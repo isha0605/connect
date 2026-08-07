@@ -1,0 +1,145 @@
+import frappe
+
+
+def _has_full_access(user):
+	return user == "Administrator" or "System Manager" in frappe.get_roles(user)
+
+
+def _is_customer_admin(customer, user):
+	return bool(
+		frappe.db.exists("Connect Customer Member", {"customer": customer, "user": user, "is_admin": 1})
+	)
+
+
+def _is_partner_admin(partner, user):
+	return bool(
+		frappe.db.exists("Connect Partner Member", {"partner": partner, "user": user, "is_admin": 1})
+	)
+
+
+def _thread_membership(thread, user):
+	return frappe.db.get_value(
+		"Connect Thread Member",
+		{"thread": thread, "user": user},
+		["permission", "is_removed", "removed_on"],
+		as_dict=True,
+	)
+
+
+def has_thread_permission(doc, ptype="read", user=None, **kwargs):
+	"""Controllers can only deny access on top of the 'All' role baseline, never grant it."""
+	user = user or frappe.session.user
+	if _has_full_access(user):
+		return True
+
+	if not doc.get("customer") or not doc.get("partner"):
+		# form not filled in yet (e.g. opening a blank "New Connect Thread")
+		return True
+
+	if ptype == "create":
+		return bool(
+			frappe.db.exists("Connect Customer Member", {"customer": doc.customer, "user": user})
+			or frappe.db.exists("Connect Partner Member", {"partner": doc.partner, "user": user})
+		)
+
+	membership = _thread_membership(doc.name, user)
+	if not membership:
+		return False
+
+	if ptype == "read":
+		return True
+
+	# any other write (e.g. closing the thread) is partner-admin only, per spec
+	return not membership.is_removed and _is_partner_admin(doc.partner, user)
+
+
+def get_thread_permission_query_conditions(user, doctype=None):
+	if _has_full_access(user):
+		return ""
+	user = frappe.db.escape(user)
+	return f"""`tabConnect Thread`.name in (
+		select thread from `tabConnect Thread Member` where user = {user}
+	)"""
+
+
+def has_message_permission(doc, ptype="read", user=None, **kwargs):
+	user = user or frappe.session.user
+	if _has_full_access(user):
+		return True
+
+	if not doc.get("thread"):
+		return True
+
+	membership = _thread_membership(doc.thread, user)
+	if not membership:
+		return False
+
+	if ptype in ("write", "create", "delete", "submit", "cancel"):
+		return not membership.is_removed and membership.permission == "Write"
+
+	# read: removed members keep a frozen view up to the moment they were removed
+	if not membership.is_removed:
+		return True
+	return bool(doc.get("creation")) and doc.creation <= membership.removed_on
+
+
+def get_message_permission_query_conditions(user, doctype=None):
+	if _has_full_access(user):
+		return ""
+	user = frappe.db.escape(user)
+	return f"""exists (
+		select 1 from `tabConnect Thread Member` ctm
+		where ctm.thread = `tabConnect Message`.thread
+		and ctm.user = {user}
+		and (ctm.is_removed = 0 or `tabConnect Message`.creation <= ctm.removed_on)
+	)"""
+
+
+def has_thread_member_permission(doc, ptype="read", user=None, **kwargs):
+	user = user or frappe.session.user
+	if _has_full_access(user):
+		return True
+
+	if not doc.get("thread") or not doc.get("side"):
+		return True
+
+	thread = frappe.db.get_value("Connect Thread", doc.thread, ["customer", "partner"], as_dict=True)
+	if not thread:
+		return False
+
+	if ptype in ("create", "write", "delete"):
+		# adding/removing members is admin-only, scoped to their own side's roster
+		if doc.side == "Customer":
+			return _is_customer_admin(thread.customer, user)
+		if doc.side == "Partner":
+			return _is_partner_admin(thread.partner, user)
+		return False
+
+	# read: any active member of the same thread can see the roster
+	return bool(_thread_membership(doc.thread, user))
+
+
+def get_thread_member_permission_query_conditions(user, doctype=None):
+	if _has_full_access(user):
+		return ""
+	user = frappe.db.escape(user)
+	return f"""`tabConnect Thread Member`.thread in (
+		select thread from `tabConnect Thread Member` where user = {user}
+	)"""
+
+
+def has_studio_page_permission(doc, ptype="read", user=None, **kwargs):
+	"""Lets any logged-in user load our published 'connect' app pages (e.g. the messaging
+	page) without granting System Manager / Studio User access to Studio Page in general."""
+	user = user or frappe.session.user
+	if _has_full_access(user):
+		return True
+	if ptype != "read":
+		return False
+	return doc.get("studio_app") == "connect" and bool(doc.get("published"))
+
+
+def get_studio_page_permission_query_conditions(user, doctype=None):
+	if _has_full_access(user):
+		return ""
+	return "`tabStudio Page`.studio_app = 'connect' and `tabStudio Page`.published = 1"
