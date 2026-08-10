@@ -138,7 +138,7 @@
         "display": "flex",
         "flexDirection": "row",
         "flexShrink": "0",
-        "height": "57px",
+        "height": "44px",
         "justifyContent": "space-between",
         "overflow": "hidden",
         "padding": "12px 8px 12px 16px"
@@ -146,17 +146,135 @@
        "children": [
         {
          "baseStyles": {
-          "color": "var(--ink-gray-9)",
-          "fontWeight": "600"
+          "marginLeft": "-8px",
+          "position": "relative"
          },
+         "children": [
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "borderRadius": "8px",
+            "cursor": "pointer",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "6px",
+            "padding": "4px 8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontWeight": "500"
+             },
+             "classes": [],
+             "componentId": "chat-header-title",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-lg",
+              "tag": "span",
+              "text": "{{ (() => { const t = (myThreads.data || []).find(t => t.name === selectedThread); if (!t) return 'Select a conversation'; const amPartner = myContext.data && myContext.data.partner; return amPartner ? t.customer : t.partner; })() }}"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "height": "16px",
+              "width": "16px"
+             },
+             "classes": [],
+             "componentId": "chat-title-chevron",
+             "componentName": "FeatherIcon",
+             "componentProps": {
+              "name": "chevron-down"
+             }
+            }
+           ],
+           "classes": [
+            "hover:bg-surface-gray-2"
+           ],
+           "componentId": "chat-title-trigger",
+           "componentName": "container",
+           "originalElement": "div",
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "showTitleMenu.value = !showTitleMenu.value;"
+            }
+           }
+          },
+          {
+           "baseStyles": {
+            "backgroundColor": "var(--surface-base)",
+            "border": "1px solid var(--outline-gray-2)",
+            "borderRadius": "10px",
+            "boxShadow": "0 4px 12px rgba(0,0,0,0.1)",
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "2px",
+            "left": "0px",
+            "marginTop": "4px",
+            "minWidth": "160px",
+            "padding": "4px",
+            "position": "absolute",
+            "top": "100%",
+            "zIndex": "20"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "justifyContent": "flex-start",
+              "width": "100%"
+             },
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "showMediaDialog.value = true; mediaTab.value = 'Files'; showMembersDialog.value = false; showTitleMenu.value = false;"
+              }
+             },
+             "componentId": "chat-title-menu-files",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "lucide-file",
+              "label": "Files",
+              "variant": "ghost"
+             }
+            },
+            {
+             "baseStyles": {
+              "justifyContent": "flex-start",
+              "width": "100%"
+             },
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "showMediaDialog.value = true; mediaTab.value = 'Links'; showMembersDialog.value = false; showTitleMenu.value = false;"
+              }
+             },
+             "componentId": "chat-title-menu-links",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "lucide-link",
+              "label": "Links",
+              "variant": "ghost"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "chat-title-menu",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "showTitleMenu"
+          }
+         ],
          "classes": [],
-         "componentId": "chat-header-title",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-lg",
-          "tag": "span",
-          "text": "{{ (() => { const t = (myThreads.data || []).find(t => t.name === selectedThread); if (!t) return 'Select a conversation'; const amPartner = myContext.data && myContext.data.partner; return amPartner ? t.customer : t.partner; })() }}"
-         }
+         "componentId": "chat-title-wrapper",
+         "componentName": "container",
+         "originalElement": "div"
         },
         {
          "baseStyles": {
@@ -256,7 +374,7 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "showMembersDialog.value = true;"
+           "script": "showMembersDialog.value = true; showMediaDialog.value = false;"
           }
          },
          "componentId": "members-trigger",
@@ -360,8 +478,12 @@
             "display": "flex",
             "flexDirection": "row",
             "justifyContent": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'flex-end' : 'flex-start' }}",
-            "padding": "3px 0",
-            "width": "100%"
+            "width": "100%",
+            "borderRadius": "8px",
+            "paddingTop": "10px",
+            "paddingBottom": "10px",
+            "paddingLeft": "16px",
+            "paddingRight": "16px"
            },
            "children": [
             {
@@ -375,32 +497,45 @@
              "children": [
               {
                "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (() => { const s = String(dataItem.sender || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
-                "borderRadius": "9999px",
-                "color": "{{ (() => { const s = String(dataItem.sender || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
-                "display": "flex",
                 "flexShrink": "0",
-                "fontSize": "16px",
-                "fontWeight": "500",
-                "height": "36px",
-                "justifyContent": "center",
-                "textTransform": "uppercase",
                 "width": "36px"
                },
                "children": [
                 {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "backgroundColor": "{{ (() => { const s = String(dataItem.sender || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                  "borderRadius": "9999px",
+                  "color": "{{ (() => { const s = String(dataItem.sender || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                  "display": "flex",
+                  "flexShrink": "0",
+                  "fontSize": "16px",
+                  "fontWeight": "500",
+                  "height": "36px",
+                  "justifyContent": "center",
+                  "textTransform": "uppercase",
+                  "width": "36px"
+                 },
+                 "children": [
+                  {
+                   "classes": [],
+                   "componentId": "message-avatar-initial",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "span",
+                    "text": "{{ (dataItem.sender || '').trim().charAt(0) }}"
+                   }
+                  }
+                 ],
                  "classes": [],
-                 "componentId": "message-avatar-initial",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "tag": "span",
-                  "text": "{{ (dataItem.sender || '').trim().charAt(0) }}"
-                 }
+                 "componentId": "message-avatar",
+                 "componentName": "container",
+                 "originalElement": "div",
+                 "visibilityCondition": "!(dataIndex > 0 && messages.data[dataIndex - 1].sender === dataItem.sender && messages.data[dataIndex - 1].message_type !== 'System' && new Date(messages.data[dataIndex - 1].creation).toDateString() === new Date(dataItem.creation).toDateString())"
                 }
                ],
                "classes": [],
-               "componentId": "message-avatar",
+               "componentId": "message-avatar-slot",
                "componentName": "container",
                "originalElement": "div"
               },
@@ -418,7 +553,7 @@
                   "alignItems": "baseline",
                   "display": "flex",
                   "flexDirection": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'row-reverse' : 'row' }}",
-                  "gap": "8px"
+                  "gap": "4px"
                  },
                  "children": [
                   {
@@ -433,7 +568,7 @@
                    "componentProps": {
                     "fontSize": "text-sm",
                     "tag": "span",
-                    "text": "{{ dataItem.sender }}"
+                    "text": "{{ (dataItem.sender || '').split('@')[0] }}"
                    }
                   },
                   {
@@ -444,21 +579,23 @@
                    "componentId": "message-time",
                    "componentName": "TextBlock",
                    "componentProps": {
-                    "fontSize": "text-sm",
+                    "fontSize": "text-xs",
                     "tag": "span",
-                    "text": "{{ new Date(dataItem.creation).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase() }}"
+                    "text": "{{ '\u00b7 ' + new Date(dataItem.creation).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase() }}",
+                    "title": "{{ (() => { const d = new Date(dataItem.creation); const day = d.getDate(); const suffix = (day % 10 === 1 && day !== 11) ? 'st' : (day % 10 === 2 && day !== 12) ? 'nd' : (day % 10 === 3 && day !== 13) ? 'rd' : 'th'; const dateStr = day + suffix + ' ' + d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase(); return dateStr + ', ' + timeStr; })() }}"
                    }
                   }
                  ],
                  "classes": [],
                  "componentId": "message-header-row",
                  "componentName": "container",
-                 "originalElement": "div"
+                 "originalElement": "div",
+                 "visibilityCondition": "!(dataIndex > 0 && messages.data[dataIndex - 1].sender === dataItem.sender && messages.data[dataIndex - 1].message_type !== 'System' && new Date(messages.data[dataIndex - 1].creation).toDateString() === new Date(dataItem.creation).toDateString())"
                 },
                 {
                  "baseStyles": {
                   "color": "var(--ink-gray-9)",
-                  "marginTop": "2px",
+                  "marginTop": "{{ (dataIndex > 0 && messages.data[dataIndex - 1].sender === dataItem.sender && messages.data[dataIndex - 1].message_type !== 'System' && new Date(messages.data[dataIndex - 1].creation).toDateString() === new Date(dataItem.creation).toDateString()) ? '0px' : '6px' }}",
                   "textAlign": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'right' : 'left' }}",
                   "whiteSpace": "pre-wrap"
                  },
@@ -484,7 +621,9 @@
              "originalElement": "div"
             }
            ],
-           "classes": [],
+           "classes": [
+            "hover:bg-surface-gray-1"
+           ],
            "componentId": "message-row",
            "componentName": "container",
            "originalElement": "div",
@@ -528,6 +667,9 @@
           "data": "{{ messages.data }}",
           "dataKey": "name",
           "emptyStateMessage": "{{ selectedThread ? 'No messages yet' : 'Select a conversation to start chatting' }}"
+         },
+         "baseStyles": {
+          "gap": "0px"
          }
         }
        ],
@@ -707,16 +849,16 @@
     {
      "baseStyles": {
       "backgroundColor": "var(--surface-base)",
-      "border": "{{ showMembersDialog ? '1px solid var(--outline-gray-2)' : 'none' }}",
+      "border": "{{ (showMembersDialog || showMediaDialog) ? '1px solid var(--outline-gray-2)' : 'none' }}",
       "borderRadius": "12px",
       "boxShadow": "0 1px 3px rgba(0,0,0,0.06)",
       "display": "flex",
       "flexDirection": "column",
       "flexShrink": "0",
-      "margin": "{{ showMembersDialog ? '4px 4px 4px 0px' : '0px' }}",
+      "margin": "{{ (showMembersDialog || showMediaDialog) ? '4px 4px 4px 0px' : '0px' }}",
       "overflow": "hidden",
       "transition": "width 0.2s ease",
-      "width": "{{ showMembersDialog ? '320px' : '0px' }}"
+      "width": "{{ (showMembersDialog || showMediaDialog) ? '320px' : '0px' }}"
      },
      "children": [
       {
@@ -727,7 +869,7 @@
         "display": "flex",
         "flexDirection": "row",
         "flexShrink": "0",
-        "height": "57px",
+        "height": "44px",
         "justifyContent": "space-between",
         "minWidth": "320px",
         "overflow": "hidden",
@@ -744,7 +886,7 @@
          "componentProps": {
           "fontSize": "text-lg",
           "tag": "span",
-          "text": "Members"
+          "text": "{{ showMediaDialog ? 'Media' : 'Members' }}"
          }
         },
         {
@@ -753,7 +895,7 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "showMembersDialog.value = false;"
+           "script": "showMembersDialog.value = false; showMediaDialog.value = false;"
           }
          },
          "componentId": "members-panel-close",
@@ -774,9 +916,7 @@
         "display": "flex",
         "flex": "1",
         "flexDirection": "column",
-        "minHeight": "0px",
-        "minWidth": "320px",
-        "overflow": "hidden"
+        "minHeight": "0px"
        },
        "children": [
         {
@@ -784,34 +924,211 @@
           "display": "flex",
           "flex": "1",
           "flexDirection": "column",
-          "gap": "16px",
           "minHeight": "0px",
           "minWidth": "320px",
-          "overflowY": "auto",
-          "padding": "16px",
-          "scrollbarColor": "var(--ink-gray-2) transparent",
-          "scrollbarWidth": "thin"
+          "overflow": "hidden"
          },
          "children": [
           {
            "baseStyles": {
             "display": "flex",
-            "flexDirection": "column"
+            "flex": "1",
+            "flexDirection": "column",
+            "gap": "16px",
+            "minHeight": "0px",
+            "minWidth": "320px",
+            "overflowY": "auto",
+            "padding": "16px",
+            "scrollbarColor": "var(--ink-gray-2) transparent",
+            "scrollbarWidth": "thin"
            },
            "children": [
             {
              "baseStyles": {
-              "fontWeight": "600",
-              "marginBottom": "4px"
+              "display": "flex",
+              "flexDirection": "column"
              },
+             "children": [
+              {
+               "baseStyles": {
+                "fontWeight": "600",
+                "marginBottom": "4px"
+               },
+               "classes": [],
+               "componentId": "partner-section-title",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).partner || '' }}"
+               }
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderRadius": "8px",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "gap": "10px",
+                  "padding": "6px 8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "backgroundColor": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                    "borderRadius": "9999px",
+                    "color": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                    "display": "flex",
+                    "flexShrink": "0",
+                    "fontSize": "16px",
+                    "fontWeight": "500",
+                    "height": "36px",
+                    "justifyContent": "center",
+                    "textTransform": "uppercase",
+                    "width": "36px"
+                   },
+                   "children": [
+                    {
+                     "classes": [],
+                     "componentId": "member-row-avatar-initial",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "span",
+                      "text": "{{ (dataItem.user || '').trim().charAt(0) }}"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "member-row-avatar",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "display": "flex",
+                    "flex": "1",
+                    "flexDirection": "column"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "6px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "textTransform": "capitalize"
+                       },
+                       "classes": [],
+                       "componentId": "member-row-email",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ (dataItem.user || '').split('@')[0] }}"
+                       }
+                      },
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-gray-2)",
+                        "borderRadius": "9999px",
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "padding": "1px 8px"
+                       },
+                       "classes": [],
+                       "componentId": "member-row-admin-badge",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-2xs",
+                        "tag": "span",
+                        "text": "Admin"
+                       },
+                       "visibilityCondition": "dataItem.user === (threadAdmins.data && threadAdmins.data.partner_admin)"
+                      }
+                     ],
+                     "classes": [],
+                     "componentId": "member-row-email-row",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)"
+                     },
+                     "classes": [],
+                     "componentId": "member-row-permission",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-2xs",
+                      "tag": "span",
+                      "text": "{{ dataItem.permission }}"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "member-row-text",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "children": [
+                    {
+                     "classes": [
+                      "opacity-0",
+                      "group-hover:opacity-100"
+                     ],
+                     "componentId": "member-row-actions-trigger",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "icon": "lucide-more-horizontal",
+                      "size": "sm",
+                      "variant": "ghost"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "member-row-actions",
+                   "componentName": "Dropdown",
+                   "componentProps": {
+                    "align": "end",
+                    "options": "{{ [ { label: 'Make admin', icon: 'lucide-crown', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Make ' + dataItem.user + ' the admin? You will lose admin rights.')) return; call('connect.api.make_thread_admin', { thread: selectedThread, member: dataItem.name }).then(() => { myContext.reload(); threadAdmins.reload(); toast({ title: 'Admin transferred', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not transfer admin', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } }, { label: 'Remove from channel', icon: 'lucide-user-minus', theme: 'red', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Remove ' + dataItem.user + ' from this thread?')) return; call('connect.api.remove_thread_member', { thread: selectedThread, member: dataItem.name }).then(() => { threadMembers.reload(); toast({ title: 'Member removed', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not remove member', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } } ] }}"
+                   }
+                  }
+                 ],
+                 "classes": [
+                  "group",
+                  "hover:bg-surface-gray-2"
+                 ],
+                 "componentId": "member-row",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentId": "partner-members-repeater",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Partner') }}",
+                "dataKey": "name",
+                "emptyStateMessage": "No members yet"
+               }
+              }
+             ],
              "classes": [],
-             "componentId": "partner-section-title",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).partner || '' }}"
-             }
+             "componentId": "partner-members-section",
+             "componentName": "container",
+             "originalElement": "div"
             },
             {
              "baseStyles": {
@@ -821,394 +1138,374 @@
              "children": [
               {
                "baseStyles": {
-                "alignItems": "center",
-                "borderRadius": "8px",
+                "fontWeight": "600",
+                "marginBottom": "4px"
+               },
+               "classes": [],
+               "componentId": "customer-section-title",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).customer || '' }}"
+               }
+              },
+              {
+               "baseStyles": {
                 "display": "flex",
-                "flexDirection": "row",
-                "gap": "10px",
-                "padding": "6px 8px"
+                "flexDirection": "column"
                },
                "children": [
                 {
                  "baseStyles": {
                   "alignItems": "center",
-                  "backgroundColor": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
-                  "borderRadius": "9999px",
-                  "color": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                  "borderRadius": "8px",
                   "display": "flex",
-                  "flexShrink": "0",
-                  "fontSize": "16px",
-                  "fontWeight": "500",
-                  "height": "36px",
-                  "justifyContent": "center",
-                  "textTransform": "uppercase",
-                  "width": "36px"
-                 },
-                 "children": [
-                  {
-                   "classes": [],
-                   "componentId": "member-row-avatar-initial",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "span",
-                    "text": "{{ (dataItem.user || '').trim().charAt(0) }}"
-                   }
-                  }
-                 ],
-                 "classes": [],
-                 "componentId": "member-row-avatar",
-                 "componentName": "container",
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flex": "1",
-                  "flexDirection": "column"
+                  "flexDirection": "row",
+                  "gap": "10px",
+                  "padding": "6px 8px"
                  },
                  "children": [
                   {
                    "baseStyles": {
                     "alignItems": "center",
+                    "backgroundColor": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                    "borderRadius": "9999px",
+                    "color": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
                     "display": "flex",
-                    "flexDirection": "row",
-                    "gap": "6px"
+                    "flexShrink": "0",
+                    "fontSize": "16px",
+                    "fontWeight": "500",
+                    "height": "36px",
+                    "justifyContent": "center",
+                    "textTransform": "uppercase",
+                    "width": "36px"
                    },
                    "children": [
                     {
-                     "baseStyles": {
-                      "textTransform": "capitalize"
-                     },
                      "classes": [],
-                     "componentId": "member-row-email",
+                     "componentId": "member-row-avatar-initial",
                      "componentName": "TextBlock",
                      "componentProps": {
-                      "fontSize": "text-sm",
                       "tag": "span",
-                      "text": "{{ dataItem.user }}"
+                      "text": "{{ (dataItem.user || '').trim().charAt(0) }}"
                      }
-                    },
-                    {
-                     "baseStyles": {
-                      "backgroundColor": "var(--surface-gray-2)",
-                      "borderRadius": "9999px",
-                      "color": "var(--ink-gray-6)",
-                      "flexShrink": "0",
-                      "padding": "1px 8px"
-                     },
-                     "classes": [],
-                     "componentId": "member-row-admin-badge",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-2xs",
-                      "tag": "span",
-                      "text": "Admin"
-                     },
-                     "visibilityCondition": "dataItem.user === (threadAdmins.data && threadAdmins.data.partner_admin)"
                     }
                    ],
                    "classes": [],
-                   "componentId": "member-row-email-row",
+                   "componentId": "member-row-avatar",
                    "componentName": "container",
                    "originalElement": "div"
                   },
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-5)"
+                    "display": "flex",
+                    "flex": "1",
+                    "flexDirection": "column"
                    },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "6px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "textTransform": "capitalize"
+                       },
+                       "classes": [],
+                       "componentId": "member-row-email",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ (dataItem.user || '').split('@')[0] }}"
+                       }
+                      },
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-gray-2)",
+                        "borderRadius": "9999px",
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "padding": "1px 8px"
+                       },
+                       "classes": [],
+                       "componentId": "member-row-admin-badge-c",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-2xs",
+                        "tag": "span",
+                        "text": "Admin"
+                       },
+                       "visibilityCondition": "dataItem.user === (threadAdmins.data && threadAdmins.data.customer_admin)"
+                      }
+                     ],
+                     "classes": [],
+                     "componentId": "member-row-email-row-c",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)"
+                     },
+                     "classes": [],
+                     "componentId": "member-row-permission",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-2xs",
+                      "tag": "span",
+                      "text": "{{ dataItem.permission }}"
+                     }
+                    }
+                   ],
                    "classes": [],
-                   "componentId": "member-row-permission",
-                   "componentName": "TextBlock",
+                   "componentId": "member-row-text",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "children": [
+                    {
+                     "classes": [
+                      "opacity-0",
+                      "group-hover:opacity-100"
+                     ],
+                     "componentId": "member-row-actions-trigger-c",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "icon": "lucide-more-horizontal",
+                      "size": "sm",
+                      "variant": "ghost"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "member-row-actions-c",
+                   "componentName": "Dropdown",
                    "componentProps": {
-                    "fontSize": "text-2xs",
-                    "tag": "span",
-                    "text": "{{ dataItem.permission }}"
+                    "align": "end",
+                    "options": "{{ [ { label: 'Make admin', icon: 'lucide-crown', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Make ' + dataItem.user + ' the admin? You will lose admin rights.')) return; call('connect.api.make_thread_admin', { thread: selectedThread, member: dataItem.name }).then(() => { myContext.reload(); threadAdmins.reload(); toast({ title: 'Admin transferred', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not transfer admin', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } }, { label: 'Remove from channel', icon: 'lucide-user-minus', theme: 'red', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Remove ' + dataItem.user + ' from this thread?')) return; call('connect.api.remove_thread_member', { thread: selectedThread, member: dataItem.name }).then(() => { threadMembers.reload(); toast({ title: 'Member removed', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not remove member', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } } ] }}"
                    }
                   }
                  ],
-                 "classes": [],
-                 "componentId": "member-row-text",
+                 "classes": [
+                  "group",
+                  "hover:bg-surface-gray-2"
+                 ],
+                 "componentId": "member-row-c",
                  "componentName": "container",
                  "originalElement": "div"
-                },
-                {
-                 "children": [
-                  {
-                   "classes": [
-                    "opacity-0",
-                    "group-hover:opacity-100"
-                   ],
-                   "componentId": "member-row-actions-trigger",
-                   "componentName": "Button",
-                   "componentProps": {
-                    "icon": "lucide-more-horizontal",
-                    "size": "sm",
-                    "variant": "ghost"
-                   }
-                  }
-                 ],
-                 "classes": [],
-                 "componentId": "member-row-actions",
-                 "componentName": "Dropdown",
-                 "componentProps": {
-                  "align": "end",
-                  "options": "{{ [ { label: 'Make admin', icon: 'lucide-crown', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Make ' + dataItem.user + ' the admin? You will lose admin rights.')) return; call('connect.api.make_thread_admin', { thread: selectedThread, member: dataItem.name }).then(() => { myContext.reload(); threadAdmins.reload(); toast({ title: 'Admin transferred', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not transfer admin', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } }, { label: 'Remove from channel', icon: 'lucide-user-minus', theme: 'red', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Remove ' + dataItem.user + ' from this thread?')) return; call('connect.api.remove_thread_member', { thread: selectedThread, member: dataItem.name }).then(() => { threadMembers.reload(); toast({ title: 'Member removed', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not remove member', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } } ] }}"
-                 }
                 }
                ],
-               "classes": [
-                "group",
-                "hover:bg-surface-gray-2"
-               ],
-               "componentId": "member-row",
-               "componentName": "container",
-               "originalElement": "div"
+               "classes": [],
+               "componentId": "customer-members-repeater",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Customer') }}",
+                "dataKey": "name",
+                "emptyStateMessage": "No members yet"
+               }
               }
              ],
              "classes": [],
-             "componentId": "partner-members-repeater",
-             "componentName": "Repeater",
-             "componentProps": {
-              "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Partner') }}",
-              "dataKey": "name",
-              "emptyStateMessage": "No members yet"
-             }
+             "componentId": "customer-members-section",
+             "componentName": "container",
+             "originalElement": "div"
             }
            ],
            "classes": [],
-           "componentId": "partner-members-section",
+           "componentId": "members-list-scroll",
            "componentName": "container",
            "originalElement": "div"
           },
           {
            "baseStyles": {
+            "borderTop": "1px solid var(--outline-gray-2)",
             "display": "flex",
-            "flexDirection": "column"
+            "flexDirection": "column",
+            "gap": "8px",
+            "padding": "16px"
            },
            "children": [
             {
              "baseStyles": {
-              "fontWeight": "600",
-              "marginBottom": "4px"
+              "width": "100%"
              },
              "classes": [],
-             "componentId": "customer-section-title",
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "showAddMemberDialog.value = true;"
+              }
+             },
+             "componentId": "add-member-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "lucide-user-plus",
+              "label": "Add",
+              "variant": "outline"
+             },
+             "visibilityCondition": "selectedThread && myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
+            }
+           ],
+           "classes": [],
+           "componentId": "members-panel-actions",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "selectedThread && myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
+          }
+         ],
+         "classes": [],
+         "componentId": "members-view",
+         "componentName": "container",
+         "originalElement": "div",
+         "visibilityCondition": "!showMediaDialog"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1",
+          "flexDirection": "column",
+          "minHeight": "0px",
+          "minWidth": "320px",
+          "overflow": "hidden"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "borderBottom": "1px solid var(--outline-gray-2)",
+            "color": "var(--ink-gray-6)",
+            "flexShrink": "0",
+            "padding": "12px 16px"
+           },
+           "children": [
+            {
+             "classes": [],
+             "componentId": "media-created-info",
              "componentName": "TextBlock",
              "componentProps": {
               "fontSize": "text-sm",
               "tag": "span",
-              "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).customer || '' }}"
-             }
-            },
-            {
-             "baseStyles": {
-              "display": "flex",
-              "flexDirection": "column"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "borderRadius": "8px",
-                "display": "flex",
-                "flexDirection": "row",
-                "gap": "10px",
-                "padding": "6px 8px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "backgroundColor": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
-                  "borderRadius": "9999px",
-                  "color": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
-                  "display": "flex",
-                  "flexShrink": "0",
-                  "fontSize": "16px",
-                  "fontWeight": "500",
-                  "height": "36px",
-                  "justifyContent": "center",
-                  "textTransform": "uppercase",
-                  "width": "36px"
-                 },
-                 "children": [
-                  {
-                   "classes": [],
-                   "componentId": "member-row-avatar-initial",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "span",
-                    "text": "{{ (dataItem.user || '').trim().charAt(0) }}"
-                   }
-                  }
-                 ],
-                 "classes": [],
-                 "componentId": "member-row-avatar",
-                 "componentName": "container",
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flex": "1",
-                  "flexDirection": "column"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "display": "flex",
-                    "flexDirection": "row",
-                    "gap": "6px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "textTransform": "capitalize"
-                     },
-                     "classes": [],
-                     "componentId": "member-row-email",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-sm",
-                      "tag": "span",
-                      "text": "{{ dataItem.user }}"
-                     }
-                    },
-                    {
-                     "baseStyles": {
-                      "backgroundColor": "var(--surface-gray-2)",
-                      "borderRadius": "9999px",
-                      "color": "var(--ink-gray-6)",
-                      "flexShrink": "0",
-                      "padding": "1px 8px"
-                     },
-                     "classes": [],
-                     "componentId": "member-row-admin-badge-c",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-2xs",
-                      "tag": "span",
-                      "text": "Admin"
-                     },
-                     "visibilityCondition": "dataItem.user === (threadAdmins.data && threadAdmins.data.customer_admin)"
-                    }
-                   ],
-                   "classes": [],
-                   "componentId": "member-row-email-row-c",
-                   "componentName": "container",
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-5)"
-                   },
-                   "classes": [],
-                   "componentId": "member-row-permission",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-2xs",
-                    "tag": "span",
-                    "text": "{{ dataItem.permission }}"
-                   }
-                  }
-                 ],
-                 "classes": [],
-                 "componentId": "member-row-text",
-                 "componentName": "container",
-                 "originalElement": "div"
-                },
-                {
-                 "children": [
-                  {
-                   "classes": [
-                    "opacity-0",
-                    "group-hover:opacity-100"
-                   ],
-                   "componentId": "member-row-actions-trigger-c",
-                   "componentName": "Button",
-                   "componentProps": {
-                    "icon": "lucide-more-horizontal",
-                    "size": "sm",
-                    "variant": "ghost"
-                   }
-                  }
-                 ],
-                 "classes": [],
-                 "componentId": "member-row-actions-c",
-                 "componentName": "Dropdown",
-                 "componentProps": {
-                  "align": "end",
-                  "options": "{{ [ { label: 'Make admin', icon: 'lucide-crown', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Make ' + dataItem.user + ' the admin? You will lose admin rights.')) return; call('connect.api.make_thread_admin', { thread: selectedThread, member: dataItem.name }).then(() => { myContext.reload(); threadAdmins.reload(); toast({ title: 'Admin transferred', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not transfer admin', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } }, { label: 'Remove from channel', icon: 'lucide-user-minus', theme: 'red', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Remove ' + dataItem.user + ' from this thread?')) return; call('connect.api.remove_thread_member', { thread: selectedThread, member: dataItem.name }).then(() => { threadMembers.reload(); toast({ title: 'Member removed', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not remove member', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } } ] }}"
-                 }
-                }
-               ],
-               "classes": [
-                "group",
-                "hover:bg-surface-gray-2"
-               ],
-               "componentId": "member-row-c",
-               "componentName": "container",
-               "originalElement": "div"
-              }
-             ],
-             "classes": [],
-             "componentId": "customer-members-repeater",
-             "componentName": "Repeater",
-             "componentProps": {
-              "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Customer') }}",
-              "dataKey": "name",
-              "emptyStateMessage": "No members yet"
+              "text": "{{ (() => { const t = (myThreads.data || []).find(t => t.name === selectedThread); if (!t || !t.creation) return ''; const d = new Date(t.creation); const day = d.getDate(); const suffix = (day % 10 === 1 && day !== 11) ? 'st' : (day % 10 === 2 && day !== 12) ? 'nd' : (day % 10 === 3 && day !== 13) ? 'rd' : 'th'; return 'Group created on ' + day + suffix + ' ' + d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); })() }}"
              }
             }
            ],
            "classes": [],
-           "componentId": "customer-members-section",
+           "componentId": "media-created-row",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "flexShrink": "0",
+            "padding": "12px 16px 0px"
+           },
+           "classes": [],
+           "componentId": "media-tabs",
+           "componentName": "TabButtons",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "mediaTab"
+            },
+            "options": [
+             {
+              "label": "Files",
+              "value": "Files"
+             },
+             {
+              "label": "Links",
+              "value": "Links"
+             }
+            ]
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minHeight": "0px",
+            "overflowY": "auto",
+            "padding": "16px",
+            "scrollbarColor": "var(--ink-gray-2) transparent",
+            "scrollbarWidth": "thin"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)"
+             },
+             "classes": [],
+             "componentId": "thread-files-empty",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "p",
+              "text": "No files have been shared in this thread yet."
+             },
+             "visibilityCondition": "mediaTab === 'Files'"
+            },
+            {
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "8px"
+               },
+               "children": [
+                {
+                 "classes": [],
+                 "componentId": "thread-link-item",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "href": "{{ dataItem.url }}",
+                  "tag": "a",
+                  "target": "_blank",
+                  "text": "{{ dataItem.url }}"
+                 },
+                 "baseStyles": {
+                  "color": "var(--ink-blue-link)",
+                  "overflowWrap": "anywhere"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "thread-links-repeater",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ (messages.data || []).flatMap(m => (m.content || '').match(/https?:\\/\\/[^\\s]+/g) || []).map(url => ({ url })) }}",
+                "dataKey": "url",
+                "emptyStateMessage": "No links have been shared in this thread yet."
+               },
+               "visibilityCondition": "mediaTab === 'Links'"
+              }
+             ],
+             "classes": [],
+             "componentId": "thread-links-wrapper",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "media-content-scroll",
            "componentName": "container",
            "originalElement": "div"
           }
          ],
          "classes": [],
-         "componentId": "members-list-scroll",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "borderTop": "1px solid var(--outline-gray-2)",
-          "display": "flex",
-          "flexDirection": "column",
-          "gap": "8px",
-          "padding": "16px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "width": "100%"
-           },
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "showAddMemberDialog.value = true;"
-            }
-           },
-           "componentId": "add-member-btn",
-           "componentName": "Button",
-           "componentProps": {
-            "iconLeft": "lucide-user-plus",
-            "label": "Add",
-            "variant": "outline"
-           },
-           "visibilityCondition": "selectedThread && myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
-          }
-         ],
-         "classes": [],
-         "componentId": "members-panel-actions",
+         "componentId": "media-view",
          "componentName": "container",
          "originalElement": "div",
-         "visibilityCondition": "selectedThread && myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
+         "visibilityCondition": "showMediaDialog"
         }
        ],
        "classes": [],
@@ -1370,7 +1667,7 @@
         "display": "flex",
         "flexDirection": "row",
         "flexShrink": "0",
-        "height": "57px",
+        "height": "44px",
         "justifyContent": "space-between",
         "overflow": "hidden",
         "padding": "12px 8px 12px 16px"
@@ -1378,17 +1675,135 @@
        "children": [
         {
          "baseStyles": {
-          "color": "var(--ink-gray-9)",
-          "fontWeight": "600"
+          "marginLeft": "-8px",
+          "position": "relative"
          },
+         "children": [
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "borderRadius": "8px",
+            "cursor": "pointer",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "6px",
+            "padding": "4px 8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontWeight": "500"
+             },
+             "classes": [],
+             "componentId": "chat-header-title",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-lg",
+              "tag": "span",
+              "text": "{{ (() => { const t = (myThreads.data || []).find(t => t.name === selectedThread); if (!t) return 'Select a conversation'; const amPartner = myContext.data && myContext.data.partner; return amPartner ? t.customer : t.partner; })() }}"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "height": "16px",
+              "width": "16px"
+             },
+             "classes": [],
+             "componentId": "chat-title-chevron",
+             "componentName": "FeatherIcon",
+             "componentProps": {
+              "name": "chevron-down"
+             }
+            }
+           ],
+           "classes": [
+            "hover:bg-surface-gray-2"
+           ],
+           "componentId": "chat-title-trigger",
+           "componentName": "container",
+           "originalElement": "div",
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "showTitleMenu.value = !showTitleMenu.value;"
+            }
+           }
+          },
+          {
+           "baseStyles": {
+            "backgroundColor": "var(--surface-base)",
+            "border": "1px solid var(--outline-gray-2)",
+            "borderRadius": "10px",
+            "boxShadow": "0 4px 12px rgba(0,0,0,0.1)",
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "2px",
+            "left": "0px",
+            "marginTop": "4px",
+            "minWidth": "160px",
+            "padding": "4px",
+            "position": "absolute",
+            "top": "100%",
+            "zIndex": "20"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "justifyContent": "flex-start",
+              "width": "100%"
+             },
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "showMediaDialog.value = true; mediaTab.value = 'Files'; showMembersDialog.value = false; showTitleMenu.value = false;"
+              }
+             },
+             "componentId": "chat-title-menu-files",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "lucide-file",
+              "label": "Files",
+              "variant": "ghost"
+             }
+            },
+            {
+             "baseStyles": {
+              "justifyContent": "flex-start",
+              "width": "100%"
+             },
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "showMediaDialog.value = true; mediaTab.value = 'Links'; showMembersDialog.value = false; showTitleMenu.value = false;"
+              }
+             },
+             "componentId": "chat-title-menu-links",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "lucide-link",
+              "label": "Links",
+              "variant": "ghost"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "chat-title-menu",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "showTitleMenu"
+          }
+         ],
          "classes": [],
-         "componentId": "chat-header-title",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-lg",
-          "tag": "span",
-          "text": "{{ (() => { const t = (myThreads.data || []).find(t => t.name === selectedThread); if (!t) return 'Select a conversation'; const amPartner = myContext.data && myContext.data.partner; return amPartner ? t.customer : t.partner; })() }}"
-         }
+         "componentId": "chat-title-wrapper",
+         "componentName": "container",
+         "originalElement": "div"
         },
         {
          "baseStyles": {
@@ -1488,7 +1903,7 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "showMembersDialog.value = true;"
+           "script": "showMembersDialog.value = true; showMediaDialog.value = false;"
           }
          },
          "componentId": "members-trigger",
@@ -1592,8 +2007,12 @@
             "display": "flex",
             "flexDirection": "row",
             "justifyContent": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'flex-end' : 'flex-start' }}",
-            "padding": "3px 0",
-            "width": "100%"
+            "width": "100%",
+            "borderRadius": "8px",
+            "paddingTop": "10px",
+            "paddingBottom": "10px",
+            "paddingLeft": "16px",
+            "paddingRight": "16px"
            },
            "children": [
             {
@@ -1607,32 +2026,45 @@
              "children": [
               {
                "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (() => { const s = String(dataItem.sender || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
-                "borderRadius": "9999px",
-                "color": "{{ (() => { const s = String(dataItem.sender || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
-                "display": "flex",
                 "flexShrink": "0",
-                "fontSize": "16px",
-                "fontWeight": "500",
-                "height": "36px",
-                "justifyContent": "center",
-                "textTransform": "uppercase",
                 "width": "36px"
                },
                "children": [
                 {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "backgroundColor": "{{ (() => { const s = String(dataItem.sender || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                  "borderRadius": "9999px",
+                  "color": "{{ (() => { const s = String(dataItem.sender || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                  "display": "flex",
+                  "flexShrink": "0",
+                  "fontSize": "16px",
+                  "fontWeight": "500",
+                  "height": "36px",
+                  "justifyContent": "center",
+                  "textTransform": "uppercase",
+                  "width": "36px"
+                 },
+                 "children": [
+                  {
+                   "classes": [],
+                   "componentId": "message-avatar-initial",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "span",
+                    "text": "{{ (dataItem.sender || '').trim().charAt(0) }}"
+                   }
+                  }
+                 ],
                  "classes": [],
-                 "componentId": "message-avatar-initial",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "tag": "span",
-                  "text": "{{ (dataItem.sender || '').trim().charAt(0) }}"
-                 }
+                 "componentId": "message-avatar",
+                 "componentName": "container",
+                 "originalElement": "div",
+                 "visibilityCondition": "!(dataIndex > 0 && messages.data[dataIndex - 1].sender === dataItem.sender && messages.data[dataIndex - 1].message_type !== 'System' && new Date(messages.data[dataIndex - 1].creation).toDateString() === new Date(dataItem.creation).toDateString())"
                 }
                ],
                "classes": [],
-               "componentId": "message-avatar",
+               "componentId": "message-avatar-slot",
                "componentName": "container",
                "originalElement": "div"
               },
@@ -1650,7 +2082,7 @@
                   "alignItems": "baseline",
                   "display": "flex",
                   "flexDirection": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'row-reverse' : 'row' }}",
-                  "gap": "8px"
+                  "gap": "4px"
                  },
                  "children": [
                   {
@@ -1665,7 +2097,7 @@
                    "componentProps": {
                     "fontSize": "text-sm",
                     "tag": "span",
-                    "text": "{{ dataItem.sender }}"
+                    "text": "{{ (dataItem.sender || '').split('@')[0] }}"
                    }
                   },
                   {
@@ -1676,21 +2108,23 @@
                    "componentId": "message-time",
                    "componentName": "TextBlock",
                    "componentProps": {
-                    "fontSize": "text-sm",
+                    "fontSize": "text-xs",
                     "tag": "span",
-                    "text": "{{ new Date(dataItem.creation).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase() }}"
+                    "text": "{{ '\u00b7 ' + new Date(dataItem.creation).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase() }}",
+                    "title": "{{ (() => { const d = new Date(dataItem.creation); const day = d.getDate(); const suffix = (day % 10 === 1 && day !== 11) ? 'st' : (day % 10 === 2 && day !== 12) ? 'nd' : (day % 10 === 3 && day !== 13) ? 'rd' : 'th'; const dateStr = day + suffix + ' ' + d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase(); return dateStr + ', ' + timeStr; })() }}"
                    }
                   }
                  ],
                  "classes": [],
                  "componentId": "message-header-row",
                  "componentName": "container",
-                 "originalElement": "div"
+                 "originalElement": "div",
+                 "visibilityCondition": "!(dataIndex > 0 && messages.data[dataIndex - 1].sender === dataItem.sender && messages.data[dataIndex - 1].message_type !== 'System' && new Date(messages.data[dataIndex - 1].creation).toDateString() === new Date(dataItem.creation).toDateString())"
                 },
                 {
                  "baseStyles": {
                   "color": "var(--ink-gray-9)",
-                  "marginTop": "2px",
+                  "marginTop": "{{ (dataIndex > 0 && messages.data[dataIndex - 1].sender === dataItem.sender && messages.data[dataIndex - 1].message_type !== 'System' && new Date(messages.data[dataIndex - 1].creation).toDateString() === new Date(dataItem.creation).toDateString()) ? '0px' : '6px' }}",
                   "textAlign": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'right' : 'left' }}",
                   "whiteSpace": "pre-wrap"
                  },
@@ -1716,7 +2150,9 @@
              "originalElement": "div"
             }
            ],
-           "classes": [],
+           "classes": [
+            "hover:bg-surface-gray-1"
+           ],
            "componentId": "message-row",
            "componentName": "container",
            "originalElement": "div",
@@ -1760,6 +2196,9 @@
           "data": "{{ messages.data }}",
           "dataKey": "name",
           "emptyStateMessage": "{{ selectedThread ? 'No messages yet' : 'Select a conversation to start chatting' }}"
+         },
+         "baseStyles": {
+          "gap": "0px"
          }
         }
        ],
@@ -1939,16 +2378,16 @@
     {
      "baseStyles": {
       "backgroundColor": "var(--surface-base)",
-      "border": "{{ showMembersDialog ? '1px solid var(--outline-gray-2)' : 'none' }}",
+      "border": "{{ (showMembersDialog || showMediaDialog) ? '1px solid var(--outline-gray-2)' : 'none' }}",
       "borderRadius": "12px",
       "boxShadow": "0 1px 3px rgba(0,0,0,0.06)",
       "display": "flex",
       "flexDirection": "column",
       "flexShrink": "0",
-      "margin": "{{ showMembersDialog ? '4px 4px 4px 0px' : '0px' }}",
+      "margin": "{{ (showMembersDialog || showMediaDialog) ? '4px 4px 4px 0px' : '0px' }}",
       "overflow": "hidden",
       "transition": "width 0.2s ease",
-      "width": "{{ showMembersDialog ? '320px' : '0px' }}"
+      "width": "{{ (showMembersDialog || showMediaDialog) ? '320px' : '0px' }}"
      },
      "children": [
       {
@@ -1959,7 +2398,7 @@
         "display": "flex",
         "flexDirection": "row",
         "flexShrink": "0",
-        "height": "57px",
+        "height": "44px",
         "justifyContent": "space-between",
         "minWidth": "320px",
         "overflow": "hidden",
@@ -1976,7 +2415,7 @@
          "componentProps": {
           "fontSize": "text-lg",
           "tag": "span",
-          "text": "Members"
+          "text": "{{ showMediaDialog ? 'Media' : 'Members' }}"
          }
         },
         {
@@ -1985,7 +2424,7 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "showMembersDialog.value = false;"
+           "script": "showMembersDialog.value = false; showMediaDialog.value = false;"
           }
          },
          "componentId": "members-panel-close",
@@ -2006,9 +2445,7 @@
         "display": "flex",
         "flex": "1",
         "flexDirection": "column",
-        "minHeight": "0px",
-        "minWidth": "320px",
-        "overflow": "hidden"
+        "minHeight": "0px"
        },
        "children": [
         {
@@ -2016,34 +2453,211 @@
           "display": "flex",
           "flex": "1",
           "flexDirection": "column",
-          "gap": "16px",
           "minHeight": "0px",
           "minWidth": "320px",
-          "overflowY": "auto",
-          "padding": "16px",
-          "scrollbarColor": "var(--ink-gray-2) transparent",
-          "scrollbarWidth": "thin"
+          "overflow": "hidden"
          },
          "children": [
           {
            "baseStyles": {
             "display": "flex",
-            "flexDirection": "column"
+            "flex": "1",
+            "flexDirection": "column",
+            "gap": "16px",
+            "minHeight": "0px",
+            "minWidth": "320px",
+            "overflowY": "auto",
+            "padding": "16px",
+            "scrollbarColor": "var(--ink-gray-2) transparent",
+            "scrollbarWidth": "thin"
            },
            "children": [
             {
              "baseStyles": {
-              "fontWeight": "600",
-              "marginBottom": "4px"
+              "display": "flex",
+              "flexDirection": "column"
              },
+             "children": [
+              {
+               "baseStyles": {
+                "fontWeight": "600",
+                "marginBottom": "4px"
+               },
+               "classes": [],
+               "componentId": "partner-section-title",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).partner || '' }}"
+               }
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderRadius": "8px",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "gap": "10px",
+                  "padding": "6px 8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "backgroundColor": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                    "borderRadius": "9999px",
+                    "color": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                    "display": "flex",
+                    "flexShrink": "0",
+                    "fontSize": "16px",
+                    "fontWeight": "500",
+                    "height": "36px",
+                    "justifyContent": "center",
+                    "textTransform": "uppercase",
+                    "width": "36px"
+                   },
+                   "children": [
+                    {
+                     "classes": [],
+                     "componentId": "member-row-avatar-initial",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "span",
+                      "text": "{{ (dataItem.user || '').trim().charAt(0) }}"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "member-row-avatar",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "display": "flex",
+                    "flex": "1",
+                    "flexDirection": "column"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "6px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "textTransform": "capitalize"
+                       },
+                       "classes": [],
+                       "componentId": "member-row-email",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ (dataItem.user || '').split('@')[0] }}"
+                       }
+                      },
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-gray-2)",
+                        "borderRadius": "9999px",
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "padding": "1px 8px"
+                       },
+                       "classes": [],
+                       "componentId": "member-row-admin-badge",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-2xs",
+                        "tag": "span",
+                        "text": "Admin"
+                       },
+                       "visibilityCondition": "dataItem.user === (threadAdmins.data && threadAdmins.data.partner_admin)"
+                      }
+                     ],
+                     "classes": [],
+                     "componentId": "member-row-email-row",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)"
+                     },
+                     "classes": [],
+                     "componentId": "member-row-permission",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-2xs",
+                      "tag": "span",
+                      "text": "{{ dataItem.permission }}"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "member-row-text",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "children": [
+                    {
+                     "classes": [
+                      "opacity-0",
+                      "group-hover:opacity-100"
+                     ],
+                     "componentId": "member-row-actions-trigger",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "icon": "lucide-more-horizontal",
+                      "size": "sm",
+                      "variant": "ghost"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "member-row-actions",
+                   "componentName": "Dropdown",
+                   "componentProps": {
+                    "align": "end",
+                    "options": "{{ [ { label: 'Make admin', icon: 'lucide-crown', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Make ' + dataItem.user + ' the admin? You will lose admin rights.')) return; call('connect.api.make_thread_admin', { thread: selectedThread, member: dataItem.name }).then(() => { myContext.reload(); threadAdmins.reload(); toast({ title: 'Admin transferred', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not transfer admin', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } }, { label: 'Remove from channel', icon: 'lucide-user-minus', theme: 'red', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Remove ' + dataItem.user + ' from this thread?')) return; call('connect.api.remove_thread_member', { thread: selectedThread, member: dataItem.name }).then(() => { threadMembers.reload(); toast({ title: 'Member removed', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not remove member', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } } ] }}"
+                   }
+                  }
+                 ],
+                 "classes": [
+                  "group",
+                  "hover:bg-surface-gray-2"
+                 ],
+                 "componentId": "member-row",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentId": "partner-members-repeater",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Partner') }}",
+                "dataKey": "name",
+                "emptyStateMessage": "No members yet"
+               }
+              }
+             ],
              "classes": [],
-             "componentId": "partner-section-title",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).partner || '' }}"
-             }
+             "componentId": "partner-members-section",
+             "componentName": "container",
+             "originalElement": "div"
             },
             {
              "baseStyles": {
@@ -2053,394 +2667,374 @@
              "children": [
               {
                "baseStyles": {
-                "alignItems": "center",
-                "borderRadius": "8px",
+                "fontWeight": "600",
+                "marginBottom": "4px"
+               },
+               "classes": [],
+               "componentId": "customer-section-title",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).customer || '' }}"
+               }
+              },
+              {
+               "baseStyles": {
                 "display": "flex",
-                "flexDirection": "row",
-                "gap": "10px",
-                "padding": "6px 8px"
+                "flexDirection": "column"
                },
                "children": [
                 {
                  "baseStyles": {
                   "alignItems": "center",
-                  "backgroundColor": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
-                  "borderRadius": "9999px",
-                  "color": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                  "borderRadius": "8px",
                   "display": "flex",
-                  "flexShrink": "0",
-                  "fontSize": "16px",
-                  "fontWeight": "500",
-                  "height": "36px",
-                  "justifyContent": "center",
-                  "textTransform": "uppercase",
-                  "width": "36px"
-                 },
-                 "children": [
-                  {
-                   "classes": [],
-                   "componentId": "member-row-avatar-initial",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "span",
-                    "text": "{{ (dataItem.user || '').trim().charAt(0) }}"
-                   }
-                  }
-                 ],
-                 "classes": [],
-                 "componentId": "member-row-avatar",
-                 "componentName": "container",
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flex": "1",
-                  "flexDirection": "column"
+                  "flexDirection": "row",
+                  "gap": "10px",
+                  "padding": "6px 8px"
                  },
                  "children": [
                   {
                    "baseStyles": {
                     "alignItems": "center",
+                    "backgroundColor": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                    "borderRadius": "9999px",
+                    "color": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
                     "display": "flex",
-                    "flexDirection": "row",
-                    "gap": "6px"
+                    "flexShrink": "0",
+                    "fontSize": "16px",
+                    "fontWeight": "500",
+                    "height": "36px",
+                    "justifyContent": "center",
+                    "textTransform": "uppercase",
+                    "width": "36px"
                    },
                    "children": [
                     {
-                     "baseStyles": {
-                      "textTransform": "capitalize"
-                     },
                      "classes": [],
-                     "componentId": "member-row-email",
+                     "componentId": "member-row-avatar-initial",
                      "componentName": "TextBlock",
                      "componentProps": {
-                      "fontSize": "text-sm",
                       "tag": "span",
-                      "text": "{{ dataItem.user }}"
+                      "text": "{{ (dataItem.user || '').trim().charAt(0) }}"
                      }
-                    },
-                    {
-                     "baseStyles": {
-                      "backgroundColor": "var(--surface-gray-2)",
-                      "borderRadius": "9999px",
-                      "color": "var(--ink-gray-6)",
-                      "flexShrink": "0",
-                      "padding": "1px 8px"
-                     },
-                     "classes": [],
-                     "componentId": "member-row-admin-badge",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-2xs",
-                      "tag": "span",
-                      "text": "Admin"
-                     },
-                     "visibilityCondition": "dataItem.user === (threadAdmins.data && threadAdmins.data.partner_admin)"
                     }
                    ],
                    "classes": [],
-                   "componentId": "member-row-email-row",
+                   "componentId": "member-row-avatar",
                    "componentName": "container",
                    "originalElement": "div"
                   },
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-5)"
+                    "display": "flex",
+                    "flex": "1",
+                    "flexDirection": "column"
                    },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "6px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "textTransform": "capitalize"
+                       },
+                       "classes": [],
+                       "componentId": "member-row-email",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ (dataItem.user || '').split('@')[0] }}"
+                       }
+                      },
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-gray-2)",
+                        "borderRadius": "9999px",
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "padding": "1px 8px"
+                       },
+                       "classes": [],
+                       "componentId": "member-row-admin-badge-c",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-2xs",
+                        "tag": "span",
+                        "text": "Admin"
+                       },
+                       "visibilityCondition": "dataItem.user === (threadAdmins.data && threadAdmins.data.customer_admin)"
+                      }
+                     ],
+                     "classes": [],
+                     "componentId": "member-row-email-row-c",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)"
+                     },
+                     "classes": [],
+                     "componentId": "member-row-permission",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-2xs",
+                      "tag": "span",
+                      "text": "{{ dataItem.permission }}"
+                     }
+                    }
+                   ],
                    "classes": [],
-                   "componentId": "member-row-permission",
-                   "componentName": "TextBlock",
+                   "componentId": "member-row-text",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "children": [
+                    {
+                     "classes": [
+                      "opacity-0",
+                      "group-hover:opacity-100"
+                     ],
+                     "componentId": "member-row-actions-trigger-c",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "icon": "lucide-more-horizontal",
+                      "size": "sm",
+                      "variant": "ghost"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "member-row-actions-c",
+                   "componentName": "Dropdown",
                    "componentProps": {
-                    "fontSize": "text-2xs",
-                    "tag": "span",
-                    "text": "{{ dataItem.permission }}"
+                    "align": "end",
+                    "options": "{{ [ { label: 'Make admin', icon: 'lucide-crown', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Make ' + dataItem.user + ' the admin? You will lose admin rights.')) return; call('connect.api.make_thread_admin', { thread: selectedThread, member: dataItem.name }).then(() => { myContext.reload(); threadAdmins.reload(); toast({ title: 'Admin transferred', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not transfer admin', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } }, { label: 'Remove from channel', icon: 'lucide-user-minus', theme: 'red', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Remove ' + dataItem.user + ' from this thread?')) return; call('connect.api.remove_thread_member', { thread: selectedThread, member: dataItem.name }).then(() => { threadMembers.reload(); toast({ title: 'Member removed', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not remove member', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } } ] }}"
                    }
                   }
                  ],
-                 "classes": [],
-                 "componentId": "member-row-text",
+                 "classes": [
+                  "group",
+                  "hover:bg-surface-gray-2"
+                 ],
+                 "componentId": "member-row-c",
                  "componentName": "container",
                  "originalElement": "div"
-                },
-                {
-                 "children": [
-                  {
-                   "classes": [
-                    "opacity-0",
-                    "group-hover:opacity-100"
-                   ],
-                   "componentId": "member-row-actions-trigger",
-                   "componentName": "Button",
-                   "componentProps": {
-                    "icon": "lucide-more-horizontal",
-                    "size": "sm",
-                    "variant": "ghost"
-                   }
-                  }
-                 ],
-                 "classes": [],
-                 "componentId": "member-row-actions",
-                 "componentName": "Dropdown",
-                 "componentProps": {
-                  "align": "end",
-                  "options": "{{ [ { label: 'Make admin', icon: 'lucide-crown', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Make ' + dataItem.user + ' the admin? You will lose admin rights.')) return; call('connect.api.make_thread_admin', { thread: selectedThread, member: dataItem.name }).then(() => { myContext.reload(); threadAdmins.reload(); toast({ title: 'Admin transferred', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not transfer admin', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } }, { label: 'Remove from channel', icon: 'lucide-user-minus', theme: 'red', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Remove ' + dataItem.user + ' from this thread?')) return; call('connect.api.remove_thread_member', { thread: selectedThread, member: dataItem.name }).then(() => { threadMembers.reload(); toast({ title: 'Member removed', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not remove member', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } } ] }}"
-                 }
                 }
                ],
-               "classes": [
-                "group",
-                "hover:bg-surface-gray-2"
-               ],
-               "componentId": "member-row",
-               "componentName": "container",
-               "originalElement": "div"
+               "classes": [],
+               "componentId": "customer-members-repeater",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Customer') }}",
+                "dataKey": "name",
+                "emptyStateMessage": "No members yet"
+               }
               }
              ],
              "classes": [],
-             "componentId": "partner-members-repeater",
-             "componentName": "Repeater",
-             "componentProps": {
-              "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Partner') }}",
-              "dataKey": "name",
-              "emptyStateMessage": "No members yet"
-             }
+             "componentId": "customer-members-section",
+             "componentName": "container",
+             "originalElement": "div"
             }
            ],
            "classes": [],
-           "componentId": "partner-members-section",
+           "componentId": "members-list-scroll",
            "componentName": "container",
            "originalElement": "div"
           },
           {
            "baseStyles": {
+            "borderTop": "1px solid var(--outline-gray-2)",
             "display": "flex",
-            "flexDirection": "column"
+            "flexDirection": "column",
+            "gap": "8px",
+            "padding": "16px"
            },
            "children": [
             {
              "baseStyles": {
-              "fontWeight": "600",
-              "marginBottom": "4px"
+              "width": "100%"
              },
              "classes": [],
-             "componentId": "customer-section-title",
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "showAddMemberDialog.value = true;"
+              }
+             },
+             "componentId": "add-member-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "lucide-user-plus",
+              "label": "Add",
+              "variant": "outline"
+             },
+             "visibilityCondition": "selectedThread && myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
+            }
+           ],
+           "classes": [],
+           "componentId": "members-panel-actions",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "selectedThread && myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
+          }
+         ],
+         "classes": [],
+         "componentId": "members-view",
+         "componentName": "container",
+         "originalElement": "div",
+         "visibilityCondition": "!showMediaDialog"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1",
+          "flexDirection": "column",
+          "minHeight": "0px",
+          "minWidth": "320px",
+          "overflow": "hidden"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "borderBottom": "1px solid var(--outline-gray-2)",
+            "color": "var(--ink-gray-6)",
+            "flexShrink": "0",
+            "padding": "12px 16px"
+           },
+           "children": [
+            {
+             "classes": [],
+             "componentId": "media-created-info",
              "componentName": "TextBlock",
              "componentProps": {
               "fontSize": "text-sm",
               "tag": "span",
-              "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).customer || '' }}"
-             }
-            },
-            {
-             "baseStyles": {
-              "display": "flex",
-              "flexDirection": "column"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "borderRadius": "8px",
-                "display": "flex",
-                "flexDirection": "row",
-                "gap": "10px",
-                "padding": "6px 8px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "backgroundColor": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
-                  "borderRadius": "9999px",
-                  "color": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
-                  "display": "flex",
-                  "flexShrink": "0",
-                  "fontSize": "16px",
-                  "fontWeight": "500",
-                  "height": "36px",
-                  "justifyContent": "center",
-                  "textTransform": "uppercase",
-                  "width": "36px"
-                 },
-                 "children": [
-                  {
-                   "classes": [],
-                   "componentId": "member-row-avatar-initial",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "span",
-                    "text": "{{ (dataItem.user || '').trim().charAt(0) }}"
-                   }
-                  }
-                 ],
-                 "classes": [],
-                 "componentId": "member-row-avatar",
-                 "componentName": "container",
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flex": "1",
-                  "flexDirection": "column"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "display": "flex",
-                    "flexDirection": "row",
-                    "gap": "6px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "textTransform": "capitalize"
-                     },
-                     "classes": [],
-                     "componentId": "member-row-email",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-sm",
-                      "tag": "span",
-                      "text": "{{ dataItem.user }}"
-                     }
-                    },
-                    {
-                     "baseStyles": {
-                      "backgroundColor": "var(--surface-gray-2)",
-                      "borderRadius": "9999px",
-                      "color": "var(--ink-gray-6)",
-                      "flexShrink": "0",
-                      "padding": "1px 8px"
-                     },
-                     "classes": [],
-                     "componentId": "member-row-admin-badge-c",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-2xs",
-                      "tag": "span",
-                      "text": "Admin"
-                     },
-                     "visibilityCondition": "dataItem.user === (threadAdmins.data && threadAdmins.data.customer_admin)"
-                    }
-                   ],
-                   "classes": [],
-                   "componentId": "member-row-email-row-c",
-                   "componentName": "container",
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-5)"
-                   },
-                   "classes": [],
-                   "componentId": "member-row-permission",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-2xs",
-                    "tag": "span",
-                    "text": "{{ dataItem.permission }}"
-                   }
-                  }
-                 ],
-                 "classes": [],
-                 "componentId": "member-row-text",
-                 "componentName": "container",
-                 "originalElement": "div"
-                },
-                {
-                 "children": [
-                  {
-                   "classes": [
-                    "opacity-0",
-                    "group-hover:opacity-100"
-                   ],
-                   "componentId": "member-row-actions-trigger-c",
-                   "componentName": "Button",
-                   "componentProps": {
-                    "icon": "lucide-more-horizontal",
-                    "size": "sm",
-                    "variant": "ghost"
-                   }
-                  }
-                 ],
-                 "classes": [],
-                 "componentId": "member-row-actions-c",
-                 "componentName": "Dropdown",
-                 "componentProps": {
-                  "align": "end",
-                  "options": "{{ [ { label: 'Make admin', icon: 'lucide-crown', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Make ' + dataItem.user + ' the admin? You will lose admin rights.')) return; call('connect.api.make_thread_admin', { thread: selectedThread, member: dataItem.name }).then(() => { myContext.reload(); threadAdmins.reload(); toast({ title: 'Admin transferred', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not transfer admin', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } }, { label: 'Remove from channel', icon: 'lucide-user-minus', theme: 'red', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Remove ' + dataItem.user + ' from this thread?')) return; call('connect.api.remove_thread_member', { thread: selectedThread, member: dataItem.name }).then(() => { threadMembers.reload(); toast({ title: 'Member removed', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not remove member', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } } ] }}"
-                 }
-                }
-               ],
-               "classes": [
-                "group",
-                "hover:bg-surface-gray-2"
-               ],
-               "componentId": "member-row-c",
-               "componentName": "container",
-               "originalElement": "div"
-              }
-             ],
-             "classes": [],
-             "componentId": "customer-members-repeater",
-             "componentName": "Repeater",
-             "componentProps": {
-              "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Customer') }}",
-              "dataKey": "name",
-              "emptyStateMessage": "No members yet"
+              "text": "{{ (() => { const t = (myThreads.data || []).find(t => t.name === selectedThread); if (!t || !t.creation) return ''; const d = new Date(t.creation); const day = d.getDate(); const suffix = (day % 10 === 1 && day !== 11) ? 'st' : (day % 10 === 2 && day !== 12) ? 'nd' : (day % 10 === 3 && day !== 13) ? 'rd' : 'th'; return 'Group created on ' + day + suffix + ' ' + d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); })() }}"
              }
             }
            ],
            "classes": [],
-           "componentId": "customer-members-section",
+           "componentId": "media-created-row",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "flexShrink": "0",
+            "padding": "12px 16px 0px"
+           },
+           "classes": [],
+           "componentId": "media-tabs",
+           "componentName": "TabButtons",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "mediaTab"
+            },
+            "options": [
+             {
+              "label": "Files",
+              "value": "Files"
+             },
+             {
+              "label": "Links",
+              "value": "Links"
+             }
+            ]
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minHeight": "0px",
+            "overflowY": "auto",
+            "padding": "16px",
+            "scrollbarColor": "var(--ink-gray-2) transparent",
+            "scrollbarWidth": "thin"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)"
+             },
+             "classes": [],
+             "componentId": "thread-files-empty",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "p",
+              "text": "No files have been shared in this thread yet."
+             },
+             "visibilityCondition": "mediaTab === 'Files'"
+            },
+            {
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "8px"
+               },
+               "children": [
+                {
+                 "classes": [],
+                 "componentId": "thread-link-item",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "href": "{{ dataItem.url }}",
+                  "tag": "a",
+                  "target": "_blank",
+                  "text": "{{ dataItem.url }}"
+                 },
+                 "baseStyles": {
+                  "color": "var(--ink-blue-link)",
+                  "overflowWrap": "anywhere"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "thread-links-repeater",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ (messages.data || []).flatMap(m => (m.content || '').match(/https?:\\/\\/[^\\s]+/g) || []).map(url => ({ url })) }}",
+                "dataKey": "url",
+                "emptyStateMessage": "No links have been shared in this thread yet."
+               },
+               "visibilityCondition": "mediaTab === 'Links'"
+              }
+             ],
+             "classes": [],
+             "componentId": "thread-links-wrapper",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "media-content-scroll",
            "componentName": "container",
            "originalElement": "div"
           }
          ],
          "classes": [],
-         "componentId": "members-list-scroll",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "borderTop": "1px solid var(--outline-gray-2)",
-          "display": "flex",
-          "flexDirection": "column",
-          "gap": "8px",
-          "padding": "16px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "width": "100%"
-           },
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "showAddMemberDialog.value = true;"
-            }
-           },
-           "componentId": "add-member-btn",
-           "componentName": "Button",
-           "componentProps": {
-            "iconLeft": "lucide-user-plus",
-            "label": "Add",
-            "variant": "outline"
-           },
-           "visibilityCondition": "selectedThread && myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
-          }
-         ],
-         "classes": [],
-         "componentId": "members-panel-actions",
+         "componentId": "media-view",
          "componentName": "container",
          "originalElement": "div",
-         "visibilityCondition": "selectedThread && myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
+         "visibilityCondition": "showMediaDialog"
         }
        ],
        "classes": [],
@@ -2482,7 +3076,7 @@
   {
    "auto": 1,
    "document_type": "Connect Thread",
-   "fields": "[\"name\",\"customer\",\"partner\",\"status\"]",
+   "fields": "[\"name\",\"customer\",\"partner\",\"status\",\"creation\"]",
    "limit": 100,
    "method": "GET",
    "resource_name": "myThreads",
@@ -2548,6 +3142,21 @@
   {
    "initial_value": "false",
    "variable_name": "showMembersDialog",
+   "variable_type": "Boolean"
+  },
+  {
+   "initial_value": "false",
+   "variable_name": "showMediaDialog",
+   "variable_type": "Boolean"
+  },
+  {
+   "initial_value": "\"Links\"",
+   "variable_name": "mediaTab",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "false",
+   "variable_name": "showTitleMenu",
    "variable_type": "Boolean"
   }
  ]
