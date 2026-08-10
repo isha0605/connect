@@ -1,0 +1,1997 @@
+{
+ "blocks": [
+  {
+   "baseStyles": {
+    "alignItems": "flex-start",
+    "display": "flex",
+    "flexDirection": "row",
+    "flexShrink": 0,
+    "height": "100%",
+    "justifyContent": "flex-start",
+    "overflowX": "hidden",
+    "position": "static",
+    "width": "inherit"
+   },
+   "blockName": "body",
+   "children": [
+    {
+     "children": [
+      {
+       "children": [],
+       "classes": [],
+       "componentId": "SidebarHeader-1ab3ba989",
+       "componentName": "SidebarHeader",
+       "componentProps": {
+        "menuItems": [
+         {
+          "icon": "lucide-log-out",
+          "label": "Log out",
+          "onClick": "() => {}"
+         }
+        ],
+        "showLogo": true,
+        "subtitle": "Guest",
+        "title": "Customer Portal"
+       }
+      },
+      {
+       "children": [],
+       "classes": [],
+       "componentId": "Sidebar-8yp5rhzr4",
+       "componentName": "Sidebar",
+       "componentProps": {
+        "collapsed": null,
+        "collapsedWidth": "3rem",
+        "header": {
+         "menuItems": [
+          {
+           "icon": "{{ getIcon('circle-question-mark') }}",
+           "label": "Help",
+           "onClick": "()=>alert(`Help clicked!`)",
+           "to": "/help"
+          },
+          {
+           "icon": "{{ getIcon('log-out') }}",
+           "label": "Logout",
+           "onClick": "()=>alert(`Logging out...`)",
+           "to": "/log-out"
+          }
+         ],
+         "subtitle": "Jane Doe",
+         "title": "Frappe"
+        },
+        "sections": [
+         {
+          "items": [
+           {
+            "icon": "{{ getIcon('bell') }}",
+            "label": "Notifications",
+            "to": ""
+           }
+          ],
+          "label": ""
+         },
+         {
+          "items": [
+           {
+            "icon": "{{ getIcon('house') }}",
+            "label": "Home",
+            "to": ""
+           },
+           {
+            "icon": "{{ getIcon('user-pen') }}",
+            "label": "Profile",
+            "to": ""
+           },
+           {
+            "icon": "{{ getIcon('settings') }}",
+            "label": "Settings",
+            "to": ""
+           }
+          ],
+          "label": ""
+         }
+        ],
+        "width": "15rem"
+       }
+      },
+      {
+       "baseStyles": {
+        "marginTop": "auto",
+        "padding": "0px 8px 8px"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "SidebarCollapseToggle-e59d8ddcc",
+         "componentName": "SidebarCollapseToggle"
+        }
+       ],
+       "classes": [],
+       "componentId": "container-061522f72",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "Sidebar-ab8d498e6",
+     "componentName": "Sidebar",
+     "componentProps": {
+      "collapsed": null,
+      "collapsedWidth": "3rem",
+      "width": "15rem"
+     }
+    },
+    {
+     "baseStyles": {
+      "backgroundColor": "var(--surface-base)",
+      "display": "flex",
+      "flex": "1",
+      "flexDirection": "column",
+      "height": "100%"
+     },
+     "children": [
+      {
+       "baseStyles": {
+        "borderColor": "var(--outline-gray-2)",
+        "borderStyle": "solid",
+        "borderWidth": "0px 0px 1px 0px",
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "12px",
+        "padding": "16px 20px"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "Breadcrumbs-43b582669",
+         "componentName": "Breadcrumbs",
+         "componentProps": {
+          "items": [
+           {
+            "label": "Home",
+            "route": "/"
+           },
+           {
+            "label": "Partners",
+            "route": "/find-partners"
+           }
+          ]
+         }
+        },
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "display": "flex",
+          "flexDirection": "row",
+          "flexWrap": "wrap",
+          "gap": "10px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "flex": "1",
+            "minWidth": "16rem"
+           },
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value } }); partnersList.reload();"
+            }
+           },
+           "componentId": "TextInput-f3a7771e3",
+           "componentName": "TextInput",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "searchTerm"
+            },
+            "placeholder": "Search partners by name, industry, or location...",
+            "size": "sm",
+            "type": "text",
+            "variant": "subtle"
+           }
+          },
+          {
+           "baseStyles": {
+            "width": "10rem"
+           },
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value } }); partnersList.reload();"
+            }
+           },
+           "componentId": "Select-9d87fd9fe",
+           "componentName": "Select",
+           "componentProps": {
+            "emptyText": "No options",
+            "modelValue": {
+             "$type": "variable",
+             "name": "countryFilter"
+            },
+            "open": false,
+            "options": "{{ countryOptions.data || [] }}",
+            "placeholder": "Country",
+            "size": "sm",
+            "variant": "outline"
+           }
+          },
+          {
+           "baseStyles": {
+            "width": "10rem"
+           },
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value } }); partnersList.reload();"
+            }
+           },
+           "componentId": "Select-102e4816a",
+           "componentName": "Select",
+           "componentProps": {
+            "emptyText": "No options",
+            "modelValue": {
+             "$type": "variable",
+             "name": "regionFilter"
+            },
+            "open": false,
+            "options": [
+             "North America",
+             "Europe",
+             "Asia Pacific",
+             "Middle East",
+             "Africa",
+             "Latin America",
+             "Oceania",
+             "Other"
+            ],
+            "placeholder": "Region",
+            "size": "sm",
+            "variant": "outline"
+           }
+          },
+          {
+           "baseStyles": {
+            "width": "10rem"
+           },
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value } }); partnersList.reload();"
+            }
+           },
+           "componentId": "Select-0f1d2fa88",
+           "componentName": "Select",
+           "componentProps": {
+            "emptyText": "No options",
+            "modelValue": {
+             "$type": "variable",
+             "name": "industryFilter"
+            },
+            "open": false,
+            "options": [
+             "Manufacturing",
+             "Retail",
+             "Healthcare",
+             "FinTech",
+             "Education",
+             "Logistics",
+             "Professional Services",
+             "Nonprofit",
+             "Government",
+             "Technology",
+             "Other"
+            ],
+            "placeholder": "Industry",
+            "size": "sm",
+            "variant": "outline"
+           }
+          },
+          {
+           "baseStyles": {
+            "width": "10rem"
+           },
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value } }); partnersList.reload();"
+            }
+           },
+           "componentId": "Select-e0c2288a0",
+           "componentName": "Select",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "productFilter"
+            },
+            "options": "{{ appOptions.data ? appOptions.data.map(d => d.title) : [] }}",
+            "placeholder": "Product",
+            "variant": "outline"
+           }
+          },
+          {
+           "baseStyles": {
+            "width": "10rem"
+           },
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value } }); partnersList.reload();"
+            }
+           },
+           "componentId": "Select-b20617b8a",
+           "componentName": "Select",
+           "componentProps": {
+            "emptyText": "No options",
+            "modelValue": {
+             "$type": "variable",
+             "name": "deliveryModeFilter"
+            },
+            "open": false,
+            "options": "{{ deliveryModeOptions.data ? deliveryModeOptions.data.map(d => d.title) : [] }}",
+            "placeholder": "Delivery Mode",
+            "size": "sm",
+            "variant": "outline"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "container-aad064f31",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "display": "flex",
+          "flexDirection": "row",
+          "justifyContent": "space-between"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-6)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "TextBlock-9af38bef4",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "Showing {{ partnersList.data ? partnersList.data.length : 0 }} partners"
+           }
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "4px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "searchTerm.value = ''; industryFilter.value = ''; productFilter.value = ''; regionFilter.value = ''; deliveryModeFilter.value = ''; countryFilter.value = ''; partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value } }); partnersList.reload();"
+              }
+             },
+             "componentId": "Button-69aca988c",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Reset",
+              "variant": "ghost"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "viewMode.value = 'grid';"
+              }
+             },
+             "componentId": "Button-b185e7f94",
+             "componentName": "Button",
+             "componentProps": {
+              "icon": "lucide-layout-grid",
+              "variant": "ghost"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "viewMode.value = 'list';"
+              }
+             },
+             "componentId": "Button-de21d3ded",
+             "componentName": "Button",
+             "componentProps": {
+              "icon": "lucide-list",
+              "variant": "ghost"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "container-0e00f9e80",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "container-1615dcd9d",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "container-1bd984c1c",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flex": "1",
+        "flexDirection": "column",
+        "overflowY": "auto"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "{{ viewMode === 'grid' ? 'row' : 'column' }}",
+          "flexWrap": "wrap",
+          "gap": "14px",
+          "padding": "20px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "Repeater-5d1bbf8de",
+         "componentName": "Repeater",
+         "componentProps": {
+          "data": "{{ partnersList.data }}",
+          "dataKey": "name",
+          "emptyStateMessage": "No partners found"
+         },
+         "componentSlots": {
+          "default": {
+           "parentBlockId": "Repeater-5d1bbf8de",
+           "slotContent": [
+            {
+             "attributes": {},
+             "baseStyles": {
+              "backgroundColor": "var(--surface-base)",
+              "borderColor": "var(--outline-gray-2)",
+              "borderRadius": "8px",
+              "borderStyle": "solid",
+              "borderWidth": "1px",
+              "cursor": "pointer",
+              "display": "flex",
+              "flexDirection": "row",
+              "gap": "14px",
+              "padding": "16px",
+              "width": "100%"
+             },
+             "children": [
+              {
+               "attributes": {},
+               "baseStyles": {},
+               "children": [],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "Avatar-02ac74c95",
+               "componentName": "Avatar",
+               "componentProps": {
+                "image": "{{ dataItem.logo }}",
+                "label": "{{ dataItem.partner_name }}",
+                "shape": "square",
+                "size": "xl",
+                "theme": "gray"
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "rawStyles": {},
+               "tabletStyles": {}
+              },
+              {
+               "attributes": {},
+               "baseStyles": {
+                "display": "flex",
+                "flex": "1",
+                "flexDirection": "column",
+                "gap": "6px",
+                "marginTop": "4px",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "flexWrap": "wrap",
+                  "gap": "6px"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)",
+                    "fontWeight": "600"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "TextBlock-24cd751f7",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-base",
+                    "tag": "span",
+                    "text": "{{ dataItem.partner_name }}"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "Badge-fba46385d",
+                   "componentName": "Badge",
+                   "componentProps": {
+                    "label": "{{ dataItem.tier }} Partner",
+                    "theme": "{{ dataItem.tier === 'Gold' ? 'amber' : (dataItem.tier === 'Silver' ? 'gray' : 'red') }}",
+                    "variant": "subtle"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "display": "{{ dataItem.specialist ? 'inline-flex' : 'none' }}"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "Badge-fb10f7921",
+                   "componentName": "Badge",
+                   "componentProps": {
+                    "label": "\u2605 Frappe Specialist",
+                    "theme": "violet",
+                    "variant": "subtle"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "container-a39e293b8",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "marginTop": "2px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "TextBlock-9968f933b",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "{{ dataItem.tagline }}"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "flexWrap": "wrap",
+                  "gap": "6px"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "TextBlock-b93e49d65",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "{{ dataItem.city ? dataItem.city + ', ' : '' }}{{ dataItem.country }}"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "Badge-0d480688d",
+                   "componentName": "Badge",
+                   "componentProps": {
+                    "label": "{{ dataItem.industry }}",
+                    "theme": "gray",
+                    "variant": "subtle"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "gap": "4px"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "Repeater-3431cd759",
+                   "componentName": "Repeater",
+                   "componentProps": {
+                    "data": "{{ dataItem.apps_preview }}",
+                    "dataKey": "self",
+                    "emptyStateMessage": ""
+                   },
+                   "componentSlots": {
+                    "default": {
+                     "parentBlockId": "Repeater-3431cd759",
+                     "slotContent": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {},
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "Badge-378020246",
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ dataItem }}",
+                        "theme": "gray",
+                        "variant": "subtle"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "slotId": "Repeater-3431cd759:default",
+                     "slotName": "default"
+                    }
+                   },
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "container-7884aaf34",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                }
+               ],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "container-e8f5d449c",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "mobileStyles": {},
+               "originalElement": "div",
+               "rawStyles": {},
+               "tabletStyles": {}
+              },
+              {
+               "attributes": {},
+               "baseStyles": {
+                "alignItems": "flex-end",
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "2px",
+                "minWidth": "9rem"
+               },
+               "children": [
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "TextBlock-b0ebaaccc",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "\u2605 {{ dataItem.rating }} ({{ dataItem.reviews_count }})"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "TextBlock-a98f5f17b",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-xs",
+                  "tag": "span",
+                  "text": "{{ dataItem.rollouts }}+ Implementations"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "gap": "6px",
+                  "marginTop": "6px"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "baseStyles": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "Button-9af2c8ee9",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "icon": "lucide-bookmark",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "router.push(`/partner-profile/${dataItem.name}`)"
+                    }
+                   },
+                   "componentId": "Button-373f2c202",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "disabled": false,
+                    "iconLeft": "lucide-arrow-up-right",
+                    "label": "Quick View",
+                    "loading": false,
+                    "size": "sm",
+                    "theme": "gray",
+                    "type": "button",
+                    "variant": "outline"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "container-9fd555e16",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "marginTop": "6px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "TextBlock-1cda2b5d4",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-xs",
+                  "tag": "span",
+                  "text": "+ Compare"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                }
+               ],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "container-b2c512d1b",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "mobileStyles": {},
+               "originalElement": "div",
+               "rawStyles": {},
+               "tabletStyles": {}
+              }
+             ],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "router.push(`/partner-profile/${dataItem.name}`)"
+              }
+             },
+             "componentId": "container-cface521a",
+             "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
+             "mobileStyles": {},
+             "originalElement": "div",
+             "rawStyles": {},
+             "tabletStyles": {}
+            }
+           ],
+           "slotId": "Repeater-5d1bbf8de:default",
+           "slotName": "default"
+          }
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "container-666f18d9b",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "container-3ef8def04",
+     "componentName": "container",
+     "originalElement": "div"
+    }
+   ],
+   "classes": [],
+   "componentId": "root",
+   "componentName": "div",
+   "originalElement": "body"
+  }
+ ],
+ "creation": "2026-08-07 13:33:53.845903",
+ "doctype": "Studio Page",
+ "draft_blocks": [
+  {
+   "baseStyles": {
+    "alignItems": "flex-start",
+    "display": "flex",
+    "flexDirection": "row",
+    "flexShrink": 0,
+    "height": "100%",
+    "justifyContent": "flex-start",
+    "overflowX": "hidden",
+    "position": "static",
+    "width": "inherit"
+   },
+   "blockName": "body",
+   "children": [
+    {
+     "children": [
+      {
+       "children": [],
+       "classes": [],
+       "componentId": "SidebarHeader-44d32fbf8",
+       "componentName": "SidebarHeader",
+       "componentProps": {
+        "menuItems": [
+         {
+          "icon": "lucide-log-out",
+          "label": "Log out",
+          "onClick": "() => {}"
+         }
+        ],
+        "showLogo": true,
+        "subtitle": "Guest",
+        "title": "Customer Portal"
+       }
+      },
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flex": "1",
+        "flexDirection": "column",
+        "minHeight": "0px",
+        "overflowY": "auto",
+        "padding": "4px 8px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "backgroundColor": "var(--surface-gray-2)",
+          "borderRadius": "6px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "SidebarItem-76f40349b",
+         "componentName": "SidebarItem",
+         "componentProps": {
+          "icon": "lucide-search",
+          "label": "Find partners",
+          "to": "/find-partners"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "SidebarItem-3466c6b0e",
+         "componentName": "SidebarItem",
+         "componentProps": {
+          "icon": "lucide-bookmark",
+          "label": "Shortlisted"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "SidebarItem-278d6afd0",
+         "componentName": "SidebarItem",
+         "componentProps": {
+          "icon": "lucide-message-square",
+          "label": "Messaging",
+          "to": "/my-page-fdbd"
+         }
+        },
+        {
+         "children": [
+          {
+           "children": [],
+           "classes": [],
+           "componentId": "TextBlock-9a70016fa",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "span",
+            "text": "Account"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "SidebarLabel-f1b5a0418",
+         "componentName": "SidebarLabel"
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "SidebarItem-0c25e4ce4",
+         "componentName": "SidebarItem",
+         "componentProps": {
+          "icon": "lucide-settings",
+          "label": "Settings"
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "container-fd48b3f83",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "marginTop": "auto",
+        "padding": "0px 8px 8px"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "SidebarCollapseToggle-761004fdf",
+         "componentName": "SidebarCollapseToggle"
+        }
+       ],
+       "classes": [],
+       "componentId": "container-d2217da68",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "Sidebar-e0b53b3e2",
+     "componentName": "Sidebar",
+     "componentProps": {
+      "collapsed": null,
+      "collapsedWidth": "3rem",
+      "width": "15rem"
+     }
+    },
+    {
+     "baseStyles": {
+      "backgroundColor": "var(--surface-base)",
+      "display": "flex",
+      "flex": "1",
+      "flexDirection": "column",
+      "height": "100%"
+     },
+     "children": [
+      {
+       "baseStyles": {
+        "borderColor": "var(--outline-gray-2)",
+        "borderStyle": "solid",
+        "borderWidth": "0px 0px 1px 0px",
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "12px",
+        "padding": "16px 20px"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "Breadcrumbs-43b582669",
+         "componentName": "Breadcrumbs",
+         "componentProps": {
+          "items": [
+           {
+            "label": "Home",
+            "route": "/"
+           },
+           {
+            "label": "Partners",
+            "route": "/find-partners"
+           }
+          ]
+         }
+        },
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "display": "flex",
+          "flexDirection": "row",
+          "flexWrap": "wrap",
+          "gap": "10px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "flex": "1",
+            "minWidth": "16rem"
+           },
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value } }); partnersList.reload();"
+            }
+           },
+           "componentId": "TextInput-f3a7771e3",
+           "componentName": "TextInput",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "searchTerm"
+            },
+            "placeholder": "Search partners by name, industry, or location...",
+            "size": "sm",
+            "type": "text",
+            "variant": "subtle"
+           }
+          },
+          {
+           "baseStyles": {
+            "width": "10rem"
+           },
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value } }); partnersList.reload();"
+            }
+           },
+           "componentId": "Select-9d87fd9fe",
+           "componentName": "Select",
+           "componentProps": {
+            "emptyText": "No options",
+            "modelValue": {
+             "$type": "variable",
+             "name": "countryFilter"
+            },
+            "open": false,
+            "options": "{{ countryOptions.data || [] }}",
+            "placeholder": "Country",
+            "size": "sm",
+            "variant": "outline"
+           }
+          },
+          {
+           "baseStyles": {
+            "width": "10rem"
+           },
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value } }); partnersList.reload();"
+            }
+           },
+           "componentId": "Select-102e4816a",
+           "componentName": "Select",
+           "componentProps": {
+            "emptyText": "No options",
+            "modelValue": {
+             "$type": "variable",
+             "name": "regionFilter"
+            },
+            "open": false,
+            "options": [
+             "North America",
+             "Europe",
+             "Asia Pacific",
+             "Middle East",
+             "Africa",
+             "Latin America",
+             "Oceania",
+             "Other"
+            ],
+            "placeholder": "Region",
+            "size": "sm",
+            "variant": "outline"
+           }
+          },
+          {
+           "baseStyles": {
+            "width": "10rem"
+           },
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value } }); partnersList.reload();"
+            }
+           },
+           "componentId": "Select-0f1d2fa88",
+           "componentName": "Select",
+           "componentProps": {
+            "emptyText": "No options",
+            "modelValue": {
+             "$type": "variable",
+             "name": "industryFilter"
+            },
+            "open": false,
+            "options": [
+             "Manufacturing",
+             "Retail",
+             "Healthcare",
+             "FinTech",
+             "Education",
+             "Logistics",
+             "Professional Services",
+             "Nonprofit",
+             "Government",
+             "Technology",
+             "Other"
+            ],
+            "placeholder": "Industry",
+            "size": "sm",
+            "variant": "outline"
+           }
+          },
+          {
+           "baseStyles": {
+            "width": "10rem"
+           },
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value } }); partnersList.reload();"
+            }
+           },
+           "componentId": "Select-e0c2288a0",
+           "componentName": "Select",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "productFilter"
+            },
+            "options": "{{ appOptions.data ? appOptions.data.map(d => d.title) : [] }}",
+            "placeholder": "Product",
+            "variant": "outline"
+           }
+          },
+          {
+           "children": [],
+           "classes": [],
+           "componentId": "Filter-u1z4z8jtq",
+           "componentName": "Filter",
+           "componentProps": {
+            "doctype": "Partner",
+            "modelValue": []
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "container-aad064f31",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "display": "flex",
+          "flexDirection": "row",
+          "justifyContent": "space-between"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-6)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "TextBlock-9af38bef4",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "Showing {{ partnersList.data ? partnersList.data.length : 0 }} partners"
+           }
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "4px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "searchTerm.value = ''; industryFilter.value = ''; productFilter.value = ''; regionFilter.value = ''; deliveryModeFilter.value = ''; countryFilter.value = ''; partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value } }); partnersList.reload();"
+              }
+             },
+             "componentId": "Button-69aca988c",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Reset",
+              "variant": "ghost"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "viewMode.value = 'grid';"
+              }
+             },
+             "componentId": "Button-b185e7f94",
+             "componentName": "Button",
+             "componentProps": {
+              "icon": "lucide-layout-grid",
+              "variant": "ghost"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "viewMode.value = 'list';"
+              }
+             },
+             "componentId": "Button-de21d3ded",
+             "componentName": "Button",
+             "componentProps": {
+              "icon": "lucide-list",
+              "variant": "ghost"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "container-0e00f9e80",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "container-1615dcd9d",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "container-1bd984c1c",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flex": "1",
+        "flexDirection": "column",
+        "overflowY": "auto"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "{{ viewMode === 'grid' ? 'row' : 'column' }}",
+          "flexWrap": "wrap",
+          "gap": "14px",
+          "padding": "20px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "Repeater-5d1bbf8de",
+         "componentName": "Repeater",
+         "componentProps": {
+          "data": "{{ partnersList.data }}",
+          "dataKey": "name",
+          "emptyStateMessage": "No partners found"
+         },
+         "componentSlots": {
+          "default": {
+           "parentBlockId": "Repeater-5d1bbf8de",
+           "slotContent": [
+            {
+             "attributes": {},
+             "baseStyles": {
+              "backgroundColor": "var(--surface-base)",
+              "borderColor": "var(--outline-gray-2)",
+              "borderRadius": "8px",
+              "borderStyle": "solid",
+              "borderWidth": "1px",
+              "cursor": "pointer",
+              "display": "flex",
+              "flexDirection": "row",
+              "gap": "14px",
+              "padding": "16px",
+              "width": "100%"
+             },
+             "children": [
+              {
+               "attributes": {},
+               "baseStyles": {},
+               "children": [],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "Avatar-02ac74c95",
+               "componentName": "Avatar",
+               "componentProps": {
+                "image": "{{ dataItem.logo }}",
+                "label": "{{ dataItem.partner_name }}",
+                "shape": "square",
+                "size": "2xl",
+                "theme": "gray"
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "rawStyles": {},
+               "tabletStyles": {}
+              },
+              {
+               "attributes": {},
+               "baseStyles": {
+                "display": "flex",
+                "flex": "1",
+                "flexDirection": "column",
+                "gap": "6px",
+                "marginTop": "4px",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "flexWrap": "wrap",
+                  "gap": "6px"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)",
+                    "fontWeight": "600"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "TextBlock-24cd751f7",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-base",
+                    "tag": "span",
+                    "text": "{{ dataItem.partner_name }}"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "Badge-fba46385d",
+                   "componentName": "Badge",
+                   "componentProps": {
+                    "label": "{{ dataItem.tier }} Partner",
+                    "theme": "{{ dataItem.tier === 'Gold' ? 'amber' : (dataItem.tier === 'Silver' ? 'gray' : 'red') }}",
+                    "variant": "subtle"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "display": "{{ dataItem.specialist ? 'inline-flex' : 'none' }}"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "Badge-fb10f7921",
+                   "componentName": "Badge",
+                   "componentProps": {
+                    "label": "\u2605 Frappe Specialist",
+                    "theme": "violet",
+                    "variant": "subtle"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "container-a39e293b8",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "marginTop": "2px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "TextBlock-9968f933b",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "{{ dataItem.tagline }}"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "flexWrap": "wrap",
+                  "gap": "6px"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "TextBlock-b93e49d65",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "{{ dataItem.city ? dataItem.city + ', ' : '' }}{{ dataItem.country }}"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "Badge-0d480688d",
+                   "componentName": "Badge",
+                   "componentProps": {
+                    "label": "{{ dataItem.industry }}",
+                    "theme": "gray",
+                    "variant": "subtle"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "gap": "4px"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "Repeater-3431cd759",
+                   "componentName": "Repeater",
+                   "componentProps": {
+                    "data": "{{ dataItem.apps_preview }}",
+                    "dataKey": "self",
+                    "emptyStateMessage": ""
+                   },
+                   "componentSlots": {
+                    "default": {
+                     "parentBlockId": "Repeater-3431cd759",
+                     "slotContent": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {},
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "Badge-378020246",
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ dataItem }}",
+                        "theme": "gray",
+                        "variant": "subtle"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "slotId": "Repeater-3431cd759:default",
+                     "slotName": "default"
+                    }
+                   },
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "container-7884aaf34",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                }
+               ],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "container-e8f5d449c",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "mobileStyles": {},
+               "originalElement": "div",
+               "rawStyles": {},
+               "tabletStyles": {}
+              },
+              {
+               "attributes": {},
+               "baseStyles": {
+                "alignItems": "center",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "17px",
+                "justifyContent": "center",
+                "minWidth": "9rem"
+               },
+               "children": [
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "TextBlock-b0ebaaccc",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "\u2605 {{ dataItem.rating }} ({{ dataItem.reviews_count }})"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "TextBlock-a98f5f17b",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-xs",
+                  "tag": "span",
+                  "text": "{{ dataItem.rollouts }}+ Implementations"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "gap": "6px",
+                  "marginTop": "6px"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "baseStyles": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "Button-9af2c8ee9",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "icon": "lucide-bookmark",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "router.push(`/partner-profile/${dataItem.name}`)"
+                    }
+                   },
+                   "componentId": "Button-373f2c202",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "disabled": false,
+                    "iconLeft": "lucide-arrow-up-right",
+                    "label": "Quick View",
+                    "loading": false,
+                    "size": "sm",
+                    "theme": "gray",
+                    "type": "button",
+                    "variant": "outline"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "container-9fd555e16",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "marginTop": "6px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "TextBlock-1cda2b5d4",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-xs",
+                  "tag": "span",
+                  "text": "+ Compare"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                }
+               ],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "container-b2c512d1b",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "mobileStyles": {},
+               "originalElement": "div",
+               "rawStyles": {},
+               "tabletStyles": {}
+              }
+             ],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "router.push(`/partner-profile/${dataItem.name}`)"
+              }
+             },
+             "componentId": "container-cface521a",
+             "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
+             "mobileStyles": {},
+             "originalElement": "div",
+             "rawStyles": {},
+             "tabletStyles": {}
+            }
+           ],
+           "slotId": "Repeater-5d1bbf8de:default",
+           "slotName": "default"
+          }
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "container-666f18d9b",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "container-3ef8def04",
+     "componentName": "container",
+     "originalElement": "div"
+    }
+   ],
+   "classes": [],
+   "componentId": "root",
+   "componentName": "div",
+   "originalElement": "body"
+  }
+ ],
+ "frappe_app": "connect",
+ "is_standard": 1,
+ "modified": "2026-08-10 12:31:49.344468",
+ "modified_by": "Administrator",
+ "name": "find_partners",
+ "owner": "Administrator",
+ "page_name": "page-8b847fb2",
+ "page_title": "Find Partners",
+ "published": 1,
+ "resources": [
+  {
+   "auto": 1,
+   "method": "GET",
+   "params": "{\"search\": \"{{ searchTerm }}\", \"industry\": \"{{ industryFilter }}\", \"product\": \"{{ productFilter }}\", \"region\": \"{{ regionFilter }}\", \"delivery_mode\": \"{{ deliveryModeFilter }}\", \"country\": \"{{ countryFilter }}\"}",
+   "resource_name": "partnersList",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.search_partners"
+  },
+  {
+   "auto": 1,
+   "document_type": "App",
+   "fields": "[\"title\"]",
+   "filters": "{}",
+   "limit": 100,
+   "method": "GET",
+   "resource_name": "appOptions",
+   "resource_type": "Document List"
+  },
+  {
+   "auto": 1,
+   "document_type": "Delivery Mode",
+   "fields": "[\"title\"]",
+   "filters": "{}",
+   "limit": 100,
+   "method": "GET",
+   "resource_name": "deliveryModeOptions",
+   "resource_type": "Document List"
+  },
+  {
+   "auto": 1,
+   "method": "GET",
+   "params": "{}",
+   "resource_name": "countryOptions",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.list_partner_countries"
+  }
+ ],
+ "route": "/find-partners",
+ "studio_app": "connect",
+ "variables": [
+  {
+   "initial_value": "\"\"",
+   "variable_name": "searchTerm",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "industryFilter",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "productFilter",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "regionFilter",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "deliveryModeFilter",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "countryFilter",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"grid\"",
+   "variable_name": "viewMode",
+   "variable_type": "String"
+  }
+ ]
+}
