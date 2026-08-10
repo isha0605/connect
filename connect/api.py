@@ -81,6 +81,37 @@ def add_thread_member(thread, email, side, permission="Write"):
 
 
 @frappe.whitelist()
+def remove_thread_member(thread, member):
+	"""Soft-remove a member from a thread. Only an admin of that member's own side may
+	remove them — mirrors add_thread_member's authorization model."""
+	user = frappe.session.user
+	member_doc = frappe.get_doc("Connect Thread Member", member)
+	if member_doc.thread != thread:
+		frappe.throw(_("Member does not belong to this thread"))
+
+	thread_doc = frappe.db.get_value("Connect Thread", thread, ["customer", "partner"], as_dict=True)
+	if not thread_doc:
+		frappe.throw(_("Thread not found"))
+
+	if member_doc.side == "Customer":
+		authorized = _is_customer_admin(thread_doc.customer, user)
+	elif member_doc.side == "Partner":
+		authorized = _is_partner_admin(thread_doc.partner, user)
+	else:
+		frappe.throw(_("Invalid side"))
+
+	if not authorized:
+		frappe.throw(_("Only an admin of your own side can remove members"), frappe.PermissionError)
+
+	member_doc.is_removed = 1
+	member_doc.save(ignore_permissions=True)
+
+	_post_system_message(thread, _("{0} was removed from this thread").format(member_doc.user))
+
+	return {"removed": member_doc.user}
+
+
+@frappe.whitelist()
 def close_thread(thread):
 	"""Partner-admin-only, per spec — customer side has no close action."""
 	user = frappe.session.user
@@ -116,28 +147,69 @@ def get_my_company_members():
 
 
 @frappe.whitelist()
-def transfer_admin(new_admin_email):
-	"""Only the CURRENT admin can transfer their own admin rights — this is not something
-	a regular member or an outsider can trigger for someone else."""
+def make_thread_admin(thread, member):
+	"""Promote a thread member to company admin. Unlike a plain company-scoped transfer, the
+	target here is a Connect Thread Member row, not necessarily an existing Connect Customer/
+	Partner Member — most thread members (added via add_thread_member) never get a company
+	membership row at all, so one is created for them here if missing."""
 	user = frappe.session.user
-	doctype, company, my_row = _my_company_membership(user)
-	if not doctype:
-		frappe.throw(_("You are not a member of any company"))
-	if not my_row.is_admin:
-		frappe.throw(_("Only the current admin can transfer admin rights"), frappe.PermissionError)
+	member_doc = frappe.get_doc("Connect Thread Member", member)
+	if member_doc.thread != thread:
+		frappe.throw(_("Member does not belong to this thread"))
 
-	fieldname = "customer" if doctype == "Connect Customer Member" else "partner"
-	new_admin_row = frappe.db.get_value(doctype, {fieldname: company, "user": new_admin_email}, "name")
-	if not new_admin_row:
-		frappe.throw(_("{0} is not a member of your company").format(new_admin_email))
+	thread_doc = frappe.get_doc("Connect Thread", thread)
 
-	frappe.db.set_value(doctype, my_row.name, "is_admin", 0)
-	frappe.db.set_value(doctype, new_admin_row, "is_admin", 1)
+	if member_doc.side == "Customer":
+		company_doctype, member_doctype, company, fieldname = (
+			"Connect Customer", "Connect Customer Member", thread_doc.customer, "customer",
+		)
+		authorized = _is_customer_admin(company, user)
+	elif member_doc.side == "Partner":
+		company_doctype, member_doctype, company, fieldname = (
+			"Connect Partner", "Connect Partner Member", thread_doc.partner, "partner",
+		)
+		authorized = _is_partner_admin(company, user)
+	else:
+		frappe.throw(_("Invalid side"))
 
-	company_doctype = "Connect Customer" if doctype == "Connect Customer Member" else "Connect Partner"
-	frappe.db.set_value(company_doctype, company, "admin_user", new_admin_email)
+	if not authorized:
+		frappe.throw(_("Only an admin of your own side can do this"), frappe.PermissionError)
 
-	return {"new_admin": new_admin_email}
+	my_row = frappe.db.get_value(member_doctype, {fieldname: company, "user": user}, "name")
+	if my_row:
+		frappe.db.set_value(member_doctype, my_row, "is_admin", 0)
+
+	target_row = frappe.db.get_value(member_doctype, {fieldname: company, "user": member_doc.user}, "name")
+	if target_row:
+		frappe.db.set_value(member_doctype, target_row, "is_admin", 1)
+	else:
+		frappe.get_doc({
+			"doctype": member_doctype,
+			fieldname: company,
+			"user": member_doc.user,
+			"is_admin": 1,
+		}).insert(ignore_permissions=True)
+
+	frappe.db.set_value(company_doctype, company, "admin_user", member_doc.user)
+
+	return {"new_admin": member_doc.user}
+
+
+@frappe.whitelist()
+def get_thread_admins(thread):
+	"""Admin emails for the two companies on this thread — used to show an Admin badge
+	next to the right member and to gate the per-member actions menu."""
+	thread_doc = frappe.db.get_value("Connect Thread", thread, ["customer", "partner"], as_dict=True)
+	if not thread_doc:
+		frappe.throw(_("Thread not found"))
+
+	partner_admin = frappe.db.get_value(
+		"Connect Partner Member", {"partner": thread_doc.partner, "is_admin": 1}, "user"
+	)
+	customer_admin = frappe.db.get_value(
+		"Connect Customer Member", {"customer": thread_doc.customer, "is_admin": 1}, "user"
+	)
+	return {"partner_admin": partner_admin, "customer_admin": customer_admin}
 
 
 @frappe.whitelist()

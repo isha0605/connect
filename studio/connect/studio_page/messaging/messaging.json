@@ -2,6 +2,7 @@
  "blocks": [
   {
    "baseStyles": {
+    "backgroundColor": "var(--surface-gray-1)",
     "display": "flex",
     "flexDirection": "row",
     "flexShrink": 0,
@@ -66,7 +67,7 @@
             "click": {
              "action": "Run Script",
              "event": "click",
-             "script": "selectedThread.value = dataItem.name; messages.filters = { thread: dataItem.name }; messages.reload(); threadMembers.filters = { thread: dataItem.name }; threadMembers.reload();"
+             "script": "selectedThread.value = dataItem.name; messages.filters = { thread: dataItem.name }; messages.reload(); threadMembers.filters = { thread: dataItem.name }; threadMembers.reload(); threadAdmins.params = { thread: dataItem.name }; threadAdmins.reload();"
             }
            },
            "componentId": "thread-item",
@@ -117,11 +118,16 @@
     },
     {
      "baseStyles": {
+      "backgroundColor": "var(--surface-base)",
+      "border": "1px solid var(--outline-gray-2)",
+      "borderRadius": "12px",
+      "boxShadow": "0 1px 3px rgba(0,0,0,0.06)",
       "display": "flex",
       "flex": "1",
       "flexDirection": "column",
-      "height": "100%",
-      "minWidth": "0px"
+      "margin": "4px",
+      "minWidth": "0px",
+      "overflow": "hidden"
      },
      "children": [
       {
@@ -131,11 +137,18 @@
         "boxSizing": "border-box",
         "display": "flex",
         "flexDirection": "row",
+        "flexShrink": "0",
+        "height": "57px",
         "justifyContent": "space-between",
-        "padding": "12px 16px"
+        "overflow": "hidden",
+        "padding": "12px 8px 12px 16px"
        },
        "children": [
         {
+         "baseStyles": {
+          "color": "var(--ink-gray-9)",
+          "fontWeight": "600"
+         },
          "classes": [],
          "componentId": "chat-header-title",
          "componentName": "TextBlock",
@@ -151,52 +164,91 @@
           "cursor": "pointer",
           "display": "flex",
           "flexDirection": "row",
-          "gap": "8px",
-          "marginRight": "8px"
+          "gap": "8px"
          },
          "children": [
           {
            "baseStyles": {
             "display": "flex",
-            "flexDirection": "row"
+            "flexDirection": "row",
+            "gap": "0px"
            },
            "children": [
             {
              "baseStyles": {
-              "border": "2px solid var(--surface-white)",
+              "alignItems": "center",
+              "backgroundColor": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+              "border": "2px solid var(--surface-base)",
               "borderRadius": "9999px",
-              "marginLeft": "{{ dataIndex > 0 ? '-8px' : '0px' }}"
+              "color": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+              "display": "flex",
+              "flexShrink": "0",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "height": "32px",
+              "justifyContent": "center",
+              "marginLeft": "{{ dataIndex > 0 ? '-10px' : '0px' }}",
+              "textTransform": "uppercase",
+              "width": "32px"
              },
+             "children": [
+              {
+               "classes": [],
+               "componentId": "members-avatar-initial",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "span",
+                "text": "{{ (dataItem.user || '').trim().charAt(0) }}"
+               }
+              }
+             ],
              "classes": [],
              "componentId": "members-avatar",
-             "componentName": "Avatar",
-             "componentProps": {
-              "label": "{{ dataItem.user }}",
-              "shape": "circle",
-              "size": "sm"
-             }
+             "componentName": "container",
+             "originalElement": "div"
             }
            ],
            "classes": [],
            "componentId": "members-avatar-stack",
            "componentName": "Repeater",
            "componentProps": {
-            "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed) }}",
-            "dataKey": "name"
+            "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed).slice(0, 3) }}",
+            "dataKey": "name",
+            "emptyStateMessage": ""
            }
           },
           {
            "baseStyles": {
-            "color": "var(--ink-gray-6)"
+            "alignItems": "center",
+            "backgroundColor": "var(--surface-gray-3)",
+            "border": "2px solid var(--surface-base)",
+            "borderRadius": "9999px",
+            "color": "var(--ink-gray-7)",
+            "display": "flex",
+            "flexShrink": "0",
+            "fontSize": "14px",
+            "fontWeight": "500",
+            "height": "32px",
+            "justifyContent": "center",
+            "marginLeft": "-15px",
+            "width": "32px"
            },
+           "children": [
+            {
+             "classes": [],
+             "componentId": "members-overflow-badge-text",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "{{ ((threadMembers.data || []).filter(m => !m.is_removed).length - 3) + '+' }}"
+             }
+            }
+           ],
            "classes": [],
-           "componentId": "members-count-text",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "{{ (threadMembers.data || []).filter(m => !m.is_removed).length }} members"
-           }
+           "componentId": "members-overflow-badge",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "(threadMembers.data || []).filter(m => !m.is_removed).length > 3"
           }
          ],
          "classes": [],
@@ -209,24 +261,8 @@
          },
          "componentId": "members-trigger",
          "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "classes": [],
-         "componentEvents": {
-          "click": {
-           "action": "Run Script",
-           "event": "click",
-           "script": "showTransferAdminDialog.value = true; myCompanyMembers.reload();"
-          }
-         },
-         "componentId": "transfer-admin-btn",
-         "componentName": "Button",
-         "componentProps": {
-          "label": "Transfer Admin",
-          "variant": "outline"
-         },
-         "visibilityCondition": "myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
+         "originalElement": "div",
+         "visibilityCondition": "selectedThread"
         },
         {
          "classes": [],
@@ -245,24 +281,6 @@
           "variant": "outline"
          },
          "visibilityCondition": "selectedThread && (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) && (((myThreads.data || []).find(t => t.name === selectedThread) || {}).status) !== 'Closed'"
-        },
-        {
-         "classes": [],
-         "componentEvents": {
-          "click": {
-           "action": "Run Script",
-           "event": "click",
-           "script": "showAddMemberDialog.value = true;"
-          }
-         },
-         "componentId": "add-member-btn",
-         "componentName": "Button",
-         "componentProps": {
-          "iconLeft": "lucide-user-plus",
-          "label": "Add Member",
-          "variant": "outline"
-         },
-         "visibilityCondition": "selectedThread && myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
         }
        ],
        "classes": [],
@@ -272,78 +290,196 @@
       },
       {
        "baseStyles": {
-        "backgroundColor": "var(--surface-gray-1)",
+        "backgroundColor": "var(--surface-base)",
         "display": "flex",
         "flex": "1",
         "flexDirection": "column",
-        "gap": "10px",
+        "gap": "0px",
         "minHeight": "0px",
         "overflowY": "auto",
-        "padding": "16px"
+        "padding": "16px",
+        "scrollbarColor": "var(--ink-gray-2) transparent",
+        "scrollbarWidth": "thin"
        },
        "children": [
         {
          "children": [
           {
            "baseStyles": {
-            "alignItems": "flex-end",
+            "alignItems": "center",
             "display": "flex",
             "flexDirection": "row",
-            "gap": "8px",
-            "justifyContent": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'flex-end' : 'flex-start' }}",
+            "gap": "12px",
+            "padding": "10px 0 6px",
             "width": "100%"
            },
            "children": [
             {
+             "baseStyles": {
+              "borderTop": "1px solid var(--surface-gray-2)",
+              "flex": "1"
+             },
              "classes": [],
-             "componentId": "message-avatar",
-             "componentName": "Avatar",
+             "componentId": "date-divider-line-left",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "flexShrink": "0"
+             },
+             "classes": [],
+             "componentId": "date-divider-text",
+             "componentName": "TextBlock",
              "componentProps": {
-              "label": "{{ dataItem.sender }}",
-              "shape": "circle",
-              "size": "sm"
+              "fontSize": "text-xs",
+              "tag": "span",
+              "text": "{{ (() => { const d = new Date(dataItem.creation); const day = d.getDate(); const suffix = (day % 10 === 1 && day !== 11) ? 'st' : (day % 10 === 2 && day !== 12) ? 'nd' : (day % 10 === 3 && day !== 13) ? 'rd' : 'th'; return day + suffix + ' ' + d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); })() }}"
              }
             },
             {
              "baseStyles": {
-              "backgroundColor": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'var(--surface-gray-7)' : 'var(--surface-white)' }}",
-              "borderRadius": "14px",
-              "boxShadow": "0 1px 2px rgba(0,0,0,0.06)",
-              "color": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'white' : 'var(--ink-gray-8)' }}",
+              "borderTop": "1px solid var(--surface-gray-2)",
+              "flex": "1"
+             },
+             "classes": [],
+             "componentId": "date-divider-line-right",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "date-divider",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "dataIndex === 0 || new Date(dataItem.creation).toDateString() !== new Date(messages.data[dataIndex - 1].creation).toDateString()"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "justifyContent": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'flex-end' : 'flex-start' }}",
+            "padding": "3px 0",
+            "width": "100%"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "flex-start",
               "display": "flex",
-              "flexDirection": "column",
-              "maxWidth": "65%",
-              "padding": "8px 14px"
+              "flexDirection": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'row-reverse' : 'row' }}",
+              "gap": "12px",
+              "maxWidth": "75%"
              },
              "children": [
               {
                "baseStyles": {
-                "fontWeight": "600",
-                "marginBottom": "2px",
-                "opacity": "0.65"
+                "alignItems": "center",
+                "backgroundColor": "{{ (() => { const s = String(dataItem.sender || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                "borderRadius": "9999px",
+                "color": "{{ (() => { const s = String(dataItem.sender || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                "display": "flex",
+                "flexShrink": "0",
+                "fontSize": "16px",
+                "fontWeight": "500",
+                "height": "36px",
+                "justifyContent": "center",
+                "textTransform": "uppercase",
+                "width": "36px"
                },
+               "children": [
+                {
+                 "classes": [],
+                 "componentId": "message-avatar-initial",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "span",
+                  "text": "{{ (dataItem.sender || '').trim().charAt(0) }}"
+                 }
+                }
+               ],
                "classes": [],
-               "componentId": "message-sender",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-2xs",
-                "tag": "span",
-                "text": "{{ dataItem.sender }}"
-               }
+               "componentId": "message-avatar",
+               "componentName": "container",
+               "originalElement": "div"
               },
               {
+               "baseStyles": {
+                "alignItems": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'flex-end' : 'flex-start' }}",
+                "display": "flex",
+                "flex": "1",
+                "flexDirection": "column",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "baseline",
+                  "display": "flex",
+                  "flexDirection": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'row-reverse' : 'row' }}",
+                  "gap": "8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)",
+                    "fontWeight": "500",
+                    "textTransform": "capitalize"
+                   },
+                   "classes": [],
+                   "componentId": "message-sender",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ dataItem.sender }}"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)"
+                   },
+                   "classes": [],
+                   "componentId": "message-time",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ new Date(dataItem.creation).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase() }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "message-header-row",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-9)",
+                  "marginTop": "2px",
+                  "textAlign": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'right' : 'left' }}",
+                  "whiteSpace": "pre-wrap"
+                 },
+                 "classes": [],
+                 "componentId": "message-content",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "p",
+                  "text": "{{ dataItem.content }}"
+                 }
+                }
+               ],
                "classes": [],
-               "componentId": "message-content",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-sm",
-                "tag": "p",
-                "text": "{{ dataItem.content }}"
-               }
+               "componentId": "message-body",
+               "componentName": "container",
+               "originalElement": "div"
               }
              ],
              "classes": [],
-             "componentId": "message-bubble",
+             "componentId": "message-cluster",
              "componentName": "container",
              "originalElement": "div"
             }
@@ -403,7 +539,7 @@
       {
        "baseStyles": {
         "alignItems": "center",
-        "backgroundColor": "var(--surface-white)",
+        "backgroundColor": "var(--surface-base)",
         "borderTop": "1px solid var(--outline-gray-2)",
         "display": "flex",
         "flexDirection": "row",
@@ -413,14 +549,14 @@
         {
          "baseStyles": {
           "alignItems": "center",
-          "backgroundColor": "var(--surface-gray-1)",
+          "backgroundColor": "var(--surface-base)",
           "border": "1px solid var(--outline-gray-2)",
-          "borderRadius": "9999px",
+          "borderRadius": "10px",
           "display": "flex",
           "flex": "1",
           "flexDirection": "row",
-          "gap": "6px",
-          "padding": "4px 6px 4px 16px"
+          "gap": "8px",
+          "padding": "6px 6px 6px 14px"
          },
          "children": [
           {
@@ -448,7 +584,6 @@
           },
           {
            "baseStyles": {
-            "borderRadius": "9999px",
             "flexShrink": 0
            },
            "classes": [],
@@ -462,7 +597,9 @@
            "componentId": "send-btn",
            "componentName": "Button",
            "componentProps": {
-            "icon": "lucide-send",
+            "disabled": "{{ !draftMessage }}",
+            "iconLeft": "lucide-send",
+            "label": "Send",
             "theme": "gray",
             "variant": "solid"
            }
@@ -569,12 +706,14 @@
     },
     {
      "baseStyles": {
-      "backgroundColor": "var(--surface-white)",
-      "borderLeft": "{{ showMembersDialog ? '1px solid var(--outline-gray-2)' : 'none' }}",
+      "backgroundColor": "var(--surface-base)",
+      "border": "{{ showMembersDialog ? '1px solid var(--outline-gray-2)' : 'none' }}",
+      "borderRadius": "12px",
+      "boxShadow": "0 1px 3px rgba(0,0,0,0.06)",
       "display": "flex",
       "flexDirection": "column",
       "flexShrink": "0",
-      "height": "100%",
+      "margin": "{{ showMembersDialog ? '4px 4px 4px 0px' : '0px' }}",
       "overflow": "hidden",
       "transition": "width 0.2s ease",
       "width": "{{ showMembersDialog ? '320px' : '0px' }}"
@@ -587,8 +726,11 @@
         "boxSizing": "border-box",
         "display": "flex",
         "flexDirection": "row",
+        "flexShrink": "0",
+        "height": "57px",
         "justifyContent": "space-between",
         "minWidth": "320px",
+        "overflow": "hidden",
         "padding": "12px 16px"
        },
        "children": [
@@ -630,31 +772,213 @@
       {
        "baseStyles": {
         "display": "flex",
+        "flex": "1",
         "flexDirection": "column",
-        "gap": "16px",
+        "minHeight": "0px",
         "minWidth": "320px",
-        "padding": "16px"
+        "overflow": "hidden"
        },
        "children": [
         {
          "baseStyles": {
           "display": "flex",
-          "flexDirection": "column"
+          "flex": "1",
+          "flexDirection": "column",
+          "gap": "16px",
+          "minHeight": "0px",
+          "minWidth": "320px",
+          "overflowY": "auto",
+          "padding": "16px",
+          "scrollbarColor": "var(--ink-gray-2) transparent",
+          "scrollbarWidth": "thin"
          },
          "children": [
           {
            "baseStyles": {
-            "fontWeight": "600",
-            "marginBottom": "4px"
+            "display": "flex",
+            "flexDirection": "column"
            },
+           "children": [
+            {
+             "baseStyles": {
+              "fontWeight": "600",
+              "marginBottom": "4px"
+             },
+             "classes": [],
+             "componentId": "partner-section-title",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).partner || '' }}"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "borderRadius": "8px",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "10px",
+                "padding": "6px 8px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "backgroundColor": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                  "borderRadius": "9999px",
+                  "color": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                  "display": "flex",
+                  "flexShrink": "0",
+                  "fontSize": "16px",
+                  "fontWeight": "500",
+                  "height": "36px",
+                  "justifyContent": "center",
+                  "textTransform": "uppercase",
+                  "width": "36px"
+                 },
+                 "children": [
+                  {
+                   "classes": [],
+                   "componentId": "member-row-avatar-initial",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "span",
+                    "text": "{{ (dataItem.user || '').trim().charAt(0) }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "member-row-avatar",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "display": "flex",
+                  "flex": "1",
+                  "flexDirection": "column"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "gap": "6px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "textTransform": "capitalize"
+                     },
+                     "classes": [],
+                     "componentId": "member-row-email",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ dataItem.user }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "backgroundColor": "var(--surface-gray-2)",
+                      "borderRadius": "9999px",
+                      "color": "var(--ink-gray-6)",
+                      "flexShrink": "0",
+                      "padding": "1px 8px"
+                     },
+                     "classes": [],
+                     "componentId": "member-row-admin-badge",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-2xs",
+                      "tag": "span",
+                      "text": "Admin"
+                     },
+                     "visibilityCondition": "dataItem.user === (threadAdmins.data && threadAdmins.data.partner_admin)"
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "member-row-email-row",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)"
+                   },
+                   "classes": [],
+                   "componentId": "member-row-permission",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-2xs",
+                    "tag": "span",
+                    "text": "{{ dataItem.permission }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "member-row-text",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "children": [
+                  {
+                   "classes": [
+                    "opacity-0",
+                    "group-hover:opacity-100"
+                   ],
+                   "componentId": "member-row-actions-trigger",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "icon": "lucide-more-horizontal",
+                    "size": "sm",
+                    "variant": "ghost"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "member-row-actions",
+                 "componentName": "Dropdown",
+                 "componentProps": {
+                  "align": "end",
+                  "options": "{{ [ { label: 'Make admin', icon: 'lucide-crown', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Make ' + dataItem.user + ' the admin? You will lose admin rights.')) return; call('connect.api.make_thread_admin', { thread: selectedThread, member: dataItem.name }).then(() => { myContext.reload(); threadAdmins.reload(); toast({ title: 'Admin transferred', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not transfer admin', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } }, { label: 'Remove from channel', icon: 'lucide-user-minus', theme: 'red', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Remove ' + dataItem.user + ' from this thread?')) return; call('connect.api.remove_thread_member', { thread: selectedThread, member: dataItem.name }).then(() => { threadMembers.reload(); toast({ title: 'Member removed', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not remove member', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } } ] }}"
+                 }
+                }
+               ],
+               "classes": [
+                "group",
+                "hover:bg-surface-gray-2"
+               ],
+               "componentId": "member-row",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "partner-members-repeater",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Partner') }}",
+              "dataKey": "name",
+              "emptyStateMessage": "No members yet"
+             }
+            }
+           ],
            "classes": [],
-           "componentId": "partner-section-title",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).partner || '' }}"
-           }
+           "componentId": "partner-members-section",
+           "componentName": "container",
+           "originalElement": "div"
           },
           {
            "baseStyles": {
@@ -664,181 +988,227 @@
            "children": [
             {
              "baseStyles": {
-              "alignItems": "center",
+              "fontWeight": "600",
+              "marginBottom": "4px"
+             },
+             "classes": [],
+             "componentId": "customer-section-title",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).customer || '' }}"
+             }
+            },
+            {
+             "baseStyles": {
               "display": "flex",
-              "flexDirection": "row",
-              "gap": "10px",
-              "padding": "6px 0"
+              "flexDirection": "column"
              },
              "children": [
               {
-               "classes": [],
-               "componentId": "member-row-avatar",
-               "componentName": "Avatar",
-               "componentProps": {
-                "label": "{{ dataItem.user }}",
-                "shape": "circle",
-                "size": "md"
-               }
-              },
-              {
                "baseStyles": {
+                "alignItems": "center",
+                "borderRadius": "8px",
                 "display": "flex",
-                "flexDirection": "column"
+                "flexDirection": "row",
+                "gap": "10px",
+                "padding": "6px 8px"
                },
                "children": [
                 {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "backgroundColor": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                  "borderRadius": "9999px",
+                  "color": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                  "display": "flex",
+                  "flexShrink": "0",
+                  "fontSize": "16px",
+                  "fontWeight": "500",
+                  "height": "36px",
+                  "justifyContent": "center",
+                  "textTransform": "uppercase",
+                  "width": "36px"
+                 },
+                 "children": [
+                  {
+                   "classes": [],
+                   "componentId": "member-row-avatar-initial",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "span",
+                    "text": "{{ (dataItem.user || '').trim().charAt(0) }}"
+                   }
+                  }
+                 ],
                  "classes": [],
-                 "componentId": "member-row-email",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "{{ dataItem.user }}"
-                 }
+                 "componentId": "member-row-avatar",
+                 "componentName": "container",
+                 "originalElement": "div"
                 },
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-5)"
+                  "display": "flex",
+                  "flex": "1",
+                  "flexDirection": "column"
                  },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "gap": "6px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "textTransform": "capitalize"
+                     },
+                     "classes": [],
+                     "componentId": "member-row-email",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ dataItem.user }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "backgroundColor": "var(--surface-gray-2)",
+                      "borderRadius": "9999px",
+                      "color": "var(--ink-gray-6)",
+                      "flexShrink": "0",
+                      "padding": "1px 8px"
+                     },
+                     "classes": [],
+                     "componentId": "member-row-admin-badge-c",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-2xs",
+                      "tag": "span",
+                      "text": "Admin"
+                     },
+                     "visibilityCondition": "dataItem.user === (threadAdmins.data && threadAdmins.data.customer_admin)"
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "member-row-email-row-c",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)"
+                   },
+                   "classes": [],
+                   "componentId": "member-row-permission",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-2xs",
+                    "tag": "span",
+                    "text": "{{ dataItem.permission }}"
+                   }
+                  }
+                 ],
                  "classes": [],
-                 "componentId": "member-row-permission",
-                 "componentName": "TextBlock",
+                 "componentId": "member-row-text",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "children": [
+                  {
+                   "classes": [
+                    "opacity-0",
+                    "group-hover:opacity-100"
+                   ],
+                   "componentId": "member-row-actions-trigger-c",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "icon": "lucide-more-horizontal",
+                    "size": "sm",
+                    "variant": "ghost"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "member-row-actions-c",
+                 "componentName": "Dropdown",
                  "componentProps": {
-                  "fontSize": "text-2xs",
-                  "tag": "span",
-                  "text": "{{ dataItem.permission }}"
+                  "align": "end",
+                  "options": "{{ [ { label: 'Make admin', icon: 'lucide-crown', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Make ' + dataItem.user + ' the admin? You will lose admin rights.')) return; call('connect.api.make_thread_admin', { thread: selectedThread, member: dataItem.name }).then(() => { myContext.reload(); threadAdmins.reload(); toast({ title: 'Admin transferred', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not transfer admin', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } }, { label: 'Remove from channel', icon: 'lucide-user-minus', theme: 'red', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Remove ' + dataItem.user + ' from this thread?')) return; call('connect.api.remove_thread_member', { thread: selectedThread, member: dataItem.name }).then(() => { threadMembers.reload(); toast({ title: 'Member removed', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not remove member', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } } ] }}"
                  }
                 }
                ],
-               "classes": [],
-               "componentId": "member-row-text",
+               "classes": [
+                "group",
+                "hover:bg-surface-gray-2"
+               ],
+               "componentId": "member-row-c",
                "componentName": "container",
                "originalElement": "div"
               }
              ],
              "classes": [],
-             "componentId": "member-row",
-             "componentName": "container",
-             "originalElement": "div"
+             "componentId": "customer-members-repeater",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Customer') }}",
+              "dataKey": "name",
+              "emptyStateMessage": "No members yet"
+             }
             }
            ],
            "classes": [],
-           "componentId": "partner-members-repeater",
-           "componentName": "Repeater",
-           "componentProps": {
-            "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Partner') }}",
-            "dataKey": "name",
-            "emptyStateMessage": "No members yet"
-           }
+           "componentId": "customer-members-section",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],
-         "componentId": "partner-members-section",
+         "componentId": "members-list-scroll",
          "componentName": "container",
          "originalElement": "div"
         },
         {
          "baseStyles": {
+          "borderTop": "1px solid var(--outline-gray-2)",
           "display": "flex",
-          "flexDirection": "column"
+          "flexDirection": "column",
+          "gap": "8px",
+          "padding": "16px"
          },
          "children": [
           {
            "baseStyles": {
-            "fontWeight": "600",
-            "marginBottom": "4px"
+            "width": "100%"
            },
            "classes": [],
-           "componentId": "customer-section-title",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).customer || '' }}"
-           }
-          },
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flexDirection": "column"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "row",
-              "gap": "10px",
-              "padding": "6px 0"
-             },
-             "children": [
-              {
-               "classes": [],
-               "componentId": "member-row-avatar",
-               "componentName": "Avatar",
-               "componentProps": {
-                "label": "{{ dataItem.user }}",
-                "shape": "circle",
-                "size": "md"
-               }
-              },
-              {
-               "baseStyles": {
-                "display": "flex",
-                "flexDirection": "column"
-               },
-               "children": [
-                {
-                 "classes": [],
-                 "componentId": "member-row-email",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "{{ dataItem.user }}"
-                 }
-                },
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-5)"
-                 },
-                 "classes": [],
-                 "componentId": "member-row-permission",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-2xs",
-                  "tag": "span",
-                  "text": "{{ dataItem.permission }}"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentId": "member-row-text",
-               "componentName": "container",
-               "originalElement": "div"
-              }
-             ],
-             "classes": [],
-             "componentId": "member-row-c",
-             "componentName": "container",
-             "originalElement": "div"
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "showAddMemberDialog.value = true;"
             }
-           ],
-           "classes": [],
-           "componentId": "customer-members-repeater",
-           "componentName": "Repeater",
+           },
+           "componentId": "add-member-btn",
+           "componentName": "Button",
            "componentProps": {
-            "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Customer') }}",
-            "dataKey": "name",
-            "emptyStateMessage": "No members yet"
-           }
+            "iconLeft": "lucide-user-plus",
+            "label": "Add",
+            "variant": "outline"
+           },
+           "visibilityCondition": "selectedThread && myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
           }
          ],
          "classes": [],
-         "componentId": "customer-members-section",
+         "componentId": "members-panel-actions",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "visibilityCondition": "selectedThread && myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
         }
        ],
        "classes": [],
@@ -851,77 +1221,6 @@
      "componentId": "members-panel",
      "componentName": "container",
      "originalElement": "div"
-    },
-    {
-     "children": [
-      {
-       "baseStyles": {
-        "display": "flex",
-        "flexDirection": "column",
-        "gap": "12px"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "color": "var(--ink-gray-6)"
-         },
-         "classes": [],
-         "componentId": "transfer-admin-help",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-sm",
-          "tag": "p",
-          "text": "Choose a teammate to become the new admin. You will lose admin rights immediately."
-         }
-        },
-        {
-         "classes": [],
-         "componentId": "new-admin-select",
-         "componentName": "Select",
-         "componentProps": {
-          "label": "New Admin",
-          "modelValue": {
-           "$type": "variable",
-           "name": "newAdminUser"
-          },
-          "options": "{{ (myCompanyMembers.data || []).filter(m => !m.is_admin).map(m => ({label: m.user, value: m.user})) }}"
-         }
-        },
-        {
-         "classes": [],
-         "componentEvents": {
-          "click": {
-           "action": "Run Script",
-           "event": "click",
-           "script": "if (!newAdminUser.value) {\n\ttoast({ title: 'Choose a teammate', icon: 'x-circle', iconClasses: 'text-red-600' });\n\treturn;\n}\nif (!window.confirm('Transfer admin rights to ' + newAdminUser.value + '? You will lose admin rights.')) return;\ncall('connect.api.transfer_admin', { new_admin_email: newAdminUser.value }).then(() => {\n\tshowTransferAdminDialog.value = false;\n\tnewAdminUser.value = '';\n\tmyContext.reload();\n\ttoast({ title: 'Admin transferred', icon: 'check', iconClasses: 'text-green-600' });\n}).catch((e) => {\n\ttoast({ title: 'Could not transfer admin', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' });\n});"
-          }
-         },
-         "componentId": "confirm-transfer-btn",
-         "componentName": "Button",
-         "componentProps": {
-          "label": "Transfer",
-          "theme": "gray",
-          "variant": "solid"
-         }
-        }
-       ],
-       "classes": [],
-       "componentId": "transfer-admin-form",
-       "componentName": "container",
-       "originalElement": "div"
-      }
-     ],
-     "classes": [],
-     "componentId": "transfer-admin-dialog",
-     "componentName": "Dialog",
-     "componentProps": {
-      "modelValue": {
-       "$type": "variable",
-       "name": "showTransferAdminDialog"
-      },
-      "size": "sm",
-      "title": "Transfer Admin"
-     }
     }
    ],
    "classes": [],
@@ -930,11 +1229,12 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-08-06 23:57:06.856562",
+ "creation": "2026-08-10 12:23:17.631362",
  "doctype": "Studio Page",
  "draft_blocks": [
   {
    "baseStyles": {
+    "backgroundColor": "var(--surface-gray-1)",
     "display": "flex",
     "flexDirection": "row",
     "flexShrink": 0,
@@ -999,7 +1299,7 @@
             "click": {
              "action": "Run Script",
              "event": "click",
-             "script": "selectedThread.value = dataItem.name; messages.filters = { thread: dataItem.name }; messages.reload(); threadMembers.filters = { thread: dataItem.name }; threadMembers.reload();"
+             "script": "selectedThread.value = dataItem.name; messages.filters = { thread: dataItem.name }; messages.reload(); threadMembers.filters = { thread: dataItem.name }; threadMembers.reload(); threadAdmins.params = { thread: dataItem.name }; threadAdmins.reload();"
             }
            },
            "componentId": "thread-item",
@@ -1050,11 +1350,16 @@
     },
     {
      "baseStyles": {
+      "backgroundColor": "var(--surface-base)",
+      "border": "1px solid var(--outline-gray-2)",
+      "borderRadius": "12px",
+      "boxShadow": "0 1px 3px rgba(0,0,0,0.06)",
       "display": "flex",
       "flex": "1",
       "flexDirection": "column",
-      "height": "100%",
-      "minWidth": "0px"
+      "margin": "4px",
+      "minWidth": "0px",
+      "overflow": "hidden"
      },
      "children": [
       {
@@ -1064,11 +1369,18 @@
         "boxSizing": "border-box",
         "display": "flex",
         "flexDirection": "row",
+        "flexShrink": "0",
+        "height": "57px",
         "justifyContent": "space-between",
-        "padding": "12px 16px"
+        "overflow": "hidden",
+        "padding": "12px 8px 12px 16px"
        },
        "children": [
         {
+         "baseStyles": {
+          "color": "var(--ink-gray-9)",
+          "fontWeight": "600"
+         },
          "classes": [],
          "componentId": "chat-header-title",
          "componentName": "TextBlock",
@@ -1084,52 +1396,91 @@
           "cursor": "pointer",
           "display": "flex",
           "flexDirection": "row",
-          "gap": "8px",
-          "marginRight": "8px"
+          "gap": "8px"
          },
          "children": [
           {
            "baseStyles": {
             "display": "flex",
-            "flexDirection": "row"
+            "flexDirection": "row",
+            "gap": "0px"
            },
            "children": [
             {
              "baseStyles": {
-              "border": "2px solid var(--surface-white)",
+              "alignItems": "center",
+              "backgroundColor": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+              "border": "2px solid var(--surface-base)",
               "borderRadius": "9999px",
-              "marginLeft": "{{ dataIndex > 0 ? '-8px' : '0px' }}"
+              "color": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+              "display": "flex",
+              "flexShrink": "0",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "height": "32px",
+              "justifyContent": "center",
+              "marginLeft": "{{ dataIndex > 0 ? '-10px' : '0px' }}",
+              "textTransform": "uppercase",
+              "width": "32px"
              },
+             "children": [
+              {
+               "classes": [],
+               "componentId": "members-avatar-initial",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "span",
+                "text": "{{ (dataItem.user || '').trim().charAt(0) }}"
+               }
+              }
+             ],
              "classes": [],
              "componentId": "members-avatar",
-             "componentName": "Avatar",
-             "componentProps": {
-              "label": "{{ dataItem.user }}",
-              "shape": "circle",
-              "size": "sm"
-             }
+             "componentName": "container",
+             "originalElement": "div"
             }
            ],
            "classes": [],
            "componentId": "members-avatar-stack",
            "componentName": "Repeater",
            "componentProps": {
-            "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed) }}",
-            "dataKey": "name"
+            "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed).slice(0, 3) }}",
+            "dataKey": "name",
+            "emptyStateMessage": ""
            }
           },
           {
            "baseStyles": {
-            "color": "var(--ink-gray-6)"
+            "alignItems": "center",
+            "backgroundColor": "var(--surface-gray-3)",
+            "border": "2px solid var(--surface-base)",
+            "borderRadius": "9999px",
+            "color": "var(--ink-gray-7)",
+            "display": "flex",
+            "flexShrink": "0",
+            "fontSize": "14px",
+            "fontWeight": "500",
+            "height": "32px",
+            "justifyContent": "center",
+            "marginLeft": "-15px",
+            "width": "32px"
            },
+           "children": [
+            {
+             "classes": [],
+             "componentId": "members-overflow-badge-text",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "{{ ((threadMembers.data || []).filter(m => !m.is_removed).length - 3) + '+' }}"
+             }
+            }
+           ],
            "classes": [],
-           "componentId": "members-count-text",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "{{ (threadMembers.data || []).filter(m => !m.is_removed).length }} members"
-           }
+           "componentId": "members-overflow-badge",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "(threadMembers.data || []).filter(m => !m.is_removed).length > 3"
           }
          ],
          "classes": [],
@@ -1142,24 +1493,8 @@
          },
          "componentId": "members-trigger",
          "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "classes": [],
-         "componentEvents": {
-          "click": {
-           "action": "Run Script",
-           "event": "click",
-           "script": "showTransferAdminDialog.value = true; myCompanyMembers.reload();"
-          }
-         },
-         "componentId": "transfer-admin-btn",
-         "componentName": "Button",
-         "componentProps": {
-          "label": "Transfer Admin",
-          "variant": "outline"
-         },
-         "visibilityCondition": "myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
+         "originalElement": "div",
+         "visibilityCondition": "selectedThread"
         },
         {
          "classes": [],
@@ -1178,24 +1513,6 @@
           "variant": "outline"
          },
          "visibilityCondition": "selectedThread && (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) && (((myThreads.data || []).find(t => t.name === selectedThread) || {}).status) !== 'Closed'"
-        },
-        {
-         "classes": [],
-         "componentEvents": {
-          "click": {
-           "action": "Run Script",
-           "event": "click",
-           "script": "showAddMemberDialog.value = true;"
-          }
-         },
-         "componentId": "add-member-btn",
-         "componentName": "Button",
-         "componentProps": {
-          "iconLeft": "lucide-user-plus",
-          "label": "Add Member",
-          "variant": "outline"
-         },
-         "visibilityCondition": "selectedThread && myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
         }
        ],
        "classes": [],
@@ -1205,78 +1522,196 @@
       },
       {
        "baseStyles": {
-        "backgroundColor": "var(--surface-gray-1)",
+        "backgroundColor": "var(--surface-base)",
         "display": "flex",
         "flex": "1",
         "flexDirection": "column",
-        "gap": "10px",
+        "gap": "0px",
         "minHeight": "0px",
         "overflowY": "auto",
-        "padding": "16px"
+        "padding": "16px",
+        "scrollbarColor": "var(--ink-gray-2) transparent",
+        "scrollbarWidth": "thin"
        },
        "children": [
         {
          "children": [
           {
            "baseStyles": {
-            "alignItems": "flex-end",
+            "alignItems": "center",
             "display": "flex",
             "flexDirection": "row",
-            "gap": "8px",
-            "justifyContent": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'flex-end' : 'flex-start' }}",
+            "gap": "12px",
+            "padding": "10px 0 6px",
             "width": "100%"
            },
            "children": [
             {
+             "baseStyles": {
+              "borderTop": "1px solid var(--surface-gray-2)",
+              "flex": "1"
+             },
              "classes": [],
-             "componentId": "message-avatar",
-             "componentName": "Avatar",
+             "componentId": "date-divider-line-left",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "flexShrink": "0"
+             },
+             "classes": [],
+             "componentId": "date-divider-text",
+             "componentName": "TextBlock",
              "componentProps": {
-              "label": "{{ dataItem.sender }}",
-              "shape": "circle",
-              "size": "sm"
+              "fontSize": "text-xs",
+              "tag": "span",
+              "text": "{{ (() => { const d = new Date(dataItem.creation); const day = d.getDate(); const suffix = (day % 10 === 1 && day !== 11) ? 'st' : (day % 10 === 2 && day !== 12) ? 'nd' : (day % 10 === 3 && day !== 13) ? 'rd' : 'th'; return day + suffix + ' ' + d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); })() }}"
              }
             },
             {
              "baseStyles": {
-              "backgroundColor": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'var(--surface-gray-7)' : 'var(--surface-white)' }}",
-              "borderRadius": "14px",
-              "boxShadow": "0 1px 2px rgba(0,0,0,0.06)",
-              "color": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'white' : 'var(--ink-gray-8)' }}",
+              "borderTop": "1px solid var(--surface-gray-2)",
+              "flex": "1"
+             },
+             "classes": [],
+             "componentId": "date-divider-line-right",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "date-divider",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "dataIndex === 0 || new Date(dataItem.creation).toDateString() !== new Date(messages.data[dataIndex - 1].creation).toDateString()"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "justifyContent": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'flex-end' : 'flex-start' }}",
+            "padding": "3px 0",
+            "width": "100%"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "flex-start",
               "display": "flex",
-              "flexDirection": "column",
-              "maxWidth": "65%",
-              "padding": "8px 14px"
+              "flexDirection": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'row-reverse' : 'row' }}",
+              "gap": "12px",
+              "maxWidth": "75%"
              },
              "children": [
               {
                "baseStyles": {
-                "fontWeight": "600",
-                "marginBottom": "2px",
-                "opacity": "0.65"
+                "alignItems": "center",
+                "backgroundColor": "{{ (() => { const s = String(dataItem.sender || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                "borderRadius": "9999px",
+                "color": "{{ (() => { const s = String(dataItem.sender || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                "display": "flex",
+                "flexShrink": "0",
+                "fontSize": "16px",
+                "fontWeight": "500",
+                "height": "36px",
+                "justifyContent": "center",
+                "textTransform": "uppercase",
+                "width": "36px"
                },
+               "children": [
+                {
+                 "classes": [],
+                 "componentId": "message-avatar-initial",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "span",
+                  "text": "{{ (dataItem.sender || '').trim().charAt(0) }}"
+                 }
+                }
+               ],
                "classes": [],
-               "componentId": "message-sender",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-2xs",
-                "tag": "span",
-                "text": "{{ dataItem.sender }}"
-               }
+               "componentId": "message-avatar",
+               "componentName": "container",
+               "originalElement": "div"
               },
               {
+               "baseStyles": {
+                "alignItems": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'flex-end' : 'flex-start' }}",
+                "display": "flex",
+                "flex": "1",
+                "flexDirection": "column",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "baseline",
+                  "display": "flex",
+                  "flexDirection": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'row-reverse' : 'row' }}",
+                  "gap": "8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)",
+                    "fontWeight": "500",
+                    "textTransform": "capitalize"
+                   },
+                   "classes": [],
+                   "componentId": "message-sender",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ dataItem.sender }}"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)"
+                   },
+                   "classes": [],
+                   "componentId": "message-time",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ new Date(dataItem.creation).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase() }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "message-header-row",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-9)",
+                  "marginTop": "2px",
+                  "textAlign": "{{ (((threadMembers.data || []).find(tm => tm.user === dataItem.sender) || {}).side === ((threadMembers.data || []).find(tm => tm.user === (myContext.data && myContext.data.user)) || {}).side) ? 'right' : 'left' }}",
+                  "whiteSpace": "pre-wrap"
+                 },
+                 "classes": [],
+                 "componentId": "message-content",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "p",
+                  "text": "{{ dataItem.content }}"
+                 }
+                }
+               ],
                "classes": [],
-               "componentId": "message-content",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-sm",
-                "tag": "p",
-                "text": "{{ dataItem.content }}"
-               }
+               "componentId": "message-body",
+               "componentName": "container",
+               "originalElement": "div"
               }
              ],
              "classes": [],
-             "componentId": "message-bubble",
+             "componentId": "message-cluster",
              "componentName": "container",
              "originalElement": "div"
             }
@@ -1336,7 +1771,7 @@
       {
        "baseStyles": {
         "alignItems": "center",
-        "backgroundColor": "var(--surface-white)",
+        "backgroundColor": "var(--surface-base)",
         "borderTop": "1px solid var(--outline-gray-2)",
         "display": "flex",
         "flexDirection": "row",
@@ -1346,14 +1781,14 @@
         {
          "baseStyles": {
           "alignItems": "center",
-          "backgroundColor": "var(--surface-gray-1)",
+          "backgroundColor": "var(--surface-base)",
           "border": "1px solid var(--outline-gray-2)",
-          "borderRadius": "9999px",
+          "borderRadius": "10px",
           "display": "flex",
           "flex": "1",
           "flexDirection": "row",
-          "gap": "6px",
-          "padding": "4px 6px 4px 16px"
+          "gap": "8px",
+          "padding": "6px 6px 6px 14px"
          },
          "children": [
           {
@@ -1381,7 +1816,6 @@
           },
           {
            "baseStyles": {
-            "borderRadius": "9999px",
             "flexShrink": 0
            },
            "classes": [],
@@ -1395,7 +1829,9 @@
            "componentId": "send-btn",
            "componentName": "Button",
            "componentProps": {
-            "icon": "lucide-send",
+            "disabled": "{{ !draftMessage }}",
+            "iconLeft": "lucide-send",
+            "label": "Send",
             "theme": "gray",
             "variant": "solid"
            }
@@ -1502,12 +1938,14 @@
     },
     {
      "baseStyles": {
-      "backgroundColor": "var(--surface-white)",
-      "borderLeft": "{{ showMembersDialog ? '1px solid var(--outline-gray-2)' : 'none' }}",
+      "backgroundColor": "var(--surface-base)",
+      "border": "{{ showMembersDialog ? '1px solid var(--outline-gray-2)' : 'none' }}",
+      "borderRadius": "12px",
+      "boxShadow": "0 1px 3px rgba(0,0,0,0.06)",
       "display": "flex",
       "flexDirection": "column",
       "flexShrink": "0",
-      "height": "100%",
+      "margin": "{{ showMembersDialog ? '4px 4px 4px 0px' : '0px' }}",
       "overflow": "hidden",
       "transition": "width 0.2s ease",
       "width": "{{ showMembersDialog ? '320px' : '0px' }}"
@@ -1520,8 +1958,11 @@
         "boxSizing": "border-box",
         "display": "flex",
         "flexDirection": "row",
+        "flexShrink": "0",
+        "height": "57px",
         "justifyContent": "space-between",
         "minWidth": "320px",
+        "overflow": "hidden",
         "padding": "12px 16px"
        },
        "children": [
@@ -1563,31 +2004,213 @@
       {
        "baseStyles": {
         "display": "flex",
+        "flex": "1",
         "flexDirection": "column",
-        "gap": "16px",
+        "minHeight": "0px",
         "minWidth": "320px",
-        "padding": "16px"
+        "overflow": "hidden"
        },
        "children": [
         {
          "baseStyles": {
           "display": "flex",
-          "flexDirection": "column"
+          "flex": "1",
+          "flexDirection": "column",
+          "gap": "16px",
+          "minHeight": "0px",
+          "minWidth": "320px",
+          "overflowY": "auto",
+          "padding": "16px",
+          "scrollbarColor": "var(--ink-gray-2) transparent",
+          "scrollbarWidth": "thin"
          },
          "children": [
           {
            "baseStyles": {
-            "fontWeight": "600",
-            "marginBottom": "4px"
+            "display": "flex",
+            "flexDirection": "column"
            },
+           "children": [
+            {
+             "baseStyles": {
+              "fontWeight": "600",
+              "marginBottom": "4px"
+             },
+             "classes": [],
+             "componentId": "partner-section-title",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).partner || '' }}"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "borderRadius": "8px",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "10px",
+                "padding": "6px 8px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "backgroundColor": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                  "borderRadius": "9999px",
+                  "color": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                  "display": "flex",
+                  "flexShrink": "0",
+                  "fontSize": "16px",
+                  "fontWeight": "500",
+                  "height": "36px",
+                  "justifyContent": "center",
+                  "textTransform": "uppercase",
+                  "width": "36px"
+                 },
+                 "children": [
+                  {
+                   "classes": [],
+                   "componentId": "member-row-avatar-initial",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "span",
+                    "text": "{{ (dataItem.user || '').trim().charAt(0) }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "member-row-avatar",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "display": "flex",
+                  "flex": "1",
+                  "flexDirection": "column"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "gap": "6px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "textTransform": "capitalize"
+                     },
+                     "classes": [],
+                     "componentId": "member-row-email",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ dataItem.user }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "backgroundColor": "var(--surface-gray-2)",
+                      "borderRadius": "9999px",
+                      "color": "var(--ink-gray-6)",
+                      "flexShrink": "0",
+                      "padding": "1px 8px"
+                     },
+                     "classes": [],
+                     "componentId": "member-row-admin-badge",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-2xs",
+                      "tag": "span",
+                      "text": "Admin"
+                     },
+                     "visibilityCondition": "dataItem.user === (threadAdmins.data && threadAdmins.data.partner_admin)"
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "member-row-email-row",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)"
+                   },
+                   "classes": [],
+                   "componentId": "member-row-permission",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-2xs",
+                    "tag": "span",
+                    "text": "{{ dataItem.permission }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "member-row-text",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "children": [
+                  {
+                   "classes": [
+                    "opacity-0",
+                    "group-hover:opacity-100"
+                   ],
+                   "componentId": "member-row-actions-trigger",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "icon": "lucide-more-horizontal",
+                    "size": "sm",
+                    "variant": "ghost"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "member-row-actions",
+                 "componentName": "Dropdown",
+                 "componentProps": {
+                  "align": "end",
+                  "options": "{{ [ { label: 'Make admin', icon: 'lucide-crown', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Make ' + dataItem.user + ' the admin? You will lose admin rights.')) return; call('connect.api.make_thread_admin', { thread: selectedThread, member: dataItem.name }).then(() => { myContext.reload(); threadAdmins.reload(); toast({ title: 'Admin transferred', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not transfer admin', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } }, { label: 'Remove from channel', icon: 'lucide-user-minus', theme: 'red', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Remove ' + dataItem.user + ' from this thread?')) return; call('connect.api.remove_thread_member', { thread: selectedThread, member: dataItem.name }).then(() => { threadMembers.reload(); toast({ title: 'Member removed', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not remove member', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } } ] }}"
+                 }
+                }
+               ],
+               "classes": [
+                "group",
+                "hover:bg-surface-gray-2"
+               ],
+               "componentId": "member-row",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "partner-members-repeater",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Partner') }}",
+              "dataKey": "name",
+              "emptyStateMessage": "No members yet"
+             }
+            }
+           ],
            "classes": [],
-           "componentId": "partner-section-title",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).partner || '' }}"
-           }
+           "componentId": "partner-members-section",
+           "componentName": "container",
+           "originalElement": "div"
           },
           {
            "baseStyles": {
@@ -1597,181 +2220,227 @@
            "children": [
             {
              "baseStyles": {
-              "alignItems": "center",
+              "fontWeight": "600",
+              "marginBottom": "4px"
+             },
+             "classes": [],
+             "componentId": "customer-section-title",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).customer || '' }}"
+             }
+            },
+            {
+             "baseStyles": {
               "display": "flex",
-              "flexDirection": "row",
-              "gap": "10px",
-              "padding": "6px 0"
+              "flexDirection": "column"
              },
              "children": [
               {
-               "classes": [],
-               "componentId": "member-row-avatar",
-               "componentName": "Avatar",
-               "componentProps": {
-                "label": "{{ dataItem.user }}",
-                "shape": "circle",
-                "size": "md"
-               }
-              },
-              {
                "baseStyles": {
+                "alignItems": "center",
+                "borderRadius": "8px",
                 "display": "flex",
-                "flexDirection": "column"
+                "flexDirection": "row",
+                "gap": "10px",
+                "padding": "6px 8px"
                },
                "children": [
                 {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "backgroundColor": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--surface-blue-2)', 'var(--surface-green-2)', 'var(--surface-amber-2)', 'var(--surface-red-2)', 'var(--surface-violet-2)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                  "borderRadius": "9999px",
+                  "color": "{{ (() => { const s = String(dataItem.user || ''); const colors = ['var(--ink-blue-8)', 'var(--ink-green-8)', 'var(--ink-amber-8)', 'var(--ink-red-8)', 'var(--ink-violet-8)']; let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % colors.length; } return colors[h]; })() }}",
+                  "display": "flex",
+                  "flexShrink": "0",
+                  "fontSize": "16px",
+                  "fontWeight": "500",
+                  "height": "36px",
+                  "justifyContent": "center",
+                  "textTransform": "uppercase",
+                  "width": "36px"
+                 },
+                 "children": [
+                  {
+                   "classes": [],
+                   "componentId": "member-row-avatar-initial",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "span",
+                    "text": "{{ (dataItem.user || '').trim().charAt(0) }}"
+                   }
+                  }
+                 ],
                  "classes": [],
-                 "componentId": "member-row-email",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "{{ dataItem.user }}"
-                 }
+                 "componentId": "member-row-avatar",
+                 "componentName": "container",
+                 "originalElement": "div"
                 },
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-5)"
+                  "display": "flex",
+                  "flex": "1",
+                  "flexDirection": "column"
                  },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "gap": "6px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "textTransform": "capitalize"
+                     },
+                     "classes": [],
+                     "componentId": "member-row-email",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ dataItem.user }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "backgroundColor": "var(--surface-gray-2)",
+                      "borderRadius": "9999px",
+                      "color": "var(--ink-gray-6)",
+                      "flexShrink": "0",
+                      "padding": "1px 8px"
+                     },
+                     "classes": [],
+                     "componentId": "member-row-admin-badge-c",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-2xs",
+                      "tag": "span",
+                      "text": "Admin"
+                     },
+                     "visibilityCondition": "dataItem.user === (threadAdmins.data && threadAdmins.data.customer_admin)"
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "member-row-email-row-c",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)"
+                   },
+                   "classes": [],
+                   "componentId": "member-row-permission",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-2xs",
+                    "tag": "span",
+                    "text": "{{ dataItem.permission }}"
+                   }
+                  }
+                 ],
                  "classes": [],
-                 "componentId": "member-row-permission",
-                 "componentName": "TextBlock",
+                 "componentId": "member-row-text",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "children": [
+                  {
+                   "classes": [
+                    "opacity-0",
+                    "group-hover:opacity-100"
+                   ],
+                   "componentId": "member-row-actions-trigger-c",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "icon": "lucide-more-horizontal",
+                    "size": "sm",
+                    "variant": "ghost"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "member-row-actions-c",
+                 "componentName": "Dropdown",
                  "componentProps": {
-                  "fontSize": "text-2xs",
-                  "tag": "span",
-                  "text": "{{ dataItem.permission }}"
+                  "align": "end",
+                  "options": "{{ [ { label: 'Make admin', icon: 'lucide-crown', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Make ' + dataItem.user + ' the admin? You will lose admin rights.')) return; call('connect.api.make_thread_admin', { thread: selectedThread, member: dataItem.name }).then(() => { myContext.reload(); threadAdmins.reload(); toast({ title: 'Admin transferred', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not transfer admin', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } }, { label: 'Remove from channel', icon: 'lucide-user-minus', theme: 'red', disabled: !(dataItem.side === 'Partner' ? (myContext.data && myContext.data.partner && myContext.data.partner.is_admin) : (myContext.data && myContext.data.customer && myContext.data.customer.is_admin)), onClick: () => { if (!window.confirm('Remove ' + dataItem.user + ' from this thread?')) return; call('connect.api.remove_thread_member', { thread: selectedThread, member: dataItem.name }).then(() => { threadMembers.reload(); toast({ title: 'Member removed', icon: 'check', iconClasses: 'text-green-600' }); }).catch((e) => { toast({ title: 'Could not remove member', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' }); }); } } ] }}"
                  }
                 }
                ],
-               "classes": [],
-               "componentId": "member-row-text",
+               "classes": [
+                "group",
+                "hover:bg-surface-gray-2"
+               ],
+               "componentId": "member-row-c",
                "componentName": "container",
                "originalElement": "div"
               }
              ],
              "classes": [],
-             "componentId": "member-row",
-             "componentName": "container",
-             "originalElement": "div"
+             "componentId": "customer-members-repeater",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Customer') }}",
+              "dataKey": "name",
+              "emptyStateMessage": "No members yet"
+             }
             }
            ],
            "classes": [],
-           "componentId": "partner-members-repeater",
-           "componentName": "Repeater",
-           "componentProps": {
-            "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Partner') }}",
-            "dataKey": "name",
-            "emptyStateMessage": "No members yet"
-           }
+           "componentId": "customer-members-section",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],
-         "componentId": "partner-members-section",
+         "componentId": "members-list-scroll",
          "componentName": "container",
          "originalElement": "div"
         },
         {
          "baseStyles": {
+          "borderTop": "1px solid var(--outline-gray-2)",
           "display": "flex",
-          "flexDirection": "column"
+          "flexDirection": "column",
+          "gap": "8px",
+          "padding": "16px"
          },
          "children": [
           {
            "baseStyles": {
-            "fontWeight": "600",
-            "marginBottom": "4px"
+            "width": "100%"
            },
            "classes": [],
-           "componentId": "customer-section-title",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "{{ ((myThreads.data || []).find(t => t.name === selectedThread) || {}).customer || '' }}"
-           }
-          },
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flexDirection": "column"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "row",
-              "gap": "10px",
-              "padding": "6px 0"
-             },
-             "children": [
-              {
-               "classes": [],
-               "componentId": "member-row-avatar",
-               "componentName": "Avatar",
-               "componentProps": {
-                "label": "{{ dataItem.user }}",
-                "shape": "circle",
-                "size": "md"
-               }
-              },
-              {
-               "baseStyles": {
-                "display": "flex",
-                "flexDirection": "column"
-               },
-               "children": [
-                {
-                 "classes": [],
-                 "componentId": "member-row-email",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "{{ dataItem.user }}"
-                 }
-                },
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-5)"
-                 },
-                 "classes": [],
-                 "componentId": "member-row-permission",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-2xs",
-                  "tag": "span",
-                  "text": "{{ dataItem.permission }}"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentId": "member-row-text",
-               "componentName": "container",
-               "originalElement": "div"
-              }
-             ],
-             "classes": [],
-             "componentId": "member-row-c",
-             "componentName": "container",
-             "originalElement": "div"
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "showAddMemberDialog.value = true;"
             }
-           ],
-           "classes": [],
-           "componentId": "customer-members-repeater",
-           "componentName": "Repeater",
+           },
+           "componentId": "add-member-btn",
+           "componentName": "Button",
            "componentProps": {
-            "data": "{{ (threadMembers.data || []).filter(m => !m.is_removed && m.side === 'Customer') }}",
-            "dataKey": "name",
-            "emptyStateMessage": "No members yet"
-           }
+            "iconLeft": "lucide-user-plus",
+            "label": "Add",
+            "variant": "outline"
+           },
+           "visibilityCondition": "selectedThread && myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
           }
          ],
          "classes": [],
-         "componentId": "customer-members-section",
+         "componentId": "members-panel-actions",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "visibilityCondition": "selectedThread && myContext.data && ((myContext.data.customer && myContext.data.customer.is_admin) || (myContext.data.partner && myContext.data.partner.is_admin))"
         }
        ],
        "classes": [],
@@ -1784,77 +2453,6 @@
      "componentId": "members-panel",
      "componentName": "container",
      "originalElement": "div"
-    },
-    {
-     "children": [
-      {
-       "baseStyles": {
-        "display": "flex",
-        "flexDirection": "column",
-        "gap": "12px"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "color": "var(--ink-gray-6)"
-         },
-         "classes": [],
-         "componentId": "transfer-admin-help",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-sm",
-          "tag": "p",
-          "text": "Choose a teammate to become the new admin. You will lose admin rights immediately."
-         }
-        },
-        {
-         "classes": [],
-         "componentId": "new-admin-select",
-         "componentName": "Select",
-         "componentProps": {
-          "label": "New Admin",
-          "modelValue": {
-           "$type": "variable",
-           "name": "newAdminUser"
-          },
-          "options": "{{ (myCompanyMembers.data || []).filter(m => !m.is_admin).map(m => ({label: m.user, value: m.user})) }}"
-         }
-        },
-        {
-         "classes": [],
-         "componentEvents": {
-          "click": {
-           "action": "Run Script",
-           "event": "click",
-           "script": "if (!newAdminUser.value) {\n\ttoast({ title: 'Choose a teammate', icon: 'x-circle', iconClasses: 'text-red-600' });\n\treturn;\n}\nif (!window.confirm('Transfer admin rights to ' + newAdminUser.value + '? You will lose admin rights.')) return;\ncall('connect.api.transfer_admin', { new_admin_email: newAdminUser.value }).then(() => {\n\tshowTransferAdminDialog.value = false;\n\tnewAdminUser.value = '';\n\tmyContext.reload();\n\ttoast({ title: 'Admin transferred', icon: 'check', iconClasses: 'text-green-600' });\n}).catch((e) => {\n\ttoast({ title: 'Could not transfer admin', text: e.messages ? e.messages[0] : e.message, icon: 'x-circle', iconClasses: 'text-red-600' });\n});"
-          }
-         },
-         "componentId": "confirm-transfer-btn",
-         "componentName": "Button",
-         "componentProps": {
-          "label": "Transfer",
-          "theme": "gray",
-          "variant": "solid"
-         }
-        }
-       ],
-       "classes": [],
-       "componentId": "transfer-admin-form",
-       "componentName": "container",
-       "originalElement": "div"
-      }
-     ],
-     "classes": [],
-     "componentId": "transfer-admin-dialog",
-     "componentName": "Dialog",
-     "componentProps": {
-      "modelValue": {
-       "$type": "variable",
-       "name": "showTransferAdminDialog"
-      },
-      "size": "sm",
-      "title": "Transfer Admin"
-     }
     }
    ],
    "classes": [],
@@ -1866,7 +2464,7 @@
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-08-07 15:01:12.660302",
+ "modified": "2026-08-10 12:23:17.631362",
  "modified_by": "Administrator",
  "name": "messaging",
  "owner": "Administrator",
@@ -1913,11 +2511,10 @@
    "resource_type": "Document List"
   },
   {
-   "__unsaved": 1,
    "method": "GET",
-   "resource_name": "myCompanyMembers",
+   "resource_name": "threadAdmins",
    "resource_type": "API Resource",
-   "url": "connect.api.get_my_company_members"
+   "url": "connect.api.get_thread_admins"
   }
  ],
  "route": "/messaging-d87b",
@@ -1952,18 +2549,6 @@
    "initial_value": "false",
    "variable_name": "showMembersDialog",
    "variable_type": "Boolean"
-  },
-  {
-   "__unsaved": 1,
-   "initial_value": "false",
-   "variable_name": "showTransferAdminDialog",
-   "variable_type": "Boolean"
-  },
-  {
-   "__unsaved": 1,
-   "initial_value": "\"\"",
-   "variable_name": "newAdminUser",
-   "variable_type": "String"
   }
  ]
 }
