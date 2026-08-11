@@ -128,6 +128,60 @@ def get_thread_member_permission_query_conditions(user, doctype=None):
 	)"""
 
 
+def _is_customer_member(user):
+	return bool(frappe.db.exists("Connect Customer Member", {"user": user}))
+
+
+def _is_partner_member(user):
+	return bool(frappe.db.exists("Connect Partner Member", {"user": user}))
+
+
+def has_message_template_permission(doc, ptype="read", user=None, **kwargs):
+	"""Global templates: read-only for any member on the matching side; the 'All' role baseline
+	already grants full CRUD (same pattern as elsewhere in this file), so this hook is what
+	actually restricts create/write/delete on globals to platform admins. Personal templates
+	(is_global=0) are owner-only for every operation — never visible to teammates or the other
+	side, per spec."""
+	user = user or frappe.session.user
+	if _has_full_access(user):
+		return True
+
+	if doc.get("is_global"):
+		if ptype in ("write", "create", "delete", "submit", "cancel"):
+			return False
+		if doc.get("side") == "Customer":
+			return _is_customer_member(user)
+		if doc.get("side") == "Partner":
+			return _is_partner_member(user)
+		return False
+
+	# personal template: creating one is only allowed for your own side; every other
+	# operation (read/write/delete) is owner-only
+	if ptype == "create":
+		if doc.get("side") == "Customer":
+			return _is_customer_member(user)
+		if doc.get("side") == "Partner":
+			return _is_partner_member(user)
+		return False
+
+	return doc.get("owner") == user
+
+
+def get_message_template_permission_query_conditions(user, doctype=None):
+	if _has_full_access(user):
+		return ""
+	conditions = [f"`tabConnect Message Template`.owner = {frappe.db.escape(user)}"]
+	if _is_customer_member(user):
+		conditions.append(
+			"(`tabConnect Message Template`.is_global = 1 and `tabConnect Message Template`.side = 'Customer')"
+		)
+	if _is_partner_member(user):
+		conditions.append(
+			"(`tabConnect Message Template`.is_global = 1 and `tabConnect Message Template`.side = 'Partner')"
+		)
+	return "(" + " or ".join(conditions) + ")"
+
+
 def has_studio_page_permission(doc, ptype="read", user=None, **kwargs):
 	"""Lets any logged-in user load our published 'connect' app pages (e.g. the messaging
 	page) without granting System Manager / Studio User access to Studio Page in general."""
