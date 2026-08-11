@@ -130,6 +130,7 @@ permission_query_conditions = {
 	"Connect Thread": "connect.connect.permissions.get_thread_permission_query_conditions",
 	"Connect Thread Member": "connect.connect.permissions.get_thread_member_permission_query_conditions",
 	"Connect Message": "connect.connect.permissions.get_message_permission_query_conditions",
+	"Connect Message Template": "connect.connect.permissions.get_message_template_permission_query_conditions",
 	"Studio Page": "connect.connect.permissions.get_studio_page_permission_query_conditions",
 }
 
@@ -137,6 +138,7 @@ has_permission = {
 	"Connect Thread": "connect.connect.permissions.has_thread_permission",
 	"Connect Thread Member": "connect.connect.permissions.has_thread_member_permission",
 	"Connect Message": "connect.connect.permissions.has_message_permission",
+	"Connect Message Template": "connect.connect.permissions.has_message_template_permission",
 	"Studio Page": "connect.connect.permissions.has_studio_page_permission",
 }
 
