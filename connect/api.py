@@ -3,7 +3,6 @@ import os
 import frappe
 from frappe import _
 from frappe.utils import now_datetime
-from frappe.utils.file_manager import save_file
 
 from connect.connect.permissions import (
 	_has_full_access,
@@ -24,7 +23,7 @@ ALLOWED_CHAT_FILE_EXTENSIONS = {
 	".gif": "image/gif",
 	".webp": "image/webp",
 }
-MAX_CHAT_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+MAX_CHAT_FILE_SIZE = 25 * 1024 * 1024  # 25 MB
 
 
 def _post_system_message(thread, content):
@@ -342,7 +341,13 @@ def upload_chat_attachment(thread):
 			_("File is too large — the limit is {0} MB").format(MAX_CHAT_FILE_SIZE // (1024 * 1024))
 		)
 
-	file_doc = save_file(filename, content, None, None, is_private=1)
+	file_doc = frappe.get_doc({
+		"doctype": "File",
+		"file_name": filename,
+		"content": content,
+		"is_private": 1,
+	})
+	file_doc.insert(ignore_permissions=True)
 
 	return {
 		"file_url": file_doc.file_url,
