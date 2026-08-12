@@ -1,7 +1,8 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2026-08-05 00:00:00.000000",
+ "autoname": "field:partner_name",
+ "creation": "2026-08-05 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -71,16 +72,17 @@
   "section_break_highlights",
   "why_choose_them",
   "section_break_demos",
-  "demos"
+  "demos",
+  "is_featured"
  ],
  "fields": [
   {
    "fieldname": "partner_name",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Partner Name",
    "reqd": 1,
-   "unique": 1,
-   "in_list_view": 1
+   "unique": 1
   },
   {
    "fieldname": "logo",
@@ -97,38 +99,39 @@
    "fieldtype": "Column Break"
   },
   {
+   "description": "Set by Frappe admins only \u2014 partners cannot self-edit their tier.",
    "fieldname": "tier",
    "fieldtype": "Select",
-   "label": "Tier",
-   "options": "Gold\nSilver\nBronze",
-   "reqd": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
+   "label": "Tier",
+   "options": "Gold\nSilver\nBronze",
    "permlevel": 1,
-   "description": "Set by Frappe admins only — partners cannot self-edit their tier."
+   "reqd": 1
   },
   {
+   "default": "0",
+   "description": "Drives the \"Frappe Specialist\" crown badge. Set by Frappe admins only \u2014 partners cannot self-edit this.",
    "fieldname": "specialist",
    "fieldtype": "Check",
    "label": "Frappe Specialist",
-   "description": "Drives the \"Frappe Specialist\" crown badge. Set by Frappe admins only — partners cannot self-edit this.",
    "permlevel": 1
   },
   {
+   "description": "Precomputed average of reviews.rating",
    "fieldname": "rating",
    "fieldtype": "Float",
+   "in_list_view": 1,
    "label": "Rating",
    "precision": "1",
-   "read_only": 1,
-   "in_list_view": 1,
-   "description": "Precomputed average of reviews.rating"
+   "read_only": 1
   },
   {
+   "description": "Precomputed count of reviews",
    "fieldname": "reviews_count",
    "fieldtype": "Int",
    "label": "Reviews Count",
-   "read_only": 1,
-   "description": "Precomputed count of reviews"
+   "read_only": 1
   },
   {
    "fieldname": "section_break_description",
@@ -148,9 +151,9 @@
   {
    "fieldname": "country",
    "fieldtype": "Data",
+   "in_standard_filter": 1,
    "label": "Country",
-   "reqd": 1,
-   "in_standard_filter": 1
+   "reqd": 1
   },
   {
    "fieldname": "city",
@@ -162,13 +165,13 @@
    "fieldtype": "Column Break"
   },
   {
+   "description": "Derived from country via a before_save hook",
    "fieldname": "region",
    "fieldtype": "Select",
+   "in_standard_filter": 1,
    "label": "Region",
    "options": "North America\nEurope\nAsia Pacific\nMiddle East\nAfrica\nLatin America\nOceania\nOther",
-   "read_only": 1,
-   "in_standard_filter": 1,
-   "description": "Derived from country via a before_save hook"
+   "read_only": 1
   },
   {
    "fieldname": "address",
@@ -193,9 +196,9 @@
   {
    "fieldname": "industry",
    "fieldtype": "Select",
+   "in_standard_filter": 1,
    "label": "Industry",
-   "options": "Manufacturing\nRetail\nHealthcare\nFinTech\nEducation\nLogistics\nProfessional Services\nNonprofit\nGovernment\nTechnology\nOther",
-   "in_standard_filter": 1
+   "options": "Manufacturing\nRetail\nHealthcare\nFinTech\nEducation\nLogistics\nProfessional Services\nNonprofit\nGovernment\nTechnology\nOther"
   },
   {
    "fieldname": "section_break_metrics",
@@ -208,18 +211,18 @@
    "label": "Implementations / Rollouts"
   },
   {
+   "description": "Set by Frappe admins only \u2014 partners cannot self-edit this.",
    "fieldname": "pmm_level",
    "fieldtype": "Float",
    "label": "PMM Level",
-   "precision": "1",
    "permlevel": 1,
-   "description": "Set by Frappe admins only — partners cannot self-edit this."
+   "precision": "1"
   },
   {
+   "description": "Powers the price-range filter. Leave blank if not disclosed.",
    "fieldname": "hourly_rate",
    "fieldtype": "Currency",
-   "label": "Hourly Rate",
-   "description": "Powers the price-range filter. Leave blank if not disclosed."
+   "label": "Hourly Rate"
   },
   {
    "fieldname": "response_time_hours",
@@ -285,11 +288,13 @@
    "label": "Countries Served"
   },
   {
+   "default": "0",
    "fieldname": "starter_pack",
    "fieldtype": "Check",
    "label": "Offers Starter Pack"
   },
   {
+   "default": "0",
    "fieldname": "demo_available",
    "fieldtype": "Check",
    "label": "Demo Available"
@@ -300,10 +305,10 @@
    "label": "References Available"
   },
   {
+   "description": "Precomputed averages recalculated in Partner.before_save from the matching per-dimension fields on each Partner Review row. A dimension is skipped for rows that left it blank.",
    "fieldname": "section_break_scores",
    "fieldtype": "Section Break",
-   "label": "Rating Breakdown",
-   "description": "Precomputed averages recalculated in Partner.before_save from the matching per-dimension fields on each Partner Review row. A dimension is skipped for rows that left it blank."
+   "label": "Rating Breakdown"
   },
   {
    "fieldname": "business_understanding_score",
@@ -449,60 +454,69 @@
    "label": "Demos"
   },
   {
+   "description": "Free-form list of demo names/links, one per line.",
    "fieldname": "demos",
    "fieldtype": "Small Text",
-   "label": "Demos",
-   "description": "Free-form list of demo names/links, one per line."
+   "label": "Demos"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_featured",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Featured (curated profile)"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-08-05 00:00:00.000000",
+ "modified": "2026-08-12 12:00:13.330204",
  "modified_by": "Administrator",
  "module": "Connect",
  "name": "Partner",
  "naming_rule": "By fieldname",
- "autoname": "field:partner_name",
  "owner": "Administrator",
  "permissions": [
   {
-   "role": "System Manager",
-   "read": 1,
-   "write": 1,
    "create": 1,
    "delete": 1,
-   "report": 1,
+   "email": 1,
    "export": 1,
    "print": 1,
-   "email": 1,
-   "share": 1
-  },
-  {
-   "role": "Guest",
-   "read": 1
-  },
-  {
-   "role": "All",
-   "read": 1
-  },
-  {
-   "role": "System Manager",
-   "permlevel": 1,
    "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
    "write": 1
   },
   {
-   "role": "Guest",
-   "permlevel": 1,
-   "read": 1
+   "read": 1,
+   "role": "Guest"
   },
   {
-   "role": "All",
+   "read": 1,
+   "role": "All"
+  },
+  {
    "permlevel": 1,
-   "read": 1
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "Guest"
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "All"
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "track_changes": 1
 }
