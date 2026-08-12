@@ -126,13 +126,17 @@ app_license = "mit"
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
-# has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# }
+permission_query_conditions = {
+	"Customer": "connect.connect.doctype.customer.customer.get_permission_query_conditions",
+	"Shortlist": "connect.connect.doctype.shortlist.shortlist.get_permission_query_conditions",
+	"Requirement": "connect.connect.doctype.requirement.requirement.get_permission_query_conditions",
+}
+
+has_permission = {
+	"Customer": "connect.connect.doctype.customer.customer.has_permission",
+	"Shortlist": "connect.connect.doctype.shortlist.shortlist.has_permission",
+	"Requirement": "connect.connect.doctype.requirement.requirement.has_permission",
+}
 
 # Document Events
 # ---------------
