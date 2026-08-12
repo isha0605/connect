@@ -1,8 +1,5 @@
 {
- "blocks": [],
- "creation": "2026-08-07 13:33:54.439457",
- "doctype": "Studio Page",
- "draft_blocks": [
+ "blocks": [
   {
    "baseStyles": {
     "alignItems": "flex-start",
@@ -69,7 +66,8 @@
          "componentName": "SidebarItem",
          "componentProps": {
           "icon": "lucide-bookmark",
-          "label": "Shortlisted"
+          "label": "Shortlisted",
+          "to": "/shortlisted"
          }
         },
         {
@@ -320,7 +318,7 @@
                      "componentProps": {
                       "fontSize": "text-sm",
                       "tag": "span",
-                      "text": "{{ partner.doc.city ? partner.doc.city + ', ' : '' }}{{ partner.doc.country }}"
+                      "text": "{{ partner.doc.city ? partner.doc.city + ', ' + partner.doc.country : partner.doc.country }}"
                      }
                     }
                    ],
@@ -504,7 +502,7 @@
                      "componentProps": {
                       "fontSize": "text-sm",
                       "tag": "span",
-                      "text": "{{ (partner.doc.team ? partner.doc.team.find(t => t.is_founder) : null)?.designation }} \u00b7 {{ partner.doc.partner_name }}"
+                      "text": "{{ [((partner.doc.team ? partner.doc.team.find(t => t.is_founder) : null)?.designation), partner.doc.partner_name].filter(Boolean).join(' \u00b7 ') }}"
                      }
                     },
                     {
@@ -3341,17 +3339,19 @@
    "originalElement": "body"
   }
  ],
+ "creation": "2026-08-07 13:33:54.439457",
+ "doctype": "Studio Page",
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-08-10 13:06:41.634727",
+ "modified": "2026-08-12 12:08:51.460200",
  "modified_by": "Administrator",
  "name": "partner_profile",
  "owner": "Administrator",
  "page_name": "page-5954dde5",
  "page_title": "Partner Profile",
+ "published": 1,
  "resources": [
   {
-   "__unsaved": 1,
    "auto": 1,
    "document_type": "Partner",
    "fetch_document_using_filters": 1,
@@ -3361,7 +3361,6 @@
    "resource_type": "Document"
   },
   {
-   "__unsaved": 1,
    "auto": 1,
    "document_type": "Partner Review",
    "fields": "[\"reviewer_name\", \"rating\", \"headline\", \"quote\", \"reviewed_on\", \"verified\"]",
