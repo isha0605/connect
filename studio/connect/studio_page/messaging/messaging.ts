@@ -10,6 +10,7 @@ export default function setup(context) {
 	const showMembersDialog = ref(false)
 	const showMediaDialog = ref(false)
 	const showTemplatesDialog = ref(false)
+	const showInlineTemplates = ref(false)
 	const mediaTab = ref("Links")
 	const showAddMemberDialog = ref(false)
 	const newMemberEmail = ref("")
@@ -158,6 +159,11 @@ export default function setup(context) {
 		draftMessage.value = draftMessage.value.replace(/(^|\s)@([^\s@]*)$/, (_match, prefix) => prefix + "@" + name + " ")
 	}
 
+	function insertTemplate(template) {
+		draftMessage.value = template.content
+		showInlineTemplates.value = false
+	}
+
 	// message-content renders this via the raw-HTML component (not a plain TextBlock) so
 	// @mentions can render bold — the content is user-typed free text, so it's escaped first
 	// (neutralizing any real markup) and only then are our own <strong> tags added back in
@@ -167,7 +173,14 @@ export default function setup(context) {
 		const div = document.createElement("div")
 		div.textContent = raw
 		const escaped = div.innerHTML
-		return escaped.replace(/@([^\s@]+)/g, '<span style="font-weight: 600">@$1</span>')
+		const withMentions = escaped.replace(/@([^\s@]+)/g, '<span style="font-weight: 600">@$1</span>')
+		const time = item ? formatMessageTime(item) : ""
+		const timeSpan =
+			'<span style="float: right; margin-left: 8px; margin-top: 6px; margin-right: -6px; font-size: 9px; ' +
+			'line-height: 12px; color: var(--ink-gray-5); white-space: nowrap;">' +
+			time +
+			"</span>"
+		return withMentions + timeSpan
 	}
 
 	function addMember() {
@@ -450,11 +463,7 @@ export default function setup(context) {
 	}
 
 	function isMine(sender) {
-		const senderSide = (context.threadMembers.data || []).find((tm) => tm.user === sender)?.side
-		const mySide = (context.threadMembers.data || []).find(
-			(tm) => tm.user === (context.myContext.data && context.myContext.data.user),
-		)?.side
-		return senderSide === mySide
+		return sender === (context.myContext.data && context.myContext.data.user)
 	}
 
 	// messages are grouped into per-day sections (see groupedMessages) so `index` here is local
@@ -466,7 +475,42 @@ export default function setup(context) {
 		const idx = (context.messages.data || []).findIndex((m) => m.name === item.name)
 		if (idx <= 0) return false
 		const prev = context.messages.data[idx - 1]
-		return !!prev && prev.sender === item.sender && prev.message_type !== "System"
+		if (!prev || prev.sender !== item.sender || prev.message_type === "System") return false
+		const gapMs = new Date(item.creation).getTime() - new Date(prev.creation).getTime()
+		return gapMs <= 2 * 60 * 1000
+	}
+
+	// consecutive files from the same sender, sent within 2 minutes of each other, are merged
+	// into one synthetic "cluster" item so they render as a single wrapped row with one time
+	// underneath instead of a separate full-width row (with its own time) per file
+	function clusterFileMessages(items) {
+		const result = []
+		for (const item of items) {
+			const prev = result[result.length - 1]
+			const isFile = item.message_type === "File"
+			if (
+				isFile &&
+				prev &&
+				prev.isFileCluster &&
+				prev.sender === item.sender &&
+				new Date(item.creation).getTime() - new Date(prev.creation).getTime() <= 2 * 60 * 1000
+			) {
+				prev.files.push(item)
+				prev.creation = item.creation
+			} else if (isFile) {
+				result.push({
+					isFileCluster: true,
+					name: "cluster-" + item.name,
+					sender: item.sender,
+					creation: item.creation,
+					message_type: "FileCluster",
+					files: [item],
+				})
+			} else {
+				result.push(item)
+			}
+		}
+		return result
 	}
 
 	// buckets the flat, chronologically-sorted message list into per-day sections, each with a
@@ -482,6 +526,9 @@ export default function setup(context) {
 			}
 			groups[groups.length - 1].items.push(item)
 		}
+		groups.forEach((g) => {
+			g.items = clusterFileMessages(g.items)
+		})
 		return groups
 	})
 
@@ -575,6 +622,7 @@ export default function setup(context) {
 		showMembersDialog,
 		showMediaDialog,
 		showTemplatesDialog,
+		showInlineTemplates,
 		myMessageTemplates,
 		mediaTab,
 		showAddMemberDialog,
@@ -583,6 +631,7 @@ export default function setup(context) {
 		isMentioning,
 		filteredMentionMembers,
 		insertMention,
+		insertTemplate,
 		formatMessageContent,
 		currentThread,
 		otherPartyName,
