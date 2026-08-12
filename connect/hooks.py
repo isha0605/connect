@@ -150,6 +150,18 @@ doc_events = {
 	"Connect Message": {
 		"after_insert": "connect.connect.notifications.notify_thread_members",
 	},
+	"Connect Customer Member": {
+		"after_insert": "connect.connect.roles.grant_company_role",
+		"on_trash": "connect.connect.roles.revoke_company_role",
+	},
+	"Connect Partner Member": {
+		"after_insert": "connect.connect.roles.grant_company_role",
+		"on_trash": "connect.connect.roles.revoke_company_role",
+	},
+	"Connect Thread Member": {
+		"after_insert": "connect.connect.roles.grant_thread_guest_role",
+		"on_trash": "connect.connect.roles.revoke_thread_guest_role",
+	},
 }
 
 # Scheduled Tasks
