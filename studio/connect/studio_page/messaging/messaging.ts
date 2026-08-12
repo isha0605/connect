@@ -1,5 +1,5 @@
-import { ref, computed, watch } from "vue"
-import { toast, call, useFileUpload } from "frappe-ui"
+import { ref, computed, watch, onScopeDispose } from "vue"
+import { toast, call, useFileUpload, initSocket } from "frappe-ui"
 
 export default function setup(context) {
 	// ---- State ----
@@ -87,6 +87,31 @@ export default function setup(context) {
 		},
 		{ immediate: true },
 	)
+
+	// ---- Realtime ----
+	// A dedicated connection for this page rather than reusing Studio's own — page scripts
+	// run in a detached effect scope with no component instance, so the socket Studio
+	// provides via Vue's provide()/inject() further up the tree isn't reachable here.
+	// connect.connect.notifications.notify_thread_members publishes this event straight to
+	// a thread's other members the instant a message is sent — the sender's own tab already
+	// reloads after sendMessage(), so this is purely for tabs that didn't send it.
+	// frappe-ui's initSocket() only computes the connection namespace from window.location in
+	// dev builds — in production it reads window.site_name, which nothing on this page sets,
+	// so it silently connects to namespace "/undefined" and the server rejects it (400 on the
+	// socket.io handshake). window.location.hostname is what the server actually expects
+	// (matches its own site-name resolution from the request's Origin header) in both cases.
+	if (!(window as any).site_name) (window as any).site_name = window.location.hostname
+	const socket = initSocket()
+	socket.on("connect", () => console.log("[connect realtime] connected, socket id:", socket.id))
+	socket.on("connect_error", (err) => console.error("[connect realtime] connect_error:", err.message))
+	socket.on("disconnect", (reason) => console.warn("[connect realtime] disconnected:", reason))
+	function handleNewMessage(payload) {
+		console.log("[connect realtime] connect_new_message received:", payload, "selectedThread:", selectedThread.value)
+		if (payload.thread === selectedThread.value) context.messages.reload()
+		context.myThreads.reload()
+	}
+	socket.on("connect_new_message", handleNewMessage)
+	onScopeDispose(() => socket.off("connect_new_message", handleNewMessage))
 
 	function closeThread() {
 		if (!window.confirm("Close this thread?")) return

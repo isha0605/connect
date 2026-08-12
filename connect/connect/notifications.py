@@ -21,3 +21,22 @@ def notify_thread_members(doc, method=None):
 			"from_user": doc.sender,
 		},
 	)
+
+	# Live push for anyone with the thread open right now — same shape as the `messages`
+	# Document List resource in messaging.json, so the client can drop it straight into
+	# that array with no refetch. after_commit=True: don't tell a client about a row that
+	# might still get rolled back later in this same request.
+	payload = {
+		"name": doc.name,
+		"thread": doc.thread,
+		"sender": doc.sender,
+		"message_type": doc.message_type,
+		"content": doc.content,
+		"attachment": doc.attachment,
+		"file_name": doc.file_name,
+		"file_type": doc.file_type,
+		"file_size": doc.file_size,
+		"creation": str(doc.creation),
+	}
+	for member in members:
+		frappe.publish_realtime("connect_new_message", payload, user=member, after_commit=True)
