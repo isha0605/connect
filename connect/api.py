@@ -370,8 +370,39 @@ def remove_chat_attachment(file_url):
 	frappe.delete_doc("File", file_name, ignore_permissions=True)
 
 
+def _resolve_private_recipients(thread, user, recipients):
+	"""Validate and normalize a private message's addressee list: must resolve to at least one
+	other *current* (non-removed) member of this thread. The client derives `recipients` from
+	@mentions in the draft, but that's just UX — re-validated here since the client's mention
+	list is never trusted for who actually gets to read the message."""
+	recipients = frappe.parse_json(recipients) if isinstance(recipients, str) else (recipients or [])
+	candidates = {r for r in recipients if r and r != user}
+	if not candidates:
+		frappe.throw(_("Mention at least one other person in the thread to send a private message"))
+
+	valid = set(
+		frappe.get_all(
+			"Connect Thread Member",
+			filters={"thread": thread, "user": ["in", list(candidates)], "is_removed": 0},
+			pluck="user",
+		)
+	)
+	if not valid:
+		frappe.throw(_("Mention at least one other person in the thread to send a private message"))
+	return valid
+
+
 @frappe.whitelist()
-def send_message(thread, content="", file_url=None, file_name=None, file_type=None, file_size=None):
+def send_message(
+	thread,
+	content="",
+	file_url=None,
+	file_name=None,
+	file_type=None,
+	file_size=None,
+	is_private=False,
+	recipients=None,
+):
 	"""Create a chat message, optionally carrying a file staged by upload_chat_attachment.
 	Text and file messages share this one path so the composer only ever needs one Send
 	action regardless of whether an attachment is riding along."""
@@ -400,6 +431,10 @@ def send_message(thread, content="", file_url=None, file_name=None, file_type=No
 		message.file_name = file_name
 		message.file_type = file_type
 		message.file_size = file_size
+	if frappe.parse_json(is_private) if isinstance(is_private, str) else is_private:
+		valid_recipients = _resolve_private_recipients(thread, user, recipients)
+		message.is_private = 1
+		message.private_to = "," + ",".join(valid_recipients) + ","
 	message.insert(ignore_permissions=True)
 
 	if file_doc_name:
@@ -409,6 +444,28 @@ def send_message(thread, content="", file_url=None, file_name=None, file_type=No
 		file_doc.save(ignore_permissions=True)
 
 	return message.as_dict()
+
+
+@frappe.whitelist()
+def delete_message(message):
+	"""Delete a message for everyone — restricted to the sender's own messages, same as every
+	mainstream chat app: the doctype's own permission model would technically allow any
+	thread member with Write to delete anyone's message (that's for moderation elsewhere),
+	but "delete for everyone" specifically only ever means *your own* message."""
+	from connect.connect.notifications import notify_message_deleted
+
+	user = frappe.session.user
+	doc = frappe.get_doc("Connect Message", message)
+	if doc.sender != user and not _has_full_access(user):
+		frappe.throw(_("You can only delete your own messages"), frappe.PermissionError)
+
+	if doc.attachment:
+		file_name = frappe.db.get_value("File", {"file_url": doc.attachment}, "name")
+		if file_name:
+			frappe.delete_doc("File", file_name, ignore_permissions=True)
+
+	notify_message_deleted(doc)
+	frappe.delete_doc("Connect Message", message, ignore_permissions=True)
 
 
 @frappe.whitelist()
