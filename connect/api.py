@@ -68,11 +68,17 @@ SORT_OPTIONS = {
 }
 
 
+# Operators the CRM-style Filter component can emit (its own WIRE_OPERATOR map) —
+# validated against this whitelist before reaching the query.
+FILTER_OPERATORS = {"is", "is not", "in", "not in", "=", "!=", "like", "not like", ">", "<", ">=", "<=", "between", "timespan"}
+
+
 @frappe.whitelist(allow_guest=True)
 def search_partners(
 	search=None, industry=None, product=None, region=None, delivery_mode=None, country=None,
 	tier=None, business_process=None, implementation_type=None, language=None,
 	min_rating=None, min_pmm_level=None, max_response_time=None,
+	extra_filters=None,
 	sort=None, limit=100,
 ):
 	"""Guest-safe partner search backing the Find Partners page.
@@ -95,6 +101,11 @@ def search_partners(
 	`max_response_time` filters on the average-response-time field
 	(response_time_hours) — "I want partners who typically respond within X
 	hours".
+
+	`extra_filters` is a JSON list of [fieldname, operator, value] triples from
+	the CRM-style Filter component (frappe-ui's meta-driven field/operator/value
+	picker) — validated against Partner's own meta before being appended, so a
+	malformed/garbage fieldname or operator is dropped rather than passed through.
 	"""
 	# TEMPORARY: only surface the original curated (fully-profiled) partners
 	# while the rest of the bulk-imported directory is still bare (name/tier/
@@ -125,6 +136,18 @@ def search_partners(
 		filters.append(["Partner", "pmm_level", ">=", flt(min_pmm_level)])
 	if max_response_time not in (None, ""):
 		filters.append(["Partner", "response_time_hours", "<=", cint(max_response_time)])
+
+	if extra_filters:
+		conditions = json.loads(extra_filters) if isinstance(extra_filters, str) else extra_filters
+		meta = frappe.get_meta("Partner")
+		valid_fieldnames = {f.fieldname for f in meta.fields} | {"name", "owner", "modified_by", "creation", "modified"}
+		for condition in conditions:
+			if len(condition) != 3:
+				continue
+			fieldname, operator, value = condition
+			if fieldname not in valid_fieldnames or operator not in FILTER_OPERATORS:
+				continue
+			filters.append(["Partner", fieldname, operator, value])
 
 	limit = cint(limit) or 100
 	search = (search or "").strip()
