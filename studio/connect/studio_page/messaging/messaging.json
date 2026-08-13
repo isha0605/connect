@@ -598,8 +598,9 @@
            "baseStyles": {
             "display": "flex",
             "flexDirection": "column",
+            "maxWidth": "985px",
             "position": "relative",
-            "width": "985px"
+            "width": "100%"
            },
            "children": [
             {
@@ -971,8 +972,8 @@
                 "flexDirection": "row",
                 "justifyContent": "{{ isMine(dataItem.sender) ? 'flex-end' : 'flex-start' }}",
                 "paddingBottom": "6px",
-                "paddingLeft": "16px",
-                "paddingRight": "16px",
+                "paddingLeft": "8px",
+                "paddingRight": "8px",
                 "paddingTop": "6px",
                 "width": "100%"
                },
@@ -1047,8 +1048,9 @@
                     },
                     {
                      "baseStyles": {
-                      "display": "inline-flex",
-                      "flexWrap": "wrap",
+                      "display": "{{ isPanelOpen() ? 'flex' : 'inline-flex' }}",
+                      "flexDirection": "{{ isPanelOpen() ? 'column' : 'row' }}",
+                      "flexWrap": "{{ isPanelOpen() ? 'nowrap' : 'wrap' }}",
                       "gap": "6px",
                       "maxWidth": "446px",
                       "width": "fit-content"
@@ -1323,11 +1325,13 @@
         {
          "baseStyles": {
           "backgroundColor": "var(--surface-base)",
-          "border": "1px solid var(--outline-gray-2)",
+          "border": "{{ composerFocused ? '1px solid var(--outline-gray-4)' : '1px solid var(--outline-gray-2)' }}",
           "borderRadius": "10px",
+          "boxShadow": "{{ composerFocused ? '0 1px 2px 0 rgb(0 0 0 / 0.05)' : 'none' }}",
           "display": "flex",
           "flex": "1",
-          "flexDirection": "column"
+          "flexDirection": "column",
+          "transition": "border-color .15s ease, box-shadow .15s ease"
          },
          "children": [
           {
@@ -1540,6 +1544,16 @@
              "children": [],
              "classes": [],
              "componentEvents": {
+              "blur": {
+               "action": "Run Script",
+               "event": "blur",
+               "script": "composerFocused.value = false;"
+              },
+              "focus": {
+               "action": "Run Script",
+               "event": "focus",
+               "script": "composerFocused.value = true;"
+              },
               "keydown": {
                "action": "Run Script",
                "event": "keydown",
@@ -2787,53 +2801,17 @@
            "children": [
             {
              "baseStyles": {
-              "alignItems": "center",
-              "backgroundColor": "var(--surface-gray-2)",
-              "borderRadius": "9999px",
               "display": "flex",
               "flex": "1",
-              "flexDirection": "row",
-              "gap": "8px",
-              "minWidth": "0px",
-              "padding": "8px 14px"
+              "minWidth": "0px"
              },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)",
-                "flexShrink": "0",
-                "height": "16px",
-                "width": "16px"
-               },
-               "classes": [],
-               "componentId": "media-search-icon",
-               "componentName": "FeatherIcon",
-               "componentProps": {
-                "name": "search"
-               }
-              },
-              {
-               "baseStyles": {
-                "flex": "1",
-                "minWidth": "0px"
-               },
-               "classes": [],
-               "componentId": "media-search-input",
-               "componentName": "TextInput",
-               "componentProps": {
-                "modelValue": {
-                 "$type": "variable",
-                 "name": "mediaSearchQuery"
-                },
-                "placeholder": "{{ mediaTab === 'Files' ? 'Search files...' : 'Search links...' }}",
-                "variant": "ghost"
-               }
-              }
-             ],
+             "children": [],
              "classes": [],
-             "componentId": "media-search-row",
-             "componentName": "container",
-             "originalElement": "div"
+             "componentId": "media-search-box",
+             "componentName": "HTML",
+             "componentProps": {
+              "html": "<div class=\"cnct-search-box\"><svg class=\"cnct-search-icon\" xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line></svg><input id=\"cnct-media-search-input\" class=\"cnct-search-input\" type=\"text\" placeholder=\"Search files...\" oninput=\"window.__connectMediaSearchInput && window.__connectMediaSearchInput(this.value)\" /></div><style>.cnct-search-box{position:relative;display:flex;align-items:center;width:100%;min-width:0;box-sizing:border-box;}.cnct-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--ink-gray-4);pointer-events:none;}.cnct-search-input{width:100%;box-sizing:border-box;height:28px;padding:0 10px 0 32px;border-radius:8px;border:1px solid transparent;background-color:var(--surface-gray-2);color:var(--ink-gray-8);font-size:13px;font-family:inherit;outline:none;transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease;}.cnct-search-input::placeholder{color:var(--ink-gray-4);}.cnct-search-input:hover{background-color:var(--surface-gray-3);}.cnct-search-input:focus{background-color:var(--surface-base);border-color:var(--outline-gray-4);box-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);}</style>"
+             }
             },
             {
              "children": [],
@@ -2857,7 +2835,8 @@
               ],
               "size": "sm",
               "type": "subtle"
-             }
+             },
+             "visibilityCondition": "mediaTab === 'Files'"
             }
            ],
            "classes": [],
@@ -2880,7 +2859,8 @@
             {
              "baseStyles": {
               "display": "flex",
-              "flexDirection": "column",
+              "flexDirection": "{{ mediaViewMode === 'grid' ? 'row' : 'column' }}",
+              "flexWrap": "{{ mediaViewMode === 'grid' ? 'wrap' : 'nowrap' }}",
               "gap": "8px"
              },
              "children": [
@@ -2899,9 +2879,9 @@
                "children": [
                 {
                  "baseStyles": {
-                  "alignItems": "flex-start",
+                  "alignItems": "{{ mediaViewMode === 'grid' ? 'center' : 'flex-start' }}",
                   "display": "flex",
-                  "flexDirection": "row",
+                  "flexDirection": "{{ mediaViewMode === 'grid' ? 'column' : 'row' }}",
                   "gap": "10px"
                  },
                  "children": [
@@ -2939,18 +2919,23 @@
                   {
                    "baseStyles": {
                     "display": "flex",
-                    "flex": "1",
+                    "flex": "{{ mediaViewMode === 'grid' ? 'none' : '1' }}",
                     "flexDirection": "column",
-                    "minWidth": "0px"
+                    "minWidth": "0px",
+                    "textAlign": "{{ mediaViewMode === 'grid' ? 'center' : 'left' }}",
+                    "width": "{{ mediaViewMode === 'grid' ? '100%' : 'auto' }}"
                    },
                    "children": [
                     {
                      "baseStyles": {
+                      "WebkitBoxOrient": "{{ mediaViewMode === 'grid' ? 'vertical' : 'unset' }}",
+                      "WebkitLineClamp": "{{ mediaViewMode === 'grid' ? '2' : 'none' }}",
                       "color": "var(--ink-gray-9)",
+                      "display": "{{ mediaViewMode === 'grid' ? '-webkit-box' : 'block' }}",
                       "fontWeight": "500",
                       "overflow": "hidden",
                       "textOverflow": "ellipsis",
-                      "whiteSpace": "nowrap"
+                      "whiteSpace": "{{ mediaViewMode === 'grid' ? 'normal' : 'nowrap' }}"
                      },
                      "classes": [],
                      "componentId": "thread-file-name",
@@ -3085,27 +3070,131 @@
                "baseStyles": {
                 "display": "flex",
                 "flexDirection": "column",
-                "gap": "8px"
+                "gap": "10px"
                },
                "children": [
                 {
                  "baseStyles": {
+                  "border": "1px solid var(--outline-gray-2)",
+                  "borderRadius": "8px",
                   "boxSizing": "border-box",
-                  "color": "var(--ink-blue-link)",
-                  "overflowWrap": "anywhere",
+                  "cursor": "pointer",
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "8px",
+                  "padding": "12px",
                   "width": "100%"
                  },
-                 "children": [],
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "gap": "8px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "flexShrink": "0"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "thread-link-avatar",
+                     "componentName": "Avatar",
+                     "componentProps": {
+                      "label": "{{ dataItem.sender }}",
+                      "shape": "circle",
+                      "size": "sm",
+                      "theme": "{{ avatarTheme(dataItem.sender) }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-9)",
+                      "fontWeight": "500",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "thread-link-sender",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ (dataItem.sender || '').split('@')[0] }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)",
+                      "flexShrink": "0"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "thread-link-day",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ '\u00b7 ' + formatRelativeDay(dataItem) }}"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "thread-link-header",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-9)",
+                    "fontWeight": "600",
+                    "overflow": "hidden",
+                    "textOverflow": "ellipsis",
+                    "whiteSpace": "nowrap"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "thread-link-title",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-base",
+                    "tag": "span",
+                    "text": "{{ dataItem.title }}"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)",
+                    "overflow": "hidden",
+                    "textOverflow": "ellipsis",
+                    "whiteSpace": "nowrap"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "thread-link-domain",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ dataItem.domain }}"
+                   }
+                  }
+                 ],
                  "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "openLink(dataItem);"
+                  }
+                 },
                  "componentId": "thread-link-item",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "href": "{{ dataItem.href }}",
-                  "tag": "a",
-                  "target": "_blank",
-                  "text": "{{ dataItem.url }}"
-                 }
+                 "componentName": "container",
+                 "originalElement": "div"
                 }
                ],
                "classes": [],
@@ -3302,7 +3391,7 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-08-12 12:59:57.400451",
+ "creation": "2026-08-13 14:15:20.974162",
  "doctype": "Studio Page",
  "draft_blocks": [
   {
@@ -3927,8 +4016,9 @@
            "baseStyles": {
             "display": "flex",
             "flexDirection": "column",
+            "maxWidth": "985px",
             "position": "relative",
-            "width": "985px"
+            "width": "100%"
            },
            "children": [
             {
@@ -3979,8 +4069,8 @@
                 "flexDirection": "row",
                 "justifyContent": "{{ isMine(dataItem.sender) ? 'flex-end' : 'flex-start' }}",
                 "paddingBottom": "6px",
-                "paddingLeft": "16px",
-                "paddingRight": "16px",
+                "paddingLeft": "11px",
+                "paddingRight": "14px",
                 "paddingTop": "6px",
                 "width": "100%"
                },
@@ -4301,8 +4391,8 @@
                 "flexDirection": "row",
                 "justifyContent": "{{ isMine(dataItem.sender) ? 'flex-end' : 'flex-start' }}",
                 "paddingBottom": "6px",
-                "paddingLeft": "16px",
-                "paddingRight": "16px",
+                "paddingLeft": "8px",
+                "paddingRight": "8px",
                 "paddingTop": "6px",
                 "width": "100%"
                },
@@ -4377,8 +4467,9 @@
                     },
                     {
                      "baseStyles": {
-                      "display": "inline-flex",
-                      "flexWrap": "wrap",
+                      "display": "{{ isPanelOpen() ? 'flex' : 'inline-flex' }}",
+                      "flexDirection": "{{ isPanelOpen() ? 'column' : 'row' }}",
+                      "flexWrap": "{{ isPanelOpen() ? 'nowrap' : 'wrap' }}",
                       "gap": "6px",
                       "maxWidth": "446px",
                       "width": "fit-content"
@@ -4656,11 +4747,13 @@
         {
          "baseStyles": {
           "backgroundColor": "var(--surface-base)",
-          "border": "1px solid var(--outline-gray-2)",
+          "border": "{{ composerFocused ? '1px solid var(--outline-gray-4)' : '1px solid var(--outline-gray-2)' }}",
           "borderRadius": "10px",
+          "boxShadow": "{{ composerFocused ? '0 1px 2px 0 rgb(0 0 0 / 0.05)' : 'none' }}",
           "display": "flex",
           "flex": "1",
-          "flexDirection": "column"
+          "flexDirection": "column",
+          "transition": "border-color .15s ease, box-shadow .15s ease"
          },
          "children": [
           {
@@ -4877,6 +4970,16 @@
              "children": [],
              "classes": [],
              "componentEvents": {
+              "blur": {
+               "action": "Run Script",
+               "event": "blur",
+               "script": "composerFocused.value = false;"
+              },
+              "focus": {
+               "action": "Run Script",
+               "event": "focus",
+               "script": "composerFocused.value = true;"
+              },
               "keydown": {
                "action": "Run Script",
                "event": "keydown",
@@ -6134,59 +6237,17 @@
            "children": [
             {
              "baseStyles": {
-              "alignItems": "center",
-              "backgroundColor": "var(--surface-gray-2)",
-              "borderRadius": "8px",
               "display": "flex",
               "flex": "1",
-              "flexDirection": "row",
-              "gap": "8px",
-              "minWidth": "0px",
-              "paddingBottom": "0px",
-              "paddingLeft": "0px",
-              "paddingRight": "0px",
-              "paddingTop": "0px"
+              "minWidth": "0px"
              },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)",
-                "flexShrink": "0",
-                "height": "16px",
-                "width": "16px"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "media-search-icon",
-               "componentName": "FeatherIcon",
-               "componentProps": {
-                "name": "search",
-                "strokeWidth": "-6.5"
-               }
-              },
-              {
-               "baseStyles": {
-                "flex": "1",
-                "minWidth": "0px"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "media-search-input",
-               "componentName": "TextInput",
-               "componentProps": {
-                "modelValue": {
-                 "$type": "variable",
-                 "name": "mediaSearchQuery"
-                },
-                "placeholder": "{{ mediaTab === 'Files' ? 'Search files...' : 'Search links...' }}",
-                "variant": "ghost"
-               }
-              }
-             ],
+             "children": [],
              "classes": [],
-             "componentId": "media-search-row",
-             "componentName": "container",
-             "originalElement": "div"
+             "componentId": "media-search-box",
+             "componentName": "HTML",
+             "componentProps": {
+              "html": "<div class=\"cnct-search-box\"><svg class=\"cnct-search-icon\" xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line></svg><input id=\"cnct-media-search-input\" class=\"cnct-search-input\" type=\"text\" placeholder=\"Search files...\" oninput=\"window.__connectMediaSearchInput && window.__connectMediaSearchInput(this.value)\" /></div><style>.cnct-search-box{position:relative;display:flex;align-items:center;width:100%;min-width:0;box-sizing:border-box;}.cnct-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--ink-gray-4);pointer-events:none;}.cnct-search-input{width:100%;box-sizing:border-box;height:28px;padding:0 10px 0 32px;border-radius:8px;border:1px solid transparent;background-color:var(--surface-gray-2);color:var(--ink-gray-8);font-size:13px;font-family:inherit;outline:none;transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease;}.cnct-search-input::placeholder{color:var(--ink-gray-4);}.cnct-search-input:hover{background-color:var(--surface-gray-3);}.cnct-search-input:focus{background-color:var(--surface-base);border-color:var(--outline-gray-4);box-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);}</style>"
+             }
             },
             {
              "children": [],
@@ -6210,7 +6271,8 @@
               ],
               "size": "sm",
               "type": "subtle"
-             }
+             },
+             "visibilityCondition": "mediaTab === 'Files'"
             }
            ],
            "classes": [],
@@ -6233,7 +6295,8 @@
             {
              "baseStyles": {
               "display": "flex",
-              "flexDirection": "column",
+              "flexDirection": "{{ mediaViewMode === 'grid' ? 'row' : 'column' }}",
+              "flexWrap": "{{ mediaViewMode === 'grid' ? 'wrap' : 'nowrap' }}",
               "gap": "8px"
              },
              "children": [
@@ -6252,9 +6315,9 @@
                "children": [
                 {
                  "baseStyles": {
-                  "alignItems": "flex-start",
+                  "alignItems": "{{ mediaViewMode === 'grid' ? 'center' : 'flex-start' }}",
                   "display": "flex",
-                  "flexDirection": "row",
+                  "flexDirection": "{{ mediaViewMode === 'grid' ? 'column' : 'row' }}",
                   "gap": "10px"
                  },
                  "children": [
@@ -6293,18 +6356,23 @@
                   {
                    "baseStyles": {
                     "display": "flex",
-                    "flex": "1",
+                    "flex": "{{ mediaViewMode === 'grid' ? 'none' : '1' }}",
                     "flexDirection": "column",
-                    "minWidth": "0px"
+                    "minWidth": "0px",
+                    "textAlign": "{{ mediaViewMode === 'grid' ? 'center' : 'left' }}",
+                    "width": "{{ mediaViewMode === 'grid' ? '100%' : 'auto' }}"
                    },
                    "children": [
                     {
                      "baseStyles": {
+                      "WebkitBoxOrient": "{{ mediaViewMode === 'grid' ? 'vertical' : 'unset' }}",
+                      "WebkitLineClamp": "{{ mediaViewMode === 'grid' ? '2' : 'none' }}",
                       "color": "var(--ink-gray-9)",
+                      "display": "{{ mediaViewMode === 'grid' ? '-webkit-box' : 'block' }}",
                       "fontWeight": "500",
                       "overflow": "hidden",
                       "textOverflow": "ellipsis",
-                      "whiteSpace": "nowrap"
+                      "whiteSpace": "{{ mediaViewMode === 'grid' ? 'normal' : 'nowrap' }}"
                      },
                      "children": [],
                      "classes": [],
@@ -6443,27 +6511,131 @@
                "baseStyles": {
                 "display": "flex",
                 "flexDirection": "column",
-                "gap": "8px"
+                "gap": "10px"
                },
                "children": [
                 {
                  "baseStyles": {
+                  "border": "1px solid var(--outline-gray-2)",
+                  "borderRadius": "8px",
                   "boxSizing": "border-box",
-                  "color": "var(--ink-blue-link)",
-                  "overflowWrap": "anywhere",
+                  "cursor": "pointer",
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "8px",
+                  "padding": "12px",
                   "width": "100%"
                  },
-                 "children": [],
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "gap": "8px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "flexShrink": "0"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "thread-link-avatar",
+                     "componentName": "Avatar",
+                     "componentProps": {
+                      "label": "{{ dataItem.sender }}",
+                      "shape": "circle",
+                      "size": "sm",
+                      "theme": "{{ avatarTheme(dataItem.sender) }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-9)",
+                      "fontWeight": "500",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "thread-link-sender",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ (dataItem.sender || '').split('@')[0] }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)",
+                      "flexShrink": "0"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "thread-link-day",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ '\u00b7 ' + formatRelativeDay(dataItem) }}"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "thread-link-header",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-9)",
+                    "fontWeight": "600",
+                    "overflow": "hidden",
+                    "textOverflow": "ellipsis",
+                    "whiteSpace": "nowrap"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "thread-link-title",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-base",
+                    "tag": "span",
+                    "text": "{{ dataItem.title }}"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)",
+                    "overflow": "hidden",
+                    "textOverflow": "ellipsis",
+                    "whiteSpace": "nowrap"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "thread-link-domain",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ dataItem.domain }}"
+                   }
+                  }
+                 ],
                  "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "openLink(dataItem);"
+                  }
+                 },
                  "componentId": "thread-link-item",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "href": "{{ dataItem.href }}",
-                  "tag": "a",
-                  "target": "_blank",
-                  "text": "{{ dataItem.url }}"
-                 }
+                 "componentName": "container",
+                 "originalElement": "div"
                 }
                ],
                "classes": [],
@@ -6665,7 +6837,7 @@
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-08-12 16:29:10.573502",
+ "modified": "2026-08-13 14:17:11.939220",
  "modified_by": "Administrator",
  "name": "messaging",
  "owner": "Administrator",

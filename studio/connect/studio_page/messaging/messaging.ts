@@ -1,4 +1,4 @@
-import { ref, computed, watch, onScopeDispose } from "vue"
+import { ref, computed, watch, onScopeDispose, nextTick } from "vue"
 import { toast, call, useFileUpload, initSocket } from "frappe-ui"
 
 export default function setup(context) {
@@ -450,18 +450,39 @@ export default function setup(context) {
 	// window.open(url, "_blank") flashes a new tab open-then-closed for URLs that trigger a
 	// direct download (nothing to display) — an <a download> click saves the file in place,
 	// with no tab, no navigation, no flash.
-	function downloadFile(item, event) {
+	//
+	// Fetched as a blob rather than navigating `<a>` straight to item.attachment: private
+	// files are served through Frappe's download route, which sets Content-Disposition to
+	// the deduped on-disk filename (a random suffix gets appended whenever a same-named file
+	// already exists). That header wins over the anchor's `download` attribute in Chrome, so
+	// a direct link leaks the disk name. A blob: URL has no Content-Disposition, so `download`
+	// is all that's left to decide the saved filename.
+	async function downloadFile(item, event) {
 		if (event) {
 			event.preventDefault()
 			event.stopPropagation()
 		}
 		if (!item || !item.attachment) return
-		const link = document.createElement("a")
-		link.href = item.attachment
-		link.download = item.file_name || ""
-		document.body.appendChild(link)
-		link.click()
-		link.remove()
+		try {
+			const response = await fetch(item.attachment)
+			if (!response.ok) throw new Error("Download failed")
+			const blob = await response.blob()
+			const blobUrl = URL.createObjectURL(blob)
+			const link = document.createElement("a")
+			link.href = blobUrl
+			link.download = item.file_name || ""
+			document.body.appendChild(link)
+			link.click()
+			link.remove()
+			URL.revokeObjectURL(blobUrl)
+		} catch (e) {
+			toast({
+				title: "Could not download file",
+				text: e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		}
 	}
 
 	// ---- File preview dialog ----
@@ -594,22 +615,80 @@ export default function setup(context) {
 		return AVATAR_THEMES[avatarHash(key)]
 	}
 
+	// Mirrors the media search box's focus treatment (see media-search-box's CSS) on the
+	// composer: the pill is a container wrapping a ghost TextInput, so there's no single
+	// element a :focus-within rule could live on — the inner input reports focus up instead.
+	const composerFocused = ref(false)
+
 	// ---- Media ----
 	const mediaSearchQuery = ref("")
 	const mediaViewMode = ref("list")
+
+	// The Files/Links search box is a raw HTML block (see media-search-box in the JSON) rather
+	// than frappe-ui's TextInput — that component never exposes its actual <input> to outside
+	// styling, only a wrapper div, so there's no way to get the icon to render inside the same
+	// box as the text. A plain <input> lets a real `<style>` block own :hover/:focus directly.
+	// Since v-html renders it outside Vue's reactivity, it's wired to app state by hand: typing
+	// calls a function stashed on `window` (inline `oninput` only has access to global scope),
+	// and switching tabs reaches back into the DOM to clear/relabel it.
+	function updateMediaSearchQuery(value) {
+		mediaSearchQuery.value = value
+	}
+	if (typeof window !== "undefined") {
+		window.__connectMediaSearchInput = updateMediaSearchQuery
+	}
 
 	// a leftover query from the Files tab would otherwise silently filter out every
 	// link (and vice versa) since both tabs share one search box
 	watch(mediaTab, () => {
 		mediaSearchQuery.value = ""
+		nextTick(() => {
+			const el = document.getElementById("cnct-media-search-input")
+			if (el) {
+				el.value = ""
+				el.placeholder = mediaTab.value === "Files" ? "Search files..." : "Search links..."
+			}
+		})
 	})
 
 	function threadLinks() {
 		const query = mediaSearchQuery.value.trim().toLowerCase()
 		return (context.messages.data || [])
-			.flatMap((m) => (m.content || "").match(/(https?:\/\/[^\s]+|www\.[^\s]+)/gi) || [])
-			.map((url) => ({ url, href: /^https?:\/\//i.test(url) ? url : "https://" + url }))
-			.filter((item) => !query || item.url.toLowerCase().includes(query))
+			.flatMap((m) =>
+				((m.content || "").match(/(https?:\/\/[^\s]+|www\.[^\s]+)/gi) || []).map((url) => ({ url, message: m })),
+			)
+			.map(({ url, message }) => {
+				const href = /^https?:\/\//i.test(url) ? url : "https://" + url
+				let domain = url
+				try {
+					domain = new URL(href).hostname
+				} catch (e) {
+					// leave the raw matched text as the domain if it doesn't parse
+				}
+				const label = domain.replace(/^www\./, "").split(".")[0]
+				const title = label ? label.charAt(0).toUpperCase() + label.slice(1) : domain
+				return { url, href, domain, title, sender: message.sender, creation: message.creation }
+			})
+			.filter(
+				(item) =>
+					!query || item.url.toLowerCase().includes(query) || item.title.toLowerCase().includes(query),
+			)
+	}
+
+	function openLink(item) {
+		if (item && item.href) window.open(item.href, "_blank", "noopener")
+	}
+
+	// mirrors formatDateDivider's ordinal-date fallback, but names the last 6 days by
+	// weekday instead — matches how the Links card list shows "Tuesday" rather than a date
+	function formatRelativeDay(item) {
+		const d = new Date(item.creation)
+		const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+		const diffDays = Math.round((startOfDay(new Date()) - startOfDay(d)) / 86400000)
+		if (diffDays === 0) return "Today"
+		if (diffDays === 1) return "Yesterday"
+		if (diffDays > 1 && diffDays < 7) return d.toLocaleDateString("en-US", { weekday: "long" })
+		return formatOrdinalDate(d)
 	}
 
 	function threadFiles() {
@@ -641,6 +720,7 @@ export default function setup(context) {
 		showFilePreviewDialog,
 		previewFile,
 		openFilePreview,
+		composerFocused,
 		mediaSearchQuery,
 		mediaViewMode,
 		fileExtensionLabel,
@@ -687,5 +767,7 @@ export default function setup(context) {
 		avatarTheme,
 		threadLinks,
 		threadFiles,
+		openLink,
+		formatRelativeDay,
 	}
 }
