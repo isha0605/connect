@@ -16,6 +16,11 @@ export default function setup(context) {
 	const newMemberEmail = ref("")
 	const newMemberPermission = ref("Write")
 
+	// A private message needs no separate recipient picker: its audience is just whichever
+	// thread members got @mentioned in the draft, resolved (and re-validated server-side —
+	// see send_message) at send time rather than tracked as separate state.
+	const privateMode = ref(false)
+
 	// ---- Threads ----
 	function currentThread() {
 		return (context.myThreads.data || []).find((t) => t.name === selectedThread.value) || {}
@@ -113,6 +118,57 @@ export default function setup(context) {
 	socket.on("connect_new_message", handleNewMessage)
 	onScopeDispose(() => socket.off("connect_new_message", handleNewMessage))
 
+	// A deleted message's sender already drops it from their own view right after the delete
+	// call resolves (see deleteMessage) — this is purely for everyone else's open tabs.
+	function handleMessageDeleted(payload) {
+		if (payload.thread === selectedThread.value) context.messages.reload()
+	}
+	socket.on("connect_message_deleted", handleMessageDeleted)
+	onScopeDispose(() => socket.off("connect_message_deleted", handleMessageDeleted))
+
+	// WhatsApp-style sticky date: an in-flow date divider (e.g. "9th August 2026" sitting
+	// between two days' messages) is always fully visible — it's not floating over anything,
+	// there's nothing to hide it *from*. The fade-on-idle only applies to whichever divider is
+	// currently pinned at the top via `position: sticky` (i.e. its natural spot has scrolled
+	// past, so it's now floating over the messages below it instead of sitting inline).
+	//
+	// `position: sticky` alone can't tell us *which* header is currently the stuck one — every
+	// header reports the same `top: 0` once stuck, indistinguishable from "about to become
+	// stuck". So each date-group gets an invisible sentinel marking where its header would sit
+	// if it *weren't* sticky; once a sentinel scrolls above the container's own top edge, that
+	// group's header is the one currently floating. Walking sentinels in DOM (= chronological)
+	// order and keeping the last one that's passed gives the single currently-stuck group.
+	const showStickyDate = ref(true)
+	const stuckDateKey = ref<string | null>(null)
+	let stickyDateHideTimer: ReturnType<typeof setTimeout> | null = null
+
+	function onMessagesScroll(event) {
+		showStickyDate.value = true
+		if (stickyDateHideTimer) clearTimeout(stickyDateHideTimer)
+		stickyDateHideTimer = setTimeout(() => {
+			showStickyDate.value = false
+		}, 1200)
+
+		const container = event && (event.currentTarget || event.target)
+		if (!container) return
+		const containerTop = container.getBoundingClientRect().top
+		let stuck = null
+		container.querySelectorAll("[data-date-sentinel]").forEach((el) => {
+			if (el.getBoundingClientRect().top <= containerTop + 1) {
+				stuck = el.getAttribute("data-date-sentinel")
+			}
+		})
+		stuckDateKey.value = stuck
+	}
+
+	function isDateStuckAndIdle(item) {
+		return !!item && item.dateKey === stuckDateKey.value && !showStickyDate.value
+	}
+
+	onScopeDispose(() => {
+		if (stickyDateHideTimer) clearTimeout(stickyDateHideTimer)
+	})
+
 	function closeThread() {
 		if (!window.confirm("Close this thread?")) return
 		call("connect.api.close_thread", { thread: selectedThread.value })
@@ -187,6 +243,25 @@ export default function setup(context) {
 	function insertTemplate(template) {
 		draftMessage.value = template.content
 		showInlineTemplates.value = false
+	}
+
+	// Every "@word" anywhere in the text (not just a trailing in-progress one, unlike
+	// mentionMatch) that matches a current member's email local-part — this is what turns
+	// @mentions in the draft into the private message's actual recipient list.
+	function extractMentionedMembers(text) {
+		const names = new Set(((text || "").match(/@([^\s@]+)/g) || []).map((m) => m.slice(1).toLowerCase()))
+		if (!names.size) return []
+		return activeMembers().filter((m) => names.has((m.user || "").split("@")[0].toLowerCase()))
+	}
+
+	// Neutralizes text before it's interpolated into an HTML-component string (which renders
+	// via v-html — nothing about the templating layer escapes it automatically). Needed for
+	// any attacker-influenced text going into markup, e.g. a message-image's alt="{{ ... }}",
+	// where file_name is whatever the uploader named their file.
+	function escapeHtmlAttr(text) {
+		const div = document.createElement("div")
+		div.textContent = text || ""
+		return div.innerHTML
 	}
 
 	// message-content renders this via the raw-HTML component (not a plain TextBlock) so
@@ -296,19 +371,140 @@ export default function setup(context) {
 	// ---- Messages ----
 	const uploadingFile = computed(() => draftAttachments.value.some((a) => a.uploading))
 
+	function messageActionsOptions(item) {
+		const onClick = item && item.isFileCluster ? () => confirmDeleteCluster(item) : () => confirmDeleteMessage(item)
+		return [{ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick }]
+	}
+
+	const showDeleteMessageDialog = ref(false)
+	const messageToDelete = ref(null)
+	const deletingMessage = ref(false)
+
+	function confirmDeleteMessage(item) {
+		messageToDelete.value = item
+		showDeleteMessageDialog.value = true
+	}
+
+	async function deleteMessage() {
+		if (!messageToDelete.value || deletingMessage.value) return
+		deletingMessage.value = true
+		try {
+			await call("connect.api.delete_message", { message: messageToDelete.value.name })
+			showDeleteMessageDialog.value = false
+			messageToDelete.value = null
+			context.messages.reload()
+		} catch (e) {
+			toast({
+				title: "Could not delete message",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			deletingMessage.value = false
+		}
+	}
+
+	// ---- Deleting a whole file cluster ----
+	// A cluster is a synthetic client-side grouping (see clusterFileMessages) of several real
+	// Connect Message docs sent close together — there's one delete trigger for the group, but
+	// deletion itself is still per-file: the dialog lists every file with its own checkbox
+	// (checked = will be deleted, all checked by default) rather than an all-or-nothing wipe.
+	const showDeleteClusterDialog = ref(false)
+	const clusterToDelete = ref(null)
+	const clusterFilesToDelete = ref(new Set())
+	const deletingCluster = ref(false)
+
+	function confirmDeleteCluster(item) {
+		clusterToDelete.value = item
+		clusterFilesToDelete.value = new Set((item.files || []).map((f) => f.name))
+		showDeleteClusterDialog.value = true
+	}
+
+	function isClusterFileMarkedForDeletion(file) {
+		return clusterFilesToDelete.value.has(file.name)
+	}
+
+	function toggleClusterFileForDeletion(file) {
+		const next = new Set(clusterFilesToDelete.value)
+		if (next.has(file.name)) next.delete(file.name)
+		else next.add(file.name)
+		clusterFilesToDelete.value = next
+	}
+
+	async function deleteSelectedClusterFiles() {
+		if (!clusterToDelete.value || deletingCluster.value) return
+		const names = [...clusterFilesToDelete.value]
+		if (!names.length) {
+			showDeleteClusterDialog.value = false
+			clusterToDelete.value = null
+			return
+		}
+		deletingCluster.value = true
+		try {
+			for (const name of names) {
+				await call("connect.api.delete_message", { message: name })
+			}
+			showDeleteClusterDialog.value = false
+			clusterToDelete.value = null
+			context.messages.reload()
+		} catch (e) {
+			toast({
+				title: "Could not delete files",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			deletingCluster.value = false
+		}
+	}
+
 	async function sendMessage() {
 		if (!selectedThread.value || uploadingFile.value) return
 		const readyAttachments = draftAttachments.value.filter((a) => a.file_url)
 		const content = draftMessage.value.trim()
 		if (!content && !readyAttachments.length) return
 
+		// Validated (and the draft left untouched) before anything is cleared or sent — a
+		// private toggle with no resolvable @mention shouldn't silently send publicly, or
+		// silently eat what was typed.
+		let recipients = null
+		if (privateMode.value) {
+			if (!content) {
+				toast({
+					title: "Type a message mentioning who should see it",
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
+				return
+			}
+			const me = context.myContext.data && context.myContext.data.user
+			recipients = [...new Set(extractMentionedMembers(content).map((m) => m.user))].filter((u) => u !== me)
+			if (!recipients.length) {
+				toast({
+					title: "Mention at least one person to send privately",
+					text: "e.g. @" + ((me || "").split("@")[0] || "name"),
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
+				return
+			}
+		}
+
 		const thread = selectedThread.value
 		draftMessage.value = ""
 		draftAttachments.value = []
+		privateMode.value = false
 
 		try {
 			if (content) {
-				await call("connect.api.send_message", { thread, content })
+				await call("connect.api.send_message", {
+					thread,
+					content,
+					is_private: !!recipients,
+					recipients,
+				})
 			}
 			for (const a of readyAttachments) {
 				await call("connect.api.send_message", {
@@ -318,6 +514,8 @@ export default function setup(context) {
 					file_name: a.file_name,
 					file_type: a.file_type,
 					file_size: a.file_size,
+					is_private: !!recipients,
+					recipients,
 				})
 			}
 			context.messages.reload()
@@ -510,6 +708,32 @@ export default function setup(context) {
 
 	function isMine(sender) {
 		return sender === (context.myContext.data && context.myContext.data.user)
+	}
+
+	// "Partner"/"Customer" tag next to a message's sender — only meaningful pointed at the
+	// *other* side, so a customer sees who on the partner side is talking and vice versa;
+	// same-side colleagues (and your own messages) never get tagged with your own side.
+	// Reads the viewer's own side off the same per-thread membership list senderSide() uses
+	// (not myContext.data.partner/.customer, which is *company*-level membership) — a user can
+	// be a thread member without also having a Connect Customer/Partner Member row, and in that
+	// case myContext's side fields are both null, which would show every badge instead of none.
+	function myOwnSide() {
+		return senderSide({ sender: context.myContext.data && context.myContext.data.user })
+	}
+
+	function senderSide(item) {
+		const sender = item && item.sender
+		const member = (context.threadMembers.data || []).find((m) => m.user === sender)
+		return member ? member.side : null
+	}
+
+	function showSenderSideBadge(item) {
+		const side = senderSide(item)
+		return !!side && side !== myOwnSide()
+	}
+
+	function senderSideBadgeTheme(item) {
+		return senderSide(item) === "Customer" ? "amber" : "violet"
 	}
 
 	// messages are grouped into per-day sections (see groupedMessages) so `index` here is local
@@ -737,7 +961,9 @@ export default function setup(context) {
 		filteredMentionMembers,
 		insertMention,
 		insertTemplate,
+		privateMode,
 		formatMessageContent,
+		escapeHtmlAttr,
 		currentThread,
 		otherPartyName,
 		threadTitle,
@@ -756,12 +982,28 @@ export default function setup(context) {
 		makeAdmin,
 		removeMember,
 		memberRowOptions,
+		messageActionsOptions,
+		showDeleteMessageDialog,
+		messageToDelete,
+		deletingMessage,
+		deleteMessage,
+		showDeleteClusterDialog,
+		clusterToDelete,
+		deletingCluster,
+		isClusterFileMarkedForDeletion,
+		toggleClusterFileForDeletion,
+		deleteSelectedClusterFiles,
 		sendMessage,
 		sendMessageOnEnter,
 		isMine,
+		senderSide,
+		showSenderSideBadge,
+		senderSideBadgeTheme,
 		isGrouped,
 		groupedMessages,
 		formatMessageTime,
+		onMessagesScroll,
+		isDateStuckAndIdle,
 		formatDateDivider,
 		formatFullDateTime,
 		avatarTheme,

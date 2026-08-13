@@ -77,7 +77,12 @@ def has_message_permission(doc, ptype="read", user=None, **kwargs):
 	if ptype in ("write", "create", "delete", "submit", "cancel"):
 		return not membership.is_removed and membership.permission == "Write"
 
-	# read: removed members keep a frozen view up to the moment they were removed
+	# read: a private message is only visible to its sender and its named recipients,
+	# on top of (not instead of) ordinary thread membership
+	if doc.get("is_private") and doc.get("sender") != user and f",{user}," not in (doc.get("private_to") or ""):
+		return False
+
+	# removed members keep a frozen view up to the moment they were removed
 	if not membership.is_removed:
 		return True
 	return bool(doc.get("creation")) and doc.creation <= membership.removed_on
@@ -86,12 +91,16 @@ def has_message_permission(doc, ptype="read", user=None, **kwargs):
 def get_message_permission_query_conditions(user, doctype=None):
 	if _has_full_access(user):
 		return ""
-	user = frappe.db.escape(user)
+	escaped_user = frappe.db.escape(user)
 	return f"""exists (
 		select 1 from `tabConnect Thread Member` ctm
 		where ctm.thread = `tabConnect Message`.thread
-		and ctm.user = {user}
+		and ctm.user = {escaped_user}
 		and (ctm.is_removed = 0 or `tabConnect Message`.creation <= ctm.removed_on)
+	) and (
+		`tabConnect Message`.is_private = 0
+		or `tabConnect Message`.sender = {escaped_user}
+		or `tabConnect Message`.private_to like {frappe.db.escape("%," + user + ",%")}
 	)"""
 
 
