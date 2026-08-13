@@ -1,5 +1,7 @@
 import difflib
 import json
+import math
+import re
 
 import frappe
 from frappe.utils import cint, flt, get_fullname, nowdate
@@ -295,6 +297,261 @@ def count_matching_partners(answers=None):
 	return len(partners)
 
 
+# Per-question matcher tables for the wizard's live dot-elimination pictogram
+# (wizard_match_state). Each maps an option VALUE to a (partner_row) -> bool
+# predicate grounded in real Partner data. A value with no defensible signal is
+# simply absent from its table, so wizard_match_state leaves the pool untouched
+# for that answer instead of guessing.
+NEED_MATCHERS = {
+	"Replace Existing ERP": lambda p: len(p["migrations"]) > 0,
+	"Manufacturing Setup": lambda p: p["industry"] == "Manufacturing",
+	"HR & Payroll": lambda p: any("hr" in a.lower() for a in p["apps"]),
+	"CRM": lambda p: any("crm" in a.lower() for a in p["apps"]),
+	"Custom App Development": lambda p: "Customization" in p["implementation_types"],
+	"Consultation / Discovery": lambda p: p["demo_available"],
+}
+COMPANY_SIZE_TO_BUCKET = {
+	"1–10": "Small", "11–50": "Small", "51–200": "Mid-size", "201–1000": "Mid-size", "1000+": "Large",
+}
+CURRENT_SYSTEM_MATCHERS = {
+	"Excel / Spreadsheets": lambda p: any(m.startswith("Excel") for m in p["migrations"]),
+	"Tally": lambda p: any(m.startswith("Tally") for m in p["migrations"]),
+	"SAP": lambda p: any(m.startswith("SAP") for m in p["migrations"]),
+	"Odoo": lambda p: any(m.startswith("Odoo") for m in p["migrations"]),
+	"Existing ERPNext": lambda p: len(p["migrations"]) == 0,
+	"Multiple Systems": lambda p: len(p["migrations"]) >= 1,
+}
+TIMELINE_MATCHERS = {
+	# response_time_hours == 0 means "not profiled", not "instant" -- excluded explicitly
+	# so an unprofiled partner isn't falsely counted as meeting an urgent timeline.
+	"Immediately": lambda p: bool(p["response_time_hours"]) and p["response_time_hours"] <= 12,
+	"Within 1 month": lambda p: bool(p["response_time_hours"]) and p["response_time_hours"] <= 24,
+}
+BUDGET_TO_TIERS = {
+	"Under ₹2L": {"Bronze"},
+	"₹2L–₹10L": {"Bronze", "Silver"},
+	"₹10L–₹25L": {"Silver"},
+	"₹25L–₹50L": {"Silver", "Gold"},
+	"₹50L+": {"Gold"},
+}
+REQUIREMENT_MATCHERS = {
+	"ETO (Engineer-to-Order)": lambda p: "Manufacturing Execution" in p["business_processes"],
+	"Manufacturing Planning": lambda p: "Manufacturing Execution" in p["business_processes"],
+	"HR & Payroll": lambda p: "HR & Payroll" in p["business_processes"],
+	"Inventory Management": lambda p: "Inventory Management" in p["business_processes"],
+	"CRM": lambda p: any("crm" in a.lower() for a in p["apps"]),
+	"Custom Development": lambda p: "Customization" in p["implementation_types"],
+	"SAP Migration": lambda p: any(m.startswith("SAP") for m in p["migrations"]),
+	"Data Migration": lambda p: len(p["migrations"]) > 0,
+	"On-site Support": lambda p: "Onsite" in p["delivery_options"],
+	# "Multi-site Operations" and "Training Required" have no real signal in the
+	# current schema -- deliberately absent rather than guessed at.
+}
+
+
+def _bucket_project_size(raw):
+	"""'$15k - $60k' -> 'Small'/'Mid-size'/'Large', or None if unparseable/unset."""
+	if not raw:
+		return None
+	nums = [int(n) for n in re.findall(r"(\d+)k", raw)]
+	if not nums:
+		return None
+	upper = max(nums)
+	if upper <= 25:
+		return "Small"
+	if upper <= 100:
+		return "Mid-size"
+	return "Large"
+
+
+def _apply_matcher(pool, predicate):
+	"""Never let a single criterion empty the pool -- if nothing in the current
+	pool satisfies it, skip it for this preview rather than showing zero."""
+	if predicate is None:
+		return pool
+	matched = [p for p in pool if predicate(p)]
+	return matched if matched else pool
+
+
+@frappe.whitelist(allow_guest=True)
+def wizard_match_state(answers=None):
+	"""Live per-partner matched/eliminated state for the finder wizard's dot
+	pictogram. Applies all answered criteria in question order, each one a no-op
+	if it would empty the pool, then a proportional quality trim (keeping the
+	highest-rated partners) so every answered question visibly moves the count
+	even ones with no category matcher — same idea as count_matching_partners,
+	but returns which partners survived, not just how many."""
+	if isinstance(answers, str):
+		answers = json.loads(answers or "{}")
+	answers = answers or {}
+
+	names = [n.name for n in frappe.get_list(
+		"Partner", filters=[["Partner", "is_featured", "=", 1]], fields=["name"], limit_page_length=0,
+	)]
+	if not names:
+		return {"matched_names": [], "count": 0}
+
+	rows = frappe.get_list(
+		"Partner", filters=[["Partner", "name", "in", names]],
+		fields=["name", "industry", "tier", "rating", "demo_available", "response_time_hours", "typical_project_size"],
+	)
+	apps_by, migrations_by, impl_by, bp_by, delivery_by = {}, {}, {}, {}, {}
+	for r in frappe.get_all("Partner App", filters={"parent": ["in", names]}, fields=["parent", "app"]):
+		apps_by.setdefault(r.parent, []).append(r.app)
+	for r in frappe.get_all("Partner Migration Path", filters={"parent": ["in", names]}, fields=["parent", "migration_path"]):
+		migrations_by.setdefault(r.parent, []).append(r.migration_path)
+	for r in frappe.get_all("Partner Implementation Type", filters={"parent": ["in", names]}, fields=["parent", "implementation_type"]):
+		impl_by.setdefault(r.parent, []).append(r.implementation_type)
+	for r in frappe.get_all("Partner Business Process", filters={"parent": ["in", names]}, fields=["parent", "business_process"]):
+		bp_by.setdefault(r.parent, []).append(r.business_process)
+	for r in frappe.get_all("Partner Delivery Mode", filters={"parent": ["in", names]}, fields=["parent", "delivery_mode"]):
+		delivery_by.setdefault(r.parent, []).append(r.delivery_mode)
+
+	pool = [{
+		"name": r.name, "industry": r.industry, "tier": r.tier, "rating": r.rating or 0,
+		"demo_available": bool(r.demo_available),
+		"response_time_hours": r.response_time_hours or 0,
+		"project_size_bucket": _bucket_project_size(r.typical_project_size),
+		"apps": apps_by.get(r.name, []),
+		"migrations": migrations_by.get(r.name, []),
+		"implementation_types": impl_by.get(r.name, []),
+		"business_processes": bp_by.get(r.name, []),
+		"delivery_options": delivery_by.get(r.name, []),
+	} for r in rows]
+
+	need = answers.get("looking_for")
+	pool = _apply_matcher(pool, NEED_MATCHERS.get(need))
+
+	industry = answers.get("industry")
+	if industry:
+		wanted = WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry)
+		pool = _apply_matcher(pool, lambda p, w=wanted: p["industry"] == w)
+
+	bucket = COMPANY_SIZE_TO_BUCKET.get(answers.get("company_size"))
+	if bucket:
+		pool = _apply_matcher(pool, lambda p, b=bucket: p["project_size_bucket"] == b)
+
+	pool = _apply_matcher(pool, CURRENT_SYSTEM_MATCHERS.get(answers.get("current_situation")))
+	pool = _apply_matcher(pool, TIMELINE_MATCHERS.get(answers.get("timeline")))
+
+	delivery = answers.get("delivery_preference")
+	if delivery and delivery != "No preference":
+		wanted_mode = DELIVERY_TO_MODE.get(delivery, delivery)
+		pool = _apply_matcher(pool, lambda p, w=wanted_mode: w in p["delivery_options"])
+
+	tiers = BUDGET_TO_TIERS.get(answers.get("budget"))
+	if tiers:
+		pool = _apply_matcher(pool, lambda p, t=tiers: p["tier"] in t)
+
+	for req in (answers.get("requirements") or []):
+		pool = _apply_matcher(pool, REQUIREMENT_MATCHERS.get(req))
+
+	# Proportional quality trim: every answered question should visibly move
+	# the count, even ones above with no real matcher for this particular value.
+	answered = sum(
+		1 for k in ("looking_for", "industry", "company_size", "current_situation", "timeline", "delivery_preference", "budget")
+		if answers.get(k)
+	)
+	if answers.get("requirements"):
+		answered += 1
+	if answered and pool:
+		target = max(1, math.ceil(len(pool) * (0.85**answered)))
+		pool = sorted(pool, key=lambda p: -p["rating"])[:target]
+
+	return {"matched_names": [p["name"] for p in pool], "count": len(pool)}
+
+
+@frappe.whitelist(allow_guest=True)
+def list_matching_partners(answers=None, limit=8):
+	"""Ranked partner results for the finder wizard's final step. Same real
+	wizard-answer -> Partner-data mappings as count_matching_partners, but returns
+	full rows (same shape as search_partners) instead of just a count.
+
+	Partners that satisfy every mappable criterion are returned first. If there
+	aren't enough of those, partners matching everything except the industry are
+	included after with `missing_label` set, describing that one gap, instead of
+	just dropping them — so an otherwise-strong match doesn't disappear over a
+	single mismatched field."""
+	if isinstance(answers, str):
+		answers = json.loads(answers or "{}")
+	answers = answers or {}
+	limit = cint(limit) or 8
+
+	industry = answers.get("industry")
+	wanted_industry = WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry) if industry else None
+
+	impl_type = LOOKING_FOR_TO_IMPL_TYPE.get(answers.get("looking_for"))
+
+	situation = answers.get("current_situation")
+	migration = CURRENT_SITUATION_TO_MIGRATION.get(situation)
+	impl_type_2 = None if migration else CURRENT_SITUATION_TO_IMPL_TYPE.get(situation)
+
+	mode = DELIVERY_TO_MODE.get(answers.get("delivery_preference"))
+
+	requirements = answers.get("requirements") or []
+	bp_values = [REQUIREMENT_TO_BUSINESS_PROCESS[r] for r in requirements if r in REQUIREMENT_TO_BUSINESS_PROCESS]
+	wants_migration_tag = any(r in REQUIREMENT_MIGRATION_TAGS for r in requirements)
+
+	# Criteria shared by both the full-match and industry-relaxed passes.
+	common_filters = [["Partner", "is_featured", "=", 1]]
+	if impl_type:
+		common_filters.append(["Partner Implementation Type", "implementation_type", "=", impl_type])
+	if migration:
+		common_filters.append(["Partner Migration Path", "migration_path", "=", migration])
+	elif impl_type_2:
+		common_filters.append(["Partner Implementation Type", "implementation_type", "=", impl_type_2])
+	if mode:
+		common_filters.append(["Partner Delivery Mode", "delivery_mode", "=", mode])
+	if bp_values:
+		common_filters.append(["Partner Business Process", "business_process", "in", bp_values])
+	elif wants_migration_tag:
+		common_filters.append(["Partner Migration Path", "migration_path", "is", "set"])
+
+	def _names(filters, limit_page_length):
+		rows = frappe.get_list(
+			"Partner", filters=filters, fields=["name"],
+			order_by="rating desc, rollouts desc", limit_page_length=limit_page_length,
+		)
+		return [r.name for r in rows]
+
+	full_filters = list(common_filters)
+	if wanted_industry:
+		full_filters.append(["Partner", "industry", "=", wanted_industry])
+	full_names = _names(full_filters, limit)
+
+	partial_names = []
+	if wanted_industry and len(full_names) < limit:
+		partial_filters = list(common_filters)
+		if full_names:
+			partial_filters.append(["Partner", "name", "not in", full_names])
+		partial_names = _names(partial_filters, limit - len(full_names))
+
+	all_names = full_names + partial_names
+	if not all_names:
+		return []
+
+	rows = frappe.get_list("Partner", filters=[["Partner", "name", "in", all_names]], fields=PARTNER_FIELDS)
+	by_name = {r.name: r for r in rows}
+
+	apps_by_partner = {}
+	for row in frappe.get_all(
+		"Partner App", filters={"parent": ["in", all_names]}, fields=["parent", "app"], order_by="idx asc",
+	):
+		bucket = apps_by_partner.setdefault(row.parent, [])
+		if len(bucket) < 2:
+			bucket.append(row.app)
+
+	result = []
+	for name in full_names + partial_names:
+		row = by_name.get(name)
+		if not row:
+			continue
+		row["apps_preview"] = apps_by_partner.get(name, [])
+		row["missing_label"] = f"{industry} Experience" if (name in partial_names and industry) else None
+		result.append(row)
+	return result
+
+
 @frappe.whitelist(allow_guest=True)
 def list_partner_countries():
 	"""Distinct countries with at least one Partner, for the Country filter dropdown.
@@ -306,6 +563,21 @@ def list_partner_countries():
 		"Partner", fields=["country"], filters={"country": ["is", "set"], "is_featured": 1}, distinct=True
 	)
 	return sorted({row.country for row in rows if row.country})
+
+
+@frappe.whitelist(allow_guest=True)
+def list_partner_filter_options():
+	"""Option lists for the Find Partners filter panel's Business Process /
+	Implementation Type / Language dropdowns. Studio's "Document List" resource
+	type calls frappe.client.get_list under the hood, which isn't guest-whitelisted
+	regardless of the target doctype's own Guest permission — so those dropdowns
+	silently returned nothing for guest visitors. This is a small API Resource
+	instead, same fix as list_partner_countries above."""
+	return {
+		"business_processes": frappe.get_all("Business Process", pluck="title", order_by="title"),
+		"implementation_types": frappe.get_all("Implementation Type", pluck="title", order_by="title"),
+		"languages": frappe.get_all("FC Language", pluck="title", order_by="title"),
+	}
 
 
 def _get_customer_for_user(user=None):
