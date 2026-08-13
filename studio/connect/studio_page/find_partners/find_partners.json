@@ -211,7 +211,7 @@
              "name": "searchTerm"
             },
             "placeholder": "Search partners by name, industry, or location...",
-            "size": "xl",
+            "size": "sm",
             "type": "text",
             "variant": "subtle"
            },
@@ -222,13 +222,27 @@
               {
                "attributes": {},
                "baseStyles": {
-                "backgroundColor": "var(--surface-purple-2)",
-                "border": "1px solid var(--outline-purple-2)",
+                "alignItems": "center",
+                "backgroundColor": "{{ findMatchHover ? '#1c2126' : '#ebeef0' }}",
+                "border": "none",
                 "borderRadius": "9999px",
-                "color": "var(--ink-purple-6)",
-                "flexShrink": "0",
-                "fontWeight": "500",
-                "marginRight": "2px"
+                "boxShadow": "none",
+                "color": "{{ findMatchHover ? '#ffffff' : '#495057' }}",
+                "cursor": "pointer",
+                "display": "flex",
+                "height": "24px",
+                "justifyContent": "flex-start",
+                "marginBottom": "0px",
+                "marginLeft": "0px",
+                "marginRight": "8px",
+                "marginTop": "0px",
+                "overflow": "hidden",
+                "paddingLeft": "7px",
+                "paddingRight": "8px",
+                "transform": "none",
+                "transition": "width .25s ease, background-color .25s ease, color .25s ease .1s",
+                "whiteSpace": "nowrap",
+                "width": "{{ findMatchHover ? '160px' : '32px' }}"
                },
                "children": [],
                "classes": [],
@@ -237,14 +251,24 @@
                  "action": "Run Script",
                  "event": "click",
                  "script": "finderOpen.value = true; finderStep.value = 0; finderAnswers.value = {}; finderOutcome.value = ''; call('connect.api.count_matching_partners', { answers: '{}' }).then(n => { matchCount.value = n; });"
+                },
+                "mouseenter": {
+                 "action": "Run Script",
+                 "event": "mouseenter",
+                 "script": "findMatchHover.value = true;"
+                },
+                "mouseleave": {
+                 "action": "Run Script",
+                 "event": "mouseleave",
+                 "script": "findMatchHover.value = false;"
                 }
                },
                "componentId": "Button-2af82f219",
                "componentName": "Button",
                "componentProps": {
                 "iconLeft": "lucide-sparkles",
-                "label": "Find My Match",
-                "variant": "subtle"
+                "label": "Find your match",
+                "variant": "ghost"
                },
                "componentSlots": {},
                "mobileStyles": {},
@@ -267,7 +291,7 @@
             "update:modelValue": {
              "action": "Run Script",
              "event": "update:modelValue",
-             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
+             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value, extra_filters: extraFiltersWire.value } }); partnersList.reload();"
             }
            },
            "componentId": "Select-0f1d2fa88",
@@ -307,7 +331,7 @@
             "update:modelValue": {
              "action": "Run Script",
              "event": "update:modelValue",
-             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
+             "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value, extra_filters: extraFiltersWire.value } }); partnersList.reload();"
             }
            },
            "componentId": "Select-9d87fd9fe",
@@ -328,361 +352,20 @@
           {
            "children": [],
            "classes": [],
-           "componentId": "Popover-e2eb58b23",
-           "componentName": "Popover",
-           "componentProps": {
-            "align": "end",
-            "side": "bottom"
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "const WIRE_OP = {is:'is','is not':'is not',in:'in','not in':'not in',equals:'=','not equals':'!=',like:'like','not like':'not like','>':'>','<':'<','>=':'>=','<=':'<=',between:'between',timespan:'timespan'}; const conditions = eventArgs[0] || []; const wire = conditions.map(f => { let val = f.value; if (f.operator === 'equals') { const v = (val === 'Yes') ? true : (val === 'No' ? false : val); return [f.fieldname, '=', v]; } if ((f.operator === 'like' || f.operator === 'not like') && typeof val === 'string' && val.indexOf('%') === -1) { val = '%' + val + '%'; } return [f.fieldname, WIRE_OP[f.operator], val]; }); extraFiltersWire.value = JSON.stringify(wire); partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value, extra_filters: extraFiltersWire.value } }); partnersList.reload();"
+            }
            },
-           "componentSlots": {
-            "default": {
-             "parentBlockId": "Popover-e2eb58b23",
-             "slotContent": [
-              {
-               "attributes": {},
-               "baseStyles": {
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "8px",
-                "minWidth": "14rem",
-                "padding": "12px"
-               },
-               "children": [
-                {
-                 "attributes": {},
-                 "baseStyles": {
-                  "color": "var(--ink-gray-5)",
-                  "fontWeight": "600",
-                  "marginBottom": "4px"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {},
-                 "componentId": "TextBlock-29b377d29",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-xs",
-                  "tag": "span",
-                  "text": "More filters"
-                 },
-                 "componentSlots": {},
-                 "mobileStyles": {},
-                 "rawStyles": {},
-                 "tabletStyles": {}
-                },
-                {
-                 "attributes": {},
-                 "baseStyles": {
-                  "width": "10rem"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {
-                  "update:modelValue": {
-                   "action": "Run Script",
-                   "event": "update:modelValue",
-                   "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
-                  }
-                 },
-                 "componentId": "Select-102e4816a",
-                 "componentName": "Select",
-                 "componentProps": {
-                  "emptyText": "No options",
-                  "modelValue": {
-                   "$type": "variable",
-                   "name": "regionFilter"
-                  },
-                  "open": false,
-                  "options": [
-                   "North America",
-                   "Europe",
-                   "Asia Pacific",
-                   "Middle East",
-                   "Africa",
-                   "Latin America",
-                   "Oceania",
-                   "Other"
-                  ],
-                  "placeholder": "Region",
-                  "size": "sm",
-                  "variant": "outline"
-                 },
-                 "componentSlots": {},
-                 "mobileStyles": {},
-                 "rawStyles": {},
-                 "tabletStyles": {}
-                },
-                {
-                 "attributes": {},
-                 "baseStyles": {
-                  "width": "10rem"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {
-                  "update:modelValue": {
-                   "action": "Run Script",
-                   "event": "update:modelValue",
-                   "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
-                  }
-                 },
-                 "componentId": "Select-e0c2288a0",
-                 "componentName": "Select",
-                 "componentProps": {
-                  "modelValue": {
-                   "$type": "variable",
-                   "name": "productFilter"
-                  },
-                  "options": "{{ appOptions.data ? appOptions.data.map(d => d.title) : [] }}",
-                  "placeholder": "App Supported",
-                  "variant": "outline"
-                 },
-                 "componentSlots": {},
-                 "mobileStyles": {},
-                 "rawStyles": {},
-                 "tabletStyles": {}
-                },
-                {
-                 "baseStyles": {
-                  "width": "10rem"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {
-                  "update:modelValue": {
-                   "action": "Run Script",
-                   "event": "update:modelValue",
-                   "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
-                  }
-                 },
-                 "componentId": "Select-aafbb2f08",
-                 "componentName": "Select",
-                 "componentProps": {
-                  "modelValue": {
-                   "$type": "variable",
-                   "name": "tierFilter"
-                  },
-                  "options": [
-                   "Gold",
-                   "Silver",
-                   "Bronze"
-                  ],
-                  "placeholder": "Tier",
-                  "size": "sm",
-                  "variant": "outline"
-                 }
-                },
-                {
-                 "baseStyles": {
-                  "width": "10rem"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {
-                  "update:modelValue": {
-                   "action": "Run Script",
-                   "event": "update:modelValue",
-                   "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
-                  }
-                 },
-                 "componentId": "Select-e1654d770",
-                 "componentName": "Select",
-                 "componentProps": {
-                  "modelValue": {
-                   "$type": "variable",
-                   "name": "businessProcessFilter"
-                  },
-                  "options": "{{ businessProcessOptions.data ? businessProcessOptions.data.map(d => d.title) : [] }}",
-                  "placeholder": "Business Process",
-                  "size": "sm",
-                  "variant": "outline"
-                 }
-                },
-                {
-                 "baseStyles": {
-                  "width": "10rem"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {
-                  "update:modelValue": {
-                   "action": "Run Script",
-                   "event": "update:modelValue",
-                   "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
-                  }
-                 },
-                 "componentId": "Select-08be31361",
-                 "componentName": "Select",
-                 "componentProps": {
-                  "modelValue": {
-                   "$type": "variable",
-                   "name": "implementationTypeFilter"
-                  },
-                  "options": "{{ implementationTypeOptions.data ? implementationTypeOptions.data.map(d => d.title) : [] }}",
-                  "placeholder": "Implementation Type",
-                  "size": "sm",
-                  "variant": "outline"
-                 }
-                },
-                {
-                 "baseStyles": {
-                  "width": "10rem"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {
-                  "update:modelValue": {
-                   "action": "Run Script",
-                   "event": "update:modelValue",
-                   "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
-                  }
-                 },
-                 "componentId": "Select-2220c3120",
-                 "componentName": "Select",
-                 "componentProps": {
-                  "modelValue": {
-                   "$type": "variable",
-                   "name": "languageFilter"
-                  },
-                  "options": "{{ languageOptions.data ? languageOptions.data.map(d => d.title) : [] }}",
-                  "placeholder": "Language",
-                  "size": "sm",
-                  "variant": "outline"
-                 }
-                },
-                {
-                 "baseStyles": {
-                  "width": "10rem"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {
-                  "update:modelValue": {
-                   "action": "Run Script",
-                   "event": "update:modelValue",
-                   "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
-                  }
-                 },
-                 "componentId": "Select-bebe6ec44",
-                 "componentName": "Select",
-                 "componentProps": {
-                  "modelValue": {
-                   "$type": "variable",
-                   "name": "minRatingFilter"
-                  },
-                  "options": [
-                   {
-                    "label": "3+",
-                    "value": "3"
-                   },
-                   {
-                    "label": "4+",
-                    "value": "4"
-                   },
-                   {
-                    "label": "4.5+",
-                    "value": "4.5"
-                   }
-                  ],
-                  "placeholder": "Minimum Rating",
-                  "size": "sm",
-                  "variant": "outline"
-                 }
-                },
-                {
-                 "baseStyles": {
-                  "width": "10rem"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {
-                  "update:modelValue": {
-                   "action": "Run Script",
-                   "event": "update:modelValue",
-                   "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
-                  }
-                 },
-                 "componentId": "TextInput-52d3ce6dd",
-                 "componentName": "TextInput",
-                 "componentProps": {
-                  "modelValue": {
-                   "$type": "variable",
-                   "name": "minPmmLevelFilter"
-                  },
-                  "placeholder": "Minimum PMM Level",
-                  "size": "sm",
-                  "type": "number",
-                  "variant": "outline"
-                 }
-                },
-                {
-                 "baseStyles": {
-                  "width": "10rem"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {
-                  "update:modelValue": {
-                   "action": "Run Script",
-                   "event": "update:modelValue",
-                   "script": "partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
-                  }
-                 },
-                 "componentId": "TextInput-49f2ad4f8",
-                 "componentName": "TextInput",
-                 "componentProps": {
-                  "modelValue": {
-                   "$type": "variable",
-                   "name": "maxResponseTimeFilter"
-                  },
-                  "placeholder": "Avg. Response Time \u2264 (hrs)",
-                  "size": "sm",
-                  "type": "number",
-                  "variant": "outline"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {},
-               "componentId": "container-a4222afb5",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "mobileStyles": {},
-               "originalElement": "div",
-               "rawStyles": {},
-               "tabletStyles": {}
-              }
-             ],
-             "slotId": "Popover-e2eb58b23:default",
-             "slotName": "default"
-            },
-            "trigger": {
-             "parentBlockId": "Popover-e2eb58b23",
-             "slotContent": [
-              {
-               "attributes": {},
-               "baseStyles": {
-                "flexShrink": "0"
-               },
-               "children": [],
-               "classes": [],
-               "componentEvents": {},
-               "componentId": "Button-2d5fd1f68",
-               "componentName": "Button",
-               "componentProps": {
-                "iconLeft": "lucide-sliders-horizontal",
-                "label": "{{ (regionFilter || productFilter) ? 'Filters \u2022' : 'Add Filters' }}",
-                "variant": "outline"
-               },
-               "componentSlots": {},
-               "mobileStyles": {},
-               "rawStyles": {},
-               "tabletStyles": {}
-              }
-             ],
-             "slotId": "Popover-e2eb58b23:trigger",
-             "slotName": "trigger"
+           "componentId": "Filter-8720d969c",
+           "componentName": "Filter",
+           "componentProps": {
+            "doctype": "Partner",
+            "modelValue": {
+             "$type": "variable",
+             "name": "partnerFilters"
             }
            }
           },
@@ -744,7 +427,7 @@
                   "click": {
                    "action": "Run Script",
                    "event": "click",
-                   "script": "sortBy.value = 'rating_desc'; partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
+                   "script": "sortBy.value = 'rating_desc'; partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value, extra_filters: extraFiltersWire.value } }); partnersList.reload();"
                   }
                  },
                  "componentId": "Button-ea9025754",
@@ -771,7 +454,7 @@
                   "click": {
                    "action": "Run Script",
                    "event": "click",
-                   "script": "sortBy.value = 'rollouts_desc'; partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
+                   "script": "sortBy.value = 'rollouts_desc'; partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value, extra_filters: extraFiltersWire.value } }); partnersList.reload();"
                   }
                  },
                  "componentId": "Button-f7cec27e5",
@@ -798,7 +481,7 @@
                   "click": {
                    "action": "Run Script",
                    "event": "click",
-                   "script": "sortBy.value = 'name_asc'; partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
+                   "script": "sortBy.value = 'name_asc'; partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value, extra_filters: extraFiltersWire.value } }); partnersList.reload();"
                   }
                  },
                  "componentId": "Button-322781629",
@@ -844,7 +527,6 @@
                "componentName": "Button",
                "componentProps": {
                 "icon": "lucide-arrow-up-down",
-                "label": "{{ (regionFilter || productFilter || tierFilter || businessProcessFilter || implementationTypeFilter || languageFilter || minRatingFilter || minPmmLevelFilter || maxResponseTimeFilter) ? 'Filters \u2022' : 'Add Filters' }}",
                 "tooltip": "Sort",
                 "variant": "outline"
                },
@@ -902,7 +584,7 @@
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "searchTerm.value = ''; industryFilter.value = ''; productFilter.value = ''; regionFilter.value = ''; deliveryModeFilter.value = ''; countryFilter.value = ''; tierFilter.value = ''; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; minPmmLevelFilter.value = ''; maxResponseTimeFilter.value = '';  partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value } }); partnersList.reload();"
+               "script": "partnerFilters.value = []; extraFiltersWire.value = '[]'; searchTerm.value = ''; industryFilter.value = ''; productFilter.value = ''; regionFilter.value = ''; deliveryModeFilter.value = ''; countryFilter.value = ''; tierFilter.value = ''; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; minPmmLevelFilter.value = ''; maxResponseTimeFilter.value = '';  partnersList.update({ params: { search: searchTerm.value, industry: industryFilter.value, product: productFilter.value, region: regionFilter.value, delivery_mode: deliveryModeFilter.value, country: countryFilter.value, tier: tierFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, min_pmm_level: minPmmLevelFilter.value, max_response_time: maxResponseTimeFilter.value, sort: sortBy.value, extra_filters: extraFiltersWire.value } }); partnersList.reload();"
               }
              },
              "componentId": "Button-69aca988c",
@@ -1007,16 +689,18 @@
              },
              "componentSlots": {
               "default": {
-               "parentBlockId": "ListRows-0836d29f6",
+               "parentBlockId": "ListRows-91e783f6b",
                "slotContent": [
                 {
                  "attributes": {},
                  "baseStyles": {
+                  "boxShadow": "none",
                   "paddingBlock": "12px",
                   "width": "100%"
                  },
                  "children": [
                   {
+                   "attributes": {},
                    "baseStyles": {
                     "paddingLeft": "8px"
                    },
@@ -1042,14 +726,21 @@
                     }
                    ],
                    "classes": [],
+                   "componentEvents": {},
                    "componentId": "ListCell-34fdd1cda",
                    "componentName": "ListCell",
-                   "componentProps": {}
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
                   },
                   {
+                   "attributes": {},
                    "baseStyles": {},
                    "children": [
                     {
+                     "attributes": {},
                      "baseStyles": {
                       "display": "flex",
                       "flexDirection": "column",
@@ -1059,6 +750,7 @@
                      },
                      "children": [
                       {
+                       "attributes": {},
                        "baseStyles": {
                         "alignItems": "center",
                         "display": "flex",
@@ -1068,41 +760,60 @@
                        },
                        "children": [
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "color": "var(--ink-gray-8)",
                           "fontWeight": "600"
                          },
                          "children": [],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "TextBlock-0b820072b",
                          "componentName": "TextBlock",
                          "componentProps": {
                           "fontSize": "text-sm",
                           "tag": "span",
                           "text": "{{ item.partner_name }}"
-                         }
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         },
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "display": "{{ item.specialist ? 'inline-flex' : 'none' }}"
                          },
                          "children": [],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "Badge-3024ba9a2",
                          "componentName": "Badge",
                          "componentProps": {
                           "label": "\u2605 Frappe Specialist",
                           "theme": "violet",
                           "variant": "outline"
-                         }
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         }
                        ],
                        "classes": [],
+                       "componentEvents": {},
                        "componentId": "container-f917e6c57",
                        "componentName": "container",
-                       "originalElement": "div"
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "rawStyles": {},
+                       "tabletStyles": {}
                       },
                       {
+                       "attributes": {},
                        "baseStyles": {
                         "alignItems": "center",
                         "display": "flex",
@@ -1112,6 +823,7 @@
                        },
                        "children": [
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "alignItems": "center",
                           "display": "flex",
@@ -1120,6 +832,7 @@
                          },
                          "children": [
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "flexShrink": "0",
                             "height": "12px",
@@ -1127,35 +840,53 @@
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "FeatherIcon-89cedc9b4",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
                             "name": "map-pin",
                             "strokeWidth": 2
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           },
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "color": "var(--ink-gray-5)"
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "TextBlock-9fc7aaeed",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
                             "tag": "span",
                             "text": "{{ item.city ? item.city + ', ' + item.country : item.country }}"
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           }
                          ],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "container-10a608e8a",
                          "componentName": "container",
-                         "originalElement": "div"
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         },
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "alignItems": "center",
                           "display": "flex",
@@ -1164,6 +895,7 @@
                          },
                          "children": [
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "flexShrink": "0",
                             "height": "12px",
@@ -1171,35 +903,53 @@
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "FeatherIcon-65445480e",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
                             "name": "{{ ({\"Manufacturing\": \"settings\", \"Retail\": \"shopping-cart\", \"Healthcare\": \"heart\", \"FinTech\": \"credit-card\", \"Education\": \"book-open\", \"Logistics\": \"truck\", \"Professional Services\": \"briefcase\", \"Nonprofit\": \"users\", \"Government\": \"flag\", \"Technology\": \"cpu\"})[item.industry] || 'folder' }}",
                             "strokeWidth": 2
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           },
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "color": "var(--ink-gray-5)"
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "TextBlock-e5f9c1585",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
                             "tag": "span",
                             "text": "{{ item.industry }} expertise"
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           }
                          ],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "container-2d53e0630",
                          "componentName": "container",
-                         "originalElement": "div"
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         },
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "alignItems": "center",
                           "display": "flex",
@@ -1208,6 +958,7 @@
                          },
                          "children": [
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "flexShrink": "0",
                             "height": "12px",
@@ -1215,53 +966,88 @@
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "FeatherIcon-4e4a0b30c",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
                             "name": "tag",
                             "strokeWidth": 2
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           },
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "color": "var(--ink-gray-5)"
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "TextBlock-4bcae2190",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
                             "tag": "span",
                             "text": "{{ (item.apps_preview || []).join(', ') }}"
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           }
                          ],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "container-688a0ce6b",
                          "componentName": "container",
-                         "originalElement": "div"
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         }
                        ],
                        "classes": [],
+                       "componentEvents": {},
                        "componentId": "container-da041458f",
                        "componentName": "container",
-                       "originalElement": "div"
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "rawStyles": {},
+                       "tabletStyles": {}
                       }
                      ],
                      "classes": [],
+                     "componentEvents": {},
                      "componentId": "container-e58ea3f47",
                      "componentName": "container",
-                     "originalElement": "div"
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
                     }
                    ],
                    "classes": [],
+                   "componentEvents": {},
                    "componentId": "ListCell-778c14922",
                    "componentName": "ListCell",
-                   "componentProps": {}
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
                   },
                   {
+                   "attributes": {},
                    "baseStyles": {
                     "alignItems": "center",
                     "display": "flex",
@@ -1269,6 +1055,7 @@
                    },
                    "children": [
                     {
+                     "attributes": {},
                      "baseStyles": {
                       "color": "var(--ink-gray-8)",
                       "fontWeight": "600",
@@ -1276,21 +1063,32 @@
                      },
                      "children": [],
                      "classes": [],
+                     "componentEvents": {},
                      "componentId": "TextBlock-940267f85",
                      "componentName": "TextBlock",
                      "componentProps": {
                       "fontSize": "text-sm",
                       "tag": "span",
                       "text": "\u2605 {{ item.rating }}"
-                     }
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "rawStyles": {},
+                     "tabletStyles": {}
                     }
                    ],
                    "classes": [],
+                   "componentEvents": {},
                    "componentId": "ListCell-b13119f46",
                    "componentName": "ListCell",
-                   "componentProps": {}
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
                   },
                   {
+                   "attributes": {},
                    "baseStyles": {
                     "alignItems": "center",
                     "display": "flex",
@@ -1303,7 +1101,7 @@
                      "attributes": {},
                      "baseStyles": {
                       "alignItems": "center",
-                      "color": "{{ (myShortlist.data || []).includes(item.name) ? 'var(--ink-amber-6)' : 'var(--ink-gray-5)' }}",
+                      "color": "{{ (myShortlist.data || []).includes(item.name) ? 'var(--ink-gray-5)' : 'var(--ink-gray-5)' }}",
                       "display": "flex",
                       "height": "36px",
                       "justifyContent": "center",
@@ -1346,8 +1144,8 @@
                      "componentId": "Button-414e0367b",
                      "componentName": "Button",
                      "componentProps": {
-                      "iconLeft": "lucide-arrow-up-right",
-                      "label": "View Profile",
+                      "iconLeft": "",
+                      "label": "Contact",
                       "variant": "outline"
                      },
                      "componentSlots": {},
@@ -1357,9 +1155,14 @@
                     }
                    ],
                    "classes": [],
+                   "componentEvents": {},
                    "componentId": "ListCell-8ce7e7572",
                    "componentName": "ListCell",
-                   "componentProps": {}
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
                   }
                  ],
                  "classes": [],
@@ -1390,23 +1193,31 @@
            },
            "componentSlots": {
             "header": {
+             "parentBlockId": "ListGroup-6249f6443",
              "slotContent": [
               {
+               "attributes": {},
                "baseStyles": {
                 "color": "var(--ink-amber-6)",
                 "fontWeight": "500"
                },
                "children": [],
                "classes": [],
+               "componentEvents": {},
                "componentId": "TextBlock-32fbb39e8",
                "componentName": "TextBlock",
                "componentProps": {
                 "fontSize": "text-sm",
                 "tag": "span",
                 "text": "{{ 'Gold \u2022 ' + (partnersList.data || []).filter(p => p.tier === 'Gold').length + ' partners' }}"
-               }
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "rawStyles": {},
+               "tabletStyles": {}
               }
              ],
+             "slotId": "ListGroup-6249f6443:header",
              "slotName": "header"
             }
            }
@@ -1438,6 +1249,7 @@
                  },
                  "children": [
                   {
+                   "attributes": {},
                    "baseStyles": {
                     "paddingLeft": "8px"
                    },
@@ -1463,14 +1275,21 @@
                     }
                    ],
                    "classes": [],
+                   "componentEvents": {},
                    "componentId": "ListCell-024048af9",
                    "componentName": "ListCell",
-                   "componentProps": {}
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
                   },
                   {
+                   "attributes": {},
                    "baseStyles": {},
                    "children": [
                     {
+                     "attributes": {},
                      "baseStyles": {
                       "display": "flex",
                       "flexDirection": "column",
@@ -1480,6 +1299,7 @@
                      },
                      "children": [
                       {
+                       "attributes": {},
                        "baseStyles": {
                         "alignItems": "center",
                         "display": "flex",
@@ -1489,41 +1309,60 @@
                        },
                        "children": [
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "color": "var(--ink-gray-8)",
                           "fontWeight": "600"
                          },
                          "children": [],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "TextBlock-19c62edde",
                          "componentName": "TextBlock",
                          "componentProps": {
                           "fontSize": "text-sm",
                           "tag": "span",
                           "text": "{{ item.partner_name }}"
-                         }
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         },
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "display": "{{ item.specialist ? 'inline-flex' : 'none' }}"
                          },
                          "children": [],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "Badge-55a5414ef",
                          "componentName": "Badge",
                          "componentProps": {
                           "label": "\u2605 Frappe Specialist",
                           "theme": "violet",
                           "variant": "outline"
-                         }
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         }
                        ],
                        "classes": [],
+                       "componentEvents": {},
                        "componentId": "container-73aab6b0f",
                        "componentName": "container",
-                       "originalElement": "div"
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "rawStyles": {},
+                       "tabletStyles": {}
                       },
                       {
+                       "attributes": {},
                        "baseStyles": {
                         "alignItems": "center",
                         "display": "flex",
@@ -1533,6 +1372,7 @@
                        },
                        "children": [
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "alignItems": "center",
                           "display": "flex",
@@ -1541,6 +1381,7 @@
                          },
                          "children": [
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "flexShrink": "0",
                             "height": "12px",
@@ -1548,35 +1389,53 @@
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "FeatherIcon-df3e80b24",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
                             "name": "map-pin",
                             "strokeWidth": 2
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           },
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "color": "var(--ink-gray-5)"
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "TextBlock-b64eadf7b",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
                             "tag": "span",
                             "text": "{{ item.city ? item.city + ', ' + item.country : item.country }}"
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           }
                          ],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "container-f95f3d7df",
                          "componentName": "container",
-                         "originalElement": "div"
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         },
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "alignItems": "center",
                           "display": "flex",
@@ -1585,6 +1444,7 @@
                          },
                          "children": [
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "flexShrink": "0",
                             "height": "12px",
@@ -1592,35 +1452,53 @@
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "FeatherIcon-8e01e8a7c",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
                             "name": "{{ ({\"Manufacturing\": \"settings\", \"Retail\": \"shopping-cart\", \"Healthcare\": \"heart\", \"FinTech\": \"credit-card\", \"Education\": \"book-open\", \"Logistics\": \"truck\", \"Professional Services\": \"briefcase\", \"Nonprofit\": \"users\", \"Government\": \"flag\", \"Technology\": \"cpu\"})[item.industry] || 'folder' }}",
                             "strokeWidth": 2
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           },
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "color": "var(--ink-gray-5)"
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "TextBlock-f99e58cfb",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
                             "tag": "span",
                             "text": "{{ item.industry }} expertise"
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           }
                          ],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "container-bc9f935e2",
                          "componentName": "container",
-                         "originalElement": "div"
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         },
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "alignItems": "center",
                           "display": "flex",
@@ -1629,6 +1507,7 @@
                          },
                          "children": [
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "flexShrink": "0",
                             "height": "12px",
@@ -1636,53 +1515,88 @@
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "FeatherIcon-3c2b621d0",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
                             "name": "tag",
                             "strokeWidth": 2
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           },
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "color": "var(--ink-gray-5)"
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "TextBlock-b19ef24cf",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
                             "tag": "span",
                             "text": "{{ (item.apps_preview || []).join(', ') }}"
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           }
                          ],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "container-e8949134a",
                          "componentName": "container",
-                         "originalElement": "div"
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         }
                        ],
                        "classes": [],
+                       "componentEvents": {},
                        "componentId": "container-8c3423ad4",
                        "componentName": "container",
-                       "originalElement": "div"
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "rawStyles": {},
+                       "tabletStyles": {}
                       }
                      ],
                      "classes": [],
+                     "componentEvents": {},
                      "componentId": "container-dcf4cb83f",
                      "componentName": "container",
-                     "originalElement": "div"
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
                     }
                    ],
                    "classes": [],
+                   "componentEvents": {},
                    "componentId": "ListCell-a07e93ad4",
                    "componentName": "ListCell",
-                   "componentProps": {}
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
                   },
                   {
+                   "attributes": {},
                    "baseStyles": {
                     "alignItems": "center",
                     "display": "flex",
@@ -1690,6 +1604,7 @@
                    },
                    "children": [
                     {
+                     "attributes": {},
                      "baseStyles": {
                       "color": "var(--ink-gray-8)",
                       "fontWeight": "600",
@@ -1697,21 +1612,32 @@
                      },
                      "children": [],
                      "classes": [],
+                     "componentEvents": {},
                      "componentId": "TextBlock-b69215137",
                      "componentName": "TextBlock",
                      "componentProps": {
                       "fontSize": "text-sm",
                       "tag": "span",
                       "text": "\u2605 {{ item.rating }}"
-                     }
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "rawStyles": {},
+                     "tabletStyles": {}
                     }
                    ],
                    "classes": [],
+                   "componentEvents": {},
                    "componentId": "ListCell-4af8a82b3",
                    "componentName": "ListCell",
-                   "componentProps": {}
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
                   },
                   {
+                   "attributes": {},
                    "baseStyles": {
                     "alignItems": "center",
                     "display": "flex",
@@ -1767,8 +1693,8 @@
                      "componentId": "Button-e8ae6c111",
                      "componentName": "Button",
                      "componentProps": {
-                      "iconLeft": "lucide-arrow-up-right",
-                      "label": "View Profile",
+                      "iconLeft": "",
+                      "label": "Contact",
                       "variant": "outline"
                      },
                      "componentSlots": {},
@@ -1778,9 +1704,14 @@
                     }
                    ],
                    "classes": [],
+                   "componentEvents": {},
                    "componentId": "ListCell-1a7b95479",
                    "componentName": "ListCell",
-                   "componentProps": {}
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
                   }
                  ],
                  "classes": [],
@@ -1811,23 +1742,31 @@
            },
            "componentSlots": {
             "header": {
+             "parentBlockId": "ListGroup-edd1019ce",
              "slotContent": [
               {
+               "attributes": {},
                "baseStyles": {
                 "color": "var(--ink-gray-6)",
                 "fontWeight": "500"
                },
                "children": [],
                "classes": [],
+               "componentEvents": {},
                "componentId": "TextBlock-5d162c47e",
                "componentName": "TextBlock",
                "componentProps": {
                 "fontSize": "text-sm",
                 "tag": "span",
                 "text": "{{ 'Silver \u2022 ' + (partnersList.data || []).filter(p => p.tier === 'Silver').length + ' partners' }}"
-               }
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "rawStyles": {},
+               "tabletStyles": {}
               }
              ],
+             "slotId": "ListGroup-edd1019ce:header",
              "slotName": "header"
             }
            }
@@ -1858,6 +1797,7 @@
                  },
                  "children": [
                   {
+                   "attributes": {},
                    "baseStyles": {
                     "paddingLeft": "8px"
                    },
@@ -1883,14 +1823,21 @@
                     }
                    ],
                    "classes": [],
+                   "componentEvents": {},
                    "componentId": "ListCell-7effcd731",
                    "componentName": "ListCell",
-                   "componentProps": {}
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
                   },
                   {
+                   "attributes": {},
                    "baseStyles": {},
                    "children": [
                     {
+                     "attributes": {},
                      "baseStyles": {
                       "display": "flex",
                       "flexDirection": "column",
@@ -1900,6 +1847,7 @@
                      },
                      "children": [
                       {
+                       "attributes": {},
                        "baseStyles": {
                         "alignItems": "center",
                         "display": "flex",
@@ -1909,41 +1857,60 @@
                        },
                        "children": [
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "color": "var(--ink-gray-8)",
                           "fontWeight": "600"
                          },
                          "children": [],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "TextBlock-5b68f4aed",
                          "componentName": "TextBlock",
                          "componentProps": {
                           "fontSize": "text-sm",
                           "tag": "span",
                           "text": "{{ item.partner_name }}"
-                         }
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         },
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "display": "{{ item.specialist ? 'inline-flex' : 'none' }}"
                          },
                          "children": [],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "Badge-76beffb21",
                          "componentName": "Badge",
                          "componentProps": {
                           "label": "\u2605 Frappe Specialist",
                           "theme": "violet",
                           "variant": "outline"
-                         }
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         }
                        ],
                        "classes": [],
+                       "componentEvents": {},
                        "componentId": "container-2bbbaab88",
                        "componentName": "container",
-                       "originalElement": "div"
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "rawStyles": {},
+                       "tabletStyles": {}
                       },
                       {
+                       "attributes": {},
                        "baseStyles": {
                         "alignItems": "center",
                         "display": "flex",
@@ -1953,6 +1920,7 @@
                        },
                        "children": [
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "alignItems": "center",
                           "display": "flex",
@@ -1961,6 +1929,7 @@
                          },
                          "children": [
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "flexShrink": "0",
                             "height": "12px",
@@ -1968,35 +1937,53 @@
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "FeatherIcon-036b397a1",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
                             "name": "map-pin",
                             "strokeWidth": 2
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           },
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "color": "var(--ink-gray-5)"
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "TextBlock-2c7b910a6",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
                             "tag": "span",
                             "text": "{{ item.city ? item.city + ', ' + item.country : item.country }}"
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           }
                          ],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "container-99e0ce006",
                          "componentName": "container",
-                         "originalElement": "div"
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         },
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "alignItems": "center",
                           "display": "flex",
@@ -2005,6 +1992,7 @@
                          },
                          "children": [
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "flexShrink": "0",
                             "height": "12px",
@@ -2012,35 +2000,53 @@
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "FeatherIcon-0341ff9d0",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
                             "name": "{{ ({\"Manufacturing\": \"settings\", \"Retail\": \"shopping-cart\", \"Healthcare\": \"heart\", \"FinTech\": \"credit-card\", \"Education\": \"book-open\", \"Logistics\": \"truck\", \"Professional Services\": \"briefcase\", \"Nonprofit\": \"users\", \"Government\": \"flag\", \"Technology\": \"cpu\"})[item.industry] || 'folder' }}",
                             "strokeWidth": 2
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           },
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "color": "var(--ink-gray-5)"
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "TextBlock-646336856",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
                             "tag": "span",
                             "text": "{{ item.industry }} expertise"
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           }
                          ],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "container-7411b38b4",
                          "componentName": "container",
-                         "originalElement": "div"
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         },
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "alignItems": "center",
                           "display": "flex",
@@ -2049,6 +2055,7 @@
                          },
                          "children": [
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "flexShrink": "0",
                             "height": "12px",
@@ -2056,53 +2063,88 @@
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "FeatherIcon-ec00a0222",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
                             "name": "tag",
                             "strokeWidth": 2
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           },
                           {
+                           "attributes": {},
                            "baseStyles": {
                             "color": "var(--ink-gray-5)"
                            },
                            "children": [],
                            "classes": [],
+                           "componentEvents": {},
                            "componentId": "TextBlock-f829d3dd8",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
                             "tag": "span",
                             "text": "{{ (item.apps_preview || []).join(', ') }}"
-                           }
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
                           }
                          ],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "container-115b6be22",
                          "componentName": "container",
-                         "originalElement": "div"
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "rawStyles": {},
+                         "tabletStyles": {}
                         }
                        ],
                        "classes": [],
+                       "componentEvents": {},
                        "componentId": "container-5e18641a4",
                        "componentName": "container",
-                       "originalElement": "div"
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "rawStyles": {},
+                       "tabletStyles": {}
                       }
                      ],
                      "classes": [],
+                     "componentEvents": {},
                      "componentId": "container-0a72b663c",
                      "componentName": "container",
-                     "originalElement": "div"
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
                     }
                    ],
                    "classes": [],
+                   "componentEvents": {},
                    "componentId": "ListCell-e4e0b2075",
                    "componentName": "ListCell",
-                   "componentProps": {}
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
                   },
                   {
+                   "attributes": {},
                    "baseStyles": {
                     "alignItems": "center",
                     "display": "flex",
@@ -2110,6 +2152,7 @@
                    },
                    "children": [
                     {
+                     "attributes": {},
                      "baseStyles": {
                       "color": "var(--ink-gray-8)",
                       "fontWeight": "600",
@@ -2117,21 +2160,32 @@
                      },
                      "children": [],
                      "classes": [],
+                     "componentEvents": {},
                      "componentId": "TextBlock-0fae9384e",
                      "componentName": "TextBlock",
                      "componentProps": {
                       "fontSize": "text-sm",
                       "tag": "span",
                       "text": "\u2605 {{ item.rating }}"
-                     }
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "rawStyles": {},
+                     "tabletStyles": {}
                     }
                    ],
                    "classes": [],
+                   "componentEvents": {},
                    "componentId": "ListCell-810485181",
                    "componentName": "ListCell",
-                   "componentProps": {}
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
                   },
                   {
+                   "attributes": {},
                    "baseStyles": {
                     "alignItems": "center",
                     "display": "flex",
@@ -2187,8 +2241,8 @@
                      "componentId": "Button-a0ff17fc9",
                      "componentName": "Button",
                      "componentProps": {
-                      "iconLeft": "lucide-arrow-up-right",
-                      "label": "View Profile",
+                      "iconLeft": "",
+                      "label": "Contact",
                       "variant": "outline"
                      },
                      "componentSlots": {},
@@ -2198,9 +2252,14 @@
                     }
                    ],
                    "classes": [],
+                   "componentEvents": {},
                    "componentId": "ListCell-16e525b58",
                    "componentName": "ListCell",
-                   "componentProps": {}
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "rawStyles": {},
+                   "tabletStyles": {}
                   }
                  ],
                  "classes": [],
@@ -2231,23 +2290,31 @@
            },
            "componentSlots": {
             "header": {
+             "parentBlockId": "ListGroup-42ec2c9d7",
              "slotContent": [
               {
+               "attributes": {},
                "baseStyles": {
                 "color": "var(--ink-red-6)",
                 "fontWeight": "500"
                },
                "children": [],
                "classes": [],
+               "componentEvents": {},
                "componentId": "TextBlock-2e255170e",
                "componentName": "TextBlock",
                "componentProps": {
                 "fontSize": "text-sm",
                 "tag": "span",
                 "text": "{{ 'Bronze \u2022 ' + (partnersList.data || []).filter(p => p.tier === 'Bronze').length + ' partners' }}"
-               }
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "rawStyles": {},
+               "tabletStyles": {}
               }
              ],
+             "slotId": "ListGroup-42ec2c9d7:header",
              "slotName": "header"
             }
            }
@@ -2375,7 +2442,7 @@
                       "display": "flex",
                       "flexDirection": "row",
                       "flexWrap": "wrap",
-                      "gap": "6px"
+                      "gap": "8px"
                      },
                      "children": [
                       {
@@ -2432,7 +2499,13 @@
                     {
                      "attributes": {},
                      "baseStyles": {
-                      "color": "{{ (myShortlist.data || []).includes(dataItem.name) ? 'var(--ink-amber-6)' : 'var(--ink-gray-5)' }}"
+                      "alignItems": "center",
+                      "color": "{{ (myShortlist.data || []).includes(dataItem.name) ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}",
+                      "display": "flex",
+                      "flexShrink": "0",
+                      "height": "32px",
+                      "justifyContent": "center",
+                      "width": "32px"
                      },
                      "children": [],
                      "classes": [],
@@ -2471,7 +2544,7 @@
                    "baseStyles": {
                     "display": "flex",
                     "flexDirection": "column",
-                    "gap": "5px"
+                    "gap": "7px"
                    },
                    "children": [
                     {
@@ -2499,21 +2572,126 @@
                     {
                      "attributes": {},
                      "baseStyles": {
-                      "color": "var(--ink-gray-5)",
-                      "marginTop": "4px"
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "4px"
                      },
-                     "children": [],
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "flexShrink": "0",
+                        "height": "12px",
+                        "width": "12px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "FeatherIcon-c32f355bd",
+                       "componentName": "FeatherIcon",
+                       "componentProps": {
+                        "color": "var(--ink-gray-5)",
+                        "name": "map-pin",
+                        "strokeWidth": 2
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-5)"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-5e14b488a",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-xs",
+                        "tag": "span",
+                        "text": "{{ dataItem.city ? dataItem.city + ', ' + dataItem.country : dataItem.country }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
                      "classes": [],
                      "componentEvents": {},
-                     "componentId": "TextBlock-5e14b488a",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-xs",
-                      "tag": "span",
-                      "text": "{{ dataItem.city ? dataItem.city + ', ' + dataItem.country : dataItem.country }}"
-                     },
+                     "componentId": "container-5d0b3b06c",
+                     "componentName": "container",
+                     "componentProps": {},
                      "componentSlots": {},
                      "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "4px"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "flexShrink": "0",
+                        "height": "12px",
+                        "width": "12px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "FeatherIcon-52bf9d3cd",
+                       "componentName": "FeatherIcon",
+                       "componentProps": {
+                        "color": "var(--ink-gray-5)",
+                        "name": "tag",
+                        "strokeWidth": 2
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-5)"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-a17ce891b",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-xs",
+                        "tag": "span",
+                        "text": "{{ (dataItem.apps_preview || []).join(', ') }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "container-12cf61b88",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
                      "rawStyles": {},
                      "tabletStyles": {}
                     }
@@ -2585,8 +2763,8 @@
                        "componentId": "Button-5e49c67a5",
                        "componentName": "Button",
                        "componentProps": {
-                        "iconLeft": "lucide-arrow-up-right",
-                        "label": "Quick View",
+                        "iconLeft": "",
+                        "label": "Contact",
                         "variant": "outline"
                        },
                        "componentSlots": {},
@@ -2805,7 +2983,13 @@
                     {
                      "attributes": {},
                      "baseStyles": {
-                      "color": "{{ (myShortlist.data || []).includes(dataItem.name) ? 'var(--ink-amber-6)' : 'var(--ink-gray-5)' }}"
+                      "alignItems": "center",
+                      "color": "{{ (myShortlist.data || []).includes(dataItem.name) ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}",
+                      "display": "flex",
+                      "flexShrink": "0",
+                      "height": "32px",
+                      "justifyContent": "center",
+                      "width": "32px"
                      },
                      "children": [],
                      "classes": [],
@@ -2844,7 +3028,7 @@
                    "baseStyles": {
                     "display": "flex",
                     "flexDirection": "column",
-                    "gap": "5px"
+                    "gap": "7px"
                    },
                    "children": [
                     {
@@ -2872,21 +3056,126 @@
                     {
                      "attributes": {},
                      "baseStyles": {
-                      "color": "var(--ink-gray-5)",
-                      "marginTop": "4px"
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "4px"
                      },
-                     "children": [],
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "flexShrink": "0",
+                        "height": "12px",
+                        "width": "12px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "FeatherIcon-9b0dd3f37",
+                       "componentName": "FeatherIcon",
+                       "componentProps": {
+                        "color": "var(--ink-gray-5)",
+                        "name": "map-pin",
+                        "strokeWidth": 2
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-5)"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-2ada1ce75",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-xs",
+                        "tag": "span",
+                        "text": "{{ dataItem.city ? dataItem.city + ', ' + dataItem.country : dataItem.country }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
                      "classes": [],
                      "componentEvents": {},
-                     "componentId": "TextBlock-2ada1ce75",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-xs",
-                      "tag": "span",
-                      "text": "{{ dataItem.city ? dataItem.city + ', ' + dataItem.country : dataItem.country }}"
-                     },
+                     "componentId": "container-245bfc30f",
+                     "componentName": "container",
+                     "componentProps": {},
                      "componentSlots": {},
                      "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "4px"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "flexShrink": "0",
+                        "height": "12px",
+                        "width": "12px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "FeatherIcon-8d3a759c1",
+                       "componentName": "FeatherIcon",
+                       "componentProps": {
+                        "color": "var(--ink-gray-5)",
+                        "name": "tag",
+                        "strokeWidth": 2
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-5)"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-d9431df06",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-xs",
+                        "tag": "span",
+                        "text": "{{ (dataItem.apps_preview || []).join(', ') }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "container-a3a0801dc",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
                      "rawStyles": {},
                      "tabletStyles": {}
                     }
@@ -2959,7 +3248,7 @@
                        "componentName": "Button",
                        "componentProps": {
                         "iconLeft": "lucide-arrow-up-right",
-                        "label": "Quick View",
+                        "label": "Contact",
                         "variant": "outline"
                        },
                        "componentSlots": {},
@@ -3178,7 +3467,13 @@
                     {
                      "attributes": {},
                      "baseStyles": {
-                      "color": "{{ (myShortlist.data || []).includes(dataItem.name) ? 'var(--ink-amber-6)' : 'var(--ink-gray-5)' }}"
+                      "alignItems": "center",
+                      "color": "{{ (myShortlist.data || []).includes(dataItem.name) ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}",
+                      "display": "flex",
+                      "flexShrink": "0",
+                      "height": "32px",
+                      "justifyContent": "center",
+                      "width": "32px"
                      },
                      "children": [],
                      "classes": [],
@@ -3217,7 +3512,7 @@
                    "baseStyles": {
                     "display": "flex",
                     "flexDirection": "column",
-                    "gap": "5px"
+                    "gap": "7px"
                    },
                    "children": [
                     {
@@ -3245,21 +3540,126 @@
                     {
                      "attributes": {},
                      "baseStyles": {
-                      "color": "var(--ink-gray-5)",
-                      "marginTop": "4px"
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "4px"
                      },
-                     "children": [],
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "flexShrink": "0",
+                        "height": "12px",
+                        "width": "12px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "FeatherIcon-4678ffc1d",
+                       "componentName": "FeatherIcon",
+                       "componentProps": {
+                        "color": "var(--ink-gray-5)",
+                        "name": "map-pin",
+                        "strokeWidth": 2
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-5)"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-df391b9ab",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-xs",
+                        "tag": "span",
+                        "text": "{{ dataItem.city ? dataItem.city + ', ' + dataItem.country : dataItem.country }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
                      "classes": [],
                      "componentEvents": {},
-                     "componentId": "TextBlock-df391b9ab",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-xs",
-                      "tag": "span",
-                      "text": "{{ dataItem.city ? dataItem.city + ', ' + dataItem.country : dataItem.country }}"
-                     },
+                     "componentId": "container-d8b9710e8",
+                     "componentName": "container",
+                     "componentProps": {},
                      "componentSlots": {},
                      "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "4px"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "flexShrink": "0",
+                        "height": "12px",
+                        "width": "12px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "FeatherIcon-f3dd093da",
+                       "componentName": "FeatherIcon",
+                       "componentProps": {
+                        "color": "var(--ink-gray-5)",
+                        "name": "tag",
+                        "strokeWidth": 2
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-5)"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-90788e487",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-xs",
+                        "tag": "span",
+                        "text": "{{ (dataItem.apps_preview || []).join(', ') }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "container-5767903ad",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
                      "rawStyles": {},
                      "tabletStyles": {}
                     }
@@ -3331,8 +3731,8 @@
                        "componentId": "Button-c1ca2b190",
                        "componentName": "Button",
                        "componentProps": {
-                        "iconLeft": "lucide-arrow-up-right",
-                        "label": "Quick View",
+                        "iconLeft": "",
+                        "label": "Contact",
                         "variant": "outline"
                        },
                        "componentSlots": {},
@@ -10136,11 +10536,11 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-08-10 16:12:59.489107",
+ "creation": "2026-08-12 14:36:43.319001",
  "doctype": "Studio Page",
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-08-12 12:25:44.760672",
+ "modified": "2026-08-13 11:27:55.538395",
  "modified_by": "Administrator",
  "name": "find_partners",
  "owner": "Administrator",
@@ -10151,7 +10551,7 @@
   {
    "auto": 1,
    "method": "GET",
-   "params": "{\"search\": \"{{ searchTerm }}\", \"industry\": \"{{ industryFilter }}\", \"product\": \"{{ productFilter }}\", \"region\": \"{{ regionFilter }}\", \"delivery_mode\": \"{{ deliveryModeFilter }}\", \"country\": \"{{ countryFilter }}\", \"sort\": \"{{ sortBy }}\", \"tier\": \"{{ tierFilter }}\", \"business_process\": \"{{ businessProcessFilter }}\", \"implementation_type\": \"{{ implementationTypeFilter }}\", \"language\": \"{{ languageFilter }}\", \"min_rating\": \"{{ minRatingFilter }}\", \"min_pmm_level\": \"{{ minPmmLevelFilter }}\", \"max_response_time\": \"{{ maxResponseTimeFilter }}\"}",
+   "params": "{\"search\": \"{{ searchTerm }}\", \"industry\": \"{{ industryFilter }}\", \"product\": \"{{ productFilter }}\", \"region\": \"{{ regionFilter }}\", \"delivery_mode\": \"{{ deliveryModeFilter }}\", \"country\": \"{{ countryFilter }}\", \"sort\": \"{{ sortBy }}\", \"tier\": \"{{ tierFilter }}\", \"business_process\": \"{{ businessProcessFilter }}\", \"implementation_type\": \"{{ implementationTypeFilter }}\", \"language\": \"{{ languageFilter }}\", \"min_rating\": \"{{ minRatingFilter }}\", \"min_pmm_level\": \"{{ minPmmLevelFilter }}\", \"max_response_time\": \"{{ maxResponseTimeFilter }}\", \"extra_filters\": \"{{ extraFiltersWire }}\"}",
    "resource_name": "partnersList",
    "resource_type": "API Resource",
    "url": "/api/method/connect.api.search_partners"
@@ -10333,6 +10733,21 @@
    "initial_value": "\"\"",
    "variable_name": "maxResponseTimeFilter",
    "variable_type": "String"
+  },
+  {
+   "initial_value": "[]",
+   "variable_name": "partnerFilters",
+   "variable_type": "Object"
+  },
+  {
+   "initial_value": "\"[]\"",
+   "variable_name": "extraFiltersWire",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "false",
+   "variable_name": "findMatchHover",
+   "variable_type": "Boolean"
   }
  ]
 }
