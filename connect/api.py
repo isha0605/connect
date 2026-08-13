@@ -2,7 +2,7 @@ import difflib
 import json
 
 import frappe
-from frappe.utils import cint, flt
+from frappe.utils import cint, flt, get_fullname, nowdate
 
 PARTNER_FIELDS = [
 	"name", "partner_name", "logo", "tagline", "tier", "specialist",
@@ -414,5 +414,63 @@ def save_customer_requirement(
 		"outcome": outcome,
 	})
 	doc.insert(ignore_permissions=True)
+	frappe.db.commit()
+	return {"name": doc.name}
+
+
+@frappe.whitelist()
+def get_my_review_for_partner(partner):
+	"""The current user's own review of this partner, if they've already left one —
+	lets the "Write a Review" form load as an edit instead of a blank form."""
+	customer = _get_customer_for_user()
+	if not customer:
+		return None
+	name = frappe.db.get_value("Partner Review", {"partner": partner, "customer": customer}, "name")
+	return frappe.get_doc("Partner Review", name).as_dict() if name else None
+
+
+@frappe.whitelist()
+def submit_partner_review(
+	partner, rating, headline=None, quote=None,
+	business_understanding=None, implementation_quality=None, communication=None,
+	timeliness=None, support=None, technical_expertise=None,
+):
+	"""Create or update the current customer's review of a partner. Partner.rating,
+	reviews_count, and the dimension scores are recomputed by Partner Review's own
+	after_insert/on_update hook, not here."""
+	customer = _get_customer_for_user()
+	if not customer:
+		frappe.throw("Your account isn't linked to a customer company yet.", frappe.PermissionError)
+
+	rating = cint(rating)
+	if rating < 1 or rating > 5:
+		frappe.throw("Rating must be between 1 and 5.")
+
+	values = {
+		"partner": partner,
+		"customer": customer,
+		"reviewer_name": get_fullname(frappe.session.user),
+		"rating": rating,
+		"headline": headline,
+		"quote": quote,
+		"reviewed_on": nowdate(),
+		"verified": 1,
+		"business_understanding": cint(business_understanding) or None,
+		"implementation_quality": cint(implementation_quality) or None,
+		"communication": cint(communication) or None,
+		"timeliness": cint(timeliness) or None,
+		"support": cint(support) or None,
+		"technical_expertise": cint(technical_expertise) or None,
+	}
+
+	existing = frappe.db.get_value("Partner Review", {"partner": partner, "customer": customer}, "name")
+	if existing:
+		doc = frappe.get_doc("Partner Review", existing)
+		doc.update(values)
+		doc.save(ignore_permissions=True)
+	else:
+		doc = frappe.get_doc({"doctype": "Partner Review", **values})
+		doc.insert(ignore_permissions=True)
+
 	frappe.db.commit()
 	return {"name": doc.name}
