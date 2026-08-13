@@ -2844,19 +2844,52 @@
              "children": [
               {
                "baseStyles": {
-                "color": "var(--ink-gray-8)",
-                "fontWeight": "600",
+                "alignItems": "center",
+                "display": "flex",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
                 "marginBottom": "12px"
                },
-               "children": [],
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "TextBlock-072df7e20",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "Reviews"
+                 }
+                },
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "call('connect.api.get_my_review_for_partner', { partner: partner.doc.name }).then((r) => { reviewRating.value = r ? r.rating : 0; reviewHeadline.value = r ? (r.headline || '') : ''; reviewQuote.value = r ? (r.quote || '') : ''; reviewDialogOpen.value = true; });"
+                  }
+                 },
+                 "componentId": "Button-open-write-review",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "iconLeft": "lucide-pencil-line",
+                  "label": "Write a Review",
+                  "size": "sm",
+                  "variant": "outline"
+                 }
+                }
+               ],
                "classes": [],
-               "componentId": "TextBlock-072df7e20",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-base",
-                "tag": "span",
-                "text": "Reviews"
-               }
+               "componentId": "container-reviews-header-row",
+               "componentName": "container",
+               "originalElement": "div"
               },
               {
                "baseStyles": {
@@ -3235,6 +3268,198 @@
         "size": "md",
         "title": "{{ 'Contact ' + partner.doc.partner_name }}"
        }
+      },
+      {
+       "children": [
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "14px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "TextBlock-review-rating-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "Your Rating"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "row",
+              "gap": "4px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "Repeater-review-stars",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ [1, 2, 3, 4, 5] }}",
+              "dataKey": "self",
+              "emptyStateMessage": ""
+             },
+             "componentSlots": {
+              "default": {
+               "parentBlockId": "Repeater-review-stars",
+               "slotContent": [
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "color": "{{ reviewRating >= dataItem ? '#f5a623' : '#dfe2e4' }}",
+                  "cursor": "pointer",
+                  "lineHeight": "1",
+                  "transition": "color .1s ease"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "reviewRating.value = dataItem;"
+                  }
+                 },
+                 "componentId": "TextBlock-review-star",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-2xl",
+                  "tag": "span",
+                  "text": "\u2605"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "rawStyles": {},
+                 "tabletStyles": {}
+                }
+               ],
+               "slotId": "Repeater-review-stars:default",
+               "slotName": "default"
+              }
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "container-review-rating-field",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "children": [],
+           "classes": [],
+           "componentId": "TextInput-review-headline",
+           "componentName": "TextInput",
+           "componentProps": {
+            "label": "Headline (optional)",
+            "modelValue": {
+             "$type": "variable",
+             "name": "reviewHeadline"
+            },
+            "placeholder": "Sum up your experience in one line"
+           }
+          },
+          {
+           "children": [],
+           "classes": [],
+           "componentId": "Textarea-review-quote",
+           "componentName": "Textarea",
+           "componentProps": {
+            "label": "Your Review",
+            "modelValue": {
+             "$type": "variable",
+             "name": "reviewQuote"
+            },
+            "placeholder": "{{ 'How was your experience working with ' + partner.doc.partner_name + '?' }}",
+            "required": true,
+            "rows": 4
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "justifyContent": "flex-end",
+            "marginTop": "20px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "reviewDialogOpen.value = false;"
+              }
+             },
+             "componentId": "Button-review-cancel",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Cancel",
+              "variant": "outline"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "reviewSubmitting.value = true; call('connect.api.submit_partner_review', { partner: partner.doc.name, rating: reviewRating.value, headline: reviewHeadline.value, quote: reviewQuote.value }).then(() => { toast({ title: 'Review submitted', text: 'Thanks for sharing your feedback!', icon: 'check-circle' }); reviewDialogOpen.value = false; reviewSubmitting.value = false; partnerReviews.reload(); partner.reload(); }).catch(() => { reviewSubmitting.value = false; });"
+              }
+             },
+             "componentId": "Button-review-submit",
+             "componentName": "Button",
+             "componentProps": {
+              "disabled": "{{ !reviewRating || !reviewQuote || reviewSubmitting }}",
+              "iconLeft": "lucide-send",
+              "label": "Submit Review",
+              "loading": "{{ reviewSubmitting }}",
+              "variant": "solid"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "container-review-actions",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "container-review-dialog-body",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "Dialog-write-review",
+       "componentName": "Dialog",
+       "componentProps": {
+        "modelValue": {
+         "$type": "variable",
+         "name": "reviewDialogOpen"
+        },
+        "size": "md",
+        "title": "{{ 'Review ' + partner.doc.partner_name }}"
+       }
       }
      ],
      "classes": [],
@@ -3249,11 +3474,11 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-08-07 13:33:54.439457",
+ "creation": "2026-08-13 12:40:13.892716",
  "doctype": "Studio Page",
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-08-13 12:19:33.513804",
+ "modified": "2026-08-13 13:02:23.631846",
  "modified_by": "Administrator",
  "name": "partner_profile",
  "owner": "Administrator",
@@ -3330,6 +3555,36 @@
    "initial_value": "\"All\"",
    "variable_name": "successStoryCategory",
    "variable_type": "String"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "false",
+   "variable_name": "reviewDialogOpen",
+   "variable_type": "Boolean"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "0",
+   "variable_name": "reviewRating",
+   "variable_type": "Number"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "\"\"",
+   "variable_name": "reviewHeadline",
+   "variable_type": "String"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "\"\"",
+   "variable_name": "reviewQuote",
+   "variable_type": "String"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "false",
+   "variable_name": "reviewSubmitting",
+   "variable_type": "Boolean"
   }
  ]
 }
