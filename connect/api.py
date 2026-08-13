@@ -467,87 +467,65 @@ def list_matching_partners(answers=None, limit=8):
 	wizard-answer -> Partner-data mappings as count_matching_partners, but returns
 	full rows (same shape as search_partners) instead of just a count.
 
-	Partners that satisfy every mappable criterion are returned first. If there
-	aren't enough of those, partners matching everything except the industry are
-	included after with `missing_label` set, describing that one gap, instead of
-	just dropping them — so an otherwise-strong match doesn't disappear over a
-	single mismatched field."""
+	Every is_featured partner is scored by how many of a small set of concrete,
+	customer-recognizable requirements they fail (currently: industry, delivery
+	mode) — not a hard AND filter. Full matches (0 missed) come first; partners
+	missing 1-2 requirements are included after with `missing_label` naming
+	exactly what they're short on, so a strong-but-imperfect match doesn't just
+	disappear. Partners missing 3+ are excluded as too far off to be useful."""
 	if isinstance(answers, str):
 		answers = json.loads(answers or "{}")
 	answers = answers or {}
 	limit = cint(limit) or 8
 
-	industry = answers.get("industry")
-	wanted_industry = WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry) if industry else None
-
-	impl_type = LOOKING_FOR_TO_IMPL_TYPE.get(answers.get("looking_for"))
-
-	situation = answers.get("current_situation")
-	migration = CURRENT_SITUATION_TO_MIGRATION.get(situation)
-	impl_type_2 = None if migration else CURRENT_SITUATION_TO_IMPL_TYPE.get(situation)
-
-	mode = DELIVERY_TO_MODE.get(answers.get("delivery_preference"))
-
-	requirements = answers.get("requirements") or []
-	bp_values = [REQUIREMENT_TO_BUSINESS_PROCESS[r] for r in requirements if r in REQUIREMENT_TO_BUSINESS_PROCESS]
-	wants_migration_tag = any(r in REQUIREMENT_MIGRATION_TAGS for r in requirements)
-
-	# Criteria shared by both the full-match and industry-relaxed passes.
-	common_filters = [["Partner", "is_featured", "=", 1]]
-	if impl_type:
-		common_filters.append(["Partner Implementation Type", "implementation_type", "=", impl_type])
-	if migration:
-		common_filters.append(["Partner Migration Path", "migration_path", "=", migration])
-	elif impl_type_2:
-		common_filters.append(["Partner Implementation Type", "implementation_type", "=", impl_type_2])
-	if mode:
-		common_filters.append(["Partner Delivery Mode", "delivery_mode", "=", mode])
-	if bp_values:
-		common_filters.append(["Partner Business Process", "business_process", "in", bp_values])
-	elif wants_migration_tag:
-		common_filters.append(["Partner Migration Path", "migration_path", "is", "set"])
-
-	def _names(filters, limit_page_length):
-		rows = frappe.get_list(
-			"Partner", filters=filters, fields=["name"],
-			order_by="rating desc, rollouts desc", limit_page_length=limit_page_length,
-		)
-		return [r.name for r in rows]
-
-	full_filters = list(common_filters)
-	if wanted_industry:
-		full_filters.append(["Partner", "industry", "=", wanted_industry])
-	full_names = _names(full_filters, limit)
-
-	partial_names = []
-	if wanted_industry and len(full_names) < limit:
-		partial_filters = list(common_filters)
-		if full_names:
-			partial_filters.append(["Partner", "name", "not in", full_names])
-		partial_names = _names(partial_filters, limit - len(full_names))
-
-	all_names = full_names + partial_names
-	if not all_names:
+	names = [n.name for n in frappe.get_list(
+		"Partner", filters=[["Partner", "is_featured", "=", 1]], fields=["name"], limit_page_length=0,
+	)]
+	if not names:
 		return []
 
-	rows = frappe.get_list("Partner", filters=[["Partner", "name", "in", all_names]], fields=PARTNER_FIELDS)
+	rows = frappe.get_list("Partner", filters=[["Partner", "name", "in", names]], fields=PARTNER_FIELDS)
 	by_name = {r.name: r for r in rows}
+
+	delivery_by = {}
+	for r in frappe.get_all("Partner Delivery Mode", filters={"parent": ["in", names]}, fields=["parent", "delivery_mode"]):
+		delivery_by.setdefault(r.parent, []).append(r.delivery_mode)
 
 	apps_by_partner = {}
 	for row in frappe.get_all(
-		"Partner App", filters={"parent": ["in", all_names]}, fields=["parent", "app"], order_by="idx asc",
+		"Partner App", filters={"parent": ["in", names]}, fields=["parent", "app"], order_by="idx asc",
 	):
 		bucket = apps_by_partner.setdefault(row.parent, [])
 		if len(bucket) < 2:
 			bucket.append(row.app)
 
-	result = []
-	for name in full_names + partial_names:
+	industry = answers.get("industry")
+	wanted_industry = WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry) if industry else None
+
+	delivery = answers.get("delivery_preference")
+	wanted_mode = DELIVERY_TO_MODE.get(delivery) if delivery and delivery != "No preference" else None
+
+	scored = []
+	for name in names:
 		row = by_name.get(name)
 		if not row:
 			continue
+		missing = []
+		if wanted_industry and row.industry != wanted_industry:
+			missing.append(f"{industry} Experience")
+		if wanted_mode and wanted_mode not in delivery_by.get(name, []):
+			missing.append(f"{delivery} Delivery")
+		if len(missing) <= 2:
+			scored.append((len(missing), -(row.rating or 0), name, missing))
+
+	scored.sort(key=lambda s: (s[0], s[1]))
+	scored = scored[:limit]
+
+	result = []
+	for _missing_count, _neg_rating, name, missing in scored:
+		row = dict(by_name[name])
 		row["apps_preview"] = apps_by_partner.get(name, [])
-		row["missing_label"] = f"{industry} Experience" if (name in partial_names and industry) else None
+		row["missing_label"] = ", ".join(missing) if missing else None
 		result.append(row)
 	return result
 
