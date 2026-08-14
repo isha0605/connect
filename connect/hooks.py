@@ -127,12 +127,22 @@ app_license = "mit"
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
+	"Connect Thread": "connect.connect.permissions.get_thread_permission_query_conditions",
+	"Connect Thread Member": "connect.connect.permissions.get_thread_member_permission_query_conditions",
+	"Connect Message": "connect.connect.permissions.get_message_permission_query_conditions",
+	"Connect Message Template": "connect.connect.permissions.get_message_template_permission_query_conditions",
+	"Studio Page": "connect.connect.permissions.get_studio_page_permission_query_conditions",
 	"Customer": "connect.connect.doctype.customer.customer.get_permission_query_conditions",
 	"Shortlist": "connect.connect.doctype.shortlist.shortlist.get_permission_query_conditions",
 	"Requirement": "connect.connect.doctype.requirement.requirement.get_permission_query_conditions",
 }
 
 has_permission = {
+	"Connect Thread": "connect.connect.permissions.has_thread_permission",
+	"Connect Thread Member": "connect.connect.permissions.has_thread_member_permission",
+	"Connect Message": "connect.connect.permissions.has_message_permission",
+	"Connect Message Template": "connect.connect.permissions.has_message_template_permission",
+	"Studio Page": "connect.connect.permissions.has_studio_page_permission",
 	"Customer": "connect.connect.doctype.customer.customer.has_permission",
 	"Shortlist": "connect.connect.doctype.shortlist.shortlist.has_permission",
 	"Requirement": "connect.connect.doctype.requirement.requirement.has_permission",
@@ -142,13 +152,23 @@ has_permission = {
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"Connect Message": {
+		"after_insert": "connect.connect.notifications.notify_thread_members",
+	},
+	"Connect Customer Member": {
+		"after_insert": "connect.connect.roles.grant_company_role",
+		"on_trash": "connect.connect.roles.revoke_company_role",
+	},
+	"Connect Partner Member": {
+		"after_insert": "connect.connect.roles.grant_company_role",
+		"on_trash": "connect.connect.roles.revoke_company_role",
+	},
+	"Connect Thread Member": {
+		"after_insert": "connect.connect.roles.grant_thread_guest_role",
+		"on_trash": "connect.connect.roles.revoke_thread_guest_role",
+	},
+}
 
 # Scheduled Tasks
 # ---------------
