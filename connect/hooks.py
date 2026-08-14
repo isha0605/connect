@@ -132,6 +132,9 @@ permission_query_conditions = {
 	"Connect Message": "connect.connect.permissions.get_message_permission_query_conditions",
 	"Connect Message Template": "connect.connect.permissions.get_message_template_permission_query_conditions",
 	"Studio Page": "connect.connect.permissions.get_studio_page_permission_query_conditions",
+	"Customer": "connect.connect.doctype.customer.customer.get_permission_query_conditions",
+	"Shortlist": "connect.connect.doctype.shortlist.shortlist.get_permission_query_conditions",
+	"Requirement": "connect.connect.doctype.requirement.requirement.get_permission_query_conditions",
 }
 
 has_permission = {
@@ -140,6 +143,9 @@ has_permission = {
 	"Connect Message": "connect.connect.permissions.has_message_permission",
 	"Connect Message Template": "connect.connect.permissions.has_message_template_permission",
 	"Studio Page": "connect.connect.permissions.has_studio_page_permission",
+	"Customer": "connect.connect.doctype.customer.customer.has_permission",
+	"Shortlist": "connect.connect.doctype.shortlist.shortlist.has_permission",
+	"Requirement": "connect.connect.doctype.requirement.requirement.has_permission",
 }
 
 # Document Events
