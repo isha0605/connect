@@ -633,10 +633,18 @@ def get_pinned_message(thread):
 
 @frappe.whitelist()
 def get_my_context():
+	"""customer side reads real Customer Team Member membership (the doctype the rest of
+	the app — Requirement, Shortlist, Pricing — already uses); partner side still reads
+	Connect Partner Member, since there's no real partner-side user/login model yet (see
+	_is_partner_admin/_is_partner_member in connect.permissions, which are in the same
+	not-yet-built state) — matching that rather than inventing a partner membership model
+	here."""
 	user = frappe.session.user
-	customer_membership = frappe.db.get_value(
-		"Connect Customer Member", {"user": user}, ["customer", "is_admin"], as_dict=True
-	)
+	customer = _get_customer_for_user(user)
+	customer_membership = None
+	if customer:
+		is_admin = frappe.db.get_value("Customer Team Member", {"parent": customer, "user": user}, "is_admin")
+		customer_membership = {"customer": customer, "is_admin": cint(is_admin)}
 	partner_membership = frappe.db.get_value(
 		"Connect Partner Member", {"user": user}, ["partner", "is_admin"], as_dict=True
 	)
@@ -1493,7 +1501,16 @@ def get_pricing_view(partner, requirement=None):
 	recent Requirement (via Customer Team Member) is resolved automatically, so
 	the frontend doesn't need to track a requirement id of its own. Passing one
 	explicitly overrides that lookup.
+
+	`partner` can arrive as the literal string "undefined" — the Pricing tab's
+	resource fires as soon as the page mounts, which can race the route param
+	it reads `partner` from. Treat that (and any other unresolved partner) as
+	"nothing to show yet" rather than raising, so a client-side timing hiccup
+	doesn't surface a fatal DoesNotExistError in the console.
 	"""
+	if not partner or partner == "undefined" or not frappe.db.exists("Partner", partner):
+		return {"state": "loading"}
+
 	partner_doc = frappe.get_doc("Partner", partner)
 	addons = [a.as_dict() for a in partner_doc.addons]
 	addon_rate = 2000 if partner_doc.starter_pack else flt(partner_doc.hourly_rate)
