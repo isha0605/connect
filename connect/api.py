@@ -158,6 +158,91 @@ def close_thread(thread):
 	return {"status": thread_doc.status}
 
 
+def _format_requirement_message(customer, note=None):
+	"""Turns the customer's most recently saved Requirement into a readable message body,
+	with an optional free-text note appended underneath. None if there's neither — the
+	caller skips sending a message in that case rather than posting something empty."""
+	lines = []
+	requirement = frappe.db.get_value("Requirement", {"customer": customer}, "name", order_by="creation desc")
+	if requirement:
+		req = frappe.get_doc("Requirement", requirement)
+		lines.append(_("New inquiry from {0} — here's what they're looking for:").format(req.company_name or customer))
+		if req.industry:
+			lines.append(_("Industry: {0}").format(req.industry))
+		if req.looking_for:
+			lines.append(_("Looking for: {0}").format(req.looking_for))
+		apps = [a.app for a in req.apps]
+		if apps:
+			lines.append(_("Apps: {0}").format(", ".join(apps)))
+		if req.company_size:
+			lines.append(_("Company size: {0}").format(req.company_size))
+		if req.timeline:
+			lines.append(_("Timeline: {0}").format(req.timeline))
+		if req.budget:
+			lines.append(_("Budget: {0}").format(req.budget))
+		if req.delivery_preference:
+			lines.append(_("Delivery preference: {0}").format(req.delivery_preference))
+
+	note = (note or "").strip()
+	if note:
+		if lines:
+			lines.append("")
+		lines.append(note)
+
+	return "\n".join(lines) if lines else None
+
+
+@frappe.whitelist()
+def start_partner_thread(partner, message=None):
+	"""Contact-Partner entry point: reuses an existing (customer, partner) thread if one
+	already exists — threads are continuous per pair, not per inquiry, per the messaging
+	spec — otherwise creates one, seats both the caller and the partner's admin as Write
+	members (a partner admin has no implicit visibility into a thread they weren't
+	explicitly added to), and — only for a brand new, still-empty thread — opens with the
+	caller's saved Requirement as the first message so the partner isn't starting from a
+	blind inquiry."""
+	user = frappe.session.user
+	customer = _get_customer_for_user(user)
+	if not customer:
+		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
+
+	thread = frappe.db.get_value("Connect Thread", {"customer": customer, "partner": partner}, "name")
+	if not thread:
+		thread = frappe.get_doc({
+			"doctype": "Connect Thread",
+			"customer": customer,
+			"partner": partner,
+		}).insert(ignore_permissions=True).name
+
+	if not frappe.db.exists("Connect Thread Member", {"thread": thread, "user": user}):
+		frappe.get_doc({
+			"doctype": "Connect Thread Member",
+			"thread": thread,
+			"user": user,
+			"side": "Customer",
+			"permission": "Write",
+			"added_by": user,
+		}).insert(ignore_permissions=True)
+
+	partner_admin = frappe.db.get_value("Connect Partner Member", {"partner": partner, "is_admin": 1}, "user")
+	if partner_admin and not frappe.db.exists("Connect Thread Member", {"thread": thread, "user": partner_admin}):
+		frappe.get_doc({
+			"doctype": "Connect Thread Member",
+			"thread": thread,
+			"user": partner_admin,
+			"side": "Partner",
+			"permission": "Write",
+			"added_by": user,
+		}).insert(ignore_permissions=True)
+
+	if not frappe.db.exists("Connect Message", {"thread": thread}):
+		content = _format_requirement_message(customer, message)
+		if content:
+			send_message(thread, content=content)
+
+	return {"thread": thread}
+
+
 @frappe.whitelist()
 def get_my_company_members():
 	"""The caller's own company roster (Customer Member or Partner Member rows) — used to
@@ -185,14 +270,10 @@ def make_thread_admin(thread, member):
 	thread_doc = frappe.get_doc("Connect Thread", thread)
 
 	if member_doc.side == "Customer":
-		company_doctype, member_doctype, company, fieldname = (
-			"Connect Customer", "Connect Customer Member", thread_doc.customer, "customer",
-		)
+		member_doctype, company, fieldname = "Connect Customer Member", thread_doc.customer, "customer"
 		authorized = _is_customer_admin(company, user)
 	elif member_doc.side == "Partner":
-		company_doctype, member_doctype, company, fieldname = (
-			"Connect Partner", "Connect Partner Member", thread_doc.partner, "partner",
-		)
+		member_doctype, company, fieldname = "Connect Partner Member", thread_doc.partner, "partner"
 		authorized = _is_partner_admin(company, user)
 	else:
 		frappe.throw(_("Invalid side"))
@@ -214,8 +295,6 @@ def make_thread_admin(thread, member):
 			"user": member_doc.user,
 			"is_admin": 1,
 		}).insert(ignore_permissions=True)
-
-	frappe.db.set_value(company_doctype, company, "admin_user", member_doc.user)
 
 	return {"new_admin": member_doc.user}
 
