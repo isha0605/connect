@@ -1,4 +1,5 @@
 {
+ "allow_guest": 1,
  "blocks": [
   {
    "baseStyles": {
@@ -127,6 +128,27 @@
         "padding": "0px 8px 8px"
        },
        "children": [
+        {
+         "baseStyles": {
+          "display": "{{ (!myContext.data || !myContext.data.customer) ? 'flex' : 'none' }}"
+         },
+         "children": [],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);"
+          }
+         },
+         "componentId": "Button-guest-login",
+         "componentName": "Button",
+         "componentProps": {
+          "iconLeft": "log-in",
+          "label": "Log in",
+          "variant": "outline"
+         }
+        },
         {
          "children": [],
          "classes": [],
@@ -707,7 +729,7 @@
             "click": {
              "action": "Run Script",
              "event": "click",
-             "script": "call('connect.api.start_partner_thread', { partner: partner.doc.name }).then(() => {\n  router.push('/messaging-d87b');\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+             "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\ncall('connect.api.start_partner_thread', { partner: partner.doc.name }).then(() => {\n  router.push('/messaging-d87b');\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
             }
            },
            "componentId": "Button-f46c06f8d",
@@ -3466,7 +3488,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const addonRate = pricingView.data.addon_rate || 0;\nconst chosenAddons = (pricingView.data.addons || []).filter(a => (selectedAddons.value || []).includes(a.name));\nconst addonsPreGST = chosenAddons.reduce((s, a) => s + (a.typical_hours || 0) * addonRate, 0);\nconst total = addonsPreGST * 1.18;\nconst payload = chosenAddons.map(a => ({ name: a.addon_name, price: Math.round((a.typical_hours || 0) * addonRate * 1.18) }));\ncall('connect.api.save_price_estimate', {\n  partner: partner.doc.name,\n  requirement: pricingView.data.requirement || null,\n  selected_addons: payload,\n  total: Math.round(total),\n}).then((name) => {\n  let summary = 'Estimating at hourly rate (\\u20b9' + Number(pricingView.data.rate || 0).toLocaleString('en-IN') + '/hr)';\n  if (chosenAddons.length) {\n    summary += ' + ' + chosenAddons.map(a => a.addon_name).join(', ');\n  }\n  summary += '. Estimated total: \\u20b9' + Math.round(total).toLocaleString('en-IN') + '.';\n  return call('connect.api.start_partner_thread', { partner: partner.doc.name, message: summary });\n}).then(() => {\n  router.push('/messaging-d87b');\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                 "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nconst addonRate = pricingView.data.addon_rate || 0;\nconst chosenAddons = (pricingView.data.addons || []).filter(a => (selectedAddons.value || []).includes(a.name));\nconst addonsPreGST = chosenAddons.reduce((s, a) => s + (a.typical_hours || 0) * addonRate, 0);\nconst total = addonsPreGST * 1.18;\nconst payload = chosenAddons.map(a => ({ name: a.addon_name, price: Math.round((a.typical_hours || 0) * addonRate * 1.18) }));\ncall('connect.api.save_price_estimate', {\n  partner: partner.doc.name,\n  requirement: pricingView.data.requirement || null,\n  selected_addons: payload,\n  total: Math.round(total),\n}).then((name) => {\n  let summary = 'Estimating at hourly rate (\\u20b9' + Number(pricingView.data.rate || 0).toLocaleString('en-IN') + '/hr)';\n  if (chosenAddons.length) {\n    summary += ' + ' + chosenAddons.map(a => a.addon_name).join(', ');\n  }\n  summary += '. Estimated total: \\u20b9' + Math.round(total).toLocaleString('en-IN') + '.';\n  return call('connect.api.start_partner_thread', { partner: partner.doc.name, message: summary });\n}).then(() => {\n  router.push('/messaging-d87b');\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                 }
                },
                "componentId": "Button-nopack-discuss",
@@ -4075,7 +4097,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const selectedPack = (pricingView.data.packs || []).find(p => p.pack_key === selectedPackKey.value);\nconst packType = selectedPack ? selectedPack.pack_name : '';\nconst packPrice = selectedPack ? (selectedPack.price || 0) : 0;\nconst chosenAddons = (pricingView.data.addons || []).filter(a => (selectedAddons.value || []).includes(a.name));\nconst addonsPreGST = chosenAddons.reduce((s, a) => s + (a.typical_hours || 0) * 2000, 0);\nconst total = packPrice + addonsPreGST * 1.18;\nconst payload = chosenAddons.map(a => ({ name: a.addon_name, price: Math.round((a.typical_hours || 0) * 2000 * 1.18) }));\ncall('connect.api.save_price_estimate', {\n  partner: partner.doc.name,\n  requirement: pricingView.data.requirement,\n  pack_type: packType,\n  selected_addons: payload,\n  total: Math.round(total),\n}).then((name) => {\n  let summary = 'Estimating: ' + packType + ' pack (\\u20b9' + packPrice.toLocaleString('en-IN') + ')';\n  if (chosenAddons.length) {\n    summary += ' + ' + chosenAddons.map(a => a.addon_name).join(', ');\n  }\n  summary += '. Estimated total: \\u20b9' + Math.round(total).toLocaleString('en-IN') + '.';\n  return call('connect.api.start_partner_thread', { partner: partner.doc.name, message: summary });\n}).then(() => {\n  router.push('/messaging-d87b');\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                 "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nconst selectedPack = (pricingView.data.packs || []).find(p => p.pack_key === selectedPackKey.value);\nconst packType = selectedPack ? selectedPack.pack_name : '';\nconst packPrice = selectedPack ? (selectedPack.price || 0) : 0;\nconst chosenAddons = (pricingView.data.addons || []).filter(a => (selectedAddons.value || []).includes(a.name));\nconst addonsPreGST = chosenAddons.reduce((s, a) => s + (a.typical_hours || 0) * 2000, 0);\nconst total = packPrice + addonsPreGST * 1.18;\nconst payload = chosenAddons.map(a => ({ name: a.addon_name, price: Math.round((a.typical_hours || 0) * 2000 * 1.18) }));\ncall('connect.api.save_price_estimate', {\n  partner: partner.doc.name,\n  requirement: pricingView.data.requirement,\n  pack_type: packType,\n  selected_addons: payload,\n  total: Math.round(total),\n}).then((name) => {\n  let summary = 'Estimating: ' + packType + ' pack (\\u20b9' + packPrice.toLocaleString('en-IN') + ')';\n  if (chosenAddons.length) {\n    summary += ' + ' + chosenAddons.map(a => a.addon_name).join(', ');\n  }\n  summary += '. Estimated total: \\u20b9' + Math.round(total).toLocaleString('en-IN') + '.';\n  return call('connect.api.start_partner_thread', { partner: partner.doc.name, message: summary });\n}).then(() => {\n  router.push('/messaging-d87b');\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                 }
                },
                "componentId": "Button-pricing-contact-estimate",
@@ -4163,7 +4185,7 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "call('connect.api.start_partner_thread', { partner: partner.doc.name }).then(() => {\n  router.push('/messaging-d87b');\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\ncall('connect.api.start_partner_thread', { partner: partner.doc.name }).then(() => {\n  router.push('/messaging-d87b');\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
           }
          },
          "componentId": "Button-29259e86d",
@@ -5166,7 +5188,7 @@
  "doctype": "Studio Page",
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-08-17 14:45:16.752556",
+ "modified": "2026-08-17 15:50:30.914986",
  "modified_by": "Administrator",
  "name": "partner_profile",
  "owner": "Administrator",
@@ -5218,6 +5240,15 @@
    "resource_name": "filterOptions",
    "resource_type": "API Resource",
    "url": "/api/method/connect.api.list_partner_filter_options"
+  },
+  {
+   "__unsaved": 1,
+   "auto": 1,
+   "method": "GET",
+   "params": "{}",
+   "resource_name": "myContext",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.get_my_context"
   }
  ],
  "route": "/partner-profile/:partner_id",
