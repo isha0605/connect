@@ -101,6 +101,13 @@
         {
          "children": [],
          "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "const req = myRequirement.data;\nsettingsCompanyName.value = req ? (req.company_name || '') : '';\nsettingsCountry.value = req ? (req.country || '') : '';\nsettingsIndustry.value = req ? (req.industry || '') : '';\nsettingsApps.value = req ? (req.apps || []) : [];\nsettingsLookingFor.value = req ? (req.looking_for || '') : '';\nsettingsCompanySize.value = req ? (req.company_size || '') : '';\nsettingsCurrentSituation.value = req ? (req.current_situation || '') : '';\nsettingsTimeline.value = req ? (req.timeline || '') : '';\nsettingsDeliveryPreference.value = req ? (req.delivery_preference || '') : '';\nsettingsBudget.value = req ? (req.budget || '') : '';\nsettingsSpecialRequirements.value = req ? JSON.parse(req.special_requirements || '[]') : [];\nsettingsOpen.value = true;"
+          }
+         },
          "componentId": "SidebarItem-5dc4ce7f1",
          "componentName": "SidebarItem",
          "componentProps": {
@@ -767,7 +774,7 @@
              "$type": "variable",
              "name": "activeTab"
             },
-            "options": "{{ [ { label: 'About', value: 'about' }, { label: 'Success Stories (' + ((partner.doc.success_stories || []).length) + ')', value: 'success_stories' }, { label: 'Reviews (' + partner.doc.reviews_count + ')', value: 'reviews' } ] }}",
+            "options": "{{ [ { label: 'About', value: 'about' }, { label: 'Success Stories (' + ((partner.doc.success_stories || []).length) + ')', value: 'success_stories' }, { label: 'Reviews (' + partner.doc.reviews_count + ')', value: 'reviews' }, { label: 'Pricing', value: 'pricing' } ] }}",
             "type": "subtle"
            }
           },
@@ -3047,6 +3054,1016 @@
            "componentId": "container-06304ebde",
            "componentName": "container",
            "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "{{ activeTab === 'pricing' ? 'flex' : 'none' }}",
+            "flexDirection": "column",
+            "gap": "20px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-9)",
+              "fontWeight": "700"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "TextBlock-pricing-header",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-lg",
+              "tag": "span",
+              "text": "Pricing"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "{{ (pricingView.data && (pricingView.data.state === 'hourly_only' || pricingView.data.state === 'no_requirement' || pricingView.data.state === 'mismatch')) ? 'flex' : 'none' }}",
+              "flexDirection": "column",
+              "gap": "20px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "#1c2126",
+                "fontFamily": "Inter",
+                "fontSize": "1.5rem",
+                "fontWeight": "700"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "TextBlock-nopack-rate",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "span",
+                "text": "{{ '\u20b9' + Number(pricingView.data.rate || 0).toLocaleString('en-IN') + '/hr' }}"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-6)",
+                "display": "{{ pricingView.data.state === 'hourly_only' ? 'none' : 'block' }}"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "TextBlock-nopack-sentence",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ pricingView.data.state === 'mismatch' ? (pricingView.data.requested_product    ? (\"Starter packs cover ERPNext and Frappe HR only \u2014 you mentioned \" + pricingView.data.requested_product + \", so here's a general hourly-rate estimate instead.\")    : \"Starter packs cover ERPNext and Frappe HR only, so here's a general hourly-rate estimate instead.\") : pricingView.data.state === 'no_requirement' ? \"You haven't saved your requirements yet, so this is a general hourly-rate estimate. Save them from Settings to see exact pack pricing if one fits your project.\" : \"\" }}"
+               }
+              },
+              {
+               "baseStyles": {
+                "backgroundColor": "var(--surface-base)",
+                "border": "1px solid var(--outline-gray-2)",
+                "borderRadius": "10px",
+                "display": "flex",
+                "flexDirection": "column",
+                "padding": "20px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600",
+                  "marginBottom": "12px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "TextBlock-nopack-addons-header",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "Implementation breakdown"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "marginBottom": "8px",
+                  "marginTop": "-8px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "TextBlock-nopack-addons-caption",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Hours are estimates, not official figures \u2014 final scope confirmed after discovery call."
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "column"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "Repeater-nopack-addons",
+                 "componentName": "Repeater",
+                 "componentProps": {
+                  "data": "{{ pricingView.data.addons || [] }}",
+                  "dataKey": "name",
+                  "emptyStateMessage": ""
+                 },
+                 "componentSlots": {
+                  "default": {
+                   "parentBlockId": "Repeater-nopack-addons",
+                   "slotContent": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "borderBottom": "1px solid var(--outline-gray-1)",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                      "padding": "12px 0"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {},
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {
+                        "update:modelValue": {
+                         "action": "Run Script",
+                         "event": "update:modelValue",
+                         "script": "const id = dataItem.name;\nconst cur = selectedAddons.value || [];\nif (cur.includes(id)) {\n  selectedAddons.value = cur.filter(x => x !== id);\n} else {\n  selectedAddons.value = [...cur, id];\n}"
+                        }
+                       },
+                       "componentId": "Checkbox-nopack-addon",
+                       "componentName": "Checkbox",
+                       "componentProps": {
+                        "label": "{{ dataItem.addon_name }}",
+                        "modelValue": "{{ (selectedAddons || []).includes(dataItem.name) }}",
+                        "size": "sm"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "marginLeft": "12px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-nopack-addon-price",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ dataItem.typical_hours + ' hrs \u00b7 ~\u20b9' + Number((dataItem.typical_hours || 0) * (pricingView.data.addon_rate || 0)).toLocaleString('en-IN') + ' + GST (est.)' }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "container-nopack-addon-row",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "slotId": "Repeater-nopack-addons:default",
+                   "slotName": "default"
+                  }
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "container-nopack-addons-card",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "backgroundColor": "var(--surface-base)",
+                "border": "1px solid var(--outline-gray-2)",
+                "borderRadius": "10px",
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "8px",
+                "padding": "20px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-nopack-total-addons-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "Selected add-ons"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-nopack-total-addons-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ '\u20b9' + Number((pricingView.data.addons || []).filter(a => (selectedAddons || []).includes(a.name)).reduce((s, a) => s + (a.typical_hours || 0) * (pricingView.data.addon_rate || 0), 0)).toLocaleString('en-IN') }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "container-nopack-total-addons",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-nopack-total-gst-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "GST (18%)"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-nopack-total-gst-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ '\u20b9' + Number(((pricingView.data.addons || []).filter(a => (selectedAddons || []).includes(a.name)).reduce((s, a) => s + (a.typical_hours || 0) * (pricingView.data.addon_rate || 0), 0)) * 0.18).toLocaleString('en-IN', {maximumFractionDigits: 0}) }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "container-nopack-total-gst",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderTop": "1px solid var(--outline-gray-1)",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                  "marginTop": "4px",
+                  "paddingTop": "12px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "#1c2126",
+                    "fontSize": "text-base",
+                    "fontWeight": "700"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-nopack-total-grand-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "Estimated total"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "#1c2126",
+                    "fontFamily": "Inter",
+                    "fontSize": "1.25rem",
+                    "fontWeight": "700"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-nopack-total-grand-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ '\u20b9' + Number(((pricingView.data.addons || []).filter(a => (selectedAddons || []).includes(a.name)).reduce((s, a) => s + (a.typical_hours || 0) * (pricingView.data.addon_rate || 0), 0)) * 1.18).toLocaleString('en-IN', {maximumFractionDigits: 0}) }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "container-nopack-total-grand",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "color": "#1c2126",
+                  "fontWeight": "500",
+                  "marginTop": "4px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "TextBlock-nopack-total-caption",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Estimated starting price \u2014 final cost confirmed after discovery call"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "container-nopack-totals-card",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "width": "fit-content"
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const addonRate = pricingView.data.addon_rate || 0;\nconst chosenAddons = (pricingView.data.addons || []).filter(a => (selectedAddons.value || []).includes(a.name));\nconst addonsPreGST = chosenAddons.reduce((s, a) => s + (a.typical_hours || 0) * addonRate, 0);\nconst total = addonsPreGST * 1.18;\nconst payload = chosenAddons.map(a => ({ name: a.addon_name, price: Math.round((a.typical_hours || 0) * addonRate * 1.18) }));\ncall('connect.api.save_price_estimate', {\n  partner: partner.doc.name,\n  requirement: pricingView.data.requirement || null,\n  selected_addons: payload,\n  total: Math.round(total),\n}).then((name) => {\n  let summary = 'Estimating at hourly rate (\\u20b9' + Number(pricingView.data.rate || 0).toLocaleString('en-IN') + '/hr)';\n  if (chosenAddons.length) {\n    summary += ' + ' + chosenAddons.map(a => a.addon_name).join(', ');\n  }\n  summary += '. Estimated total: \\u20b9' + Math.round(total).toLocaleString('en-IN') + '.\\n\\n';\n  contactMessage.value = summary;\n  contactDialogOpen.value = true;\n}).catch((err) => {\n  toast({ title: 'Could not save estimate', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                }
+               },
+               "componentId": "Button-nopack-discuss",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "Discuss this with partner",
+                "variant": "solid"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "container-pricing-no-pack-estimator",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "{{ (pricingView.data && pricingView.data && pricingView.data.state === 'eligible') ? 'flex' : 'none' }}",
+              "flexDirection": "column",
+              "gap": "20px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-8)",
+                "fontWeight": "600",
+                "marginBottom": "12px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "TextBlock-pricing-choose-pack",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-base",
+                "tag": "span",
+                "text": "Choose a pack"
+               }
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": "16px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "Repeater-pricing-packs",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ pricingView.data.packs || [] }}",
+                "dataKey": "name",
+                "emptyStateMessage": ""
+               },
+               "componentSlots": {
+                "default": {
+                 "parentBlockId": "Repeater-pricing-packs",
+                 "slotContent": [
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "backgroundColor": "var(--surface-base)",
+                    "border": "{{ dataItem.pack_key === selectedPackKey ? '2px solid #1c2126' : '1px solid var(--outline-gray-2)' }}",
+                    "borderRadius": "10px",
+                    "cursor": "pointer",
+                    "display": "flex",
+                    "flex": "1 1 45%",
+                    "flexDirection": "column",
+                    "gap": "4px",
+                    "minWidth": "220px",
+                    "padding": "16px"
+                   },
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-9)",
+                        "fontWeight": "600"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-pricing-pack-name",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-base",
+                        "tag": "span",
+                        "text": "{{ dataItem.pack_name }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "#1c2126",
+                        "display": "{{ dataItem.is_primary_match ? 'block' : 'none' }}",
+                        "fontWeight": "700",
+                        "letterSpacing": "0.02em",
+                        "textTransform": "uppercase"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-pricing-pack-best-match",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-xs",
+                        "tag": "span",
+                        "text": "Best match"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "container-pricing-pack-card-top",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "color": "#1c2126",
+                      "fontFamily": "Inter",
+                      "fontSize": "1.125rem",
+                      "fontWeight": "700"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "TextBlock-pricing-pack-price",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "span",
+                      "text": "{{ '\u20b9' + Number(dataItem.price || 0).toLocaleString('en-IN') }}"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "borderTop": "1px solid var(--outline-gray-1)",
+                      "display": "{{ dataItem.pack_key === selectedPackKey ? 'flex' : 'none' }}",
+                      "flexDirection": "column",
+                      "gap": "4px",
+                      "marginTop": "8px",
+                      "paddingTop": "8px"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-pricing-pack-hours",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ dataItem.hours + ' hrs \u00b7 valid ' + dataItem.validity_days + ' days' }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-pricing-pack-includes",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ dataItem.includes_summary }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "container-pricing-pack-details",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "selectedPackKey.value = dataItem.pack_key;"
+                    }
+                   },
+                   "componentId": "container-pricing-pack-card",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "originalElement": "div",
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "slotId": "Repeater-pricing-packs:default",
+                 "slotName": "default"
+                }
+               }
+              },
+              {
+               "baseStyles": {
+                "backgroundColor": "var(--surface-base)",
+                "border": "1px solid var(--outline-gray-2)",
+                "borderRadius": "10px",
+                "display": "flex",
+                "flexDirection": "column",
+                "padding": "20px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600",
+                  "marginBottom": "12px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "TextBlock-pricing-addons-header",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "Add-ons"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "marginBottom": "8px",
+                  "marginTop": "-8px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "TextBlock-pricing-addons-caption",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Hours are estimates, not official figures \u2014 final scope confirmed after discovery call."
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "column"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "Repeater-pricing-addons",
+                 "componentName": "Repeater",
+                 "componentProps": {
+                  "data": "{{ pricingView.data.addons || [] }}",
+                  "dataKey": "name",
+                  "emptyStateMessage": ""
+                 },
+                 "componentSlots": {
+                  "default": {
+                   "parentBlockId": "Repeater-pricing-addons",
+                   "slotContent": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "borderBottom": "1px solid var(--outline-gray-1)",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                      "padding": "12px 0"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {},
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {
+                        "update:modelValue": {
+                         "action": "Run Script",
+                         "event": "update:modelValue",
+                         "script": "const id = dataItem.name;\nconst cur = selectedAddons.value || [];\nif (cur.includes(id)) {\n  selectedAddons.value = cur.filter(x => x !== id);\n} else {\n  selectedAddons.value = [...cur, id];\n}"
+                        }
+                       },
+                       "componentId": "Checkbox-pricing-addon",
+                       "componentName": "Checkbox",
+                       "componentProps": {
+                        "label": "{{ dataItem.addon_name }}",
+                        "modelValue": "{{ (selectedAddons || []).includes(dataItem.name) }}",
+                        "size": "sm"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "marginLeft": "12px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-pricing-addon-price",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ dataItem.typical_hours + ' hrs \u00b7 ~\u20b9' + Number((dataItem.typical_hours || 0) * 2000).toLocaleString('en-IN') + ' + GST (est.)' }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "container-pricing-addon-row",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "slotId": "Repeater-pricing-addons:default",
+                   "slotName": "default"
+                  }
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "container-pricing-addons-card",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "backgroundColor": "var(--surface-base)",
+                "border": "1px solid var(--outline-gray-2)",
+                "borderRadius": "10px",
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "8px",
+                "padding": "20px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-pack-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "Pack"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-pack-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ selectedPackKey ? ((((pricingView.data.packs || []).find(p => p.pack_key === selectedPackKey) || {}).pack_name) + ' \u2014 \u20b9' + Number(((pricingView.data.packs || []).find(p => p.pack_key === selectedPackKey) || {}).price || 0).toLocaleString('en-IN')) : 'Select a pack above' }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "container-pricing-total-pack",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-addons-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "Add-ons"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-addons-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ '\u20b9' + Number((pricingView.data.addons || []).filter(a => (selectedAddons || []).includes(a.name)).reduce((s, a) => s + (a.typical_hours || 0) * 2000, 0)).toLocaleString('en-IN') }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "container-pricing-total-addons",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-gst-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "GST (18%)"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-gst-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ '\u20b9' + Number(((pricingView.data.addons || []).filter(a => (selectedAddons || []).includes(a.name)).reduce((s, a) => s + (a.typical_hours || 0) * 2000, 0)) * 0.18).toLocaleString('en-IN', {maximumFractionDigits: 0}) }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "container-pricing-total-gst",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderTop": "1px solid var(--outline-gray-1)",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                  "marginTop": "4px",
+                  "paddingTop": "12px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "#1c2126",
+                    "fontSize": "text-base",
+                    "fontWeight": "700"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-grand-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "Estimated total"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "#1c2126",
+                    "fontFamily": "Inter",
+                    "fontSize": "1.25rem",
+                    "fontWeight": "700"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-grand-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ '\u20b9' + Number((((pricingView.data.packs || []).find(p => p.pack_key === selectedPackKey) || {}).price || 0) + ((pricingView.data.addons || []).filter(a => (selectedAddons || []).includes(a.name)).reduce((s, a) => s + (a.typical_hours || 0) * 2000, 0)) * 1.18).toLocaleString('en-IN', {maximumFractionDigits: 0}) }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "container-pricing-total-grand",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "color": "#1c2126",
+                  "fontWeight": "500",
+                  "marginTop": "4px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "TextBlock-pricing-total-caption",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Estimated starting price \u2014 final cost confirmed after discovery call"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "container-pricing-totals-card",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "width": "fit-content"
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const selectedPack = (pricingView.data.packs || []).find(p => p.pack_key === selectedPackKey.value);\nconst packType = selectedPack ? selectedPack.pack_name : '';\nconst packPrice = selectedPack ? (selectedPack.price || 0) : 0;\nconst chosenAddons = (pricingView.data.addons || []).filter(a => (selectedAddons.value || []).includes(a.name));\nconst addonsPreGST = chosenAddons.reduce((s, a) => s + (a.typical_hours || 0) * 2000, 0);\nconst total = packPrice + addonsPreGST * 1.18;\nconst payload = chosenAddons.map(a => ({ name: a.addon_name, price: Math.round((a.typical_hours || 0) * 2000 * 1.18) }));\ncall('connect.api.save_price_estimate', {\n  partner: partner.doc.name,\n  requirement: pricingView.data.requirement,\n  pack_type: packType,\n  selected_addons: payload,\n  total: Math.round(total),\n}).then((name) => {\n  let summary = 'Estimating: ' + packType + ' pack (\\u20b9' + packPrice.toLocaleString('en-IN') + ')';\n  if (chosenAddons.length) {\n    summary += ' + ' + chosenAddons.map(a => a.addon_name).join(', ');\n  }\n  summary += '. Estimated total: \\u20b9' + Math.round(total).toLocaleString('en-IN') + '.\\n\\n';\n  contactMessage.value = summary;\n  contactDialogOpen.value = true;\n}).catch((err) => {\n  toast({ title: 'Could not save estimate', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                }
+               },
+               "componentId": "Button-pricing-contact-estimate",
+               "componentName": "Button",
+               "componentProps": {
+                "disabled": "{{ !selectedPackKey }}",
+                "label": "Contact partner with this estimate",
+                "variant": "solid"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "container-pricing-eligible",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "container-pricing-tab",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],
@@ -3466,6 +4483,770 @@
      "componentId": "container-346ebd1cd",
      "componentName": "container",
      "originalElement": "div"
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "16px",
+        "maxHeight": "65vh",
+        "overflowY": "auto",
+        "padding": "4px 2px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "TextBlock-settings-intro",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-sm",
+          "tag": "span",
+          "text": "Tell partners what you need so we can show you accurate pricing and matches."
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "16px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-company-name-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "Company Name"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-company-name-input",
+             "componentName": "TextInput",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsCompanyName"
+              }
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-company-name",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-country-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "Country"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-country-input",
+             "componentName": "TextInput",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsCountry"
+              }
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-country",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "container-settings-row-company",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1",
+          "flexDirection": "column",
+          "minWidth": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "fontSize": "text-sm",
+            "fontWeight": "500",
+            "marginBottom": "6px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "field-settings-industry-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "span",
+            "text": "Industry"
+           }
+          },
+          {
+           "children": [],
+           "classes": [],
+           "componentId": "field-settings-industry-input",
+           "componentName": "Select",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "settingsIndustry"
+            },
+            "options": [
+             "",
+             "Manufacturing",
+             "Retail & Distribution",
+             "Healthcare",
+             "Education",
+             "Services",
+             "Construction",
+             "Logistics",
+             "Technology",
+             "Other"
+            ]
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "field-settings-industry",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1",
+          "flexDirection": "column",
+          "minWidth": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "fontSize": "text-sm",
+            "fontWeight": "500",
+            "marginBottom": "6px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "field-settings-apps-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "span",
+            "text": "Apps of Interest"
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "flexWrap": "wrap",
+            "gap": "4px 20px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "Repeater-settings-apps",
+           "componentName": "Repeater",
+           "componentProps": {
+            "data": "{{ filterOptions.data ? filterOptions.data.apps : [] }}",
+            "dataKey": "self",
+            "emptyStateMessage": ""
+           },
+           "componentSlots": {
+            "default": {
+             "parentBlockId": "Repeater-settings-apps",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {},
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "update:modelValue": {
+                 "action": "Run Script",
+                 "event": "update:modelValue",
+                 "script": "const cur = settingsApps.value || [];\nconst val = dataItem;\nconst next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val];\nsettingsApps.value = next;"
+                }
+               },
+               "componentId": "Repeater-settings-apps-item",
+               "componentName": "Checkbox",
+               "componentProps": {
+                "label": "{{ dataItem }}",
+                "modelValue": "{{ (settingsApps || []).includes(dataItem) }}",
+                "size": "sm"
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "rawStyles": {},
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Repeater-settings-apps:default",
+             "slotName": "default"
+            }
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "field-settings-apps",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "borderTop": "1px solid var(--outline-gray-1)",
+          "margin": "4px 0"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "divider-settings-1",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "16px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-looking-for-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "What are you looking for?"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-looking-for-input",
+             "componentName": "Select",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsLookingFor"
+              },
+              "options": [
+               "",
+               "New ERP Implementation",
+               "Replace Existing ERP",
+               "Manufacturing Setup",
+               "HR & Payroll",
+               "CRM",
+               "Custom App Development",
+               "Consultation / Discovery",
+               "Not sure yet"
+              ]
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-looking-for",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-company-size-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "Company Size"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-company-size-input",
+             "componentName": "Select",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsCompanySize"
+              },
+              "options": [
+               "",
+               "1\u201310",
+               "11\u201350",
+               "51\u2013200",
+               "201\u20131000",
+               "1000+"
+              ]
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-company-size",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "container-settings-row-1",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "16px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-current-situation-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "Current Situation"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-current-situation-input",
+             "componentName": "Select",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsCurrentSituation"
+              },
+              "options": [
+               "",
+               "Excel / Spreadsheets",
+               "Tally",
+               "SAP",
+               "Oracle",
+               "Odoo",
+               "Existing ERPNext",
+               "Multiple Systems",
+               "No System Yet"
+              ]
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-current-situation",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-timeline-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "Timeline"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-timeline-input",
+             "componentName": "Select",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsTimeline"
+              },
+              "options": [
+               "",
+               "Immediately",
+               "Within 1 month",
+               "Within 3 months",
+               "Within 6 months",
+               "Just exploring"
+              ]
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-timeline",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "container-settings-row-2",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "16px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-delivery-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "Delivery Preference"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-delivery-input",
+             "componentName": "Select",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsDeliveryPreference"
+              },
+              "options": [
+               "",
+               "Remote",
+               "Hybrid",
+               "On-site",
+               "No preference"
+              ]
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-delivery",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-budget-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "Budget"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-budget-input",
+             "componentName": "Select",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsBudget"
+              },
+              "options": [
+               "",
+               "Under \u20b92L",
+               "\u20b92L\u2013\u20b910L",
+               "\u20b910L\u2013\u20b925L",
+               "\u20b925L\u2013\u20b950L",
+               "\u20b950L+",
+               "Not decided"
+              ]
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-budget",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "container-settings-row-3",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1",
+          "flexDirection": "column",
+          "minWidth": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "fontSize": "text-sm",
+            "fontWeight": "500",
+            "marginBottom": "6px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "field-settings-special-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "span",
+            "text": "Special Requirements"
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "flexWrap": "wrap",
+            "gap": "4px 20px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "Repeater-settings-special",
+           "componentName": "Repeater",
+           "componentProps": {
+            "data": "{{ [\"ETO (Engineer-to-Order)\", \"Manufacturing Planning\", \"Multi-site Operations\", \"HR & Payroll\", \"Inventory Management\", \"CRM\", \"Custom Development\", \"SAP Migration\", \"Data Migration\", \"Training Required\", \"On-site Support\"] }}",
+            "dataKey": "self",
+            "emptyStateMessage": ""
+           },
+           "componentSlots": {
+            "default": {
+             "parentBlockId": "Repeater-settings-special",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {},
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "update:modelValue": {
+                 "action": "Run Script",
+                 "event": "update:modelValue",
+                 "script": "const cur = settingsSpecialRequirements.value || [];\nconst val = dataItem;\nconst next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val];\nsettingsSpecialRequirements.value = next;"
+                }
+               },
+               "componentId": "Repeater-settings-special-item",
+               "componentName": "Checkbox",
+               "componentProps": {
+                "label": "{{ dataItem }}",
+                "modelValue": "{{ (settingsSpecialRequirements || []).includes(dataItem) }}",
+                "size": "sm"
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "rawStyles": {},
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Repeater-settings-special:default",
+             "slotName": "default"
+            }
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "field-settings-special",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "container-settings-body",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "borderTop": "1px solid var(--outline-gray-1)",
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "8px",
+        "justifyContent": "flex-end",
+        "marginTop": "16px",
+        "paddingTop": "16px"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "settingsOpen.value = false;"
+          }
+         },
+         "componentId": "Button-settings-cancel",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "Cancel",
+          "variant": "outline"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "settingsSaving.value = true;\ncall('connect.api.save_customer_requirement', {\n  company_name: settingsCompanyName.value,\n  country: settingsCountry.value,\n  industry: settingsIndustry.value,\n  apps: settingsApps.value,\n  looking_for: settingsLookingFor.value,\n  company_size: settingsCompanySize.value,\n  current_situation: settingsCurrentSituation.value,\n  timeline: settingsTimeline.value,\n  delivery_preference: settingsDeliveryPreference.value,\n  budget: settingsBudget.value,\n  special_requirements: JSON.stringify(settingsSpecialRequirements.value || []),\n}).then(() => {\n  settingsSaving.value = false;\n  settingsOpen.value = false;\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch((err) => {\n  settingsSaving.value = false;\n  toast({ title: 'Could not save', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+          }
+         },
+         "componentId": "Button-settings-save",
+         "componentName": "Button",
+         "componentProps": {
+          "disabled": "{{ !settingsCompanyName || !settingsCountry || !settingsIndustry }}",
+          "label": "{{ settingsSaving ? 'Saving...' : 'Save' }}",
+          "variant": "solid"
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "container-settings-footer",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "Dialog-settings",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "settingsOpen"
+      },
+      "size": "2xl",
+      "title": "Your Requirements"
+     }
     }
    ],
    "classes": [],
@@ -3474,7 +5255,7 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-08-13 12:40:13.892716",
+ "creation": "2026-08-14 12:14:11.991529",
  "doctype": "Studio Page",
  "draft_blocks": [
   {
@@ -3578,6 +5359,13 @@
         {
          "children": [],
          "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "const req = myRequirement.data;\nsettingsCompanyName.value = req ? (req.company_name || '') : '';\nsettingsCountry.value = req ? (req.country || '') : '';\nsettingsIndustry.value = req ? (req.industry || '') : '';\nsettingsApps.value = req ? (req.apps || []) : [];\nsettingsLookingFor.value = req ? (req.looking_for || '') : '';\nsettingsCompanySize.value = req ? (req.company_size || '') : '';\nsettingsCurrentSituation.value = req ? (req.current_situation || '') : '';\nsettingsTimeline.value = req ? (req.timeline || '') : '';\nsettingsDeliveryPreference.value = req ? (req.delivery_preference || '') : '';\nsettingsBudget.value = req ? (req.budget || '') : '';\nsettingsSpecialRequirements.value = req ? JSON.parse(req.special_requirements || '[]') : [];\nsettingsOpen.value = true;"
+          }
+         },
          "componentId": "SidebarItem-5dc4ce7f1",
          "componentName": "SidebarItem",
          "componentProps": {
@@ -3668,7 +5456,6 @@
         "display": "flex",
         "flexDirection": "row",
         "gap": "20px",
-        "margin": "23px",
         "paddingBottom": "80px",
         "position": "relative"
        },
@@ -3680,6 +5467,7 @@
           "border": "1px solid var(--outline-gray-2)",
           "borderRadius": "12px",
           "flexShrink": "0",
+          "marginLeft": "23px",
           "padding": "20px",
           "position": "sticky",
           "top": "20px",
@@ -3883,9 +5671,6 @@
               "gap": "16px",
               "justifyContent": "flex-start",
               "marginTop": "0px",
-              "paddingBottom": "0px",
-              "paddingLeft": "0px",
-              "paddingRight": "0px",
               "paddingTop": "20px"
              },
              "blockName": "container",
@@ -4236,203 +6021,20 @@
          "children": [
           {
            "baseStyles": {
-            "display": "flex",
-            "flexDirection": "row",
-            "flexShrink": 1,
-            "justifyContent": "space-between",
-            "width": "100%"
+            "marginBottom": "20px"
            },
-           "blockName": "container",
-           "children": [
-            {
-             "baseStyles": {
-              "marginBottom": "20px"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "TabButtons-bc91b0f48",
-             "componentName": "TabButtons",
-             "componentProps": {
-              "modelValue": {
-               "$type": "variable",
-               "name": "activeTab"
-              },
-              "options": "{{ [ { label: 'About', value: 'about' }, { label: 'Success Stories (' + ((partner.doc.success_stories || []).length) + ')', value: 'success_stories' }, { label: 'Reviews (' + partner.doc.reviews_count + ')', value: 'reviews' } ] }}",
-              "type": "subtle"
-             }
-            },
-            {
-             "children": [],
-             "classes": [],
-             "componentId": "Popover-sss600t2o",
-             "componentName": "Popover",
-             "componentProps": {
-              "align": "end",
-              "side": "bottom"
-             },
-             "componentSlots": {
-              "default": {
-               "parentBlockId": "Popover-sss600t2o",
-               "slotContent": [
-                {
-                 "attributes": {},
-                 "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "minWidth": "12rem"
-                 },
-                 "children": [
-                  {
-                   "attributes": {},
-                   "baseStyles": {
-                    "color": "var(--ink-gray-5)",
-                    "fontWeight": "600",
-                    "marginBottom": "4px",
-                    "padding": "0 4px"
-                   },
-                   "children": [],
-                   "classes": [],
-                   "componentEvents": {},
-                   "componentId": "TextBlock-eqqdtcfgu",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-xs",
-                    "tag": "span",
-                    "text": "Filter by industry"
-                   },
-                   "componentSlots": {},
-                   "mobileStyles": {},
-                   "rawStyles": {},
-                   "tabletStyles": {}
-                  },
-                  {
-                   "attributes": {},
-                   "baseStyles": {},
-                   "children": [],
-                   "classes": [],
-                   "componentEvents": {
-                    "click": {
-                     "action": "Run Script",
-                     "event": "click",
-                     "script": "successStoryCategory.value = 'All';"
-                    }
-                   },
-                   "componentId": "Button-w9r3whtlm",
-                   "componentName": "Button",
-                   "componentProps": {
-                    "iconLeft": "{{ successStoryCategory === 'All' ? 'lucide-check' : '' }}",
-                    "label": "All",
-                    "variant": "ghost"
-                   },
-                   "componentSlots": {},
-                   "mobileStyles": {},
-                   "rawStyles": {},
-                   "tabletStyles": {}
-                  },
-                  {
-                   "attributes": {},
-                   "baseStyles": {
-                    "display": "flex",
-                    "flexDirection": "column"
-                   },
-                   "children": [],
-                   "classes": [],
-                   "componentEvents": {},
-                   "componentId": "Repeater-nrlrafz6g",
-                   "componentName": "Repeater",
-                   "componentProps": {
-                    "data": "{{ [...new Set((partner.doc.success_stories || []).map(s => s.category).filter(Boolean))] }}",
-                    "dataKey": "self",
-                    "emptyStateMessage": ""
-                   },
-                   "componentSlots": {
-                    "default": {
-                     "parentBlockId": "Repeater-nrlrafz6g",
-                     "slotContent": [
-                      {
-                       "attributes": {},
-                       "baseStyles": {},
-                       "children": [],
-                       "classes": [],
-                       "componentEvents": {
-                        "click": {
-                         "action": "Run Script",
-                         "event": "click",
-                         "script": "successStoryCategory.value = dataItem;"
-                        }
-                       },
-                       "componentId": "Button-2at0igblc",
-                       "componentName": "Button",
-                       "componentProps": {
-                        "iconLeft": "{{ successStoryCategory === dataItem ? 'lucide-check' : '' }}",
-                        "label": "{{ dataItem }}",
-                        "variant": "ghost"
-                       },
-                       "componentSlots": {},
-                       "mobileStyles": {},
-                       "rawStyles": {},
-                       "tabletStyles": {}
-                      }
-                     ],
-                     "slotId": "Repeater-story-filter:default",
-                     "slotName": "default"
-                    }
-                   },
-                   "mobileStyles": {},
-                   "rawStyles": {},
-                   "tabletStyles": {}
-                  }
-                 ],
-                 "classes": [],
-                 "componentEvents": {},
-                 "componentId": "container-od3faykt6",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "mobileStyles": {},
-                 "originalElement": "div",
-                 "rawStyles": {},
-                 "tabletStyles": {}
-                }
-               ],
-               "slotId": "Popover-sss600t2o:default",
-               "slotName": "default"
-              },
-              "trigger": {
-               "parentBlockId": "Popover-sss600t2o",
-               "slotContent": [
-                {
-                 "attributes": {},
-                 "baseStyles": {
-                  "flexShrink": "0"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {},
-                 "componentId": "Button-4t0iijfwu",
-                 "componentName": "Button",
-                 "componentProps": {
-                  "icon": "lucide-filter",
-                  "tooltip": "Filter by industry",
-                  "variant": "outline"
-                 },
-                 "componentSlots": {},
-                 "mobileStyles": {},
-                 "rawStyles": {},
-                 "tabletStyles": {},
-                 "visibilityCondition": "activeTab == \"success_stories\""
-                }
-               ],
-               "slotId": "Popover-sss600t2o:trigger",
-               "slotName": "trigger"
-              }
-             }
-            }
-           ],
+           "children": [],
            "classes": [],
-           "componentId": "container-zbhrryoka",
-           "componentName": "container",
-           "originalElement": "div"
+           "componentId": "TabButtons-bc91b0f48",
+           "componentName": "TabButtons",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "activeTab"
+            },
+            "options": "{{ [ { label: 'About', value: 'about' }, { label: 'Success Stories (' + ((partner.doc.success_stories || []).length) + ')', value: 'success_stories' }, { label: 'Reviews (' + partner.doc.reviews_count + ')', value: 'reviews' }, { label: 'Pricing', value: 'pricing' } ] }}",
+            "type": "subtle"
+           }
           },
           {
            "baseStyles": {
@@ -4466,7 +6068,7 @@
              "componentId": "TextBlock-d11da2625",
              "componentName": "TextBlock",
              "componentProps": {
-              "fontSize": "text-p-sm",
+              "fontSize": "text-sm",
               "tag": "span",
               "text": "{{ partner.doc.description }}"
              }
@@ -4559,7 +6161,7 @@
                    "componentId": "TextBlock-539269d44",
                    "componentName": "TextBlock",
                    "componentProps": {
-                    "fontSize": "text-p-sm",
+                    "fontSize": "text-sm",
                     "tag": "span",
                     "text": "{{ (partner.doc.team.find(t => t.is_founder) || {}).bio }}"
                    }
@@ -4605,6 +6207,7 @@
               "borderRadius": "10px",
               "display": "flex",
               "flexDirection": "column",
+              "marginBottom": "16px",
               "padding": "20px"
              },
              "children": [
@@ -4858,6 +6461,7 @@
               "borderRadius": "10px",
               "display": "flex",
               "flexDirection": "column",
+              "marginBottom": "16px",
               "padding": "20px"
              },
              "children": [
@@ -5014,6 +6618,7 @@
               "borderRadius": "10px",
               "display": "flex",
               "flexDirection": "column",
+              "marginBottom": "16px",
               "padding": "20px"
              },
              "children": [
@@ -5047,7 +6652,7 @@
                "componentProps": {
                 "data": "{{ partner.doc.photos || [] }}",
                 "dataKey": "name",
-                "emptyStateMessage": "No photos available yet"
+                "emptyStateMessage": ""
                },
                "componentSlots": {
                 "default": {
@@ -5076,6 +6681,21 @@
                  "slotName": "default"
                 }
                }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "display": "{{ (partner.doc.photos || []).length ? 'none' : 'block' }}"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "TextBlock-49cf076ec",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "No photos available yet."
+               }
               }
              ],
              "classes": [],
@@ -5090,6 +6710,7 @@
               "borderRadius": "10px",
               "display": "flex",
               "flexDirection": "column",
+              "marginBottom": "16px",
               "padding": "20px"
              },
              "children": [
@@ -5387,6 +7008,186 @@
              "children": [
               {
                "baseStyles": {
+                "display": "{{ (partner.doc.success_stories || []).length ? 'flex' : 'none' }}",
+                "flexDirection": "row",
+                "justifyContent": "flex-end",
+                "marginBottom": "12px"
+               },
+               "children": [
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentId": "Popover-story-filter",
+                 "componentName": "Popover",
+                 "componentProps": {
+                  "align": "end",
+                  "side": "bottom"
+                 },
+                 "componentSlots": {
+                  "default": {
+                   "parentBlockId": "Popover-story-filter",
+                   "slotContent": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "display": "flex",
+                      "flexDirection": "column",
+                      "minWidth": "12rem"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-5)",
+                        "fontWeight": "600",
+                        "marginBottom": "4px",
+                        "padding": "0 4px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-story-filter-label",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-xs",
+                        "tag": "span",
+                        "text": "Filter by industry"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {},
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "successStoryCategory.value = 'All';"
+                        }
+                       },
+                       "componentId": "Button-story-filter-all",
+                       "componentName": "Button",
+                       "componentProps": {
+                        "iconLeft": "{{ successStoryCategory === 'All' ? 'lucide-check' : '' }}",
+                        "label": "All",
+                        "variant": "ghost"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "display": "flex",
+                        "flexDirection": "column"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "Repeater-story-filter",
+                       "componentName": "Repeater",
+                       "componentProps": {
+                        "data": "{{ [...new Set((partner.doc.success_stories || []).map(s => s.category).filter(Boolean))] }}",
+                        "dataKey": "self",
+                        "emptyStateMessage": ""
+                       },
+                       "componentSlots": {
+                        "default": {
+                         "parentBlockId": "Repeater-story-filter",
+                         "slotContent": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {},
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {
+                            "click": {
+                             "action": "Run Script",
+                             "event": "click",
+                             "script": "successStoryCategory.value = dataItem;"
+                            }
+                           },
+                           "componentId": "Button-story-filter-option",
+                           "componentName": "Button",
+                           "componentProps": {
+                            "iconLeft": "{{ successStoryCategory === dataItem ? 'lucide-check' : '' }}",
+                            "label": "{{ dataItem }}",
+                            "variant": "ghost"
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "rawStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "slotId": "Repeater-story-filter:default",
+                         "slotName": "default"
+                        }
+                       },
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "container-story-filter-panel",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "slotId": "Popover-story-filter:default",
+                   "slotName": "default"
+                  },
+                  "trigger": {
+                   "parentBlockId": "Popover-story-filter",
+                   "slotContent": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "flexShrink": "0"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "Button-story-filter-trigger",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "icon": "lucide-filter",
+                      "tooltip": "Filter by industry",
+                      "variant": "outline"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "slotId": "Popover-story-filter:trigger",
+                   "slotName": "trigger"
+                  }
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "container-story-filter-row",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
                 "display": "flex",
                 "flexDirection": "column"
                },
@@ -5413,6 +7214,7 @@
                     "display": "flex",
                     "flexDirection": "row",
                     "gap": "16px",
+                    "marginBottom": "16px",
                     "padding": "20px"
                    },
                    "children": [
@@ -6510,6 +8312,1016 @@
            "componentId": "container-06304ebde",
            "componentName": "container",
            "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "{{ activeTab === 'pricing' ? 'flex' : 'none' }}",
+            "flexDirection": "column",
+            "gap": "20px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-9)",
+              "fontWeight": "700"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "TextBlock-pricing-header",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-lg",
+              "tag": "span",
+              "text": "Pricing"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "{{ (pricingView.data && (pricingView.data.state === 'hourly_only' || pricingView.data.state === 'no_requirement' || pricingView.data.state === 'mismatch')) ? 'flex' : 'none' }}",
+              "flexDirection": "column",
+              "gap": "20px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "#1c2126",
+                "fontFamily": "Inter",
+                "fontSize": "1.5rem",
+                "fontWeight": "700"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "TextBlock-nopack-rate",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "span",
+                "text": "{{ '\u20b9' + Number(pricingView.data.rate || 0).toLocaleString('en-IN') + '/hr' }}"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-6)",
+                "display": "{{ pricingView.data.state === 'hourly_only' ? 'none' : 'block' }}"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "TextBlock-nopack-sentence",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ pricingView.data.state === 'mismatch' ? (pricingView.data.requested_product    ? (\"Starter packs cover ERPNext and Frappe HR only \u2014 you mentioned \" + pricingView.data.requested_product + \", so here's a general hourly-rate estimate instead.\")    : \"Starter packs cover ERPNext and Frappe HR only, so here's a general hourly-rate estimate instead.\") : pricingView.data.state === 'no_requirement' ? \"You haven't saved your requirements yet, so this is a general hourly-rate estimate. Save them from Settings to see exact pack pricing if one fits your project.\" : \"\" }}"
+               }
+              },
+              {
+               "baseStyles": {
+                "backgroundColor": "var(--surface-base)",
+                "border": "1px solid var(--outline-gray-2)",
+                "borderRadius": "10px",
+                "display": "flex",
+                "flexDirection": "column",
+                "padding": "20px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600",
+                  "marginBottom": "12px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "TextBlock-nopack-addons-header",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "Implementation breakdown"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "marginBottom": "8px",
+                  "marginTop": "-8px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "TextBlock-nopack-addons-caption",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Hours are estimates, not official figures \u2014 final scope confirmed after discovery call."
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "column"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "Repeater-nopack-addons",
+                 "componentName": "Repeater",
+                 "componentProps": {
+                  "data": "{{ pricingView.data.addons || [] }}",
+                  "dataKey": "name",
+                  "emptyStateMessage": ""
+                 },
+                 "componentSlots": {
+                  "default": {
+                   "parentBlockId": "Repeater-nopack-addons",
+                   "slotContent": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "borderBottom": "1px solid var(--outline-gray-1)",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                      "padding": "12px 0"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {},
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {
+                        "update:modelValue": {
+                         "action": "Run Script",
+                         "event": "update:modelValue",
+                         "script": "const id = dataItem.name;\nconst cur = selectedAddons.value || [];\nif (cur.includes(id)) {\n  selectedAddons.value = cur.filter(x => x !== id);\n} else {\n  selectedAddons.value = [...cur, id];\n}"
+                        }
+                       },
+                       "componentId": "Checkbox-nopack-addon",
+                       "componentName": "Checkbox",
+                       "componentProps": {
+                        "label": "{{ dataItem.addon_name }}",
+                        "modelValue": "{{ (selectedAddons || []).includes(dataItem.name) }}",
+                        "size": "sm"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "marginLeft": "12px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-nopack-addon-price",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ dataItem.typical_hours + ' hrs \u00b7 ~\u20b9' + Number((dataItem.typical_hours || 0) * (pricingView.data.addon_rate || 0)).toLocaleString('en-IN') + ' + GST (est.)' }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "container-nopack-addon-row",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "slotId": "Repeater-nopack-addons:default",
+                   "slotName": "default"
+                  }
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "container-nopack-addons-card",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "backgroundColor": "var(--surface-base)",
+                "border": "1px solid var(--outline-gray-2)",
+                "borderRadius": "10px",
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "8px",
+                "padding": "20px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-nopack-total-addons-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "Selected add-ons"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-nopack-total-addons-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ '\u20b9' + Number((pricingView.data.addons || []).filter(a => (selectedAddons || []).includes(a.name)).reduce((s, a) => s + (a.typical_hours || 0) * (pricingView.data.addon_rate || 0), 0)).toLocaleString('en-IN') }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "container-nopack-total-addons",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-nopack-total-gst-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "GST (18%)"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-nopack-total-gst-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ '\u20b9' + Number(((pricingView.data.addons || []).filter(a => (selectedAddons || []).includes(a.name)).reduce((s, a) => s + (a.typical_hours || 0) * (pricingView.data.addon_rate || 0), 0)) * 0.18).toLocaleString('en-IN', {maximumFractionDigits: 0}) }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "container-nopack-total-gst",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderTop": "1px solid var(--outline-gray-1)",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                  "marginTop": "4px",
+                  "paddingTop": "12px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "#1c2126",
+                    "fontSize": "text-base",
+                    "fontWeight": "700"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-nopack-total-grand-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "Estimated total"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "#1c2126",
+                    "fontFamily": "Inter",
+                    "fontSize": "1.25rem",
+                    "fontWeight": "700"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-nopack-total-grand-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ '\u20b9' + Number(((pricingView.data.addons || []).filter(a => (selectedAddons || []).includes(a.name)).reduce((s, a) => s + (a.typical_hours || 0) * (pricingView.data.addon_rate || 0), 0)) * 1.18).toLocaleString('en-IN', {maximumFractionDigits: 0}) }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "container-nopack-total-grand",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "color": "#1c2126",
+                  "fontWeight": "500",
+                  "marginTop": "4px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "TextBlock-nopack-total-caption",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Estimated starting price \u2014 final cost confirmed after discovery call"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "container-nopack-totals-card",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "width": "fit-content"
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const addonRate = pricingView.data.addon_rate || 0;\nconst chosenAddons = (pricingView.data.addons || []).filter(a => (selectedAddons.value || []).includes(a.name));\nconst addonsPreGST = chosenAddons.reduce((s, a) => s + (a.typical_hours || 0) * addonRate, 0);\nconst total = addonsPreGST * 1.18;\nconst payload = chosenAddons.map(a => ({ name: a.addon_name, price: Math.round((a.typical_hours || 0) * addonRate * 1.18) }));\ncall('connect.api.save_price_estimate', {\n  partner: partner.doc.name,\n  requirement: pricingView.data.requirement || null,\n  selected_addons: payload,\n  total: Math.round(total),\n}).then((name) => {\n  let summary = 'Estimating at hourly rate (\\u20b9' + Number(pricingView.data.rate || 0).toLocaleString('en-IN') + '/hr)';\n  if (chosenAddons.length) {\n    summary += ' + ' + chosenAddons.map(a => a.addon_name).join(', ');\n  }\n  summary += '. Estimated total: \\u20b9' + Math.round(total).toLocaleString('en-IN') + '.\\n\\n';\n  contactMessage.value = summary;\n  contactDialogOpen.value = true;\n}).catch((err) => {\n  toast({ title: 'Could not save estimate', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                }
+               },
+               "componentId": "Button-nopack-discuss",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "Discuss this with partner",
+                "variant": "solid"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "container-pricing-no-pack-estimator",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "{{ (pricingView.data && pricingView.data && pricingView.data.state === 'eligible') ? 'flex' : 'none' }}",
+              "flexDirection": "column",
+              "gap": "20px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-8)",
+                "fontWeight": "600",
+                "marginBottom": "12px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "TextBlock-pricing-choose-pack",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-base",
+                "tag": "span",
+                "text": "Choose a pack"
+               }
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": "16px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "Repeater-pricing-packs",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ pricingView.data.packs || [] }}",
+                "dataKey": "name",
+                "emptyStateMessage": ""
+               },
+               "componentSlots": {
+                "default": {
+                 "parentBlockId": "Repeater-pricing-packs",
+                 "slotContent": [
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "backgroundColor": "var(--surface-base)",
+                    "border": "{{ dataItem.pack_key === selectedPackKey ? '2px solid #1c2126' : '1px solid var(--outline-gray-2)' }}",
+                    "borderRadius": "10px",
+                    "cursor": "pointer",
+                    "display": "flex",
+                    "flex": "1 1 45%",
+                    "flexDirection": "column",
+                    "gap": "4px",
+                    "minWidth": "220px",
+                    "padding": "16px"
+                   },
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-9)",
+                        "fontWeight": "600"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-pricing-pack-name",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-base",
+                        "tag": "span",
+                        "text": "{{ dataItem.pack_name }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "#1c2126",
+                        "display": "{{ dataItem.is_primary_match ? 'block' : 'none' }}",
+                        "fontWeight": "700",
+                        "letterSpacing": "0.02em",
+                        "textTransform": "uppercase"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-pricing-pack-best-match",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-xs",
+                        "tag": "span",
+                        "text": "Best match"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "container-pricing-pack-card-top",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "color": "#1c2126",
+                      "fontFamily": "Inter",
+                      "fontSize": "1.125rem",
+                      "fontWeight": "700"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "TextBlock-pricing-pack-price",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "span",
+                      "text": "{{ '\u20b9' + Number(dataItem.price || 0).toLocaleString('en-IN') }}"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "borderTop": "1px solid var(--outline-gray-1)",
+                      "display": "{{ dataItem.pack_key === selectedPackKey ? 'flex' : 'none' }}",
+                      "flexDirection": "column",
+                      "gap": "4px",
+                      "marginTop": "8px",
+                      "paddingTop": "8px"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-pricing-pack-hours",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ dataItem.hours + ' hrs \u00b7 valid ' + dataItem.validity_days + ' days' }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-pricing-pack-includes",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ dataItem.includes_summary }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "container-pricing-pack-details",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "selectedPackKey.value = dataItem.pack_key;"
+                    }
+                   },
+                   "componentId": "container-pricing-pack-card",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "originalElement": "div",
+                   "rawStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "slotId": "Repeater-pricing-packs:default",
+                 "slotName": "default"
+                }
+               }
+              },
+              {
+               "baseStyles": {
+                "backgroundColor": "var(--surface-base)",
+                "border": "1px solid var(--outline-gray-2)",
+                "borderRadius": "10px",
+                "display": "flex",
+                "flexDirection": "column",
+                "padding": "20px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600",
+                  "marginBottom": "12px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "TextBlock-pricing-addons-header",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "Add-ons"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "marginBottom": "8px",
+                  "marginTop": "-8px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "TextBlock-pricing-addons-caption",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Hours are estimates, not official figures \u2014 final scope confirmed after discovery call."
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "column"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "Repeater-pricing-addons",
+                 "componentName": "Repeater",
+                 "componentProps": {
+                  "data": "{{ pricingView.data.addons || [] }}",
+                  "dataKey": "name",
+                  "emptyStateMessage": ""
+                 },
+                 "componentSlots": {
+                  "default": {
+                   "parentBlockId": "Repeater-pricing-addons",
+                   "slotContent": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "borderBottom": "1px solid var(--outline-gray-1)",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                      "padding": "12px 0"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {},
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {
+                        "update:modelValue": {
+                         "action": "Run Script",
+                         "event": "update:modelValue",
+                         "script": "const id = dataItem.name;\nconst cur = selectedAddons.value || [];\nif (cur.includes(id)) {\n  selectedAddons.value = cur.filter(x => x !== id);\n} else {\n  selectedAddons.value = [...cur, id];\n}"
+                        }
+                       },
+                       "componentId": "Checkbox-pricing-addon",
+                       "componentName": "Checkbox",
+                       "componentProps": {
+                        "label": "{{ dataItem.addon_name }}",
+                        "modelValue": "{{ (selectedAddons || []).includes(dataItem.name) }}",
+                        "size": "sm"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "marginLeft": "12px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "TextBlock-pricing-addon-price",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ dataItem.typical_hours + ' hrs \u00b7 ~\u20b9' + Number((dataItem.typical_hours || 0) * 2000).toLocaleString('en-IN') + ' + GST (est.)' }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "rawStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "container-pricing-addon-row",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "rawStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "slotId": "Repeater-pricing-addons:default",
+                   "slotName": "default"
+                  }
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "container-pricing-addons-card",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "backgroundColor": "var(--surface-base)",
+                "border": "1px solid var(--outline-gray-2)",
+                "borderRadius": "10px",
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "8px",
+                "padding": "20px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-pack-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "Pack"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-pack-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ selectedPackKey ? ((((pricingView.data.packs || []).find(p => p.pack_key === selectedPackKey) || {}).pack_name) + ' \u2014 \u20b9' + Number(((pricingView.data.packs || []).find(p => p.pack_key === selectedPackKey) || {}).price || 0).toLocaleString('en-IN')) : 'Select a pack above' }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "container-pricing-total-pack",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-addons-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "Add-ons"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-addons-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ '\u20b9' + Number((pricingView.data.addons || []).filter(a => (selectedAddons || []).includes(a.name)).reduce((s, a) => s + (a.typical_hours || 0) * 2000, 0)).toLocaleString('en-IN') }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "container-pricing-total-addons",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-gst-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "GST (18%)"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-gst-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ '\u20b9' + Number(((pricingView.data.addons || []).filter(a => (selectedAddons || []).includes(a.name)).reduce((s, a) => s + (a.typical_hours || 0) * 2000, 0)) * 0.18).toLocaleString('en-IN', {maximumFractionDigits: 0}) }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "container-pricing-total-gst",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderTop": "1px solid var(--outline-gray-1)",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                  "marginTop": "4px",
+                  "paddingTop": "12px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "#1c2126",
+                    "fontSize": "text-base",
+                    "fontWeight": "700"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-grand-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "Estimated total"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "#1c2126",
+                    "fontFamily": "Inter",
+                    "fontSize": "1.25rem",
+                    "fontWeight": "700"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "container-pricing-total-grand-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ '\u20b9' + Number((((pricingView.data.packs || []).find(p => p.pack_key === selectedPackKey) || {}).price || 0) + ((pricingView.data.addons || []).filter(a => (selectedAddons || []).includes(a.name)).reduce((s, a) => s + (a.typical_hours || 0) * 2000, 0)) * 1.18).toLocaleString('en-IN', {maximumFractionDigits: 0}) }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "container-pricing-total-grand",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "color": "#1c2126",
+                  "fontWeight": "500",
+                  "marginTop": "4px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "TextBlock-pricing-total-caption",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Estimated starting price \u2014 final cost confirmed after discovery call"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "container-pricing-totals-card",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "width": "fit-content"
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const selectedPack = (pricingView.data.packs || []).find(p => p.pack_key === selectedPackKey.value);\nconst packType = selectedPack ? selectedPack.pack_name : '';\nconst packPrice = selectedPack ? (selectedPack.price || 0) : 0;\nconst chosenAddons = (pricingView.data.addons || []).filter(a => (selectedAddons.value || []).includes(a.name));\nconst addonsPreGST = chosenAddons.reduce((s, a) => s + (a.typical_hours || 0) * 2000, 0);\nconst total = packPrice + addonsPreGST * 1.18;\nconst payload = chosenAddons.map(a => ({ name: a.addon_name, price: Math.round((a.typical_hours || 0) * 2000 * 1.18) }));\ncall('connect.api.save_price_estimate', {\n  partner: partner.doc.name,\n  requirement: pricingView.data.requirement,\n  pack_type: packType,\n  selected_addons: payload,\n  total: Math.round(total),\n}).then((name) => {\n  let summary = 'Estimating: ' + packType + ' pack (\\u20b9' + packPrice.toLocaleString('en-IN') + ')';\n  if (chosenAddons.length) {\n    summary += ' + ' + chosenAddons.map(a => a.addon_name).join(', ');\n  }\n  summary += '. Estimated total: \\u20b9' + Math.round(total).toLocaleString('en-IN') + '.\\n\\n';\n  contactMessage.value = summary;\n  contactDialogOpen.value = true;\n}).catch((err) => {\n  toast({ title: 'Could not save estimate', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                }
+               },
+               "componentId": "Button-pricing-contact-estimate",
+               "componentName": "Button",
+               "componentProps": {
+                "disabled": "{{ !selectedPackKey }}",
+                "label": "Contact partner with this estimate",
+                "variant": "subtle"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "container-pricing-eligible",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "container-pricing-tab",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],
@@ -6929,6 +9741,770 @@
      "componentId": "container-346ebd1cd",
      "componentName": "container",
      "originalElement": "div"
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "16px",
+        "maxHeight": "65vh",
+        "overflowY": "auto",
+        "padding": "4px 2px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "TextBlock-settings-intro",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-sm",
+          "tag": "span",
+          "text": "Tell partners what you need so we can show you accurate pricing and matches."
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "16px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-company-name-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "Company Name"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-company-name-input",
+             "componentName": "TextInput",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsCompanyName"
+              }
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-company-name",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-country-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "Country"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-country-input",
+             "componentName": "TextInput",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsCountry"
+              }
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-country",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "container-settings-row-company",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1",
+          "flexDirection": "column",
+          "minWidth": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "fontSize": "text-sm",
+            "fontWeight": "500",
+            "marginBottom": "6px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "field-settings-industry-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "span",
+            "text": "Industry"
+           }
+          },
+          {
+           "children": [],
+           "classes": [],
+           "componentId": "field-settings-industry-input",
+           "componentName": "Select",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "settingsIndustry"
+            },
+            "options": [
+             "",
+             "Manufacturing",
+             "Retail & Distribution",
+             "Healthcare",
+             "Education",
+             "Services",
+             "Construction",
+             "Logistics",
+             "Technology",
+             "Other"
+            ]
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "field-settings-industry",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1",
+          "flexDirection": "column",
+          "minWidth": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "fontSize": "text-sm",
+            "fontWeight": "500",
+            "marginBottom": "6px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "field-settings-apps-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "span",
+            "text": "Apps of Interest"
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "flexWrap": "wrap",
+            "gap": "4px 20px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "Repeater-settings-apps",
+           "componentName": "Repeater",
+           "componentProps": {
+            "data": "{{ filterOptions.data ? filterOptions.data.apps : [] }}",
+            "dataKey": "self",
+            "emptyStateMessage": ""
+           },
+           "componentSlots": {
+            "default": {
+             "parentBlockId": "Repeater-settings-apps",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {},
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "update:modelValue": {
+                 "action": "Run Script",
+                 "event": "update:modelValue",
+                 "script": "const cur = settingsApps.value || [];\nconst val = dataItem;\nconst next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val];\nsettingsApps.value = next;"
+                }
+               },
+               "componentId": "Repeater-settings-apps-item",
+               "componentName": "Checkbox",
+               "componentProps": {
+                "label": "{{ dataItem }}",
+                "modelValue": "{{ (settingsApps || []).includes(dataItem) }}",
+                "size": "sm"
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "rawStyles": {},
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Repeater-settings-apps:default",
+             "slotName": "default"
+            }
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "field-settings-apps",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "borderTop": "1px solid var(--outline-gray-1)",
+          "margin": "4px 0"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "divider-settings-1",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "16px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-looking-for-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "What are you looking for?"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-looking-for-input",
+             "componentName": "Select",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsLookingFor"
+              },
+              "options": [
+               "",
+               "New ERP Implementation",
+               "Replace Existing ERP",
+               "Manufacturing Setup",
+               "HR & Payroll",
+               "CRM",
+               "Custom App Development",
+               "Consultation / Discovery",
+               "Not sure yet"
+              ]
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-looking-for",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-company-size-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "Company Size"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-company-size-input",
+             "componentName": "Select",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsCompanySize"
+              },
+              "options": [
+               "",
+               "1\u201310",
+               "11\u201350",
+               "51\u2013200",
+               "201\u20131000",
+               "1000+"
+              ]
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-company-size",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "container-settings-row-1",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "16px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-current-situation-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "Current Situation"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-current-situation-input",
+             "componentName": "Select",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsCurrentSituation"
+              },
+              "options": [
+               "",
+               "Excel / Spreadsheets",
+               "Tally",
+               "SAP",
+               "Oracle",
+               "Odoo",
+               "Existing ERPNext",
+               "Multiple Systems",
+               "No System Yet"
+              ]
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-current-situation",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-timeline-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "Timeline"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-timeline-input",
+             "componentName": "Select",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsTimeline"
+              },
+              "options": [
+               "",
+               "Immediately",
+               "Within 1 month",
+               "Within 3 months",
+               "Within 6 months",
+               "Just exploring"
+              ]
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-timeline",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "container-settings-row-2",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "16px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-delivery-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "Delivery Preference"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-delivery-input",
+             "componentName": "Select",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsDeliveryPreference"
+              },
+              "options": [
+               "",
+               "Remote",
+               "Hybrid",
+               "On-site",
+               "No preference"
+              ]
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-delivery",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minWidth": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontSize": "text-sm",
+              "fontWeight": "500",
+              "marginBottom": "6px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-budget-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "Budget"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "field-settings-budget-input",
+             "componentName": "Select",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "settingsBudget"
+              },
+              "options": [
+               "",
+               "Under \u20b92L",
+               "\u20b92L\u2013\u20b910L",
+               "\u20b910L\u2013\u20b925L",
+               "\u20b925L\u2013\u20b950L",
+               "\u20b950L+",
+               "Not decided"
+              ]
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "field-settings-budget",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "container-settings-row-3",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1",
+          "flexDirection": "column",
+          "minWidth": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "fontSize": "text-sm",
+            "fontWeight": "500",
+            "marginBottom": "6px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "field-settings-special-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "span",
+            "text": "Special Requirements"
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "flexWrap": "wrap",
+            "gap": "4px 20px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "Repeater-settings-special",
+           "componentName": "Repeater",
+           "componentProps": {
+            "data": "{{ [\"ETO (Engineer-to-Order)\", \"Manufacturing Planning\", \"Multi-site Operations\", \"HR & Payroll\", \"Inventory Management\", \"CRM\", \"Custom Development\", \"SAP Migration\", \"Data Migration\", \"Training Required\", \"On-site Support\"] }}",
+            "dataKey": "self",
+            "emptyStateMessage": ""
+           },
+           "componentSlots": {
+            "default": {
+             "parentBlockId": "Repeater-settings-special",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {},
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "update:modelValue": {
+                 "action": "Run Script",
+                 "event": "update:modelValue",
+                 "script": "const cur = settingsSpecialRequirements.value || [];\nconst val = dataItem;\nconst next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val];\nsettingsSpecialRequirements.value = next;"
+                }
+               },
+               "componentId": "Repeater-settings-special-item",
+               "componentName": "Checkbox",
+               "componentProps": {
+                "label": "{{ dataItem }}",
+                "modelValue": "{{ (settingsSpecialRequirements || []).includes(dataItem) }}",
+                "size": "sm"
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "rawStyles": {},
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Repeater-settings-special:default",
+             "slotName": "default"
+            }
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "field-settings-special",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "container-settings-body",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "borderTop": "1px solid var(--outline-gray-1)",
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "8px",
+        "justifyContent": "flex-end",
+        "marginTop": "16px",
+        "paddingTop": "16px"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "settingsOpen.value = false;"
+          }
+         },
+         "componentId": "Button-settings-cancel",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "Cancel",
+          "variant": "outline"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "settingsSaving.value = true;\ncall('connect.api.save_customer_requirement', {\n  company_name: settingsCompanyName.value,\n  country: settingsCountry.value,\n  industry: settingsIndustry.value,\n  apps: settingsApps.value,\n  looking_for: settingsLookingFor.value,\n  company_size: settingsCompanySize.value,\n  current_situation: settingsCurrentSituation.value,\n  timeline: settingsTimeline.value,\n  delivery_preference: settingsDeliveryPreference.value,\n  budget: settingsBudget.value,\n  special_requirements: JSON.stringify(settingsSpecialRequirements.value || []),\n}).then(() => {\n  settingsSaving.value = false;\n  settingsOpen.value = false;\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch((err) => {\n  settingsSaving.value = false;\n  toast({ title: 'Could not save', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+          }
+         },
+         "componentId": "Button-settings-save",
+         "componentName": "Button",
+         "componentProps": {
+          "disabled": "{{ !settingsCompanyName || !settingsCountry || !settingsIndustry }}",
+          "label": "{{ settingsSaving ? 'Saving...' : 'Save' }}",
+          "variant": "solid"
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "container-settings-footer",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "Dialog-settings",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "settingsOpen"
+      },
+      "size": "2xl",
+      "title": "Your Requirements"
+     }
     }
    ],
    "classes": [],
@@ -6939,7 +10515,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-08-13 16:17:18.286631",
+ "modified": "2026-08-14 15:19:34.255006",
  "modified_by": "Administrator",
  "name": "partner_profile",
  "owner": "Administrator",
@@ -6967,6 +10543,30 @@
    "resource_type": "Document List",
    "sort_field": "reviewed_on",
    "sort_order": "DESC"
+  },
+  {
+   "auto": 1,
+   "method": "GET",
+   "params": "{\"partner\": \"{{ route.params.partner_id }}\"}",
+   "resource_name": "pricingView",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.get_pricing_view"
+  },
+  {
+   "auto": 1,
+   "method": "GET",
+   "params": "{}",
+   "resource_name": "myRequirement",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.get_my_requirement"
+  },
+  {
+   "auto": 1,
+   "method": "GET",
+   "params": "{}",
+   "resource_name": "filterOptions",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.list_partner_filter_options"
   }
  ],
  "route": "/partner-profile/:partner_id",
@@ -7040,6 +10640,86 @@
   {
    "initial_value": "false",
    "variable_name": "reviewSubmitting",
+   "variable_type": "Boolean"
+  },
+  {
+   "initial_value": "[]",
+   "variable_name": "selectedPricingOptions",
+   "variable_type": "Object"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "selectedPackKey",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "[]",
+   "variable_name": "selectedAddons",
+   "variable_type": "Object"
+  },
+  {
+   "initial_value": "false",
+   "variable_name": "settingsOpen",
+   "variable_type": "Boolean"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "settingsCompanyName",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "settingsCountry",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "settingsIndustry",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "[]",
+   "variable_name": "settingsApps",
+   "variable_type": "Object"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "settingsLookingFor",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "settingsCompanySize",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "settingsCurrentSituation",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "settingsTimeline",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "settingsDeliveryPreference",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "settingsBudget",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "[]",
+   "variable_name": "settingsSpecialRequirements",
+   "variable_type": "Object"
+  },
+  {
+   "initial_value": "false",
+   "variable_name": "settingsSaving",
    "variable_type": "Boolean"
   }
  ]
