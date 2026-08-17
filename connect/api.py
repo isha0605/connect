@@ -1469,6 +1469,32 @@ def get_partner_preview(partner):
 	return doc
 
 
+@frappe.whitelist(allow_guest=True)
+def get_partner_document(partner):
+	"""Full Partner record for the Partner Profile page. Studio's "Document" resource
+	type calls frappe.client.get, which isn't guest-whitelisted regardless of the target
+	doctype's own Guest permission — same fix as list_partner_filter_options. Returns
+	everything a logged-in visitor already sees on this page; nothing here is any more
+	sensitive than what search_partners/get_partner_preview already expose to guests."""
+	if not frappe.db.exists("Partner", partner):
+		frappe.throw(_("Partner not found"), frappe.DoesNotExistError)
+	return frappe.get_doc("Partner", partner).as_dict()
+
+
+@frappe.whitelist(allow_guest=True)
+def list_partner_reviews(partner):
+	"""Reviews tab on Partner Profile. Studio's "Document List" resource type calls
+	frappe.client.get_list under the hood, which isn't guest-whitelisted regardless of
+	the target doctype's own Guest permission — same fix as list_partner_filter_options."""
+	return frappe.get_all(
+		"Partner Review",
+		filters={"partner": partner},
+		fields=["reviewer_name", "rating", "headline", "quote", "reviewed_on", "verified"],
+		order_by="reviewed_on desc",
+		limit_page_length=100,
+	)
+
+
 # Which packs are the "closest fit" for a given requirement's product interest,
 # derived from Requirement.apps (there's no dedicated product_interest field —
 # apps already carries this signal, since its options come from the real App
