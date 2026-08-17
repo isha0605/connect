@@ -142,6 +142,16 @@ export default function setup(context) {
 	const stuckDateKey = ref<string | null>(null)
 	let stickyDateHideTimer: ReturnType<typeof setTimeout> | null = null
 
+	// Whether the pane should keep tracking the newest message. Turned back on every time we
+	// deliberately jump to bottom (thread open, send, incoming realtime message); turned off the
+	// moment the user scrolls away from the bottom themselves, so reading old messages isn't
+	// fought by an unrelated message arriving elsewhere.
+	let stickToBottom = true
+
+	function isNearMessagesBottom(el: HTMLElement) {
+		return el.scrollHeight - el.scrollTop - el.clientHeight < 80
+	}
+
 	function onMessagesScroll(event) {
 		showStickyDate.value = true
 		if (stickyDateHideTimer) clearTimeout(stickyDateHideTimer)
@@ -151,6 +161,8 @@ export default function setup(context) {
 
 		const container = event && (event.currentTarget || event.target)
 		if (!container) return
+		stickToBottom = isNearMessagesBottom(container)
+
 		const containerTop = container.getBoundingClientRect().top
 		let stuck = null
 		container.querySelectorAll("[data-date-sentinel]").forEach((el) => {
@@ -165,8 +177,48 @@ export default function setup(context) {
 		return !!item && item.dateKey === stuckDateKey.value && !showStickyDate.value
 	}
 
+	// Jump the message pane to the newest message — opening/switching a thread and sending a
+	// message should always land on what was just written, not wherever the scroll happened to
+	// be. A plain scrollTop=scrollHeight right after nextTick can still undershoot though:
+	// avatars/image attachments that haven't finished loading yet grow the container a moment
+	// later, leaving the "bottom" short of the real last message (looked like landing a whole day
+	// early when the tail of the list is image-heavy). The ResizeObserver re-pins on every
+	// subsequent layout change while stickToBottom holds, so a late-loading image can't strand
+	// the scroll partway up.
+	let messagesResizeObserver: ResizeObserver | null = null
+
+	function scrollMessagesToBottom() {
+		stickToBottom = true
+		nextTick(() => {
+			const el = document.querySelector('[data-component-id="messages-scroll"]') as HTMLElement | null
+			if (!el) return
+			el.scrollTop = el.scrollHeight
+
+			if (!messagesResizeObserver) {
+				const content = el.firstElementChild
+				if (content) {
+					messagesResizeObserver = new ResizeObserver(() => {
+						if (stickToBottom) el.scrollTop = el.scrollHeight
+					})
+					messagesResizeObserver.observe(content)
+				}
+			}
+		})
+	}
+
+	// `messages`' own filters are dynamically bound to selectedThread (see the page's resource
+	// config), so Studio's resource layer *also* reloads it reactively on top of any explicit
+	// .reload() call made below — racing two fetches and only scrolling after one of them would
+	// leave the pane wherever the other one's re-render happened to land. Watching the data
+	// itself sidesteps the race: it fires once, after whichever fetch actually lands last.
+	watch(
+		() => context.messages.data,
+		() => scrollMessagesToBottom(),
+	)
+
 	onScopeDispose(() => {
 		if (stickyDateHideTimer) clearTimeout(stickyDateHideTimer)
+		messagesResizeObserver?.disconnect()
 	})
 
 	function closeThread() {
@@ -372,7 +424,8 @@ export default function setup(context) {
 	const uploadingFile = computed(() => draftAttachments.value.some((a) => a.uploading))
 
 	function messageActionsOptions(item) {
-		const onClick = item && item.isFileCluster ? () => confirmDeleteCluster(item) : () => confirmDeleteMessage(item)
+		if (!item || !isMine(item.sender)) return []
+		const onClick = item.isFileCluster ? () => confirmDeleteCluster(item) : () => confirmDeleteMessage(item)
 		return [{ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick }]
 	}
 
@@ -684,6 +737,10 @@ export default function setup(context) {
 	}
 
 	// ---- File preview dialog ----
+	// A plain fixed overlay (not frappe-ui's Dialog) so it can truly cover the whole viewport
+	// edge-to-edge with no scroller — Dialog always wraps content in a margined, capped-width
+	// box with its own scrollable backdrop, neither of which is overridable via props. Escape-
+	// to-close is normally Dialog's job, so it's reimplemented here.
 	const showFilePreviewDialog = ref(false)
 	const previewFile = ref(null)
 
@@ -691,6 +748,14 @@ export default function setup(context) {
 		previewFile.value = item
 		showFilePreviewDialog.value = true
 	}
+
+	function handleFilePreviewKeydown(event: KeyboardEvent) {
+		if (event.key === "Escape" && showFilePreviewDialog.value) {
+			showFilePreviewDialog.value = false
+		}
+	}
+	window.addEventListener("keydown", handleFilePreviewKeydown)
+	onScopeDispose(() => window.removeEventListener("keydown", handleFilePreviewKeydown))
 
 	function sendMessageOnEnter(event) {
 		if (event && event.key === "Enter") {
