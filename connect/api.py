@@ -558,7 +558,7 @@ def delete_message_template(name):
 
 PARTNER_FIELDS = [
 	"name", "partner_name", "logo", "tagline", "tier", "specialist",
-	"rating", "reviews_count", "industry", "country", "city", "rollouts",
+	"rating", "reviews_count", "industry", "country", "city", "rollouts", "hourly_rate",
 ]
 SEARCHABLE_TEXT_FIELDS = ["partner_name", "tagline", "industry", "country", "city"]
 
@@ -993,16 +993,24 @@ def wizard_match_state(answers=None):
 	if tiers:
 		pool = _apply_matcher(pool, lambda p, t=tiers: p["tier"] in t)
 
+	wanted_apps = answers.get("apps") or []
+	if wanted_apps:
+		pool = _apply_matcher(pool, lambda p, w=wanted_apps: any(a in p["apps"] for a in w))
+
 	for req in (answers.get("requirements") or []):
 		pool = _apply_matcher(pool, REQUIREMENT_MATCHERS.get(req))
 
 	# Proportional quality trim: every answered question should visibly move
 	# the count, even ones above with no real matcher for this particular value.
+	# company_name/country are excluded here -- they have no matching signal at
+	# all, so counting them would trim the pool for no real reason.
 	answered = sum(
 		1 for k in ("looking_for", "industry", "company_size", "current_situation", "timeline", "delivery_preference", "budget")
 		if answers.get(k)
 	)
 	if answers.get("requirements"):
+		answered += 1
+	if wanted_apps:
 		answered += 1
 	if answered and pool:
 		target = max(1, math.ceil(len(pool) * (0.85**answered)))
@@ -1018,11 +1026,12 @@ def list_matching_partners(answers=None, limit=8):
 	full rows (same shape as search_partners) instead of just a count.
 
 	Every is_featured partner is scored by how many of a small set of concrete,
-	customer-recognizable requirements they fail (currently: industry, delivery
-	mode) — not a hard AND filter. Full matches (0 missed) come first; partners
-	missing 1-2 requirements are included after with `missing_label` naming
-	exactly what they're short on, so a strong-but-imperfect match doesn't just
-	disappear. Partners missing 3+ are excluded as too far off to be useful."""
+	customer-recognizable requirements they fail (currently: industry, apps,
+	delivery mode) — not a hard AND filter. Full matches (0 missed) come first;
+	partners missing 1-2 requirements are included after with `missing_label`
+	naming exactly what they're short on, so a strong-but-imperfect match
+	doesn't just disappear. Partners missing 3+ are excluded as too far off to
+	be useful."""
 	if isinstance(answers, str):
 		answers = json.loads(answers or "{}")
 	answers = answers or {}
@@ -1041,19 +1050,22 @@ def list_matching_partners(answers=None, limit=8):
 	for r in frappe.get_all("Partner Delivery Mode", filters={"parent": ["in", names]}, fields=["parent", "delivery_mode"]):
 		delivery_by.setdefault(r.parent, []).append(r.delivery_mode)
 
-	apps_by_partner = {}
+	apps_by_partner, apps_preview_by_partner = {}, {}
 	for row in frappe.get_all(
 		"Partner App", filters={"parent": ["in", names]}, fields=["parent", "app"], order_by="idx asc",
 	):
-		bucket = apps_by_partner.setdefault(row.parent, [])
-		if len(bucket) < 2:
-			bucket.append(row.app)
+		apps_by_partner.setdefault(row.parent, []).append(row.app)
+		preview = apps_preview_by_partner.setdefault(row.parent, [])
+		if len(preview) < 2:
+			preview.append(row.app)
 
 	industry = answers.get("industry")
 	wanted_industry = WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry) if industry else None
 
 	delivery = answers.get("delivery_preference")
 	wanted_mode = DELIVERY_TO_MODE.get(delivery) if delivery and delivery != "No preference" else None
+
+	wanted_apps = answers.get("apps") or []
 
 	scored = []
 	for name in names:
@@ -1063,6 +1075,8 @@ def list_matching_partners(answers=None, limit=8):
 		missing = []
 		if wanted_industry and row.industry != wanted_industry:
 			missing.append(f"{industry} Experience")
+		if wanted_apps and not any(a in apps_by_partner.get(name, []) for a in wanted_apps):
+			missing.append(", ".join(wanted_apps) + (" Support" if len(wanted_apps) == 1 else " support"))
 		if wanted_mode and wanted_mode not in delivery_by.get(name, []):
 			missing.append(f"{delivery} Delivery")
 		if len(missing) <= 2:
@@ -1074,7 +1088,7 @@ def list_matching_partners(answers=None, limit=8):
 	result = []
 	for _missing_count, _neg_rating, name, missing in scored:
 		row = dict(by_name[name])
-		row["apps_preview"] = apps_by_partner.get(name, [])
+		row["apps_preview"] = apps_preview_by_partner.get(name, [])
 		row["missing_label"] = ", ".join(missing) if missing else None
 		result.append(row)
 	return result
@@ -1096,15 +1110,17 @@ def list_partner_countries():
 @frappe.whitelist(allow_guest=True)
 def list_partner_filter_options():
 	"""Option lists for the Find Partners filter panel's Business Process /
-	Implementation Type / Language dropdowns. Studio's "Document List" resource
-	type calls frappe.client.get_list under the hood, which isn't guest-whitelisted
-	regardless of the target doctype's own Guest permission — so those dropdowns
-	silently returned nothing for guest visitors. This is a small API Resource
-	instead, same fix as list_partner_countries above."""
+	Implementation Type / Language dropdowns, plus the finder wizard's Apps
+	question. Studio's "Document List" resource type calls frappe.client.get_list
+	under the hood, which isn't guest-whitelisted regardless of the target
+	doctype's own Guest permission — so those dropdowns silently returned
+	nothing for guest visitors. This is a small API Resource instead, same fix
+	as list_partner_countries above."""
 	return {
 		"business_processes": frappe.get_all("Business Process", pluck="title", order_by="title"),
 		"implementation_types": frappe.get_all("Implementation Type", pluck="title", order_by="title"),
 		"languages": frappe.get_all("FC Language", pluck="title", order_by="title"),
+		"apps": frappe.get_all("App", pluck="title", order_by="title"),
 	}
 
 
@@ -1192,30 +1208,212 @@ def list_my_shortlist():
 
 @frappe.whitelist()
 def save_customer_requirement(
-	looking_for, industry, company_size, current_situation, timeline, delivery_preference, budget,
+	company_name, country, industry, apps=None,
+	looking_for=None, company_size=None, current_situation=None, timeline=None, delivery_preference=None, budget=None,
 	special_requirements=None, outcome=None,
 ):
-	"""Persist one completed "Find me a partner" wizard run for the current user's company."""
+	"""Create or update the current user's company's one Requirement — company_name/
+	country/industry/apps are the 4 primary questions; everything else comes from
+	the bundled, optional "Additional Requirements" step. Upserts by customer, so
+	both the Find My Match wizard and the Settings "Edit Requirements" form share
+	a single canonical requirement that either flow can fill in or update."""
 	customer = _get_customer_for_user()
 	if not customer:
 		frappe.throw("Your account isn't linked to a customer company yet.", frappe.PermissionError)
 
-	doc = frappe.get_doc({
-		"doctype": "Requirement",
+	if isinstance(apps, str):
+		apps = json.loads(apps or "[]")
+
+	values = {
 		"customer": customer,
-		"looking_for": looking_for,
+		"company_name": company_name,
+		"country": country,
 		"industry": industry,
+		"apps": [{"app": a} for a in (apps or [])],
+		"looking_for": looking_for,
 		"company_size": company_size,
 		"current_situation": current_situation,
 		"timeline": timeline,
 		"delivery_preference": delivery_preference,
 		"budget": budget,
 		"special_requirements": special_requirements or "[]",
-		"outcome": outcome,
-	})
-	doc.insert(ignore_permissions=True)
+	}
+	if outcome:
+		values["outcome"] = outcome
+
+	existing = frappe.db.get_value("Requirement", {"customer": customer}, "name", order_by="creation desc")
+	if existing:
+		doc = frappe.get_doc("Requirement", existing)
+		doc.update(values)
+		doc.save(ignore_permissions=True)
+	else:
+		doc = frappe.get_doc({"doctype": "Requirement", **values})
+		doc.insert(ignore_permissions=True)
+
 	frappe.db.commit()
 	return {"name": doc.name}
+
+
+@frappe.whitelist(allow_guest=True)
+def get_my_requirement():
+	"""The current user's company's saved requirement, for prefilling the Settings
+	"Edit Requirements" form — None if they haven't saved one yet (add mode), and
+	for a logged-out visitor (same as no customer link)."""
+	customer = _get_customer_for_user()
+	if not customer:
+		return None
+	name = frappe.db.get_value("Requirement", {"customer": customer}, "name", order_by="creation desc")
+	if not name:
+		return None
+	doc = frappe.get_doc("Requirement", name)
+	return {
+		"name": doc.name,
+		"company_name": doc.company_name,
+		"country": doc.country,
+		"industry": doc.industry,
+		"apps": [a.app for a in doc.apps],
+		"looking_for": doc.looking_for,
+		"company_size": doc.company_size,
+		"current_situation": doc.current_situation,
+		"timeline": doc.timeline,
+		"delivery_preference": doc.delivery_preference,
+		"budget": doc.budget,
+		"special_requirements": doc.special_requirements,
+	}
+
+
+@frappe.whitelist(allow_guest=True)
+def get_partner_preview(partner):
+	"""Lightweight partner snapshot for the Find Partners list view's quick-preview
+	side drawer — just enough to decide whether to open the full profile. Fetched
+	on demand per click rather than bloating every row of search_partners."""
+	fields = [
+		"name", "partner_name", "logo", "description", "tier", "specialist",
+		"rating", "reviews_count", "city", "country", "pmm_level", "hourly_rate",
+		"certs_erpnext", "certs_frappe_framework", "industry", "address",
+	]
+	doc = frappe.db.get_value("Partner", partner, fields, as_dict=True)
+	if not doc:
+		frappe.throw(_("Partner not found"), frappe.DoesNotExistError)
+
+	doc["apps"] = frappe.get_all("Partner App", filters={"parent": partner}, pluck="app", order_by="idx asc")
+	doc["migrations"] = frappe.get_all(
+		"Partner Migration Path", filters={"parent": partner}, pluck="migration_path", order_by="idx asc"
+	)
+	return doc
+
+
+# Which packs are the "closest fit" for a given requirement's product interest,
+# derived from Requirement.apps (there's no dedicated product_interest field —
+# apps already carries this signal, since its options come from the real App
+# doctype and already include "ERPNext" and "Frappe HR").
+def _pack_is_primary_match(pack_key, has_erpnext, has_hr):
+	if pack_key == "allinone":
+		return has_erpnext and has_hr
+	if pack_key in ("core", "manufacturing"):
+		return has_erpnext and not has_hr
+	if pack_key == "hr":
+		return has_hr and not has_erpnext
+	return False
+
+
+@frappe.whitelist(allow_guest=True)
+def get_pricing_view(partner, requirement=None):
+	"""Drives the Partner Profile Pricing tab. Guest-safe like the rest of the
+	profile page — a logged-out visitor or one with no saved Requirement simply
+	lands on "no_requirement", same honest fallback either way.
+
+	Every partner gets an hourly-rate add-on breakdown regardless of whether they
+	offer starter packs — `addon_rate` is the fixed ₹2,000/hr pack-derived rate
+	for starter-pack partners (has to match their own pack price-per-hour
+	exactly), or the partner's own disclosed/estimated hourly_rate otherwise.
+	Packaged pricing (`state: "eligible"`) additionally requires starter_pack AND
+	a requirement that wants ERPNext or Frappe HR.
+
+	`requirement` is optional and normally left unset: the caller's own most
+	recent Requirement (via Customer Team Member) is resolved automatically, so
+	the frontend doesn't need to track a requirement id of its own. Passing one
+	explicitly overrides that lookup.
+	"""
+	partner_doc = frappe.get_doc("Partner", partner)
+	addons = [a.as_dict() for a in partner_doc.addons]
+	addon_rate = 2000 if partner_doc.starter_pack else flt(partner_doc.hourly_rate)
+
+	if not requirement:
+		customer = _get_customer_for_user()
+		if customer:
+			requirement = frappe.db.get_value(
+				"Requirement", {"customer": customer}, "name", order_by="creation desc"
+			)
+
+	if not partner_doc.starter_pack:
+		return {
+			"state": "hourly_only", "rate": partner_doc.hourly_rate,
+			"addons": addons, "addon_rate": addon_rate, "requirement": requirement,
+		}
+
+	if not requirement:
+		return {"state": "no_requirement", "rate": partner_doc.hourly_rate, "addons": addons, "addon_rate": addon_rate}
+
+	req = frappe.get_doc("Requirement", requirement)
+	req_apps = [a.app for a in req.apps]
+	has_erpnext = "ERPNext" in req_apps
+	has_hr = "Frappe HR" in req_apps
+
+	if not (has_erpnext or has_hr):
+		return {
+			"state": "mismatch",
+			"rate": partner_doc.hourly_rate,
+			"requested_product": ", ".join(req_apps) if req_apps else None,
+			"requirement": req.name,
+			"addons": addons,
+			"addon_rate": addon_rate,
+		}
+
+	packs = [p.as_dict() for p in partner_doc.packs]
+	for p in packs:
+		p["is_primary_match"] = _pack_is_primary_match(p["pack_key"], has_erpnext, has_hr)
+
+	return {
+		"state": "eligible",
+		"packs": packs,
+		"addons": addons,
+		"requirement": req.name,
+	}
+
+
+@frappe.whitelist()
+def save_price_estimate(partner, selected_addons, total, requirement=None, pack_type=None):
+	"""Record a customer's starter-pack estimate (pack + selected add-ons) at the
+	moment they choose to contact the partner about it, so the partner sees
+	exactly what was being estimated rather than a blind inquiry. requirement/
+	pack_type are optional — the no_requirement and mismatch pricing states have
+	no eligible pack, only an hourly-rate add-on estimate, so base_price is 0 and
+	pack_type stays blank for those."""
+	customer = _get_customer_for_user()
+	if not customer:
+		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
+
+	if isinstance(selected_addons, str):
+		selected_addons = json.loads(selected_addons or "[]")
+
+	partner_doc = frappe.get_doc("Partner", partner)
+	base_price = next((p.price for p in partner_doc.packs if p.pack_name == pack_type), 0)
+
+	doc = frappe.get_doc({
+		"doctype": "Price Estimate",
+		"user": frappe.session.user,
+		"partner": partner,
+		"requirement": requirement,
+		"pack_type": pack_type,
+		"base_price": base_price,
+		"total": flt(total),
+	})
+	for addon in selected_addons:
+		doc.append("selected_options", {"feature_name": addon.get("name"), "price": addon.get("price")})
+	doc.insert(ignore_permissions=True)
+	frappe.db.commit()
+	return doc.name
 
 
 @frappe.whitelist()
