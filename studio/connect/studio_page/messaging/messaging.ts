@@ -81,6 +81,7 @@ export default function setup(context) {
 		call("connect.api.mark_thread_read", { thread: name })
 			.then(() => context.myThreads.reload())
 			.catch(() => {})
+		fetchPinnedMessage()
 	}
 
 	// default to the first (most recently active) thread once the list loads
@@ -125,6 +126,30 @@ export default function setup(context) {
 	}
 	socket.on("connect_message_deleted", handleMessageDeleted)
 	onScopeDispose(() => socket.off("connect_message_deleted", handleMessageDeleted))
+
+	function handleMessageEdited(payload) {
+		if (payload.thread === selectedThread.value) context.messages.reload()
+	}
+	socket.on("connect_message_edited", handleMessageEdited)
+	onScopeDispose(() => socket.off("connect_message_edited", handleMessageEdited))
+
+	// The pin/unpin call itself already updates the acting tab's own `pinnedMessage` — this is
+	// purely for everyone else's open tabs, and carries the pinned message's fields directly in
+	// the payload so those tabs don't need a round trip back to get_pinned_message.
+	function handleThreadPinChanged(payload) {
+		if (payload.thread !== selectedThread.value) return
+		pinnedMessage.value = payload.pinned_message
+			? {
+					name: payload.pinned_message,
+					sender: payload.sender,
+					message_type: payload.message_type,
+					content: payload.content,
+					file_name: payload.file_name,
+				}
+			: null
+	}
+	socket.on("connect_thread_pin_changed", handleThreadPinChanged)
+	onScopeDispose(() => socket.off("connect_thread_pin_changed", handleThreadPinChanged))
 
 	// WhatsApp-style sticky date: an in-flow date divider (e.g. "9th August 2026" sitting
 	// between two days' messages) is always fully visible — it's not floating over anything,
@@ -327,10 +352,11 @@ export default function setup(context) {
 		const escaped = div.innerHTML
 		const withMentions = escaped.replace(/@([^\s@]+)/g, '<span style="font-weight: 600">@$1</span>')
 		const time = item ? formatMessageTime(item) : ""
+		const timeText = item && item.is_edited ? "Edited · " + time : time
 		const timeSpan =
 			'<span style="float: right; margin-left: 8px; margin-top: 6px; margin-right: -6px; font-size: 9px; ' +
 			'line-height: 12px; color: var(--ink-gray-5); white-space: nowrap;">' +
-			time +
+			timeText +
 			"</span>"
 		return withMentions + timeSpan
 	}
@@ -456,6 +482,126 @@ export default function setup(context) {
 		} finally {
 			deletingMessage.value = false
 		}
+	}
+
+	// ---- Editing a message ----
+	const showEditMessageDialog = ref(false)
+	const messageToEdit = ref(null)
+	const editMessageContent = ref("")
+	const editingMessage = ref(false)
+
+	function confirmEditMessage(item) {
+		if (!item || item.isFileCluster || item.message_type !== "Text" || !isMine(item.sender)) return
+		messageToEdit.value = item
+		editMessageContent.value = item.content
+		showEditMessageDialog.value = true
+	}
+
+	function closeEditMessageDialog() {
+		showEditMessageDialog.value = false
+		messageToEdit.value = null
+		editMessageContent.value = ""
+	}
+
+	async function saveEditedMessage() {
+		if (!messageToEdit.value || editingMessage.value) return
+		const content = editMessageContent.value.trim()
+		if (!content) return
+		editingMessage.value = true
+		try {
+			await call("connect.api.edit_message", { message: messageToEdit.value.name, content })
+			closeEditMessageDialog()
+			context.messages.reload()
+		} catch (e) {
+			toast({
+				title: "Could not edit message",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			editingMessage.value = false
+		}
+	}
+
+	function saveEditedMessageOnEnter(event) {
+		if (event && event.key === "Enter" && !event.shiftKey) {
+			event.preventDefault()
+			saveEditedMessage()
+		}
+	}
+
+	// ---- Pinning a message ----
+	// One pin at a time per thread (see connect.api.pin_message) — the currently pinned
+	// message's own fields are kept here rather than re-derived from context.messages.data
+	// since the pinned message can scroll out of the loaded window (200-message limit).
+	const pinnedMessage = ref(null)
+
+	async function fetchPinnedMessage() {
+		if (!selectedThread.value) {
+			pinnedMessage.value = null
+			return
+		}
+		try {
+			pinnedMessage.value = await call("connect.api.get_pinned_message", { thread: selectedThread.value })
+		} catch (e) {
+			pinnedMessage.value = null
+		}
+	}
+
+	function isPinned(item) {
+		return !!(pinnedMessage.value && item && pinnedMessage.value.name === item.name)
+	}
+
+	async function togglePinMessage(item) {
+		if (!item || item.isFileCluster) return
+		try {
+			if (isPinned(item)) {
+				await call("connect.api.unpin_message", { thread: selectedThread.value })
+				pinnedMessage.value = null
+			} else {
+				await call("connect.api.pin_message", { message: item.name })
+				await fetchPinnedMessage()
+			}
+		} catch (e) {
+			toast({
+				title: "Could not update pinned message",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		}
+	}
+
+	async function unpinMessage() {
+		if (!selectedThread.value || !pinnedMessage.value) return
+		try {
+			await call("connect.api.unpin_message", { thread: selectedThread.value })
+			pinnedMessage.value = null
+		} catch (e) {
+			toast({
+				title: "Could not unpin message",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		}
+	}
+
+	function pinnedMessageLabel() {
+		if (!pinnedMessage.value) return ""
+		const sender = (pinnedMessage.value.sender || "").split("@")[0]
+		const body =
+			pinnedMessage.value.message_type === "File"
+				? "📎 " + (pinnedMessage.value.file_name || "Attachment")
+				: pinnedMessage.value.content
+		return sender + ": " + body
+	}
+
+	function scrollToPinnedMessage() {
+		if (!pinnedMessage.value) return
+		const el = document.querySelector(`[data-message-id="${pinnedMessage.value.name}"]`)
+		if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
 	}
 
 	// ---- Deleting a whole file cluster ----
@@ -1052,6 +1198,19 @@ export default function setup(context) {
 		messageToDelete,
 		deletingMessage,
 		deleteMessage,
+		showEditMessageDialog,
+		editMessageContent,
+		editingMessage,
+		confirmEditMessage,
+		closeEditMessageDialog,
+		saveEditedMessage,
+		saveEditedMessageOnEnter,
+		pinnedMessage,
+		isPinned,
+		togglePinMessage,
+		unpinMessage,
+		pinnedMessageLabel,
+		scrollToPinnedMessage,
 		showDeleteClusterDialog,
 		clusterToDelete,
 		deletingCluster,
