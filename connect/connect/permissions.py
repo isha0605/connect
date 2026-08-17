@@ -193,16 +193,24 @@ def get_message_template_permission_query_conditions(user, doctype=None):
 
 def has_studio_page_permission(doc, ptype="read", user=None, **kwargs):
 	"""Lets any logged-in user load our published 'connect' app pages (e.g. the messaging
-	page) without granting System Manager / Studio User access to Studio Page in general."""
+	page) without granting System Manager / Studio User access to Studio Page in general.
+	Guests only get pages explicitly marked allow_guest."""
 	user = user or frappe.session.user
 	if _has_full_access(user):
 		return True
 	if ptype != "read":
 		return False
-	return doc.get("studio_app") == "connect" and bool(doc.get("published"))
+	if not (doc.get("studio_app") == "connect" and bool(doc.get("published"))):
+		return False
+	if user == "Guest":
+		return bool(doc.get("allow_guest"))
+	return True
 
 
 def get_studio_page_permission_query_conditions(user, doctype=None):
 	if _has_full_access(user):
 		return ""
-	return "`tabStudio Page`.studio_app = 'connect' and `tabStudio Page`.published = 1"
+	base = "`tabStudio Page`.studio_app = 'connect' and `tabStudio Page`.published = 1"
+	if user == "Guest":
+		return base + " and `tabStudio Page`.allow_guest = 1"
+	return base

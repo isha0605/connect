@@ -631,14 +631,13 @@ def get_pinned_message(thread):
 	)
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def get_my_context():
 	"""customer side reads real Customer Team Member membership (the doctype the rest of
-	the app — Requirement, Shortlist, Pricing — already uses); partner side still reads
-	Connect Partner Member, since there's no real partner-side user/login model yet (see
-	_is_partner_admin/_is_partner_member in connect.permissions, which are in the same
-	not-yet-built state) — matching that rather than inventing a partner membership model
-	here."""
+	the app — Requirement, Shortlist, Pricing — already uses); partner side reads
+	Connect Partner Member (the real partner-side user/login model, see
+	_is_partner_admin/_is_partner_member in connect.permissions). Guest-safe: an
+	unrecognized/Guest user just falls through to customer=None, partner=None."""
 	user = frappe.session.user
 	customer = _get_customer_for_user(user)
 	customer_membership = None
@@ -1299,7 +1298,7 @@ def _get_customer_for_user(user=None):
 	return frappe.db.get_value("Customer Team Member", {"user": user}, "parent")
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def get_my_customer():
 	"""Current session user's Customer company — feeds the portal shell (sidebar identity etc)."""
 	customer = _get_customer_for_user()
@@ -1308,7 +1307,7 @@ def get_my_customer():
 	return frappe.db.get_value("Customer", customer, ["name", "customer_name"], as_dict=True)
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def get_my_shortlisted_partner_names():
 	"""Lightweight list of shortlisted partner names for the current user's company —
 	used to mark bookmark state on Find Partners without re-fetching full partner rows."""
