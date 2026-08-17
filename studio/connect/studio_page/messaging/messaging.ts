@@ -81,6 +81,7 @@ export default function setup(context) {
 		call("connect.api.mark_thread_read", { thread: name })
 			.then(() => context.myThreads.reload())
 			.catch(() => {})
+		fetchPinnedMessage()
 	}
 
 	// default to the first (most recently active) thread once the list loads
@@ -126,6 +127,30 @@ export default function setup(context) {
 	socket.on("connect_message_deleted", handleMessageDeleted)
 	onScopeDispose(() => socket.off("connect_message_deleted", handleMessageDeleted))
 
+	function handleMessageEdited(payload) {
+		if (payload.thread === selectedThread.value) context.messages.reload()
+	}
+	socket.on("connect_message_edited", handleMessageEdited)
+	onScopeDispose(() => socket.off("connect_message_edited", handleMessageEdited))
+
+	// The pin/unpin call itself already updates the acting tab's own `pinnedMessage` — this is
+	// purely for everyone else's open tabs, and carries the pinned message's fields directly in
+	// the payload so those tabs don't need a round trip back to get_pinned_message.
+	function handleThreadPinChanged(payload) {
+		if (payload.thread !== selectedThread.value) return
+		pinnedMessage.value = payload.pinned_message
+			? {
+					name: payload.pinned_message,
+					sender: payload.sender,
+					message_type: payload.message_type,
+					content: payload.content,
+					file_name: payload.file_name,
+				}
+			: null
+	}
+	socket.on("connect_thread_pin_changed", handleThreadPinChanged)
+	onScopeDispose(() => socket.off("connect_thread_pin_changed", handleThreadPinChanged))
+
 	// WhatsApp-style sticky date: an in-flow date divider (e.g. "9th August 2026" sitting
 	// between two days' messages) is always fully visible — it's not floating over anything,
 	// there's nothing to hide it *from*. The fade-on-idle only applies to whichever divider is
@@ -142,6 +167,16 @@ export default function setup(context) {
 	const stuckDateKey = ref<string | null>(null)
 	let stickyDateHideTimer: ReturnType<typeof setTimeout> | null = null
 
+	// Whether the pane should keep tracking the newest message. Turned back on every time we
+	// deliberately jump to bottom (thread open, send, incoming realtime message); turned off the
+	// moment the user scrolls away from the bottom themselves, so reading old messages isn't
+	// fought by an unrelated message arriving elsewhere.
+	let stickToBottom = true
+
+	function isNearMessagesBottom(el: HTMLElement) {
+		return el.scrollHeight - el.scrollTop - el.clientHeight < 80
+	}
+
 	function onMessagesScroll(event) {
 		showStickyDate.value = true
 		if (stickyDateHideTimer) clearTimeout(stickyDateHideTimer)
@@ -151,6 +186,8 @@ export default function setup(context) {
 
 		const container = event && (event.currentTarget || event.target)
 		if (!container) return
+		stickToBottom = isNearMessagesBottom(container)
+
 		const containerTop = container.getBoundingClientRect().top
 		let stuck = null
 		container.querySelectorAll("[data-date-sentinel]").forEach((el) => {
@@ -165,8 +202,48 @@ export default function setup(context) {
 		return !!item && item.dateKey === stuckDateKey.value && !showStickyDate.value
 	}
 
+	// Jump the message pane to the newest message — opening/switching a thread and sending a
+	// message should always land on what was just written, not wherever the scroll happened to
+	// be. A plain scrollTop=scrollHeight right after nextTick can still undershoot though:
+	// avatars/image attachments that haven't finished loading yet grow the container a moment
+	// later, leaving the "bottom" short of the real last message (looked like landing a whole day
+	// early when the tail of the list is image-heavy). The ResizeObserver re-pins on every
+	// subsequent layout change while stickToBottom holds, so a late-loading image can't strand
+	// the scroll partway up.
+	let messagesResizeObserver: ResizeObserver | null = null
+
+	function scrollMessagesToBottom() {
+		stickToBottom = true
+		nextTick(() => {
+			const el = document.querySelector('[data-component-id="messages-scroll"]') as HTMLElement | null
+			if (!el) return
+			el.scrollTop = el.scrollHeight
+
+			if (!messagesResizeObserver) {
+				const content = el.firstElementChild
+				if (content) {
+					messagesResizeObserver = new ResizeObserver(() => {
+						if (stickToBottom) el.scrollTop = el.scrollHeight
+					})
+					messagesResizeObserver.observe(content)
+				}
+			}
+		})
+	}
+
+	// `messages`' own filters are dynamically bound to selectedThread (see the page's resource
+	// config), so Studio's resource layer *also* reloads it reactively on top of any explicit
+	// .reload() call made below — racing two fetches and only scrolling after one of them would
+	// leave the pane wherever the other one's re-render happened to land. Watching the data
+	// itself sidesteps the race: it fires once, after whichever fetch actually lands last.
+	watch(
+		() => context.messages.data,
+		() => scrollMessagesToBottom(),
+	)
+
 	onScopeDispose(() => {
 		if (stickyDateHideTimer) clearTimeout(stickyDateHideTimer)
+		messagesResizeObserver?.disconnect()
 	})
 
 	function closeThread() {
@@ -275,10 +352,11 @@ export default function setup(context) {
 		const escaped = div.innerHTML
 		const withMentions = escaped.replace(/@([^\s@]+)/g, '<span style="font-weight: 600">@$1</span>')
 		const time = item ? formatMessageTime(item) : ""
+		const timeText = item && item.is_edited ? "Edited · " + time : time
 		const timeSpan =
 			'<span style="float: right; margin-left: 8px; margin-top: 6px; margin-right: -6px; font-size: 9px; ' +
 			'line-height: 12px; color: var(--ink-gray-5); white-space: nowrap;">' +
-			time +
+			timeText +
 			"</span>"
 		return withMentions + timeSpan
 	}
@@ -372,7 +450,8 @@ export default function setup(context) {
 	const uploadingFile = computed(() => draftAttachments.value.some((a) => a.uploading))
 
 	function messageActionsOptions(item) {
-		const onClick = item && item.isFileCluster ? () => confirmDeleteCluster(item) : () => confirmDeleteMessage(item)
+		if (!item || !isMine(item.sender)) return []
+		const onClick = item.isFileCluster ? () => confirmDeleteCluster(item) : () => confirmDeleteMessage(item)
 		return [{ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick }]
 	}
 
@@ -403,6 +482,126 @@ export default function setup(context) {
 		} finally {
 			deletingMessage.value = false
 		}
+	}
+
+	// ---- Editing a message ----
+	const showEditMessageDialog = ref(false)
+	const messageToEdit = ref(null)
+	const editMessageContent = ref("")
+	const editingMessage = ref(false)
+
+	function confirmEditMessage(item) {
+		if (!item || item.isFileCluster || item.message_type !== "Text" || !isMine(item.sender)) return
+		messageToEdit.value = item
+		editMessageContent.value = item.content
+		showEditMessageDialog.value = true
+	}
+
+	function closeEditMessageDialog() {
+		showEditMessageDialog.value = false
+		messageToEdit.value = null
+		editMessageContent.value = ""
+	}
+
+	async function saveEditedMessage() {
+		if (!messageToEdit.value || editingMessage.value) return
+		const content = editMessageContent.value.trim()
+		if (!content) return
+		editingMessage.value = true
+		try {
+			await call("connect.api.edit_message", { message: messageToEdit.value.name, content })
+			closeEditMessageDialog()
+			context.messages.reload()
+		} catch (e) {
+			toast({
+				title: "Could not edit message",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			editingMessage.value = false
+		}
+	}
+
+	function saveEditedMessageOnEnter(event) {
+		if (event && event.key === "Enter" && !event.shiftKey) {
+			event.preventDefault()
+			saveEditedMessage()
+		}
+	}
+
+	// ---- Pinning a message ----
+	// One pin at a time per thread (see connect.api.pin_message) — the currently pinned
+	// message's own fields are kept here rather than re-derived from context.messages.data
+	// since the pinned message can scroll out of the loaded window (200-message limit).
+	const pinnedMessage = ref(null)
+
+	async function fetchPinnedMessage() {
+		if (!selectedThread.value) {
+			pinnedMessage.value = null
+			return
+		}
+		try {
+			pinnedMessage.value = await call("connect.api.get_pinned_message", { thread: selectedThread.value })
+		} catch (e) {
+			pinnedMessage.value = null
+		}
+	}
+
+	function isPinned(item) {
+		return !!(pinnedMessage.value && item && pinnedMessage.value.name === item.name)
+	}
+
+	async function togglePinMessage(item) {
+		if (!item || item.isFileCluster) return
+		try {
+			if (isPinned(item)) {
+				await call("connect.api.unpin_message", { thread: selectedThread.value })
+				pinnedMessage.value = null
+			} else {
+				await call("connect.api.pin_message", { message: item.name })
+				await fetchPinnedMessage()
+			}
+		} catch (e) {
+			toast({
+				title: "Could not update pinned message",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		}
+	}
+
+	async function unpinMessage() {
+		if (!selectedThread.value || !pinnedMessage.value) return
+		try {
+			await call("connect.api.unpin_message", { thread: selectedThread.value })
+			pinnedMessage.value = null
+		} catch (e) {
+			toast({
+				title: "Could not unpin message",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		}
+	}
+
+	function pinnedMessageLabel() {
+		if (!pinnedMessage.value) return ""
+		const sender = (pinnedMessage.value.sender || "").split("@")[0]
+		const body =
+			pinnedMessage.value.message_type === "File"
+				? "📎 " + (pinnedMessage.value.file_name || "Attachment")
+				: pinnedMessage.value.content
+		return sender + ": " + body
+	}
+
+	function scrollToPinnedMessage() {
+		if (!pinnedMessage.value) return
+		const el = document.querySelector(`[data-message-id="${pinnedMessage.value.name}"]`)
+		if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
 	}
 
 	// ---- Deleting a whole file cluster ----
@@ -684,6 +883,10 @@ export default function setup(context) {
 	}
 
 	// ---- File preview dialog ----
+	// A plain fixed overlay (not frappe-ui's Dialog) so it can truly cover the whole viewport
+	// edge-to-edge with no scroller — Dialog always wraps content in a margined, capped-width
+	// box with its own scrollable backdrop, neither of which is overridable via props. Escape-
+	// to-close is normally Dialog's job, so it's reimplemented here.
 	const showFilePreviewDialog = ref(false)
 	const previewFile = ref(null)
 
@@ -691,6 +894,14 @@ export default function setup(context) {
 		previewFile.value = item
 		showFilePreviewDialog.value = true
 	}
+
+	function handleFilePreviewKeydown(event: KeyboardEvent) {
+		if (event.key === "Escape" && showFilePreviewDialog.value) {
+			showFilePreviewDialog.value = false
+		}
+	}
+	window.addEventListener("keydown", handleFilePreviewKeydown)
+	onScopeDispose(() => window.removeEventListener("keydown", handleFilePreviewKeydown))
 
 	function sendMessageOnEnter(event) {
 		if (event && event.key === "Enter") {
@@ -987,6 +1198,19 @@ export default function setup(context) {
 		messageToDelete,
 		deletingMessage,
 		deleteMessage,
+		showEditMessageDialog,
+		editMessageContent,
+		editingMessage,
+		confirmEditMessage,
+		closeEditMessageDialog,
+		saveEditedMessage,
+		saveEditedMessageOnEnter,
+		pinnedMessage,
+		isPinned,
+		togglePinMessage,
+		unpinMessage,
+		pinnedMessageLabel,
+		scrollToPinnedMessage,
 		showDeleteClusterDialog,
 		clusterToDelete,
 		deletingCluster,
