@@ -451,8 +451,33 @@ export default function setup(context) {
 
 	function messageActionsOptions(item) {
 		if (!item || !isMine(item.sender)) return []
-		const onClick = item.isFileCluster ? () => confirmDeleteCluster(item) : () => confirmDeleteMessage(item)
-		return [{ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick }]
+		const options = []
+		if (!item.isFileCluster && item.message_type === "Text") {
+			options.push({ label: "Edit", icon: "lucide-pencil", onClick: () => confirmEditMessage(item) })
+		}
+		if (!item.isFileCluster) {
+			options.push({
+				label: isPinned(item) ? "Unpin" : "Pin",
+				icon: isPinned(item) ? "lucide-pin-off" : "lucide-pin",
+				onClick: () => togglePinMessage(item),
+			})
+		}
+		const onDelete = item.isFileCluster ? () => confirmDeleteCluster(item) : () => confirmDeleteMessage(item)
+		options.push({ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick: onDelete })
+		return options
+	}
+
+	// Right-click menu for someone else's message — just Pin/Unpin, since edit/delete are
+	// sender-only (see messageActionsOptions). File clusters aren't pinnable (see togglePinMessage).
+	function otherMessageActionsOptions(item) {
+		if (!item || item.isFileCluster) return []
+		return [
+			{
+				label: isPinned(item) ? "Unpin" : "Pin",
+				icon: isPinned(item) ? "lucide-pin-off" : "lucide-pin",
+				onClick: () => togglePinMessage(item),
+			},
+		]
 	}
 
 	const showDeleteMessageDialog = ref(false)
@@ -1194,6 +1219,7 @@ export default function setup(context) {
 		removeMember,
 		memberRowOptions,
 		messageActionsOptions,
+		otherMessageActionsOptions,
 		showDeleteMessageDialog,
 		messageToDelete,
 		deletingMessage,
