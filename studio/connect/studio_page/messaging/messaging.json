@@ -600,6 +600,103 @@
       },
       {
        "baseStyles": {
+        "alignItems": "center",
+        "backgroundColor": "var(--surface-amber-1)",
+        "borderBottom": "1px solid var(--outline-gray-2)",
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "8px",
+        "padding": "8px 16px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "backgroundColor": "var(--surface-amber-3)",
+          "borderRadius": "6px",
+          "display": "flex",
+          "flexShrink": "0",
+          "height": "26px",
+          "justifyContent": "center",
+          "width": "26px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-amber-7)",
+            "height": "13px",
+            "width": "13px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "pinned-banner-icon",
+           "componentName": "FeatherIcon",
+           "componentProps": {
+            "name": "pin"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "pinned-banner-icon-box",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-8)",
+          "cursor": "pointer",
+          "flex": "1",
+          "minWidth": "0px",
+          "overflow": "hidden",
+          "textOverflow": "ellipsis",
+          "whiteSpace": "nowrap"
+         },
+         "children": [],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "scrollToPinnedMessage();"
+          }
+         },
+         "componentId": "pinned-banner-text",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-sm",
+          "tag": "span",
+          "text": "{{ pinnedMessageLabel() }}"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "unpinMessage();"
+          }
+         },
+         "componentId": "pinned-banner-unpin",
+         "componentName": "Button",
+         "componentProps": {
+          "icon": "lucide-x",
+          "size": "sm",
+          "theme": "gray",
+          "tooltip": "Unpin",
+          "variant": "ghost"
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "pinned-message-banner",
+       "componentName": "container",
+       "originalElement": "div",
+       "visibilityCondition": "selectedThread && pinnedMessage && pinnedMessage.name"
+      },
+      {
+       "baseStyles": {
         "backgroundColor": "var(--surface-base)",
         "display": "flex",
         "flex": "1",
@@ -1043,6 +1140,93 @@
                        "componentName": "container",
                        "originalElement": "div",
                        "visibilityCondition": "dataItem.message_type === 'File' && isImageFile(dataItem)"
+                      },
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-white)",
+                        "border": "1px solid var(--outline-gray-2)",
+                        "borderRadius": "8px",
+                        "boxShadow": "var(--shadow-sm)",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "gap": "2px",
+                        "padding": "2px",
+                        "position": "absolute",
+                        "right": "0px",
+                        "top": "-16px",
+                        "zIndex": "10"
+                       },
+                       "children": [
+                        {
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "confirmEditMessage(dataItem);"
+                          }
+                         },
+                         "componentId": "message-edit-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "icon": "lucide-pencil",
+                          "size": "sm",
+                          "theme": "gray",
+                          "tooltip": "Edit",
+                          "variant": "ghost"
+                         },
+                         "visibilityCondition": "dataItem.message_type === 'Text'"
+                        },
+                        {
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "togglePinMessage(dataItem);"
+                          }
+                         },
+                         "componentId": "message-pin-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "icon": "{{ isPinned(dataItem) ? 'lucide-pin-off' : 'lucide-pin' }}",
+                          "size": "sm",
+                          "theme": "{{ isPinned(dataItem) ? 'blue' : 'gray' }}",
+                          "tooltip": "{{ isPinned(dataItem) ? 'Unpin' : 'Pin' }}",
+                          "variant": "ghost"
+                         }
+                        },
+                        {
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "confirmDeleteMessage(dataItem);"
+                          }
+                         },
+                         "componentId": "message-delete-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "icon": "lucide-trash-2",
+                          "size": "sm",
+                          "theme": "red",
+                          "tooltip": "Delete",
+                          "variant": "ghost"
+                         }
+                        }
+                       ],
+                       "classes": [
+                        "opacity-0",
+                        "group-hover:opacity-100",
+                        "transition-opacity"
+                       ],
+                       "componentId": "message-actions-toolbar",
+                       "componentName": "container",
+                       "originalElement": "div"
                       }
                      ],
                      "classes": [],
@@ -1292,6 +1476,52 @@
                        "componentName": "container",
                        "originalElement": "div",
                        "visibilityCondition": "dataItem.message_type === 'File' && isImageFile(dataItem)"
+                      },
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-white)",
+                        "border": "1px solid var(--outline-gray-2)",
+                        "borderRadius": "8px",
+                        "boxShadow": "var(--shadow-sm)",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "gap": "2px",
+                        "left": "0px",
+                        "padding": "2px",
+                        "position": "absolute",
+                        "top": "-16px",
+                        "zIndex": "10"
+                       },
+                       "children": [
+                        {
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "togglePinMessage(dataItem);"
+                          }
+                         },
+                         "componentId": "message-pin-btn-o",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "icon": "{{ isPinned(dataItem) ? 'lucide-pin-off' : 'lucide-pin' }}",
+                          "size": "sm",
+                          "theme": "{{ isPinned(dataItem) ? 'blue' : 'gray' }}",
+                          "tooltip": "{{ isPinned(dataItem) ? 'Unpin' : 'Pin' }}",
+                          "variant": "ghost"
+                         }
+                        }
+                       ],
+                       "classes": [
+                        "opacity-0",
+                        "group-hover:opacity-100",
+                        "transition-opacity"
+                       ],
+                       "componentId": "message-actions-toolbar-o",
+                       "componentName": "container",
+                       "originalElement": "div"
                       }
                      ],
                      "classes": [],
@@ -1305,6 +1535,7 @@
                    "componentId": "message-body",
                    "componentName": "container",
                    "componentProps": {
+                    "data-message-id": "{{ dataItem.name }}",
                     "title": "{{ isGrouped(dataItem, dataIndex) ? formatMessageTime(dataItem) : '' }}"
                    },
                    "originalElement": "div"
@@ -2999,6 +3230,106 @@
       },
       "size": "sm",
       "title": "Delete message?"
+     }
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "12px"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
+         "componentEvents": {
+          "keydown": {
+           "action": "Run Script",
+           "event": "keydown",
+           "script": "saveEditedMessageOnEnter(eventArgs[0]);"
+          }
+         },
+         "componentId": "edit-message-input",
+         "componentName": "TextInput",
+         "componentProps": {
+          "modelValue": {
+           "$type": "variable",
+           "name": "editMessageContent"
+          },
+          "placeholder": "Edit message..."
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "8px",
+          "justifyContent": "flex-end"
+         },
+         "children": [
+          {
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "closeEditMessageDialog();"
+            }
+           },
+           "componentId": "edit-message-cancel-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "theme": "gray",
+            "variant": "outline"
+           }
+          },
+          {
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "saveEditedMessage();"
+            }
+           },
+           "componentId": "edit-message-save-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Save",
+            "loading": "{{ editingMessage }}",
+            "loadingText": "Saving...",
+            "theme": "gray",
+            "variant": "solid"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "edit-message-actions",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "edit-message-body",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "edit-message-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "showEditMessageDialog"
+      },
+      "size": "sm",
+      "title": "Edit message"
      }
     },
     {
@@ -5259,6 +5590,103 @@
       },
       {
        "baseStyles": {
+        "alignItems": "center",
+        "backgroundColor": "var(--surface-amber-1)",
+        "borderBottom": "1px solid var(--outline-gray-2)",
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "8px",
+        "padding": "8px 16px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "backgroundColor": "var(--surface-amber-3)",
+          "borderRadius": "6px",
+          "display": "flex",
+          "flexShrink": "0",
+          "height": "26px",
+          "justifyContent": "center",
+          "width": "26px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-amber-7)",
+            "height": "13px",
+            "width": "13px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "pinned-banner-icon",
+           "componentName": "FeatherIcon",
+           "componentProps": {
+            "name": "pin"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "pinned-banner-icon-box",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-8)",
+          "cursor": "pointer",
+          "flex": "1",
+          "minWidth": "0px",
+          "overflow": "hidden",
+          "textOverflow": "ellipsis",
+          "whiteSpace": "nowrap"
+         },
+         "children": [],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "scrollToPinnedMessage();"
+          }
+         },
+         "componentId": "pinned-banner-text",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-sm",
+          "tag": "span",
+          "text": "{{ pinnedMessageLabel() }}"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "unpinMessage();"
+          }
+         },
+         "componentId": "pinned-banner-unpin",
+         "componentName": "Button",
+         "componentProps": {
+          "icon": "lucide-x",
+          "size": "sm",
+          "theme": "gray",
+          "tooltip": "Unpin",
+          "variant": "ghost"
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "pinned-message-banner",
+       "componentName": "container",
+       "originalElement": "div",
+       "visibilityCondition": "selectedThread && pinnedMessage && pinnedMessage.name"
+      },
+      {
+       "baseStyles": {
         "backgroundColor": "var(--surface-base)",
         "display": "flex",
         "flex": "1",
@@ -5702,6 +6130,93 @@
                        "componentName": "container",
                        "originalElement": "div",
                        "visibilityCondition": "dataItem.message_type === 'File' && isImageFile(dataItem)"
+                      },
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-white)",
+                        "border": "1px solid var(--outline-gray-2)",
+                        "borderRadius": "8px",
+                        "boxShadow": "var(--shadow-sm)",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "gap": "2px",
+                        "padding": "2px",
+                        "position": "absolute",
+                        "right": "0px",
+                        "top": "-16px",
+                        "zIndex": "10"
+                       },
+                       "children": [
+                        {
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "confirmEditMessage(dataItem);"
+                          }
+                         },
+                         "componentId": "message-edit-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "icon": "lucide-pencil",
+                          "size": "sm",
+                          "theme": "gray",
+                          "tooltip": "Edit",
+                          "variant": "ghost"
+                         },
+                         "visibilityCondition": "dataItem.message_type === 'Text'"
+                        },
+                        {
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "togglePinMessage(dataItem);"
+                          }
+                         },
+                         "componentId": "message-pin-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "icon": "{{ isPinned(dataItem) ? 'lucide-pin-off' : 'lucide-pin' }}",
+                          "size": "sm",
+                          "theme": "{{ isPinned(dataItem) ? 'blue' : 'gray' }}",
+                          "tooltip": "{{ isPinned(dataItem) ? 'Unpin' : 'Pin' }}",
+                          "variant": "ghost"
+                         }
+                        },
+                        {
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "confirmDeleteMessage(dataItem);"
+                          }
+                         },
+                         "componentId": "message-delete-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "icon": "lucide-trash-2",
+                          "size": "sm",
+                          "theme": "red",
+                          "tooltip": "Delete",
+                          "variant": "ghost"
+                         }
+                        }
+                       ],
+                       "classes": [
+                        "opacity-0",
+                        "group-hover:opacity-100",
+                        "transition-opacity"
+                       ],
+                       "componentId": "message-actions-toolbar",
+                       "componentName": "container",
+                       "originalElement": "div"
                       }
                      ],
                      "classes": [],
@@ -5951,6 +6466,52 @@
                        "componentName": "container",
                        "originalElement": "div",
                        "visibilityCondition": "dataItem.message_type === 'File' && isImageFile(dataItem)"
+                      },
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-white)",
+                        "border": "1px solid var(--outline-gray-2)",
+                        "borderRadius": "8px",
+                        "boxShadow": "var(--shadow-sm)",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "gap": "2px",
+                        "left": "0px",
+                        "padding": "2px",
+                        "position": "absolute",
+                        "top": "-16px",
+                        "zIndex": "10"
+                       },
+                       "children": [
+                        {
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "togglePinMessage(dataItem);"
+                          }
+                         },
+                         "componentId": "message-pin-btn-o",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "icon": "{{ isPinned(dataItem) ? 'lucide-pin-off' : 'lucide-pin' }}",
+                          "size": "sm",
+                          "theme": "{{ isPinned(dataItem) ? 'blue' : 'gray' }}",
+                          "tooltip": "{{ isPinned(dataItem) ? 'Unpin' : 'Pin' }}",
+                          "variant": "ghost"
+                         }
+                        }
+                       ],
+                       "classes": [
+                        "opacity-0",
+                        "group-hover:opacity-100",
+                        "transition-opacity"
+                       ],
+                       "componentId": "message-actions-toolbar-o",
+                       "componentName": "container",
+                       "originalElement": "div"
                       }
                      ],
                      "classes": [],
@@ -5964,6 +6525,7 @@
                    "componentId": "message-body",
                    "componentName": "container",
                    "componentProps": {
+                    "data-message-id": "{{ dataItem.name }}",
                     "title": "{{ isGrouped(dataItem, dataIndex) ? formatMessageTime(dataItem) : '' }}"
                    },
                    "originalElement": "div"
@@ -7672,6 +8234,106 @@
         {
          "children": [],
          "classes": [],
+         "componentEvents": {
+          "keydown": {
+           "action": "Run Script",
+           "event": "keydown",
+           "script": "saveEditedMessageOnEnter(eventArgs[0]);"
+          }
+         },
+         "componentId": "edit-message-input",
+         "componentName": "TextInput",
+         "componentProps": {
+          "modelValue": {
+           "$type": "variable",
+           "name": "editMessageContent"
+          },
+          "placeholder": "Edit message..."
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "8px",
+          "justifyContent": "flex-end"
+         },
+         "children": [
+          {
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "closeEditMessageDialog();"
+            }
+           },
+           "componentId": "edit-message-cancel-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "theme": "gray",
+            "variant": "outline"
+           }
+          },
+          {
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "saveEditedMessage();"
+            }
+           },
+           "componentId": "edit-message-save-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Save",
+            "loading": "{{ editingMessage }}",
+            "loadingText": "Saving...",
+            "theme": "gray",
+            "variant": "solid"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "edit-message-actions",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "edit-message-body",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "edit-message-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "showEditMessageDialog"
+      },
+      "size": "sm",
+      "title": "Edit message"
+     }
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "12px"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
          "componentId": "new-member-email",
          "componentName": "TextInput",
          "componentProps": {
@@ -9342,7 +10004,7 @@
   },
   {
    "document_type": "Connect Message",
-   "fields": "[\"name\",\"thread\",\"sender\",\"message_type\",\"content\",\"attachment\",\"file_name\",\"file_type\",\"file_size\",\"is_private\",\"private_to\",\"creation\"]",
+   "fields": "[\"name\",\"thread\",\"sender\",\"message_type\",\"content\",\"attachment\",\"file_name\",\"file_type\",\"file_size\",\"is_private\",\"private_to\",\"is_edited\",\"creation\"]",
    "filters": "{\"thread\":[\"=\",\"{{ selectedThread }}\"]}",
    "limit": 200,
    "method": "GET",

@@ -473,6 +473,86 @@ def delete_message(message):
 
 
 @frappe.whitelist()
+def edit_message(message, content):
+	"""Edit your own text message in place — same own-message-only rule as delete_message.
+	Files/images/system rows aren't editable, and an edit is never allowed to empty a message
+	out entirely (that's what delete is for)."""
+	from connect.connect.notifications import notify_message_edited
+
+	user = frappe.session.user
+	doc = frappe.get_doc("Connect Message", message)
+	if doc.sender != user and not _has_full_access(user):
+		frappe.throw(_("You can only edit your own messages"), frappe.PermissionError)
+	if doc.message_type != "Text":
+		frappe.throw(_("Only text messages can be edited"))
+
+	content = (content or "").strip()
+	if not content:
+		frappe.throw(_("Message can't be empty"))
+
+	doc.content = content
+	doc.is_edited = 1
+	doc.save(ignore_permissions=True)
+
+	notify_message_edited(doc)
+	return doc.as_dict()
+
+
+@frappe.whitelist()
+def pin_message(message):
+	"""Pin a message to the top of its thread — one at a time, pinning a new one replaces
+	whichever was pinned before. Available to any thread member with Write (not just the
+	sender), same audience as posting. A private message is never pinned: the banner is
+	visible to the whole thread, which would leak it past its original recipients."""
+	from connect.connect.notifications import notify_thread_pin_changed
+
+	user = frappe.session.user
+	doc = frappe.get_doc("Connect Message", message)
+	_check_can_write(doc.thread, user)
+	if doc.is_private:
+		frappe.throw(_("Private messages can't be pinned"))
+
+	thread_doc = frappe.get_doc("Connect Thread", doc.thread)
+	thread_doc.pinned_message = doc.name
+	thread_doc.save(ignore_permissions=True)
+
+	notify_thread_pin_changed(thread_doc, doc, user)
+	return {"thread": thread_doc.name, "pinned_message": thread_doc.pinned_message}
+
+
+@frappe.whitelist()
+def unpin_message(thread):
+	from connect.connect.notifications import notify_thread_pin_changed
+
+	user = frappe.session.user
+	_check_can_write(thread, user)
+
+	thread_doc = frappe.get_doc("Connect Thread", thread)
+	thread_doc.pinned_message = None
+	thread_doc.save(ignore_permissions=True)
+
+	notify_thread_pin_changed(thread_doc, None, user)
+	return {"thread": thread_doc.name, "pinned_message": None}
+
+
+@frappe.whitelist()
+def get_pinned_message(thread):
+	user = frappe.session.user
+	if not _thread_membership(thread, user) and not _has_full_access(user):
+		frappe.throw(_("You don't have access to this thread"), frappe.PermissionError)
+
+	pinned = frappe.db.get_value("Connect Thread", thread, "pinned_message")
+	if not pinned:
+		return None
+	return frappe.db.get_value(
+		"Connect Message",
+		pinned,
+		["name", "sender", "message_type", "content", "file_name", "creation"],
+		as_dict=True,
+	)
+
+
+@frappe.whitelist()
 def get_my_context():
 	user = frappe.session.user
 	customer_membership = frappe.db.get_value(

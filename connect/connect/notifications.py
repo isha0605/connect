@@ -73,3 +73,38 @@ def notify_message_deleted(doc):
 	payload = {"name": doc.name, "thread": doc.thread}
 	for member in members:
 		frappe.publish_realtime("connect_message_deleted", payload, user=member, after_commit=True)
+
+
+def notify_message_edited(doc):
+	"""Same restricted audience as a new message — an edited private message must not leak its
+	new content to anyone outside its original recipients. The editor's own tab already shows
+	the new content right after the edit call resolves."""
+	members = _notification_targets(doc)
+	if not members:
+		return
+	payload = {"name": doc.name, "thread": doc.thread, "content": doc.content, "is_edited": doc.is_edited}
+	for member in members:
+		frappe.publish_realtime("connect_message_edited", payload, user=member, after_commit=True)
+
+
+def notify_thread_pin_changed(thread_doc, message_doc, actor):
+	"""Pinning is thread-wide (not audience-restricted like a message's own visibility), so
+	every active member hears about it — except `actor`, whose own tab already updated right
+	after the pin/unpin call resolved. `message_doc` is None on unpin."""
+	members = frappe.get_all(
+		"Connect Thread Member",
+		filters={"thread": thread_doc.name, "is_removed": 0, "user": ["!=", actor]},
+		pluck="user",
+	)
+	if not members:
+		return
+	payload = {
+		"thread": thread_doc.name,
+		"pinned_message": message_doc.name if message_doc else None,
+		"sender": message_doc.sender if message_doc else None,
+		"message_type": message_doc.message_type if message_doc else None,
+		"content": message_doc.content if message_doc else None,
+		"file_name": message_doc.file_name if message_doc else None,
+	}
+	for member in members:
+		frappe.publish_realtime("connect_thread_pin_changed", payload, user=member, after_commit=True)
