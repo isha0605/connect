@@ -23777,7 +23777,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-08-18 11:47:51.777746",
+ "modified": "2026-08-18 12:22:41.696759",
  "modified_by": "Administrator",
  "name": "find_partners",
  "owner": "Administrator",
@@ -23836,7 +23836,7 @@
   {
    "auto": 1,
    "method": "GET",
-   "on_success": "function onSuccess(data) {\n  const cookies = document.cookie.split('; ').reduce((acc, c) => {\n    const i = c.indexOf('=');\n    if (i > -1) acc[c.slice(0, i)] = decodeURIComponent(c.slice(i + 1));\n    return acc;\n  }, {});\n  if (!data && cookies.user_id && cookies.user_id !== 'Guest') {\n    finderOpen.value = true;\n  }\n}",
+   "on_success": "function onSuccess(data) {\n  if (!data || Object.keys(data).length === 0) {\n    finderOpen.value = true;\n  }\n}",
    "params": "{}",
    "resource_name": "myRequirement",
    "resource_type": "API Resource",
