@@ -7,7 +7,7 @@ def _has_full_access(user):
 
 def _is_customer_admin(customer, user):
 	return bool(
-		frappe.db.exists("Connect Customer Member", {"customer": customer, "user": user, "is_admin": 1})
+		frappe.db.exists("Customer Team Member", {"parent": customer, "user": user, "is_admin": 1})
 	)
 
 
@@ -38,7 +38,7 @@ def has_thread_permission(doc, ptype="read", user=None, **kwargs):
 
 	if ptype == "create":
 		return bool(
-			frappe.db.exists("Connect Customer Member", {"customer": doc.customer, "user": user})
+			frappe.db.exists("Customer Team Member", {"parent": doc.customer, "user": user})
 			or frappe.db.exists("Connect Partner Member", {"partner": doc.partner, "user": user})
 		)
 
@@ -149,7 +149,7 @@ def get_thread_member_permission_query_conditions(user, doctype=None):
 
 
 def _is_customer_member(user):
-	return bool(frappe.db.exists("Connect Customer Member", {"user": user}))
+	return bool(frappe.db.exists("Customer Team Member", {"user": user}))
 
 
 def _is_partner_member(user):
