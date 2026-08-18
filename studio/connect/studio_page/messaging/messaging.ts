@@ -84,12 +84,18 @@ export default function setup(context) {
 		fetchPinnedMessage()
 	}
 
-	// default to the first (most recently active) thread once the list loads
+	// Default to the thread named in ?thread=<name> (how "Contact Partner" and the pricing
+	// estimate flows land here after start_partner_thread) once it shows up in the list,
+	// otherwise fall back to the first (most recently active) thread. Without this, arriving
+	// via those flows would open whatever thread happens to sort first instead of the one
+	// the user just started — wrong thread if they have any other, more recently active chat.
 	watch(
 		() => context.myThreads?.data,
 		(threads) => {
 			if (selectedThread.value || !threads || !threads.length) return
-			selectThread(threads[0].name)
+			const requested = new URLSearchParams(window.location.search).get("thread")
+			const match = requested && threads.find((t) => t.name === requested)
+			selectThread(match ? match.name : threads[0].name)
 		},
 		{ immediate: true },
 	)
