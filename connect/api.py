@@ -6,7 +6,7 @@ import re
 
 import frappe
 from frappe import _
-from frappe.utils import cint, flt, get_fullname, now_datetime, nowdate
+from frappe.utils import cint, flt, get_fullname, now_datetime, nowdate, validate_email_address
 
 from connect.connect.permissions import (
 	_has_full_access,
@@ -662,6 +662,47 @@ def get_my_context():
 		"customer": customer_membership,
 		"partner": partner_membership,
 	}
+
+
+@frappe.whitelist(allow_guest=True)
+def signup_customer(full_name, company_name, email, password):
+	"""Self-serve signup for a new customer company: creates the User and a new
+	Customer, seats the signing-up user as that Customer's admin, and logs them
+	in immediately. Deliberately minimal (no industry/apps/etc.) -- the existing
+	onboarding wizard already auto-opens for any logged-in user with no saved
+	Requirement, so it picks up the rest of the company profile from here."""
+	full_name = (full_name or "").strip()
+	company_name = (company_name or "").strip()
+	email = (email or "").strip().lower()
+	if not full_name or not company_name or not email or not password:
+		frappe.throw(_("Please fill in all fields"))
+	if not validate_email_address(email, throw=False):
+		frappe.throw(_("Enter a valid email address"))
+	if frappe.db.exists("User", email):
+		frappe.throw(_("An account with this email already exists. Log in instead."))
+	if frappe.db.exists("Customer", company_name):
+		frappe.throw(
+			_("{0} is already registered. Ask your team admin to add you instead.").format(company_name)
+		)
+
+	first_name, _, last_name = full_name.partition(" ")
+
+	user = frappe.new_doc("User")
+	user.email = email
+	user.first_name = first_name
+	user.last_name = last_name
+	user.user_type = "Website User"
+	user.send_welcome_email = 0
+	user.new_password = password
+	user.insert(ignore_permissions=True)
+
+	customer = frappe.new_doc("Customer")
+	customer.customer_name = company_name
+	customer.append("team", {"user": email, "full_name": full_name, "is_admin": 1})
+	customer.insert(ignore_permissions=True)
+
+	frappe.local.login_manager.login_as(email)
+	return {"ok": True}
 
 
 def _my_side(user):
