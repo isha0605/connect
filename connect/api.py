@@ -266,6 +266,8 @@ def make_thread_admin(thread, member):
 	member_doc = frappe.get_doc("Connect Thread Member", member)
 	if member_doc.thread != thread:
 		frappe.throw(_("Member does not belong to this thread"))
+	if member_doc.is_removed:
+		frappe.throw(_("A removed member can't be made admin"))
 
 	thread_doc = frappe.get_doc("Connect Thread", thread)
 
@@ -541,6 +543,10 @@ def delete_message(message):
 	doc = frappe.get_doc("Connect Message", message)
 	if doc.sender != user and not _has_full_access(user):
 		frappe.throw(_("You can only delete your own messages"), frappe.PermissionError)
+	if not _has_full_access(user):
+		membership = _thread_membership(doc.thread, user)
+		if not membership or membership.is_removed:
+			frappe.throw(_("You no longer have access to this thread"), frappe.PermissionError)
 
 	if doc.attachment:
 		file_name = frappe.db.get_value("File", {"file_url": doc.attachment}, "name")
@@ -562,6 +568,10 @@ def edit_message(message, content):
 	doc = frappe.get_doc("Connect Message", message)
 	if doc.sender != user and not _has_full_access(user):
 		frappe.throw(_("You can only edit your own messages"), frappe.PermissionError)
+	if not _has_full_access(user):
+		membership = _thread_membership(doc.thread, user)
+		if not membership or membership.is_removed:
+			frappe.throw(_("You no longer have access to this thread"), frappe.PermissionError)
 	if doc.message_type != "Text":
 		frappe.throw(_("Only text messages can be edited"))
 
