@@ -6,7 +6,7 @@ import re
 
 import frappe
 from frappe import _
-from frappe.utils import cint, flt, get_fullname, now_datetime, nowdate
+from frappe.utils import cint, flt, get_fullname, now_datetime, nowdate, validate_email_address
 
 from connect.connect.permissions import (
 	_has_full_access,
@@ -44,10 +44,10 @@ def _my_company_membership(user):
 	"""Returns (doctype, company, row) for whichever company this user belongs to, or
 	(None, None, None) if neither. A user is assumed to belong to at most one company."""
 	customer_row = frappe.db.get_value(
-		"Connect Customer Member", {"user": user}, ["name", "customer", "is_admin"], as_dict=True
+		"Customer Team Member", {"user": user}, ["name", "parent", "is_admin"], as_dict=True
 	)
 	if customer_row:
-		return "Connect Customer Member", customer_row.customer, customer_row
+		return "Customer Team Member", customer_row.parent, customer_row
 	partner_row = frappe.db.get_value(
 		"Connect Partner Member", {"user": user}, ["name", "partner", "is_admin"], as_dict=True
 	)
@@ -252,16 +252,18 @@ def get_my_company_members():
 	if not doctype:
 		frappe.throw(_("You are not a member of any company"))
 
-	fieldname = "customer" if doctype == "Connect Customer Member" else "partner"
+	fieldname = "parent" if doctype == "Customer Team Member" else "partner"
 	return frappe.get_all(doctype, filters={fieldname: company}, fields=["user", "is_admin"])
 
 
 @frappe.whitelist()
 def make_thread_admin(thread, member):
 	"""Promote a thread member to company admin. Unlike a plain company-scoped transfer, the
-	target here is a Connect Thread Member row, not necessarily an existing Connect Customer/
+	target here is a Connect Thread Member row, not necessarily an existing Customer Team/
 	Partner Member — most thread members (added via add_thread_member) never get a company
-	membership row at all, so one is created for them here if missing."""
+	membership row at all, so one is created for them here if missing. Customer Team Member
+	is a child table of Customer (unlike the standalone Connect Partner Member), so that side
+	goes through the parent doc instead of a bare insert."""
 	user = frappe.session.user
 	member_doc = frappe.get_doc("Connect Thread Member", member)
 	if member_doc.thread != thread:
@@ -272,10 +274,10 @@ def make_thread_admin(thread, member):
 	thread_doc = frappe.get_doc("Connect Thread", thread)
 
 	if member_doc.side == "Customer":
-		member_doctype, company, fieldname = "Connect Customer Member", thread_doc.customer, "customer"
+		company = thread_doc.customer
 		authorized = _is_customer_admin(company, user)
 	elif member_doc.side == "Partner":
-		member_doctype, company, fieldname = "Connect Partner Member", thread_doc.partner, "partner"
+		company = thread_doc.partner
 		authorized = _is_partner_admin(company, user)
 	else:
 		frappe.throw(_("Invalid side"))
@@ -283,20 +285,35 @@ def make_thread_admin(thread, member):
 	if not authorized:
 		frappe.throw(_("Only an admin of your own side can do this"), frappe.PermissionError)
 
-	my_row = frappe.db.get_value(member_doctype, {fieldname: company, "user": user}, "name")
-	if my_row:
-		frappe.db.set_value(member_doctype, my_row, "is_admin", 0)
-
-	target_row = frappe.db.get_value(member_doctype, {fieldname: company, "user": member_doc.user}, "name")
-	if target_row:
-		frappe.db.set_value(member_doctype, target_row, "is_admin", 1)
+	if member_doc.side == "Customer":
+		customer_doc = frappe.get_doc("Customer", company)
+		found = False
+		for row in customer_doc.team:
+			if row.user == user:
+				row.is_admin = 0
+			if row.user == member_doc.user:
+				row.is_admin = 1
+				found = True
+		if not found:
+			customer_doc.append("team", {"user": member_doc.user, "is_admin": 1})
+		customer_doc.save(ignore_permissions=True)
 	else:
-		frappe.get_doc({
-			"doctype": member_doctype,
-			fieldname: company,
-			"user": member_doc.user,
-			"is_admin": 1,
-		}).insert(ignore_permissions=True)
+		my_row = frappe.db.get_value("Connect Partner Member", {"partner": company, "user": user}, "name")
+		if my_row:
+			frappe.db.set_value("Connect Partner Member", my_row, "is_admin", 0)
+
+		target_row = frappe.db.get_value(
+			"Connect Partner Member", {"partner": company, "user": member_doc.user}, "name"
+		)
+		if target_row:
+			frappe.db.set_value("Connect Partner Member", target_row, "is_admin", 1)
+		else:
+			frappe.get_doc({
+				"doctype": "Connect Partner Member",
+				"partner": company,
+				"user": member_doc.user,
+				"is_admin": 1,
+			}).insert(ignore_permissions=True)
 
 	return {"new_admin": member_doc.user}
 
@@ -313,7 +330,7 @@ def get_thread_admins(thread):
 		"Connect Partner Member", {"partner": thread_doc.partner, "is_admin": 1}, "user"
 	)
 	customer_admin = frappe.db.get_value(
-		"Connect Customer Member", {"customer": thread_doc.customer, "is_admin": 1}, "user"
+		"Customer Team Member", {"parent": thread_doc.customer, "is_admin": 1}, "user"
 	)
 	return {"partner_admin": partner_admin, "customer_admin": customer_admin}
 
@@ -664,10 +681,51 @@ def get_my_context():
 	}
 
 
+@frappe.whitelist(allow_guest=True)
+def signup_customer(full_name, company_name, email, password):
+	"""Self-serve signup for a new customer company: creates the User and a new
+	Customer, seats the signing-up user as that Customer's admin, and logs them
+	in immediately. Deliberately minimal (no industry/apps/etc.) -- the existing
+	onboarding wizard already auto-opens for any logged-in user with no saved
+	Requirement, so it picks up the rest of the company profile from here."""
+	full_name = (full_name or "").strip()
+	company_name = (company_name or "").strip()
+	email = (email or "").strip().lower()
+	if not full_name or not company_name or not email or not password:
+		frappe.throw(_("Please fill in all fields"))
+	if not validate_email_address(email, throw=False):
+		frappe.throw(_("Enter a valid email address"))
+	if frappe.db.exists("User", email):
+		frappe.throw(_("An account with this email already exists. Log in instead."))
+	if frappe.db.exists("Customer", company_name):
+		frappe.throw(
+			_("{0} is already registered. Ask your team admin to add you instead.").format(company_name)
+		)
+
+	first_name, _, last_name = full_name.partition(" ")
+
+	user = frappe.new_doc("User")
+	user.email = email
+	user.first_name = first_name
+	user.last_name = last_name
+	user.user_type = "Website User"
+	user.send_welcome_email = 0
+	user.new_password = password
+	user.insert(ignore_permissions=True)
+
+	customer = frappe.new_doc("Customer")
+	customer.customer_name = company_name
+	customer.append("team", {"user": email, "full_name": full_name, "is_admin": 1})
+	customer.insert(ignore_permissions=True)
+
+	frappe.local.login_manager.login_as(email)
+	return {"ok": True}
+
+
 def _my_side(user):
 	"""Which side (Customer/Partner) this user belongs to, or None if neither."""
 	doctype, _company, _row = _my_company_membership(user)
-	if doctype == "Connect Customer Member":
+	if doctype == "Customer Team Member":
 		return "Customer"
 	if doctype == "Connect Partner Member":
 		return "Partner"
