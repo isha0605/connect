@@ -9,6 +9,16 @@ from frappe.utils import now_datetime
 
 class ConnectThread(Document):
 	def validate(self):
+		if not self.is_new():
+			# customer/partner define which two companies' history lives in this thread —
+			# the doctype otherwise grants "write" to any partner admin (so they can close
+			# it), and without this, that same write access could reassign the thread to an
+			# unrelated customer, silently handing them another company's message history
+			# the next time that customer messages this partner.
+			prev = frappe.db.get_value("Connect Thread", self.name, ["customer", "partner"], as_dict=True)
+			if prev and (prev.customer != self.customer or prev.partner != self.partner):
+				frappe.throw(_("A thread's customer and partner can't be changed after it's created"))
+
 		existing = frappe.db.exists(
 			"Connect Thread",
 			{"customer": self.customer, "partner": self.partner, "name": ["!=", self.name]},

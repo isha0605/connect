@@ -75,7 +75,18 @@ def has_message_permission(doc, ptype="read", user=None, **kwargs):
 		return False
 
 	if ptype in ("write", "create", "delete", "submit", "cancel"):
-		return not membership.is_removed and membership.permission == "Write"
+		if membership.is_removed or membership.permission != "Write":
+			return False
+		if ptype == "create":
+			# Beyond thread membership, a message you're creating must actually be
+			# *yours* — api.send_message always sets sender=session user, but that's
+			# just app-layer convention; without this, the raw doctype API (create=1
+			# is granted to every Connect Customer/Partner role) would let any Write
+			# member insert a message with someone else's email as sender, or with
+			# message_type="System" to forge an authoritative-looking system notice.
+			if doc.get("sender") != user or doc.get("message_type") == "System":
+				return False
+		return True
 
 	# read: a private message is only visible to its sender and its named recipients,
 	# on top of (not instead of) ordinary thread membership
