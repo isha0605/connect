@@ -5138,7 +5138,36 @@
       },
       {
        "baseStyles": {
-        "display": "{{ !(myContext.data && myContext.data.customer) ? 'flex' : 'none' }}"
+        "display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "SidebarHeader-wu7zkwqum-partner",
+         "componentName": "SidebarHeader",
+         "componentProps": {
+          "menuItems": [
+           {
+            "icon": "lucide-log-out",
+            "label": "Log out",
+            "onClick": "() => { call('logout').then(() => { window.location.href = '/login'; }); }"
+           }
+          ],
+          "showLogo": true,
+          "subtitle": "{{ myContext.data && myContext.data.partner ? myContext.data.partner.partner : '' }}",
+          "title": "Partner Portal"
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "container-SidebarHeader-wu7zkwqum-wrap-partner",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "display": "{{ !(myContext.data && (myContext.data.customer || myContext.data.partner)) ? 'flex' : 'none' }}"
        },
        "children": [
         {
