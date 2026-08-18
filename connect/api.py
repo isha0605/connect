@@ -793,6 +793,7 @@ def delete_message_template(name):
 PARTNER_FIELDS = [
 	"name", "partner_name", "logo", "tagline", "tier", "specialist",
 	"rating", "reviews_count", "industry", "country", "city", "rollouts", "hourly_rate",
+	"response_time_hours",
 ]
 SEARCHABLE_TEXT_FIELDS = ["partner_name", "tagline", "industry", "country", "city"]
 
@@ -986,6 +987,24 @@ def search_partners(
 
 	for p in partners:
 		p["apps_preview"] = apps_by_partner.get(p.name, [])
+
+	success_stories_by_partner = {}
+	if partner_names:
+		for row in frappe.get_all(
+			"Partner Success Story",
+			filters={"parent": ["in", partner_names]},
+			fields=["parent", "category"],
+			order_by="idx asc",
+		):
+			bucket = success_stories_by_partner.setdefault(row.parent, {"count": 0, "categories": []})
+			bucket["count"] += 1
+			if row.category and row.category not in bucket["categories"]:
+				bucket["categories"].append(row.category)
+
+	for p in partners:
+		stories = success_stories_by_partner.get(p.name, {"count": 0, "categories": []})
+		p["success_story_count"] = stories["count"]
+		p["success_story_categories"] = stories["categories"]
 
 	return partners
 
