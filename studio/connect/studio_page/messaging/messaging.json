@@ -2370,149 +2370,173 @@
           },
           {
            "baseStyles": {
-            "alignItems": "center",
             "display": "flex",
-            "flexDirection": "row",
-            "gap": "6px",
-            "padding": "6px 6px 6px 14px"
+            "flexDirection": "column"
            },
            "children": [
             {
              "baseStyles": {
               "display": "flex",
-              "flexDirection": "row",
-              "flexShrink": 1,
-              "height": "fit-content",
-              "width": "fit-content"
+              "padding": "10px 14px 4px 14px"
              },
-             "blockName": "container",
              "children": [
               {
-               "children": [],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "openFilePicker();"
-                }
-               },
-               "componentId": "attach-file-btn",
-               "componentName": "Button",
-               "componentProps": {
-                "icon": "lucide-paperclip",
-                "theme": "gray",
-                "tooltip": "Attach a file",
-                "variant": "ghost"
-               }
-              },
-              {
                "baseStyles": {
-                "marginLeft": "5px",
-                "paddingLeft": "0px"
+                "flex": "1"
                },
                "children": [],
                "classes": [],
                "componentEvents": {
-                "click": {
+                "blur": {
                  "action": "Run Script",
-                 "event": "click",
-                 "script": "showInlineTemplates.value = !showInlineTemplates.value;"
+                 "event": "blur",
+                 "script": "composerFocused.value = false;"
+                },
+                "focus": {
+                 "action": "Run Script",
+                 "event": "focus",
+                 "script": "composerFocused.value = true;"
+                },
+                "keydown": {
+                 "action": "Run Script",
+                 "event": "keydown",
+                 "script": "sendMessageOnEnter(eventArgs[0]);"
                 }
                },
-               "componentId": "inline-templates-trigger-btn",
-               "componentName": "Button",
+               "componentId": "message-input",
+               "componentName": "TextInput",
                "componentProps": {
-                "icon": "lucide-message-square-text",
-                "theme": "gray",
-                "tooltip": "Message templates",
+                "modelValue": {
+                 "$type": "variable",
+                 "name": "draftMessage"
+                },
+                "placeholder": "Type a message...",
                 "variant": "ghost"
-               }
-              },
-              {
-               "baseStyles": {
-                "marginLeft": "5px"
-               },
-               "children": [],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "privateMode.value = !privateMode.value;"
-                }
-               },
-               "componentId": "private-toggle-btn",
-               "componentName": "Button",
-               "componentProps": {
-                "icon": "{{ privateMode ? 'lucide-lock' : 'lucide-lock-open' }}",
-                "theme": "{{ privateMode ? 'amber' : 'gray' }}",
-                "tooltip": "{{ privateMode ? 'Private message \u2014 click to send to everyone' : 'Click to send privately to whoever you @mention' }}",
-                "variant": "{{ privateMode ? 'subtle' : 'ghost' }}"
                }
               }
              ],
              "classes": [],
-             "componentId": "container-w3gfltv9s",
+             "componentId": "message-input-row",
              "componentName": "container",
              "originalElement": "div"
             },
             {
              "baseStyles": {
-              "flex": "1"
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "padding": "4px 6px 6px 10px"
              },
-             "children": [],
-             "classes": [],
-             "componentEvents": {
-              "blur": {
-               "action": "Run Script",
-               "event": "blur",
-               "script": "composerFocused.value = false;"
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "row",
+                "flexShrink": 1,
+                "height": "fit-content",
+                "width": "fit-content"
+               },
+               "blockName": "container",
+               "children": [
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "openFilePicker();"
+                  }
+                 },
+                 "componentId": "attach-file-btn",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "icon": "lucide-paperclip",
+                  "theme": "gray",
+                  "tooltip": "Attach a file",
+                  "variant": "ghost"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "marginLeft": "5px",
+                  "paddingLeft": "0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "showInlineTemplates.value = !showInlineTemplates.value;"
+                  }
+                 },
+                 "componentId": "inline-templates-trigger-btn",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "icon": "lucide-message-square-text",
+                  "theme": "gray",
+                  "tooltip": "Message templates",
+                  "variant": "ghost"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "marginLeft": "5px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "privateMode.value = !privateMode.value;"
+                  }
+                 },
+                 "componentId": "private-toggle-btn",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "icon": "{{ privateMode ? 'lucide-lock' : 'lucide-lock-open' }}",
+                  "theme": "{{ privateMode ? 'amber' : 'gray' }}",
+                  "tooltip": "{{ privateMode ? 'Private message \u2014 click to send to everyone' : 'Click to send privately to whoever you @mention' }}",
+                  "variant": "{{ privateMode ? 'subtle' : 'ghost' }}"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "container-w3gfltv9s",
+               "componentName": "container",
+               "originalElement": "div"
               },
-              "focus": {
-               "action": "Run Script",
-               "event": "focus",
-               "script": "composerFocused.value = true;"
-              },
-              "keydown": {
-               "action": "Run Script",
-               "event": "keydown",
-               "script": "sendMessageOnEnter(eventArgs[0]);"
+              {
+               "baseStyles": {
+                "flexShrink": 0
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "sendMessage();"
+                }
+               },
+               "componentId": "send-btn",
+               "componentName": "Button",
+               "componentProps": {
+                "disabled": "{{ (!draftMessage && !draftAttachments.length) || uploadingFile }}",
+                "iconLeft": "lucide-send",
+                "label": "Send",
+                "theme": "gray",
+                "variant": "solid"
+               }
               }
-             },
-             "componentId": "message-input",
-             "componentName": "TextInput",
-             "componentProps": {
-              "modelValue": {
-               "$type": "variable",
-               "name": "draftMessage"
-              },
-              "placeholder": "Type a message...",
-              "variant": "ghost"
-             }
-            },
-            {
-             "baseStyles": {
-              "flexShrink": 0
-             },
-             "children": [],
+             ],
              "classes": [],
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "sendMessage();"
-              }
-             },
-             "componentId": "send-btn",
-             "componentName": "Button",
-             "componentProps": {
-              "disabled": "{{ (!draftMessage && !draftAttachments.length) || uploadingFile }}",
-              "iconLeft": "lucide-send",
-              "label": "Send",
-              "theme": "gray",
-              "variant": "solid"
-             }
+             "componentId": "toolbar-row",
+             "componentName": "container",
+             "originalElement": "div"
             }
            ],
            "classes": [],
@@ -7485,149 +7509,173 @@
           },
           {
            "baseStyles": {
-            "alignItems": "center",
             "display": "flex",
-            "flexDirection": "row",
-            "gap": "6px",
-            "padding": "6px 6px 6px 14px"
+            "flexDirection": "column"
            },
            "children": [
             {
              "baseStyles": {
               "display": "flex",
-              "flexDirection": "row",
-              "flexShrink": 1,
-              "height": "fit-content",
-              "width": "fit-content"
+              "padding": "10px 14px 4px 14px"
              },
-             "blockName": "container",
              "children": [
               {
-               "children": [],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "openFilePicker();"
-                }
-               },
-               "componentId": "attach-file-btn",
-               "componentName": "Button",
-               "componentProps": {
-                "icon": "lucide-paperclip",
-                "theme": "gray",
-                "tooltip": "Attach a file",
-                "variant": "ghost"
-               }
-              },
-              {
                "baseStyles": {
-                "marginLeft": "5px",
-                "paddingLeft": "0px"
+                "flex": "1"
                },
                "children": [],
                "classes": [],
                "componentEvents": {
-                "click": {
+                "blur": {
                  "action": "Run Script",
-                 "event": "click",
-                 "script": "showInlineTemplates.value = !showInlineTemplates.value;"
+                 "event": "blur",
+                 "script": "composerFocused.value = false;"
+                },
+                "focus": {
+                 "action": "Run Script",
+                 "event": "focus",
+                 "script": "composerFocused.value = true;"
+                },
+                "keydown": {
+                 "action": "Run Script",
+                 "event": "keydown",
+                 "script": "sendMessageOnEnter(eventArgs[0]);"
                 }
                },
-               "componentId": "inline-templates-trigger-btn",
-               "componentName": "Button",
+               "componentId": "message-input",
+               "componentName": "TextInput",
                "componentProps": {
-                "icon": "lucide-message-square-text",
-                "theme": "gray",
-                "tooltip": "Message templates",
+                "modelValue": {
+                 "$type": "variable",
+                 "name": "draftMessage"
+                },
+                "placeholder": "Type a message...",
                 "variant": "ghost"
-               }
-              },
-              {
-               "baseStyles": {
-                "marginLeft": "5px"
-               },
-               "children": [],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "privateMode.value = !privateMode.value;"
-                }
-               },
-               "componentId": "private-toggle-btn",
-               "componentName": "Button",
-               "componentProps": {
-                "icon": "{{ privateMode ? 'lucide-lock' : 'lucide-lock-open' }}",
-                "theme": "{{ privateMode ? 'amber' : 'gray' }}",
-                "tooltip": "{{ privateMode ? 'Private message \u2014 click to send to everyone' : 'Click to send privately to whoever you @mention' }}",
-                "variant": "{{ privateMode ? 'subtle' : 'ghost' }}"
                }
               }
              ],
              "classes": [],
-             "componentId": "container-w3gfltv9s",
+             "componentId": "message-input-row",
              "componentName": "container",
              "originalElement": "div"
             },
             {
              "baseStyles": {
-              "flex": "1"
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "padding": "4px 6px 6px 10px"
              },
-             "children": [],
-             "classes": [],
-             "componentEvents": {
-              "blur": {
-               "action": "Run Script",
-               "event": "blur",
-               "script": "composerFocused.value = false;"
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "row",
+                "flexShrink": 1,
+                "height": "fit-content",
+                "width": "fit-content"
+               },
+               "blockName": "container",
+               "children": [
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "openFilePicker();"
+                  }
+                 },
+                 "componentId": "attach-file-btn",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "icon": "lucide-paperclip",
+                  "theme": "gray",
+                  "tooltip": "Attach a file",
+                  "variant": "ghost"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "marginLeft": "5px",
+                  "paddingLeft": "0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "showInlineTemplates.value = !showInlineTemplates.value;"
+                  }
+                 },
+                 "componentId": "inline-templates-trigger-btn",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "icon": "lucide-message-square-text",
+                  "theme": "gray",
+                  "tooltip": "Message templates",
+                  "variant": "ghost"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "marginLeft": "5px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "privateMode.value = !privateMode.value;"
+                  }
+                 },
+                 "componentId": "private-toggle-btn",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "icon": "{{ privateMode ? 'lucide-lock' : 'lucide-lock-open' }}",
+                  "theme": "{{ privateMode ? 'amber' : 'gray' }}",
+                  "tooltip": "{{ privateMode ? 'Private message \u2014 click to send to everyone' : 'Click to send privately to whoever you @mention' }}",
+                  "variant": "{{ privateMode ? 'subtle' : 'ghost' }}"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "container-w3gfltv9s",
+               "componentName": "container",
+               "originalElement": "div"
               },
-              "focus": {
-               "action": "Run Script",
-               "event": "focus",
-               "script": "composerFocused.value = true;"
-              },
-              "keydown": {
-               "action": "Run Script",
-               "event": "keydown",
-               "script": "sendMessageOnEnter(eventArgs[0]);"
+              {
+               "baseStyles": {
+                "flexShrink": 0
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "sendMessage();"
+                }
+               },
+               "componentId": "send-btn",
+               "componentName": "Button",
+               "componentProps": {
+                "disabled": "{{ (!draftMessage && !draftAttachments.length) || uploadingFile }}",
+                "iconLeft": "lucide-send",
+                "label": "Send",
+                "theme": "gray",
+                "variant": "solid"
+               }
               }
-             },
-             "componentId": "message-input",
-             "componentName": "TextInput",
-             "componentProps": {
-              "modelValue": {
-               "$type": "variable",
-               "name": "draftMessage"
-              },
-              "placeholder": "Type a message...",
-              "variant": "ghost"
-             }
-            },
-            {
-             "baseStyles": {
-              "flexShrink": 0
-             },
-             "children": [],
+             ],
              "classes": [],
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "sendMessage();"
-              }
-             },
-             "componentId": "send-btn",
-             "componentName": "Button",
-             "componentProps": {
-              "disabled": "{{ (!draftMessage && !draftAttachments.length) || uploadingFile }}",
-              "iconLeft": "lucide-send",
-              "label": "Send",
-              "theme": "gray",
-              "variant": "solid"
-             }
+             "componentId": "toolbar-row",
+             "componentName": "container",
+             "originalElement": "div"
             }
            ],
            "classes": [],
