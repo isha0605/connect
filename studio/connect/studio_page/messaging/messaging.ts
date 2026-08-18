@@ -523,10 +523,9 @@ export default function setup(context) {
 
 	function confirmEditMessage(item) {
 		if (!item || item.isFileCluster || item.message_type !== "Text" || !isMine(item.sender)) return
-		// Edits happen inline in the message bubble itself (see message-bubble's edit-mode variant
-		// in messaging.json), keyed off messageToEdit — no dialog to open.
 		messageToEdit.value = item
 		editMessageContent.value = item.content
+		showEditMessageDialog.value = true
 	}
 
 	function closeEditMessageDialog() {
@@ -557,12 +556,9 @@ export default function setup(context) {
 	}
 
 	function saveEditedMessageOnEnter(event) {
-		if (!event) return
-		if (event.key === "Enter" && !event.shiftKey) {
+		if (event && event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault()
 			saveEditedMessage()
-		} else if (event.key === "Escape") {
-			closeEditMessageDialog()
 		}
 	}
 
