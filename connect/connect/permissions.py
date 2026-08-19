@@ -88,11 +88,6 @@ def has_message_permission(doc, ptype="read", user=None, **kwargs):
 				return False
 		return True
 
-	# read: a private message is only visible to its sender and its named recipients,
-	# on top of (not instead of) ordinary thread membership
-	if doc.get("is_private") and doc.get("sender") != user and f",{user}," not in (doc.get("private_to") or ""):
-		return False
-
 	# removed members keep a frozen view up to the moment they were removed
 	if not membership.is_removed:
 		return True
@@ -108,10 +103,6 @@ def get_message_permission_query_conditions(user, doctype=None):
 		where ctm.thread = `tabConnect Message`.thread
 		and ctm.user = {escaped_user}
 		and (ctm.is_removed = 0 or `tabConnect Message`.creation <= ctm.removed_on)
-	) and (
-		`tabConnect Message`.is_private = 0
-		or `tabConnect Message`.sender = {escaped_user}
-		or `tabConnect Message`.private_to like {frappe.db.escape("%," + user + ",%")}
 	)"""
 
 
