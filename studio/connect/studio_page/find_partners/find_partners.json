@@ -4260,7 +4260,48 @@
         },
         {
          "baseStyles": {
-          "display": "{{ !(wizardMatches || []).length && viewMode === 'list' ? 'block' : 'none' }}",
+          "alignItems": "center",
+          "display": "{{ !partnersList.data && !(wizardMatches || []).length ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "justifyContent": "center",
+          "padding": "80px 0",
+          "width": "100%"
+         },
+         "children": [
+          {
+           "children": [],
+           "classes": [],
+           "componentId": "Spinner-partners-loading",
+           "componentName": "Spinner",
+           "componentProps": {
+            "size": "lg",
+            "theme": "gray"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "marginTop": "12px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "TextBlock-partners-loading",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-base",
+            "tag": "span",
+            "text": "Loading partners..."
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "container-partners-loading",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "{{ partnersList.data && !(wizardMatches || []).length && viewMode === 'list' ? 'block' : 'none' }}",
           "isolation": "isolate",
           "padding": "8px 20px 20px"
          },
@@ -6173,7 +6214,7 @@
         },
         {
          "baseStyles": {
-          "display": "{{ !(wizardMatches || []).length && viewMode === 'grid' ? 'flex' : 'none' }}",
+          "display": "{{ partnersList.data && !(wizardMatches || []).length && viewMode === 'grid' ? 'flex' : 'none' }}",
           "flexDirection": "column",
           "padding": "8px 20px 20px"
          },
@@ -11972,7 +12013,7 @@
  "doctype": "Studio Page",
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-08-19 00:48:52.100227",
+ "modified": "2026-08-19 11:27:16.285551",
  "modified_by": "Administrator",
  "name": "find_partners",
  "owner": "Administrator",
