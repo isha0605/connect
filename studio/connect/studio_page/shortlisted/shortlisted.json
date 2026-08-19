@@ -902,7 +902,7 @@
                         "click": {
                          "action": "Run Script",
                          "event": "click",
-                         "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); } call('connect.api.remove_from_shortlist', { partner: item.name }).then(() => myShortlistFull.reload())"
+                         "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlistFull.data || [];\nmyShortlistFull.data = previous.filter((p) => p.name !== partner);\ncall('connect.api.remove_from_shortlist', { partner }).then(() => { myShortlistFull.reload(); }).catch((err) => {\n  myShortlistFull.data = previous;\n  toast({ title: 'Could not remove from shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                         }
                        },
                        "componentId": "Button-remove-shortlist",
@@ -1165,7 +1165,7 @@
                       "click": {
                        "action": "Run Script",
                        "event": "click",
-                       "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); } call('connect.api.remove_from_shortlist', { partner: dataItem.name }).then(() => myShortlistFull.reload())"
+                       "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlistFull.data || [];\nmyShortlistFull.data = previous.filter((p) => p.name !== partner);\ncall('connect.api.remove_from_shortlist', { partner }).then(() => { myShortlistFull.reload(); }).catch((err) => {\n  myShortlistFull.data = previous;\n  toast({ title: 'Could not remove from shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                       }
                      },
                      "componentId": "Button-1a14da3a0",
@@ -3215,7 +3215,7 @@
                         "click": {
                          "action": "Run Script",
                          "event": "click",
-                         "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); } call('connect.api.remove_from_shortlist', { partner: item.name }).then(() => myShortlistFull.reload())"
+                         "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlistFull.data || [];\nmyShortlistFull.data = previous.filter((p) => p.name !== partner);\ncall('connect.api.remove_from_shortlist', { partner }).then(() => { myShortlistFull.reload(); }).catch((err) => {\n  myShortlistFull.data = previous;\n  toast({ title: 'Could not remove from shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                         }
                        },
                        "componentId": "Button-remove-shortlist",
@@ -3459,7 +3459,7 @@
                       "click": {
                        "action": "Run Script",
                        "event": "click",
-                       "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); } call('connect.api.remove_from_shortlist', { partner: dataItem.name }).then(() => myShortlistFull.reload())"
+                       "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlistFull.data || [];\nmyShortlistFull.data = previous.filter((p) => p.name !== partner);\ncall('connect.api.remove_from_shortlist', { partner }).then(() => { myShortlistFull.reload(); }).catch((err) => {\n  myShortlistFull.data = previous;\n  toast({ title: 'Could not remove from shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                       }
                      },
                      "componentId": "Button-1a14da3a0",
@@ -4625,7 +4625,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-08-20 00:04:18.777864",
+ "modified": "2026-08-20 00:45:07.232535",
  "modified_by": "Administrator",
  "name": "shortlisted",
  "owner": "Administrator",
