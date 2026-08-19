@@ -1,14 +1,12 @@
 {
  "actions": [],
- "allow_bulk_edit": 1,
- "allow_rename": 1,
+ "allow_rename": 0,
  "autoname": "hash",
- "creation": "2026-08-06 22:08:35.352939",
+ "creation": "2026-08-18 21:00:00.000000",
  "doctype": "DocType",
- "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "thread",
+  "dm_thread",
   "sender",
   "message_type",
   "content",
@@ -16,17 +14,15 @@
   "file_name",
   "file_type",
   "file_size",
-  "is_private",
-  "private_to",
   "is_edited"
  ],
  "fields": [
   {
-   "fieldname": "thread",
+   "fieldname": "dm_thread",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Thread",
-   "options": "Connect Thread",
+   "label": "DM Thread",
+   "options": "Connect DM Thread",
    "reqd": 1
   },
   {
@@ -41,15 +37,13 @@
    "default": "Text",
    "fieldname": "message_type",
    "fieldtype": "Select",
-   "in_list_view": 1,
    "label": "Message Type",
-   "options": "Text\nFile\nSystem\nRequirement"
+   "options": "Text\nFile"
   },
   {
    "fieldname": "content",
    "fieldtype": "Small Text",
-   "label": "Content",
-   "reqd": 1
+   "label": "Content"
   },
   {
    "fieldname": "attachment",
@@ -73,30 +67,17 @@
   },
   {
    "default": "0",
-   "fieldname": "is_private",
-   "fieldtype": "Check",
-   "label": "Is Private"
-  },
-  {
-   "description": "Comma-delimited user emails this private message is visible to, padded with a leading/trailing comma (\",a@x.com,b@y.com,\") so permission checks can match a single recipient with a plain LIKE instead of a child table.",
-   "fieldname": "private_to",
-   "fieldtype": "Small Text",
-   "label": "Private To"
-  },
-  {
-   "default": "0",
    "fieldname": "is_edited",
    "fieldtype": "Check",
    "label": "Is Edited"
   }
  ],
- "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-08-06 22:24:02.294526",
+ "modified": "2026-08-18 21:00:00.000000",
  "modified_by": "Administrator",
  "module": "Connect",
- "name": "Connect Message",
+ "name": "Connect DM Message",
  "owner": "Administrator",
  "permissions": [
   {
@@ -119,7 +100,8 @@
    "read": 1,
    "report": 1,
    "role": "Connect Customer",
-   "share": 1
+   "share": 1,
+   "write": 1
   },
   {
    "create": 1,
@@ -129,7 +111,8 @@
    "read": 1,
    "report": 1,
    "role": "Connect Partner",
-   "share": 1
+   "share": 1,
+   "write": 1
   },
   {
    "create": 1,
@@ -150,11 +133,21 @@
    "report": 1,
    "role": "Connect Partner Guest",
    "share": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Studio User",
+   "share": 1,
+   "write": 1
   }
  ],
  "row_format": "Dynamic",
- "rows_threshold_for_grid_search": 20,
  "sort_field": "creation",
- "sort_order": "DESC",
+ "sort_order": "ASC",
  "states": []
 }

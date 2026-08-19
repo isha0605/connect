@@ -193,14 +193,46 @@ def _format_requirement_message(customer, note=None):
 
 
 @frappe.whitelist()
+def get_requirement_snapshot():
+	"""The caller's most recently saved Requirement, as a plain dict of the fields a
+	Requirement-type chat message card can show/edit — used to seed the composer's draft
+	card on a fresh Contact-Partner thread (see start_partner_thread's `is_new_thread`).
+	None if the caller isn't a customer or has no saved Requirement yet."""
+	user = frappe.session.user
+	customer = _get_customer_for_user(user)
+	if not customer:
+		return None
+
+	requirement = frappe.db.get_value("Requirement", {"customer": customer}, "name", order_by="creation desc")
+	if not requirement:
+		return None
+
+	req = frappe.get_doc("Requirement", requirement)
+	return {
+		"company_name": req.company_name,
+		"country": req.country,
+		"industry": req.industry,
+		"apps": [a.app for a in req.apps],
+		"looking_for": req.looking_for,
+		"company_size": req.company_size,
+		"current_situation": req.current_situation,
+		"timeline": req.timeline,
+		"delivery_preference": req.delivery_preference,
+		"budget": req.budget,
+	}
+
+
+@frappe.whitelist()
 def start_partner_thread(partner, message=None):
 	"""Contact-Partner entry point: reuses an existing (customer, partner) thread if one
 	already exists — threads are continuous per pair, not per inquiry, per the messaging
 	spec — otherwise creates one, seats both the caller and the partner's admin as Write
 	members (a partner admin has no implicit visibility into a thread they weren't
-	explicitly added to), and — only for a brand new, still-empty thread — opens with the
-	caller's saved Requirement as the first message so the partner isn't starting from a
-	blind inquiry."""
+	explicitly added to). Doesn't auto-send anything on its own for a plain "Contact
+	Partner" click (message=None) — the client uses `is_new_thread` to decide whether to
+	seed the composer with a reviewable Requirement draft instead (see
+	get_requirement_snapshot); an explicit `message` (the pricing-estimate flows) still
+	posts immediately, same as before."""
 	user = frappe.session.user
 	customer = _get_customer_for_user(user)
 	if not customer:
@@ -235,12 +267,13 @@ def start_partner_thread(partner, message=None):
 			"added_by": user,
 		}).insert(ignore_permissions=True)
 
-	if not frappe.db.exists("Connect Message", {"thread": thread}):
+	is_new_thread = not frappe.db.exists("Connect Message", {"thread": thread})
+	if is_new_thread and message:
 		content = _format_requirement_message(customer, message)
 		if content:
 			send_message(thread, content=content)
 
-	return {"thread": thread}
+	return {"thread": thread, "is_new_thread": is_new_thread}
 
 
 @frappe.whitelist()
@@ -254,6 +287,48 @@ def get_my_company_members():
 
 	fieldname = "parent" if doctype == "Customer Team Member" else "partner"
 	return frappe.get_all(doctype, filters={fieldname: company}, fields=["user", "is_admin"])
+
+
+@frappe.whitelist()
+def get_my_team():
+	"""The caller's own company roster, enriched with name/photo — powers the sidebar
+	Settings popup's Users section. Unlike get_my_company_members (a bare user/is_admin list
+	for the 'transfer admin to' picker), this is meant to render directly."""
+	user = frappe.session.user
+	doctype, company, _row = _my_company_membership(user)
+	if not doctype:
+		frappe.throw(_("You are not a member of any company"))
+
+	fieldname = "parent" if doctype == "Customer Team Member" else "partner"
+	rows = frappe.get_all(doctype, filters={fieldname: company}, fields=["user", "is_admin"])
+	for row in rows:
+		profile = frappe.db.get_value("User", row.user, ["full_name", "user_image"], as_dict=True) or {}
+		row["full_name"] = profile.get("full_name")
+		row["user_image"] = profile.get("user_image")
+	return rows
+
+
+@frappe.whitelist()
+def get_my_profile():
+	"""The caller's own name/photo — powers the sidebar avatar and the Settings popup's
+	Profile section."""
+	user = frappe.session.user
+	profile = frappe.db.get_value("User", user, ["full_name", "user_image"], as_dict=True) or {}
+	return {"email": user, "full_name": profile.get("full_name"), "user_image": profile.get("user_image")}
+
+
+@frappe.whitelist()
+def update_my_profile(full_name):
+	"""Self-service rename only, for now — matches the minimal Profile section in the
+	Settings popup. Any logged-in user may rename themselves; there's nothing company- or
+	thread-scoped to check here."""
+	full_name = (full_name or "").strip()
+	if not full_name:
+		frappe.throw(_("Name can't be empty"))
+
+	user = frappe.session.user
+	frappe.db.set_value("User", user, "full_name", full_name)
+	return {"email": user, "full_name": full_name}
 
 
 @frappe.whitelist()
@@ -336,6 +411,25 @@ def get_thread_admins(thread):
 
 
 @frappe.whitelist()
+def get_thread_member_profiles(thread):
+	"""Full name + profile photo for the hover card shown over a sender's name/avatar in chat.
+	Scoped the same way get_my_threads is — includes everyone who's ever been a member (not
+	just currently-active ones), so a removed member's older messages can still resolve a name.
+	Not scoped to the caller's own membership beyond "can they see this thread at all", same
+	boundary as _check_can_write's read-side counterpart."""
+	user = frappe.session.user
+	if not (_has_full_access(user) or _thread_membership(thread, user)):
+		frappe.throw(_("You don't have access to this thread"), frappe.PermissionError)
+
+	emails = frappe.get_list("Connect Thread Member", filters={"thread": thread}, pluck="user", distinct=True)
+	if not emails:
+		return []
+	return frappe.get_list(
+		"User", filters={"name": ["in", emails]}, fields=["name", "full_name", "user_image"]
+	)
+
+
+@frappe.whitelist()
 def get_my_threads():
 	"""Thread list for the sidebar, enriched with what a plain 'Connect Thread' list can't
 	give the client: a last-message preview and an unread count. Both are scoped to the
@@ -366,17 +460,24 @@ def get_my_threads():
 		last = frappe.get_list(
 			"Connect Message",
 			filters=message_filters,
-			fields=["content", "message_type", "file_name", "creation"],
+			fields=["content", "message_type", "file_name", "creation", "sender"],
 			order_by="creation desc",
 			limit_page_length=1,
 		)
 		if last:
 			m = last[0]
-			preview = ("📎 " + (m.file_name or _("Attachment"))) if m.message_type == "File" else (m.content or "")
+			if m.message_type == "File":
+				preview = "📎 " + (m.file_name or _("Attachment"))
+			elif m.message_type == "Requirement":
+				preview = _("Requirement details")
+			else:
+				preview = m.content or ""
 			last_message_at = m.creation
+			last_message_sender = m.sender
 		else:
 			preview = ""
 			last_message_at = t.creation
+			last_message_sender = None
 
 		unread_filters = message_filters + [["sender", "!=", user]]
 		if membership.get("last_read_at"):
@@ -391,6 +492,7 @@ def get_my_threads():
 			"creation": t.creation,
 			"last_message": preview[:140],
 			"last_message_at": last_message_at,
+			"last_message_sender": last_message_sender,
 			"unread_count": unread_count,
 		})
 
@@ -420,14 +522,10 @@ def _check_can_write(thread, user):
 		frappe.throw(_("This thread is closed"))
 
 
-@frappe.whitelist()
-def upload_chat_attachment(thread):
-	"""Stage a pdf/docx/image for the composer's attachment preview, ahead of Send. Left
-	unattached to any document until send_message claims it — that's what lets the composer
-	show upload progress and a remove button before a message (and its notification) exists."""
-	user = frappe.session.user
-	_check_can_write(thread, user)
-
+def _stage_chat_attachment():
+	"""Shared upload logic behind upload_chat_attachment / upload_dm_attachment — only the
+	permission check differs between a company thread and a DM, so that's kept in each thin
+	wrapper and everything else (validation, the actual unattached File doc) lives here once."""
 	uploaded = frappe.request.files.get("file") if frappe.request else None
 	if not uploaded:
 		frappe.throw(_("No file was uploaded"))
@@ -457,6 +555,26 @@ def upload_chat_attachment(thread):
 		"file_type": ALLOWED_CHAT_FILE_EXTENSIONS[ext],
 		"file_size": file_doc.file_size,
 	}
+
+
+@frappe.whitelist()
+def upload_chat_attachment(thread):
+	"""Stage a pdf/docx/image for the composer's attachment preview, ahead of Send. Left
+	unattached to any document until send_message claims it — that's what lets the composer
+	show upload progress and a remove button before a message (and its notification) exists."""
+	_check_can_write(thread, frappe.session.user)
+	return _stage_chat_attachment()
+
+
+@frappe.whitelist()
+def upload_dm_attachment(thread):
+	"""DM counterpart to upload_chat_attachment — same staging logic, but permission is just
+	"are you one of the two participants" rather than a Connect Thread Member Write check."""
+	user = frappe.session.user
+	pair = frappe.db.get_value("Connect DM Thread", thread, ["user_a", "user_b"], as_dict=True)
+	if not pair or user not in (pair.user_a, pair.user_b):
+		frappe.throw(_("You don't have access to this conversation"), frappe.PermissionError)
+	return _stage_chat_attachment()
 
 
 @frappe.whitelist()
@@ -504,13 +622,17 @@ def send_message(
 	file_size=None,
 	is_private=False,
 	recipients=None,
+	requirement_data=None,
 ):
-	"""Create a chat message, optionally carrying a file staged by upload_chat_attachment.
-	Text and file messages share this one path so the composer only ever needs one Send
-	action regardless of whether an attachment is riding along."""
+	"""Create a chat message, optionally carrying a file staged by upload_chat_attachment, or
+	a Requirement snapshot (see get_requirement_snapshot) reviewed/edited by the customer in
+	the composer before sending — stored as a JSON blob in `content` since it renders as a
+	structured card client-side rather than plain text. Text, file and requirement messages
+	all share this one path so the composer only ever needs one Send action."""
 	user = frappe.session.user
+	requirement_data = frappe.parse_json(requirement_data) if isinstance(requirement_data, str) else requirement_data
 	content = (content or "").strip()
-	if not content and not file_url:
+	if not content and not file_url and not requirement_data:
 		frappe.throw(_("Message can't be empty"))
 
 	_check_can_write(thread, user)
@@ -521,12 +643,22 @@ def send_message(
 		if not file_doc_name:
 			frappe.throw(_("Attachment not found"))
 
+	if requirement_data:
+		message_type = "Requirement"
+		message_content = json.dumps(requirement_data)
+	elif file_url:
+		message_type = "File"
+		message_content = content or file_name
+	else:
+		message_type = "Text"
+		message_content = content
+
 	message = frappe.get_doc({
 		"doctype": "Connect Message",
 		"thread": thread,
 		"sender": user,
-		"message_type": "File" if file_url else "Text",
-		"content": content or file_name,
+		"message_type": message_type,
+		"content": message_content,
 	})
 	if file_url:
 		message.attachment = file_url
@@ -788,6 +920,241 @@ def delete_message_template(name):
 
 	doc.delete()
 	return {"deleted": name}
+
+
+@frappe.whitelist()
+def start_dm(user):
+	"""Find-or-create the 1:1 thread with `user`. A DM has exactly two participants and no
+	inherent direction, so an existing thread is found by matching the *unordered* pair —
+	constraining both user_a and user_b to the 2-element {me, user} set can only ever match a
+	thread between exactly those two, never a third party sharing one side."""
+	me = frappe.session.user
+	if user == me:
+		frappe.throw(_("You can't start a conversation with yourself"))
+	if not frappe.db.exists("User", user):
+		frappe.throw(_("User not found"))
+
+	existing = frappe.db.get_value(
+		"Connect DM Thread", {"user_a": ["in", [me, user]], "user_b": ["in", [me, user]]}, "name"
+	)
+	if existing:
+		return existing
+
+	doc = frappe.get_doc({"doctype": "Connect DM Thread", "user_a": me, "user_b": user})
+	doc.insert(ignore_permissions=True)
+	return doc.name
+
+
+@frappe.whitelist()
+def get_my_dm_threads():
+	"""DM inbox for the sidebar — same last-message/unread-count shape as get_my_threads, one
+	row per person the caller has ever exchanged direct messages with."""
+	user = frappe.session.user
+	threads = frappe.get_list(
+		"Connect DM Thread",
+		or_filters=[["user_a", "=", user], ["user_b", "=", user]],
+		fields=["name", "user_a", "user_b", "last_read_at_a", "last_read_at_b", "creation"],
+		order_by="modified desc",
+		limit_page_length=100,
+	)
+
+	result = []
+	for t in threads:
+		other = t.user_b if t.user_a == user else t.user_a
+		last_read_at = t.last_read_at_a if t.user_a == user else t.last_read_at_b
+		profile = frappe.db.get_value("User", other, ["full_name", "user_image"], as_dict=True) or {}
+
+		last = frappe.get_list(
+			"Connect DM Message",
+			filters={"dm_thread": t.name},
+			fields=["content", "message_type", "file_name", "sender", "creation"],
+			order_by="creation desc",
+			limit_page_length=1,
+		)
+		if last:
+			m = last[0]
+			preview = ("📎 " + (m.file_name or _("Attachment"))) if m.message_type == "File" else (m.content or "")
+			last_message = preview[:140]
+			last_message_at = m.creation
+			last_message_sender = m.sender
+		else:
+			last_message = ""
+			last_message_at = t.creation
+			last_message_sender = None
+
+		unread_filters = {"dm_thread": t.name, "sender": ["!=", user]}
+		if last_read_at:
+			unread_filters["creation"] = [">", last_read_at]
+		unread_count = frappe.db.count("Connect DM Message", filters=unread_filters)
+
+		result.append({
+			"name": t.name,
+			"other_user": other,
+			"other_user_full_name": profile.get("full_name"),
+			"other_user_image": profile.get("user_image"),
+			"last_message": last_message,
+			"last_message_at": last_message_at,
+			"last_message_sender": last_message_sender,
+			"unread_count": unread_count,
+		})
+	return result
+
+
+@frappe.whitelist()
+def mark_dm_thread_read(thread):
+	"""Best-effort, mirrors mark_thread_read — a stale/foreign thread name is a silent no-op."""
+	user = frappe.session.user
+	pair = frappe.db.get_value("Connect DM Thread", thread, ["user_a", "user_b"], as_dict=True)
+	if not pair or user not in (pair.user_a, pair.user_b):
+		return
+	field = "last_read_at_a" if pair.user_a == user else "last_read_at_b"
+	frappe.db.set_value("Connect DM Thread", thread, field, now_datetime())
+
+
+@frappe.whitelist()
+def send_dm_message(thread, content="", file_url=None, file_name=None, file_type=None, file_size=None):
+	"""DM counterpart to send_message — same text-or-file shape, one message per call, staged
+	attachments claimed the same way (looked up by file_url + owner, then re-parented)."""
+	user = frappe.session.user
+	pair = frappe.db.get_value("Connect DM Thread", thread, ["user_a", "user_b"], as_dict=True)
+	if not pair or user not in (pair.user_a, pair.user_b):
+		frappe.throw(_("You don't have access to this conversation"), frappe.PermissionError)
+
+	content = (content or "").strip()
+	if not content and not file_url:
+		frappe.throw(_("Message cannot be empty"))
+
+	file_doc_name = None
+	if file_url:
+		file_doc_name = frappe.db.get_value("File", {"file_url": file_url, "owner": user}, "name")
+		if not file_doc_name:
+			frappe.throw(_("Attachment not found"))
+
+	doc = frappe.get_doc({
+		"doctype": "Connect DM Message",
+		"dm_thread": thread,
+		"sender": user,
+		"message_type": "File" if file_url else "Text",
+		"content": content or file_name,
+	})
+	if file_url:
+		doc.attachment = file_url
+		doc.file_name = file_name
+		doc.file_type = file_type
+		doc.file_size = file_size
+	doc.insert(ignore_permissions=True)
+
+	if file_doc_name:
+		file_doc = frappe.get_doc("File", file_doc_name)
+		file_doc.attached_to_doctype = "Connect DM Message"
+		file_doc.attached_to_name = doc.name
+		file_doc.save(ignore_permissions=True)
+
+	# bumps the thread to the top of get_my_dm_threads' order_by=modified desc — a plain
+	# message insert doesn't touch its parent thread's own timestamp on its own
+	frappe.db.set_value("Connect DM Thread", thread, "modified", now_datetime(), update_modified=False)
+	return doc.as_dict()
+
+
+def _dm_thread_pair(thread, user):
+	pair = frappe.db.get_value("Connect DM Thread", thread, ["user_a", "user_b"], as_dict=True)
+	if not pair or user not in (pair.user_a, pair.user_b):
+		frappe.throw(_("You don't have access to this conversation"), frappe.PermissionError)
+	return pair
+
+
+@frappe.whitelist()
+def delete_dm_message(message):
+	"""DM counterpart to delete_message — own-message-only, same as the company thread version
+	(no admin override here since a DM has no such role)."""
+	from connect.connect.notifications import notify_dm_message_deleted
+
+	user = frappe.session.user
+	doc = frappe.get_doc("Connect DM Message", message)
+	_dm_thread_pair(doc.dm_thread, user)
+	if doc.sender != user:
+		frappe.throw(_("You can only delete your own messages"), frappe.PermissionError)
+
+	if doc.attachment:
+		file_name = frappe.db.get_value("File", {"file_url": doc.attachment}, "name")
+		if file_name:
+			frappe.delete_doc("File", file_name, ignore_permissions=True)
+
+	notify_dm_message_deleted(doc)
+	frappe.delete_doc("Connect DM Message", message, ignore_permissions=True)
+
+
+@frappe.whitelist()
+def edit_dm_message(message, content):
+	"""DM counterpart to edit_message."""
+	from connect.connect.notifications import notify_dm_message_edited
+
+	user = frappe.session.user
+	doc = frappe.get_doc("Connect DM Message", message)
+	_dm_thread_pair(doc.dm_thread, user)
+	if doc.sender != user:
+		frappe.throw(_("You can only edit your own messages"), frappe.PermissionError)
+	if doc.message_type != "Text":
+		frappe.throw(_("Only text messages can be edited"))
+
+	content = (content or "").strip()
+	if not content:
+		frappe.throw(_("Message can't be empty"))
+
+	doc.content = content
+	doc.is_edited = 1
+	doc.save(ignore_permissions=True)
+
+	notify_dm_message_edited(doc)
+	return doc.as_dict()
+
+
+@frappe.whitelist()
+def pin_dm_message(message):
+	"""DM counterpart to pin_message — either participant can pin, same as either can post."""
+	from connect.connect.notifications import notify_dm_thread_pin_changed
+
+	user = frappe.session.user
+	doc = frappe.get_doc("Connect DM Message", message)
+	_dm_thread_pair(doc.dm_thread, user)
+
+	thread_doc = frappe.get_doc("Connect DM Thread", doc.dm_thread)
+	thread_doc.pinned_message = doc.name
+	thread_doc.save(ignore_permissions=True)
+
+	notify_dm_thread_pin_changed(thread_doc, doc, user)
+	return {"thread": thread_doc.name, "pinned_message": thread_doc.pinned_message}
+
+
+@frappe.whitelist()
+def unpin_dm_message(thread):
+	from connect.connect.notifications import notify_dm_thread_pin_changed
+
+	user = frappe.session.user
+	_dm_thread_pair(thread, user)
+
+	thread_doc = frappe.get_doc("Connect DM Thread", thread)
+	thread_doc.pinned_message = None
+	thread_doc.save(ignore_permissions=True)
+
+	notify_dm_thread_pin_changed(thread_doc, None, user)
+	return {"thread": thread_doc.name, "pinned_message": None}
+
+
+@frappe.whitelist()
+def get_pinned_dm_message(thread):
+	user = frappe.session.user
+	_dm_thread_pair(thread, user)
+
+	pinned = frappe.db.get_value("Connect DM Thread", thread, "pinned_message")
+	if not pinned:
+		return None
+	return frappe.db.get_value(
+		"Connect DM Message",
+		pinned,
+		["name", "sender", "message_type", "content", "file_name", "creation"],
+		as_dict=True,
+	)
 
 
 PARTNER_FIELDS = [

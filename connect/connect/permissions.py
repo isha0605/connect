@@ -148,6 +148,49 @@ def get_thread_member_permission_query_conditions(user, doctype=None):
 	)"""
 
 
+def has_dm_thread_permission(doc, ptype="read", user=None, **kwargs):
+	"""A DM thread has exactly two fixed participants (no add/remove, unlike company threads)
+	— either one can always read/write it, and starting one is always self-initiated (the
+	caller is always one of the two parties), so create is unconditionally allowed here."""
+	user = user or frappe.session.user
+	if _has_full_access(user):
+		return True
+	if ptype == "create" or not doc.get("user_a") or not doc.get("user_b"):
+		return True
+	return user in (doc.user_a, doc.user_b)
+
+
+def get_dm_thread_permission_query_conditions(user, doctype=None):
+	if _has_full_access(user):
+		return ""
+	user = frappe.db.escape(user)
+	return f"(`tabConnect DM Thread`.user_a = {user} or `tabConnect DM Thread`.user_b = {user})"
+
+
+def has_dm_message_permission(doc, ptype="read", user=None, **kwargs):
+	user = user or frappe.session.user
+	if _has_full_access(user):
+		return True
+	if ptype == "create":
+		return doc.get("sender") == user
+
+	thread = frappe.db.get_value("Connect DM Thread", doc.get("dm_thread"), ["user_a", "user_b"], as_dict=True)
+	if not thread or user not in (thread.user_a, thread.user_b):
+		return False
+	if ptype in ("write", "delete"):
+		return doc.get("sender") == user
+	return True
+
+
+def get_dm_message_permission_query_conditions(user, doctype=None):
+	if _has_full_access(user):
+		return ""
+	user = frappe.db.escape(user)
+	return f"""`tabConnect DM Message`.dm_thread in (
+		select name from `tabConnect DM Thread` where user_a = {user} or user_b = {user}
+	)"""
+
+
 def _is_customer_member(user):
 	return bool(frappe.db.exists("Customer Team Member", {"user": user}))
 

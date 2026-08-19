@@ -27,13 +27,14 @@ def notify_thread_members(doc, method=None):
 	if not members:
 		return
 
+	subject = "Shared requirement details" if doc.message_type == "Requirement" else frappe.utils.strip_html(doc.content)
 	enqueue_create_notification(
 		members,
 		{
 			"type": "Alert",
 			"document_type": "Connect Thread",
 			"document_name": doc.thread,
-			"subject": frappe.utils.strip_html(doc.content)[:140],
+			"subject": subject[:140],
 			"from_user": doc.sender,
 		},
 	)
@@ -85,6 +86,71 @@ def notify_message_edited(doc):
 	payload = {"name": doc.name, "thread": doc.thread, "content": doc.content, "is_edited": doc.is_edited}
 	for member in members:
 		frappe.publish_realtime("connect_message_edited", payload, user=member, after_commit=True)
+
+
+def notify_dm_recipient(doc, method=None):
+	"""Mirrors notify_thread_members, simplified: a DM thread has exactly one other party, so
+	there's no audience computation — just push straight to whichever of user_a/user_b isn't
+	the sender."""
+	pair = frappe.db.get_value("Connect DM Thread", doc.dm_thread, ["user_a", "user_b"], as_dict=True)
+	if not pair:
+		return
+	recipient = pair.user_b if pair.user_a == doc.sender else pair.user_a
+
+	enqueue_create_notification(
+		[recipient],
+		{
+			"type": "Alert",
+			"document_type": "Connect DM Thread",
+			"document_name": doc.dm_thread,
+			"subject": frappe.utils.strip_html(doc.content)[:140],
+			"from_user": doc.sender,
+		},
+	)
+
+	payload = {
+		"name": doc.name,
+		"dm_thread": doc.dm_thread,
+		"sender": doc.sender,
+		"content": doc.content,
+		"creation": str(doc.creation),
+	}
+	frappe.publish_realtime("connect_new_dm_message", payload, user=recipient, after_commit=True)
+
+
+def notify_dm_message_deleted(doc):
+	"""DM counterpart to notify_message_deleted — single fixed recipient, no audience computation."""
+	pair = frappe.db.get_value("Connect DM Thread", doc.dm_thread, ["user_a", "user_b"], as_dict=True)
+	if not pair:
+		return
+	recipient = pair.user_b if pair.user_a == doc.sender else pair.user_a
+	payload = {"name": doc.name, "dm_thread": doc.dm_thread}
+	frappe.publish_realtime("connect_dm_message_deleted", payload, user=recipient, after_commit=True)
+
+
+def notify_dm_message_edited(doc):
+	"""DM counterpart to notify_message_edited."""
+	pair = frappe.db.get_value("Connect DM Thread", doc.dm_thread, ["user_a", "user_b"], as_dict=True)
+	if not pair:
+		return
+	recipient = pair.user_b if pair.user_a == doc.sender else pair.user_a
+	payload = {"name": doc.name, "dm_thread": doc.dm_thread, "content": doc.content, "is_edited": doc.is_edited}
+	frappe.publish_realtime("connect_dm_message_edited", payload, user=recipient, after_commit=True)
+
+
+def notify_dm_thread_pin_changed(thread_doc, message_doc, actor):
+	"""DM counterpart to notify_thread_pin_changed — the "everyone but the actor" audience is
+	just the one other participant. `message_doc` is None on unpin."""
+	recipient = thread_doc.user_b if thread_doc.user_a == actor else thread_doc.user_a
+	payload = {
+		"thread": thread_doc.name,
+		"pinned_message": message_doc.name if message_doc else None,
+		"sender": message_doc.sender if message_doc else None,
+		"message_type": message_doc.message_type if message_doc else None,
+		"content": message_doc.content if message_doc else None,
+		"file_name": message_doc.file_name if message_doc else None,
+	}
+	frappe.publish_realtime("connect_dm_thread_pin_changed", payload, user=recipient, after_commit=True)
 
 
 def notify_thread_pin_changed(thread_doc, message_doc, actor):
