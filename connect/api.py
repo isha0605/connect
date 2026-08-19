@@ -1553,9 +1553,12 @@ def _score_partners_by_requirements(answers):
 		wanted_industry, wanted_mode, wanted_apps, wanted_impl_type,
 		wanted_migration or wanted_situation_impl_type, wanted_bps or wants_migration_tag,
 	) if v)
-	max_missing = max(2, math.ceil(answered / 2))
+	# Strict (0 missing tolerated) for the first couple of answered questions so a
+	# single answer visibly narrows the pool right away; +1 tolerance per question
+	# after that so a fuller wizard doesn't collapse to zero results.
+	max_missing = max(0, answered - 2)
 
-	scored = []
+	all_scored = []
 	for name in names:
 		row = by_name.get(name)
 		if not row:
@@ -1577,8 +1580,16 @@ def _score_partners_by_requirements(answers):
 			missing.append(", ".join(requirements) + " Support")
 		elif wants_migration_tag and not migrations_by.get(name):
 			missing.append("Migration Experience")
-		if len(missing) <= max_missing:
-			scored.append((len(missing), -(row.rating or 0), name, missing))
+		all_scored.append((len(missing), -(row.rating or 0), name, missing))
+
+	# Never let the answered criteria empty the results outright -- if literally
+	# nobody clears the strict threshold (e.g. an industry with no featured
+	# partner at all), fall back to whoever comes closest instead of showing
+	# nothing, same "don't just disappear" spirit as the per-criterion matchers
+	# this replaced.
+	best = min((m[0] for m in all_scored), default=0)
+	effective_missing = max(max_missing, best)
+	scored = [s for s in all_scored if s[0] <= effective_missing]
 
 	scored.sort(key=lambda s: (s[0], s[1]))
 	return scored, apps_by_partner
