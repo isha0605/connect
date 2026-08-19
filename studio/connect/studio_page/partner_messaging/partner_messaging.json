@@ -72,6 +72,64 @@
       {
        "children": [
         {
+         "baseStyles": {
+          "alignItems": "center",
+          "cursor": "pointer",
+          "display": "flex",
+          "gap": "8px",
+          "justifyContent": "flex-start",
+          "padding": "6px 12px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "flexShrink": "0",
+            "fontSize": "16px",
+            "fontWeight": "500",
+            "height": "36px",
+            "width": "36px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "sidebar-my-avatar-img",
+           "componentName": "Avatar",
+           "componentProps": {
+            "image": "{{ myProfile.data ? myProfile.data.user_image : '' }}",
+            "label": "{{ myProfile.data ? myProfile.data.full_name : '' }}",
+            "shape": "circle",
+            "size": "xl"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)"
+           },
+           "children": [],
+           "classes": [
+            "truncate"
+           ],
+           "componentId": "sidebar-my-avatar-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "Profile"
+           }
+          }
+         ],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "openSettings();"
+          }
+         },
+         "componentId": "sidebar-my-avatar",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
          "children": [],
          "classes": [],
          "componentId": "SidebarCollapseToggle-pm001",
@@ -98,7 +156,7 @@
       "display": "{{ (!myContext.data || myContext.data.partner) ? 'flex' : 'none' }}",
       "flexShrink": 0,
       "height": "100%",
-      "width": "256px"
+      "width": "320px"
      },
      "children": [
       {
@@ -112,7 +170,7 @@
         "paddingLeft": "0px",
         "paddingRight": "0px",
         "paddingTop": "4px",
-        "width": "257px"
+        "width": "321px"
        },
        "children": [
         {
@@ -188,9 +246,10 @@
              "componentId": "thread-item-avatar",
              "componentName": "Avatar",
              "componentProps": {
+              "image": "{{ dataItem.convType === 'dm' ? dataItem.other_user_image : '' }}",
               "label": "{{ otherPartyName(dataItem) }}",
               "shape": "circle",
-              "size": "2xl",
+              "size": "xl",
               "theme": "{{ avatarTheme(otherPartyName(dataItem)) }}"
              }
             },
@@ -232,15 +291,17 @@
                 },
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-5)",
+                  "color": "var(--ink-gray-4)",
                   "flexShrink": "0"
                  },
                  "children": [],
-                 "classes": [],
+                 "classes": [
+                  "md:text-2xs"
+                 ],
                  "componentId": "thread-item-time",
                  "componentName": "TextBlock",
                  "componentProps": {
-                  "fontSize": "text-xs",
+                  "fontSize": "text-sm",
                   "tag": "span",
                   "text": "{{ threadListTime(dataItem) }}"
                  }
@@ -261,8 +322,9 @@
                "children": [
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-5)",
+                  "color": "{{ dataItem.unread_count > 0 ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}",
                   "flex": "1",
+                  "fontWeight": "{{ dataItem.unread_count > 0 ? '600' : '400' }}",
                   "minWidth": "0px",
                   "overflow": "hidden",
                   "textOverflow": "ellipsis",
@@ -277,6 +339,19 @@
                   "tag": "span",
                   "text": "{{ threadListPreview(dataItem) }}"
                  }
+                },
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentId": "thread-item-unread-badge",
+                 "componentName": "Badge",
+                 "componentProps": {
+                  "label": "{{ dataItem.unread_count }}",
+                  "size": "sm",
+                  "theme": "gray",
+                  "variant": "subtle"
+                 },
+                 "visibilityCondition": "dataItem.unread_count > 0"
                 }
                ],
                "classes": [],
@@ -298,7 +373,7 @@
             "click": {
              "action": "Run Script",
              "event": "click",
-             "script": "selectThread(dataItem.name);"
+             "script": "selectThread(dataItem);"
             }
            },
            "componentId": "thread-item",
@@ -310,7 +385,7 @@
          "componentId": "thread-repeater",
          "componentName": "Repeater",
          "componentProps": {
-          "data": "{{ myThreads.data }}",
+          "data": "{{ unifiedThreadList() }}",
           "dataKey": "name",
           "emptyStateMessage": "No conversations yet"
          }
@@ -531,7 +606,7 @@
          "componentId": "members-trigger",
          "componentName": "container",
          "originalElement": "div",
-         "visibilityCondition": "selectedThread"
+         "visibilityCondition": "selectedThread && selectedThreadType === 'company'"
         }
        ],
        "classes": [],
@@ -553,7 +628,7 @@
         {
          "baseStyles": {
           "alignItems": "center",
-          "backgroundColor": "var(--surface-amber-3)",
+          "backgroundColor": "var(--surface-amber-2)",
           "borderRadius": "6px",
           "display": "flex",
           "flexShrink": "0",
@@ -565,16 +640,16 @@
           {
            "baseStyles": {
             "color": "var(--ink-amber-7)",
-            "height": "13px",
-            "width": "13px"
+            "height": "14px",
+            "width": "14px"
            },
            "children": [],
-           "classes": [],
+           "classes": [
+            "lucide-pin"
+           ],
            "componentId": "pinned-banner-icon",
-           "componentName": "FeatherIcon",
-           "componentProps": {
-            "name": "bookmark"
-           }
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],
@@ -750,6 +825,7 @@
                   {
                    "baseStyles": {
                     "flexShrink": "0",
+                    "position": "relative",
                     "width": "36px"
                    },
                    "children": [
@@ -766,15 +842,146 @@
                      "componentId": "message-avatar",
                      "componentName": "Avatar",
                      "componentProps": {
-                      "label": "{{ dataItem.sender }}",
+                      "image": "{{ memberImage(dataItem.sender) }}",
+                      "label": "{{ memberDisplayName(dataItem.sender) }}",
                       "shape": "circle",
                       "size": "xl",
                       "theme": "{{ avatarTheme(dataItem.sender) }}"
                      },
                      "visibilityCondition": "!isGrouped(dataItem, dataIndex)"
+                    },
+                    {
+                     "baseStyles": {
+                      "backgroundColor": "var(--surface-base)",
+                      "border": "1px solid var(--outline-gray-2)",
+                      "borderRadius": "10px",
+                      "boxShadow": "0 4px 16px rgba(0,0,0,0.12)",
+                      "flexDirection": "column",
+                      "gap": "10px",
+                      "left": "0px",
+                      "marginTop": "6px",
+                      "padding": "12px",
+                      "position": "absolute",
+                      "top": "100%",
+                      "width": "230px",
+                      "zIndex": "20"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "gap": "10px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "flexShrink": "0",
+                          "height": "44px",
+                          "width": "44px"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentId": "sender-hover-card-avatar",
+                         "componentName": "Avatar",
+                         "componentProps": {
+                          "image": "{{ memberImage(dataItem.sender) }}",
+                          "label": "{{ memberDisplayName(dataItem.sender) }}",
+                          "shape": "circle",
+                          "size": "2xl",
+                          "theme": "{{ avatarTheme(dataItem.sender) }}"
+                         }
+                        },
+                        {
+                         "baseStyles": {
+                          "display": "flex",
+                          "flexDirection": "column",
+                          "gap": "2px",
+                          "minWidth": "0px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-8)",
+                            "fontWeight": "600",
+                            "overflow": "hidden",
+                            "textOverflow": "ellipsis",
+                            "whiteSpace": "nowrap"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentId": "sender-hover-card-name",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-sm",
+                            "tag": "span",
+                            "text": "{{ memberDisplayName(dataItem.sender) }}"
+                           }
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)",
+                            "overflow": "hidden",
+                            "textOverflow": "ellipsis",
+                            "whiteSpace": "nowrap"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentId": "sender-hover-card-email",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-xs",
+                            "tag": "span",
+                            "text": "{{ dataItem.sender }}"
+                           }
+                          }
+                         ],
+                         "classes": [],
+                         "componentId": "sender-hover-card-info",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        }
+                       ],
+                       "classes": [],
+                       "componentId": "sender-hover-card-row",
+                       "componentName": "container",
+                       "originalElement": "div"
+                      },
+                      {
+                       "children": [],
+                       "classes": [
+                        "w-full"
+                       ],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "connectWithUser(dataItem.sender);"
+                        }
+                       },
+                       "componentId": "sender-hover-card-connect-btn",
+                       "componentName": "Button",
+                       "componentProps": {
+                        "label": "Connect",
+                        "size": "sm",
+                        "theme": "gray",
+                        "variant": "outline"
+                       }
+                      }
+                     ],
+                     "classes": [
+                      "hidden",
+                      "group-hover/option:flex"
+                     ],
+                     "componentId": "message-avatar-hover-card",
+                     "componentName": "container",
+                     "originalElement": "div"
                     }
                    ],
-                   "classes": [],
+                   "classes": [
+                    "group/option"
+                   ],
                    "componentId": "message-avatar-slot",
                    "componentName": "container",
                    "originalElement": "div",
@@ -798,14 +1005,15 @@
                       "flexDirection": "row",
                       "gap": "4px",
                       "justifyContent": "flex-start",
-                      "marginBottom": "5px"
+                      "marginBottom": "5px",
+                      "position": "relative"
                      },
                      "children": [
                       {
                        "baseStyles": {
                         "color": "var(--ink-gray-6)",
-                        "fontWeight": "500",
-                        "textTransform": "capitalize"
+                        "cursor": "default",
+                        "fontWeight": "500"
                        },
                        "children": [],
                        "classes": [],
@@ -814,7 +1022,7 @@
                        "componentProps": {
                         "fontSize": "text-sm",
                         "tag": "span",
-                        "text": "{{ (dataItem.sender || '').split('@')[0] }}"
+                        "text": "{{ memberDisplayName(dataItem.sender) }}"
                        }
                       },
                       {
@@ -834,9 +1042,140 @@
                         "variant": "outline"
                        },
                        "visibilityCondition": "showSenderSideBadge(dataItem)"
+                      },
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-base)",
+                        "border": "1px solid var(--outline-gray-2)",
+                        "borderRadius": "10px",
+                        "boxShadow": "0 4px 16px rgba(0,0,0,0.12)",
+                        "left": "0px",
+                        "marginTop": "6px",
+                        "padding": "12px",
+                        "position": "absolute",
+                        "top": "100%",
+                        "width": "230px",
+                        "zIndex": "20"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "gap": "10px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "flexShrink": "0",
+                            "height": "44px",
+                            "width": "44px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentId": "sender-name-hover-card-avatar",
+                           "componentName": "Avatar",
+                           "componentProps": {
+                            "image": "{{ memberImage(dataItem.sender) }}",
+                            "label": "{{ memberDisplayName(dataItem.sender) }}",
+                            "shape": "circle",
+                            "size": "2xl",
+                            "theme": "{{ avatarTheme(dataItem.sender) }}"
+                           }
+                          },
+                          {
+                           "baseStyles": {
+                            "display": "flex",
+                            "flexDirection": "column",
+                            "gap": "2px",
+                            "minWidth": "0px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-8)",
+                              "fontWeight": "600",
+                              "overflow": "hidden",
+                              "textOverflow": "ellipsis",
+                              "whiteSpace": "nowrap"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentId": "sender-name-hover-card-name",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-sm",
+                              "tag": "span",
+                              "text": "{{ memberDisplayName(dataItem.sender) }}"
+                             }
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-5)",
+                              "overflow": "hidden",
+                              "textOverflow": "ellipsis",
+                              "whiteSpace": "nowrap"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentId": "sender-name-hover-card-email",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-xs",
+                              "tag": "span",
+                              "text": "{{ dataItem.sender }}"
+                             }
+                            }
+                           ],
+                           "classes": [],
+                           "componentId": "sender-name-hover-card-info",
+                           "componentName": "container",
+                           "originalElement": "div"
+                          }
+                         ],
+                         "classes": [],
+                         "componentId": "sender-name-hover-card-row",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "marginTop": "10px"
+                         },
+                         "children": [],
+                         "classes": [
+                          "w-full"
+                         ],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "connectWithUser(dataItem.sender);"
+                          }
+                         },
+                         "componentId": "sender-name-hover-card-connect-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "label": "Connect",
+                          "size": "sm",
+                          "theme": "gray",
+                          "variant": "outline"
+                         }
+                        }
+                       ],
+                       "classes": [
+                        "hidden",
+                        "group-hover/item:block"
+                       ],
+                       "componentId": "message-sender-hover-card",
+                       "componentName": "container",
+                       "originalElement": "div"
                       }
                      ],
-                     "classes": [],
+                     "classes": [
+                      "group/item"
+                     ],
                      "componentId": "message-header-row",
                      "componentName": "container",
                      "originalElement": "div",
@@ -882,7 +1221,38 @@
                        "componentId": "message-bubble",
                        "componentName": "container",
                        "originalElement": "div",
-                       "visibilityCondition": "dataItem.message_type !== 'File'"
+                       "visibilityCondition": "dataItem.message_type !== 'File' && dataItem.message_type !== 'Requirement'"
+                      },
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "{{ isMine(dataItem.sender) ? 'var(--surface-gray-3)' : 'var(--surface-gray-2)' }}",
+                        "border": "1px solid var(--outline-gray-2)",
+                        "borderRadius": "12px",
+                        "display": "inline-block",
+                        "marginTop": "0px",
+                        "maxWidth": "320px",
+                        "padding": "10px 14px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-9)",
+                          "textAlign": "left"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentId": "message-requirement-content",
+                         "componentName": "HTML",
+                         "componentProps": {
+                          "html": "{{ requirementCardHtml(dataItem) }}"
+                         }
+                        }
+                       ],
+                       "classes": [],
+                       "componentId": "message-requirement-card",
+                       "componentName": "container",
+                       "originalElement": "div",
+                       "visibilityCondition": "dataItem.message_type === 'Requirement'"
                       },
                       {
                        "baseStyles": {
@@ -1131,7 +1501,38 @@
                        "componentId": "message-bubble-o",
                        "componentName": "container",
                        "originalElement": "div",
-                       "visibilityCondition": "dataItem.message_type !== 'File'"
+                       "visibilityCondition": "dataItem.message_type !== 'File' && dataItem.message_type !== 'Requirement'"
+                      },
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "{{ isMine(dataItem.sender) ? 'var(--surface-gray-3)' : 'var(--surface-gray-2)' }}",
+                        "border": "1px solid var(--outline-gray-2)",
+                        "borderRadius": "12px",
+                        "display": "inline-block",
+                        "marginTop": "0px",
+                        "maxWidth": "320px",
+                        "padding": "10px 14px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-9)",
+                          "textAlign": "left"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentId": "message-requirement-content-o",
+                         "componentName": "HTML",
+                         "componentProps": {
+                          "html": "{{ requirementCardHtml(dataItem) }}"
+                         }
+                        }
+                       ],
+                       "classes": [],
+                       "componentId": "message-requirement-card-o",
+                       "componentName": "container",
+                       "originalElement": "div",
+                       "visibilityCondition": "dataItem.message_type === 'Requirement'"
                       },
                       {
                        "baseStyles": {
@@ -1392,6 +1793,7 @@
                   {
                    "baseStyles": {
                     "flexShrink": "0",
+                    "position": "relative",
                     "width": "36px"
                    },
                    "children": [
@@ -1408,14 +1810,145 @@
                      "componentId": "file-cluster-avatar",
                      "componentName": "Avatar",
                      "componentProps": {
-                      "label": "{{ dataItem.sender }}",
+                      "image": "{{ memberImage(dataItem.sender) }}",
+                      "label": "{{ memberDisplayName(dataItem.sender) }}",
                       "shape": "circle",
                       "size": "xl",
                       "theme": "{{ avatarTheme(dataItem.sender) }}"
                      }
+                    },
+                    {
+                     "baseStyles": {
+                      "backgroundColor": "var(--surface-base)",
+                      "border": "1px solid var(--outline-gray-2)",
+                      "borderRadius": "10px",
+                      "boxShadow": "0 4px 16px rgba(0,0,0,0.12)",
+                      "flexDirection": "column",
+                      "gap": "10px",
+                      "left": "0px",
+                      "marginTop": "6px",
+                      "padding": "12px",
+                      "position": "absolute",
+                      "top": "100%",
+                      "width": "230px",
+                      "zIndex": "20"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "gap": "10px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "flexShrink": "0",
+                          "height": "44px",
+                          "width": "44px"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentId": "file-cluster-avatar-hover-card-avatar",
+                         "componentName": "Avatar",
+                         "componentProps": {
+                          "image": "{{ memberImage(dataItem.sender) }}",
+                          "label": "{{ memberDisplayName(dataItem.sender) }}",
+                          "shape": "circle",
+                          "size": "2xl",
+                          "theme": "{{ avatarTheme(dataItem.sender) }}"
+                         }
+                        },
+                        {
+                         "baseStyles": {
+                          "display": "flex",
+                          "flexDirection": "column",
+                          "gap": "2px",
+                          "minWidth": "0px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-8)",
+                            "fontWeight": "600",
+                            "overflow": "hidden",
+                            "textOverflow": "ellipsis",
+                            "whiteSpace": "nowrap"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentId": "file-cluster-avatar-hover-card-name",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-sm",
+                            "tag": "span",
+                            "text": "{{ memberDisplayName(dataItem.sender) }}"
+                           }
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)",
+                            "overflow": "hidden",
+                            "textOverflow": "ellipsis",
+                            "whiteSpace": "nowrap"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentId": "file-cluster-avatar-hover-card-email",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-xs",
+                            "tag": "span",
+                            "text": "{{ dataItem.sender }}"
+                           }
+                          }
+                         ],
+                         "classes": [],
+                         "componentId": "file-cluster-avatar-hover-card-info",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        }
+                       ],
+                       "classes": [],
+                       "componentId": "file-cluster-avatar-hover-card-row",
+                       "componentName": "container",
+                       "originalElement": "div"
+                      },
+                      {
+                       "children": [],
+                       "classes": [
+                        "w-full"
+                       ],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "connectWithUser(dataItem.sender);"
+                        }
+                       },
+                       "componentId": "file-cluster-avatar-hover-card-connect-btn",
+                       "componentName": "Button",
+                       "componentProps": {
+                        "label": "Connect",
+                        "size": "sm",
+                        "theme": "gray",
+                        "variant": "outline"
+                       }
+                      }
+                     ],
+                     "classes": [
+                      "hidden",
+                      "group-hover/option:flex"
+                     ],
+                     "componentId": "file-cluster-avatar-hover-card",
+                     "componentName": "container",
+                     "originalElement": "div"
                     }
                    ],
-                   "classes": [],
+                   "classes": [
+                    "group/option"
+                   ],
                    "componentId": "file-cluster-avatar-slot",
                    "componentName": "container",
                    "originalElement": "div",
@@ -1425,7 +1958,7 @@
                    "baseStyles": {
                     "alignItems": "{{ isMine(dataItem.sender) ? 'flex-end' : 'flex-start' }}",
                     "display": "flex",
-                    "flex": "1",
+                    "flex": "{{ isMine(dataItem.sender) ? '0 1 auto' : '1' }}",
                     "flexDirection": "column",
                     "minWidth": "0px"
                    },
@@ -1436,14 +1969,15 @@
                       "display": "flex",
                       "flexDirection": "row",
                       "gap": "4px",
-                      "marginBottom": "4px"
+                      "marginBottom": "4px",
+                      "position": "relative"
                      },
                      "children": [
                       {
                        "baseStyles": {
                         "color": "var(--ink-gray-6)",
-                        "fontWeight": "500",
-                        "textTransform": "capitalize"
+                        "cursor": "default",
+                        "fontWeight": "500"
                        },
                        "children": [],
                        "classes": [],
@@ -1452,7 +1986,7 @@
                        "componentProps": {
                         "fontSize": "text-sm",
                         "tag": "span",
-                        "text": "{{ (dataItem.sender || '').split('@')[0] }}"
+                        "text": "{{ memberDisplayName(dataItem.sender) }}"
                        }
                       },
                       {
@@ -1472,9 +2006,140 @@
                         "variant": "outline"
                        },
                        "visibilityCondition": "showSenderSideBadge(dataItem)"
+                      },
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-base)",
+                        "border": "1px solid var(--outline-gray-2)",
+                        "borderRadius": "10px",
+                        "boxShadow": "0 4px 16px rgba(0,0,0,0.12)",
+                        "left": "0px",
+                        "marginTop": "6px",
+                        "padding": "12px",
+                        "position": "absolute",
+                        "top": "100%",
+                        "width": "230px",
+                        "zIndex": "20"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "gap": "10px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "flexShrink": "0",
+                            "height": "44px",
+                            "width": "44px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentId": "file-cluster-sender-hover-card-avatar",
+                           "componentName": "Avatar",
+                           "componentProps": {
+                            "image": "{{ memberImage(dataItem.sender) }}",
+                            "label": "{{ memberDisplayName(dataItem.sender) }}",
+                            "shape": "circle",
+                            "size": "2xl",
+                            "theme": "{{ avatarTheme(dataItem.sender) }}"
+                           }
+                          },
+                          {
+                           "baseStyles": {
+                            "display": "flex",
+                            "flexDirection": "column",
+                            "gap": "2px",
+                            "minWidth": "0px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-8)",
+                              "fontWeight": "600",
+                              "overflow": "hidden",
+                              "textOverflow": "ellipsis",
+                              "whiteSpace": "nowrap"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentId": "file-cluster-sender-hover-card-name",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-sm",
+                              "tag": "span",
+                              "text": "{{ memberDisplayName(dataItem.sender) }}"
+                             }
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-5)",
+                              "overflow": "hidden",
+                              "textOverflow": "ellipsis",
+                              "whiteSpace": "nowrap"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentId": "file-cluster-sender-hover-card-email",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-xs",
+                              "tag": "span",
+                              "text": "{{ dataItem.sender }}"
+                             }
+                            }
+                           ],
+                           "classes": [],
+                           "componentId": "file-cluster-sender-hover-card-info",
+                           "componentName": "container",
+                           "originalElement": "div"
+                          }
+                         ],
+                         "classes": [],
+                         "componentId": "file-cluster-sender-hover-card-row",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "marginTop": "10px"
+                         },
+                         "children": [],
+                         "classes": [
+                          "w-full"
+                         ],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "connectWithUser(dataItem.sender);"
+                          }
+                         },
+                         "componentId": "file-cluster-sender-hover-card-connect-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "label": "Connect",
+                          "size": "sm",
+                          "theme": "gray",
+                          "variant": "outline"
+                         }
+                        }
+                       ],
+                       "classes": [
+                        "hidden",
+                        "group-hover/item:block"
+                       ],
+                       "componentId": "file-cluster-sender-hover-card",
+                       "componentName": "container",
+                       "originalElement": "div"
                       }
                      ],
-                     "classes": [],
+                     "classes": [
+                      "group/item"
+                     ],
                      "componentId": "file-cluster-header",
                      "componentName": "container",
                      "originalElement": "div",
@@ -1495,7 +2160,7 @@
                         "flexWrap": "{{ isPanelOpen() ? 'nowrap' : 'wrap' }}",
                         "gap": "6px",
                         "maxWidth": "446px",
-                        "width": "fit-content"
+                        "width": "{{ isPanelOpen() ? 'fit-content' : clusterRowWidth(dataItem) }}"
                        },
                        "children": [
                         {
@@ -1728,7 +2393,7 @@
                         "flexWrap": "{{ isPanelOpen() ? 'nowrap' : 'wrap' }}",
                         "gap": "6px",
                         "maxWidth": "446px",
-                        "width": "fit-content"
+                        "width": "{{ isPanelOpen() ? 'fit-content' : clusterRowWidth(dataItem) }}"
                        },
                        "children": [
                         {
@@ -2222,13 +2887,13 @@
           {
            "baseStyles": {
             "alignItems": "center",
-            "backgroundColor": "var(--surface-amber-1)",
-            "borderBottom": "1px solid var(--outline-amber-2)",
-            "color": "var(--ink-amber-7)",
+            "backgroundColor": "var(--surface-gray-1)",
+            "borderBottom": "1px solid var(--outline-gray-2)",
+            "color": "var(--ink-gray-7)",
             "display": "flex",
             "flexDirection": "row",
             "gap": "6px",
-            "padding": "6px 14px"
+            "padding": "6px 10px 6px 14px"
            },
            "children": [
             {
@@ -2238,30 +2903,53 @@
               "width": "13px"
              },
              "children": [],
+             "classes": [
+              "lucide-pencil"
+             ],
+             "componentId": "editing-hint-icon",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "flex": "1"
+             },
+             "children": [],
              "classes": [],
-             "componentId": "private-hint-icon",
-             "componentName": "FeatherIcon",
+             "componentId": "editing-hint-text",
+             "componentName": "TextBlock",
              "componentProps": {
-              "name": "lock"
+              "fontSize": "text-xs",
+              "tag": "span",
+              "text": "Editing message"
              }
             },
             {
              "children": [],
              "classes": [],
-             "componentId": "private-hint-text",
-             "componentName": "TextBlock",
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "cancelEditMessage();"
+              }
+             },
+             "componentId": "editing-hint-cancel-btn",
+             "componentName": "Button",
              "componentProps": {
-              "fontSize": "text-xs",
-              "tag": "span",
-              "text": "Private \u2014 @mention who should see this. Only you and the people you mention will see it."
+              "icon": "lucide-x",
+              "size": "sm",
+              "theme": "gray",
+              "tooltip": "Cancel editing",
+              "variant": "ghost"
              }
             }
            ],
            "classes": [],
-           "componentId": "private-mode-hint",
+           "componentId": "editing-message-hint",
            "componentName": "container",
            "originalElement": "div",
-           "visibilityCondition": "privateMode"
+           "visibilityCondition": "!!messageToEdit"
           },
           {
            "baseStyles": {
@@ -2277,7 +2965,13 @@
              "children": [
               {
                "baseStyles": {
-                "flex": "1"
+                "flex": "1",
+                "lineHeight": "1.4",
+                "maxHeight": "280px",
+                "overflowY": "auto",
+                "resize": "none",
+                "scrollbarColor": "var(--ink-gray-2) transparent",
+                "scrollbarWidth": "thin"
                },
                "children": [],
                "classes": [],
@@ -2299,13 +2993,14 @@
                 }
                },
                "componentId": "message-input",
-               "componentName": "TextInput",
+               "componentName": "Textarea",
                "componentProps": {
                 "modelValue": {
                  "$type": "variable",
                  "name": "draftMessage"
                 },
                 "placeholder": "Type a message...",
+                "rows": 1,
                 "variant": "ghost"
                }
               }
@@ -2375,28 +3070,6 @@
                   "tooltip": "Message templates",
                   "variant": "ghost"
                  }
-                },
-                {
-                 "baseStyles": {
-                  "marginLeft": "5px"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "privateMode.value = !privateMode.value;"
-                  }
-                 },
-                 "componentId": "private-toggle-btn",
-                 "componentName": "Button",
-                 "componentProps": {
-                  "icon": "{{ privateMode ? 'lucide-lock' : 'lucide-lock-open' }}",
-                  "theme": "{{ privateMode ? 'amber' : 'gray' }}",
-                  "tooltip": "{{ privateMode ? 'Private message \u2014 click to send to everyone' : 'Click to send privately to whoever you @mention' }}",
-                  "variant": "{{ privateMode ? 'subtle' : 'ghost' }}"
-                 }
                 }
                ],
                "classes": [],
@@ -2421,8 +3094,8 @@
                "componentName": "Button",
                "componentProps": {
                 "disabled": "{{ (!draftMessage && !draftAttachments.length) || uploadingFile }}",
-                "iconLeft": "lucide-send",
-                "label": "Send",
+                "iconLeft": "{{ messageToEdit ? 'lucide-check' : 'lucide-send' }}",
+                "label": "{{ messageToEdit ? 'Save' : 'Send' }}",
                 "theme": "gray",
                 "variant": "solid"
                }
@@ -2562,90 +3235,263 @@
           "left": "16px",
           "marginBottom": "8px",
           "maxHeight": "280px",
-          "overflowY": "auto",
           "padding": "6px",
           "position": "absolute",
-          "scrollbarColor": "var(--ink-gray-2) transparent",
-          "scrollbarWidth": "thin",
           "width": "300px",
           "zIndex": "10"
          },
          "children": [
           {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "flexShrink": "0",
+            "gap": "6px",
+            "marginBottom": "6px"
+           },
            "children": [
             {
              "baseStyles": {
-              "borderRadius": "6px",
-              "boxSizing": "border-box",
-              "cursor": "pointer",
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "2px",
-              "padding": "6px 8px",
-              "width": "100%"
+              "flex": "1"
              },
-             "children": [
-              {
-               "baseStyles": {
-                "fontWeight": "500",
-                "overflow": "hidden",
-                "textOverflow": "ellipsis",
-                "whiteSpace": "nowrap"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "inline-template-title",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-sm",
-                "tag": "span",
-                "text": "{{ dataItem.title }}"
-               }
+             "children": [],
+             "classes": [],
+             "componentId": "inline-templates-search",
+             "componentName": "TextInput",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "templateSearchQuery"
               },
-              {
-               "baseStyles": {
-                "WebkitBoxOrient": "vertical",
-                "WebkitLineClamp": "2",
-                "color": "var(--ink-gray-5)",
-                "display": "-webkit-box",
-                "overflow": "hidden"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "inline-template-content",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "span",
-                "text": "{{ dataItem.content }}"
-               }
-              }
-             ],
-             "classes": [
-              "hover:bg-surface-gray-2"
-             ],
+              "placeholder": "Search templates...",
+              "size": "sm",
+              "variant": "subtle"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
              "componentEvents": {
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "insertTemplate(dataItem);"
+               "script": "openCreateTemplateForm();"
               }
              },
-             "componentId": "inline-template-item",
+             "componentId": "inline-templates-create-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "icon": "lucide-plus",
+              "size": "sm",
+              "theme": "gray",
+              "tooltip": "New template",
+              "variant": "outline"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "inline-templates-toolbar",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "backgroundColor": "var(--surface-gray-1)",
+            "border": "1px solid var(--outline-gray-2)",
+            "borderRadius": "8px",
+            "display": "flex",
+            "flexDirection": "column",
+            "flexShrink": "0",
+            "gap": "6px",
+            "marginBottom": "6px",
+            "padding": "8px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "new-template-title-input",
+             "componentName": "TextInput",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "newTemplateTitle"
+              },
+              "placeholder": "Template name",
+              "size": "sm",
+              "variant": "outline"
+             }
+            },
+            {
+             "baseStyles": {
+              "resize": "none"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "new-template-content-input",
+             "componentName": "Textarea",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "newTemplateContent"
+              },
+              "placeholder": "Message text",
+              "rows": 2,
+              "size": "sm",
+              "variant": "outline"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "row",
+              "gap": "6px",
+              "justifyContent": "flex-end"
+             },
+             "children": [
+              {
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "closeCreateTemplateForm();"
+                }
+               },
+               "componentId": "new-template-cancel-btn",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "Cancel",
+                "size": "sm",
+                "theme": "gray",
+                "variant": "ghost"
+               }
+              },
+              {
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "saveNewTemplate();"
+                }
+               },
+               "componentId": "new-template-save-btn",
+               "componentName": "Button",
+               "componentProps": {
+                "disabled": "{{ !newTemplateTitle.trim() || !newTemplateContent.trim() }}",
+                "label": "Save",
+                "loading": "{{ creatingTemplate }}",
+                "size": "sm",
+                "theme": "gray",
+                "variant": "solid"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "new-template-actions",
              "componentName": "container",
              "originalElement": "div"
             }
            ],
-           "classes": [
-            "!gap-1"
+           "classes": [],
+           "componentId": "new-template-form",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "showCreateTemplateForm"
+          },
+          {
+           "baseStyles": {
+            "flex": "1",
+            "minHeight": "0px",
+            "overflowY": "auto",
+            "scrollbarColor": "var(--ink-gray-2) transparent",
+            "scrollbarWidth": "thin"
+           },
+           "children": [
+            {
+             "children": [
+              {
+               "baseStyles": {
+                "borderRadius": "6px",
+                "boxSizing": "border-box",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "2px",
+                "padding": "6px 8px",
+                "width": "100%"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "fontWeight": "500",
+                  "overflow": "hidden",
+                  "textOverflow": "ellipsis",
+                  "whiteSpace": "nowrap"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "inline-template-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "{{ dataItem.title }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "WebkitBoxOrient": "vertical",
+                  "WebkitLineClamp": "2",
+                  "color": "var(--ink-gray-5)",
+                  "display": "-webkit-box",
+                  "overflow": "hidden"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "inline-template-content",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-xs",
+                  "tag": "span",
+                  "text": "{{ dataItem.content }}"
+                 }
+                }
+               ],
+               "classes": [
+                "hover:bg-surface-gray-2"
+               ],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "insertTemplate(dataItem);"
+                }
+               },
+               "componentId": "inline-template-item",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [
+              "!gap-1"
+             ],
+             "componentId": "inline-templates-repeater",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ filteredMessageTemplates() }}",
+              "dataKey": "name",
+              "emptyStateMessage": "No templates found"
+             }
+            }
            ],
-           "componentId": "inline-templates-repeater",
-           "componentName": "Repeater",
-           "componentProps": {
-            "data": "{{ myMessageTemplates() }}",
-            "dataKey": "name",
-            "emptyStateMessage": "No templates yet"
-           }
+           "classes": [],
+           "componentId": "inline-templates-list",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],
@@ -2768,6 +3614,7 @@
               "alignItems": "center",
               "border": "1px solid var(--outline-gray-2)",
               "borderRadius": "8px",
+              "cursor": "pointer",
               "display": "flex",
               "flexDirection": "row",
               "gap": "10px",
@@ -2777,13 +3624,6 @@
               {
                "children": [],
                "classes": [],
-               "componentEvents": {
-                "change": {
-                 "action": "Run Script",
-                 "event": "change",
-                 "script": "toggleClusterFileForDeletion(dataItem);"
-                }
-               },
                "componentId": "delete-cluster-file-checkbox",
                "componentName": "Checkbox",
                "componentProps": {
@@ -2869,6 +3709,13 @@
               }
              ],
              "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "toggleClusterFileForDeletion(dataItem);"
+              }
+             },
              "componentId": "delete-cluster-file-row",
              "componentName": "container",
              "originalElement": "div"
@@ -3119,6 +3966,746 @@
       },
       "size": "sm",
       "title": "Delete message?"
+     }
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "row",
+        "height": "min(620px, 80vh)",
+        "position": "relative"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "backgroundColor": "var(--surface-sidebar)",
+          "borderRight": "1px solid var(--outline-gray-2)",
+          "display": "flex",
+          "flexDirection": "column",
+          "flexShrink": "0",
+          "gap": "2px",
+          "padding": "8px",
+          "width": "220px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "backgroundColor": "var(--surface-sidebar)",
+            "color": "var(--ink-gray-5)",
+            "cursor": "default",
+            "display": "flex",
+            "fontWeight": "500",
+            "gap": "6px",
+            "height": "30px",
+            "margin": "3px 0",
+            "padding": "7px 8px",
+            "position": "sticky",
+            "top": "0",
+            "zIndex": "10"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "settings-nav-group-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-xs",
+            "tag": "span",
+            "text": "Settings"
+           }
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "backgroundColor": "{{ settingsSection === 'profile' ? 'var(--surface-elevation-3)' : 'transparent' }}",
+            "borderRadius": "6px",
+            "boxShadow": "{{ settingsSection === 'profile' ? '0 1px 2px 0 rgb(0 0 0 / 0.05)' : 'none' }}",
+            "cursor": "pointer",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "height": "28px",
+            "padding": "0 8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "flexShrink": "0",
+              "height": "15px",
+              "width": "15px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "settings-nav-profile-icon",
+             "componentName": "FeatherIcon",
+             "componentProps": {
+              "name": "user"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)"
+             },
+             "children": [],
+             "classes": [
+              "truncate"
+             ],
+             "componentId": "settings-nav-profile-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-base",
+              "tag": "span",
+              "text": "Profile"
+             }
+            }
+           ],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "selectSettingsSection('profile');"
+            }
+           },
+           "componentId": "settings-nav-profile",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "backgroundColor": "{{ settingsSection === 'users' ? 'var(--surface-elevation-3)' : 'transparent' }}",
+            "borderRadius": "6px",
+            "boxShadow": "{{ settingsSection === 'users' ? '0 1px 2px 0 rgb(0 0 0 / 0.05)' : 'none' }}",
+            "cursor": "pointer",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "height": "28px",
+            "padding": "0 8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "flexShrink": "0",
+              "height": "15px",
+              "width": "15px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "settings-nav-users-icon",
+             "componentName": "FeatherIcon",
+             "componentProps": {
+              "name": "users"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)"
+             },
+             "children": [],
+             "classes": [
+              "truncate"
+             ],
+             "componentId": "settings-nav-users-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-base",
+              "tag": "span",
+              "text": "Users"
+             }
+            }
+           ],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "selectSettingsSection('users');"
+            }
+           },
+           "componentId": "settings-nav-users",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "settings-left-nav",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1",
+          "flexDirection": "column",
+          "minHeight": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minHeight": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "flex-start",
+              "display": "flex",
+              "flexShrink": "0",
+              "gap": "16px",
+              "justifyContent": "space-between",
+              "padding": "40px 40px 0"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "4px",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "settings-profile-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-lg",
+                  "tag": "h2",
+                  "text": "Profile"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "settings-profile-description",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "p",
+                  "text": "Manage your profile"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "settings-profile-heading",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "display": "flex",
+                "flexShrink": "0",
+                "gap": "8px"
+               },
+               "children": [
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "saveMyProfile();"
+                  }
+                 },
+                 "componentId": "settings-profile-save-btn",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "label": "Save",
+                  "loading": "{{ savingProfile }}",
+                  "loadingText": "Saving...",
+                  "theme": "gray",
+                  "variant": "solid"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "settings-profile-actions",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "settings-profile-header",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "flex": "1",
+              "minHeight": "0px",
+              "overflowY": "auto",
+              "padding": "20px 40px 40px",
+              "scrollbarColor": "var(--outline-gray-3) transparent",
+              "scrollbarWidth": "thin"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "var(--surface-gray-1)",
+                "borderRadius": "8px",
+                "display": "flex",
+                "justifyContent": "center",
+                "marginBottom": "20px",
+                "padding": "20px 0"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "cursor": "pointer",
+                  "height": "88px",
+                  "position": "relative",
+                  "width": "88px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "height": "88px",
+                    "width": "88px"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "settings-avatar",
+                   "componentName": "Avatar",
+                   "componentProps": {
+                    "image": "{{ myProfile.data ? myProfile.data.user_image : '' }}",
+                    "label": "{{ myProfile.data ? myProfile.data.full_name : '' }}",
+                    "shape": "circle",
+                    "size": "3xl"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "backgroundColor": "var(--black-overlay-100)",
+                    "borderRadius": "50%",
+                    "display": "flex",
+                    "height": "88px",
+                    "justifyContent": "center",
+                    "left": "0",
+                    "position": "absolute",
+                    "top": "0",
+                    "width": "88px"
+                   },
+                   "children": [
+                    {
+                     "children": [],
+                     "classes": [],
+                     "componentId": "settings-avatar-spinner",
+                     "componentName": "Spinner",
+                     "componentProps": {
+                      "size": "md",
+                      "theme": "gray"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "settings-avatar-overlay",
+                   "componentName": "container",
+                   "originalElement": "div",
+                   "visibilityCondition": "uploadingProfileImage"
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "openProfileImagePicker();"
+                  }
+                 },
+                 "componentId": "settings-avatar-wrap",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentId": "settings-photo-card",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "marginBottom": "14px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "settings-name-input",
+               "componentName": "TextInput",
+               "componentProps": {
+                "label": "Full name",
+                "modelValue": {
+                 "$type": "variable",
+                 "name": "editFullName"
+                },
+                "placeholder": "Your name",
+                "size": "md",
+                "variant": "outline"
+               }
+              },
+              {
+               "baseStyles": {
+                "marginBottom": "14px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "settings-email-input",
+               "componentName": "TextInput",
+               "componentProps": {
+                "disabled": true,
+                "label": "Email",
+                "modelValue": "{{ myProfile.data ? myProfile.data.email : '' }}",
+                "size": "md",
+                "type": "email",
+                "variant": "outline"
+               }
+              },
+              {
+               "baseStyles": {
+                "marginBottom": "14px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "settings-role-input",
+               "componentName": "TextInput",
+               "componentProps": {
+                "label": "Role",
+                "modelValue": {
+                 "$type": "variable",
+                 "name": "editRole"
+                },
+                "placeholder": "e.g. Sales, Support",
+                "size": "md",
+                "variant": "outline"
+               }
+              },
+              {
+               "baseStyles": {
+                "marginBottom": "0px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "settings-phone-input",
+               "componentName": "TextInput",
+               "componentProps": {
+                "label": "Phone number",
+                "modelValue": {
+                 "$type": "variable",
+                 "name": "editPhone"
+                },
+                "placeholder": "Your phone number",
+                "size": "md",
+                "type": "tel",
+                "variant": "outline"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "settings-body",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "settings-profile-section",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "settingsSection === 'profile'"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minHeight": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "flex-start",
+              "display": "flex",
+              "flexShrink": "0",
+              "gap": "16px",
+              "justifyContent": "space-between",
+              "padding": "40px 40px 0"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "4px",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "settings-users-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-lg",
+                  "tag": "h2",
+                  "text": "Users"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "settings-users-description",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "p",
+                  "text": "People at your company"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "settings-users-heading",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "settings-users-header",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "flex": "1",
+              "minHeight": "0px",
+              "overflowY": "auto",
+              "padding": "20px 40px 40px",
+              "scrollbarColor": "var(--outline-gray-3) transparent",
+              "scrollbarWidth": "thin"
+             },
+             "children": [
+              {
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderBottom": "1px solid var(--outline-gray-1)",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "gap": "10px",
+                  "padding": "8px 0"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "flexShrink": "0",
+                    "fontSize": "16px",
+                    "fontWeight": "500",
+                    "height": "36px",
+                    "width": "36px"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "settings-team-row-avatar",
+                   "componentName": "Avatar",
+                   "componentProps": {
+                    "image": "{{ dataItem.user_image }}",
+                    "label": "{{ dataItem.full_name || dataItem.user }}",
+                    "shape": "circle",
+                    "size": "xl"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "display": "flex",
+                    "flex": "1",
+                    "flexDirection": "column",
+                    "minWidth": "0px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-9)",
+                      "fontWeight": "500",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "settings-team-row-name",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ dataItem.full_name || dataItem.user }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "settings-team-row-email",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-xs",
+                      "tag": "span",
+                      "text": "{{ dataItem.user }}"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "settings-team-row-info",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "children": [],
+                   "classes": [],
+                   "componentId": "settings-team-row-admin-badge",
+                   "componentName": "Badge",
+                   "componentProps": {
+                    "label": "Admin",
+                    "size": "sm",
+                    "theme": "gray",
+                    "variant": "subtle"
+                   },
+                   "visibilityCondition": "dataItem.is_admin"
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "settings-team-row",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentId": "settings-team-repeater",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ myTeam.data }}",
+                "dataKey": "user"
+               }
+              },
+              {
+               "children": [],
+               "classes": [],
+               "componentId": "settings-team-empty",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "p",
+                "text": "No team members yet."
+               },
+               "visibilityCondition": "myTeam.data && !myTeam.data.length"
+              }
+             ],
+             "classes": [],
+             "componentId": "settings-users-body",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "settings-users-section",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "settingsSection === 'users'"
+          }
+         ],
+         "classes": [],
+         "componentId": "settings-right-pane",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "backgroundColor": "transparent",
+          "borderRadius": "6px",
+          "cursor": "pointer",
+          "display": "flex",
+          "height": "28px",
+          "justifyContent": "center",
+          "position": "absolute",
+          "right": "16px",
+          "top": "16px",
+          "width": "28px",
+          "zIndex": "20"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "height": "16px",
+            "width": "16px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "settings-close-icon",
+           "componentName": "FeatherIcon",
+           "componentProps": {
+            "name": "x"
+           }
+          }
+         ],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "showSettingsDialog.value = false;"
+          }
+         },
+         "componentId": "settings-close-btn",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "settings-dialog-body",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "settings-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "bare": true,
+      "modelValue": {
+       "$type": "variable",
+       "name": "showSettingsDialog"
+      },
+      "size": "4xl"
      }
     },
     {
@@ -4310,27 +5897,22 @@
             {
              "children": [],
              "classes": [],
-             "componentId": "media-view-toggle",
-             "componentName": "TabButtons",
-             "componentProps": {
-              "modelValue": {
-               "$type": "variable",
-               "name": "mediaViewMode"
-              },
-              "options": [
-               {
-                "icon": "lucide-list",
-                "value": "list"
-               },
-               {
-                "icon": "lucide-grid",
-                "value": "grid"
-               }
-              ],
-              "size": "sm",
-              "type": "subtle"
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "toggleMediaSort();"
+              }
              },
-             "visibilityCondition": "mediaTab === 'Files'"
+             "componentId": "media-sort-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "icon": "lucide-arrow-down-up",
+              "size": "sm",
+              "theme": "gray",
+              "tooltip": "Sort",
+              "variant": "outline"
+             }
             }
            ],
            "classes": [],
@@ -4898,13 +6480,45 @@
   {
    "auto": 1,
    "method": "GET",
+   "resource_name": "myProfile",
+   "resource_type": "API Resource",
+   "url": "connect.api.get_my_profile"
+  },
+  {
+   "auto": 1,
+   "method": "GET",
+   "resource_name": "myTeam",
+   "resource_type": "API Resource",
+   "url": "connect.api.get_my_team"
+  },
+  {
+   "auto": 1,
+   "method": "GET",
    "resource_name": "myThreads",
    "resource_type": "API Resource",
    "url": "connect.api.get_my_threads"
   },
   {
+   "auto": 1,
+   "method": "GET",
+   "resource_name": "myDMThreads",
+   "resource_type": "API Resource",
+   "url": "connect.api.get_my_dm_threads"
+  },
+  {
+   "document_type": "Connect DM Message",
+   "fields": "[\"name\",\"dm_thread\",\"sender\",\"message_type\",\"content\",\"attachment\",\"file_name\",\"file_type\",\"file_size\",\"is_edited\",\"creation\"]",
+   "filters": "{\"dm_thread\":[\"=\",\"{{ selectedThread }}\"]}",
+   "limit": 200,
+   "method": "GET",
+   "resource_name": "dmMessages",
+   "resource_type": "Document List",
+   "sort_field": "creation",
+   "sort_order": "ASC"
+  },
+  {
    "document_type": "Connect Message",
-   "fields": "[\"name\",\"thread\",\"sender\",\"message_type\",\"content\",\"attachment\",\"file_name\",\"file_type\",\"file_size\",\"is_private\",\"private_to\",\"is_edited\",\"creation\"]",
+   "fields": "[\"name\", \"thread\", \"sender\", \"message_type\", \"content\", \"attachment\", \"file_name\", \"file_type\", \"file_size\", \"is_edited\", \"creation\"]",
    "filters": "{\"thread\":[\"=\",\"{{ selectedThread }}\"]}",
    "limit": 200,
    "method": "GET",
@@ -4927,6 +6541,12 @@
    "resource_name": "threadAdmins",
    "resource_type": "API Resource",
    "url": "connect.api.get_thread_admins"
+  },
+  {
+   "method": "GET",
+   "resource_name": "memberProfiles",
+   "resource_type": "API Resource",
+   "url": "connect.api.get_thread_member_profiles"
   },
   {
    "auto": 1,

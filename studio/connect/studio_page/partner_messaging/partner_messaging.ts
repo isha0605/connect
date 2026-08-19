@@ -10,23 +10,51 @@ export default function setup(context) {
 	const showMembersDialog = ref(false)
 	const showMediaDialog = ref(false)
 	const showTemplatesDialog = ref(false)
+	// ---- Settings popup (sidebar avatar) ----
+	// Two-pane Settings dialog, mirroring Raven's own profile popup — Profile is self-service
+	// rename (myProfile/myTeam are both auto-fetch resources, see the JSON's resources array),
+	// Users is a read-only roster of the caller's own company (get_my_team).
+	const showSettingsDialog = ref(false)
+	const settingsSection = ref("profile")
+	const editFullName = ref("")
+	const editPhone = ref("")
+	const editRole = ref("")
+	const savingProfile = ref(false)
+	const uploadingProfileImage = ref(false)
 	const showInlineTemplates = ref(false)
 	const mediaTab = ref("Links")
 	const showAddMemberDialog = ref(false)
 	const newMemberEmail = ref("")
 	const newMemberPermission = ref("Write")
 
-	// A private message needs no separate recipient picker: its audience is just whichever
-	// thread members got @mentioned in the draft, resolved (and re-validated server-side —
-	// see send_message) at send time rather than tracked as separate state.
-	const privateMode = ref(false)
+	// DMs live in the SAME sidebar/chat pane as company deal threads (see unifiedThreadList) —
+	// selectedThreadType tracks which kind selectedThread currently refers to, since the two
+	// live in different doctypes/resources (Connect Thread vs Connect DM Thread) under the hood.
+	const selectedThreadType = ref("company")
 
 	// ---- Threads ----
+	// Company deal threads and DM threads share an identical last-message/unread-count shape
+	// (see get_my_threads / get_my_dm_threads on the backend) — merging them into one list and
+	// sorting by activity is what puts them in one inbox together, WhatsApp/Raven-style.
+	function unifiedThreadList() {
+		const company = (context.myThreads.data || []).map((t) => ({ ...t, convType: "company" }))
+		const dms = (context.myDMThreads.data || []).map((t) => ({ ...t, convType: "dm" }))
+		return [...company, ...dms].sort(
+			(a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime(),
+		)
+	}
+
 	function currentThread() {
-		return (context.myThreads.data || []).find((t) => t.name === selectedThread.value) || {}
+		return (
+			unifiedThreadList().find((t) => t.name === selectedThread.value && t.convType === selectedThreadType.value) ||
+			{}
+		)
 	}
 
 	function otherPartyName(thread) {
+		if (thread && thread.convType === "dm") {
+			return capitalizeName(thread.other_user_full_name) || memberDisplayName(thread.other_user)
+		}
 		const amPartner = context.myContext.data && context.myContext.data.partner
 		return amPartner ? thread.customer : thread.partner
 	}
@@ -52,13 +80,21 @@ export default function setup(context) {
 		return d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 	}
 
+	// WhatsApp/Slack-style "Sender: message" preview — the sender label mirrors how a message's
+	// own sender name renders in the chat pane (email local-part, capitalized), so the thread
+	// list and the open thread agree on how someone's name is shown.
 	function threadListPreview(thread) {
-		return (thread && thread.last_message) || "No messages yet"
+		if (!thread || !thread.last_message) return "No messages yet"
+		const me = context.myContext.data && context.myContext.data.user
+		const sender = thread.last_message_sender
+		let label = sender === me ? "You" : (sender || "").split("@")[0]
+		if (label && label !== "You") label = label.charAt(0).toUpperCase() + label.slice(1)
+		return (label ? label + ": " : "") + thread.last_message
 	}
 
 	function threadCreatedLabel() {
 		const t = currentThread()
-		if (!t.creation) return ""
+		if (!t.creation || t.convType === "dm") return ""
 		return "Group created on " + formatOrdinalDate(new Date(t.creation))
 	}
 
@@ -70,26 +106,107 @@ export default function setup(context) {
 		return context.myTemplates.data || []
 	}
 
-	function selectThread(name) {
+	// ---- Template search + create ----
+	const templateSearchQuery = ref("")
+	const showCreateTemplateForm = ref(false)
+	const newTemplateTitle = ref("")
+	const newTemplateContent = ref("")
+	const creatingTemplate = ref(false)
+
+	function filteredMessageTemplates() {
+		const query = templateSearchQuery.value.trim().toLowerCase()
+		const templates = myMessageTemplates()
+		if (!query) return templates
+		return templates.filter(
+			(t) => (t.title || "").toLowerCase().includes(query) || (t.content || "").toLowerCase().includes(query),
+		)
+	}
+
+	function openCreateTemplateForm() {
+		showCreateTemplateForm.value = true
+		newTemplateTitle.value = ""
+		newTemplateContent.value = ""
+	}
+
+	function closeCreateTemplateForm() {
+		showCreateTemplateForm.value = false
+		newTemplateTitle.value = ""
+		newTemplateContent.value = ""
+	}
+
+	async function saveNewTemplate() {
+		const title = newTemplateTitle.value.trim()
+		const content = newTemplateContent.value.trim()
+		if (!title || !content || creatingTemplate.value) return
+		creatingTemplate.value = true
+		try {
+			await call("connect.api.create_message_template", { title, content })
+			context.myTemplates.reload()
+			closeCreateTemplateForm()
+			toast({ title: "Template created", icon: "check", iconClasses: "text-green-600" })
+		} catch (e) {
+			toast({
+				title: "Could not create template",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			creatingTemplate.value = false
+		}
+	}
+
+	// Accepts either a unified-list item ({name, convType, ...}) or a bare thread name (still
+	// supported for the odd caller that only has a company-thread id on hand) — always resolves
+	// to a definite convType so every step below knows which doctype/resource it's dealing with.
+	function selectThread(item) {
+		const name = typeof item === "string" ? item : item.name
+		const convType = typeof item === "string" ? "company" : item.convType || "company"
 		selectedThread.value = name
+		selectedThreadType.value = convType
+		showMembersDialog.value = false
+		showMediaDialog.value = false
+		showTemplatesDialog.value = false
+		pinnedMessage.value = null
+
+		if (convType === "dm") {
+			const other = typeof item === "object" ? item : null
+			// No thread-member roster for a DM — seed memberProfiles by hand from what the
+			// inbox list already carries, so sender hover cards resolve a name/photo same as
+			// they do for a company thread.
+			context.memberProfiles.data = other
+				? [{ name: other.other_user, full_name: other.other_user_full_name, user_image: other.other_user_image }]
+				: []
+			context.dmMessages.filters = { dm_thread: name }
+			context.dmMessages.reload()
+			call("connect.api.mark_dm_thread_read", { thread: name })
+				.then(() => context.myDMThreads.reload())
+				.catch(() => {})
+			fetchPinnedMessage()
+			return
+		}
+
 		context.messages.filters = { thread: name }
 		context.messages.reload()
 		context.threadMembers.filters = { thread: name }
 		context.threadMembers.reload()
 		context.threadAdmins.params = { thread: name }
 		context.threadAdmins.reload()
+		context.memberProfiles.params = { thread: name }
+		context.memberProfiles.reload()
 		call("connect.api.mark_thread_read", { thread: name })
 			.then(() => context.myThreads.reload())
 			.catch(() => {})
 		fetchPinnedMessage()
 	}
 
-	// default to the first (most recently active) thread once the list loads
+	// default to the first (most recently active) conversation once either list loads
 	watch(
-		() => context.myThreads?.data,
-		(threads) => {
-			if (selectedThread.value || !threads || !threads.length) return
-			selectThread(threads[0].name)
+		() => [context.myThreads?.data, context.myDMThreads?.data],
+		() => {
+			if (selectedThread.value) return
+			const list = unifiedThreadList()
+			if (list.length) selectThread(list[0])
 		},
 		{ immediate: true },
 	)
@@ -118,6 +235,16 @@ export default function setup(context) {
 	}
 	socket.on("connect_new_message", handleNewMessage)
 	onScopeDispose(() => socket.off("connect_new_message", handleNewMessage))
+
+	// DM inbox/thread updates, mirroring handleNewMessage above.
+	function handleNewDMMessage(payload) {
+		if (selectedThreadType.value === "dm" && payload.dm_thread === selectedThread.value) {
+			context.dmMessages.reload()
+		}
+		context.myDMThreads.reload()
+	}
+	socket.on("connect_new_dm_message", handleNewDMMessage)
+	onScopeDispose(() => socket.off("connect_new_dm_message", handleNewDMMessage))
 
 	// A deleted message's sender already drops it from their own view right after the delete
 	// call resolves (see deleteMessage) — this is purely for everyone else's open tabs.
@@ -150,6 +277,38 @@ export default function setup(context) {
 	}
 	socket.on("connect_thread_pin_changed", handleThreadPinChanged)
 	onScopeDispose(() => socket.off("connect_thread_pin_changed", handleThreadPinChanged))
+
+	// DM counterparts to the three handlers above, mirroring them 1:1.
+	function handleDMMessageDeleted(payload) {
+		if (selectedThreadType.value === "dm" && payload.dm_thread === selectedThread.value) {
+			context.dmMessages.reload()
+		}
+	}
+	socket.on("connect_dm_message_deleted", handleDMMessageDeleted)
+	onScopeDispose(() => socket.off("connect_dm_message_deleted", handleDMMessageDeleted))
+
+	function handleDMMessageEdited(payload) {
+		if (selectedThreadType.value === "dm" && payload.dm_thread === selectedThread.value) {
+			context.dmMessages.reload()
+		}
+	}
+	socket.on("connect_dm_message_edited", handleDMMessageEdited)
+	onScopeDispose(() => socket.off("connect_dm_message_edited", handleDMMessageEdited))
+
+	function handleDMThreadPinChanged(payload) {
+		if (selectedThreadType.value !== "dm" || payload.thread !== selectedThread.value) return
+		pinnedMessage.value = payload.pinned_message
+			? {
+					name: payload.pinned_message,
+					sender: payload.sender,
+					message_type: payload.message_type,
+					content: payload.content,
+					file_name: payload.file_name,
+				}
+			: null
+	}
+	socket.on("connect_dm_thread_pin_changed", handleDMThreadPinChanged)
+	onScopeDispose(() => socket.off("connect_dm_thread_pin_changed", handleDMThreadPinChanged))
 
 	// WhatsApp-style sticky date: an in-flow date divider (e.g. "9th August 2026" sitting
 	// between two days' messages) is always fully visible — it's not floating over anything,
@@ -237,7 +396,7 @@ export default function setup(context) {
 	// leave the pane wherever the other one's re-render happened to land. Watching the data
 	// itself sidesteps the race: it fires once, after whichever fetch actually lands last.
 	watch(
-		() => context.messages.data,
+		() => [context.messages.data, context.dmMessages.data],
 		() => scrollMessagesToBottom(),
 	)
 
@@ -322,15 +481,6 @@ export default function setup(context) {
 		showInlineTemplates.value = false
 	}
 
-	// Every "@word" anywhere in the text (not just a trailing in-progress one, unlike
-	// mentionMatch) that matches a current member's email local-part — this is what turns
-	// @mentions in the draft into the private message's actual recipient list.
-	function extractMentionedMembers(text) {
-		const names = new Set(((text || "").match(/@([^\s@]+)/g) || []).map((m) => m.slice(1).toLowerCase()))
-		if (!names.size) return []
-		return activeMembers().filter((m) => names.has((m.user || "").split("@")[0].toLowerCase()))
-	}
-
 	// Neutralizes text before it's interpolated into an HTML-component string (which renders
 	// via v-html — nothing about the templating layer escapes it automatically). Needed for
 	// any attacker-influenced text going into markup, e.g. a message-image's alt="{{ ... }}",
@@ -359,6 +509,141 @@ export default function setup(context) {
 			timeText +
 			"</span>"
 		return withMentions + timeSpan
+	}
+
+	// ---- Requirement cards ----
+	// Read-only here — partners receive these (see connect.api.send_message's requirement_data
+	// path on the customer side) but never send or edit one. Mirrors messaging.ts's version.
+	function parseRequirementContent(item) {
+		try {
+			return JSON.parse((item && item.content) || "{}") || {}
+		} catch (e) {
+			return {}
+		}
+	}
+
+	const REQUIREMENT_FIELD_LABELS = [
+		["company_name", "Company"],
+		["country", "Country"],
+		["industry", "Industry"],
+		["looking_for", "Looking for"],
+		["company_size", "Company size"],
+		["current_situation", "Current setup"],
+		["timeline", "Timeline"],
+		["delivery_preference", "Delivery"],
+		["budget", "Budget"],
+		["apps", "Apps"],
+	]
+
+	function requirementFieldRows(req) {
+		return REQUIREMENT_FIELD_LABELS.map(([key, label]) => {
+			let value = req[key]
+			if (key === "apps") value = Array.isArray(value) ? value.join(", ") : value
+			return [label, value]
+		}).filter(([, value]) => value)
+	}
+
+	function requirementCardHtml(item) {
+		const rows = requirementFieldRows(parseRequirementContent(item))
+		const rowsHtml = rows
+			.map(
+				([label, value]) =>
+					'<div style="color: var(--ink-gray-5); white-space: nowrap;">' +
+					escapeHtmlAttr(label) +
+					"</div>" +
+					'<div style="color: var(--ink-gray-9); font-weight: 500;">' +
+					escapeHtmlAttr(String(value)) +
+					"</div>",
+			)
+			.join("")
+		return (
+			'<div style="min-width: 200px;">' +
+			'<div style="display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; margin-bottom: 8px; color: var(--ink-gray-9);">' +
+			"<span>Requirement details</span></div>" +
+			'<div style="display: grid; grid-template-columns: auto 1fr; gap: 5px 14px; font-size: 12.5px; line-height: 1.4;">' +
+			rowsHtml +
+			"</div>" +
+			'<div style="text-align: right; margin-top: 8px; font-size: 9px; color: var(--ink-gray-5);">' +
+			escapeHtmlAttr(formatMessageTime(item)) +
+			"</div>" +
+			"</div>"
+		)
+	}
+
+	// ---- Settings popup ----
+	function openSettings() {
+		settingsSection.value = "profile"
+		const profile = context.myProfile.data
+		editFullName.value = (profile && profile.full_name) || ""
+		editPhone.value = (profile && profile.phone) || ""
+		editRole.value = (profile && profile.role) || ""
+		showSettingsDialog.value = true
+	}
+
+	function selectSettingsSection(section) {
+		settingsSection.value = section
+	}
+
+	async function saveMyProfile() {
+		const fullName = editFullName.value.trim()
+		if (!fullName || savingProfile.value) return
+		savingProfile.value = true
+		try {
+			await call("connect.api.update_my_profile", {
+				full_name: fullName,
+				phone: editPhone.value.trim(),
+				role: editRole.value.trim(),
+			})
+			await context.myProfile.reload()
+			toast({ title: "Profile updated", icon: "check", iconClasses: "text-green-600" })
+		} catch (e) {
+			toast({
+				title: "Could not update profile",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			savingProfile.value = false
+		}
+	}
+
+	// picking a new avatar happens the same way as chat attachments (see openFilePicker) —
+	// a throwaway <input> is the smallest way to reach the browser's native file dialog.
+	function openProfileImagePicker() {
+		if (uploadingProfileImage.value) return
+		const input = document.createElement("input")
+		input.type = "file"
+		input.accept = "image/*"
+		input.style.display = "none"
+		input.addEventListener("change", () => {
+			const file = input.files && input.files[0]
+			if (file) uploadProfileImage(file)
+			input.remove()
+		})
+		document.body.appendChild(input)
+		input.click()
+	}
+
+	function uploadProfileImage(file) {
+		uploadingProfileImage.value = true
+		const { upload } = useFileUpload()
+		upload(file, { upload_endpoint: "/api/method/connect.api.upload_profile_image" })
+			.then(() => {
+				context.myProfile.reload()
+				toast({ title: "Photo updated", icon: "check", iconClasses: "text-green-600" })
+			})
+			.catch((e) => {
+				toast({
+					title: "Could not upload photo",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
+			})
+			.finally(() => {
+				uploadingProfileImage.value = false
+			})
 	}
 
 	function addMember() {
@@ -493,10 +778,18 @@ export default function setup(context) {
 		if (!messageToDelete.value || deletingMessage.value) return
 		deletingMessage.value = true
 		try {
-			await call("connect.api.delete_message", { message: messageToDelete.value.name })
+			const isDM = selectedThreadType.value === "dm"
+			await call(isDM ? "connect.api.delete_dm_message" : "connect.api.delete_message", {
+				message: messageToDelete.value.name,
+			})
 			showDeleteMessageDialog.value = false
 			messageToDelete.value = null
-			context.messages.reload()
+			if (isDM) {
+				context.dmMessages.reload()
+				context.myDMThreads.reload()
+			} else {
+				context.messages.reload()
+			}
 		} catch (e) {
 			toast({
 				title: "Could not delete message",
@@ -510,6 +803,13 @@ export default function setup(context) {
 	}
 
 	// ---- Editing a message ----
+	// Editing happens in the composer itself (matching Telegram/WhatsApp Web) rather than a
+	// popup — messageToEdit gates an "Editing message" strip above the input and repurposes
+	// draftMessage as the edit buffer, so Enter/Send both branch into saveEditedMessage instead
+	// of sendMessage while it's set. showEditMessageDialog/editMessageContent are kept around
+	// (unused) purely because the old Edit dialog's JSON block still references them — leaving
+	// it in place but permanently unreachable, rather than excising it, is the same low-risk
+	// approach that worked the last time this dialog was retired.
 	const showEditMessageDialog = ref(false)
 	const messageToEdit = ref(null)
 	const editMessageContent = ref("")
@@ -518,8 +818,17 @@ export default function setup(context) {
 	function confirmEditMessage(item) {
 		if (!item || item.isFileCluster || item.message_type !== "Text" || !isMine(item.sender)) return
 		messageToEdit.value = item
-		editMessageContent.value = item.content
-		showEditMessageDialog.value = true
+		draftMessage.value = item.content
+		showInlineTemplates.value = false
+		nextTick(() => {
+			const el = document.querySelector('[data-component-id="message-input"]') as HTMLTextAreaElement | null
+			el?.focus()
+		})
+	}
+
+	function cancelEditMessage() {
+		messageToEdit.value = null
+		draftMessage.value = ""
 	}
 
 	function closeEditMessageDialog() {
@@ -530,13 +839,19 @@ export default function setup(context) {
 
 	async function saveEditedMessage() {
 		if (!messageToEdit.value || editingMessage.value) return
-		const content = editMessageContent.value.trim()
+		const content = draftMessage.value.trim()
 		if (!content) return
 		editingMessage.value = true
 		try {
-			await call("connect.api.edit_message", { message: messageToEdit.value.name, content })
-			closeEditMessageDialog()
-			context.messages.reload()
+			const isDM = selectedThreadType.value === "dm"
+			await call(isDM ? "connect.api.edit_dm_message" : "connect.api.edit_message", {
+				message: messageToEdit.value.name,
+				content,
+			})
+			messageToEdit.value = null
+			draftMessage.value = ""
+			if (isDM) context.dmMessages.reload()
+			else context.messages.reload()
 		} catch (e) {
 			toast({
 				title: "Could not edit message",
@@ -568,7 +883,9 @@ export default function setup(context) {
 			return
 		}
 		try {
-			pinnedMessage.value = await call("connect.api.get_pinned_message", { thread: selectedThread.value })
+			const method =
+				selectedThreadType.value === "dm" ? "connect.api.get_pinned_dm_message" : "connect.api.get_pinned_message"
+			pinnedMessage.value = await call(method, { thread: selectedThread.value })
 		} catch (e) {
 			pinnedMessage.value = null
 		}
@@ -580,12 +897,15 @@ export default function setup(context) {
 
 	async function togglePinMessage(item) {
 		if (!item || item.isFileCluster) return
+		const isDM = selectedThreadType.value === "dm"
 		try {
 			if (isPinned(item)) {
-				await call("connect.api.unpin_message", { thread: selectedThread.value })
+				await call(isDM ? "connect.api.unpin_dm_message" : "connect.api.unpin_message", {
+					thread: selectedThread.value,
+				})
 				pinnedMessage.value = null
 			} else {
-				await call("connect.api.pin_message", { message: item.name })
+				await call(isDM ? "connect.api.pin_dm_message" : "connect.api.pin_message", { message: item.name })
 				await fetchPinnedMessage()
 			}
 		} catch (e) {
@@ -601,7 +921,10 @@ export default function setup(context) {
 	async function unpinMessage() {
 		if (!selectedThread.value || !pinnedMessage.value) return
 		try {
-			await call("connect.api.unpin_message", { thread: selectedThread.value })
+			const isDM = selectedThreadType.value === "dm"
+			await call(isDM ? "connect.api.unpin_dm_message" : "connect.api.unpin_message", {
+				thread: selectedThread.value,
+			})
 			pinnedMessage.value = null
 		} catch (e) {
 			toast({
@@ -616,10 +939,12 @@ export default function setup(context) {
 	function pinnedMessageLabel() {
 		if (!pinnedMessage.value) return ""
 		const sender = (pinnedMessage.value.sender || "").split("@")[0]
-		const body =
-			pinnedMessage.value.message_type === "File"
-				? "📎 " + (pinnedMessage.value.file_name || "Attachment")
-				: pinnedMessage.value.content
+		let body = pinnedMessage.value.content
+		if (pinnedMessage.value.message_type === "File") {
+			body = "📎 " + (pinnedMessage.value.file_name || "Attachment")
+		} else if (pinnedMessage.value.message_type === "Requirement") {
+			body = "Requirement details"
+		}
 		return sender + ": " + body
 	}
 
@@ -666,12 +991,18 @@ export default function setup(context) {
 		}
 		deletingCluster.value = true
 		try {
+			const isDM = selectedThreadType.value === "dm"
 			for (const name of names) {
-				await call("connect.api.delete_message", { message: name })
+				await call(isDM ? "connect.api.delete_dm_message" : "connect.api.delete_message", { message: name })
 			}
 			showDeleteClusterDialog.value = false
 			clusterToDelete.value = null
-			context.messages.reload()
+			if (isDM) {
+				context.dmMessages.reload()
+				context.myDMThreads.reload()
+			} else {
+				context.messages.reload()
+			}
 		} catch (e) {
 			toast({
 				title: "Could not delete files",
@@ -686,49 +1017,54 @@ export default function setup(context) {
 
 	async function sendMessage() {
 		if (!selectedThread.value || uploadingFile.value) return
+		if (messageToEdit.value) {
+			await saveEditedMessage()
+			return
+		}
+		if (selectedThreadType.value === "dm") {
+			const dmReadyAttachments = draftAttachments.value.filter((a) => a.file_url)
+			const content = draftMessage.value.trim()
+			if (!content && !dmReadyAttachments.length) return
+			const thread = selectedThread.value
+			draftMessage.value = ""
+			draftAttachments.value = []
+			try {
+				if (content) {
+					await call("connect.api.send_dm_message", { thread, content })
+				}
+				for (const a of dmReadyAttachments) {
+					await call("connect.api.send_dm_message", {
+						thread,
+						content: "",
+						file_url: a.file_url,
+						file_name: a.file_name,
+						file_type: a.file_type,
+						file_size: a.file_size,
+					})
+				}
+				context.dmMessages.reload()
+				context.myDMThreads.reload()
+			} catch (e) {
+				toast({
+					title: "Could not send message",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
+			}
+			return
+		}
 		const readyAttachments = draftAttachments.value.filter((a) => a.file_url)
 		const content = draftMessage.value.trim()
 		if (!content && !readyAttachments.length) return
 
-		// Validated (and the draft left untouched) before anything is cleared or sent — a
-		// private toggle with no resolvable @mention shouldn't silently send publicly, or
-		// silently eat what was typed.
-		let recipients = null
-		if (privateMode.value) {
-			if (!content) {
-				toast({
-					title: "Type a message mentioning who should see it",
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
-				return
-			}
-			const me = context.myContext.data && context.myContext.data.user
-			recipients = [...new Set(extractMentionedMembers(content).map((m) => m.user))].filter((u) => u !== me)
-			if (!recipients.length) {
-				toast({
-					title: "Mention at least one person to send privately",
-					text: "e.g. @" + ((me || "").split("@")[0] || "name"),
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
-				return
-			}
-		}
-
 		const thread = selectedThread.value
 		draftMessage.value = ""
 		draftAttachments.value = []
-		privateMode.value = false
 
 		try {
 			if (content) {
-				await call("connect.api.send_message", {
-					thread,
-					content,
-					is_private: !!recipients,
-					recipients,
-				})
+				await call("connect.api.send_message", { thread, content })
 			}
 			for (const a of readyAttachments) {
 				await call("connect.api.send_message", {
@@ -738,8 +1074,6 @@ export default function setup(context) {
 					file_name: a.file_name,
 					file_type: a.file_type,
 					file_size: a.file_size,
-					is_private: !!recipients,
-					recipients,
 				})
 			}
 			context.messages.reload()
@@ -790,7 +1124,10 @@ export default function setup(context) {
 
 		const { upload } = useFileUpload()
 		upload(file, {
-			upload_endpoint: "/api/method/connect.api.upload_chat_attachment",
+			upload_endpoint:
+				selectedThreadType.value === "dm"
+					? "/api/method/connect.api.upload_dm_attachment"
+					: "/api/method/connect.api.upload_chat_attachment",
 			params: { thread: selectedThread.value },
 		})
 			.then((data) => {
@@ -869,6 +1206,36 @@ export default function setup(context) {
 		return !!(item && item.file_type && item.file_type.startsWith("image/"))
 	}
 
+	// A wrapping flex row with no explicit width has no reliable way to shrink to "the width
+	// of its widest wrapped line" across browsers — `fit-content`/`max-content` on a multi-line
+	// flex container can resolve against the wrong reference box depending on the ancestor
+	// chain, which is what kept leaving a stale gap next to small clusters. Computing the exact
+	// pixel width ourselves (mirroring the same greedy left-to-right packing flex-wrap does)
+	// sidesteps that ambiguity entirely — image/file card widths below match the fixed sizes
+	// used in cluster-image-html's max-width and the file-attachment card's width.
+	function clusterRowWidth(dataItem) {
+		const files = (dataItem && dataItem.files) || []
+		if (!files.length) return "0px"
+		const widths = files.map((f) => (isImageFile(f) ? 280 : 220))
+		const gap = 6
+		const maxLineWidth = 446
+		let rows = [[]]
+		let currentWidth = 0
+		for (const w of widths) {
+			const row = rows[rows.length - 1]
+			const addedWidth = row.length ? w + gap : w
+			if (row.length && currentWidth + addedWidth > maxLineWidth) {
+				rows.push([w])
+				currentWidth = w
+			} else {
+				row.push(w)
+				currentWidth += addedWidth
+			}
+		}
+		const widest = Math.max(...rows.map((row) => row.reduce((sum, w, i) => sum + w + (i ? gap : 0), 0)))
+		return Math.min(widest, maxLineWidth) + "px"
+	}
+
 	// window.open(url, "_blank") flashes a new tab open-then-closed for URLs that trigger a
 	// direct download (nothing to display) — an <a download> click saves the file in place,
 	// with no tab, no navigation, no flash.
@@ -928,8 +1295,17 @@ export default function setup(context) {
 	window.addEventListener("keydown", handleFilePreviewKeydown)
 	onScopeDispose(() => window.removeEventListener("keydown", handleFilePreviewKeydown))
 
+	// Shift+Enter falls through to the textarea's own default behavior (insert a newline) —
+	// only a bare Enter sends/saves, matching the composer's old single-line TextInput where
+	// Enter always sent (there was no newline to insert) and Shift made no difference.
 	function sendMessageOnEnter(event) {
-		if (event && event.key === "Enter") {
+		if (!event) return
+		if (event.key === "Escape" && messageToEdit.value) {
+			event.preventDefault()
+			cancelEditMessage()
+			return
+		}
+		if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault()
 			if (isMentioning()) {
 				const matches = filteredMentionMembers()
@@ -941,6 +1317,26 @@ export default function setup(context) {
 			sendMessage()
 		}
 	}
+
+	// The composer grows with the message the same way Slack's does: taller while typing a
+	// multi-line message, capped (see message-input's maxHeight) with a scrollbar past that.
+	// Textarea has no built-in auto-grow, so height is measured and set by hand on every
+	// content change — driven off draftMessage itself (not an `input` listener) so it also
+	// catches non-typing changes: loading a message into the composer to edit it, inserting a
+	// template/mention, or clearing the draft after send.
+	//
+	// Selector targets `[data-component-id="message-input"]` directly, not a `textarea`
+	// descendant of it: Textarea has no label here, so its LabelingWrapper renders no wrapper
+	// element at all (`<slot v-else />`) — the bare `<textarea>` IS the component's single root,
+	// and that's what data-component-id ends up on. A descendant selector silently matches
+	// nothing, which is why resizing did nothing the first time this was wired up.
+	function autoResizeComposer() {
+		const el = document.querySelector('[data-component-id="message-input"]') as HTMLTextAreaElement | null
+		if (!el) return
+		el.style.height = "auto"
+		el.style.height = el.scrollHeight + "px"
+	}
+	watch(draftMessage, () => nextTick(autoResizeComposer))
 
 	function isMine(sender) {
 		return sender === (context.myContext.data && context.myContext.data.user)
@@ -972,15 +1368,24 @@ export default function setup(context) {
 		return senderSide(item) === "Customer" ? "amber" : "violet"
 	}
 
+	// The currently open conversation's flat, chronological message list — Connect Message
+	// (company threads) and Connect DM Message (DMs) are different doctypes/resources, so
+	// every consumer of "the messages" goes through this instead of reading context.messages
+	// directly, the same way currentThread() abstracts over the two thread doctypes.
+	function currentMessages() {
+		return selectedThreadType.value === "dm" ? context.dmMessages.data || [] : context.messages.data || []
+	}
+
 	// messages are grouped into per-day sections (see groupedMessages) so `index` here is local
-	// to the current day's group, not the flat position in context.messages.data — the first
+	// to the current day's group, not the flat position in currentMessages() — the first
 	// message of a day is never grouped, everything after that is looked up by its global
 	// neighbour (safe, since a non-zero local index guarantees the previous message is the same day).
 	function isGrouped(item, index) {
 		if (index <= 0) return false
-		const idx = (context.messages.data || []).findIndex((m) => m.name === item.name)
+		const messages = currentMessages()
+		const idx = messages.findIndex((m) => m.name === item.name)
 		if (idx <= 0) return false
-		const prev = context.messages.data[idx - 1]
+		const prev = messages[idx - 1]
 		if (!prev || prev.sender !== item.sender || prev.message_type === "System") return false
 		const gapMs = new Date(item.creation).getTime() - new Date(prev.creation).getTime()
 		return gapMs <= 2 * 60 * 1000
@@ -1024,7 +1429,7 @@ export default function setup(context) {
 	const groupedMessages = computed(() => {
 		const groups = []
 		let lastKey = null
-		for (const item of context.messages.data || []) {
+		for (const item of currentMessages()) {
 			const key = new Date(item.creation).toDateString()
 			if (key !== lastKey) {
 				groups.push({ dateKey: key, dateLabel: formatDateDivider(item), items: [] })
@@ -1075,6 +1480,61 @@ export default function setup(context) {
 		return AVATAR_THEMES[avatarHash(key)]
 	}
 
+	// ---- Sender hover card ----
+	// memberProfiles is fetched once per selectThread() (see there) rather than per-message,
+	// covering everyone who's ever been a member of the thread — including removed members, so
+	// their older messages can still resolve a name/photo on hover.
+	function memberProfile(email) {
+		const profiles = context.memberProfiles.data || []
+		return profiles.find((p) => p.name === email) || null
+	}
+
+	function capitalizeName(name) {
+		return name ? name.charAt(0).toUpperCase() + name.slice(1) : name
+	}
+
+	function memberDisplayName(email) {
+		const profile = memberProfile(email)
+		if (profile && profile.full_name) return capitalizeName(profile.full_name)
+		const local = (email || "").split("@")[0]
+		return local ? capitalizeName(local) : email || ""
+	}
+
+	function memberImage(email) {
+		const profile = memberProfile(email)
+		return (profile && profile.user_image) || ""
+	}
+
+	// Triggered from the "Connect" button on a sender's hover card — starts (or resumes) a
+	// 1:1 with them and selects it into the SAME sidebar/chat pane as every other conversation
+	// (no separate inbox or popup — see unifiedThreadList).
+	async function connectWithUser(email) {
+		if (!email || email === (context.myContext.data && context.myContext.data.user)) return
+		try {
+			const thread = await call("connect.api.start_dm", { user: email })
+			await context.myDMThreads.reload()
+			const found = (context.myDMThreads.data || []).find((t) => t.name === thread)
+			selectThread(
+				found
+					? { ...found, convType: "dm" }
+					: {
+							name: thread,
+							convType: "dm",
+							other_user: email,
+							other_user_full_name: memberDisplayName(email),
+							other_user_image: memberImage(email),
+						},
+			)
+		} catch (e) {
+			toast({
+				title: "Could not start conversation",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		}
+	}
+
 	// Mirrors the media search box's focus treatment (see media-search-box's CSS) on the
 	// composer: the pill is a container wrapping a ghost TextInput, so there's no single
 	// element a :focus-within rule could live on — the inner input reports focus up instead.
@@ -1083,6 +1543,11 @@ export default function setup(context) {
 	// ---- Media ----
 	const mediaSearchQuery = ref("")
 	const mediaViewMode = ref("list")
+	const mediaSortAscending = ref(false)
+
+	function toggleMediaSort() {
+		mediaSortAscending.value = !mediaSortAscending.value
+	}
 
 	// The Files/Links search box is a raw HTML block (see media-search-box in the JSON) rather
 	// than frappe-ui's TextInput — that component never exposes its actual <input> to outside
@@ -1113,7 +1578,7 @@ export default function setup(context) {
 
 	function threadLinks() {
 		const query = mediaSearchQuery.value.trim().toLowerCase()
-		return (context.messages.data || [])
+		return currentMessages()
 			.flatMap((m) =>
 				((m.content || "").match(/(https?:\/\/[^\s]+|www\.[^\s]+)/gi) || []).map((url) => ({ url, message: m })),
 			)
@@ -1133,6 +1598,10 @@ export default function setup(context) {
 				(item) =>
 					!query || item.url.toLowerCase().includes(query) || item.title.toLowerCase().includes(query),
 			)
+			.sort((a, b) => {
+				const diff = new Date(b.creation).getTime() - new Date(a.creation).getTime()
+				return mediaSortAscending.value ? -diff : diff
+			})
 	}
 
 	function openLink(item) {
@@ -1153,9 +1622,12 @@ export default function setup(context) {
 
 	function threadFiles() {
 		const query = mediaSearchQuery.value.trim().toLowerCase()
-		return (context.messages.data || []).filter(
-			(m) => m.message_type === "File" && (!query || (m.file_name || "").toLowerCase().includes(query)),
-		)
+		return currentMessages()
+			.filter((m) => m.message_type === "File" && (!query || (m.file_name || "").toLowerCase().includes(query)))
+			.sort((a, b) => {
+				const diff = new Date(b.creation).getTime() - new Date(a.creation).getTime()
+				return mediaSortAscending.value ? -diff : diff
+			})
 	}
 
 	function fileExtensionLabel(item) {
@@ -1169,6 +1641,18 @@ export default function setup(context) {
 		draftMessage,
 		uploadingFile,
 		draftAttachments,
+		requirementCardHtml,
+		showSettingsDialog,
+		settingsSection,
+		editFullName,
+		editPhone,
+		editRole,
+		savingProfile,
+		uploadingProfileImage,
+		openSettings,
+		selectSettingsSection,
+		saveMyProfile,
+		openProfileImagePicker,
 		openFilePicker,
 		removeAttachment,
 		formatFileSize,
@@ -1176,6 +1660,7 @@ export default function setup(context) {
 		attachmentIconBg,
 		attachmentIconColor,
 		isImageFile,
+		clusterRowWidth,
 		downloadFile,
 		showFilePreviewDialog,
 		previewFile,
@@ -1183,12 +1668,23 @@ export default function setup(context) {
 		composerFocused,
 		mediaSearchQuery,
 		mediaViewMode,
+		mediaSortAscending,
+		toggleMediaSort,
 		fileExtensionLabel,
 		showMembersDialog,
 		showMediaDialog,
 		showTemplatesDialog,
 		showInlineTemplates,
 		myMessageTemplates,
+		templateSearchQuery,
+		filteredMessageTemplates,
+		showCreateTemplateForm,
+		newTemplateTitle,
+		newTemplateContent,
+		creatingTemplate,
+		openCreateTemplateForm,
+		closeCreateTemplateForm,
+		saveNewTemplate,
 		mediaTab,
 		showAddMemberDialog,
 		newMemberEmail,
@@ -1197,7 +1693,6 @@ export default function setup(context) {
 		filteredMentionMembers,
 		insertMention,
 		insertTemplate,
-		privateMode,
 		formatMessageContent,
 		escapeHtmlAttr,
 		currentThread,
@@ -1227,7 +1722,9 @@ export default function setup(context) {
 		showEditMessageDialog,
 		editMessageContent,
 		editingMessage,
+		messageToEdit,
 		confirmEditMessage,
+		cancelEditMessage,
 		closeEditMessageDialog,
 		saveEditedMessage,
 		saveEditedMessageOnEnter,
@@ -1257,6 +1754,13 @@ export default function setup(context) {
 		formatDateDivider,
 		formatFullDateTime,
 		avatarTheme,
+		memberProfile,
+		memberDisplayName,
+		memberImage,
+		selectedThreadType,
+		unifiedThreadList,
+		currentMessages,
+		connectWithUser,
 		threadLinks,
 		threadFiles,
 		openLink,
