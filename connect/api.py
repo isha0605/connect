@@ -1498,17 +1498,20 @@ def count_matching_partners(answers=None):
 
 def _score_partners_by_requirements(answers):
 	"""Shared scoring for the finder wizard: every is_featured partner scored by
-	how many of the wizard's answered questions they fail to satisfy — not a
-	hard AND filter. Covers every question with a real, defensible signal in
-	the Partner schema (industry, apps, delivery mode, looking_for, current
-	situation, additional requirements); company size/timeline/budget are
-	deliberately left out, same as count_matching_partners above, since they
-	have no clean Partner-data equivalent to guess at. Returns
-	[(missing_count, -rating, name, missing_labels)] sorted, with anything
-	missing more than half of the answered questions (min 2) already excluded.
-	Used by both wizard_match_state (the live dot pictogram) and
-	list_matching_partners (the final results) so the count the wizard
-	previews always matches what the results page actually shows."""
+	how many of the wizard's answered questions they fail to satisfy. Covers
+	every question with a real, defensible signal in the Partner schema
+	(industry, apps, delivery mode, looking_for, current situation, additional
+	requirements); company size/timeline/budget are deliberately left out, same
+	as count_matching_partners above, since they have no clean Partner-data
+	equivalent to guess at. Returns the full, unfiltered
+	[(missing_count, -rating, name, missing_labels)] list sorted best-first —
+	callers decide their own cutoff:
+	- wizard_match_state counts only missing_count == 0 (an exact match),
+	  which is the same thing the results page's own "N Partners Match Your
+	  Requirements" header counts, so the two numbers agree by construction.
+	- list_matching_partners keeps a wider pool (0 misses, plus near-misses)
+	  so the "explore partners missing a few requirements" section always has
+	  something to show, even when nobody's a perfect match."""
 	names = [n.name for n in frappe.get_list(
 		"Partner", filters=[["Partner", "is_featured", "=", 1]], fields=["name"], limit_page_length=0,
 	)]
@@ -1549,15 +1552,6 @@ def _score_partners_by_requirements(answers):
 	wanted_bps = [REQUIREMENT_TO_BUSINESS_PROCESS[r] for r in requirements if r in REQUIREMENT_TO_BUSINESS_PROCESS]
 	wants_migration_tag = any(r in REQUIREMENT_MIGRATION_TAGS for r in requirements)
 
-	answered = sum(1 for v in (
-		wanted_industry, wanted_mode, wanted_apps, wanted_impl_type,
-		wanted_migration or wanted_situation_impl_type, wanted_bps or wants_migration_tag,
-	) if v)
-	# Strict (0 missing tolerated) for the first couple of answered questions so a
-	# single answer visibly narrows the pool right away; +1 tolerance per question
-	# after that so a fuller wizard doesn't collapse to zero results.
-	max_missing = max(0, answered - 2)
-
 	all_scored = []
 	for name in names:
 		row = by_name.get(name)
@@ -1582,33 +1576,23 @@ def _score_partners_by_requirements(answers):
 			missing.append("Migration Experience")
 		all_scored.append((len(missing), -(row.rating or 0), name, missing))
 
-	# Never let the answered criteria empty the results outright -- if literally
-	# nobody clears the strict threshold (e.g. an industry with no featured
-	# partner at all), fall back to whoever comes closest instead of showing
-	# nothing, same "don't just disappear" spirit as the per-criterion matchers
-	# this replaced.
-	best = min((m[0] for m in all_scored), default=0)
-	effective_missing = max(max_missing, best)
-	scored = [s for s in all_scored if s[0] <= effective_missing]
-
-	scored.sort(key=lambda s: (s[0], s[1]))
-	return scored, apps_by_partner
+	all_scored.sort(key=lambda s: (s[0], s[1]))
+	return all_scored, apps_by_partner
 
 
 @frappe.whitelist(allow_guest=True)
-def wizard_match_state(answers=None, limit=8):
+def wizard_match_state(answers=None):
 	"""Live per-partner matched state for the finder wizard's dot pictogram —
-	uses the exact same scoring as list_matching_partners (see there), capped
-	to the same default limit, so the count shown while answering questions
-	always matches the count the results step actually displays."""
+	counts exact matches only (missing_count == 0), the same thing the results
+	page's own "N Partners Match Your Requirements" header counts, so the two
+	numbers always agree without needing a separate threshold to keep in sync."""
 	if isinstance(answers, str):
 		answers = json.loads(answers or "{}")
 	answers = answers or {}
-	limit = cint(limit) or 8
 
-	scored, _apps_by_partner = _score_partners_by_requirements(answers)
-	scored = scored[:limit]
-	matched_names = [name for *_rest, name, _missing in scored]
+	all_scored, _apps_by_partner = _score_partners_by_requirements(answers)
+	exact = [s for s in all_scored if s[0] == 0]
+	matched_names = [name for *_rest, name, _missing in exact]
 	return {"matched_names": matched_names, "count": len(matched_names)}
 
 
@@ -1618,18 +1602,24 @@ def list_matching_partners(answers=None, limit=8):
 	as wizard_match_state (see _score_partners_by_requirements), returning full
 	rows (same shape as search_partners) instead of just names.
 
-	Full matches (0 missed) come first; partners missing 1-2 requirements are
+	Full matches (0 missed) come first; partners missing a requirement are
 	included after with `missing_label` naming exactly what they're short on,
-	so a strong-but-imperfect match doesn't just disappear. Partners missing 3+
-	are excluded as too far off to be useful."""
+	so a strong-but-imperfect match doesn't just disappear — capped at missing
+	<= 2 normally, but never let that cap empty the results outright: if
+	nobody clears it (e.g. an industry with no featured partner at all),
+	fall back to whoever comes closest instead of showing nothing."""
 	if isinstance(answers, str):
 		answers = json.loads(answers or "{}")
 	answers = answers or {}
 	limit = cint(limit) or 8
 
-	scored, apps_by_partner = _score_partners_by_requirements(answers)
-	if not scored:
+	all_scored, apps_by_partner = _score_partners_by_requirements(answers)
+	if not all_scored:
 		return []
+
+	best = all_scored[0][0]
+	display_cap = max(2, best)
+	scored = [s for s in all_scored if s[0] <= display_cap]
 
 	names = [name for *_rest, name, _missing in scored]
 	rows = frappe.get_list("Partner", filters=[["Partner", "name", "in", names]], fields=PARTNER_FIELDS)
