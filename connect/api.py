@@ -310,25 +310,85 @@ def get_my_team():
 
 @frappe.whitelist()
 def get_my_profile():
-	"""The caller's own name/photo — powers the sidebar avatar and the Settings popup's
-	Profile section."""
+	"""The caller's own name/photo/contact details — powers the sidebar avatar and the
+	Settings popup's Profile section. `role` is company-scoped (Connect Partner Member),
+	not a User field, so it's looked up separately and only set for partner-side users."""
 	user = frappe.session.user
-	profile = frappe.db.get_value("User", user, ["full_name", "user_image"], as_dict=True) or {}
-	return {"email": user, "full_name": profile.get("full_name"), "user_image": profile.get("user_image")}
+	profile = frappe.db.get_value("User", user, ["full_name", "user_image", "phone"], as_dict=True) or {}
+	role = frappe.db.get_value("Connect Partner Member", {"user": user}, "role")
+	return {
+		"email": user,
+		"full_name": profile.get("full_name"),
+		"user_image": profile.get("user_image"),
+		"phone": profile.get("phone"),
+		"role": role,
+	}
 
 
 @frappe.whitelist()
-def update_my_profile(full_name):
-	"""Self-service rename only, for now — matches the minimal Profile section in the
-	Settings popup. Any logged-in user may rename themselves; there's nothing company- or
-	thread-scoped to check here."""
+def update_my_profile(full_name, phone=None, role=None):
+	"""Self-service profile edit — matches the Profile section in the Settings popup. Any
+	logged-in user may edit themselves; there's nothing company- or thread-scoped to check
+	here. `role` only persists for partner-side users (it lives on their Connect Partner
+	Member row); it's silently ignored for anyone without one."""
 	full_name = (full_name or "").strip()
 	if not full_name:
 		frappe.throw(_("Name can't be empty"))
 
 	user = frappe.session.user
-	frappe.db.set_value("User", user, "full_name", full_name)
+	frappe.db.set_value("User", user, {"full_name": full_name, "phone": (phone or "").strip()})
+
+	member_name = frappe.db.get_value("Connect Partner Member", {"user": user}, "name")
+	if member_name:
+		frappe.db.set_value("Connect Partner Member", member_name, "role", (role or "").strip())
+
 	return {"email": user, "full_name": full_name}
+
+
+ALLOWED_PROFILE_IMAGE_EXTENSIONS = {
+	".png": "image/png",
+	".jpg": "image/jpeg",
+	".jpeg": "image/jpeg",
+	".gif": "image/gif",
+	".webp": "image/webp",
+}
+MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
+@frappe.whitelist()
+def upload_profile_image():
+	"""Sets the caller's own User.user_image from an uploaded file — powers the clickable
+	avatar in the Settings popup's Profile section. Stored as a public file since avatars are
+	rendered to other users across the app (thread lists, member rows, hover cards)."""
+	uploaded = frappe.request.files.get("file") if frappe.request else None
+	if not uploaded:
+		frappe.throw(_("No file was uploaded"))
+
+	filename = uploaded.filename or ""
+	ext = os.path.splitext(filename)[1].lower()
+	if ext not in ALLOWED_PROFILE_IMAGE_EXTENSIONS:
+		frappe.throw(_("Only PNG, JPG, GIF, and WEBP images can be used as a profile photo"))
+
+	content = uploaded.stream.read()
+	if len(content) > MAX_PROFILE_IMAGE_SIZE:
+		frappe.throw(
+			_("Image is too large — the limit is {0} MB").format(MAX_PROFILE_IMAGE_SIZE // (1024 * 1024))
+		)
+
+	user = frappe.session.user
+	file_doc = frappe.get_doc({
+		"doctype": "File",
+		"file_name": filename,
+		"content": content,
+		"is_private": 0,
+		"attached_to_doctype": "User",
+		"attached_to_name": user,
+		"attached_to_field": "user_image",
+	})
+	file_doc.insert(ignore_permissions=True)
+
+	frappe.db.set_value("User", user, "user_image", file_doc.file_url)
+	return {"user_image": file_doc.file_url}
 
 
 @frappe.whitelist()
@@ -590,28 +650,6 @@ def remove_chat_attachment(file_url):
 	frappe.delete_doc("File", file_name, ignore_permissions=True)
 
 
-def _resolve_private_recipients(thread, user, recipients):
-	"""Validate and normalize a private message's addressee list: must resolve to at least one
-	other *current* (non-removed) member of this thread. The client derives `recipients` from
-	@mentions in the draft, but that's just UX — re-validated here since the client's mention
-	list is never trusted for who actually gets to read the message."""
-	recipients = frappe.parse_json(recipients) if isinstance(recipients, str) else (recipients or [])
-	candidates = {r for r in recipients if r and r != user}
-	if not candidates:
-		frappe.throw(_("Mention at least one other person in the thread to send a private message"))
-
-	valid = set(
-		frappe.get_all(
-			"Connect Thread Member",
-			filters={"thread": thread, "user": ["in", list(candidates)], "is_removed": 0},
-			pluck="user",
-		)
-	)
-	if not valid:
-		frappe.throw(_("Mention at least one other person in the thread to send a private message"))
-	return valid
-
-
 @frappe.whitelist()
 def send_message(
 	thread,
@@ -620,8 +658,6 @@ def send_message(
 	file_name=None,
 	file_type=None,
 	file_size=None,
-	is_private=False,
-	recipients=None,
 	requirement_data=None,
 ):
 	"""Create a chat message, optionally carrying a file staged by upload_chat_attachment, or
@@ -665,10 +701,6 @@ def send_message(
 		message.file_name = file_name
 		message.file_type = file_type
 		message.file_size = file_size
-	if frappe.parse_json(is_private) if isinstance(is_private, str) else is_private:
-		valid_recipients = _resolve_private_recipients(thread, user, recipients)
-		message.is_private = 1
-		message.private_to = "," + ",".join(valid_recipients) + ","
 	message.insert(ignore_permissions=True)
 
 	if file_doc_name:
@@ -740,15 +772,12 @@ def edit_message(message, content):
 def pin_message(message):
 	"""Pin a message to the top of its thread — one at a time, pinning a new one replaces
 	whichever was pinned before. Available to any thread member with Write (not just the
-	sender), same audience as posting. A private message is never pinned: the banner is
-	visible to the whole thread, which would leak it past its original recipients."""
+	sender), same audience as posting."""
 	from connect.connect.notifications import notify_thread_pin_changed
 
 	user = frappe.session.user
 	doc = frappe.get_doc("Connect Message", message)
 	_check_can_write(doc.thread, user)
-	if doc.is_private:
-		frappe.throw(_("Private messages can't be pinned"))
 
 	thread_doc = frappe.get_doc("Connect Thread", doc.thread)
 	thread_doc.pinned_message = doc.name

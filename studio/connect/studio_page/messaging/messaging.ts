@@ -20,17 +20,15 @@ export default function setup(context) {
 	const showProfileSettingsDialog = ref(false)
 	const profileSettingsSection = ref("profile")
 	const editFullName = ref("")
+	const editPhone = ref("")
+	const editRole = ref("")
 	const savingProfile = ref(false)
+	const uploadingProfileImage = ref(false)
 	const showInlineTemplates = ref(false)
 	const mediaTab = ref("Links")
 	const showAddMemberDialog = ref(false)
 	const newMemberEmail = ref("")
 	const newMemberPermission = ref("Write")
-
-	// A private message needs no separate recipient picker: its audience is just whichever
-	// thread members got @mentioned in the draft, resolved (and re-validated server-side —
-	// see send_message) at send time rather than tracked as separate state.
-	const privateMode = ref(false)
 
 	// DMs live in the SAME sidebar/chat pane as company deal threads (see unifiedThreadList) —
 	// selectedThreadType tracks which kind selectedThread currently refers to, since the two
@@ -475,15 +473,6 @@ export default function setup(context) {
 		showInlineTemplates.value = false
 	}
 
-	// Every "@word" anywhere in the text (not just a trailing in-progress one, unlike
-	// mentionMatch) that matches a current member's email local-part — this is what turns
-	// @mentions in the draft into the private message's actual recipient list.
-	function extractMentionedMembers(text) {
-		const names = new Set(((text || "").match(/@([^\s@]+)/g) || []).map((m) => m.slice(1).toLowerCase()))
-		if (!names.size) return []
-		return activeMembers().filter((m) => names.has((m.user || "").split("@")[0].toLowerCase()))
-	}
-
 	// Neutralizes text before it's interpolated into an HTML-component string (which renders
 	// via v-html — nothing about the templating layer escapes it automatically). Needed for
 	// any attacker-influenced text going into markup, e.g. a message-image's alt="{{ ... }}",
@@ -652,7 +641,10 @@ export default function setup(context) {
 	// ---- Profile settings popup ----
 	function openProfileSettings() {
 		profileSettingsSection.value = "profile"
-		editFullName.value = (context.myProfile.data && context.myProfile.data.full_name) || ""
+		const profile = context.myProfile.data
+		editFullName.value = (profile && profile.full_name) || ""
+		editPhone.value = (profile && profile.phone) || ""
+		editRole.value = (profile && profile.role) || ""
 		showProfileSettingsDialog.value = true
 	}
 
@@ -665,8 +657,13 @@ export default function setup(context) {
 		if (!fullName || savingProfile.value) return
 		savingProfile.value = true
 		try {
-			await call("connect.api.update_my_profile", { full_name: fullName })
+			await call("connect.api.update_my_profile", {
+				full_name: fullName,
+				phone: editPhone.value.trim(),
+				role: editRole.value.trim(),
+			})
 			await context.myProfile.reload()
+			toast({ title: "Profile updated", icon: "check", iconClasses: "text-green-600" })
 		} catch (e) {
 			toast({
 				title: "Could not update profile",
@@ -677,6 +674,44 @@ export default function setup(context) {
 		} finally {
 			savingProfile.value = false
 		}
+	}
+
+	// picking a new avatar happens the same way as chat attachments (see openFilePicker) —
+	// a throwaway <input> is the smallest way to reach the browser's native file dialog.
+	function openProfileImagePicker() {
+		if (uploadingProfileImage.value) return
+		const input = document.createElement("input")
+		input.type = "file"
+		input.accept = "image/*"
+		input.style.display = "none"
+		input.addEventListener("change", () => {
+			const file = input.files && input.files[0]
+			if (file) uploadProfileImage(file)
+			input.remove()
+		})
+		document.body.appendChild(input)
+		input.click()
+	}
+
+	function uploadProfileImage(file) {
+		uploadingProfileImage.value = true
+		const { upload } = useFileUpload()
+		upload(file, { upload_endpoint: "/api/method/connect.api.upload_profile_image" })
+			.then(() => {
+				context.myProfile.reload()
+				toast({ title: "Photo updated", icon: "check", iconClasses: "text-green-600" })
+			})
+			.catch((e) => {
+				toast({
+					title: "Could not upload photo",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
+			})
+			.finally(() => {
+				uploadingProfileImage.value = false
+			})
 	}
 
 	function addMember() {
@@ -852,7 +887,6 @@ export default function setup(context) {
 		if (!item || item.isFileCluster || item.message_type !== "Text" || !isMine(item.sender)) return
 		messageToEdit.value = item
 		draftMessage.value = item.content
-		privateMode.value = false
 		showInlineTemplates.value = false
 		nextTick(() => {
 			const el = document.querySelector('[data-component-id="message-input"]') as HTMLTextAreaElement | null
@@ -1092,47 +1126,15 @@ export default function setup(context) {
 		const content = draftMessage.value.trim()
 		if (!content && !readyAttachments.length && !draftRequirement.value) return
 
-		// Validated (and the draft left untouched) before anything is cleared or sent — a
-		// private toggle with no resolvable @mention shouldn't silently send publicly, or
-		// silently eat what was typed.
-		let recipients = null
-		if (privateMode.value) {
-			if (!content) {
-				toast({
-					title: "Type a message mentioning who should see it",
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
-				return
-			}
-			const me = context.myContext.data && context.myContext.data.user
-			recipients = [...new Set(extractMentionedMembers(content).map((m) => m.user))].filter((u) => u !== me)
-			if (!recipients.length) {
-				toast({
-					title: "Mention at least one person to send privately",
-					text: "e.g. @" + ((me || "").split("@")[0] || "name"),
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
-				return
-			}
-		}
-
 		const thread = selectedThread.value
 		const requirementToSend = draftRequirement.value
 		draftMessage.value = ""
 		draftAttachments.value = []
 		draftRequirement.value = null
-		privateMode.value = false
 
 		try {
 			if (content) {
-				await call("connect.api.send_message", {
-					thread,
-					content,
-					is_private: !!recipients,
-					recipients,
-				})
+				await call("connect.api.send_message", { thread, content })
 			}
 			for (const a of readyAttachments) {
 				await call("connect.api.send_message", {
@@ -1142,17 +1144,10 @@ export default function setup(context) {
 					file_name: a.file_name,
 					file_type: a.file_type,
 					file_size: a.file_size,
-					is_private: !!recipients,
-					recipients,
 				})
 			}
 			if (requirementToSend) {
-				await call("connect.api.send_message", {
-					thread,
-					requirement_data: requirementToSend,
-					is_private: !!recipients,
-					recipients,
-				})
+				await call("connect.api.send_message", { thread, requirement_data: requirementToSend })
 			}
 			context.messages.reload()
 		} catch (e) {
@@ -1755,10 +1750,14 @@ export default function setup(context) {
 		showProfileSettingsDialog,
 		profileSettingsSection,
 		editFullName,
+		editPhone,
+		editRole,
 		savingProfile,
+		uploadingProfileImage,
 		openProfileSettings,
 		selectProfileSettingsSection,
 		saveMyProfile,
+		openProfileImagePicker,
 		draftRequirement,
 		showRequirementPreviewDialog,
 		editCompanyName,
@@ -1816,7 +1815,6 @@ export default function setup(context) {
 		filteredMentionMembers,
 		insertMention,
 		insertTemplate,
-		privateMode,
 		formatMessageContent,
 		escapeHtmlAttr,
 		currentThread,
