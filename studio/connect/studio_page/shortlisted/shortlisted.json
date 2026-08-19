@@ -367,7 +367,48 @@
        "children": [
         {
          "baseStyles": {
-          "display": "{{ viewMode === 'list' ? 'block' : 'none' }}",
+          "alignItems": "center",
+          "display": "{{ !myShortlistFull.data ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "justifyContent": "center",
+          "padding": "80px 0",
+          "width": "100%"
+         },
+         "children": [
+          {
+           "children": [],
+           "classes": [],
+           "componentId": "Spinner-shortlist-loading",
+           "componentName": "Spinner",
+           "componentProps": {
+            "size": "lg",
+            "theme": "gray"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "marginTop": "12px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "TextBlock-shortlist-loading",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-base",
+            "tag": "span",
+            "text": "Loading shortlisted partners..."
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "container-shortlist-loading",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "{{ myShortlistFull.data && viewMode === 'list' ? 'block' : 'none' }}",
           "isolation": "isolate",
           "padding": "8px 20px 20px"
          },
@@ -1019,7 +1060,7 @@
         },
         {
          "baseStyles": {
-          "display": "{{ viewMode === 'grid' ? 'flex' : 'none' }}",
+          "display": "{{ myShortlistFull.data && viewMode === 'grid' ? 'flex' : 'none' }}",
           "flexDirection": "column",
           "padding": "8px 20px 20px"
          },
@@ -1451,7 +1492,7 @@
         {
          "baseStyles": {
           "alignItems": "center",
-          "display": "{{ (myShortlistFull.data || []).length ? 'none' : 'flex' }}",
+          "display": "{{ myShortlistFull.data && !myShortlistFull.data.length ? 'flex' : 'none' }}",
           "flexDirection": "column",
           "justifyContent": "center",
           "padding": "64px 20px",
@@ -2680,7 +2721,48 @@
        "children": [
         {
          "baseStyles": {
-          "display": "{{ viewMode === 'list' ? 'block' : 'none' }}",
+          "alignItems": "center",
+          "display": "{{ !myShortlistFull.data ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "justifyContent": "center",
+          "padding": "80px 0",
+          "width": "100%"
+         },
+         "children": [
+          {
+           "children": [],
+           "classes": [],
+           "componentId": "Spinner-shortlist-loading",
+           "componentName": "Spinner",
+           "componentProps": {
+            "size": "lg",
+            "theme": "gray"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "marginTop": "12px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "TextBlock-shortlist-loading",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-base",
+            "tag": "span",
+            "text": "Loading shortlisted partners..."
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "container-shortlist-loading",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "{{ myShortlistFull.data && viewMode === 'list' ? 'block' : 'none' }}",
           "isolation": "isolate",
           "padding": "8px 20px 20px"
          },
@@ -3334,7 +3416,7 @@
         },
         {
          "baseStyles": {
-          "display": "{{ viewMode === 'grid' ? 'flex' : 'none' }}",
+          "display": "{{ myShortlistFull.data && viewMode === 'grid' ? 'flex' : 'none' }}",
           "flexDirection": "column",
           "padding": "8px 20px 20px"
          },
@@ -3766,7 +3848,7 @@
         {
          "baseStyles": {
           "alignItems": "center",
-          "display": "{{ (myShortlistFull.data || []).length ? 'none' : 'flex' }}",
+          "display": "{{ myShortlistFull.data && !myShortlistFull.data.length ? 'flex' : 'none' }}",
           "flexDirection": "column",
           "justifyContent": "center",
           "padding": "64px 20px",
@@ -4625,7 +4707,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-08-20 00:45:07.232535",
+ "modified": "2026-08-20 01:02:50.102275",
  "modified_by": "Administrator",
  "name": "shortlisted",
  "owner": "Administrator",
