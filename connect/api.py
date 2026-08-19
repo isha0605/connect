@@ -1733,12 +1733,29 @@ def list_matching_partners(answers=None, limit=8):
 
 	scored.sort(key=lambda s: (s[0], s[1]))
 	scored = scored[:limit]
+	result_names = [name for *_rest, name, _missing in scored]
+
+	success_stories_by_partner = {}
+	if result_names:
+		for row in frappe.get_all(
+			"Partner Success Story",
+			filters={"parent": ["in", result_names]},
+			fields=["parent", "category"],
+			order_by="idx asc",
+		):
+			bucket = success_stories_by_partner.setdefault(row.parent, {"count": 0, "categories": []})
+			bucket["count"] += 1
+			if row.category and row.category not in bucket["categories"]:
+				bucket["categories"].append(row.category)
 
 	result = []
 	for _missing_count, _neg_rating, name, missing in scored:
 		row = dict(by_name[name])
 		row["apps_preview"] = apps_preview_by_partner.get(name, [])
 		row["missing_label"] = ", ".join(missing) if missing else None
+		stories = success_stories_by_partner.get(name, {"count": 0, "categories": []})
+		row["success_story_count"] = stories["count"]
+		row["success_story_categories"] = stories["categories"]
 		result.append(row)
 	return result
 
@@ -1851,6 +1868,22 @@ def list_my_shortlist():
 			bucket.append(row.app)
 	for p in ordered:
 		p["apps_preview"] = apps_by_partner.get(p.name, [])
+
+	success_stories_by_partner = {}
+	for row in frappe.get_all(
+		"Partner Success Story",
+		filters={"parent": ["in", names]},
+		fields=["parent", "category"],
+		order_by="idx asc",
+	):
+		bucket = success_stories_by_partner.setdefault(row.parent, {"count": 0, "categories": []})
+		bucket["count"] += 1
+		if row.category and row.category not in bucket["categories"]:
+			bucket["categories"].append(row.category)
+	for p in ordered:
+		stories = success_stories_by_partner.get(p.name, {"count": 0, "categories": []})
+		p["success_story_count"] = stories["count"]
+		p["success_story_categories"] = stories["categories"]
 
 	return ordered
 
