@@ -19,6 +19,12 @@ export default function setup(context) {
 	const editFullName = ref("")
 	const editPhone = ref("")
 	const editRole = ref("")
+	// snapshot of what's actually saved, taken on open and again after a successful save —
+	// the Save button stays disabled (same greyed-out look as the composer's Send button
+	// with an empty draft) until one of the fields drifts from this baseline.
+	const originalFullName = ref("")
+	const originalPhone = ref("")
+	const originalRole = ref("")
 	const savingProfile = ref(false)
 	const uploadingProfileImage = ref(false)
 	const showInlineTemplates = ref(false)
@@ -577,6 +583,9 @@ export default function setup(context) {
 		editFullName.value = (profile && profile.full_name) || ""
 		editPhone.value = (profile && profile.phone) || ""
 		editRole.value = (profile && profile.role) || ""
+		originalFullName.value = editFullName.value
+		originalPhone.value = editPhone.value
+		originalRole.value = editRole.value
 		showSettingsDialog.value = true
 	}
 
@@ -595,6 +604,9 @@ export default function setup(context) {
 				role: editRole.value.trim(),
 			})
 			await context.myProfile.reload()
+			originalFullName.value = editFullName.value
+			originalPhone.value = editPhone.value
+			originalRole.value = editRole.value
 			toast({ title: "Profile updated", icon: "check", iconClasses: "text-green-600" })
 		} catch (e) {
 			toast({
@@ -1647,6 +1659,9 @@ export default function setup(context) {
 		editFullName,
 		editPhone,
 		editRole,
+		originalFullName,
+		originalPhone,
+		originalRole,
 		savingProfile,
 		uploadingProfileImage,
 		openSettings,
