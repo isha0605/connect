@@ -1496,201 +1496,20 @@ def count_matching_partners(answers=None):
 	return len(partners)
 
 
-# Per-question matcher tables for the wizard's live dot-elimination pictogram
-# (wizard_match_state). Each maps an option VALUE to a (partner_row) -> bool
-# predicate grounded in real Partner data. A value with no defensible signal is
-# simply absent from its table, so wizard_match_state leaves the pool untouched
-# for that answer instead of guessing.
-NEED_MATCHERS = {
-	"Replace Existing ERP": lambda p: len(p["migrations"]) > 0,
-	"Manufacturing Setup": lambda p: p["industry"] == "Manufacturing",
-	"HR & Payroll": lambda p: any("hr" in a.lower() for a in p["apps"]),
-	"CRM": lambda p: any("crm" in a.lower() for a in p["apps"]),
-	"Custom App Development": lambda p: "Customization" in p["implementation_types"],
-	"Consultation / Discovery": lambda p: p["demo_available"],
-}
-COMPANY_SIZE_TO_BUCKET = {
-	"1–10": "Small", "11–50": "Small", "51–200": "Mid-size", "201–1000": "Mid-size", "1000+": "Large",
-}
-CURRENT_SYSTEM_MATCHERS = {
-	"Excel / Spreadsheets": lambda p: any(m.startswith("Excel") for m in p["migrations"]),
-	"Tally": lambda p: any(m.startswith("Tally") for m in p["migrations"]),
-	"SAP": lambda p: any(m.startswith("SAP") for m in p["migrations"]),
-	"Odoo": lambda p: any(m.startswith("Odoo") for m in p["migrations"]),
-	"Existing ERPNext": lambda p: len(p["migrations"]) == 0,
-	"Multiple Systems": lambda p: len(p["migrations"]) >= 1,
-}
-TIMELINE_MATCHERS = {
-	# response_time_hours == 0 means "not profiled", not "instant" -- excluded explicitly
-	# so an unprofiled partner isn't falsely counted as meeting an urgent timeline.
-	"Immediately": lambda p: bool(p["response_time_hours"]) and p["response_time_hours"] <= 12,
-	"Within 1 month": lambda p: bool(p["response_time_hours"]) and p["response_time_hours"] <= 24,
-}
-BUDGET_TO_TIERS = {
-	"Under ₹2L": {"Bronze"},
-	"₹2L–₹10L": {"Bronze", "Silver"},
-	"₹10L–₹25L": {"Silver"},
-	"₹25L–₹50L": {"Silver", "Gold"},
-	"₹50L+": {"Gold"},
-}
-REQUIREMENT_MATCHERS = {
-	"ETO (Engineer-to-Order)": lambda p: "Manufacturing Execution" in p["business_processes"],
-	"Manufacturing Planning": lambda p: "Manufacturing Execution" in p["business_processes"],
-	"HR & Payroll": lambda p: "HR & Payroll" in p["business_processes"],
-	"Inventory Management": lambda p: "Inventory Management" in p["business_processes"],
-	"CRM": lambda p: any("crm" in a.lower() for a in p["apps"]),
-	"Custom Development": lambda p: "Customization" in p["implementation_types"],
-	"SAP Migration": lambda p: any(m.startswith("SAP") for m in p["migrations"]),
-	"Data Migration": lambda p: len(p["migrations"]) > 0,
-	"On-site Support": lambda p: "Onsite" in p["delivery_options"],
-	# "Multi-site Operations" and "Training Required" have no real signal in the
-	# current schema -- deliberately absent rather than guessed at.
-}
-
-
-def _bucket_project_size(raw):
-	"""'$15k - $60k' -> 'Small'/'Mid-size'/'Large', or None if unparseable/unset."""
-	if not raw:
-		return None
-	nums = [int(n) for n in re.findall(r"(\d+)k", raw)]
-	if not nums:
-		return None
-	upper = max(nums)
-	if upper <= 25:
-		return "Small"
-	if upper <= 100:
-		return "Mid-size"
-	return "Large"
-
-
-def _apply_matcher(pool, predicate):
-	"""Never let a single criterion empty the pool -- if nothing in the current
-	pool satisfies it, skip it for this preview rather than showing zero."""
-	if predicate is None:
-		return pool
-	matched = [p for p in pool if predicate(p)]
-	return matched if matched else pool
-
-
-@frappe.whitelist(allow_guest=True)
-def wizard_match_state(answers=None):
-	"""Live per-partner matched/eliminated state for the finder wizard's dot
-	pictogram. Applies all answered criteria in question order, each one a no-op
-	if it would empty the pool, then a proportional quality trim (keeping the
-	highest-rated partners) so every answered question visibly moves the count
-	even ones with no category matcher — same idea as count_matching_partners,
-	but returns which partners survived, not just how many."""
-	if isinstance(answers, str):
-		answers = json.loads(answers or "{}")
-	answers = answers or {}
-
+def _score_partners_by_requirements(answers):
+	"""Shared scoring for the finder wizard: every is_featured partner scored by
+	how many of a small set of concrete, customer-recognizable requirements they
+	fail (industry, apps, delivery mode) — not a hard AND filter. Returns
+	(name, industry, rating) rows and a sorted [(missing_count, -rating, name,
+	missing_labels)] list, missing 3+ already excluded. Used by both
+	wizard_match_state (the live dot pictogram) and list_matching_partners (the
+	final results) so the count the wizard previews always matches what the
+	results page actually shows."""
 	names = [n.name for n in frappe.get_list(
 		"Partner", filters=[["Partner", "is_featured", "=", 1]], fields=["name"], limit_page_length=0,
 	)]
 	if not names:
-		return {"matched_names": [], "count": 0}
-
-	rows = frappe.get_list(
-		"Partner", filters=[["Partner", "name", "in", names]],
-		fields=["name", "industry", "tier", "rating", "demo_available", "response_time_hours", "typical_project_size"],
-	)
-	apps_by, migrations_by, impl_by, bp_by, delivery_by = {}, {}, {}, {}, {}
-	for r in frappe.get_all("Partner App", filters={"parent": ["in", names]}, fields=["parent", "app"]):
-		apps_by.setdefault(r.parent, []).append(r.app)
-	for r in frappe.get_all("Partner Migration Path", filters={"parent": ["in", names]}, fields=["parent", "migration_path"]):
-		migrations_by.setdefault(r.parent, []).append(r.migration_path)
-	for r in frappe.get_all("Partner Implementation Type", filters={"parent": ["in", names]}, fields=["parent", "implementation_type"]):
-		impl_by.setdefault(r.parent, []).append(r.implementation_type)
-	for r in frappe.get_all("Partner Business Process", filters={"parent": ["in", names]}, fields=["parent", "business_process"]):
-		bp_by.setdefault(r.parent, []).append(r.business_process)
-	for r in frappe.get_all("Partner Delivery Mode", filters={"parent": ["in", names]}, fields=["parent", "delivery_mode"]):
-		delivery_by.setdefault(r.parent, []).append(r.delivery_mode)
-
-	pool = [{
-		"name": r.name, "industry": r.industry, "tier": r.tier, "rating": r.rating or 0,
-		"demo_available": bool(r.demo_available),
-		"response_time_hours": r.response_time_hours or 0,
-		"project_size_bucket": _bucket_project_size(r.typical_project_size),
-		"apps": apps_by.get(r.name, []),
-		"migrations": migrations_by.get(r.name, []),
-		"implementation_types": impl_by.get(r.name, []),
-		"business_processes": bp_by.get(r.name, []),
-		"delivery_options": delivery_by.get(r.name, []),
-	} for r in rows]
-
-	need = answers.get("looking_for")
-	pool = _apply_matcher(pool, NEED_MATCHERS.get(need))
-
-	industry = answers.get("industry")
-	if industry:
-		wanted = WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry)
-		pool = _apply_matcher(pool, lambda p, w=wanted: p["industry"] == w)
-
-	bucket = COMPANY_SIZE_TO_BUCKET.get(answers.get("company_size"))
-	if bucket:
-		pool = _apply_matcher(pool, lambda p, b=bucket: p["project_size_bucket"] == b)
-
-	pool = _apply_matcher(pool, CURRENT_SYSTEM_MATCHERS.get(answers.get("current_situation")))
-	pool = _apply_matcher(pool, TIMELINE_MATCHERS.get(answers.get("timeline")))
-
-	delivery = answers.get("delivery_preference")
-	if delivery and delivery != "No preference":
-		wanted_mode = DELIVERY_TO_MODE.get(delivery, delivery)
-		pool = _apply_matcher(pool, lambda p, w=wanted_mode: w in p["delivery_options"])
-
-	tiers = BUDGET_TO_TIERS.get(answers.get("budget"))
-	if tiers:
-		pool = _apply_matcher(pool, lambda p, t=tiers: p["tier"] in t)
-
-	wanted_apps = answers.get("apps") or []
-	if wanted_apps:
-		pool = _apply_matcher(pool, lambda p, w=wanted_apps: any(a in p["apps"] for a in w))
-
-	for req in (answers.get("requirements") or []):
-		pool = _apply_matcher(pool, REQUIREMENT_MATCHERS.get(req))
-
-	# Proportional quality trim: every answered question should visibly move
-	# the count, even ones above with no real matcher for this particular value.
-	# company_name/country are excluded here -- they have no matching signal at
-	# all, so counting them would trim the pool for no real reason.
-	answered = sum(
-		1 for k in ("looking_for", "industry", "company_size", "current_situation", "timeline", "delivery_preference", "budget")
-		if answers.get(k)
-	)
-	if answers.get("requirements"):
-		answered += 1
-	if wanted_apps:
-		answered += 1
-	if answered and pool:
-		target = max(1, math.ceil(len(pool) * (0.85**answered)))
-		pool = sorted(pool, key=lambda p: -p["rating"])[:target]
-
-	return {"matched_names": [p["name"] for p in pool], "count": len(pool)}
-
-
-@frappe.whitelist(allow_guest=True)
-def list_matching_partners(answers=None, limit=8):
-	"""Ranked partner results for the finder wizard's final step. Same real
-	wizard-answer -> Partner-data mappings as count_matching_partners, but returns
-	full rows (same shape as search_partners) instead of just a count.
-
-	Every is_featured partner is scored by how many of a small set of concrete,
-	customer-recognizable requirements they fail (currently: industry, apps,
-	delivery mode) — not a hard AND filter. Full matches (0 missed) come first;
-	partners missing 1-2 requirements are included after with `missing_label`
-	naming exactly what they're short on, so a strong-but-imperfect match
-	doesn't just disappear. Partners missing 3+ are excluded as too far off to
-	be useful."""
-	if isinstance(answers, str):
-		answers = json.loads(answers or "{}")
-	answers = answers or {}
-	limit = cint(limit) or 8
-
-	names = [n.name for n in frappe.get_list(
-		"Partner", filters=[["Partner", "is_featured", "=", 1]], fields=["name"], limit_page_length=0,
-	)]
-	if not names:
-		return []
+		return [], {}
 
 	rows = frappe.get_list("Partner", filters=[["Partner", "name", "in", names]], fields=PARTNER_FIELDS)
 	by_name = {r.name: r for r in rows}
@@ -1699,14 +1518,11 @@ def list_matching_partners(answers=None, limit=8):
 	for r in frappe.get_all("Partner Delivery Mode", filters={"parent": ["in", names]}, fields=["parent", "delivery_mode"]):
 		delivery_by.setdefault(r.parent, []).append(r.delivery_mode)
 
-	apps_by_partner, apps_preview_by_partner = {}, {}
+	apps_by_partner = {}
 	for row in frappe.get_all(
 		"Partner App", filters={"parent": ["in", names]}, fields=["parent", "app"], order_by="idx asc",
 	):
 		apps_by_partner.setdefault(row.parent, []).append(row.app)
-		preview = apps_preview_by_partner.setdefault(row.parent, [])
-		if len(preview) < 2:
-			preview.append(row.app)
 
 	industry = answers.get("industry")
 	wanted_industry = WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry) if industry else None
@@ -1732,6 +1548,53 @@ def list_matching_partners(answers=None, limit=8):
 			scored.append((len(missing), -(row.rating or 0), name, missing))
 
 	scored.sort(key=lambda s: (s[0], s[1]))
+	return scored, apps_by_partner
+
+
+@frappe.whitelist(allow_guest=True)
+def wizard_match_state(answers=None, limit=8):
+	"""Live per-partner matched state for the finder wizard's dot pictogram —
+	uses the exact same scoring as list_matching_partners (see there), capped
+	to the same default limit, so the count shown while answering questions
+	always matches the count the results step actually displays."""
+	if isinstance(answers, str):
+		answers = json.loads(answers or "{}")
+	answers = answers or {}
+	limit = cint(limit) or 8
+
+	scored, _apps_by_partner = _score_partners_by_requirements(answers)
+	scored = scored[:limit]
+	matched_names = [name for *_rest, name, _missing in scored]
+	return {"matched_names": matched_names, "count": len(matched_names)}
+
+
+@frappe.whitelist(allow_guest=True)
+def list_matching_partners(answers=None, limit=8):
+	"""Ranked partner results for the finder wizard's final step. Same scoring
+	as wizard_match_state (see _score_partners_by_requirements), returning full
+	rows (same shape as search_partners) instead of just names.
+
+	Full matches (0 missed) come first; partners missing 1-2 requirements are
+	included after with `missing_label` naming exactly what they're short on,
+	so a strong-but-imperfect match doesn't just disappear. Partners missing 3+
+	are excluded as too far off to be useful."""
+	if isinstance(answers, str):
+		answers = json.loads(answers or "{}")
+	answers = answers or {}
+	limit = cint(limit) or 8
+
+	scored, apps_by_partner = _score_partners_by_requirements(answers)
+	if not scored:
+		return []
+
+	names = [name for *_rest, name, _missing in scored]
+	rows = frappe.get_list("Partner", filters=[["Partner", "name", "in", names]], fields=PARTNER_FIELDS)
+	by_name = {r.name: r for r in rows}
+
+	apps_preview_by_partner = {}
+	for name, apps in apps_by_partner.items():
+		apps_preview_by_partner[name] = apps[:2]
+
 	scored = scored[:limit]
 	result_names = [name for *_rest, name, _missing in scored]
 
