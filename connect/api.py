@@ -1552,6 +1552,17 @@ def _score_partners_by_requirements(answers):
 	wanted_bps = [REQUIREMENT_TO_BUSINESS_PROCESS[r] for r in requirements if r in REQUIREMENT_TO_BUSINESS_PROCESS]
 	wants_migration_tag = any(r in REQUIREMENT_MIGRATION_TAGS for r in requirements)
 
+	# How many of the (up to 6) scored dimensions were actually answered — used by
+	# list_matching_partners to scale its near-match tolerance. A flat "missing <= 2"
+	# cap is generous when 8 questions were answered but makes almost the entire
+	# featured pool look like a "near match" when only 2-3 were, which is exactly
+	# the sparse-answers case a wizard reopen tends to produce (unset fields stay
+	# unset unless the visitor deliberately fills them in).
+	answered_dims = sum([
+		bool(wanted_industry), bool(wanted_apps), bool(wanted_mode), bool(wanted_impl_type),
+		bool(wanted_migration or wanted_situation_impl_type), bool(wanted_bps or wants_migration_tag),
+	])
+
 	all_scored = []
 	for name in names:
 		row = by_name.get(name)
@@ -1577,7 +1588,7 @@ def _score_partners_by_requirements(answers):
 		all_scored.append((len(missing), -(row.rating or 0), name, missing))
 
 	all_scored.sort(key=lambda s: (s[0], s[1]))
-	return all_scored, apps_by_partner
+	return all_scored, apps_by_partner, answered_dims
 
 
 @frappe.whitelist(allow_guest=True)
@@ -1590,7 +1601,7 @@ def wizard_match_state(answers=None):
 		answers = json.loads(answers or "{}")
 	answers = answers or {}
 
-	all_scored, _apps_by_partner = _score_partners_by_requirements(answers)
+	all_scored, _apps_by_partner, _answered_dims = _score_partners_by_requirements(answers)
 	exact = [s for s in all_scored if s[0] == 0]
 	matched_names = [name for *_rest, name, _missing in exact]
 	return {"matched_names": matched_names, "count": len(matched_names)}
@@ -1605,20 +1616,25 @@ def list_matching_partners(answers=None, limit=8):
 	Full matches (0 missed) come first; partners missing a requirement are
 	included after with `missing_label` naming exactly what they're short on,
 	so a strong-but-imperfect match doesn't just disappear — capped at missing
-	<= 2 normally, but never let that cap empty the results outright: if
-	nobody clears it (e.g. an industry with no featured partner at all),
-	fall back to whoever comes closest instead of showing nothing."""
+	roughly a third of what was actually answered (never let that cap empty the
+	results outright: if nobody clears it, e.g. an industry with no featured
+	partner at all, fall back to whoever comes closest instead of showing
+	nothing). The cap scales with how much was answered rather than sitting at
+	a flat "missing <= 2" — with only 2-3 questions answered (a wizard reopen
+	commonly prefills a sparse answer set), a flat cap of 2 let nearly the
+	entire featured pool through as a "near match", which just looks like a
+	vague, unfiltered list rather than an actual ranking."""
 	if isinstance(answers, str):
 		answers = json.loads(answers or "{}")
 	answers = answers or {}
 	limit = cint(limit) or 8
 
-	all_scored, apps_by_partner = _score_partners_by_requirements(answers)
+	all_scored, apps_by_partner, answered_dims = _score_partners_by_requirements(answers)
 	if not all_scored:
 		return []
 
 	best = all_scored[0][0]
-	display_cap = max(2, best)
+	display_cap = max(best, math.ceil(answered_dims / 3)) if answered_dims else best
 	scored = [s for s in all_scored if s[0] <= display_cap]
 
 	names = [name for *_rest, name, _missing in scored]
@@ -1789,7 +1805,7 @@ def list_my_shortlist():
 def save_customer_requirement(
 	company_name, country, industry, apps=None,
 	looking_for=None, company_size=None, current_situation=None, timeline=None, delivery_preference=None, budget=None,
-	special_requirements=None, outcome=None,
+	special_requirements=None, additional_notes=None, outcome=None,
 ):
 	"""Create or update the current user's company's one Requirement — company_name/
 	country/industry/apps are the 4 primary questions; everything else comes from
@@ -1816,6 +1832,7 @@ def save_customer_requirement(
 		"delivery_preference": delivery_preference,
 		"budget": budget,
 		"special_requirements": special_requirements or "[]",
+		"additional_notes": additional_notes or "",
 	}
 	if outcome:
 		values["outcome"] = outcome
@@ -1858,6 +1875,7 @@ def get_my_requirement():
 		"delivery_preference": doc.delivery_preference,
 		"budget": doc.budget,
 		"special_requirements": doc.special_requirements,
+		"additional_notes": doc.additional_notes,
 	}
 
 

@@ -8,6 +8,7 @@ PARTNER_GUEST_ROLE = "Connect Partner Guest"
 _COMPANY_ROLE_BY_DOCTYPE = {
 	"Connect Customer Member": CUSTOMER_ROLE,
 	"Connect Partner Member": PARTNER_ROLE,
+	"Customer Team Member": CUSTOMER_ROLE,
 }
 _GUEST_ROLE_BY_SIDE = {
 	"Customer": CUSTOMER_GUEST_ROLE,
@@ -25,10 +26,16 @@ def _set_role(user, role, should_have):
 
 
 def grant_company_role(doc, method=None):
-	"""Fires on Connect Customer Member/Connect Partner Member creation — real company
-	membership: roster visibility, admin-transfer eligibility, and thread-creation
-	permission all still read this table directly (see connect.connect.permissions),
-	unaffected by this role. This role only ever gates the messaging doctypes."""
+	"""Fires on Customer Team Member creation (and the legacy Connect Customer Member/
+	Connect Partner Member doctypes) — real company membership: roster visibility,
+	admin-transfer eligibility, and thread-creation permission all still read this table
+	directly (see connect.connect.permissions), unaffected by this role. This role only
+	ever gates the messaging doctypes.
+
+	Note: there is no partner-side equivalent yet — Partner Team Member (the public
+	team/bio roster shown on a partner's profile) has no `user` field, so partner login
+	accounts still need their Connect Partner role granted manually until a real
+	partner-membership doctype exists."""
 	_set_role(doc.user, _COMPANY_ROLE_BY_DOCTYPE[doc.doctype], True)
 
 

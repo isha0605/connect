@@ -171,6 +171,10 @@ doc_events = {
 		"after_insert": "connect.connect.roles.grant_company_role",
 		"on_trash": "connect.connect.roles.revoke_company_role",
 	},
+	"Customer Team Member": {
+		"after_insert": "connect.connect.roles.grant_company_role",
+		"on_trash": "connect.connect.roles.revoke_company_role",
+	},
 	"Connect Thread Member": {
 		"after_insert": "connect.connect.roles.grant_thread_guest_role",
 		"on_trash": "connect.connect.roles.revoke_thread_guest_role",
