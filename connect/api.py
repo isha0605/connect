@@ -1498,13 +1498,17 @@ def count_matching_partners(answers=None):
 
 def _score_partners_by_requirements(answers):
 	"""Shared scoring for the finder wizard: every is_featured partner scored by
-	how many of a small set of concrete, customer-recognizable requirements they
-	fail (industry, apps, delivery mode) — not a hard AND filter. Returns
-	(name, industry, rating) rows and a sorted [(missing_count, -rating, name,
-	missing_labels)] list, missing 3+ already excluded. Used by both
-	wizard_match_state (the live dot pictogram) and list_matching_partners (the
-	final results) so the count the wizard previews always matches what the
-	results page actually shows."""
+	how many of the wizard's answered questions they fail to satisfy — not a
+	hard AND filter. Covers every question with a real, defensible signal in
+	the Partner schema (industry, apps, delivery mode, looking_for, current
+	situation, additional requirements); company size/timeline/budget are
+	deliberately left out, same as count_matching_partners above, since they
+	have no clean Partner-data equivalent to guess at. Returns
+	[(missing_count, -rating, name, missing_labels)] sorted, with anything
+	missing more than half of the answered questions (min 2) already excluded.
+	Used by both wizard_match_state (the live dot pictogram) and
+	list_matching_partners (the final results) so the count the wizard
+	previews always matches what the results page actually shows."""
 	names = [n.name for n in frappe.get_list(
 		"Partner", filters=[["Partner", "is_featured", "=", 1]], fields=["name"], limit_page_length=0,
 	)]
@@ -1514,15 +1518,17 @@ def _score_partners_by_requirements(answers):
 	rows = frappe.get_list("Partner", filters=[["Partner", "name", "in", names]], fields=PARTNER_FIELDS)
 	by_name = {r.name: r for r in rows}
 
-	delivery_by = {}
+	delivery_by, apps_by_partner, migrations_by, impl_by, bp_by = {}, {}, {}, {}, {}
 	for r in frappe.get_all("Partner Delivery Mode", filters={"parent": ["in", names]}, fields=["parent", "delivery_mode"]):
 		delivery_by.setdefault(r.parent, []).append(r.delivery_mode)
-
-	apps_by_partner = {}
-	for row in frappe.get_all(
-		"Partner App", filters={"parent": ["in", names]}, fields=["parent", "app"], order_by="idx asc",
-	):
-		apps_by_partner.setdefault(row.parent, []).append(row.app)
+	for r in frappe.get_all("Partner App", filters={"parent": ["in", names]}, fields=["parent", "app"], order_by="idx asc"):
+		apps_by_partner.setdefault(r.parent, []).append(r.app)
+	for r in frappe.get_all("Partner Migration Path", filters={"parent": ["in", names]}, fields=["parent", "migration_path"]):
+		migrations_by.setdefault(r.parent, []).append(r.migration_path)
+	for r in frappe.get_all("Partner Implementation Type", filters={"parent": ["in", names]}, fields=["parent", "implementation_type"]):
+		impl_by.setdefault(r.parent, []).append(r.implementation_type)
+	for r in frappe.get_all("Partner Business Process", filters={"parent": ["in", names]}, fields=["parent", "business_process"]):
+		bp_by.setdefault(r.parent, []).append(r.business_process)
 
 	industry = answers.get("industry")
 	wanted_industry = WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry) if industry else None
@@ -1531,6 +1537,23 @@ def _score_partners_by_requirements(answers):
 	wanted_mode = DELIVERY_TO_MODE.get(delivery) if delivery and delivery != "No preference" else None
 
 	wanted_apps = answers.get("apps") or []
+
+	looking_for = answers.get("looking_for")
+	wanted_impl_type = LOOKING_FOR_TO_IMPL_TYPE.get(looking_for)
+
+	situation = answers.get("current_situation")
+	wanted_migration = CURRENT_SITUATION_TO_MIGRATION.get(situation)
+	wanted_situation_impl_type = None if wanted_migration else CURRENT_SITUATION_TO_IMPL_TYPE.get(situation)
+
+	requirements = answers.get("requirements") or []
+	wanted_bps = [REQUIREMENT_TO_BUSINESS_PROCESS[r] for r in requirements if r in REQUIREMENT_TO_BUSINESS_PROCESS]
+	wants_migration_tag = any(r in REQUIREMENT_MIGRATION_TAGS for r in requirements)
+
+	answered = sum(1 for v in (
+		wanted_industry, wanted_mode, wanted_apps, wanted_impl_type,
+		wanted_migration or wanted_situation_impl_type, wanted_bps or wants_migration_tag,
+	) if v)
+	max_missing = max(2, math.ceil(answered / 2))
 
 	scored = []
 	for name in names:
@@ -1544,7 +1567,17 @@ def _score_partners_by_requirements(answers):
 			missing.append(", ".join(wanted_apps) + (" Support" if len(wanted_apps) == 1 else " support"))
 		if wanted_mode and wanted_mode not in delivery_by.get(name, []):
 			missing.append(f"{delivery} Delivery")
-		if len(missing) <= 2:
+		if wanted_impl_type and wanted_impl_type not in impl_by.get(name, []):
+			missing.append(f"{looking_for} Expertise")
+		if wanted_migration and wanted_migration not in migrations_by.get(name, []):
+			missing.append(f"{situation} Migration Experience")
+		elif wanted_situation_impl_type and wanted_situation_impl_type not in impl_by.get(name, []):
+			missing.append(f"{situation} Experience")
+		if wanted_bps and not any(bp in bp_by.get(name, []) for bp in wanted_bps):
+			missing.append(", ".join(requirements) + " Support")
+		elif wants_migration_tag and not migrations_by.get(name):
+			missing.append("Migration Experience")
+		if len(missing) <= max_missing:
 			scored.append((len(missing), -(row.rating or 0), name, missing))
 
 	scored.sort(key=lambda s: (s[0], s[1]))
