@@ -346,7 +346,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "finderOpen.value = true; finderStep.value = 0; finderAnswers.value = {}; finderOutcome.value = ''; lastAnsweredKey.value = ''; matchedNames.value = []; call('connect.api.wizard_match_state', { answers: '{}' }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const saved = myRequirement.data || {};\nlet special = [];\ntry { special = JSON.parse(saved.special_requirements || '[]'); } catch (e) { special = []; }\nconst prefill = {\n  company_name: saved.company_name || undefined,\n  country: saved.country || undefined,\n  industry: saved.industry || undefined,\n  apps: saved.apps || [],\n  looking_for: saved.looking_for || undefined,\n  company_size: saved.company_size || undefined,\n  current_situation: saved.current_situation || undefined,\n  timeline: saved.timeline || undefined,\n  delivery_preference: saved.delivery_preference || undefined,\n  budget: saved.budget || undefined,\n  requirements: special,\n};\nObject.keys(prefill).forEach((k) => { if (prefill[k] === undefined) delete prefill[k]; });\nwizardCompanyNameInput.value = saved.company_name || '';\nwizardCountryInput.value = saved.country || '';\nwizardLookingForSelect.value = saved.looking_for || '';\nwizardCompanySizeSelect.value = saved.company_size || '';\nwizardCurrentSituationSelect.value = saved.current_situation || '';\nwizardTimelineSelect.value = saved.timeline || '';\nwizardDeliveryPreferenceSelect.value = saved.delivery_preference || '';\nwizardBudgetSelect.value = saved.budget || '';\nfinderOpen.value = true; finderStep.value = 0; finderAnswers.value = prefill; finderOutcome.value = ''; lastAnsweredKey.value = ''; matchedNames.value = [];\ncall('connect.api.wizard_match_state', { answers: JSON.stringify(prefill) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "Button-2af82f219",
@@ -12661,7 +12661,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "finderOpen.value = true; finderStep.value = 0; finderAnswers.value = {}; finderOutcome.value = ''; lastAnsweredKey.value = ''; matchedNames.value = []; call('connect.api.wizard_match_state', { answers: '{}' }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const saved = myRequirement.data || {};\nlet special = [];\ntry { special = JSON.parse(saved.special_requirements || '[]'); } catch (e) { special = []; }\nconst prefill = {\n  company_name: saved.company_name || undefined,\n  country: saved.country || undefined,\n  industry: saved.industry || undefined,\n  apps: saved.apps || [],\n  looking_for: saved.looking_for || undefined,\n  company_size: saved.company_size || undefined,\n  current_situation: saved.current_situation || undefined,\n  timeline: saved.timeline || undefined,\n  delivery_preference: saved.delivery_preference || undefined,\n  budget: saved.budget || undefined,\n  requirements: special,\n};\nObject.keys(prefill).forEach((k) => { if (prefill[k] === undefined) delete prefill[k]; });\nwizardCompanyNameInput.value = saved.company_name || '';\nwizardCountryInput.value = saved.country || '';\nwizardLookingForSelect.value = saved.looking_for || '';\nwizardCompanySizeSelect.value = saved.company_size || '';\nwizardCurrentSituationSelect.value = saved.current_situation || '';\nwizardTimelineSelect.value = saved.timeline || '';\nwizardDeliveryPreferenceSelect.value = saved.delivery_preference || '';\nwizardBudgetSelect.value = saved.budget || '';\nfinderOpen.value = true; finderStep.value = 0; finderAnswers.value = prefill; finderOutcome.value = ''; lastAnsweredKey.value = ''; matchedNames.value = [];\ncall('connect.api.wizard_match_state', { answers: JSON.stringify(prefill) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "Button-2af82f219",
@@ -24627,7 +24627,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-08-20 00:04:19.010333",
+ "modified": "2026-08-20 00:07:44.351531",
  "modified_by": "Administrator",
  "name": "find_partners",
  "owner": "Administrator",
