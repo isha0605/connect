@@ -12339,40 +12339,6 @@
                "componentId": "profile-settings-profile-heading",
                "componentName": "container",
                "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "display": "flex",
-                "flexShrink": "0",
-                "gap": "8px"
-               },
-               "children": [
-                {
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "saveMyProfile();"
-                  }
-                 },
-                 "componentId": "profile-settings-profile-save-btn",
-                 "componentName": "Button",
-                 "componentProps": {
-                  "label": "Save",
-                  "loading": "{{ savingProfile }}",
-                  "loadingText": "Saving...",
-                  "theme": "gray",
-                  "variant": "solid"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentId": "profile-settings-profile-actions",
-               "componentName": "container",
-               "originalElement": "div"
               }
              ],
              "classes": [],
@@ -12477,78 +12443,148 @@
               },
               {
                "baseStyles": {
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "12px",
                 "marginBottom": "14px"
                },
-               "children": [],
-               "classes": [],
-               "componentId": "profile-settings-name-input",
-               "componentName": "TextInput",
-               "componentProps": {
-                "label": "Full name",
-                "modelValue": {
-                 "$type": "variable",
-                 "name": "editFullName"
+               "children": [
+                {
+                 "baseStyles": {
+                  "flex": "1",
+                  "minWidth": "0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-name-input",
+                 "componentName": "TextInput",
+                 "componentProps": {
+                  "label": "Full name",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "editFullName"
+                  },
+                  "placeholder": "Your name",
+                  "size": "md",
+                  "variant": "outline"
+                 }
                 },
-                "placeholder": "Your name",
-                "size": "md",
-                "variant": "outline"
-               }
-              },
-              {
-               "baseStyles": {
-                "marginBottom": "14px"
-               },
-               "children": [],
+                {
+                 "baseStyles": {
+                  "flex": "1",
+                  "minWidth": "0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-role-input",
+                 "componentName": "TextInput",
+                 "componentProps": {
+                  "label": "Role",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "editRole"
+                  },
+                  "placeholder": "e.g. Sales, Support",
+                  "size": "md",
+                  "variant": "outline"
+                 }
+                }
+               ],
                "classes": [],
-               "componentId": "profile-settings-email-input",
-               "componentName": "TextInput",
-               "componentProps": {
-                "disabled": true,
-                "label": "Email",
-                "modelValue": "{{ myProfile.data ? myProfile.data.email : '' }}",
-                "size": "md",
-                "type": "email",
-                "variant": "outline"
-               }
+               "componentId": "profile-settings-name-role-row",
+               "componentName": "container",
+               "originalElement": "div"
               },
               {
                "baseStyles": {
-                "marginBottom": "14px"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "profile-settings-role-input",
-               "componentName": "TextInput",
-               "componentProps": {
-                "label": "Role",
-                "modelValue": {
-                 "$type": "variable",
-                 "name": "editRole"
-                },
-                "placeholder": "e.g. Sales, Support",
-                "size": "md",
-                "variant": "outline"
-               }
-              },
-              {
-               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "12px",
                 "marginBottom": "0px"
                },
-               "children": [],
-               "classes": [],
-               "componentId": "profile-settings-phone-input",
-               "componentName": "TextInput",
-               "componentProps": {
-                "label": "Phone number",
-                "modelValue": {
-                 "$type": "variable",
-                 "name": "editPhone"
+               "children": [
+                {
+                 "baseStyles": {
+                  "flex": "1",
+                  "minWidth": "0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-email-input",
+                 "componentName": "TextInput",
+                 "componentProps": {
+                  "disabled": true,
+                  "label": "Email",
+                  "modelValue": "{{ myProfile.data ? myProfile.data.email : '' }}",
+                  "size": "md",
+                  "type": "email",
+                  "variant": "outline"
+                 }
                 },
-                "placeholder": "Your phone number",
-                "size": "md",
-                "type": "tel",
-                "variant": "outline"
-               }
+                {
+                 "baseStyles": {
+                  "flex": "1",
+                  "minWidth": "0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-phone-input",
+                 "componentName": "TextInput",
+                 "componentProps": {
+                  "label": "Phone number",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "editPhone"
+                  },
+                  "placeholder": "Your phone number",
+                  "size": "md",
+                  "type": "tel",
+                  "variant": "outline"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "profile-settings-email-phone-row",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "justifyContent": "flex-end",
+                "marginTop": "20px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flexShrink": 0
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "saveMyProfile();"
+                  }
+                 },
+                 "componentId": "profile-settings-profile-save-btn",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "disabled": "{{ editFullName === originalFullName && editRole === originalRole && editPhone === originalPhone }}",
+                  "iconLeft": "lucide-check",
+                  "label": "Save",
+                  "loading": "{{ savingProfile }}",
+                  "loadingText": "Saving...",
+                  "theme": "gray",
+                  "variant": "solid"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "profile-settings-profile-save-row",
+               "componentName": "container",
+               "originalElement": "div"
               }
              ],
              "classes": [],
