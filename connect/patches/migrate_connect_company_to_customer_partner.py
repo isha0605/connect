@@ -34,21 +34,22 @@ def execute():
 				"customer_name": row.company_name,
 			}).insert(ignore_permissions=True).name
 
-		customer_doc = frappe.get_doc("Customer", customer_name)
-		existing_team_users = {t.user for t in customer_doc.team}
+		existing_team_users = set(
+			frappe.get_all("Customer Team Member", filters={"customer": customer_name}, pluck="user")
+		)
 		members = frappe.get_all(
 			"Connect Customer Member", filters={"customer": row.name}, fields=["user", "is_admin"]
 		)
-		changed = False
 		for member in members:
 			if member.user in existing_team_users:
 				continue
-			customer_doc.append(
-				"team", {"user": member.user, "full_name": get_fullname(member.user), "is_admin": member.is_admin}
-			)
-			changed = True
-		if changed:
-			customer_doc.save(ignore_permissions=True)
+			frappe.get_doc({
+				"doctype": "Customer Team Member",
+				"customer": customer_name,
+				"user": member.user,
+				"full_name": get_fullname(member.user),
+				"is_admin": member.is_admin,
+			}).insert(ignore_permissions=True)
 
 		frappe.db.set_value(
 			"Connect Customer Member", {"customer": row.name}, "customer", customer_name, update_modified=False

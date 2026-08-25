@@ -16,7 +16,7 @@ class Shortlist(Document):
 
 
 def _customer_names_for_user(user):
-	return frappe.get_all("Customer Team Member", filters={"user": user}, pluck="parent")
+	return frappe.get_all("Customer Team Member", filters={"user": user}, pluck="customer")
 
 
 def get_permission_query_conditions(user):

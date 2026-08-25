@@ -44,10 +44,10 @@ def _my_company_membership(user):
 	"""Returns (doctype, company, row) for whichever company this user belongs to, or
 	(None, None, None) if neither. A user is assumed to belong to at most one company."""
 	customer_row = frappe.db.get_value(
-		"Customer Team Member", {"user": user}, ["name", "parent", "is_admin"], as_dict=True
+		"Customer Team Member", {"user": user}, ["name", "customer", "is_admin"], as_dict=True
 	)
 	if customer_row:
-		return "Customer Team Member", customer_row.parent, customer_row
+		return "Customer Team Member", customer_row.customer, customer_row
 	partner_row = frappe.db.get_value(
 		"Connect Partner Member", {"user": user}, ["name", "partner", "is_admin"], as_dict=True
 	)
@@ -285,7 +285,7 @@ def get_my_company_members():
 	if not doctype:
 		frappe.throw(_("You are not a member of any company"))
 
-	fieldname = "parent" if doctype == "Customer Team Member" else "partner"
+	fieldname = "customer" if doctype == "Customer Team Member" else "partner"
 	return frappe.get_all(doctype, filters={fieldname: company}, fields=["user", "is_admin"])
 
 
@@ -299,7 +299,7 @@ def get_my_team():
 	if not doctype:
 		frappe.throw(_("You are not a member of any company"))
 
-	fieldname = "parent" if doctype == "Customer Team Member" else "partner"
+	fieldname = "customer" if doctype == "Customer Team Member" else "partner"
 	rows = frappe.get_all(doctype, filters={fieldname: company}, fields=["user", "is_admin"])
 	for row in rows:
 		profile = frappe.db.get_value("User", row.user, ["full_name", "user_image"], as_dict=True) or {}
@@ -396,9 +396,9 @@ def make_thread_admin(thread, member):
 	"""Promote a thread member to company admin. Unlike a plain company-scoped transfer, the
 	target here is a Connect Thread Member row, not necessarily an existing Customer Team/
 	Partner Member — most thread members (added via add_thread_member) never get a company
-	membership row at all, so one is created for them here if missing. Customer Team Member
-	is a child table of Customer (unlike the standalone Connect Partner Member), so that side
-	goes through the parent doc instead of a bare insert."""
+	membership row at all, so one is created for them here if missing. Both Customer Team
+	Member and Connect Partner Member are standalone doctypes (see connect.connect.roles),
+	so both sides go through the same find-or-create-by-bare-insert shape."""
 	user = frappe.session.user
 	member_doc = frappe.get_doc("Connect Thread Member", member)
 	if member_doc.thread != thread:
@@ -421,17 +421,23 @@ def make_thread_admin(thread, member):
 		frappe.throw(_("Only an admin of your own side can do this"), frappe.PermissionError)
 
 	if member_doc.side == "Customer":
-		customer_doc = frappe.get_doc("Customer", company)
-		found = False
-		for row in customer_doc.team:
-			if row.user == user:
-				row.is_admin = 0
-			if row.user == member_doc.user:
-				row.is_admin = 1
-				found = True
-		if not found:
-			customer_doc.append("team", {"user": member_doc.user, "is_admin": 1})
-		customer_doc.save(ignore_permissions=True)
+		my_row = frappe.db.get_value("Customer Team Member", {"customer": company, "user": user}, "name")
+		if my_row:
+			frappe.db.set_value("Customer Team Member", my_row, "is_admin", 0)
+
+		target_row = frappe.db.get_value(
+			"Customer Team Member", {"customer": company, "user": member_doc.user}, "name"
+		)
+		if target_row:
+			frappe.db.set_value("Customer Team Member", target_row, "is_admin", 1)
+		else:
+			frappe.get_doc({
+				"doctype": "Customer Team Member",
+				"customer": company,
+				"user": member_doc.user,
+				"full_name": get_fullname(member_doc.user),
+				"is_admin": 1,
+			}).insert(ignore_permissions=True)
 	else:
 		my_row = frappe.db.get_value("Connect Partner Member", {"partner": company, "user": user}, "name")
 		if my_row:
@@ -465,7 +471,7 @@ def get_thread_admins(thread):
 		"Connect Partner Member", {"partner": thread_doc.partner, "is_admin": 1}, "user"
 	)
 	customer_admin = frappe.db.get_value(
-		"Customer Team Member", {"parent": thread_doc.customer, "is_admin": 1}, "user"
+		"Customer Team Member", {"customer": thread_doc.customer, "is_admin": 1}, "user"
 	)
 	return {"partner_admin": partner_admin, "customer_admin": customer_admin}
 
@@ -830,7 +836,7 @@ def get_my_context():
 	customer = _get_customer_for_user(user)
 	customer_membership = None
 	if customer:
-		is_admin = frappe.db.get_value("Customer Team Member", {"parent": customer, "user": user}, "is_admin")
+		is_admin = frappe.db.get_value("Customer Team Member", {"customer": customer, "user": user}, "is_admin")
 		customer_membership = {"customer": customer, "is_admin": cint(is_admin)}
 	partner_membership = frappe.db.get_value(
 		"Connect Partner Member", {"user": user}, ["partner", "is_admin"], as_dict=True
@@ -876,8 +882,15 @@ def signup_customer(full_name, company_name, email, password):
 
 	customer = frappe.new_doc("Customer")
 	customer.customer_name = company_name
-	customer.append("team", {"user": email, "full_name": full_name, "is_admin": 1})
 	customer.insert(ignore_permissions=True)
+
+	frappe.get_doc({
+		"doctype": "Customer Team Member",
+		"customer": customer.name,
+		"user": email,
+		"full_name": full_name,
+		"is_admin": 1,
+	}).insert(ignore_permissions=True)
 
 	frappe.local.login_manager.login_as(email)
 	return {"ok": True}
@@ -1708,7 +1721,7 @@ def _get_customer_for_user(user=None):
 	user = user or frappe.session.user
 	if not user or user == "Guest":
 		return None
-	return frappe.db.get_value("Customer Team Member", {"user": user}, "parent")
+	return frappe.db.get_value("Customer Team Member", {"user": user}, "customer")
 
 
 @frappe.whitelist(allow_guest=True)

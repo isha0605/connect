@@ -14,7 +14,7 @@ def get_permission_query_conditions(user):
 	if user == "Administrator" or "System Manager" in frappe.get_roles(user):
 		return ""
 	return f"""`tabCustomer`.name in (
-		select parent from `tabCustomer Team Member` where user = {frappe.db.escape(user)}
+		select customer from `tabCustomer Team Member` where user = {frappe.db.escape(user)}
 	)"""
 
 
@@ -22,4 +22,4 @@ def has_permission(doc, user=None, permission_type=None):
 	user = user or frappe.session.user
 	if user == "Administrator" or "System Manager" in frappe.get_roles(user):
 		return True
-	return bool(frappe.db.exists("Customer Team Member", {"parent": doc.name, "user": user}))
+	return bool(frappe.db.exists("Customer Team Member", {"customer": doc.name, "user": user}))
