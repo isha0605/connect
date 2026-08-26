@@ -807,7 +807,7 @@ export default function setup(context) {
 		const disabled = !isRowAdmin(item)
 		return [
 			{ label: "Make admin", icon: "lucide-crown", disabled, onClick: () => makeAdmin(item) },
-			{ label: "Remove from channel", icon: "lucide-user-minus", theme: "red", disabled, onClick: () => removeMember(item) },
+			{ label: "Remove from chat", icon: "lucide-user-minus", theme: "red", disabled, onClick: () => removeMember(item) },
 		]
 	}
 

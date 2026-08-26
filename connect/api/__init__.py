@@ -7,7 +7,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint, flt, get_fullname, nowdate, validate_email_address
 
-from connect.permissions import _my_company_membership
+from connect.permissions import _is_customer_admin, _is_partner_admin, _my_company_membership
 
 
 
@@ -62,6 +62,57 @@ def remove_team_member(member):
 	doc = frappe.get_doc(doctype, member)
 	doc.remove(user)
 	return {"removed": doc.user}
+
+
+@frappe.whitelist()
+def add_team_member(email, role=None):
+	"""Invite someone directly onto the caller's own company roster — not thread-scoped, unlike
+	Connect Thread's add_member. Creates their User account first if it doesn't exist yet, same
+	server-side pattern (a portal admin has no create-permission on User)."""
+	user = frappe.session.user
+	doctype, company, _row = _my_company_membership(user)
+	if not doctype:
+		frappe.throw(_("You are not a member of any company"))
+
+	is_customer_side = doctype == "Customer Team Member"
+	authorized = (
+		_is_customer_admin(company, user) if is_customer_side else _is_partner_admin(company, user)
+	)
+	if not authorized:
+		frappe.throw(_("Only an admin can add a team member"), frappe.PermissionError)
+
+	email = (email or "").strip().lower()
+	if not email:
+		frappe.throw(_("Enter an email address"))
+	if not validate_email_address(email, throw=False):
+		frappe.throw(_("Enter a valid email address"))
+
+	fieldname = "customer" if is_customer_side else "partner"
+	if frappe.db.exists(doctype, {fieldname: company, "user": email}):
+		frappe.throw(_("{0} is already a member").format(email))
+
+	created_user = False
+	if not frappe.db.exists("User", email):
+		frappe.get_doc({
+			"doctype": "User",
+			"email": email,
+			"first_name": email.split("@")[0],
+			"user_type": "Website User",
+			"send_welcome_email": 0,
+		}).insert(ignore_permissions=True)
+		created_user = True
+
+	role_field = "designation" if is_customer_side else "role"
+	member_doc = frappe.get_doc({
+		"doctype": doctype,
+		fieldname: company,
+		"user": email,
+		"is_admin": 0,
+		role_field: role,
+	})
+	member_doc.insert(ignore_permissions=True)
+
+	return {"member": member_doc.name, "created_user": created_user}
 
 
 @frappe.whitelist()

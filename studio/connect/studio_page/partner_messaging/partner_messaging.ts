@@ -32,6 +32,10 @@ export default function setup(context) {
 	const showAddMemberDialog = ref(false)
 	const newMemberEmail = ref("")
 	const newMemberPermission = ref("Write")
+	const showAddTeamMemberDialog = ref(false)
+	const newTeamMemberEmail = ref("")
+	const newTeamMemberRole = ref("")
+	const addingTeamMember = ref(false)
 
 	// DMs live in the SAME sidebar/chat pane as company deal threads (see unifiedThreadList) —
 	// selectedThreadType tracks which kind selectedThread currently refers to, since the two
@@ -739,7 +743,7 @@ export default function setup(context) {
 		const disabled = !isRowAdmin(item)
 		return [
 			{ label: "Make admin", icon: "lucide-crown", disabled, onClick: () => makeAdmin(item) },
-			{ label: "Remove from channel", icon: "lucide-user-minus", theme: "red", disabled, onClick: () => removeMember(item) },
+			{ label: "Remove from chat", icon: "lucide-user-minus", theme: "red", disabled, onClick: () => removeMember(item) },
 		]
 	}
 
@@ -779,6 +783,38 @@ export default function setup(context) {
 		return [
 			{ label: "Disable", icon: "lucide-user-minus", theme: "red", disabled, onClick: () => confirmDisableTeamMember(item) },
 		]
+	}
+
+	async function addTeamMember() {
+		if (!newTeamMemberEmail.value) {
+			toast({ title: "Enter an email", icon: "x-circle", iconClasses: "text-red-600" })
+			return
+		}
+		addingTeamMember.value = true
+		try {
+			const data = await call("connect.api.add_team_member", {
+				email: newTeamMemberEmail.value,
+				role: newTeamMemberRole.value || null,
+			})
+			showAddTeamMemberDialog.value = false
+			newTeamMemberEmail.value = ""
+			newTeamMemberRole.value = ""
+			context.myTeam.reload()
+			toast({
+				title: data && data.created_user ? "New account created and added" : "Team member added",
+				icon: "check",
+				iconClasses: "text-green-600",
+			})
+		} catch (e) {
+			toast({
+				title: "Could not add team member",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			addingTeamMember.value = false
+		}
 	}
 
 	// ---- Messages ----
@@ -1775,6 +1811,11 @@ export default function setup(context) {
 		disablingTeamMember,
 		disableTeamMember,
 		teamRowOptions,
+		showAddTeamMemberDialog,
+		newTeamMemberEmail,
+		newTeamMemberRole,
+		addingTeamMember,
+		addTeamMember,
 		messageActionsOptions,
 		otherMessageActionsOptions,
 		showDeleteMessageDialog,
