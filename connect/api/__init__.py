@@ -65,10 +65,12 @@ def remove_team_member(member):
 
 
 @frappe.whitelist()
-def add_team_member(email, role=None):
+def add_team_member(email, role=None, password=None):
 	"""Invite someone directly onto the caller's own company roster — not thread-scoped, unlike
 	Connect Thread's add_member. Creates their User account first if it doesn't exist yet, same
-	server-side pattern (a portal admin has no create-permission on User)."""
+	server-side pattern (a portal admin has no create-permission on User). An admin can also set
+	the new account's password here directly, so they don't have to hand-edit it in the database
+	afterward — only applies to a newly-created account, never to one that already existed."""
 	user = frappe.session.user
 	doctype, company, _row = _my_company_membership(user)
 	if not doctype:
@@ -93,13 +95,14 @@ def add_team_member(email, role=None):
 
 	created_user = False
 	if not frappe.db.exists("User", email):
-		frappe.get_doc({
-			"doctype": "User",
-			"email": email,
-			"first_name": email.split("@")[0],
-			"user_type": "Website User",
-			"send_welcome_email": 0,
-		}).insert(ignore_permissions=True)
+		new_user = frappe.new_doc("User")
+		new_user.email = email
+		new_user.first_name = email.split("@")[0]
+		new_user.user_type = "Website User"
+		new_user.send_welcome_email = 0
+		if password:
+			new_user.new_password = password
+		new_user.insert(ignore_permissions=True)
 		created_user = True
 
 	role_field = "designation" if is_customer_side else "role"

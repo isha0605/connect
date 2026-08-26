@@ -38,6 +38,7 @@ export default function setup(context) {
 	const showAddTeamMemberDialog = ref(false)
 	const newTeamMemberEmail = ref("")
 	const newTeamMemberRole = ref("")
+	const newTeamMemberPassword = ref("")
 	const addingTeamMember = ref(false)
 
 	// DMs live in the SAME sidebar/chat pane as company deal threads (see unifiedThreadList) —
@@ -863,10 +864,12 @@ export default function setup(context) {
 			const data = await call("connect.api.add_team_member", {
 				email: newTeamMemberEmail.value,
 				role: newTeamMemberRole.value || null,
+				password: newTeamMemberPassword.value || null,
 			})
 			showAddTeamMemberDialog.value = false
 			newTeamMemberEmail.value = ""
 			newTeamMemberRole.value = ""
+			newTeamMemberPassword.value = ""
 			context.myTeam.reload()
 			toast({
 				title: data && data.created_user ? "New account created and added" : "Team member added",
@@ -1936,6 +1939,7 @@ export default function setup(context) {
 		showAddTeamMemberDialog,
 		newTeamMemberEmail,
 		newTeamMemberRole,
+		newTeamMemberPassword,
 		addingTeamMember,
 		addTeamMember,
 		messageActionsOptions,
