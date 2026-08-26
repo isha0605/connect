@@ -17,6 +17,32 @@ def _is_partner_admin(partner, user):
 	)
 
 
+def _my_company_membership(user):
+	"""Returns (doctype, company, row) for whichever company this user belongs to, or
+	(None, None, None) if neither. A user is assumed to belong to at most one company."""
+	customer_row = frappe.db.get_value(
+		"Customer Team Member", {"user": user}, ["name", "customer", "is_admin"], as_dict=True
+	)
+	if customer_row:
+		return "Customer Team Member", customer_row.customer, customer_row
+	partner_row = frappe.db.get_value(
+		"Connect Partner Member", {"user": user}, ["name", "partner", "is_admin"], as_dict=True
+	)
+	if partner_row:
+		return "Connect Partner Member", partner_row.partner, partner_row
+	return None, None, None
+
+
+def _my_side(user):
+	"""Which side (Customer/Partner) this user belongs to, or None if neither."""
+	doctype, _company, _row = _my_company_membership(user)
+	if doctype == "Customer Team Member":
+		return "Customer"
+	if doctype == "Connect Partner Member":
+		return "Partner"
+	return None
+
+
 def _thread_membership(thread, user):
 	return frappe.db.get_value(
 		"Connect Thread Member",
