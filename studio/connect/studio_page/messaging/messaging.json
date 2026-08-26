@@ -4430,6 +4430,100 @@
       {
        "baseStyles": {
         "display": "flex",
+        "flexDirection": "column",
+        "gap": "14px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "disable-team-member-description",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-sm",
+          "tag": "p",
+          "text": "{{ memberToDisable ? memberToDisable.user + ' will lose access to every thread they are part of.' : '' }}"
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "8px",
+          "justifyContent": "flex-end"
+         },
+         "children": [
+          {
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "showDisableTeamMemberDialog.value = false;"
+            }
+           },
+           "componentId": "disable-team-member-cancel-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "theme": "gray",
+            "variant": "outline"
+           }
+          },
+          {
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "disableTeamMember();"
+            }
+           },
+           "componentId": "disable-team-member-confirm-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Disable",
+            "loading": "{{ disablingTeamMember }}",
+            "loadingText": "Disabling...",
+            "theme": "red",
+            "variant": "solid"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "disable-team-member-actions",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "disable-team-member-body",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "disable-team-member-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "showDisableTeamMemberDialog"
+      },
+      "size": "sm",
+      "title": "Disable team member?"
+     }
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
         "flexDirection": "row",
         "height": "min(620px, 80vh)",
         "position": "relative"

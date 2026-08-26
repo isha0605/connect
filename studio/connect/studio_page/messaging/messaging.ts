@@ -811,28 +811,41 @@ export default function setup(context) {
 		]
 	}
 
-	function removeTeamMember(item) {
-		if (!window.confirm(`Disable ${item.user}? They'll lose access to all threads.`)) return
-		call("connect.api.remove_team_member", { member: item.name })
-			.then(() => {
-				context.myTeam.reload()
-				toast({ title: "Team member disabled", icon: "check", iconClasses: "text-green-600" })
+	const showDisableTeamMemberDialog = ref(false)
+	const memberToDisable = ref(null)
+	const disablingTeamMember = ref(false)
+
+	function confirmDisableTeamMember(item) {
+		memberToDisable.value = item
+		showDisableTeamMemberDialog.value = true
+	}
+
+	async function disableTeamMember() {
+		if (!memberToDisable.value || disablingTeamMember.value) return
+		disablingTeamMember.value = true
+		try {
+			await call("connect.api.remove_team_member", { member: memberToDisable.value.name })
+			showDisableTeamMemberDialog.value = false
+			memberToDisable.value = null
+			context.myTeam.reload()
+			toast({ title: "Team member disabled", icon: "check", iconClasses: "text-green-600" })
+		} catch (e) {
+			toast({
+				title: "Could not disable team member",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
 			})
-			.catch((e) => {
-				toast({
-					title: "Could not disable team member",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
-			})
+		} finally {
+			disablingTeamMember.value = false
+		}
 	}
 
 	function teamRowOptions(item) {
 		const me = context.myContext.data && context.myContext.data.user
 		const disabled = !isAnyAdmin() || item.user === me
 		return [
-			{ label: "Disable", icon: "lucide-user-minus", theme: "red", disabled, onClick: () => removeTeamMember(item) },
+			{ label: "Disable", icon: "lucide-user-minus", theme: "red", disabled, onClick: () => confirmDisableTeamMember(item) },
 		]
 	}
 
@@ -1879,7 +1892,10 @@ export default function setup(context) {
 		makeAdmin,
 		removeMember,
 		memberRowOptions,
-		removeTeamMember,
+		showDisableTeamMemberDialog,
+		memberToDisable,
+		disablingTeamMember,
+		disableTeamMember,
 		teamRowOptions,
 		messageActionsOptions,
 		otherMessageActionsOptions,
