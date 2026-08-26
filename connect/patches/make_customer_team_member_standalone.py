@@ -1,11 +1,11 @@
 import frappe
 
-from connect.connect.roles import CUSTOMER_ROLE
+from connect.roles import CUSTOMER_ROLE
 
 
 def execute():
 	"""Customer Team Member just became a standalone doctype (it was a child table of
-	Customer) so its after_insert/on_trash role-grant hooks (see connect.connect.roles)
+	Customer) so its after_insert/on_trash role-grant hooks (see connect.roles)
 	actually fire. As a child table, rows were always written via
 	`customer_doc.append("team", ...); customer_doc.save()` — Frappe writes child rows with
 	raw db_insert/db_update during the parent's save, which never runs the child doctype's

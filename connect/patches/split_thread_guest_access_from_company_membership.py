@@ -1,6 +1,6 @@
 import frappe
 
-from connect.connect.roles import CUSTOMER_GUEST_ROLE, PARTNER_GUEST_ROLE, _GUEST_ROLE_BY_SIDE, _set_role
+from connect.roles import CUSTOMER_GUEST_ROLE, PARTNER_GUEST_ROLE, _GUEST_ROLE_BY_SIDE, _set_role
 
 
 def execute():

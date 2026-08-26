@@ -8,7 +8,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint, flt, get_fullname, now_datetime, nowdate, validate_email_address
 
-from connect.connect.permissions import (
+from connect.permissions import (
 	_has_full_access,
 	_is_customer_admin,
 	_is_partner_admin,
@@ -397,7 +397,7 @@ def make_thread_admin(thread, member):
 	target here is a Connect Thread Member row, not necessarily an existing Customer Team/
 	Partner Member — most thread members (added via add_thread_member) never get a company
 	membership row at all, so one is created for them here if missing. Both Customer Team
-	Member and Connect Partner Member are standalone doctypes (see connect.connect.roles),
+	Member and Connect Partner Member are standalone doctypes (see connect.roles),
 	so both sides go through the same find-or-create-by-bare-insert shape."""
 	user = frappe.session.user
 	member_doc = frappe.get_doc("Connect Thread Member", member)
@@ -724,7 +724,7 @@ def delete_message(message):
 	mainstream chat app: the doctype's own permission model would technically allow any
 	thread member with Write to delete anyone's message (that's for moderation elsewhere),
 	but "delete for everyone" specifically only ever means *your own* message."""
-	from connect.connect.notifications import notify_message_deleted
+	from connect.notifications import notify_message_deleted
 
 	user = frappe.session.user
 	doc = frappe.get_doc("Connect Message", message)
@@ -749,7 +749,7 @@ def edit_message(message, content):
 	"""Edit your own text message in place — same own-message-only rule as delete_message.
 	Files/images/system rows aren't editable, and an edit is never allowed to empty a message
 	out entirely (that's what delete is for)."""
-	from connect.connect.notifications import notify_message_edited
+	from connect.notifications import notify_message_edited
 
 	user = frappe.session.user
 	doc = frappe.get_doc("Connect Message", message)
@@ -779,7 +779,7 @@ def pin_message(message):
 	"""Pin a message to the top of its thread — one at a time, pinning a new one replaces
 	whichever was pinned before. Available to any thread member with Write (not just the
 	sender), same audience as posting."""
-	from connect.connect.notifications import notify_thread_pin_changed
+	from connect.notifications import notify_thread_pin_changed
 
 	user = frappe.session.user
 	doc = frappe.get_doc("Connect Message", message)
@@ -795,7 +795,7 @@ def pin_message(message):
 
 @frappe.whitelist()
 def unpin_message(thread):
-	from connect.connect.notifications import notify_thread_pin_changed
+	from connect.notifications import notify_thread_pin_changed
 
 	user = frappe.session.user
 	_check_can_write(thread, user)
@@ -1109,7 +1109,7 @@ def _dm_thread_pair(thread, user):
 def delete_dm_message(message):
 	"""DM counterpart to delete_message — own-message-only, same as the company thread version
 	(no admin override here since a DM has no such role)."""
-	from connect.connect.notifications import notify_dm_message_deleted
+	from connect.notifications import notify_dm_message_deleted
 
 	user = frappe.session.user
 	doc = frappe.get_doc("Connect DM Message", message)
@@ -1129,7 +1129,7 @@ def delete_dm_message(message):
 @frappe.whitelist()
 def edit_dm_message(message, content):
 	"""DM counterpart to edit_message."""
-	from connect.connect.notifications import notify_dm_message_edited
+	from connect.notifications import notify_dm_message_edited
 
 	user = frappe.session.user
 	doc = frappe.get_doc("Connect DM Message", message)
@@ -1154,7 +1154,7 @@ def edit_dm_message(message, content):
 @frappe.whitelist()
 def pin_dm_message(message):
 	"""DM counterpart to pin_message — either participant can pin, same as either can post."""
-	from connect.connect.notifications import notify_dm_thread_pin_changed
+	from connect.notifications import notify_dm_thread_pin_changed
 
 	user = frappe.session.user
 	doc = frappe.get_doc("Connect DM Message", message)
@@ -1170,7 +1170,7 @@ def pin_dm_message(message):
 
 @frappe.whitelist()
 def unpin_dm_message(thread):
-	from connect.connect.notifications import notify_dm_thread_pin_changed
+	from connect.notifications import notify_dm_thread_pin_changed
 
 	user = frappe.session.user
 	_dm_thread_pair(thread, user)

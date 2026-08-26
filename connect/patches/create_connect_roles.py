@@ -1,11 +1,11 @@
 import frappe
 
-from connect.connect.roles import CUSTOMER_ROLE, PARTNER_ROLE
+from connect.roles import CUSTOMER_ROLE, PARTNER_ROLE
 
 
 def execute():
 	"""Introduces Connect Customer / Connect Partner as the doctype-level access gate for
-	thread data (see connect.connect.roles) — this patch creates the roles and backs the
+	thread data (see connect.roles) — this patch creates the roles and backs the
 	new grant/revoke hooks up to every membership that already exists, so no one loses
 	access when the 'All' role permission is eventually removed in a later change."""
 	for role_name in (CUSTOMER_ROLE, PARTNER_ROLE):

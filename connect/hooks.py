@@ -127,29 +127,29 @@ app_license = "mit"
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
-	"Connect Thread": "connect.connect.permissions.get_thread_permission_query_conditions",
-	"Connect Thread Member": "connect.connect.permissions.get_thread_member_permission_query_conditions",
-	"Connect Message": "connect.connect.permissions.get_message_permission_query_conditions",
-	"Connect Message Template": "connect.connect.permissions.get_message_template_permission_query_conditions",
-	"Connect DM Thread": "connect.connect.permissions.get_dm_thread_permission_query_conditions",
-	"Connect DM Message": "connect.connect.permissions.get_dm_message_permission_query_conditions",
-	"Studio Page": "connect.connect.permissions.get_studio_page_permission_query_conditions",
-	"Customer": "connect.connect.doctype.customer.customer.get_permission_query_conditions",
-	"Shortlist": "connect.connect.doctype.shortlist.shortlist.get_permission_query_conditions",
-	"Requirement": "connect.connect.doctype.requirement.requirement.get_permission_query_conditions",
+	"Connect Thread": "connect.permissions.get_thread_permission_query_conditions",
+	"Connect Thread Member": "connect.permissions.get_thread_member_permission_query_conditions",
+	"Connect Message": "connect.permissions.get_message_permission_query_conditions",
+	"Connect Message Template": "connect.permissions.get_message_template_permission_query_conditions",
+	"Connect DM Thread": "connect.permissions.get_dm_thread_permission_query_conditions",
+	"Connect DM Message": "connect.permissions.get_dm_message_permission_query_conditions",
+	"Studio Page": "connect.permissions.get_studio_page_permission_query_conditions",
+	"Customer": "connect.customer.doctype.customer.customer.get_permission_query_conditions",
+	"Shortlist": "connect.customer.doctype.shortlist.shortlist.get_permission_query_conditions",
+	"Requirement": "connect.customer.doctype.requirement.requirement.get_permission_query_conditions",
 }
 
 has_permission = {
-	"Connect Thread": "connect.connect.permissions.has_thread_permission",
-	"Connect Thread Member": "connect.connect.permissions.has_thread_member_permission",
-	"Connect Message": "connect.connect.permissions.has_message_permission",
-	"Connect Message Template": "connect.connect.permissions.has_message_template_permission",
-	"Connect DM Thread": "connect.connect.permissions.has_dm_thread_permission",
-	"Connect DM Message": "connect.connect.permissions.has_dm_message_permission",
-	"Studio Page": "connect.connect.permissions.has_studio_page_permission",
-	"Customer": "connect.connect.doctype.customer.customer.has_permission",
-	"Shortlist": "connect.connect.doctype.shortlist.shortlist.has_permission",
-	"Requirement": "connect.connect.doctype.requirement.requirement.has_permission",
+	"Connect Thread": "connect.permissions.has_thread_permission",
+	"Connect Thread Member": "connect.permissions.has_thread_member_permission",
+	"Connect Message": "connect.permissions.has_message_permission",
+	"Connect Message Template": "connect.permissions.has_message_template_permission",
+	"Connect DM Thread": "connect.permissions.has_dm_thread_permission",
+	"Connect DM Message": "connect.permissions.has_dm_message_permission",
+	"Studio Page": "connect.permissions.has_studio_page_permission",
+	"Customer": "connect.customer.doctype.customer.customer.has_permission",
+	"Shortlist": "connect.customer.doctype.shortlist.shortlist.has_permission",
+	"Requirement": "connect.customer.doctype.requirement.requirement.has_permission",
 }
 
 # Document Events
@@ -158,26 +158,26 @@ has_permission = {
 
 doc_events = {
 	"Connect Message": {
-		"after_insert": "connect.connect.notifications.notify_thread_members",
+		"after_insert": "connect.notifications.notify_thread_members",
 	},
 	"Connect DM Message": {
-		"after_insert": "connect.connect.notifications.notify_dm_recipient",
+		"after_insert": "connect.notifications.notify_dm_recipient",
 	},
 	"Connect Customer Member": {
-		"after_insert": "connect.connect.roles.grant_company_role",
-		"on_trash": "connect.connect.roles.revoke_company_role",
+		"after_insert": "connect.roles.grant_company_role",
+		"on_trash": "connect.roles.revoke_company_role",
 	},
 	"Connect Partner Member": {
-		"after_insert": "connect.connect.roles.grant_company_role",
-		"on_trash": "connect.connect.roles.revoke_company_role",
+		"after_insert": "connect.roles.grant_company_role",
+		"on_trash": "connect.roles.revoke_company_role",
 	},
 	"Customer Team Member": {
-		"after_insert": "connect.connect.roles.grant_company_role",
-		"on_trash": "connect.connect.roles.revoke_company_role",
+		"after_insert": "connect.roles.grant_company_role",
+		"on_trash": "connect.roles.revoke_company_role",
 	},
 	"Connect Thread Member": {
-		"after_insert": "connect.connect.roles.grant_thread_guest_role",
-		"on_trash": "connect.connect.roles.revoke_thread_guest_role",
+		"after_insert": "connect.roles.grant_thread_guest_role",
+		"on_trash": "connect.roles.revoke_thread_guest_role",
 	},
 }
 
