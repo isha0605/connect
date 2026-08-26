@@ -35,12 +35,29 @@ def get_my_team():
 		frappe.throw(_("You are not a member of any company"))
 
 	fieldname = "customer" if doctype == "Customer Team Member" else "partner"
-	rows = frappe.get_all(doctype, filters={fieldname: company}, fields=["user", "is_admin"])
+	rows = frappe.get_all(
+		doctype, filters={fieldname: company}, fields=["name", "user", "is_admin", "is_removed"]
+	)
 	for row in rows:
 		profile = frappe.db.get_value("User", row.user, ["full_name", "user_image"], as_dict=True) or {}
 		row["full_name"] = profile.get("full_name")
 		row["user_image"] = profile.get("user_image")
 	return rows
+
+
+@frappe.whitelist()
+def remove_team_member(member):
+	"""Remove someone from the caller's own company roster — the doctype (Customer Team
+	Member vs Connect Partner Member) is inferred from the caller's own side, matching
+	get_my_team/get_my_company_members."""
+	user = frappe.session.user
+	doctype, _company, _row = _my_company_membership(user)
+	if not doctype:
+		frappe.throw(_("You are not a member of any company"))
+
+	doc = frappe.get_doc(doctype, member)
+	doc.remove(user)
+	return {"removed": doc.user}
 
 
 @frappe.whitelist()
