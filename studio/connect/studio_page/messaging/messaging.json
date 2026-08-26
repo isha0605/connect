@@ -5001,44 +5001,97 @@
              },
              "children": [
               {
+               "baseStyles": {
+                "borderBottom": "1px solid var(--outline-gray-2)",
+                "color": "var(--ink-gray-5)",
+                "display": "grid",
+                "fontSize": "12px",
+                "fontWeight": "500",
+                "gap": "10px",
+                "gridTemplateColumns": "minmax(120px,1fr) minmax(140px,1.4fr) auto",
+                "padding": "0 0 8px"
+               },
+               "children": [
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-team-header-name",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "span",
+                  "text": "Name"
+                 }
+                },
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-team-header-email",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "span",
+                  "text": "Email"
+                 }
+                },
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-team-header-role",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "span",
+                  "text": "Role"
+                 },
+                 "baseStyles": {
+                  "textAlign": "right"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "profile-settings-team-header",
+               "componentName": "container",
+               "originalElement": "div",
+               "visibilityCondition": "myTeam.data && myTeam.data.length"
+              },
+              {
                "children": [
                 {
                  "baseStyles": {
                   "alignItems": "center",
                   "borderBottom": "1px solid var(--outline-gray-1)",
-                  "display": "flex",
-                  "flexDirection": "row",
+                  "display": "grid",
                   "gap": "10px",
+                  "gridTemplateColumns": "minmax(120px,1fr) minmax(140px,1.4fr) auto",
                   "padding": "8px 0"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "flexShrink": "0",
-                    "fontSize": "16px",
-                    "fontWeight": "500",
-                    "height": "36px",
-                    "width": "36px"
-                   },
-                   "children": [],
-                   "classes": [],
-                   "componentId": "profile-settings-team-row-avatar",
-                   "componentName": "Avatar",
-                   "componentProps": {
-                    "image": "{{ dataItem.user_image }}",
-                    "label": "{{ dataItem.full_name || dataItem.user }}",
-                    "shape": "circle",
-                    "size": "xl"
-                   }
-                  },
-                  {
-                   "baseStyles": {
+                    "alignItems": "center",
                     "display": "flex",
-                    "flex": "1",
-                    "flexDirection": "column",
+                    "flexDirection": "row",
+                    "gap": "10px",
                     "minWidth": "0px"
                    },
                    "children": [
+                    {
+                     "baseStyles": {
+                      "flexShrink": "0",
+                      "fontSize": "16px",
+                      "fontWeight": "500",
+                      "height": "36px",
+                      "width": "36px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "profile-settings-team-row-avatar",
+                     "componentName": "Avatar",
+                     "componentProps": {
+                      "image": "{{ dataItem.user_image }}",
+                      "label": "{{ dataItem.full_name || dataItem.user }}",
+                      "shape": "circle",
+                      "size": "xl"
+                     }
+                    },
                     {
                      "baseStyles": {
                       "color": "var(--ink-gray-9)",
@@ -5056,81 +5109,99 @@
                       "tag": "span",
                       "text": "{{ dataItem.full_name || dataItem.user }}"
                      }
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-5)",
-                      "overflow": "hidden",
-                      "textOverflow": "ellipsis",
-                      "whiteSpace": "nowrap"
-                     },
-                     "children": [],
-                     "classes": [],
-                     "componentId": "profile-settings-team-row-email",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-xs",
-                      "tag": "span",
-                      "text": "{{ dataItem.user }}"
-                     }
                     }
                    ],
                    "classes": [],
-                   "componentId": "profile-settings-team-row-info",
+                   "componentId": "profile-settings-team-row-name-cell",
                    "componentName": "container",
                    "originalElement": "div"
                   },
                   {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "color": "var(--ink-gray-5)",
+                    "display": "flex",
+                    "minWidth": "0px",
+                    "overflow": "hidden",
+                    "textOverflow": "ellipsis",
+                    "whiteSpace": "nowrap"
+                   },
                    "children": [],
                    "classes": [],
-                   "componentId": "profile-settings-team-row-admin-badge",
-                   "componentName": "Badge",
+                   "componentId": "profile-settings-team-row-email",
+                   "componentName": "TextBlock",
                    "componentProps": {
-                    "label": "Admin",
-                    "size": "sm",
-                    "theme": "gray",
-                    "variant": "subtle"
-                   },
-                   "visibilityCondition": "dataItem.is_admin"
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ dataItem.user }}"
+                   }
                   },
                   {
-                   "children": [],
-                   "classes": [],
-                   "componentId": "profile-settings-team-row-disabled-badge",
-                   "componentName": "Badge",
-                   "componentProps": {
-                    "label": "Disabled",
-                    "size": "sm",
-                    "theme": "gray",
-                    "variant": "subtle"
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "gap": "6px",
+                    "justifyContent": "flex-end"
                    },
-                   "visibilityCondition": "dataItem.is_removed"
-                  },
-                  {
                    "children": [
                     {
                      "children": [],
-                     "classes": [
-                      "opacity-0",
-                      "group-hover:opacity-100"
-                     ],
-                     "componentId": "profile-settings-team-row-actions-trigger",
-                     "componentName": "Button",
+                     "classes": [],
+                     "componentId": "profile-settings-team-row-admin-badge",
+                     "componentName": "Badge",
                      "componentProps": {
-                      "icon": "lucide-more-horizontal",
+                      "label": "Admin",
                       "size": "sm",
-                      "variant": "ghost"
-                     }
+                      "theme": "gray",
+                      "variant": "subtle"
+                     },
+                     "visibilityCondition": "dataItem.is_admin"
+                    },
+                    {
+                     "children": [],
+                     "classes": [],
+                     "componentId": "profile-settings-team-row-disabled-badge",
+                     "componentName": "Badge",
+                     "componentProps": {
+                      "label": "Disabled",
+                      "size": "sm",
+                      "theme": "gray",
+                      "variant": "subtle"
+                     },
+                     "visibilityCondition": "dataItem.is_removed"
+                    },
+                    {
+                     "children": [
+                      {
+                       "children": [],
+                       "classes": [
+                        "opacity-0",
+                        "group-hover:opacity-100"
+                       ],
+                       "componentId": "profile-settings-team-row-actions-trigger",
+                       "componentName": "Button",
+                       "componentProps": {
+                        "icon": "lucide-more-horizontal",
+                        "size": "sm",
+                        "variant": "ghost"
+                       }
+                      }
+                     ],
+                     "classes": [],
+                     "componentId": "profile-settings-team-row-actions",
+                     "componentName": "Dropdown",
+                     "componentProps": {
+                      "align": "end",
+                      "options": "{{ teamRowOptions(dataItem) }}"
+                     },
+                     "visibilityCondition": "!dataItem.is_removed"
                     }
                    ],
                    "classes": [],
-                   "componentId": "profile-settings-team-row-actions",
-                   "componentName": "Dropdown",
-                   "componentProps": {
-                    "align": "end",
-                    "options": "{{ teamRowOptions(dataItem) }}"
-                   },
-                   "visibilityCondition": "!dataItem.is_removed"
+                   "componentId": "profile-settings-team-row-role-cell",
+                   "componentName": "container",
+                   "originalElement": "div"
                   }
                  ],
                  "classes": [
