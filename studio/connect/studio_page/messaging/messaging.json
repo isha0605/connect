@@ -4524,6 +4524,83 @@
       {
        "baseStyles": {
         "display": "flex",
+        "flexDirection": "column",
+        "gap": "12px"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "new-team-member-email",
+         "componentName": "TextInput",
+         "componentProps": {
+          "label": "Email",
+          "modelValue": {
+           "$type": "variable",
+           "name": "newTeamMemberEmail"
+          },
+          "placeholder": "teammate@company.com",
+          "type": "email"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "new-team-member-role",
+         "componentName": "TextInput",
+         "componentProps": {
+          "label": "Role (optional)",
+          "modelValue": {
+           "$type": "variable",
+           "name": "newTeamMemberRole"
+          },
+          "placeholder": "e.g. Sales, Tech, Manager"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "addTeamMember();"
+          }
+         },
+         "componentId": "add-team-member-submit",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "Add member",
+          "loading": "{{ addingTeamMember }}",
+          "loadingText": "Adding...",
+          "theme": "gray",
+          "variant": "solid"
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "add-team-member-form",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "add-team-member-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "showAddTeamMemberDialog"
+      },
+      "size": "sm",
+      "title": "Add team member"
+     }
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
         "flexDirection": "row",
         "height": "min(620px, 80vh)",
         "position": "relative"
@@ -5077,6 +5154,25 @@
                "componentId": "profile-settings-users-heading",
                "componentName": "container",
                "originalElement": "div"
+              },
+              {
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "showAddTeamMemberDialog.value = true;"
+                }
+               },
+               "componentId": "add-team-member-btn",
+               "componentName": "Button",
+               "componentProps": {
+                "iconLeft": "lucide-user-plus",
+                "label": "Add",
+                "variant": "outline"
+               },
+               "visibilityCondition": "isPartnerAdmin()"
               }
              ],
              "classes": [],
