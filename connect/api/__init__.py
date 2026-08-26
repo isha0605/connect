@@ -35,8 +35,12 @@ def get_my_team():
 		frappe.throw(_("You are not a member of any company"))
 
 	fieldname = "customer" if doctype == "Customer Team Member" else "partner"
+	role_field = "designation" if doctype == "Customer Team Member" else "role"
 	rows = frappe.get_all(
-		doctype, filters={fieldname: company}, fields=["name", "user", "is_admin", "is_removed"]
+		doctype,
+		filters={fieldname: company},
+		fields=["name", "user", "is_admin", "is_removed", f"{role_field} as role"],
+		order_by="is_admin desc, creation asc",
 	)
 	for row in rows:
 		profile = frappe.db.get_value("User", row.user, ["full_name", "user_image"], as_dict=True) or {}
