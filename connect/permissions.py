@@ -26,6 +26,27 @@ def _thread_membership(thread, user):
 	)
 
 
+def _check_can_write(thread, user):
+	from frappe import _
+
+	if _has_full_access(user):
+		return
+	membership = _thread_membership(thread, user)
+	if not membership or membership.is_removed or membership.permission != "Write":
+		frappe.throw(_("You don't have permission to post in this thread"), frappe.PermissionError)
+	if frappe.db.get_value("Connect Thread", thread, "status") == "Closed":
+		frappe.throw(_("This thread is closed"))
+
+
+def _dm_thread_pair(thread, user):
+	from frappe import _
+
+	pair = frappe.db.get_value("Connect DM Thread", thread, ["user_a", "user_b"], as_dict=True)
+	if not pair or user not in (pair.user_a, pair.user_b):
+		frappe.throw(_("You don't have access to this conversation"), frappe.PermissionError)
+	return pair
+
+
 def has_thread_permission(doc, ptype="read", user=None, **kwargs):
 	"""Controllers can only deny access on top of the 'All' role baseline, never grant it."""
 	user = user or frappe.session.user
