@@ -811,6 +811,30 @@ export default function setup(context) {
 		]
 	}
 
+	function removeTeamMember(item) {
+		if (!window.confirm(`Remove ${item.user} from the company? They'll lose access to all threads.`)) return
+		call("connect.api.remove_team_member", { member: item.name })
+			.then(() => {
+				context.myTeam.reload()
+				toast({ title: "Team member removed", icon: "check", iconClasses: "text-green-600" })
+			})
+			.catch((e) => {
+				toast({
+					title: "Could not remove team member",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
+			})
+	}
+
+	function teamRowOptions(item) {
+		const disabled = !isAnyAdmin()
+		return [
+			{ label: "Remove from company", icon: "lucide-user-minus", theme: "red", disabled, onClick: () => removeTeamMember(item) },
+		]
+	}
+
 	// ---- Messages ----
 	const uploadingFile = computed(() => draftAttachments.value.some((a) => a.uploading))
 
@@ -1854,6 +1878,8 @@ export default function setup(context) {
 		makeAdmin,
 		removeMember,
 		memberRowOptions,
+		removeTeamMember,
+		teamRowOptions,
 		messageActionsOptions,
 		otherMessageActionsOptions,
 		showDeleteMessageDialog,
