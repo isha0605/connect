@@ -163,10 +163,6 @@ doc_events = {
 	"Connect DM Message": {
 		"after_insert": "connect.notifications.notify_dm_recipient",
 	},
-	"Connect Customer Member": {
-		"after_insert": "connect.roles.grant_company_role",
-		"on_trash": "connect.roles.revoke_company_role",
-	},
 	"Connect Partner Member": {
 		"after_insert": "connect.roles.grant_company_role",
 		"on_trash": "connect.roles.revoke_company_role",

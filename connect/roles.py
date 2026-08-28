@@ -6,7 +6,6 @@ CUSTOMER_GUEST_ROLE = "Connect Customer Guest"
 PARTNER_GUEST_ROLE = "Connect Partner Guest"
 
 _COMPANY_ROLE_BY_DOCTYPE = {
-	"Connect Customer Member": CUSTOMER_ROLE,
 	"Connect Partner Member": PARTNER_ROLE,
 	"Customer Team Member": CUSTOMER_ROLE,
 }
@@ -26,8 +25,8 @@ def _set_role(user, role, should_have):
 
 
 def grant_company_role(doc, method=None):
-	"""Fires on Customer Team Member creation (and the legacy Connect Customer Member/
-	Connect Partner Member doctypes) — real company membership: roster visibility,
+	"""Fires on Customer Team Member creation (and the still-live legacy Connect Partner
+	Member doctype) — real company membership: roster visibility,
 	admin-transfer eligibility, and thread-creation permission all still read this table
 	directly (see connect.permissions), unaffected by this role. This role only
 	ever gates the messaging doctypes.
