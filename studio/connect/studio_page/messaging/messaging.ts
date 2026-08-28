@@ -1,5 +1,5 @@
 import { ref, computed, watch, onScopeDispose, nextTick } from "vue"
-import { toast, call, useFileUpload, initSocket } from "frappe-ui"
+import { toast, call, useFileUpload, initSocket, setConfig } from "frappe-ui"
 
 export default function setup(context) {
 	// ---- State ----
@@ -228,6 +228,15 @@ export default function setup(context) {
 	// (matches its own site-name resolution from the request's Origin header) in both cases.
 	if (!(window as any).site_name) (window as any).site_name = window.location.hostname
 	const socket = initSocket()
+
+	// Without this, useFileUpload's client-side size check (fileSizeLimitMessage) has no
+	// limit to compare against and silently lets oversized files through to the raw upload,
+	// which then fails as an opaque network error instead of an upfront, readable message.
+	// Studio-rendered pages don't get a window.frappe.boot object (unlike desk), so the
+	// limit has to be fetched rather than read off boot data.
+	call("frappe.core.api.file.get_max_file_size").then((maxFileSize) => {
+		if (maxFileSize) setConfig("maxFileSize", maxFileSize)
+	})
 	socket.on("connect", () => console.log("[connect realtime] connected, socket id:", socket.id))
 	socket.on("connect_error", (err) => console.error("[connect realtime] connect_error:", err.message))
 	socket.on("disconnect", (reason) => console.warn("[connect realtime] disconnected:", reason))
@@ -503,7 +512,10 @@ export default function setup(context) {
 		const div = document.createElement("div")
 		div.textContent = raw
 		const escaped = div.innerHTML
-		const withMentions = escaped.replace(/@([^\s@]+)/g, '<span style="font-weight: 600">@$1</span>')
+		const withMentions = escaped.replace(
+			/(^|\s)@([^\s@]+)/g,
+			(_match, prefix, name) => prefix + '<span style="font-weight: 600">@' + name + "</span>",
+		)
 		const time = item ? formatMessageTime(item) : ""
 		const timeText = item && item.is_edited ? "Edited · " + time : time
 		const timeSpan =
@@ -547,31 +559,211 @@ export default function setup(context) {
 		}).filter(([, value]) => value)
 	}
 
-	function requirementCardHtml(item) {
+	// preview_title-style header for the card — same fallback order a viewer would look for.
+	// Also doubles as the Avatar's label (frappe-ui's Avatar falls back to that label's first
+	// letter when there's no image, so this drives both the heading and the avatar initial).
+	function requirementCardTitle(item) {
+		const req = parseRequirementContent(item)
+		return req.company_name || req.looking_for || "Requirement details"
+	}
+
+	function requirementSubtitle(item) {
+		const req = parseRequirementContent(item)
+		const parts = []
+		if (req.industry) parts.push(req.industry)
+		if (req.company_size) parts.push(req.company_size + " employees")
+		if (req.country) parts.push(req.country)
+		return parts.join(" · ")
+	}
+
+	// Wrapped as {name} objects (rather than bare strings) so the Apps Repeater has a real
+	// object field to key each Badge by — same shape convention as every other Repeater in
+	// this file (see message-item-repeater's dataKey: "name").
+	function requirementAppItems(item) {
+		const req = parseRequirementContent(item)
+		const apps = Array.isArray(req.apps) ? req.apps : []
+		return apps.map((name) => ({ name }))
+	}
+
+	// Shared by copy and download so both actions always agree on what "the requirement" reads as.
+	function requirementDetailsText(item) {
 		const rows = requirementFieldRows(parseRequirementContent(item))
-		const rowsHtml = rows
-			.map(
-				([label, value]) =>
-					'<div style="color: var(--ink-gray-5); white-space: nowrap;">' +
-					escapeHtmlAttr(label) +
-					"</div>" +
-					'<div style="color: var(--ink-gray-9); font-weight: 500;">' +
-					escapeHtmlAttr(String(value)) +
-					"</div>",
+		const lines = [requirementCardTitle(item), ""]
+		rows.forEach(([label, value]) => lines.push(label + ": " + value))
+		return lines.join("\n")
+	}
+
+	async function copyRequirementDetails(item) {
+		try {
+			await navigator.clipboard.writeText(requirementDetailsText(item))
+			toast({ title: "Copied to clipboard", icon: "check", iconClasses: "text-green-600" })
+		} catch (e) {
+			toast({ title: "Could not copy", text: e.message, icon: "x-circle", iconClasses: "text-red-600" })
+		}
+	}
+
+	// ---- Minimal client-side .docx (OOXML) writer ----
+	// A Requirement message is a one-time snapshot with no backing document to fetch/print
+	// (see downloadFile for the file-attachment path, which does have one), so this builds
+	// the .docx straight from requirementDetailsText's fields. No new bundle dependency (a
+	// Studio page script only gets vue/frappe-ui) — a .docx is just a ZIP of a few XML parts,
+	// so this hand-rolls an uncompressed (STORE) ZIP writer rather than pulling in a library.
+	const CRC32_TABLE = (() => {
+		const table = new Uint32Array(256)
+		for (let n = 0; n < 256; n++) {
+			let c = n
+			for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
+			table[n] = c >>> 0
+		}
+		return table
+	})()
+
+	function crc32(bytes) {
+		let crc = 0xffffffff
+		for (let i = 0; i < bytes.length; i++) crc = CRC32_TABLE[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8)
+		return (crc ^ 0xffffffff) >>> 0
+	}
+
+	// entries: [{ name, content }] with content as a plain (UTF-8) string.
+	function buildZipBlob(entries, mimeType) {
+		const encoder = new TextEncoder()
+		const localParts = []
+		const centralParts = []
+		let offset = 0
+
+		entries.forEach((entry) => {
+			const nameBytes = encoder.encode(entry.name)
+			const dataBytes = encoder.encode(entry.content)
+			const crc = crc32(dataBytes)
+			const size = dataBytes.length
+
+			const local = new DataView(new ArrayBuffer(30))
+			local.setUint32(0, 0x04034b50, true)
+			local.setUint16(4, 20, true) // version needed
+			local.setUint16(6, 0, true) // general purpose flag
+			local.setUint16(8, 0, true) // compression method: store
+			local.setUint16(10, 0, true) // mod time
+			local.setUint16(12, 0x21, true) // mod date (1980-01-01, the DOS epoch floor)
+			local.setUint32(14, crc, true)
+			local.setUint32(18, size, true) // compressed size
+			local.setUint32(22, size, true) // uncompressed size
+			local.setUint16(26, nameBytes.length, true)
+			local.setUint16(28, 0, true) // extra field length
+			localParts.push(new Uint8Array(local.buffer), nameBytes, dataBytes)
+
+			const central = new DataView(new ArrayBuffer(46))
+			central.setUint32(0, 0x02014b50, true)
+			central.setUint16(4, 20, true) // version made by
+			central.setUint16(6, 20, true) // version needed
+			central.setUint16(8, 0, true)
+			central.setUint16(10, 0, true)
+			central.setUint16(12, 0, true)
+			central.setUint16(14, 0x21, true)
+			central.setUint32(16, crc, true)
+			central.setUint32(20, size, true)
+			central.setUint32(24, size, true)
+			central.setUint16(28, nameBytes.length, true)
+			central.setUint16(30, 0, true) // extra field length
+			central.setUint16(32, 0, true) // comment length
+			central.setUint16(34, 0, true) // disk number start
+			central.setUint16(36, 0, true) // internal file attrs
+			central.setUint32(38, 0, true) // external file attrs
+			central.setUint32(42, offset, true) // offset of local header
+			centralParts.push(new Uint8Array(central.buffer), nameBytes)
+
+			offset += 30 + nameBytes.length + size
+		})
+
+		const centralStart = offset
+		const centralSize = centralParts.reduce((sum, part) => sum + part.length, 0)
+
+		const end = new DataView(new ArrayBuffer(22))
+		end.setUint32(0, 0x06054b50, true)
+		end.setUint16(4, 0, true)
+		end.setUint16(6, 0, true)
+		end.setUint16(8, entries.length, true)
+		end.setUint16(10, entries.length, true)
+		end.setUint32(12, centralSize, true)
+		end.setUint32(16, centralStart, true)
+		end.setUint16(20, 0, true)
+
+		return new Blob([...localParts, ...centralParts, new Uint8Array(end.buffer)], { type: mimeType })
+	}
+
+	const XML_ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" }
+	function xmlEscape(value) {
+		return String(value).replace(/[&<>"']/g, (ch) => XML_ESCAPES[ch])
+	}
+
+	function requirementDocumentXml(item) {
+		const rows = requirementFieldRows(parseRequirementContent(item))
+		const paragraphs = [
+			`<w:p><w:pPr><w:spacing w:after="240"/></w:pPr><w:r><w:rPr><w:b/><w:sz w:val="32"/></w:rPr>` +
+				`<w:t xml:space="preserve">${xmlEscape(requirementCardTitle(item))}</w:t></w:r></w:p>`,
+		]
+		rows.forEach(([label, value]) => {
+			paragraphs.push(
+				`<w:p><w:pPr><w:spacing w:after="120"/></w:pPr>` +
+					`<w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">${xmlEscape(label)}: </w:t></w:r>` +
+					`<w:r><w:t xml:space="preserve">${xmlEscape(value)}</w:t></w:r></w:p>`,
 			)
-			.join("")
+		})
 		return (
-			'<div style="min-width: 200px;">' +
-			'<div style="display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; margin-bottom: 8px; color: var(--ink-gray-9);">' +
-			"<span>Requirement details</span></div>" +
-			'<div style="display: grid; grid-template-columns: auto 1fr; gap: 5px 14px; font-size: 12.5px; line-height: 1.4;">' +
-			rowsHtml +
-			"</div>" +
-			'<div style="text-align: right; margin-top: 8px; font-size: 9px; color: var(--ink-gray-5);">' +
-			escapeHtmlAttr(formatMessageTime(item)) +
-			"</div>" +
-			"</div>"
+			`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+			`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>` +
+			paragraphs.join("") +
+			`<w:sectPr/></w:body></w:document>`
 		)
+	}
+
+	function requirementDocxBlob(item) {
+		return buildZipBlob(
+			[
+				{
+					name: "[Content_Types].xml",
+					content:
+						`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+						`<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
+						`<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>` +
+						`<Default Extension="xml" ContentType="application/xml"/>` +
+						`<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>` +
+						`</Types>`,
+				},
+				{
+					name: "_rels/.rels",
+					content:
+						`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+						`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
+						`<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>` +
+						`</Relationships>`,
+				},
+				{ name: "word/document.xml", content: requirementDocumentXml(item) },
+			],
+			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+		)
+	}
+
+	function downloadRequirementDetails(item, event) {
+		if (event) {
+			event.preventDefault()
+			event.stopPropagation()
+		}
+		try {
+			const req = parseRequirementContent(item)
+			const blob = requirementDocxBlob(item)
+			const blobUrl = URL.createObjectURL(blob)
+			const link = document.createElement("a")
+			link.href = blobUrl
+			const namePart = (req.company_name || "requirement").replace(/[^a-z0-9]+/gi, "-")
+			const datePart = new Date(item.creation).toISOString().slice(0, 10)
+			link.download = "Requirement-" + namePart + "-" + datePart + ".docx"
+			document.body.appendChild(link)
+			link.click()
+			link.remove()
+			URL.revokeObjectURL(blobUrl)
+		} catch (e) {
+			toast({ title: "Could not download", text: e.message, icon: "x-circle", iconClasses: "text-red-600" })
+		}
 	}
 
 	// ---- Requirement draft (Contact Partner composer card) ----
@@ -1202,6 +1394,11 @@ export default function setup(context) {
 				context.dmMessages.reload()
 				context.myDMThreads.reload()
 			} catch (e) {
+				// A multi-part send (text + attachments) can partially succeed before one part
+				// fails — reload so the sender's own view reflects whatever actually went
+				// through, rather than looking empty until something else triggers a refresh.
+				context.dmMessages.reload()
+				context.myDMThreads.reload()
 				toast({
 					title: "Could not send message",
 					text: e.messages ? e.messages[0] : e.message,
@@ -1239,7 +1436,12 @@ export default function setup(context) {
 				await call("connect.api.messaging.send_message", { thread, requirement_data: requirementToSend })
 			}
 			context.messages.reload()
+			context.myThreads.reload()
 		} catch (e) {
+			// Same reasoning as the DM branch above: reflect whatever partially sent instead
+			// of leaving the pane looking empty after a mid-send failure.
+			context.messages.reload()
+			context.myThreads.reload()
 			toast({
 				title: "Could not send message",
 				text: e.messages ? e.messages[0] : e.message,
@@ -1546,15 +1748,35 @@ export default function setup(context) {
 		return [...raw].reverse()
 	}
 
-	function isGrouped(item, index) {
-		if (index <= 0) return false
-		const messages = currentMessages()
-		const idx = messages.findIndex((m) => m.name === item.name)
-		if (idx <= 0) return false
-		const prev = messages[idx - 1]
-		if (!prev || prev.sender !== item.sender || prev.message_type === "System") return false
-		const gapMs = new Date(item.creation).getTime() - new Date(prev.creation).getTime()
-		return gapMs <= 2 * 60 * 1000
+	// One pass over the flat list per messages update, rather than a findIndex per rendered
+	// item (which made isGrouped O(n) per call, O(n²) for the whole thread). Split into
+	// per-day buckets the same way groupedMessages does, since "grouped with the previous
+	// message" should never be true across a day boundary — day-1's last message and day-2's
+	// first message are never adjacent for this purpose even though currentMessages() is one
+	// flat, unbroken chronological list.
+	const groupedFlagByName = computed(() => {
+		const flags = {}
+		let lastDateKey = null
+		let prev = null
+		for (const item of currentMessages()) {
+			const dateKey = new Date(item.creation).toDateString()
+			if (dateKey !== lastDateKey) {
+				lastDateKey = dateKey
+				prev = null
+			}
+			if (prev && prev.sender === item.sender && prev.message_type !== "System") {
+				const gapMs = new Date(item.creation).getTime() - new Date(prev.creation).getTime()
+				flags[item.name] = gapMs <= 2 * 60 * 1000
+			} else {
+				flags[item.name] = false
+			}
+			prev = item
+		}
+		return flags
+	})
+
+	function isGrouped(item) {
+		return !!(item && groupedFlagByName.value[item.name])
 	}
 
 	// consecutive files from the same sender, sent within 2 minutes of each other, are merged
@@ -1742,11 +1964,20 @@ export default function setup(context) {
 		})
 	})
 
+	// Strips sentence punctuation a URL regex has no way to distinguish from part of the URL
+	// itself (e.g. "check https://example.com." — the trailing period isn't part of the link).
+	// Left untouched otherwise, since a URL can legitimately end in these characters.
+	function stripTrailingPunctuation(url) {
+		return url.replace(/[.,!?;:'"]+$/, "")
+	}
+
 	function threadLinks() {
 		const query = mediaSearchQuery.value.trim().toLowerCase()
 		return currentMessages()
 			.flatMap((m) =>
-				((m.content || "").match(/(https?:\/\/[^\s]+|www\.[^\s]+)/gi) || []).map((url) => ({ url, message: m })),
+				((m.content || "").match(/(https?:\/\/[^\s]+|www\.[^\s]+)/gi) || [])
+					.map(stripTrailingPunctuation)
+					.map((url) => ({ url, message: m })),
 			)
 			.map(({ url, message }) => {
 				const href = /^https?:\/\//i.test(url) ? url : "https://" + url
@@ -1818,18 +2049,39 @@ export default function setup(context) {
 	watch(
 		() => [context.myThreads?.data, context.myDMThreads?.data],
 		() => {
-			if (selectedThread.value) return
-			const params = new URLSearchParams(window.location.search)
-			const requested = params.get("thread")
-			if (requested) {
-				selectThread(requested)
-				// set by start_partner_thread's is_new_thread — a brand-new Contact-Partner thread
-				// seeds the composer with a reviewable Requirement draft instead of auto-sending one
-				if (params.get("requirement") === "1") fetchRequirementDraft()
+			const list = unifiedThreadList()
+
+			if (!selectedThread.value) {
+				const params = new URLSearchParams(window.location.search)
+				const requested = params.get("thread")
+				if (requested) {
+					selectThread(requested)
+					// set by start_partner_thread's is_new_thread — a brand-new Contact-Partner thread
+					// seeds the composer with a reviewable Requirement draft instead of auto-sending one.
+					// Consumed once: stripped from the URL right after, so a later reload of this same
+					// link (or revisiting the thread) doesn't keep re-seeding an already-sent draft.
+					if (params.get("requirement") === "1") {
+						fetchRequirementDraft()
+						params.delete("requirement")
+						const newSearch = params.toString()
+						window.history.replaceState({}, "", window.location.pathname + (newSearch ? "?" + newSearch : ""))
+					}
+					return
+				}
+				if (list.length) selectThread(list[0])
 				return
 			}
-			const list = unifiedThreadList()
-			if (list.length) selectThread(list[0])
+
+			// Self-heal a ?thread= (or otherwise) selection that doesn't actually exist once both
+			// lists have genuinely finished loading — e.g. a Contact-Partner link left in the URL
+			// from an earlier visit, pointing at a thread that's since been deleted. Gated on both
+			// resources actually being loaded so this never fires against the brief window where a
+			// brand-new Contact-Partner thread is selected before myThreads' reload has caught up
+			// (see the branch above) — only a thread that's missing after a real load is treated as
+			// gone, falling back to the most recent conversation instead of leaving the pane stuck.
+			const haveData = Boolean(context.myThreads?.data && context.myDMThreads?.data)
+			const stillExists = list.some((t) => t.name === selectedThread.value && t.convType === selectedThreadType.value)
+			if (haveData && !stillExists && list.length) selectThread(list[0])
 		},
 		{ immediate: true },
 	)
@@ -1839,7 +2091,12 @@ export default function setup(context) {
 		draftMessage,
 		uploadingFile,
 		draftAttachments,
-		requirementCardHtml,
+		requirementCardTitle,
+		requirementSubtitle,
+		requirementAppItems,
+		parseRequirementContent,
+		copyRequirementDetails,
+		downloadRequirementDetails,
 		showProfileSettingsDialog,
 		profileSettingsSection,
 		editFullName,
