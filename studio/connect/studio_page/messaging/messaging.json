@@ -309,8 +309,6 @@
         },
         {
          "baseStyles": {
-          "backgroundColor": "var(--surface-gray-2)",
-          "borderRadius": "6px",
           "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
          },
          "children": [],
@@ -324,6 +322,10 @@
          }
         },
         {
+         "baseStyles": {
+          "backgroundColor": "var(--surface-gray-2)",
+          "borderRadius": "6px"
+         },
          "children": [],
          "classes": [],
          "componentId": "SidebarItem-queazbn89",
@@ -1551,26 +1553,626 @@
                         },
                         {
                          "baseStyles": {
-                          "backgroundColor": "{{ isMine(dataItem.sender) ? 'var(--surface-gray-3)' : 'var(--surface-gray-2)' }}",
+                          "backgroundColor": "var(--surface-base)",
                           "border": "1px solid var(--outline-gray-2)",
                           "borderRadius": "12px",
                           "display": "inline-block",
                           "marginTop": "0px",
-                          "maxWidth": "320px",
-                          "padding": "10px 14px"
+                          "maxWidth": "400px",
+                          "padding": "14px 16px"
                          },
                          "children": [
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-9)",
-                            "textAlign": "left"
+                            "alignItems": "center",
+                            "display": "flex",
+                            "justifyContent": "space-between",
+                            "marginBottom": "10px"
+                           },
+                           "children": [
+                            {
+                             "children": [],
+                             "classes": [],
+                             "componentId": "message-requirement-badge",
+                             "componentName": "Badge",
+                             "componentProps": {
+                              "label": "Requirement",
+                              "size": "sm",
+                              "theme": "gray",
+                              "variant": "subtle"
+                             }
+                            },
+                            {
+                             "baseStyles": {
+                              "alignItems": "center",
+                              "display": "flex",
+                              "flexShrink": "0",
+                              "gap": "0px"
+                             },
+                             "children": [
+                              {
+                               "children": [],
+                               "classes": [],
+                               "componentEvents": {
+                                "click": {
+                                 "action": "Run Script",
+                                 "event": "click",
+                                 "script": "copyRequirementDetails(dataItem);"
+                                }
+                               },
+                               "componentId": "message-requirement-copy",
+                               "componentName": "Button",
+                               "componentProps": {
+                                "icon": "lucide-copy",
+                                "size": "sm",
+                                "theme": "gray",
+                                "variant": "ghost"
+                               }
+                              },
+                              {
+                               "children": [],
+                               "classes": [],
+                               "componentEvents": {
+                                "click": {
+                                 "action": "Run Script",
+                                 "event": "click",
+                                 "script": "downloadRequirementDetails(dataItem, eventArgs[0]);"
+                                }
+                               },
+                               "componentId": "message-requirement-download",
+                               "componentName": "Button",
+                               "componentProps": {
+                                "icon": "lucide-download",
+                                "size": "sm",
+                                "theme": "gray",
+                                "variant": "ghost"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-header-actions",
+                             "componentName": "container",
+                             "originalElement": "div"
+                            }
+                           ],
+                           "classes": [],
+                           "componentId": "message-requirement-header",
+                           "componentName": "container",
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "gap": "10px",
+                            "marginBottom": "12px"
+                           },
+                           "children": [
+                            {
+                             "children": [],
+                             "classes": [],
+                             "componentId": "message-requirement-avatar",
+                             "componentName": "Avatar",
+                             "componentProps": {
+                              "label": "{{ requirementCardTitle(dataItem) }}",
+                              "shape": "square",
+                              "size": "2xl",
+                              "theme": "{{ avatarTheme(requirementCardTitle(dataItem)) }}"
+                             }
+                            },
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flexDirection": "column",
+                              "gap": "1px",
+                              "minWidth": "0"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-8)",
+                                "overflow": "hidden",
+                                "textOverflow": "ellipsis",
+                                "whiteSpace": "nowrap"
+                               },
+                               "children": [],
+                               "classes": [
+                                "text-base",
+                                "font-semibold"
+                               ],
+                               "componentId": "message-requirement-company-name",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "tag": "span",
+                                "text": "{{ requirementCardTitle(dataItem) }}"
+                               }
+                              },
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-5)",
+                                "overflow": "hidden",
+                                "textOverflow": "ellipsis",
+                                "whiteSpace": "nowrap"
+                               },
+                               "children": [],
+                               "classes": [
+                                "text-xs"
+                               ],
+                               "componentId": "message-requirement-company-subtitle",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "tag": "span",
+                                "text": "{{ requirementSubtitle(dataItem) }}"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-company-text",
+                             "componentName": "container",
+                             "originalElement": "div"
+                            }
+                           ],
+                           "classes": [],
+                           "componentId": "message-requirement-company-row",
+                           "componentName": "container",
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "backgroundColor": "var(--outline-gray-2)",
+                            "height": "1px",
+                            "marginBottom": "12px",
+                            "width": "100%"
                            },
                            "children": [],
                            "classes": [],
-                           "componentId": "message-requirement-content",
-                           "componentName": "HTML",
+                           "componentId": "message-requirement-divider-1",
+                           "componentName": "container",
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "marginBottom": "12px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-5)",
+                              "marginRight": "4px"
+                             },
+                             "children": [],
+                             "classes": [
+                              "text-xs"
+                             ],
+                             "componentId": "message-requirement-lookingfor-label",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "tag": "span",
+                              "text": "Looking for"
+                             }
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-8)"
+                             },
+                             "children": [],
+                             "classes": [
+                              "text-p-base"
+                             ],
+                             "componentId": "message-requirement-lookingfor-value",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "tag": "span",
+                              "text": "{{ parseRequirementContent(dataItem).looking_for }}"
+                             }
+                            }
+                           ],
+                           "classes": [],
+                           "componentId": "message-requirement-lookingfor",
+                           "componentName": "container",
+                           "originalElement": "div",
+                           "visibilityCondition": "parseRequirementContent(dataItem).looking_for"
+                          },
+                          {
+                           "baseStyles": {
+                            "marginBottom": "12px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "alignItems": "center",
+                              "display": "flex",
+                              "gap": "5px",
+                              "marginBottom": "6px"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-5)",
+                                "height": "13px",
+                                "width": "13px"
+                               },
+                               "children": [],
+                               "classes": [],
+                               "componentId": "message-requirement-apps-icon",
+                               "componentName": "FeatherIcon",
+                               "componentProps": {
+                                "name": "grid"
+                               }
+                              },
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-5)"
+                               },
+                               "children": [],
+                               "classes": [
+                                "text-xs"
+                               ],
+                               "componentId": "message-requirement-apps-label",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "tag": "span",
+                                "text": "Apps"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-apps-header",
+                             "componentName": "container",
+                             "originalElement": "div"
+                            },
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flexWrap": "wrap",
+                              "gap": "6px"
+                             },
+                             "children": [
+                              {
+                               "children": [],
+                               "classes": [],
+                               "componentId": "message-requirement-app-badge",
+                               "componentName": "Badge",
+                               "componentProps": {
+                                "label": "{{ dataItem.name }}",
+                                "size": "sm",
+                                "theme": "gray",
+                                "variant": "outline"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-apps-repeater",
+                             "componentName": "Repeater",
+                             "componentProps": {
+                              "data": "{{ requirementAppItems(dataItem) }}",
+                              "dataKey": "name"
+                             }
+                            }
+                           ],
+                           "classes": [],
+                           "componentId": "message-requirement-apps",
+                           "componentName": "container",
+                           "originalElement": "div",
+                           "visibilityCondition": "(parseRequirementContent(dataItem).apps || []).length > 0"
+                          },
+                          {
+                           "baseStyles": {
+                            "columnGap": "14px",
+                            "display": "grid",
+                            "gridTemplateColumns": "1fr 1fr",
+                            "rowGap": "10px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flexDirection": "column",
+                              "gap": "2px"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "alignItems": "center",
+                                "display": "flex",
+                                "gap": "5px"
+                               },
+                               "children": [
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-4)",
+                                  "height": "12px",
+                                  "width": "12px"
+                                 },
+                                 "children": [],
+                                 "classes": [],
+                                 "componentId": "message-requirement-field-current_situation-icon",
+                                 "componentName": "FeatherIcon",
+                                 "componentProps": {
+                                  "name": "database"
+                                 }
+                                },
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-5)"
+                                 },
+                                 "children": [],
+                                 "classes": [
+                                  "text-xs"
+                                 ],
+                                 "componentId": "message-requirement-field-current_situation-label",
+                                 "componentName": "TextBlock",
+                                 "componentProps": {
+                                  "tag": "span",
+                                  "text": "Current setup"
+                                 }
+                                }
+                               ],
+                               "classes": [],
+                               "componentId": "message-requirement-field-current_situation-header",
+                               "componentName": "container",
+                               "originalElement": "div"
+                              },
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-8)"
+                               },
+                               "children": [],
+                               "classes": [
+                                "text-p-sm",
+                                "font-medium"
+                               ],
+                               "componentId": "message-requirement-field-current_situation-value",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "tag": "span",
+                                "text": "{{ parseRequirementContent(dataItem).current_situation }}"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-field-current_situation",
+                             "componentName": "container",
+                             "originalElement": "div",
+                             "visibilityCondition": "parseRequirementContent(dataItem).current_situation"
+                            },
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flexDirection": "column",
+                              "gap": "2px"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "alignItems": "center",
+                                "display": "flex",
+                                "gap": "5px"
+                               },
+                               "children": [
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-4)",
+                                  "height": "12px",
+                                  "width": "12px"
+                                 },
+                                 "children": [],
+                                 "classes": [],
+                                 "componentId": "message-requirement-field-timeline-icon",
+                                 "componentName": "FeatherIcon",
+                                 "componentProps": {
+                                  "name": "clock"
+                                 }
+                                },
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-5)"
+                                 },
+                                 "children": [],
+                                 "classes": [
+                                  "text-xs"
+                                 ],
+                                 "componentId": "message-requirement-field-timeline-label",
+                                 "componentName": "TextBlock",
+                                 "componentProps": {
+                                  "tag": "span",
+                                  "text": "Timeline"
+                                 }
+                                }
+                               ],
+                               "classes": [],
+                               "componentId": "message-requirement-field-timeline-header",
+                               "componentName": "container",
+                               "originalElement": "div"
+                              },
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-8)"
+                               },
+                               "children": [],
+                               "classes": [
+                                "text-p-sm",
+                                "font-medium"
+                               ],
+                               "componentId": "message-requirement-field-timeline-value",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "tag": "span",
+                                "text": "{{ parseRequirementContent(dataItem).timeline }}"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-field-timeline",
+                             "componentName": "container",
+                             "originalElement": "div",
+                             "visibilityCondition": "parseRequirementContent(dataItem).timeline"
+                            },
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flexDirection": "column",
+                              "gap": "2px"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "alignItems": "center",
+                                "display": "flex",
+                                "gap": "5px"
+                               },
+                               "children": [
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-4)",
+                                  "height": "12px",
+                                  "width": "12px"
+                                 },
+                                 "children": [],
+                                 "classes": [],
+                                 "componentId": "message-requirement-field-delivery_preference-icon",
+                                 "componentName": "FeatherIcon",
+                                 "componentProps": {
+                                  "name": "map-pin"
+                                 }
+                                },
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-5)"
+                                 },
+                                 "children": [],
+                                 "classes": [
+                                  "text-xs"
+                                 ],
+                                 "componentId": "message-requirement-field-delivery_preference-label",
+                                 "componentName": "TextBlock",
+                                 "componentProps": {
+                                  "tag": "span",
+                                  "text": "Delivery"
+                                 }
+                                }
+                               ],
+                               "classes": [],
+                               "componentId": "message-requirement-field-delivery_preference-header",
+                               "componentName": "container",
+                               "originalElement": "div"
+                              },
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-8)"
+                               },
+                               "children": [],
+                               "classes": [
+                                "text-p-sm",
+                                "font-medium"
+                               ],
+                               "componentId": "message-requirement-field-delivery_preference-value",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "tag": "span",
+                                "text": "{{ parseRequirementContent(dataItem).delivery_preference }}"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-field-delivery_preference",
+                             "componentName": "container",
+                             "originalElement": "div",
+                             "visibilityCondition": "parseRequirementContent(dataItem).delivery_preference"
+                            },
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flexDirection": "column",
+                              "gap": "2px"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "alignItems": "center",
+                                "display": "flex",
+                                "gap": "5px"
+                               },
+                               "children": [
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-4)",
+                                  "height": "12px",
+                                  "width": "12px"
+                                 },
+                                 "children": [],
+                                 "classes": [],
+                                 "componentId": "message-requirement-field-budget-icon",
+                                 "componentName": "FeatherIcon",
+                                 "componentProps": {
+                                  "name": "credit-card"
+                                 }
+                                },
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-5)"
+                                 },
+                                 "children": [],
+                                 "classes": [
+                                  "text-xs"
+                                 ],
+                                 "componentId": "message-requirement-field-budget-label",
+                                 "componentName": "TextBlock",
+                                 "componentProps": {
+                                  "tag": "span",
+                                  "text": "Budget"
+                                 }
+                                }
+                               ],
+                               "classes": [],
+                               "componentId": "message-requirement-field-budget-header",
+                               "componentName": "container",
+                               "originalElement": "div"
+                              },
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-8)"
+                               },
+                               "children": [],
+                               "classes": [
+                                "text-p-sm",
+                                "font-medium"
+                               ],
+                               "componentId": "message-requirement-field-budget-value",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "tag": "span",
+                                "text": "{{ parseRequirementContent(dataItem).budget }}"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-field-budget",
+                             "componentName": "container",
+                             "originalElement": "div",
+                             "visibilityCondition": "parseRequirementContent(dataItem).budget"
+                            }
+                           ],
+                           "classes": [],
+                           "componentId": "message-requirement-fields-grid",
+                           "componentName": "container",
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)",
+                            "display": "block",
+                            "fontSize": "9px",
+                            "marginTop": "10px",
+                            "textAlign": "right"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentId": "message-requirement-timestamp",
+                           "componentName": "TextBlock",
                            "componentProps": {
-                            "html": "{{ requirementCardHtml(dataItem) }}"
+                            "tag": "span",
+                            "text": "{{ formatMessageTime(dataItem) }}"
                            }
                           }
                          ],
@@ -1831,26 +2433,626 @@
                         },
                         {
                          "baseStyles": {
-                          "backgroundColor": "{{ isMine(dataItem.sender) ? 'var(--surface-gray-3)' : 'var(--surface-gray-2)' }}",
+                          "backgroundColor": "var(--surface-base)",
                           "border": "1px solid var(--outline-gray-2)",
                           "borderRadius": "12px",
                           "display": "inline-block",
                           "marginTop": "0px",
-                          "maxWidth": "320px",
-                          "padding": "10px 14px"
+                          "maxWidth": "400px",
+                          "padding": "14px 16px"
                          },
                          "children": [
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-9)",
-                            "textAlign": "left"
+                            "alignItems": "center",
+                            "display": "flex",
+                            "justifyContent": "space-between",
+                            "marginBottom": "10px"
+                           },
+                           "children": [
+                            {
+                             "children": [],
+                             "classes": [],
+                             "componentId": "message-requirement-badge-o",
+                             "componentName": "Badge",
+                             "componentProps": {
+                              "label": "Requirement",
+                              "size": "sm",
+                              "theme": "gray",
+                              "variant": "subtle"
+                             }
+                            },
+                            {
+                             "baseStyles": {
+                              "alignItems": "center",
+                              "display": "flex",
+                              "flexShrink": "0",
+                              "gap": "0px"
+                             },
+                             "children": [
+                              {
+                               "children": [],
+                               "classes": [],
+                               "componentEvents": {
+                                "click": {
+                                 "action": "Run Script",
+                                 "event": "click",
+                                 "script": "copyRequirementDetails(dataItem);"
+                                }
+                               },
+                               "componentId": "message-requirement-copy-o",
+                               "componentName": "Button",
+                               "componentProps": {
+                                "icon": "lucide-copy",
+                                "size": "sm",
+                                "theme": "gray",
+                                "variant": "ghost"
+                               }
+                              },
+                              {
+                               "children": [],
+                               "classes": [],
+                               "componentEvents": {
+                                "click": {
+                                 "action": "Run Script",
+                                 "event": "click",
+                                 "script": "downloadRequirementDetails(dataItem, eventArgs[0]);"
+                                }
+                               },
+                               "componentId": "message-requirement-download-o",
+                               "componentName": "Button",
+                               "componentProps": {
+                                "icon": "lucide-download",
+                                "size": "sm",
+                                "theme": "gray",
+                                "variant": "ghost"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-header-actions-o",
+                             "componentName": "container",
+                             "originalElement": "div"
+                            }
+                           ],
+                           "classes": [],
+                           "componentId": "message-requirement-header-o",
+                           "componentName": "container",
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "gap": "10px",
+                            "marginBottom": "12px"
+                           },
+                           "children": [
+                            {
+                             "children": [],
+                             "classes": [],
+                             "componentId": "message-requirement-avatar-o",
+                             "componentName": "Avatar",
+                             "componentProps": {
+                              "label": "{{ requirementCardTitle(dataItem) }}",
+                              "shape": "square",
+                              "size": "2xl",
+                              "theme": "{{ avatarTheme(requirementCardTitle(dataItem)) }}"
+                             }
+                            },
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flexDirection": "column",
+                              "gap": "1px",
+                              "minWidth": "0"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-8)",
+                                "overflow": "hidden",
+                                "textOverflow": "ellipsis",
+                                "whiteSpace": "nowrap"
+                               },
+                               "children": [],
+                               "classes": [
+                                "text-base",
+                                "font-semibold"
+                               ],
+                               "componentId": "message-requirement-company-name-o",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "tag": "span",
+                                "text": "{{ requirementCardTitle(dataItem) }}"
+                               }
+                              },
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-5)",
+                                "overflow": "hidden",
+                                "textOverflow": "ellipsis",
+                                "whiteSpace": "nowrap"
+                               },
+                               "children": [],
+                               "classes": [
+                                "text-xs"
+                               ],
+                               "componentId": "message-requirement-company-subtitle-o",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "tag": "span",
+                                "text": "{{ requirementSubtitle(dataItem) }}"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-company-text-o",
+                             "componentName": "container",
+                             "originalElement": "div"
+                            }
+                           ],
+                           "classes": [],
+                           "componentId": "message-requirement-company-row-o",
+                           "componentName": "container",
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "backgroundColor": "var(--outline-gray-2)",
+                            "height": "1px",
+                            "marginBottom": "12px",
+                            "width": "100%"
                            },
                            "children": [],
                            "classes": [],
-                           "componentId": "message-requirement-content-o",
-                           "componentName": "HTML",
+                           "componentId": "message-requirement-divider-1-o",
+                           "componentName": "container",
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "marginBottom": "12px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-5)",
+                              "marginRight": "4px"
+                             },
+                             "children": [],
+                             "classes": [
+                              "text-xs"
+                             ],
+                             "componentId": "message-requirement-lookingfor-label-o",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "tag": "span",
+                              "text": "Looking for"
+                             }
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-8)"
+                             },
+                             "children": [],
+                             "classes": [
+                              "text-p-base"
+                             ],
+                             "componentId": "message-requirement-lookingfor-value-o",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "tag": "span",
+                              "text": "{{ parseRequirementContent(dataItem).looking_for }}"
+                             }
+                            }
+                           ],
+                           "classes": [],
+                           "componentId": "message-requirement-lookingfor-o",
+                           "componentName": "container",
+                           "originalElement": "div",
+                           "visibilityCondition": "parseRequirementContent(dataItem).looking_for"
+                          },
+                          {
+                           "baseStyles": {
+                            "marginBottom": "12px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "alignItems": "center",
+                              "display": "flex",
+                              "gap": "5px",
+                              "marginBottom": "6px"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-5)",
+                                "height": "13px",
+                                "width": "13px"
+                               },
+                               "children": [],
+                               "classes": [],
+                               "componentId": "message-requirement-apps-icon-o",
+                               "componentName": "FeatherIcon",
+                               "componentProps": {
+                                "name": "grid"
+                               }
+                              },
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-5)"
+                               },
+                               "children": [],
+                               "classes": [
+                                "text-xs"
+                               ],
+                               "componentId": "message-requirement-apps-label-o",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "tag": "span",
+                                "text": "Apps"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-apps-header-o",
+                             "componentName": "container",
+                             "originalElement": "div"
+                            },
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flexWrap": "wrap",
+                              "gap": "6px"
+                             },
+                             "children": [
+                              {
+                               "children": [],
+                               "classes": [],
+                               "componentId": "message-requirement-app-badge-o",
+                               "componentName": "Badge",
+                               "componentProps": {
+                                "label": "{{ dataItem.name }}",
+                                "size": "sm",
+                                "theme": "gray",
+                                "variant": "outline"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-apps-repeater-o",
+                             "componentName": "Repeater",
+                             "componentProps": {
+                              "data": "{{ requirementAppItems(dataItem) }}",
+                              "dataKey": "name"
+                             }
+                            }
+                           ],
+                           "classes": [],
+                           "componentId": "message-requirement-apps-o",
+                           "componentName": "container",
+                           "originalElement": "div",
+                           "visibilityCondition": "(parseRequirementContent(dataItem).apps || []).length > 0"
+                          },
+                          {
+                           "baseStyles": {
+                            "columnGap": "14px",
+                            "display": "grid",
+                            "gridTemplateColumns": "1fr 1fr",
+                            "rowGap": "10px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flexDirection": "column",
+                              "gap": "2px"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "alignItems": "center",
+                                "display": "flex",
+                                "gap": "5px"
+                               },
+                               "children": [
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-4)",
+                                  "height": "12px",
+                                  "width": "12px"
+                                 },
+                                 "children": [],
+                                 "classes": [],
+                                 "componentId": "message-requirement-field-current_situation-icon-o",
+                                 "componentName": "FeatherIcon",
+                                 "componentProps": {
+                                  "name": "database"
+                                 }
+                                },
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-5)"
+                                 },
+                                 "children": [],
+                                 "classes": [
+                                  "text-xs"
+                                 ],
+                                 "componentId": "message-requirement-field-current_situation-label-o",
+                                 "componentName": "TextBlock",
+                                 "componentProps": {
+                                  "tag": "span",
+                                  "text": "Current setup"
+                                 }
+                                }
+                               ],
+                               "classes": [],
+                               "componentId": "message-requirement-field-current_situation-header-o",
+                               "componentName": "container",
+                               "originalElement": "div"
+                              },
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-8)"
+                               },
+                               "children": [],
+                               "classes": [
+                                "text-p-sm",
+                                "font-medium"
+                               ],
+                               "componentId": "message-requirement-field-current_situation-value-o",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "tag": "span",
+                                "text": "{{ parseRequirementContent(dataItem).current_situation }}"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-field-current_situation-o",
+                             "componentName": "container",
+                             "originalElement": "div",
+                             "visibilityCondition": "parseRequirementContent(dataItem).current_situation"
+                            },
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flexDirection": "column",
+                              "gap": "2px"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "alignItems": "center",
+                                "display": "flex",
+                                "gap": "5px"
+                               },
+                               "children": [
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-4)",
+                                  "height": "12px",
+                                  "width": "12px"
+                                 },
+                                 "children": [],
+                                 "classes": [],
+                                 "componentId": "message-requirement-field-timeline-icon-o",
+                                 "componentName": "FeatherIcon",
+                                 "componentProps": {
+                                  "name": "clock"
+                                 }
+                                },
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-5)"
+                                 },
+                                 "children": [],
+                                 "classes": [
+                                  "text-xs"
+                                 ],
+                                 "componentId": "message-requirement-field-timeline-label-o",
+                                 "componentName": "TextBlock",
+                                 "componentProps": {
+                                  "tag": "span",
+                                  "text": "Timeline"
+                                 }
+                                }
+                               ],
+                               "classes": [],
+                               "componentId": "message-requirement-field-timeline-header-o",
+                               "componentName": "container",
+                               "originalElement": "div"
+                              },
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-8)"
+                               },
+                               "children": [],
+                               "classes": [
+                                "text-p-sm",
+                                "font-medium"
+                               ],
+                               "componentId": "message-requirement-field-timeline-value-o",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "tag": "span",
+                                "text": "{{ parseRequirementContent(dataItem).timeline }}"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-field-timeline-o",
+                             "componentName": "container",
+                             "originalElement": "div",
+                             "visibilityCondition": "parseRequirementContent(dataItem).timeline"
+                            },
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flexDirection": "column",
+                              "gap": "2px"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "alignItems": "center",
+                                "display": "flex",
+                                "gap": "5px"
+                               },
+                               "children": [
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-4)",
+                                  "height": "12px",
+                                  "width": "12px"
+                                 },
+                                 "children": [],
+                                 "classes": [],
+                                 "componentId": "message-requirement-field-delivery_preference-icon-o",
+                                 "componentName": "FeatherIcon",
+                                 "componentProps": {
+                                  "name": "map-pin"
+                                 }
+                                },
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-5)"
+                                 },
+                                 "children": [],
+                                 "classes": [
+                                  "text-xs"
+                                 ],
+                                 "componentId": "message-requirement-field-delivery_preference-label-o",
+                                 "componentName": "TextBlock",
+                                 "componentProps": {
+                                  "tag": "span",
+                                  "text": "Delivery"
+                                 }
+                                }
+                               ],
+                               "classes": [],
+                               "componentId": "message-requirement-field-delivery_preference-header-o",
+                               "componentName": "container",
+                               "originalElement": "div"
+                              },
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-8)"
+                               },
+                               "children": [],
+                               "classes": [
+                                "text-p-sm",
+                                "font-medium"
+                               ],
+                               "componentId": "message-requirement-field-delivery_preference-value-o",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "tag": "span",
+                                "text": "{{ parseRequirementContent(dataItem).delivery_preference }}"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-field-delivery_preference-o",
+                             "componentName": "container",
+                             "originalElement": "div",
+                             "visibilityCondition": "parseRequirementContent(dataItem).delivery_preference"
+                            },
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flexDirection": "column",
+                              "gap": "2px"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "alignItems": "center",
+                                "display": "flex",
+                                "gap": "5px"
+                               },
+                               "children": [
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-4)",
+                                  "height": "12px",
+                                  "width": "12px"
+                                 },
+                                 "children": [],
+                                 "classes": [],
+                                 "componentId": "message-requirement-field-budget-icon-o",
+                                 "componentName": "FeatherIcon",
+                                 "componentProps": {
+                                  "name": "credit-card"
+                                 }
+                                },
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-5)"
+                                 },
+                                 "children": [],
+                                 "classes": [
+                                  "text-xs"
+                                 ],
+                                 "componentId": "message-requirement-field-budget-label-o",
+                                 "componentName": "TextBlock",
+                                 "componentProps": {
+                                  "tag": "span",
+                                  "text": "Budget"
+                                 }
+                                }
+                               ],
+                               "classes": [],
+                               "componentId": "message-requirement-field-budget-header-o",
+                               "componentName": "container",
+                               "originalElement": "div"
+                              },
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-8)"
+                               },
+                               "children": [],
+                               "classes": [
+                                "text-p-sm",
+                                "font-medium"
+                               ],
+                               "componentId": "message-requirement-field-budget-value-o",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "tag": "span",
+                                "text": "{{ parseRequirementContent(dataItem).budget }}"
+                               }
+                              }
+                             ],
+                             "classes": [],
+                             "componentId": "message-requirement-field-budget-o",
+                             "componentName": "container",
+                             "originalElement": "div",
+                             "visibilityCondition": "parseRequirementContent(dataItem).budget"
+                            }
+                           ],
+                           "classes": [],
+                           "componentId": "message-requirement-fields-grid-o",
+                           "componentName": "container",
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)",
+                            "display": "block",
+                            "fontSize": "9px",
+                            "marginTop": "10px",
+                            "textAlign": "right"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentId": "message-requirement-timestamp-o",
+                           "componentName": "TextBlock",
                            "componentProps": {
-                            "html": "{{ requirementCardHtml(dataItem) }}"
+                            "tag": "span",
+                            "text": "{{ formatMessageTime(dataItem) }}"
                            }
                           }
                          ],
@@ -4430,192 +5632,6 @@
       {
        "baseStyles": {
         "display": "flex",
-        "flexDirection": "column",
-        "gap": "14px"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "color": "var(--ink-gray-6)"
-         },
-         "children": [],
-         "classes": [],
-         "componentId": "disable-team-member-description",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-sm",
-          "tag": "p",
-          "text": "{{ memberToDisable ? memberToDisable.user + ' will lose access to every thread they are part of.' : '' }}"
-         }
-        },
-        {
-         "baseStyles": {
-          "display": "flex",
-          "flexDirection": "row",
-          "gap": "8px",
-          "justifyContent": "flex-end"
-         },
-         "children": [
-          {
-           "children": [],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "showDisableTeamMemberDialog.value = false;"
-            }
-           },
-           "componentId": "disable-team-member-cancel-btn",
-           "componentName": "Button",
-           "componentProps": {
-            "label": "Cancel",
-            "theme": "gray",
-            "variant": "outline"
-           }
-          },
-          {
-           "children": [],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "disableTeamMember();"
-            }
-           },
-           "componentId": "disable-team-member-confirm-btn",
-           "componentName": "Button",
-           "componentProps": {
-            "label": "Disable",
-            "loading": "{{ disablingTeamMember }}",
-            "loadingText": "Disabling...",
-            "theme": "red",
-            "variant": "solid"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "disable-team-member-actions",
-         "componentName": "container",
-         "originalElement": "div"
-        }
-       ],
-       "classes": [],
-       "componentId": "disable-team-member-body",
-       "componentName": "container",
-       "originalElement": "div"
-      }
-     ],
-     "classes": [],
-     "componentId": "disable-team-member-dialog",
-     "componentName": "Dialog",
-     "componentProps": {
-      "modelValue": {
-       "$type": "variable",
-       "name": "showDisableTeamMemberDialog"
-      },
-      "size": "sm",
-      "title": "Disable team member?"
-     }
-    },
-    {
-     "children": [
-      {
-       "baseStyles": {
-        "display": "flex",
-        "flexDirection": "column",
-        "gap": "12px"
-       },
-       "children": [
-        {
-         "children": [],
-         "classes": [],
-         "componentId": "new-team-member-email",
-         "componentName": "TextInput",
-         "componentProps": {
-          "label": "Email",
-          "modelValue": {
-           "$type": "variable",
-           "name": "newTeamMemberEmail"
-          },
-          "placeholder": "teammate@company.com",
-          "type": "email"
-         }
-        },
-        {
-         "children": [],
-         "classes": [],
-         "componentId": "new-team-member-role",
-         "componentName": "TextInput",
-         "componentProps": {
-          "label": "Role (optional)",
-          "modelValue": {
-           "$type": "variable",
-           "name": "newTeamMemberRole"
-          },
-          "placeholder": "e.g. Sales, Tech, Manager"
-         }
-        },
-        {
-         "children": [],
-         "classes": [],
-         "componentId": "new-team-member-password",
-         "componentName": "TextInput",
-         "componentProps": {
-          "label": "Password (optional)",
-          "modelValue": {
-           "$type": "variable",
-           "name": "newTeamMemberPassword"
-          },
-          "placeholder": "Leave blank to set later",
-          "type": "password"
-         }
-        },
-        {
-         "children": [],
-         "classes": [],
-         "componentEvents": {
-          "click": {
-           "action": "Run Script",
-           "event": "click",
-           "script": "addTeamMember();"
-          }
-         },
-         "componentId": "add-team-member-submit",
-         "componentName": "Button",
-         "componentProps": {
-          "label": "Add member",
-          "loading": "{{ addingTeamMember }}",
-          "loadingText": "Adding...",
-          "theme": "gray",
-          "variant": "solid"
-         }
-        }
-       ],
-       "classes": [],
-       "componentId": "add-team-member-form",
-       "componentName": "container",
-       "originalElement": "div"
-      }
-     ],
-     "classes": [],
-     "componentId": "add-team-member-dialog",
-     "componentName": "Dialog",
-     "componentProps": {
-      "modelValue": {
-       "$type": "variable",
-       "name": "showAddTeamMemberDialog"
-      },
-      "size": "sm",
-      "title": "Add team member"
-     }
-    },
-    {
-     "children": [
-      {
-       "baseStyles": {
-        "display": "flex",
         "flexDirection": "row",
         "height": "min(620px, 80vh)",
         "position": "relative"
@@ -5247,6 +6263,9 @@
                "visibilityCondition": "myTeam.data && myTeam.data.length"
               },
               {
+               "baseStyles": {
+                "gap": "0px"
+               },
                "children": [
                 {
                  "baseStyles": {
@@ -5414,9 +6433,6 @@
                  "originalElement": "div"
                 }
                ],
-               "baseStyles": {
-                "gap": "0px"
-               },
                "classes": [],
                "componentId": "profile-settings-team-repeater",
                "componentName": "Repeater",
@@ -5550,6 +6566,192 @@
        "name": "showProfileSettingsDialog"
       },
       "size": "4xl"
+     }
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "14px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "disable-team-member-description",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-sm",
+          "tag": "p",
+          "text": "{{ memberToDisable ? memberToDisable.user + ' will lose access to every thread they are part of.' : '' }}"
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "8px",
+          "justifyContent": "flex-end"
+         },
+         "children": [
+          {
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "showDisableTeamMemberDialog.value = false;"
+            }
+           },
+           "componentId": "disable-team-member-cancel-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "theme": "gray",
+            "variant": "outline"
+           }
+          },
+          {
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "disableTeamMember();"
+            }
+           },
+           "componentId": "disable-team-member-confirm-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Disable",
+            "loading": "{{ disablingTeamMember }}",
+            "loadingText": "Disabling...",
+            "theme": "red",
+            "variant": "solid"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "disable-team-member-actions",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "disable-team-member-body",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "disable-team-member-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "showDisableTeamMemberDialog"
+      },
+      "size": "sm",
+      "title": "Disable team member?"
+     }
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "12px"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "new-team-member-email",
+         "componentName": "TextInput",
+         "componentProps": {
+          "label": "Email",
+          "modelValue": {
+           "$type": "variable",
+           "name": "newTeamMemberEmail"
+          },
+          "placeholder": "teammate@company.com",
+          "type": "email"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "new-team-member-role",
+         "componentName": "TextInput",
+         "componentProps": {
+          "label": "Role (optional)",
+          "modelValue": {
+           "$type": "variable",
+           "name": "newTeamMemberRole"
+          },
+          "placeholder": "e.g. Sales, Tech, Manager"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "new-team-member-password",
+         "componentName": "TextInput",
+         "componentProps": {
+          "label": "Password (optional)",
+          "modelValue": {
+           "$type": "variable",
+           "name": "newTeamMemberPassword"
+          },
+          "placeholder": "Leave blank to set later",
+          "type": "password"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "addTeamMember();"
+          }
+         },
+         "componentId": "add-team-member-submit",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "Add member",
+          "loading": "{{ addingTeamMember }}",
+          "loadingText": "Adding...",
+          "theme": "gray",
+          "variant": "solid"
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "add-team-member-form",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "add-team-member-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "showAddTeamMemberDialog"
+      },
+      "size": "sm",
+      "title": "Add team member"
      }
     },
     {
@@ -8640,12 +9842,12 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-08-19 14:13:34.797120",
+ "creation": "2026-08-27 12:56:52.239968",
  "doctype": "Studio Page",
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-08-20 01:19:47.030548",
+ "modified": "2026-08-28 14:31:53.180585",
  "modified_by": "Administrator",
  "name": "messaging",
  "owner": "Administrator",
@@ -8692,12 +9894,14 @@
    "document_type": "Connect DM Message",
    "fields": "[\"name\",\"dm_thread\",\"sender\",\"message_type\",\"content\",\"attachment\",\"file_name\",\"file_type\",\"file_size\",\"is_edited\",\"creation\"]",
    "filters": "{\"dm_thread\":[\"=\",\"{{ selectedThread }}\"]}",
-   "limit": 200,
+   "limit": 1000000,
    "method": "GET",
+   "params": "{}",
    "resource_name": "dmMessages",
    "resource_type": "Document List",
    "sort_field": "creation",
-   "sort_order": "DESC"
+   "sort_order": "DESC",
+   "whitelisted_methods": "[]"
   },
   {
    "document_type": "Connect Message",
