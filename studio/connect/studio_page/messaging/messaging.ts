@@ -348,6 +348,37 @@ export default function setup(context) {
 		return el.scrollHeight - el.scrollTop - el.clientHeight < 80
 	}
 
+	// messages/dmMessages are frappe-ui list resources capped at 200 rows (see messaging.json),
+	// sorted creation DESC — so `.next()` fetches the *next older* page and appends it to the
+	// end of `.data`, which is exactly "load more history" for a DESC-sorted list. Set while a
+	// fetch is in flight so a burst of scroll events near the top can't fire it more than once
+	// concurrently, and so the data-change watcher below (which normally snaps the pane to the
+	// bottom on every new message) knows to stay put instead — otherwise appending older
+	// messages would immediately yank the pane away from what the user scrolled up to read.
+	let isLoadingOlderMessages = false
+
+	async function loadOlderMessages(container: HTMLElement) {
+		if (!selectedThread.value || isLoadingOlderMessages) return
+		const list = selectedThreadType.value === "dm" ? context.dmMessages : context.messages
+		if (!list || list.list.loading || !list.hasNextPage) return
+
+		isLoadingOlderMessages = true
+		const prevScrollHeight = container.scrollHeight
+		const prevScrollTop = container.scrollTop
+		try {
+			await list.next()
+			await nextTick()
+			// Keep whatever the user was looking at pinned in place — without this, prepending
+			// older messages above the viewport would shove their current position down the page.
+			container.scrollTop = prevScrollTop + (container.scrollHeight - prevScrollHeight)
+		} catch (e) {
+			// no history-loading affordance to show an error in — silently leave hasNextPage as
+			// is, so the next scroll-to-top attempt just retries
+		} finally {
+			isLoadingOlderMessages = false
+		}
+	}
+
 	function onMessagesScroll(event) {
 		showStickyDate.value = true
 		if (stickyDateHideTimer) clearTimeout(stickyDateHideTimer)
@@ -358,6 +389,7 @@ export default function setup(context) {
 		const container = event && (event.currentTarget || event.target)
 		if (!container) return
 		stickToBottom = isNearMessagesBottom(container)
+		if (container.scrollTop < 200) loadOlderMessages(container)
 
 		const containerTop = container.getBoundingClientRect().top
 		let stuck = null
@@ -409,7 +441,13 @@ export default function setup(context) {
 	// itself sidesteps the race: it fires once, after whichever fetch actually lands last.
 	watch(
 		() => [context.messages.data, context.dmMessages.data],
-		() => scrollMessagesToBottom(),
+		() => {
+			// A load-older-history fetch also lands here (it's the same .data array), but that
+			// one manages the scroll position itself (see loadOlderMessages) — jumping to the
+			// bottom here too would undo it the instant the older page arrives.
+			if (isLoadingOlderMessages) return
+			scrollMessagesToBottom()
+		},
 	)
 
 	onScopeDispose(() => {
