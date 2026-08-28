@@ -1,5 +1,5 @@
 import json
-import os
+import mimetypes
 
 import frappe
 from frappe import _
@@ -15,22 +15,9 @@ from connect.permissions import (
 )
 
 
-ALLOWED_CHAT_FILE_EXTENSIONS = {
-	".pdf": "application/pdf",
-	".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-	".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-	".png": "image/png",
-	".jpg": "image/jpeg",
-	".jpeg": "image/jpeg",
-	".gif": "image/gif",
-	".webp": "image/webp",
-}
-MAX_CHAT_FILE_SIZE = 25 * 1024 * 1024  # 25 MB
-
-
 @frappe.whitelist()
 def add_thread_member(thread, email, side, permission="Write"):
-	"""Membership/authorization logic lives on Connect Thread's add_member()."""
+	# adding member to chat
 	thread_doc = frappe.get_doc("Connect Thread", thread)
 	member, created_user = thread_doc.add_member(email, side, permission, frappe.session.user)
 	return {"member": member.name, "created_user": created_user}
@@ -38,15 +25,15 @@ def add_thread_member(thread, email, side, permission="Write"):
 
 @frappe.whitelist()
 def remove_thread_member(thread, member):
-	"""Membership/authorization logic lives on Connect Thread's remove_member()."""
+	# removing member from chat
 	thread_doc = frappe.get_doc("Connect Thread", thread)
-	member_doc = thread_doc.remove_member(member, frappe.session.user)
+	member_doc = thread_doc.remove_member(member, fyesrappe.session.user)
 	return {"removed": member_doc.user}
 
 
 @frappe.whitelist()
 def close_thread(thread):
-	"""Authorization and state transition live on Connect Thread's close()."""
+	# closing the chat thread
 	thread_doc = frappe.get_doc("Connect Thread", thread)
 	thread_doc.close(frappe.session.user)
 	return {"status": thread_doc.status}
@@ -308,20 +295,11 @@ def _stage_chat_attachment():
 		frappe.throw(_("No file was uploaded"))
 
 	filename = uploaded.filename or ""
-	ext = os.path.splitext(filename)[1].lower()
-	if ext not in ALLOWED_CHAT_FILE_EXTENSIONS:
-		frappe.throw(_("Only PDF, DOCX, and image files can be shared in chat"))
-
-	content = uploaded.stream.read()
-	if len(content) > MAX_CHAT_FILE_SIZE:
-		frappe.throw(
-			_("File is too large — the limit is {0} MB").format(MAX_CHAT_FILE_SIZE // (1024 * 1024))
-		)
 
 	file_doc = frappe.get_doc({
 		"doctype": "File",
 		"file_name": filename,
-		"content": content,
+		"content": uploaded.stream.read(),
 		"is_private": 1,
 	})
 	file_doc.insert(ignore_permissions=True)
@@ -329,7 +307,7 @@ def _stage_chat_attachment():
 	return {
 		"file_url": file_doc.file_url,
 		"file_name": filename,
-		"file_type": ALLOWED_CHAT_FILE_EXTENSIONS[ext],
+		"file_type": mimetypes.guess_type(filename)[0],
 		"file_size": file_doc.file_size,
 	}
 
