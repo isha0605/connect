@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "field:partner_name",
+ "autoname": "format:PART-{#####}",
  "creation": "2026-08-05 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -12,9 +12,9 @@
   "column_break_basic",
   "tier",
   "verification_status",
+  "enabled",
   "specialist",
   "rating",
-  "reviews_count",
   "section_break_description",
   "description",
   "section_break_location",
@@ -33,9 +33,8 @@
   "hourly_rate",
   "response_time_hours",
   "column_break_metrics",
-  "founded_years_ago",
+  "year_founded",
   "sites_deployed",
-  "consultant_bench",
   "typical_project_size",
   "proposal_timeline",
   "section_break_certs",
@@ -103,19 +102,19 @@
    "fieldtype": "Column Break"
   },
   {
-   "description": "Set by Frappe admins only \u2014 partners cannot self-edit their tier.",
+   "description": "Set by Frappe admins only — partners cannot self-edit their tier.",
    "fieldname": "tier",
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Tier",
-   "options": "Gold\nSilver\nBronze",
+   "options": "\nGold\nSilver\nBronze",
    "permlevel": 1,
    "reqd": 1
   },
   {
    "default": "Pending Review",
-   "description": "Set by Frappe admins only \u2014 partners cannot self-edit their verification status.",
+   "description": "Set by Frappe admins only — partners cannot self-edit their verification status.",
    "fieldname": "verification_status",
    "fieldtype": "Select",
    "in_standard_filter": 1,
@@ -124,8 +123,16 @@
    "permlevel": 1
   },
   {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Enabled"
+  },
+  {
    "default": "0",
-   "description": "Drives the \"Frappe Specialist\" crown badge. Set by Frappe admins only \u2014 partners cannot self-edit this.",
+   "description": "Drives the \"Frappe Specialist\" crown badge. Set by Frappe admins only — partners cannot self-edit this.",
    "fieldname": "specialist",
    "fieldtype": "Check",
    "label": "Frappe Specialist",
@@ -134,17 +141,10 @@
   {
    "description": "Precomputed average of reviews.rating",
    "fieldname": "rating",
-   "fieldtype": "Float",
+   "fieldtype": "Rating",
    "in_list_view": 1,
    "label": "Rating",
    "precision": "1",
-   "read_only": 1
-  },
-  {
-   "description": "Precomputed count of reviews",
-   "fieldname": "reviews_count",
-   "fieldtype": "Int",
-   "label": "Reviews Count",
    "read_only": 1
   },
   {
@@ -184,7 +184,7 @@
    "fieldtype": "Select",
    "in_standard_filter": 1,
    "label": "Region",
-   "options": "North America\nEurope\nAsia Pacific\nMiddle East\nAfrica\nLatin America\nOceania\nOther",
+   "options": "\nNorth America\nEurope\nAsia Pacific\nMiddle East\nAfrica\nLatin America\nOceania\nOther",
    "read_only": 1
   },
   {
@@ -212,7 +212,7 @@
    "fieldtype": "Select",
    "in_standard_filter": 1,
    "label": "Industry",
-   "options": "Manufacturing\nRetail\nHealthcare\nFinTech\nEducation\nLogistics\nProfessional Services\nNonprofit\nGovernment\nTechnology\nOther"
+   "options": "\nManufacturing\nRetail\nHealthcare\nFinTech\nEducation\nLogistics\nProfessional Services\nNonprofit\nGovernment\nTechnology\nOther"
   },
   {
    "fieldname": "section_break_metrics",
@@ -225,9 +225,9 @@
    "label": "Implementations / Rollouts"
   },
   {
-   "description": "Set by Frappe admins only \u2014 partners cannot self-edit this.",
+   "description": "Set by Frappe admins only — partners cannot self-edit this.",
    "fieldname": "pmm_level",
-   "fieldtype": "Float",
+   "fieldtype": "Int",
    "label": "PMM Level",
    "permlevel": 1,
    "precision": "1"
@@ -248,19 +248,9 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "founded_years_ago",
-   "fieldtype": "Int",
-   "label": "Founded (Years Ago)"
-  },
-  {
    "fieldname": "sites_deployed",
    "fieldtype": "Int",
    "label": "Sites Deployed"
-  },
-  {
-   "fieldname": "consultant_bench",
-   "fieldtype": "Int",
-   "label": "Consultants on Bench"
   },
   {
    "fieldname": "typical_project_size",
@@ -499,15 +489,20 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Featured (curated profile)"
+  },
+  {
+   "fieldname": "year_founded",
+   "fieldtype": "Int",
+   "label": "Year Founded"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-08-12 12:00:13.330204",
+ "modified": "2026-08-25 12:52:33.280627",
  "modified_by": "Administrator",
  "module": "Partner",
  "name": "Partner",
- "naming_rule": "By fieldname",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
