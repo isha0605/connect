@@ -59,6 +59,11 @@ app_license = "mit"
 # application home page (will override Website Settings)
 # home_page = "login"
 
+# custom content for the "Sign up" panel on the default /login page — points
+# guests at the app's own /connect/signup flow (creates a Customer) instead of
+# Frappe's generic signup form (creates a bare User)
+signup_form_template = "connect/templates/includes/signup_redirect.html"
+
 # website user home page (by Role)
 # role_home_page = {
 # 	"Role": "home_page"
