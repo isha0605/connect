@@ -134,9 +134,9 @@ permission_query_conditions = {
 	"Connect DM Thread": "connect.connect.permissions.get_dm_thread_permission_query_conditions",
 	"Connect DM Message": "connect.connect.permissions.get_dm_message_permission_query_conditions",
 	"Studio Page": "connect.connect.permissions.get_studio_page_permission_query_conditions",
-	"Customer": "connect.connect.doctype.customer.customer.get_permission_query_conditions",
-	"Shortlist": "connect.connect.doctype.shortlist.shortlist.get_permission_query_conditions",
-	"Requirement": "connect.connect.doctype.requirement.requirement.get_permission_query_conditions",
+	"Customer": "connect.customer.doctype.customer.customer.get_permission_query_conditions",
+	"Shortlist": "connect.customer.doctype.shortlist.shortlist.get_permission_query_conditions",
+	"Requirement": "connect.customer.doctype.requirement.requirement.get_permission_query_conditions",
 }
 
 has_permission = {
@@ -147,9 +147,9 @@ has_permission = {
 	"Connect DM Thread": "connect.connect.permissions.has_dm_thread_permission",
 	"Connect DM Message": "connect.connect.permissions.has_dm_message_permission",
 	"Studio Page": "connect.connect.permissions.has_studio_page_permission",
-	"Customer": "connect.connect.doctype.customer.customer.has_permission",
-	"Shortlist": "connect.connect.doctype.shortlist.shortlist.has_permission",
-	"Requirement": "connect.connect.doctype.requirement.requirement.has_permission",
+	"Customer": "connect.customer.doctype.customer.customer.has_permission",
+	"Shortlist": "connect.customer.doctype.shortlist.shortlist.has_permission",
+	"Requirement": "connect.customer.doctype.requirement.requirement.has_permission",
 }
 
 # Document Events
