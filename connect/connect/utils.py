@@ -61,12 +61,17 @@ def get_my_team():
 		frappe.throw(_("You are not a member of any company"))
 
 	fieldname = "customer" if doctype == "Customer Team Member" else "partner"
-	rows = frappe.get_all(doctype, filters={fieldname: company}, fields=["user", "is_admin"])
-	for row in rows:
-		profile = frappe.db.get_value("User", row.user, ["full_name", "user_image"], as_dict=True) or {}
-		row["full_name"] = profile.get("full_name")
-		row["user_image"] = profile.get("user_image")
-	return rows
+	Member = frappe.qb.DocType(doctype)
+	UserTable = frappe.qb.DocType("User")
+
+	return (
+		frappe.qb.from_(Member)
+		.left_join(UserTable)
+		.on(Member.user == UserTable.name)
+		.select(Member.user, Member.is_admin, UserTable.full_name, UserTable.user_image)
+		.where(Member[fieldname] == company)
+		.run(as_dict=True)
+	)
 
 
 def get_my_profile():
@@ -74,14 +79,24 @@ def get_my_profile():
 	Settings popup's Profile section. `role` is company-scoped (Connect Partner Member),
 	not a User field, so it's looked up separately and only set for partner-side users."""
 	user = frappe.session.user
-	profile = frappe.db.get_value("User", user, ["full_name", "user_image", "phone"], as_dict=True) or {}
-	role = frappe.db.get_value("Connect Partner Member", {"user": user}, "role")
+	UserTable = frappe.qb.DocType("User")
+	PartnerMember = frappe.qb.DocType("Connect Partner Member")
+
+	rows = (
+		frappe.qb.from_(UserTable)
+		.left_join(PartnerMember)
+		.on(PartnerMember.user == UserTable.name)
+		.select(UserTable.full_name, UserTable.user_image, UserTable.phone, PartnerMember.role)
+		.where(UserTable.name == user)
+		.run(as_dict=True)
+	)
+	profile = rows[0] if rows else {}
 	return {
 		"email": user,
 		"full_name": profile.get("full_name"),
 		"user_image": profile.get("user_image"),
 		"phone": profile.get("phone"),
-		"role": role,
+		"role": profile.get("role"),
 	}
 
 

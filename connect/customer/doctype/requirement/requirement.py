@@ -5,6 +5,7 @@ import json
 import frappe
 from frappe import _
 from frappe.model.document import Document
+from frappe.query_builder import Order
 
 
 class Requirement(Document):
@@ -27,8 +28,8 @@ def get_permission_query_conditions(user):
 	customers = _customer_names_for_user(user)
 	if not customers:
 		return "1=0"
-	names = ", ".join(frappe.db.escape(c) for c in customers)
-	return f"`tabRequirement`.customer in ({names})"
+	RequirementTable = frappe.qb.DocType("Requirement")
+	return RequirementTable.customer.isin(customers).get_sql()
 
 
 def has_permission(doc, user=None, permission_type=None):
@@ -93,8 +94,49 @@ def save_customer_requirement(
 		doc = frappe.get_doc({"doctype": "Requirement", **values})
 		doc.insert(ignore_permissions=True)
 
-	frappe.db.commit()
 	return {"name": doc.name}
+
+
+REQUIREMENT_FIELDS = [
+	"name", "company_name", "country", "industry", "looking_for", "company_size",
+	"current_situation", "timeline", "delivery_preference", "budget",
+	"special_requirements", "additional_notes",
+]
+
+
+def _latest_requirement_for_customer(customer):
+	"""The customer's most recent Requirement — just the fields
+	get_my_requirement/get_requirement_snapshot actually return, plus its apps,
+	in 2 queries total (one row + one child-table fetch). frappe.get_doc(...)
+	would do this in more queries for less: one SELECT * for every column on
+	the doctype (not just the ~12 we use) plus one query per child table the
+	doctype defines, whether we read it or not."""
+	RequirementTable = frappe.qb.DocType("Requirement")
+	rows = (
+		frappe.qb.from_(RequirementTable)
+		.select(*[RequirementTable[f] for f in REQUIREMENT_FIELDS])
+		.where(RequirementTable.customer == customer)
+		.orderby(RequirementTable.creation, order=Order.desc)
+		.limit(1)
+		.run(as_dict=True)
+	)
+	if not rows:
+		return None
+	req = rows[0]
+
+	AppTable = frappe.qb.DocType("Partner App")
+	req["apps"] = (
+		frappe.qb.from_(AppTable)
+		.select(AppTable.app)
+		.where(
+			(AppTable.parent == req.name)
+			& (AppTable.parenttype == "Requirement")
+			& (AppTable.parentfield == "apps")
+		)
+		.orderby(AppTable.idx)
+		.run(pluck=True)
+	)
+	return req
 
 
 def get_my_requirement():
@@ -105,24 +147,23 @@ def get_my_requirement():
 	customer = get_customer_for_user()
 	if not customer:
 		return None
-	name = frappe.db.get_value("Requirement", {"customer": customer}, "name", order_by="creation desc")
-	if not name:
+	req = _latest_requirement_for_customer(customer)
+	if not req:
 		return None
-	doc = frappe.get_doc("Requirement", name)
 	return {
-		"name": doc.name,
-		"company_name": doc.company_name,
-		"country": doc.country,
-		"industry": doc.industry,
-		"apps": [a.app for a in doc.apps],
-		"looking_for": doc.looking_for,
-		"company_size": doc.company_size,
-		"current_situation": doc.current_situation,
-		"timeline": doc.timeline,
-		"delivery_preference": doc.delivery_preference,
-		"budget": doc.budget,
-		"special_requirements": doc.special_requirements,
-		"additional_notes": doc.additional_notes,
+		"name": req.name,
+		"company_name": req.company_name,
+		"country": req.country,
+		"industry": req.industry,
+		"apps": req.apps,
+		"looking_for": req.looking_for,
+		"company_size": req.company_size,
+		"current_situation": req.current_situation,
+		"timeline": req.timeline,
+		"delivery_preference": req.delivery_preference,
+		"budget": req.budget,
+		"special_requirements": req.special_requirements,
+		"additional_notes": req.additional_notes,
 	}
 
 
@@ -135,21 +176,20 @@ def get_requirement_snapshot():
 	customer = get_customer_for_user()
 	if not customer:
 		return None
-	name = frappe.db.get_value("Requirement", {"customer": customer}, "name", order_by="creation desc")
-	if not name:
+	req = _latest_requirement_for_customer(customer)
+	if not req:
 		return None
-	doc = frappe.get_doc("Requirement", name)
 	return {
-		"company_name": doc.company_name,
-		"country": doc.country,
-		"industry": doc.industry,
-		"apps": [row.app for row in doc.apps],
-		"looking_for": doc.looking_for,
-		"company_size": doc.company_size,
-		"current_situation": doc.current_situation,
-		"timeline": doc.timeline,
-		"delivery_preference": doc.delivery_preference,
-		"budget": doc.budget,
-		"special_requirements": doc.special_requirements,
-		"additional_notes": doc.additional_notes,
+		"company_name": req.company_name,
+		"country": req.country,
+		"industry": req.industry,
+		"apps": req.apps,
+		"looking_for": req.looking_for,
+		"company_size": req.company_size,
+		"current_situation": req.current_situation,
+		"timeline": req.timeline,
+		"delivery_preference": req.delivery_preference,
+		"budget": req.budget,
+		"special_requirements": req.special_requirements,
+		"additional_notes": req.additional_notes,
 	}

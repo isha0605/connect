@@ -86,7 +86,6 @@ def submit_partner_review(
 		doc = frappe.get_doc({"doctype": "Partner Review", **values})
 		doc.insert(ignore_permissions=True)
 
-	frappe.db.commit()
 	return {"name": doc.name}
 
 
@@ -97,8 +96,10 @@ def get_my_review_for_partner(partner: str):
 	customer = get_customer_for_user()
 	if not customer:
 		return None
-	name = frappe.db.get_value("Partner Review", {"partner": partner, "customer": customer}, "name")
-	return frappe.get_doc("Partner Review", name).as_dict() if name else None
+	rows = frappe.get_all(
+		"Partner Review", filters={"partner": partner, "customer": customer}, fields=["*"], limit_page_length=1
+	)
+	return rows[0] if rows else None
 
 
 def list_partner_reviews(partner: str):

@@ -33,8 +33,9 @@ def save_price_estimate(
 	if isinstance(selected_addons, str):
 		selected_addons = json.loads(selected_addons or "[]")
 
-	partner_doc = frappe.get_doc("Partner", partner)
-	base_price = next((p.price for p in partner_doc.packs if p.pack_name == pack_type), 0)
+	base_price = 0
+	if pack_type:
+		base_price = frappe.db.get_value("Partner Pack", {"parent": partner, "pack_name": pack_type}, "price") or 0
 
 	doc = frappe.get_doc({
 		"doctype": "Price Estimate",
@@ -48,7 +49,6 @@ def save_price_estimate(
 	for addon in selected_addons:
 		doc.append("selected_options", {"feature_name": addon.get("name"), "price": addon.get("price")})
 	doc.insert(ignore_permissions=True)
-	frappe.db.commit()
 	return doc.name
 
 
@@ -61,9 +61,10 @@ def get_pricing_view(partner: str, requirement: str | None = None):
 	if not partner or partner == "undefined" or not frappe.db.exists("Partner", partner):
 		return {"state": "loading"}
 
-	partner_doc = frappe.get_doc("Partner", partner)
-	addons = [a.as_dict() for a in partner_doc.addons]
-	addon_rate = 2000 if partner_doc.starter_pack else flt(partner_doc.hourly_rate)
+	partner_info = frappe.db.get_value("Partner", partner, ["starter_pack", "hourly_rate"], as_dict=True)
+	hourly_rate = flt(partner_info.hourly_rate)
+	addons = frappe.get_all("Partner Addon", filters={"parent": partner}, fields=["*"], order_by="idx")
+	addon_rate = 2000 if partner_info.starter_pack else hourly_rate
 
 	if not requirement:
 		customer = get_customer_for_user()
@@ -72,31 +73,35 @@ def get_pricing_view(partner: str, requirement: str | None = None):
 				"Requirement", {"customer": customer}, "name", order_by="creation desc"
 			)
 
-	if not partner_doc.starter_pack:
+	if not partner_info.starter_pack:
 		return {
-			"state": "hourly_only", "rate": partner_doc.hourly_rate,
+			"state": "hourly_only", "rate": hourly_rate,
 			"addons": addons, "addon_rate": addon_rate, "requirement": requirement,
 		}
 
 	if not requirement:
-		return {"state": "no_requirement", "rate": partner_doc.hourly_rate, "addons": addons, "addon_rate": addon_rate}
+		return {"state": "no_requirement", "rate": hourly_rate, "addons": addons, "addon_rate": addon_rate}
 
-	req = frappe.get_doc("Requirement", requirement)
-	req_apps = [a.app for a in req.apps]
+	req_apps = frappe.get_all(
+		"Partner App",
+		filters={"parent": requirement, "parenttype": "Requirement", "parentfield": "apps"},
+		pluck="app",
+		order_by="idx",
+	)
 	has_erpnext = "ERPNext" in req_apps
 	has_hr = "Frappe HR" in req_apps
 
 	if not (has_erpnext or has_hr):
 		return {
 			"state": "mismatch",
-			"rate": partner_doc.hourly_rate,
+			"rate": hourly_rate,
 			"requested_product": ", ".join(req_apps) if req_apps else None,
-			"requirement": req.name,
+			"requirement": requirement,
 			"addons": addons,
 			"addon_rate": addon_rate,
 		}
 
-	packs = [p.as_dict() for p in partner_doc.packs]
+	packs = frappe.get_all("Partner Pack", filters={"parent": partner}, fields=["*"], order_by="idx")
 	for p in packs:
 		p["is_primary_match"] = _pack_is_primary_match(p["pack_key"], has_erpnext, has_hr)
 
@@ -104,5 +109,5 @@ def get_pricing_view(partner: str, requirement: str | None = None):
 		"state": "eligible",
 		"packs": packs,
 		"addons": addons,
-		"requirement": req.name,
+		"requirement": requirement,
 	}

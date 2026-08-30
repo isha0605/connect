@@ -192,6 +192,35 @@ def _fuzzy_rank(search_term: str, candidates: list[dict], threshold: float = 0.6
 	return [c for _, c in scored]
 
 
+def _partners_matching_child(child_doctype: str, field: str, operator: str, value):
+	"""Names of partners with at least one <child_doctype> row satisfying
+	<field> <operator> <value> — built as a WHERE name IN (subquery) membership
+	check, not a join. Joining the child table directly onto Partner (Frappe's
+	own ["Child Doctype", field, op, value] filter syntax does exactly that)
+	multiplies a partner's row once per matching child row — combine two or
+	more such filters at once (as search_partners' filter panel lets you) and
+	a partner with, say, 2 matching rows in one child table and 3 in another
+	comes back 6 times instead of once. A membership subquery is a plain
+	yes/no test per partner, so it can't fan out no matter how many child rows
+	exist on either side."""
+	ChildTable = frappe.qb.DocType(child_doctype)
+	query = (
+		frappe.qb.from_(ChildTable)
+		.select(ChildTable.parent)
+		.distinct()
+		.where(ChildTable.parenttype == "Partner")
+	)
+	if operator == "=":
+		query = query.where(ChildTable[field] == value)
+	elif operator == "in":
+		query = query.where(ChildTable[field].isin(value))
+	elif operator == "is_set":
+		query = query.where(ChildTable[field] != "")
+	else:
+		raise ValueError(f"Unsupported operator: {operator}")
+	return {row[0] for row in query.run()}
+
+
 def search_partners(
 	search: str | None = None,
 	industry: str | None = None,
@@ -212,10 +241,14 @@ def search_partners(
 ):
 	"""Guest-safe partner search backing the Find Partners page.
 
-	Structured filters combine as AND and always run as a real DB query —
-	`product`/`delivery_mode`/`business_process`/`implementation_type`/`language`
-	filter through their Partner child tables via Frappe's built-in child-table
-	join syntax (["<child doctype>", "<field>", "=", value]).
+	Structured filters combine as AND. `product`/`delivery_mode`/
+	`business_process`/`implementation_type`/`language` each resolve to "which
+	partners have at least one matching child-table row" via a WHERE name IN
+	(subquery) membership check (see _partners_matching_child) rather than
+	Frappe's built-in child-table join filter syntax — a join multiplies a
+	partner's row once per matching child row, so combining more than one such
+	filter at once (this panel lets you) could silently duplicate results. A
+	membership subquery can't do that.
 
 	`search` layers full-text search with a fuzzy/typo-tolerant fallback on top
 	of whatever the structured filters already narrowed down to:
@@ -243,18 +276,23 @@ def search_partners(
 		filters.append(["Partner", "region", "=", region])
 	if country:
 		filters.append(["Partner", "country", "=", country])
-	if product:
-		filters.append(["Partner App", "app", "=", product])
-	if delivery_mode:
-		filters.append(["Partner Delivery Mode", "delivery_mode", "=", delivery_mode])
 	if tier:
 		filters.append(["Partner", "tier", "=", tier])
+
+	child_matches = []
+	if product:
+		child_matches.append(_partners_matching_child("Partner App", "app", "=", product))
+	if delivery_mode:
+		child_matches.append(_partners_matching_child("Partner Delivery Mode", "delivery_mode", "=", delivery_mode))
 	if business_process:
-		filters.append(["Partner Business Process", "business_process", "=", business_process])
+		child_matches.append(_partners_matching_child("Partner Business Process", "business_process", "=", business_process))
 	if implementation_type:
-		filters.append(["Partner Implementation Type", "implementation_type", "=", implementation_type])
+		child_matches.append(_partners_matching_child("Partner Implementation Type", "implementation_type", "=", implementation_type))
 	if language:
-		filters.append(["Partner Language", "language", "=", language])
+		child_matches.append(_partners_matching_child("Partner Language", "language", "=", language))
+	if child_matches:
+		filters.append(["Partner", "name", "in", list(set.intersection(*child_matches))])
+
 	if min_rating not in (None, ""):
 		filters.append(["Partner", "rating", ">=", flt(min_rating)])
 	if min_pmm_level not in (None, ""):
@@ -338,6 +376,7 @@ def count_matching_partners(answers: dict | str | None = None):
 		answers = json.loads(answers or "{}")
 	answers = answers or {}
 	filters = [["Partner", "is_featured", "=", 1], ["Partner", "enabled", "=", 1]]
+	child_matches = []
 
 	industry = answers.get("industry")
 	if industry:
@@ -345,27 +384,30 @@ def count_matching_partners(answers: dict | str | None = None):
 
 	impl_type = LOOKING_FOR_TO_IMPL_TYPE.get(answers.get("looking_for"))
 	if impl_type:
-		filters.append(["Partner Implementation Type", "implementation_type", "=", impl_type])
+		child_matches.append(_partners_matching_child("Partner Implementation Type", "implementation_type", "=", impl_type))
 
 	situation = answers.get("current_situation")
 	migration = CURRENT_SITUATION_TO_MIGRATION.get(situation)
 	if migration:
-		filters.append(["Partner Migration Path", "migration_path", "=", migration])
+		child_matches.append(_partners_matching_child("Partner Migration Path", "migration_path", "=", migration))
 	else:
 		impl_type_2 = CURRENT_SITUATION_TO_IMPL_TYPE.get(situation)
 		if impl_type_2:
-			filters.append(["Partner Implementation Type", "implementation_type", "=", impl_type_2])
+			child_matches.append(_partners_matching_child("Partner Implementation Type", "implementation_type", "=", impl_type_2))
 
 	mode = DELIVERY_TO_MODE.get(answers.get("delivery_preference"))
 	if mode:
-		filters.append(["Partner Delivery Mode", "delivery_mode", "=", mode])
+		child_matches.append(_partners_matching_child("Partner Delivery Mode", "delivery_mode", "=", mode))
 
 	requirements = answers.get("requirements") or []
 	bp_values = [REQUIREMENT_TO_BUSINESS_PROCESS[r] for r in requirements if r in REQUIREMENT_TO_BUSINESS_PROCESS]
 	if bp_values:
-		filters.append(["Partner Business Process", "business_process", "in", bp_values])
+		child_matches.append(_partners_matching_child("Partner Business Process", "business_process", "in", bp_values))
 	elif any(r in REQUIREMENT_MIGRATION_TAGS for r in requirements):
-		filters.append(["Partner Migration Path", "migration_path", "is", "set"])
+		child_matches.append(_partners_matching_child("Partner Migration Path", "migration_path", "is_set", None))
+
+	if child_matches:
+		filters.append(["Partner", "name", "in", list(set.intersection(*child_matches))])
 
 	partners = frappe.get_list("Partner", filters=filters, fields=["name"], limit_page_length=0)
 	return len(partners)
@@ -388,7 +430,12 @@ def _score_partners_by_requirements(answers: dict):
 	delivery_by, apps_by_partner, migrations_by, impl_by, bp_by = {}, {}, {}, {}, {}
 	for r in frappe.get_all("Partner Delivery Mode", filters={"parent": ["in", names]}, fields=["parent", "delivery_mode"]):
 		delivery_by.setdefault(r.parent, []).append(r.delivery_mode)
-	for r in frappe.get_all("Partner App", filters={"parent": ["in", names]}, fields=["parent", "app"], order_by="idx asc"):
+	for r in frappe.get_all(
+		"Partner App",
+		filters={"parent": ["in", names], "parenttype": "Partner", "parentfield": "apps"},
+		fields=["parent", "app"],
+		order_by="idx asc",
+	):
 		apps_by_partner.setdefault(r.parent, []).append(r.app)
 	for r in frappe.get_all("Partner Migration Path", filters={"parent": ["in", names]}, fields=["parent", "migration_path"]):
 		migrations_by.setdefault(r.parent, []).append(r.migration_path)
@@ -559,7 +606,12 @@ def get_partner_preview(partner: str):
 	if not doc:
 		frappe.throw(_("Partner not found"), frappe.DoesNotExistError)
 
-	doc["apps"] = frappe.get_all("Partner App", filters={"parent": partner}, pluck="app", order_by="idx asc")
+	doc["apps"] = frappe.get_all(
+		"Partner App",
+		filters={"parent": partner, "parenttype": "Partner", "parentfield": "apps"},
+		pluck="app",
+		order_by="idx asc",
+	)
 	doc["migrations"] = frappe.get_all(
 		"Partner Migration Path", filters={"parent": partner}, pluck="migration_path", order_by="idx asc"
 	)

@@ -8,9 +8,16 @@ from frappe.model.document import Document
 
 class Shortlist(Document):
 	def validate(self):
-		duplicate = frappe.db.exists(
-			"Shortlist",
-			{"customer": self.customer, "partner": self.partner, "name": ["!=", self.name]},
+		ShortlistTable = frappe.qb.DocType("Shortlist")
+		duplicate = (
+			frappe.qb.from_(ShortlistTable)
+			.select(ShortlistTable.name)
+			.where(
+				(ShortlistTable.customer == self.customer)
+				& (ShortlistTable.partner == self.partner)
+				& (ShortlistTable.name != self.name)
+			)
+			.run()
 		)
 		if duplicate:
 			frappe.throw(f"{self.partner} is already shortlisted for {self.customer}.")
@@ -34,8 +41,8 @@ def get_permission_query_conditions(user):
 	customers = _customer_names_for_user(user)
 	if not customers:
 		return "1=0"
-	names = ", ".join(frappe.db.escape(c) for c in customers)
-	return f"`tabShortlist`.customer in ({names})"
+	ShortlistTable = frappe.qb.DocType("Shortlist")
+	return ShortlistTable.customer.isin(customers).get_sql()
 
 
 def has_permission(doc, user=None, permission_type=None):
@@ -60,11 +67,18 @@ def add_to_shortlist(partner: str):
 	customer = get_customer_for_user()
 	if not customer:
 		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
-	if not frappe.db.exists("Shortlist", {"customer": customer, "partner": partner}):
+
+	ShortlistTable = frappe.qb.DocType("Shortlist")
+	exists = (
+		frappe.qb.from_(ShortlistTable)
+		.select(ShortlistTable.name)
+		.where((ShortlistTable.customer == customer) & (ShortlistTable.partner == partner))
+		.run()
+	)
+	if not exists:
 		frappe.get_doc({"doctype": "Shortlist", "customer": customer, "partner": partner}).insert(
 			ignore_permissions=True
 		)
-		frappe.db.commit()
 	return {"shortlisted": True}
 
 
@@ -73,10 +87,16 @@ def remove_from_shortlist(partner: str):
 	customer = get_customer_for_user()
 	if not customer:
 		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
-	existing = frappe.db.get_value("Shortlist", {"customer": customer, "partner": partner})
-	if existing:
-		frappe.delete_doc("Shortlist", existing, ignore_permissions=True)
-		frappe.db.commit()
+
+	ShortlistTable = frappe.qb.DocType("Shortlist")
+	rows = (
+		frappe.qb.from_(ShortlistTable)
+		.select(ShortlistTable.name)
+		.where((ShortlistTable.customer == customer) & (ShortlistTable.partner == partner))
+		.run()
+	)
+	if rows:
+		frappe.delete_doc("Shortlist", rows[0][0], ignore_permissions=True)
 	return {"shortlisted": False}
 
 
