@@ -16,7 +16,7 @@ def get_permission_query_conditions(user):
 	if user == "Administrator" or "System Manager" in frappe.get_roles(user):
 		return ""
 	return f"""`tabCustomer`.name in (
-		select parent from `tabCustomer Team Member` where user = {frappe.db.escape(user)}
+		select customer from `tabCustomer Team Member` where user = {frappe.db.escape(user)}
 	)"""
 
 
@@ -24,7 +24,7 @@ def has_permission(doc, user=None, permission_type=None):
 	user = user or frappe.session.user
 	if user == "Administrator" or "System Manager" in frappe.get_roles(user):
 		return True
-	return bool(frappe.db.exists("Customer Team Member", {"parent": doc.name, "user": user}))
+	return bool(frappe.db.exists("Customer Team Member", {"customer": doc.name, "user": user}))
 
 
 def get_customer_for_user(user: str | None = None):
@@ -32,7 +32,7 @@ def get_customer_for_user(user: str | None = None):
 	user = user or frappe.session.user
 	if not user or user == "Guest":
 		return None
-	return frappe.db.get_value("Customer Team Member", {"user": user}, "parent")
+	return frappe.db.get_value("Customer Team Member", {"user": user}, "customer")
 
 
 def get_my_customer():
@@ -74,8 +74,15 @@ def signup_customer(full_name: str, company_name: str, email: str, password: str
 
 	customer = frappe.new_doc("Customer")
 	customer.customer_name = company_name
-	customer.append("team", {"user": email, "full_name": full_name, "is_admin": 1})
 	customer.insert(ignore_permissions=True)
+
+	frappe.get_doc({
+		"doctype": "Customer Team Member",
+		"customer": customer.name,
+		"user": email,
+		"full_name": full_name,
+		"is_admin": 1,
+	}).insert(ignore_permissions=True)
 
 	frappe.local.login_manager.login_as(email)
 	return {"ok": True}

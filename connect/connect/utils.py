@@ -17,10 +17,10 @@ def _my_company_membership(user: str):
 	"""Returns (doctype, company, row) for whichever company this user belongs to, or
 	(None, None, None) if neither. A user is assumed to belong to at most one company."""
 	customer_row = frappe.db.get_value(
-		"Customer Team Member", {"user": user}, ["name", "parent", "is_admin"], as_dict=True
+		"Customer Team Member", {"user": user}, ["name", "customer", "is_admin"], as_dict=True
 	)
 	if customer_row:
-		return "Customer Team Member", customer_row.parent, customer_row
+		return "Customer Team Member", customer_row.customer, customer_row
 	partner_row = frappe.db.get_value(
 		"Connect Partner Member", {"user": user}, ["name", "partner", "is_admin"], as_dict=True
 	)
@@ -47,7 +47,7 @@ def get_my_company_members():
 	if not doctype:
 		frappe.throw(_("You are not a member of any company"))
 
-	fieldname = "parent" if doctype == "Customer Team Member" else "partner"
+	fieldname = "customer" if doctype == "Customer Team Member" else "partner"
 	return frappe.get_all(doctype, filters={fieldname: company}, fields=["user", "is_admin"])
 
 
@@ -60,7 +60,7 @@ def get_my_team():
 	if not doctype:
 		frappe.throw(_("You are not a member of any company"))
 
-	fieldname = "parent" if doctype == "Customer Team Member" else "partner"
+	fieldname = "customer" if doctype == "Customer Team Member" else "partner"
 	rows = frappe.get_all(doctype, filters={fieldname: company}, fields=["user", "is_admin"])
 	for row in rows:
 		profile = frappe.db.get_value("User", row.user, ["full_name", "user_image"], as_dict=True) or {}
@@ -150,7 +150,7 @@ def get_my_context():
 	customer = get_customer_for_user(user)
 	customer_membership = None
 	if customer:
-		is_admin = frappe.db.get_value("Customer Team Member", {"parent": customer, "user": user}, "is_admin")
+		is_admin = frappe.db.get_value("Customer Team Member", {"customer": customer, "user": user}, "is_admin")
 		customer_membership = {"customer": customer, "is_admin": cint(is_admin)}
 	partner_membership = frappe.db.get_value(
 		"Connect Partner Member", {"user": user}, ["partner", "is_admin"], as_dict=True

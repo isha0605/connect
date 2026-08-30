@@ -1384,8 +1384,12 @@ export default function setup(context) {
 	// (company threads) and Connect DM Message (DMs) are different doctypes/resources, so
 	// every consumer of "the messages" goes through this instead of reading context.messages
 	// directly, the same way currentThread() abstracts over the two thread doctypes.
+	// The resources fetch creation DESC (newest-first) so the 200-row cap keeps the most
+	// recent messages instead of freezing on the oldest 200 once a thread grows past the
+	// limit — reverse here, once, back to the ascending order every other reader expects.
 	function currentMessages() {
-		return selectedThreadType.value === "dm" ? context.dmMessages.data || [] : context.messages.data || []
+		const raw = selectedThreadType.value === "dm" ? context.dmMessages.data || [] : context.messages.data || []
+		return [...raw].reverse()
 	}
 
 	// messages are grouped into per-day sections (see groupedMessages) so `index` here is local
