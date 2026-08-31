@@ -3,6 +3,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from connect.notifications import notify_dm_message_deleted, notify_dm_message_edited
 from connect.permissions import _check_can_modify_dm_message
 
 
@@ -29,14 +30,10 @@ class ConnectDMMessage(Document):
 
 	def on_update(self):
 		if self.flags.get("_was_edited"):
-			from connect.notifications import notify_dm_message_edited
-
 			notify_dm_message_edited(self)
 
 	def on_trash(self):
 		"""Connect Message's own-message-only delete rule."""
-		from connect.notifications import notify_dm_message_deleted
-
 		user = frappe.session.user
 		_check_can_modify_dm_message(self.dm_thread, self.sender, user, _("You can only delete your own messages"))
 

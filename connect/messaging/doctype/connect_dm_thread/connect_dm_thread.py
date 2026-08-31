@@ -4,11 +4,12 @@
 import frappe
 from frappe.model.document import Document
 
+from connect.notifications import notify_dm_thread_pin_changed
+
 
 class ConnectDMThread(Document):
 	def pin(self, message, user):
 		"""DM counterpart to Connect Thread's pin: either participant can pin, same as either can post."""
-		from connect.notifications import notify_dm_thread_pin_changed
 		from connect.permissions import _dm_thread_pair
 
 		_dm_thread_pair(self.name, user)
@@ -18,7 +19,6 @@ class ConnectDMThread(Document):
 		notify_dm_thread_pin_changed(self, message_doc, user)
 
 	def unpin(self, user):
-		from connect.notifications import notify_dm_thread_pin_changed
 		from connect.permissions import _dm_thread_pair
 
 		_dm_thread_pair(self.name, user)

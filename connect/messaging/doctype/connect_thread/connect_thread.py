@@ -6,6 +6,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import now_datetime
 
+from connect.notifications import notify_thread_pin_changed
+
 
 class ConnectThread(Document):
 	def validate(self):
@@ -38,7 +40,6 @@ class ConnectThread(Document):
 
 	def pin(self, message, user):
 		"""Pins a message to the top of the thread, replacing whichever was pinned before."""
-		from connect.notifications import notify_thread_pin_changed
 		from connect.permissions import _check_can_write
 
 		_check_can_write(self.name, user)
@@ -48,7 +49,6 @@ class ConnectThread(Document):
 		notify_thread_pin_changed(self, message_doc, user)
 
 	def unpin(self, user):
-		from connect.notifications import notify_thread_pin_changed
 		from connect.permissions import _check_can_write
 
 		_check_can_write(self.name, user)

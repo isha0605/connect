@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from connect.notifications import notify_message_deleted, notify_message_edited
 from connect.permissions import _check_can_modify_message
 
 
@@ -33,14 +34,10 @@ class ConnectMessage(Document):
 
 	def on_update(self):
 		if self.flags.get("_was_edited"):
-			from connect.notifications import notify_message_edited
-
 			notify_message_edited(self)
 
 	def on_trash(self):
 		"""Deletes a message for everyone, restricted to the sender's own messages like other chat apps."""
-		from connect.notifications import notify_message_deleted
-
 		user = frappe.session.user
 		_check_can_modify_message(self.thread, self.sender, user, _("You can only delete your own messages"))
 
