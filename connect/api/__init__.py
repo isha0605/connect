@@ -848,8 +848,7 @@ def add_to_shortlist(partner):
 		frappe.get_doc({"doctype": "Shortlist", "customer": customer, "partner": partner}).insert(
 			ignore_permissions=True
 		)
-		frappe.db.commit()
-	return {"shortlisted": True}
+		return {"shortlisted": True}
 
 
 @frappe.whitelist()
@@ -860,8 +859,7 @@ def remove_from_shortlist(partner):
 	existing = frappe.db.get_value("Shortlist", {"customer": customer, "partner": partner})
 	if existing:
 		frappe.delete_doc("Shortlist", existing, ignore_permissions=True)
-		frappe.db.commit()
-	return {"shortlisted": False}
+		return {"shortlisted": False}
 
 
 @frappe.whitelist()
@@ -955,7 +953,6 @@ def save_customer_requirement(
 		doc = frappe.get_doc({"doctype": "Requirement", **values})
 		doc.insert(ignore_permissions=True)
 
-	frappe.db.commit()
 	return {"name": doc.name}
 
 
@@ -1153,7 +1150,6 @@ def save_price_estimate(partner, selected_addons, total, requirement=None, pack_
 	for addon in selected_addons:
 		doc.append("selected_options", {"feature_name": addon.get("name"), "price": addon.get("price")})
 	doc.insert(ignore_permissions=True)
-	frappe.db.commit()
 	return doc.name
 
 
@@ -1211,5 +1207,4 @@ def submit_partner_review(
 		doc = frappe.get_doc({"doctype": "Partner Review", **values})
 		doc.insert(ignore_permissions=True)
 
-	frappe.db.commit()
 	return {"name": doc.name}
