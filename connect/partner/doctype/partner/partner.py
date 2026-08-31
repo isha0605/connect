@@ -221,6 +221,52 @@ def _partners_matching_child(child_doctype: str, field: str, operator: str, valu
 	return {row[0] for row in query.run()}
 
 
+def _apps_by_partner(names: list[str]):
+	"""Every Partner App (Partner.apps) value for each partner in `names`, in
+	one query, keyed by partner name — full list, in idx order, not capped to
+	a preview length. Callers that only want a short preview slice it
+	themselves (apps[:2]); the finder wizard's scoring needs the full list to
+	check membership against several wanted apps at once."""
+	if not names:
+		return {}
+	apps_by_partner = {}
+	for r in frappe.get_all(
+		"Partner App",
+		filters={"parent": ["in", names], "parenttype": "Partner", "parentfield": "apps"},
+		fields=["parent", "app"],
+		order_by="idx asc",
+	):
+		apps_by_partner.setdefault(r.parent, []).append(r.app)
+	return apps_by_partner
+
+
+def attach_success_story_previews(rows: list[dict]):
+	"""Batch-attaches success_story_count/success_story_categories to each row
+	in `rows` (each needs a "name" key matching a Partner document) — one
+	query regardless of how many rows. Used everywhere a partner listing shows
+	this preview: Find Partners search, the finder wizard's results, and the
+	customer's Shortlisted page."""
+	names = [r["name"] for r in rows]
+	if not names:
+		return rows
+	buckets = {}
+	for row in frappe.get_all(
+		"Partner Success Story",
+		filters={"parent": ["in", names], "parenttype": "Partner", "parentfield": "success_stories"},
+		fields=["parent", "category"],
+		order_by="idx asc",
+	):
+		bucket = buckets.setdefault(row.parent, {"count": 0, "categories": []})
+		bucket["count"] += 1
+		if row.category and row.category not in bucket["categories"]:
+			bucket["categories"].append(row.category)
+	for r in rows:
+		stories = buckets.get(r["name"], {"count": 0, "categories": []})
+		r["success_story_count"] = stories["count"]
+		r["success_story_categories"] = stories["categories"]
+	return rows
+
+
 def search_partners(
 	search: str | None = None,
 	industry: str | None = None,
@@ -345,25 +391,12 @@ def search_partners(
 
 			partners.sort(key=sort_key)
 
-	success_stories_by_partner = {}
 	partner_names = [p.name for p in partners]
-	if partner_names:
-		for row in frappe.get_all(
-			"Partner Success Story",
-			filters={"parent": ["in", partner_names]},
-			fields=["parent", "category"],
-			order_by="idx asc",
-		):
-			bucket = success_stories_by_partner.setdefault(row.parent, {"count": 0, "categories": []})
-			bucket["count"] += 1
-			if row.category and row.category not in bucket["categories"]:
-				bucket["categories"].append(row.category)
-
+	apps_by_partner = _apps_by_partner(partner_names)
 	for p in partners:
-		stories = success_stories_by_partner.get(p.name, {"count": 0, "categories": []})
-		p["success_story_count"] = stories["count"]
-		p["success_story_categories"] = stories["categories"]
+		p["apps_preview"] = apps_by_partner.get(p.name, [])[:2]
 
+	attach_success_story_previews(partners)
 	return partners
 
 
@@ -427,16 +460,10 @@ def _score_partners_by_requirements(answers: dict):
 	rows = frappe.get_list("Partner", filters=[["Partner", "name", "in", names]], fields=PARTNER_FIELDS)
 	by_name = {r.name: r for r in rows}
 
-	delivery_by, apps_by_partner, migrations_by, impl_by, bp_by = {}, {}, {}, {}, {}
+	delivery_by, migrations_by, impl_by, bp_by = {}, {}, {}, {}
+	apps_by_partner = _apps_by_partner(names)
 	for r in frappe.get_all("Partner Delivery Mode", filters={"parent": ["in", names]}, fields=["parent", "delivery_mode"]):
 		delivery_by.setdefault(r.parent, []).append(r.delivery_mode)
-	for r in frappe.get_all(
-		"Partner App",
-		filters={"parent": ["in", names], "parenttype": "Partner", "parentfield": "apps"},
-		fields=["parent", "app"],
-		order_by="idx asc",
-	):
-		apps_by_partner.setdefault(r.parent, []).append(r.app)
 	for r in frappe.get_all("Partner Migration Path", filters={"parent": ["in", names]}, fields=["parent", "migration_path"]):
 		migrations_by.setdefault(r.parent, []).append(r.migration_path)
 	for r in frappe.get_all("Partner Implementation Type", filters={"parent": ["in", names]}, fields=["parent", "implementation_type"]):
@@ -532,35 +559,16 @@ def list_matching_partners(answers: dict | str | None = None, limit: int = 8):
 	rows = frappe.get_list("Partner", filters=[["Partner", "name", "in", names]], fields=PARTNER_FIELDS)
 	by_name = {r.name: r for r in rows}
 
-	apps_preview_by_partner = {}
-	for name, apps in apps_by_partner.items():
-		apps_preview_by_partner[name] = apps[:2]
-
 	scored = scored[:limit]
-	result_names = [name for *_rest, name, _missing in scored]
-
-	success_stories_by_partner = {}
-	if result_names:
-		for row in frappe.get_all(
-			"Partner Success Story",
-			filters={"parent": ["in", result_names]},
-			fields=["parent", "category"],
-			order_by="idx asc",
-		):
-			bucket = success_stories_by_partner.setdefault(row.parent, {"count": 0, "categories": []})
-			bucket["count"] += 1
-			if row.category and row.category not in bucket["categories"]:
-				bucket["categories"].append(row.category)
 
 	result = []
 	for _missing_count, _neg_rating, name, missing in scored:
 		row = dict(by_name[name])
-		row["apps_preview"] = apps_preview_by_partner.get(name, [])
+		row["apps_preview"] = apps_by_partner.get(name, [])[:2]
 		row["missing_label"] = ", ".join(missing) if missing else None
-		stories = success_stories_by_partner.get(name, {"count": 0, "categories": []})
-		row["success_story_count"] = stories["count"]
-		row["success_story_categories"] = stories["categories"]
 		result.append(row)
+
+	attach_success_story_previews(result)
 	return result
 
 

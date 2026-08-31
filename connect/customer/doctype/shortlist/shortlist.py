@@ -88,7 +88,7 @@ def remove_from_shortlist(partner: str):
 def list_my_shortlist():
 	"""Full Partner records the current user's company has shortlisted — backs the Shortlisted page."""
 	from connect.customer.doctype.customer.customer import get_customer_for_user
-	from connect.partner.doctype.partner.partner import PARTNER_FIELDS
+	from connect.partner.doctype.partner.partner import PARTNER_FIELDS, _apps_by_partner, attach_success_story_previews
 	customer = get_customer_for_user()
 	if not customer:
 		return []
@@ -103,30 +103,9 @@ def list_my_shortlist():
 	by_name = {p.name: p for p in partners}
 	ordered = [by_name[n] for n in names if n in by_name]
 
-	apps_by_partner = {}
-	for row in frappe.get_all(
-		"Partner App", filters={"parent": ["in", names]}, fields=["parent", "app"], order_by="idx asc"
-	):
-		bucket = apps_by_partner.setdefault(row.parent, [])
-		if len(bucket) < 2:
-			bucket.append(row.app)
+	apps_by_partner = _apps_by_partner(names)
 	for p in ordered:
-		p["apps_preview"] = apps_by_partner.get(p.name, [])
+		p["apps_preview"] = apps_by_partner.get(p.name, [])[:2]
 
-	success_stories_by_partner = {}
-	for row in frappe.get_all(
-		"Partner Success Story",
-		filters={"parent": ["in", names]},
-		fields=["parent", "category"],
-		order_by="idx asc",
-	):
-		bucket = success_stories_by_partner.setdefault(row.parent, {"count": 0, "categories": []})
-		bucket["count"] += 1
-		if row.category and row.category not in bucket["categories"]:
-			bucket["categories"].append(row.category)
-	for p in ordered:
-		stories = success_stories_by_partner.get(p.name, {"count": 0, "categories": []})
-		p["success_story_count"] = stories["count"]
-		p["success_story_categories"] = stories["categories"]
-
+	attach_success_story_previews(ordered)
 	return ordered
