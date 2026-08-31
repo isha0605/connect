@@ -6,6 +6,8 @@ import os
 import frappe
 from frappe import _
 from frappe.utils import cint, flt, get_fullname, nowdate, validate_email_address
+from pypika.functions import DistinctOptionFunction
+from pypika.utils import builder
 
 from connect.permissions import _is_customer_admin, _is_partner_admin, _my_company_membership
 
@@ -280,6 +282,27 @@ PARTNER_FIELDS = [
 SEARCHABLE_TEXT_FIELDS = ["partner_name", "tagline", "industry", "country", "city"]
 
 
+class _NaturalLanguageMatch(DistinctOptionFunction):
+	"""MATCH(col1, col2, ...) AGAINST (term IN NATURAL LANGUAGE MODE) over multiple columns.
+	frappe.query_builder.functions.Match only supports a single column in BOOLEAN MODE, which
+	doesn't fit relevance-ranked multi-field search — this mirrors its implementation for the
+	NATURAL LANGUAGE MODE case instead."""
+
+	def __init__(self, *columns):
+		super().__init__("MATCH", *columns)
+		self._against = None
+
+	def get_function_sql(self, **kwargs):
+		sql = super(DistinctOptionFunction, self).get_function_sql(**kwargs)
+		if self._against is None:
+			raise Exception("Chain the `Against()` method with match to complete the query")
+		return f"{sql} AGAINST ({frappe.db.escape(self._against)} IN NATURAL LANGUAGE MODE)"
+
+	@builder
+	def Against(self, text):
+		self._against = text
+
+
 def _fts_rank(search_term, allowed_names):
 	"""MariaDB natural-language FULLTEXT search (see the partner_fts index) —
 	real relevance ranking, handles multi-word queries well. Returns names in
@@ -288,18 +311,18 @@ def _fts_rank(search_term, allowed_names):
 	is for."""
 	if not allowed_names:
 		return []
-	rows = frappe.db.sql(
-		"""
-		SELECT name FROM `tabPartner`
-		WHERE name IN %(names)s
-		AND MATCH(partner_name, tagline, description, industry, city, country)
-			AGAINST (%(term)s IN NATURAL LANGUAGE MODE)
-		ORDER BY MATCH(partner_name, tagline, description, industry, city, country)
-			AGAINST (%(term)s IN NATURAL LANGUAGE MODE) DESC
-		""",
-		{"term": search_term, "names": allowed_names},
-		as_dict=True,
-	)
+	Partner = frappe.qb.DocType("Partner")
+	rank = _NaturalLanguageMatch(
+		Partner.partner_name, Partner.tagline, Partner.description,
+		Partner.industry, Partner.city, Partner.country,
+	).Against(search_term)
+	rows = (
+		frappe.qb.from_(Partner)
+		.select(Partner.name, rank.as_("rank"))
+		.where(Partner.name.isin(allowed_names))
+		.where(rank)
+		.orderby("rank", order=frappe.qb.desc)
+	).run(as_dict=True)
 	return [r.name for r in rows]
 
 
