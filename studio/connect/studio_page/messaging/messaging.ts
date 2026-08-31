@@ -1161,6 +1161,15 @@ export default function setup(context) {
 		showDeleteMessageDialog.value = true
 	}
 
+	// The backend now enforces edit/delete ownership via Frappe's own permission system
+	// (has_message_permission/has_dm_message_permission) instead of a custom app-level check,
+	// so a denied attempt surfaces as a generic PermissionError with no specific message —
+	// swap in our own wording for that one case rather than showing Frappe's raw text.
+	function permissionAwareErrorText(e, deniedText) {
+		if (e.exc_type === "PermissionError") return deniedText
+		return e.messages ? e.messages[0] : e.message
+	}
+
 	async function deleteMessage() {
 		if (!messageToDelete.value || deletingMessage.value) return
 		deletingMessage.value = true
@@ -1180,7 +1189,7 @@ export default function setup(context) {
 		} catch (e) {
 			toast({
 				title: "Could not delete message",
-				text: e.messages ? e.messages[0] : e.message,
+				text: permissionAwareErrorText(e, "You don't have permission to delete this message"),
 				icon: "x-circle",
 				iconClasses: "text-red-600",
 			})
@@ -1242,7 +1251,7 @@ export default function setup(context) {
 		} catch (e) {
 			toast({
 				title: "Could not edit message",
-				text: e.messages ? e.messages[0] : e.message,
+				text: permissionAwareErrorText(e, "You don't have permission to edit this message"),
 				icon: "x-circle",
 				iconClasses: "text-red-600",
 			})
@@ -1393,7 +1402,7 @@ export default function setup(context) {
 		} catch (e) {
 			toast({
 				title: "Could not delete files",
-				text: e.messages ? e.messages[0] : e.message,
+				text: permissionAwareErrorText(e, "You don't have permission to delete one or more of these files"),
 				icon: "x-circle",
 				iconClasses: "text-red-600",
 			})
