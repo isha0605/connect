@@ -40,7 +40,6 @@ def has_permission(doc, user=None, permission_type=None):
 
 
 def save_customer_requirement(
-	company_name: str,
 	country: str,
 	industry: str,
 	apps: str | list | None = None,
@@ -54,11 +53,14 @@ def save_customer_requirement(
 	additional_notes: str | None = None,
 	outcome: str | None = None,
 ):
-	"""Create or update the current user's company's one Requirement — company_name/
-	country/industry/apps are the 4 primary questions; everything else comes from
-	the bundled, optional "Additional Requirements" step. Upserts by customer, so
-	both the Find My Match wizard and the Settings "Edit Requirements" form share
-	a single canonical requirement that either flow can fill in or update."""
+	"""Create or update the current user's company's one Requirement —
+	country/industry/apps are the 3 primary questions; everything else comes
+	from the bundled, optional "Additional Requirements" step. company_name
+	is deliberately not a parameter here — it's already collected at signup
+	(Customer.customer_name), so it's read from there instead of asking again.
+	Upserts by customer, so both the Find My Match wizard and the Settings
+	"Edit Requirements" form share a single canonical requirement that either
+	flow can fill in or update."""
 	from connect.customer.doctype.customer.customer import get_customer_for_user
 	customer = get_customer_for_user()
 	if not customer:
@@ -69,7 +71,7 @@ def save_customer_requirement(
 
 	values = {
 		"customer": customer,
-		"company_name": company_name,
+		"company_name": frappe.db.get_value("Customer", customer, "customer_name"),
 		"country": country,
 		"industry": industry,
 		"apps": [{"app": a} for a in (apps or [])],

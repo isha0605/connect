@@ -1162,7 +1162,6 @@ def list_my_shortlist():
 
 @frappe.whitelist()
 def save_customer_requirement(
-	company_name: str,
 	country: str,
 	industry: str,
 	apps: str | list | None = None,
@@ -1177,7 +1176,7 @@ def save_customer_requirement(
 	outcome: str | None = None,
 ):
 	from connect.customer.doctype.requirement.requirement import save_customer_requirement
-	return save_customer_requirement(company_name=company_name, country=country, industry=industry, apps=apps, looking_for=looking_for, company_size=company_size, current_situation=current_situation, timeline=timeline, delivery_preference=delivery_preference, budget=budget, special_requirements=special_requirements, additional_notes=additional_notes, outcome=outcome)
+	return save_customer_requirement(country=country, industry=industry, apps=apps, looking_for=looking_for, company_size=company_size, current_situation=current_situation, timeline=timeline, delivery_preference=delivery_preference, budget=budget, special_requirements=special_requirements, additional_notes=additional_notes, outcome=outcome)
 
 
 @frappe.whitelist(allow_guest=True)
