@@ -288,7 +288,7 @@
         "click": {
          "action": "Run Script",
          "event": "click",
-         "script": "signupError.value = '';\nif (!signupFullName || !signupCompanyName || !signupEmail || !signupPassword) {\n  signupError.value = 'Please fill in all fields.';\n  return;\n}\nsignupSubmitting.value = true;\ncall('connect.api.signup_customer', {\n  full_name: signupFullName.value,\n  company_name: signupCompanyName.value,\n  email: signupEmail.value,\n  password: signupPassword.value,\n}).then(() => {\n  const params = new URLSearchParams(window.location.search);\n  window.location.href = params.get('redirect-to') || '/connect/find-partners';\n}).catch((err) => {\n  signupSubmitting.value = false;\n  signupError.value = (err && err.message) || 'Could not create your account. Please try again.';\n});"
+         "script": "signupError.value = '';\nif (!signupFullName || !signupCompanyName || !signupEmail || !signupPassword) {\n  signupError.value = 'Please fill in all fields.';\n  return;\n}\nsignupSubmitting.value = true;\ncall('connect.api.customer.signup_customer', {\n  full_name: signupFullName.value,\n  company_name: signupCompanyName.value,\n  email: signupEmail.value,\n  password: signupPassword.value,\n}).then(() => {\n  const params = new URLSearchParams(window.location.search);\n  window.location.href = params.get('redirect-to') || '/connect/find-partners';\n}).catch((err) => {\n  signupSubmitting.value = false;\n  signupError.value = (err && err.message) || 'Could not create your account. Please try again.';\n});"
         }
        },
        "componentId": "Button-signup-submit",
@@ -742,7 +742,7 @@
         "click": {
          "action": "Run Script",
          "event": "click",
-         "script": "signupError.value = '';\nif (!signupFullName || !signupCompanyName || !signupEmail || !signupPassword) {\n  signupError.value = 'Please fill in all fields.';\n  return;\n}\nsignupSubmitting.value = true;\ncall('connect.api.signup_customer', {\n  full_name: signupFullName.value,\n  company_name: signupCompanyName.value,\n  email: signupEmail.value,\n  password: signupPassword.value,\n}).then(() => {\n  const params = new URLSearchParams(window.location.search);\n  window.location.href = params.get('redirect-to') || '/connect/find-partners';\n}).catch((err) => {\n  signupSubmitting.value = false;\n  signupError.value = (err && err.message) || 'Could not create your account. Please try again.';\n});"
+         "script": "signupError.value = '';\nif (!signupFullName || !signupCompanyName || !signupEmail || !signupPassword) {\n  signupError.value = 'Please fill in all fields.';\n  return;\n}\nsignupSubmitting.value = true;\ncall('connect.api.customer.signup_customer', {\n  full_name: signupFullName.value,\n  company_name: signupCompanyName.value,\n  email: signupEmail.value,\n  password: signupPassword.value,\n}).then(() => {\n  const params = new URLSearchParams(window.location.search);\n  window.location.href = params.get('redirect-to') || '/connect/find-partners';\n}).catch((err) => {\n  signupSubmitting.value = false;\n  signupError.value = (err && err.message) || 'Could not create your account. Please try again.';\n});"
         }
        },
        "componentId": "Button-signup-submit",
@@ -922,7 +922,7 @@
    "params": "{}",
    "resource_name": "myContext",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.get_my_context"
+   "url": "/api/method/connect.api.account.get_my_context"
   }
  ],
  "route": "/signup",

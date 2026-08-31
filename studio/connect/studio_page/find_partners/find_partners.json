@@ -346,7 +346,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const saved = myRequirement.data || {};\nlet special = [];\ntry { special = JSON.parse(saved.special_requirements || '[]'); } catch (e) { special = []; }\nconst prefill = {\n  company_name: saved.company_name || undefined,\n  country: saved.country || undefined,\n  industry: saved.industry || undefined,\n  apps: saved.apps || [],\n  looking_for: saved.looking_for || undefined,\n  company_size: saved.company_size || undefined,\n  current_situation: saved.current_situation || undefined,\n  timeline: saved.timeline || undefined,\n  delivery_preference: saved.delivery_preference || undefined,\n  budget: saved.budget || undefined,\n  requirements: special,\n  additional_notes: saved.additional_notes || undefined,\n};\nObject.keys(prefill).forEach((k) => { if (prefill[k] === undefined) delete prefill[k]; });\nwizardCompanyNameInput.value = saved.company_name || '';\nwizardCountryInput.value = saved.country || '';\nwizardLookingForSelect.value = saved.looking_for || '';\nwizardCompanySizeSelect.value = saved.company_size || '';\nwizardCurrentSituationSelect.value = saved.current_situation || '';\nwizardTimelineSelect.value = saved.timeline || '';\nwizardDeliveryPreferenceSelect.value = saved.delivery_preference || '';\nwizardBudgetSelect.value = saved.budget || '';\nwizardAdditionalNotesInput.value = saved.additional_notes || '';\nfinderOpen.value = true; finderStep.value = 1; finderAnswers.value = prefill; finderOutcome.value = ''; lastAnsweredKey.value = ''; matchedNames.value = [];\ncall('connect.api.wizard_match_state', { answers: JSON.stringify(prefill) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const saved = myRequirement.data || {};\nlet special = [];\ntry { special = JSON.parse(saved.special_requirements || '[]'); } catch (e) { special = []; }\nconst prefill = {\n  company_name: saved.company_name || undefined,\n  country: saved.country || undefined,\n  industry: saved.industry || undefined,\n  apps: saved.apps || [],\n  looking_for: saved.looking_for || undefined,\n  company_size: saved.company_size || undefined,\n  current_situation: saved.current_situation || undefined,\n  timeline: saved.timeline || undefined,\n  delivery_preference: saved.delivery_preference || undefined,\n  budget: saved.budget || undefined,\n  requirements: special,\n  additional_notes: saved.additional_notes || undefined,\n};\nObject.keys(prefill).forEach((k) => { if (prefill[k] === undefined) delete prefill[k]; });\nwizardCompanyNameInput.value = saved.company_name || '';\nwizardCountryInput.value = saved.country || '';\nwizardLookingForSelect.value = saved.looking_for || '';\nwizardCompanySizeSelect.value = saved.company_size || '';\nwizardCurrentSituationSelect.value = saved.current_situation || '';\nwizardTimelineSelect.value = saved.timeline || '';\nwizardDeliveryPreferenceSelect.value = saved.delivery_preference || '';\nwizardBudgetSelect.value = saved.budget || '';\nwizardAdditionalNotesInput.value = saved.additional_notes || '';\nfinderOpen.value = true; finderStep.value = 1; finderAnswers.value = prefill; finderOutcome.value = ''; lastAnsweredKey.value = ''; matchedNames.value = [];\ncall('connect.api.partner.wizard_match_state', { answers: JSON.stringify(prefill) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "Button-2af82f219",
@@ -1927,7 +1927,7 @@
                           "click": {
                            "action": "Run Script",
                            "event": "click",
-                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.remove_from_shortlist' : 'connect.api.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                           }
                          },
                          "componentId": "Button-shortlist-wizard-match",
@@ -2644,7 +2644,7 @@
                           "click": {
                            "action": "Run Script",
                            "event": "click",
-                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.remove_from_shortlist' : 'connect.api.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                           }
                          },
                          "componentId": "Button-shortlist-wizard-near",
@@ -3036,7 +3036,7 @@
                         "click": {
                          "action": "Run Script",
                          "event": "click",
-                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.remove_from_shortlist' : 'connect.api.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                         }
                        },
                        "componentId": "6a6c3a3235",
@@ -3602,7 +3602,7 @@
                         "click": {
                          "action": "Run Script",
                          "event": "click",
-                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.remove_from_shortlist' : 'connect.api.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                         }
                        },
                        "componentId": "b21e76fe10",
@@ -4168,7 +4168,7 @@
                         "click": {
                          "action": "Run Script",
                          "event": "click",
-                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.remove_from_shortlist' : 'connect.api.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                         }
                        },
                        "componentId": "bc6c5492b3",
@@ -5046,7 +5046,7 @@
                           "click": {
                            "action": "Run Script",
                            "event": "click",
-                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.remove_from_shortlist' : 'connect.api.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                           }
                          },
                          "componentId": "Button-shortlist-gold",
@@ -5693,7 +5693,7 @@
                           "click": {
                            "action": "Run Script",
                            "event": "click",
-                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.remove_from_shortlist' : 'connect.api.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                           }
                          },
                          "componentId": "Button-shortlist-silver",
@@ -6339,7 +6339,7 @@
                           "click": {
                            "action": "Run Script",
                            "event": "click",
-                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.remove_from_shortlist' : 'connect.api.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                           }
                          },
                          "componentId": "Button-shortlist-bronze",
@@ -6652,7 +6652,7 @@
                       "click": {
                        "action": "Run Script",
                        "event": "click",
-                       "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.remove_from_shortlist' : 'connect.api.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                       "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                       }
                      },
                      "componentId": "Button-12687416b",
@@ -7118,7 +7118,7 @@
                       "click": {
                        "action": "Run Script",
                        "event": "click",
-                       "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.remove_from_shortlist' : 'connect.api.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                       "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                       }
                      },
                      "componentId": "Button-f46f8943e",
@@ -7584,7 +7584,7 @@
                       "click": {
                        "action": "Run Script",
                        "event": "click",
-                       "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.remove_from_shortlist' : 'connect.api.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                       "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                       }
                      },
                      "componentId": "Button-93d7a6457",
@@ -8427,7 +8427,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Manufacturing\" }; lastAnsweredKey.value = 'industry'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Manufacturing\" }; lastAnsweredKey.value = 'industry'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "8af804dc3c",
@@ -8484,7 +8484,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Retail & Distribution\" }; lastAnsweredKey.value = 'industry'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Retail & Distribution\" }; lastAnsweredKey.value = 'industry'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "7b4cdb3804",
@@ -8541,7 +8541,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Healthcare\" }; lastAnsweredKey.value = 'industry'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Healthcare\" }; lastAnsweredKey.value = 'industry'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "c7dab40a26",
@@ -8598,7 +8598,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Education\" }; lastAnsweredKey.value = 'industry'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Education\" }; lastAnsweredKey.value = 'industry'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "505e8ce359",
@@ -8655,7 +8655,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Services\" }; lastAnsweredKey.value = 'industry'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Services\" }; lastAnsweredKey.value = 'industry'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "7522c616df",
@@ -8712,7 +8712,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Construction\" }; lastAnsweredKey.value = 'industry'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Construction\" }; lastAnsweredKey.value = 'industry'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "317f9cc085",
@@ -8769,7 +8769,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Logistics\" }; lastAnsweredKey.value = 'industry'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Logistics\" }; lastAnsweredKey.value = 'industry'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "81524403e6",
@@ -8826,7 +8826,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Technology\" }; lastAnsweredKey.value = 'industry'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Technology\" }; lastAnsweredKey.value = 'industry'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "7f95c8d214",
@@ -8883,7 +8883,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Other\" }; lastAnsweredKey.value = 'industry'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "finderAnswers.value = { ...finderAnswers.value, industry: \"Other\" }; lastAnsweredKey.value = 'industry'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "918fe8589d",
@@ -9065,7 +9065,7 @@
                   "click": {
                    "action": "Run Script",
                    "event": "click",
-                   "script": "const cur = finderAnswers.value.apps || []; const val = dataItem; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, apps: next }; lastAnsweredKey.value = 'apps'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                   "script": "const cur = finderAnswers.value.apps || []; const val = dataItem; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, apps: next }; lastAnsweredKey.value = 'apps'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                   }
                  },
                  "componentId": "347d062650",
@@ -9214,7 +9214,7 @@
                     "update:modelValue": {
                      "action": "Run Script",
                      "event": "update:modelValue",
-                     "script": "finderAnswers.value = { ...finderAnswers.value, looking_for: wizardLookingForSelect.value }; lastAnsweredKey.value = 'looking_for'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                     "script": "finderAnswers.value = { ...finderAnswers.value, looking_for: wizardLookingForSelect.value }; lastAnsweredKey.value = 'looking_for'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                     }
                    },
                    "componentId": "1802ca5736",
@@ -9278,7 +9278,7 @@
                     "update:modelValue": {
                      "action": "Run Script",
                      "event": "update:modelValue",
-                     "script": "finderAnswers.value = { ...finderAnswers.value, company_size: wizardCompanySizeSelect.value }; lastAnsweredKey.value = 'company_size'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                     "script": "finderAnswers.value = { ...finderAnswers.value, company_size: wizardCompanySizeSelect.value }; lastAnsweredKey.value = 'company_size'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                     }
                    },
                    "componentId": "855ca5fb64",
@@ -9339,7 +9339,7 @@
                     "update:modelValue": {
                      "action": "Run Script",
                      "event": "update:modelValue",
-                     "script": "finderAnswers.value = { ...finderAnswers.value, current_situation: wizardCurrentSituationSelect.value }; lastAnsweredKey.value = 'current_situation'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                     "script": "finderAnswers.value = { ...finderAnswers.value, current_situation: wizardCurrentSituationSelect.value }; lastAnsweredKey.value = 'current_situation'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                     }
                    },
                    "componentId": "9c162f3d12",
@@ -9403,7 +9403,7 @@
                     "update:modelValue": {
                      "action": "Run Script",
                      "event": "update:modelValue",
-                     "script": "finderAnswers.value = { ...finderAnswers.value, timeline: wizardTimelineSelect.value }; lastAnsweredKey.value = 'timeline'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                     "script": "finderAnswers.value = { ...finderAnswers.value, timeline: wizardTimelineSelect.value }; lastAnsweredKey.value = 'timeline'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                     }
                    },
                    "componentId": "7df5bdad19",
@@ -9464,7 +9464,7 @@
                     "update:modelValue": {
                      "action": "Run Script",
                      "event": "update:modelValue",
-                     "script": "finderAnswers.value = { ...finderAnswers.value, delivery_preference: wizardDeliveryPreferenceSelect.value }; lastAnsweredKey.value = 'delivery_preference'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                     "script": "finderAnswers.value = { ...finderAnswers.value, delivery_preference: wizardDeliveryPreferenceSelect.value }; lastAnsweredKey.value = 'delivery_preference'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                     }
                    },
                    "componentId": "15ac49e722",
@@ -9524,7 +9524,7 @@
                     "update:modelValue": {
                      "action": "Run Script",
                      "event": "update:modelValue",
-                     "script": "finderAnswers.value = { ...finderAnswers.value, budget: wizardBudgetSelect.value }; lastAnsweredKey.value = 'budget'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                     "script": "finderAnswers.value = { ...finderAnswers.value, budget: wizardBudgetSelect.value }; lastAnsweredKey.value = 'budget'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                     }
                    },
                    "componentId": "30101ea245",
@@ -9641,7 +9641,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"ETO (Engineer-to-Order)\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"ETO (Engineer-to-Order)\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "516a52cda8",
@@ -9698,7 +9698,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Manufacturing Planning\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Manufacturing Planning\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "d3cbfc82be",
@@ -9755,7 +9755,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Multi-site Operations\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Multi-site Operations\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "46e9d29511",
@@ -9812,7 +9812,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"HR & Payroll\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"HR & Payroll\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "acda2f65b2",
@@ -9869,7 +9869,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Inventory Management\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Inventory Management\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "4d930b812d",
@@ -9926,7 +9926,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"CRM\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"CRM\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "425183f4c0",
@@ -9983,7 +9983,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Custom Development\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Custom Development\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "7ac9c0b3f6",
@@ -10040,7 +10040,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"SAP Migration\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"SAP Migration\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "777735f765",
@@ -10097,7 +10097,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Data Migration\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Data Migration\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "cf4b73afb4",
@@ -10154,7 +10154,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Training Required\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Training Required\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.partner.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "a0795a3bcc",
@@ -10270,7 +10270,7 @@
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "const a = finderAnswers.value;\nconst smallTeam = [\"1\\u201310\", \"11\\u201350\"].includes(a.company_size);\nconst smallBudget = [\"Under \\u20b92L\", \"\\u20b92L\\u2013\\u20b910L\"].includes(a.budget);\nconst immediate = a.timeline === \"Immediately\";\nconst standard = [\"New ERP Implementation\", \"Replace Existing ERP\"].includes(a.looking_for);\nconst qualifies = smallTeam && smallBudget && immediate && standard;\nfinderOutcome.value = qualifies ? 'starter' : 'matches';\ncall('connect.api.save_customer_requirement', {\n  country: a.country, industry: a.industry,\n  apps: JSON.stringify(a.apps || []),\n  looking_for: a.looking_for, company_size: a.company_size,\n  current_situation: a.current_situation, timeline: a.timeline,\n  delivery_preference: a.delivery_preference, budget: a.budget,\n  special_requirements: JSON.stringify(a.requirements || []), additional_notes: a.additional_notes,\n  outcome: qualifies ? 'Starter Pack' : 'Matches',\n}).then(() => {\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch(() => {\n  toast({ title: 'Not saved', text: 'Log in to save your requirements for later.', icon: 'alert-circle' });\n});\ncall('connect.api.list_matching_partners', { answers: JSON.stringify(a) }).then((r) => {\n  wizardMatches.value = r || [];\n  try { localStorage.setItem('connect_wizard_results', JSON.stringify({ answers: a, matches: r || [] })); } catch (e) {}\n});\nfinderOpen.value = false;"
+               "script": "const a = finderAnswers.value;\nconst smallTeam = [\"1\\u201310\", \"11\\u201350\"].includes(a.company_size);\nconst smallBudget = [\"Under \\u20b92L\", \"\\u20b92L\\u2013\\u20b910L\"].includes(a.budget);\nconst immediate = a.timeline === \"Immediately\";\nconst standard = [\"New ERP Implementation\", \"Replace Existing ERP\"].includes(a.looking_for);\nconst qualifies = smallTeam && smallBudget && immediate && standard;\nfinderOutcome.value = qualifies ? 'starter' : 'matches';\ncall('connect.api.customer.save_customer_requirement', {\n  country: a.country, industry: a.industry,\n  apps: JSON.stringify(a.apps || []),\n  looking_for: a.looking_for, company_size: a.company_size,\n  current_situation: a.current_situation, timeline: a.timeline,\n  delivery_preference: a.delivery_preference, budget: a.budget,\n  special_requirements: JSON.stringify(a.requirements || []), additional_notes: a.additional_notes,\n  outcome: qualifies ? 'Starter Pack' : 'Matches',\n}).then(() => {\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch(() => {\n  toast({ title: 'Not saved', text: 'Log in to save your requirements for later.', icon: 'alert-circle' });\n});\ncall('connect.api.partner.list_matching_partners', { answers: JSON.stringify(a) }).then((r) => {\n  wizardMatches.value = r || [];\n  try { localStorage.setItem('connect_wizard_results', JSON.stringify({ answers: a, matches: r || [] })); } catch (e) {}\n});\nfinderOpen.value = false;"
               }
              },
              "componentId": "fa7c6b5ff8",
@@ -10482,7 +10482,7 @@
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "call('connect.api.list_matching_partners', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { wizardMatches.value = r || []; });\nfinderOpen.value = false;"
+               "script": "call('connect.api.partner.list_matching_partners', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { wizardMatches.value = r || []; });\nfinderOpen.value = false;"
               }
              },
              "componentId": "Button-wizard-continue-search",
@@ -10502,7 +10502,7 @@
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "call('connect.api.list_matching_partners', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { wizardMatches.value = r || []; });\nfinderOpen.value = false;"
+               "script": "call('connect.api.partner.list_matching_partners', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { wizardMatches.value = r || []; });\nfinderOpen.value = false;"
               }
              },
              "componentId": "Button-wizard-explore-starter",
@@ -10535,7 +10535,7 @@
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "call('connect.api.list_matching_partners', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { wizardMatches.value = r || []; });\nfinderOpen.value = false;"
+               "script": "call('connect.api.partner.list_matching_partners', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { wizardMatches.value = r || []; });\nfinderOpen.value = false;"
               }
              },
              "componentId": "Button-wizard-see-matches",
@@ -12102,7 +12102,7 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "settingsSaving.value = true;\ncall('connect.api.save_customer_requirement', {\n  country: settingsCountry.value,\n  industry: settingsIndustry.value,\n  apps: settingsApps.value,\n  looking_for: settingsLookingFor.value,\n  company_size: settingsCompanySize.value,\n  current_situation: settingsCurrentSituation.value,\n  timeline: settingsTimeline.value,\n  delivery_preference: settingsDeliveryPreference.value,\n  budget: settingsBudget.value,\n  special_requirements: JSON.stringify(settingsSpecialRequirements.value || []),\n}).then(() => {\n  settingsSaving.value = false;\n  settingsOpen.value = false;\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch((err) => {\n  settingsSaving.value = false;\n  toast({ title: 'Could not save', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+           "script": "settingsSaving.value = true;\ncall('connect.api.customer.save_customer_requirement', {\n  country: settingsCountry.value,\n  industry: settingsIndustry.value,\n  apps: settingsApps.value,\n  looking_for: settingsLookingFor.value,\n  company_size: settingsCompanySize.value,\n  current_situation: settingsCurrentSituation.value,\n  timeline: settingsTimeline.value,\n  delivery_preference: settingsDeliveryPreference.value,\n  budget: settingsBudget.value,\n  special_requirements: JSON.stringify(settingsSpecialRequirements.value || []),\n}).then(() => {\n  settingsSaving.value = false;\n  settingsOpen.value = false;\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch((err) => {\n  settingsSaving.value = false;\n  toast({ title: 'Could not save', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
           }
          },
          "componentId": "Button-settings-save",
@@ -12157,7 +12157,7 @@
    "params": "{\"search\": \"{{ searchTerm }}\", \"industry\": \"{{ industryFilter }}\", \"product\": \"{{ productFilter }}\", \"region\": \"{{ regionFilter }}\", \"delivery_mode\": \"{{ deliveryModeFilter }}\", \"country\": \"{{ countryFilter }}\", \"sort\": \"{{ sortBy }}\", \"tier\": \"{{ tierFilter }}\", \"business_process\": \"{{ businessProcessFilter }}\", \"implementation_type\": \"{{ implementationTypeFilter }}\", \"language\": \"{{ languageFilter }}\", \"min_rating\": \"{{ minRatingFilter }}\", \"min_pmm_level\": \"{{ minPmmLevelFilter }}\", \"max_response_time\": \"{{ maxResponseTimeFilter }}\", \"extra_filters\": \"{{ extraFiltersWire }}\"}",
    "resource_name": "partnersList",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.search_partners"
+   "url": "/api/method/connect.api.partner.search_partners"
   },
   {
    "auto": 1,
@@ -12165,7 +12165,7 @@
    "params": "{}",
    "resource_name": "countryOptions",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.list_partner_countries"
+   "url": "/api/method/connect.api.partner.list_partner_countries"
   },
   {
    "auto": 1,
@@ -12173,7 +12173,7 @@
    "params": "{}",
    "resource_name": "myShortlist",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.get_my_shortlisted_partner_names"
+   "url": "/api/method/connect.api.customer.get_my_shortlisted_partner_names"
   },
   {
    "auto": 1,
@@ -12181,7 +12181,7 @@
    "params": "{}",
    "resource_name": "myCustomer",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.get_my_customer"
+   "url": "/api/method/connect.api.customer.get_my_customer"
   },
   {
    "auto": 1,
@@ -12189,7 +12189,7 @@
    "params": "{}",
    "resource_name": "filterOptions",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.list_partner_filter_options"
+   "url": "/api/method/connect.api.partner.list_partner_filter_options"
   },
   {
    "auto": 1,
@@ -12197,7 +12197,7 @@
    "params": "{}",
    "resource_name": "wizardAllPartners",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.search_partners"
+   "url": "/api/method/connect.api.partner.search_partners"
   },
   {
    "auto": 1,
@@ -12206,7 +12206,7 @@
    "params": "{}",
    "resource_name": "myRequirement",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.get_my_requirement"
+   "url": "/api/method/connect.api.customer.get_my_requirement"
   },
   {
    "auto": 1,
@@ -12214,7 +12214,7 @@
    "params": "{}",
    "resource_name": "myContext",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.get_my_context"
+   "url": "/api/method/connect.api.account.get_my_context"
   }
  ],
  "route": "/find-partners",

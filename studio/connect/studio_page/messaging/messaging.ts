@@ -901,7 +901,7 @@ export default function setup(context) {
 		if (!fullName || savingProfile.value) return
 		savingProfile.value = true
 		try {
-			await call("connect.api.update_my_profile", {
+			await call("connect.api.account.update_my_profile", {
 				full_name: fullName,
 				phone: editPhone.value.trim(),
 				role: editRole.value.trim(),
@@ -943,7 +943,7 @@ export default function setup(context) {
 	function uploadProfileImage(file) {
 		uploadingProfileImage.value = true
 		const { upload } = useFileUpload()
-		upload(file, { upload_endpoint: "/api/method/connect.api.upload_profile_image" })
+		upload(file, { upload_endpoint: "/api/method/connect.api.account.upload_profile_image" })
 			.then(() => {
 				context.myProfile.reload()
 				toast({ title: "Photo updated", icon: "check", iconClasses: "text-green-600" })
@@ -1059,7 +1059,7 @@ export default function setup(context) {
 		if (!memberToDisable.value || disablingTeamMember.value) return
 		disablingTeamMember.value = true
 		try {
-			await call("connect.api.remove_team_member", { member: memberToDisable.value.name })
+			await call("connect.api.account.remove_team_member", { member: memberToDisable.value.name })
 			showDisableTeamMemberDialog.value = false
 			memberToDisable.value = null
 			context.myTeam.reload()
@@ -1091,7 +1091,7 @@ export default function setup(context) {
 		}
 		addingTeamMember.value = true
 		try {
-			const data = await call("connect.api.add_team_member", {
+			const data = await call("connect.api.account.add_team_member", {
 				email: newTeamMemberEmail.value,
 				role: newTeamMemberRole.value || null,
 				password: newTeamMemberPassword.value || null,

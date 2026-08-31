@@ -9807,7 +9807,7 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "settingsSaving.value = true;\ncall('connect.api.save_customer_requirement', {\n  company_name: settingsCompanyName.value,\n  country: settingsCountry.value,\n  industry: settingsIndustry.value,\n  apps: settingsApps.value,\n  looking_for: settingsLookingFor.value,\n  company_size: settingsCompanySize.value,\n  current_situation: settingsCurrentSituation.value,\n  timeline: settingsTimeline.value,\n  delivery_preference: settingsDeliveryPreference.value,\n  budget: settingsBudget.value,\n  special_requirements: JSON.stringify(settingsSpecialRequirements.value || []),\n}).then(() => {\n  settingsSaving.value = false;\n  settingsOpen.value = false;\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch((err) => {\n  settingsSaving.value = false;\n  toast({ title: 'Could not save', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+           "script": "settingsSaving.value = true;\ncall('connect.api.customer.save_customer_requirement', {\n  company_name: settingsCompanyName.value,\n  country: settingsCountry.value,\n  industry: settingsIndustry.value,\n  apps: settingsApps.value,\n  looking_for: settingsLookingFor.value,\n  company_size: settingsCompanySize.value,\n  current_situation: settingsCurrentSituation.value,\n  timeline: settingsTimeline.value,\n  delivery_preference: settingsDeliveryPreference.value,\n  budget: settingsBudget.value,\n  special_requirements: JSON.stringify(settingsSpecialRequirements.value || []),\n}).then(() => {\n  settingsSaving.value = false;\n  settingsOpen.value = false;\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch((err) => {\n  settingsSaving.value = false;\n  toast({ title: 'Could not save', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
           }
          },
          "componentId": "Button-settings-save",
@@ -19656,7 +19656,7 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "settingsSaving.value = true;\ncall('connect.api.save_customer_requirement', {\n  company_name: settingsCompanyName.value,\n  country: settingsCountry.value,\n  industry: settingsIndustry.value,\n  apps: settingsApps.value,\n  looking_for: settingsLookingFor.value,\n  company_size: settingsCompanySize.value,\n  current_situation: settingsCurrentSituation.value,\n  timeline: settingsTimeline.value,\n  delivery_preference: settingsDeliveryPreference.value,\n  budget: settingsBudget.value,\n  special_requirements: JSON.stringify(settingsSpecialRequirements.value || []),\n}).then(() => {\n  settingsSaving.value = false;\n  settingsOpen.value = false;\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch((err) => {\n  settingsSaving.value = false;\n  toast({ title: 'Could not save', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+           "script": "settingsSaving.value = true;\ncall('connect.api.customer.save_customer_requirement', {\n  company_name: settingsCompanyName.value,\n  country: settingsCountry.value,\n  industry: settingsIndustry.value,\n  apps: settingsApps.value,\n  looking_for: settingsLookingFor.value,\n  company_size: settingsCompanySize.value,\n  current_situation: settingsCurrentSituation.value,\n  timeline: settingsTimeline.value,\n  delivery_preference: settingsDeliveryPreference.value,\n  budget: settingsBudget.value,\n  special_requirements: JSON.stringify(settingsSpecialRequirements.value || []),\n}).then(() => {\n  settingsSaving.value = false;\n  settingsOpen.value = false;\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch((err) => {\n  settingsSaving.value = false;\n  toast({ title: 'Could not save', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
           }
          },
          "componentId": "Button-settings-save",
@@ -19709,21 +19709,21 @@
    "method": "GET",
    "resource_name": "myContext",
    "resource_type": "API Resource",
-   "url": "connect.api.get_my_context"
+   "url": "connect.api.account.get_my_context"
   },
   {
    "auto": 1,
    "method": "GET",
    "resource_name": "myProfile",
    "resource_type": "API Resource",
-   "url": "connect.api.get_my_profile"
+   "url": "connect.api.account.get_my_profile"
   },
   {
    "auto": 1,
    "method": "GET",
    "resource_name": "myTeam",
    "resource_type": "API Resource",
-   "url": "connect.api.get_my_team"
+   "url": "connect.api.account.get_my_team"
   },
   {
    "auto": 1,
@@ -19797,7 +19797,7 @@
    "params": "{}",
    "resource_name": "filterOptions",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.list_partner_filter_options"
+   "url": "/api/method/connect.api.partner.list_partner_filter_options"
   },
   {
    "auto": 1,
@@ -19805,7 +19805,7 @@
    "params": "{}",
    "resource_name": "myRequirement",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.get_my_requirement"
+   "url": "/api/method/connect.api.customer.get_my_requirement"
   }
  ],
  "route": "/messaging-d87b",
