@@ -20,8 +20,8 @@ def get_permission_query_conditions(user):
 	customers = _customer_names_for_user(user)
 	if not customers:
 		return "1=0"
-	names = ", ".join(frappe.db.escape(c) for c in customers)
-	return f"`tabRequirement`.customer in ({names})"
+	RequirementTable = frappe.qb.DocType("Requirement")
+	return RequirementTable.customer.isin(customers).get_sql()
 
 
 def has_permission(doc, user=None, permission_type=None):
