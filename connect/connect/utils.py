@@ -166,10 +166,13 @@ def get_my_context():
 	customer_membership = None
 	if customer:
 		is_admin = frappe.db.get_value("Customer Team Member", {"customer": customer, "user": user}, "is_admin")
-		customer_membership = {"customer": customer, "is_admin": cint(is_admin)}
+		customer_name = frappe.db.get_value("Customer", customer, "customer_name")
+		customer_membership = {"customer": customer, "customer_name": customer_name, "is_admin": cint(is_admin)}
 	partner_membership = frappe.db.get_value(
 		"Connect Partner Member", {"user": user}, ["partner", "is_admin"], as_dict=True
 	)
+	if partner_membership:
+		partner_membership["partner_name"] = frappe.db.get_value("Partner", partner_membership.partner, "partner_name")
 	return {
 		"user": user,
 		"customer": customer_membership,
