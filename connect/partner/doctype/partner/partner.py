@@ -340,26 +340,20 @@ def search_partners(
 	malformed/garbage fieldname or operator is dropped rather than passed through.
 	"""
 	filters = list(BASE_PARTNER_FILTERS)
-	if industry:
-		filters.append(["Partner", "industry", "=", industry])
-	if region:
-		filters.append(["Partner", "region", "=", region])
-	if country:
-		filters.append(["Partner", "country", "=", country])
-	if tier:
-		filters.append(["Partner", "tier", "=", tier])
+	for field, value in [("industry", industry), ("region", region), ("country", country), ("tier", tier)]:
+		if value:
+			filters.append(["Partner", field, "=", value])
 
 	child_matches = []
-	if product:
-		child_matches.append(_partners_matching_child("Partner App", "app", "=", product))
-	if delivery_mode:
-		child_matches.append(_partners_matching_child("Partner Delivery Mode", "delivery_mode", "=", delivery_mode))
-	if business_process:
-		child_matches.append(_partners_matching_child("Partner Business Process", "business_process", "=", business_process))
-	if implementation_type:
-		child_matches.append(_partners_matching_child("Partner Implementation Type", "implementation_type", "=", implementation_type))
-	if language:
-		child_matches.append(_partners_matching_child("Partner Language", "language", "=", language))
+	for value, child_doctype, field in [
+		(product, "Partner App", "app"),
+		(delivery_mode, "Partner Delivery Mode", "delivery_mode"),
+		(business_process, "Partner Business Process", "business_process"),
+		(implementation_type, "Partner Implementation Type", "implementation_type"),
+		(language, "Partner Language", "language"),
+	]:
+		if value:
+			child_matches.append(_partners_matching_child(child_doctype, field, "=", value))
 	if child_matches:
 		filters.append(["Partner", "name", "in", list(set.intersection(*child_matches))])
 
