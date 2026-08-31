@@ -1,7 +1,6 @@
 import json
 
 import frappe
-from frappe import _
 
 from connect.api.attachments import _attach_file_to_message, _claim_staged_attachment
 from connect.permissions import _check_can_read, _check_can_write
@@ -31,8 +30,6 @@ def send_message(
 	user = frappe.session.user
 	requirement_data = frappe.parse_json(requirement_data) if isinstance(requirement_data, str) else requirement_data
 	content = (content or "").strip()
-	if not content and not file_url and not requirement_data:
-		frappe.throw(_("Message can't be empty"))
 
 	_check_can_write(thread, user)
 

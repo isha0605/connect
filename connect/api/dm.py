@@ -92,8 +92,6 @@ def send_dm_message(thread, content="", file_url=None, file_name=None, file_type
 	_dm_thread_pair(thread, user)
 
 	content = (content or "").strip()
-	if not content and not file_url:
-		frappe.throw(_("Message cannot be empty"))
 
 	file_doc_name = _claim_staged_attachment(file_url, user) if file_url else None
 

@@ -1,5 +1,3 @@
-# Copyright (c) 2026, Isha and contributors
-# For license information, please see license.txt
 
 import frappe
 from frappe import _
@@ -17,6 +15,8 @@ class ConnectMessage(Document):
 	def validate(self):
 		if self.message_type == "File" and not self.attachment:
 			frappe.throw(_("A file message must have an attachment"))
+		if self.message_type == "Text" and not (self.content or "").strip():
+			frappe.throw(_("Message can't be empty"))
 		if not self.is_new():
 			self._validate_edit()
 
@@ -30,8 +30,6 @@ class ConnectMessage(Document):
 			frappe.throw(_("Message can't be empty"))
 		self.content = content
 		self.is_edited = 1
-		# Set only here (never during insert's own validate/before_save pass), so on_update
-		# can tell an actual edit apart from any other future path that might call .save().
 		self.flags._was_edited = True
 
 	def on_update(self):

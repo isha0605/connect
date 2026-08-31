@@ -15,6 +15,8 @@ class ConnectDMMessage(Document):
 	def validate(self):
 		if self.message_type == "File" and not self.attachment:
 			frappe.throw(_("A file message must have an attachment"))
+		if self.message_type == "Text" and not (self.content or "").strip():
+			frappe.throw(_("Message cannot be empty"))
 		if not self.is_new():
 			self._validate_edit()
 
