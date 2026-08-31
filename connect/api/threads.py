@@ -2,7 +2,6 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime
 
-from connect.api import _get_customer_for_user, _latest_requirement_for_customer
 from connect.permissions import _check_can_read, _get_partner_admin
 
 
@@ -32,27 +31,8 @@ def close_thread(thread):
 
 @frappe.whitelist()
 def get_requirement_snapshot():
-	"""Returns the caller's saved Requirement as a dict, to seed a draft Requirement card in a new thread."""
-	user = frappe.session.user
-	customer = _get_customer_for_user(user)
-	if not customer:
-		return None
-
-	req = _latest_requirement_for_customer(customer)
-	if not req:
-		return None
-	return {
-		"company_name": req.company_name,
-		"country": req.country,
-		"industry": req.industry,
-		"apps": req.apps,
-		"looking_for": req.looking_for,
-		"company_size": req.company_size,
-		"current_situation": req.current_situation,
-		"timeline": req.timeline,
-		"delivery_preference": req.delivery_preference,
-		"budget": req.budget,
-	}
+	from connect.customer.doctype.requirement.requirement import get_requirement_snapshot
+	return get_requirement_snapshot()
 
 
 @frappe.whitelist()

@@ -1,8 +1,8 @@
 import frappe
 from frappe import _
 
-from connect.api import _get_customer_for_user
 from connect.api.messages import send_message
+from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.permissions import _get_partner_admin
 
 # start_partner_thread stays at this dotted path (connect.api.messaging.start_partner_thread)
@@ -60,7 +60,7 @@ def _ensure_thread_member(thread, user, side, added_by):
 def start_partner_thread(partner, message=None):
 	"""Finds or creates the (customer, partner) thread and adds both sides as members, for the Contact Partner action."""
 	user = frappe.session.user
-	customer = _get_customer_for_user(user)
+	customer = get_customer_for_user(user)
 	if not customer:
 		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
 
