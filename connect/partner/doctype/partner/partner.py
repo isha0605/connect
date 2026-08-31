@@ -65,6 +65,11 @@ PARTNER_FIELDS = [
 ]
 SEARCHABLE_TEXT_FIELDS = ["partner_name", "tagline", "industry", "country", "city"]
 
+# The "is this partner visible at all" gate — combined as AND with whatever
+# else a caller filters on. Callers that append more filters must copy this
+# (list(BASE_PARTNER_FILTERS)) rather than mutate it in place.
+BASE_PARTNER_FILTERS = [["Partner", "is_featured", "=", 1], ["Partner", "enabled", "=", 1]]
+
 SORT_OPTIONS = {
 	"rating_desc": ("rating", True),
 	"rollouts_desc": ("rollouts", True),
@@ -221,23 +226,42 @@ def _partners_matching_child(child_doctype: str, field: str, operator: str, valu
 	return {row[0] for row in query.run()}
 
 
-def _apps_by_partner(names: list[str]):
-	"""Every Partner App (Partner.apps) value for each partner in `names`, in
-	one query, keyed by partner name — full list, in idx order, not capped to
-	a preview length. Callers that only want a short preview slice it
-	themselves (apps[:2]); the finder wizard's scoring needs the full list to
-	check membership against several wanted apps at once."""
+def _child_values_by_partner(child_doctype: str, value_field: str, names: list[str], parentfield: str | None = None):
+	"""Every `value_field` value from `child_doctype` for each partner in
+	`names`, in one query, grouped into a dict of lists keyed by partner name
+	(full list, in idx order — callers wanting just a preview slice it
+	themselves, e.g. apps[:2]). Always scoped to parenttype="Partner"; pass
+	`parentfield` too for a child doctype shared with another doctype's own
+	Table field (e.g. "Partner App" is also Requirement.apps) so a same-named
+	parent from the other doctype can't leak in."""
 	if not names:
 		return {}
-	apps_by_partner = {}
+	filters = {"parent": ["in", names], "parenttype": "Partner"}
+	if parentfield:
+		filters["parentfield"] = parentfield
+	values_by_partner = {}
 	for r in frappe.get_all(
-		"Partner App",
-		filters={"parent": ["in", names], "parenttype": "Partner", "parentfield": "apps"},
-		fields=["parent", "app"],
-		order_by="idx asc",
+		child_doctype, filters=filters, fields=["parent", value_field], order_by="idx asc"
 	):
-		apps_by_partner.setdefault(r.parent, []).append(r.app)
-	return apps_by_partner
+		values_by_partner.setdefault(r.parent, []).append(r.get(value_field))
+	return values_by_partner
+
+
+def _apps_by_partner(names: list[str]):
+	"""Every Partner App (Partner.apps) value for each partner in `names` —
+	see _child_values_by_partner. Kept as its own name since "apps per
+	partner" is looked up from several places (search, wizard scoring,
+	shortlist), not just the wizard scoring pass."""
+	return _child_values_by_partner("Partner App", "app", names, parentfield="apps")
+
+
+def _parse_answers(answers: dict | str | None):
+	"""Normalizes the finder wizard's `answers` payload — arrives as a JSON
+	string over the wire (a whitelisted endpoint's raw argument) but as a
+	plain dict when one wizard function calls another directly in Python."""
+	if isinstance(answers, str):
+		answers = json.loads(answers or "{}")
+	return answers or {}
 
 
 def attach_success_story_previews(rows: list[dict]):
@@ -315,7 +339,7 @@ def search_partners(
 	picker) — validated against Partner's own meta before being appended, so a
 	malformed/garbage fieldname or operator is dropped rather than passed through.
 	"""
-	filters = [["Partner", "is_featured", "=", 1], ["Partner", "enabled", "=", 1]]
+	filters = list(BASE_PARTNER_FILTERS)
 	if industry:
 		filters.append(["Partner", "industry", "=", industry])
 	if region:
@@ -405,10 +429,8 @@ def count_matching_partners(answers: dict | str | None = None):
 	recomputed cumulatively after every answer. Filters combine as AND, narrowing
 	as more (mappable) answers come in — only questions with a real mapping to
 	Partner data affect the count."""
-	if isinstance(answers, str):
-		answers = json.loads(answers or "{}")
-	answers = answers or {}
-	filters = [["Partner", "is_featured", "=", 1], ["Partner", "enabled", "=", 1]]
+	answers = _parse_answers(answers)
+	filters = list(BASE_PARTNER_FILTERS)
 	child_matches = []
 
 	industry = answers.get("industry")
@@ -452,7 +474,7 @@ def _score_partners_by_requirements(answers: dict):
 	full, unfiltered [(missing_count, -rating, name, missing_labels)] list sorted
 	best-first — callers decide their own cutoff."""
 	names = [n.name for n in frappe.get_list(
-		"Partner", filters=[["Partner", "is_featured", "=", 1], ["Partner", "enabled", "=", 1]], fields=["name"], limit_page_length=0,
+		"Partner", filters=BASE_PARTNER_FILTERS, fields=["name"], limit_page_length=0,
 	)]
 	if not names:
 		return [], {}
@@ -460,16 +482,11 @@ def _score_partners_by_requirements(answers: dict):
 	rows = frappe.get_list("Partner", filters=[["Partner", "name", "in", names]], fields=PARTNER_FIELDS)
 	by_name = {r.name: r for r in rows}
 
-	delivery_by, migrations_by, impl_by, bp_by = {}, {}, {}, {}
 	apps_by_partner = _apps_by_partner(names)
-	for r in frappe.get_all("Partner Delivery Mode", filters={"parent": ["in", names]}, fields=["parent", "delivery_mode"]):
-		delivery_by.setdefault(r.parent, []).append(r.delivery_mode)
-	for r in frappe.get_all("Partner Migration Path", filters={"parent": ["in", names]}, fields=["parent", "migration_path"]):
-		migrations_by.setdefault(r.parent, []).append(r.migration_path)
-	for r in frappe.get_all("Partner Implementation Type", filters={"parent": ["in", names]}, fields=["parent", "implementation_type"]):
-		impl_by.setdefault(r.parent, []).append(r.implementation_type)
-	for r in frappe.get_all("Partner Business Process", filters={"parent": ["in", names]}, fields=["parent", "business_process"]):
-		bp_by.setdefault(r.parent, []).append(r.business_process)
+	delivery_by = _child_values_by_partner("Partner Delivery Mode", "delivery_mode", names)
+	migrations_by = _child_values_by_partner("Partner Migration Path", "migration_path", names)
+	impl_by = _child_values_by_partner("Partner Implementation Type", "implementation_type", names)
+	bp_by = _child_values_by_partner("Partner Business Process", "business_process", names)
 
 	industry = answers.get("industry")
 	wanted_industry = WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry) if industry else None
@@ -528,9 +545,7 @@ def wizard_match_state(answers: dict | str | None = None):
 	counts exact matches only (missing_count == 0), the same thing the results
 	page's own "N Partners Match Your Requirements" header counts, so the two
 	numbers always agree without needing a separate threshold to keep in sync."""
-	if isinstance(answers, str):
-		answers = json.loads(answers or "{}")
-	answers = answers or {}
+	answers = _parse_answers(answers)
 
 	all_scored, _apps_by_partner, _answered_dims = _score_partners_by_requirements(answers)
 	exact = [s for s in all_scored if s[0] == 0]
@@ -542,9 +557,7 @@ def list_matching_partners(answers: dict | str | None = None, limit: int = 8):
 	"""Ranked partner results for the finder wizard's final step. Same scoring
 	as wizard_match_state (see _score_partners_by_requirements), returning full
 	rows (same shape as search_partners) instead of just names."""
-	if isinstance(answers, str):
-		answers = json.loads(answers or "{}")
-	answers = answers or {}
+	answers = _parse_answers(answers)
 	limit = cint(limit) or 8
 
 	all_scored, apps_by_partner, answered_dims = _score_partners_by_requirements(answers)
