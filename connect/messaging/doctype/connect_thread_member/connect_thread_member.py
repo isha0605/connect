@@ -24,13 +24,7 @@ class ConnectThreadMember(Document):
 			self.removed_on = None
 
 	def make_admin(self, user):
-		"""Promote this thread member to company admin. Unlike a plain company-scoped
-		transfer, the target here is a Connect Thread Member row, not necessarily an existing
-		Customer Team/Partner Member — most thread members (added via add_thread_member)
-		never get a company membership row at all, so one is created for them here if
-		missing. Both Customer Team Member and Connect Partner Member are standalone
-		doctypes (see connect.roles), so both sides go through the same
-		find-or-create-by-bare-insert shape."""
+		"""Promotes this thread member to company admin, creating a company membership row for them if they don't have one yet."""
 		from connect.permissions import _is_customer_admin, _is_partner_admin
 
 		if self.is_removed:

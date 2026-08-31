@@ -16,9 +16,7 @@ class ConnectMessage(Document):
 			self._validate_edit()
 
 	def _validate_edit(self):
-		"""Same own-message-only rule as on_trash. Files/images/system rows aren't editable,
-		and an edit is never allowed to empty a message out entirely (that's what delete is
-		for)."""
+		"""Restricts edits to your own text messages; files, images, and system messages can't be edited."""
 		user = frappe.session.user
 		if self.sender != user and not _has_full_access(user):
 			frappe.throw(_("You can only edit your own messages"), frappe.PermissionError)
@@ -45,10 +43,7 @@ class ConnectMessage(Document):
 			notify_message_edited(self)
 
 	def on_trash(self):
-		"""Delete for everyone — restricted to the sender's own messages, same as every
-		mainstream chat app: the doctype's own permission model would technically allow any
-		thread member with Write to delete anyone's message (that's for moderation elsewhere),
-		but "delete for everyone" specifically only ever means *your own* message."""
+		"""Deletes a message for everyone, restricted to the sender's own messages like other chat apps."""
 		from connect.notifications import notify_message_deleted
 
 		user = frappe.session.user

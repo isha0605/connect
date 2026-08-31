@@ -18,8 +18,7 @@ def _is_partner_admin(partner, user):
 
 
 def _my_company_membership(user):
-	"""Returns (doctype, company, row) for whichever company this user belongs to, or
-	(None, None, None) if neither. A user is assumed to belong to at most one company."""
+	"""Returns which company (and doctype/row) this user belongs to, or Nones if neither."""
 	customer_row = frappe.db.get_value(
 		"Customer Team Member", {"user": user}, ["name", "customer", "is_admin"], as_dict=True
 	)
@@ -187,9 +186,7 @@ def get_thread_member_permission_query_conditions(user, doctype=None):
 
 
 def has_dm_thread_permission(doc, ptype="read", user=None, **kwargs):
-	"""A DM thread has exactly two fixed participants (no add/remove, unlike company threads)
-	— either one can always read/write it, and starting one is always self-initiated (the
-	caller is always one of the two parties), so create is unconditionally allowed here."""
+	"""Lets either DM participant read/write it, since a DM has exactly two fixed participants."""
 	user = user or frappe.session.user
 	if _has_full_access(user):
 		return True
@@ -238,11 +235,7 @@ def _is_partner_member(user):
 
 
 def has_message_template_permission(doc, ptype="read", user=None, **kwargs):
-	"""Global templates: read-only for any member on the matching side; the 'All' role baseline
-	already grants full CRUD (same pattern as elsewhere in this file), so this hook is what
-	actually restricts create/write/delete on globals to platform admins. Personal templates
-	(is_global=0) are owner-only for every operation — never visible to teammates or the other
-	side, per spec."""
+	"""Restricts global templates to read-only per side, and personal templates to owner-only."""
 	user = user or frappe.session.user
 	if _has_full_access(user):
 		return True
@@ -284,9 +277,7 @@ def get_message_template_permission_query_conditions(user, doctype=None):
 
 
 def has_studio_page_permission(doc, ptype="read", user=None, **kwargs):
-	"""Lets any logged-in user load our published 'connect' app pages (e.g. the messaging
-	page) without granting System Manager / Studio User access to Studio Page in general.
-	Guests only get pages explicitly marked allow_guest."""
+	"""Lets any logged-in user load connect's own published Studio pages, without granting broader Studio access."""
 	user = user or frappe.session.user
 	if _has_full_access(user):
 		return True

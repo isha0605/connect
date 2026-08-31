@@ -7,8 +7,7 @@ from frappe.model.document import Document
 
 class ConnectDMThread(Document):
 	def pin(self, message, user):
-		"""DM counterpart to Connect Thread's pin — either participant can pin, same as either
-		can post."""
+		"""DM counterpart to Connect Thread's pin: either participant can pin, same as either can post."""
 		from connect.notifications import notify_dm_thread_pin_changed
 		from connect.permissions import _dm_thread_pair
 

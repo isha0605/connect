@@ -37,9 +37,7 @@ class ConnectThread(Document):
 			self.closed_on = None
 
 	def pin(self, message, user):
-		"""Pin a message to the top of this thread — one at a time, pinning a new one
-		replaces whichever was pinned before. Available to any thread member with Write (not
-		just the sender), same audience as posting."""
+		"""Pins a message to the top of the thread, replacing whichever was pinned before."""
 		from connect.notifications import notify_thread_pin_changed
 		from connect.permissions import _check_can_write
 
@@ -77,11 +75,7 @@ class ConnectThread(Document):
 		frappe.throw(_("Invalid side"))
 
 	def add_member(self, email, side, permission, added_by):
-		"""Add someone to this thread, creating their User account first if it doesn't exist
-		yet. A regular portal admin has no create-permission on User, so this has to happen
-		here, server-side, after independently re-checking the caller is really an admin of
-		the side they're claiming to add to — never trust the client's own claim of
-		authority."""
+		"""Adds someone to this thread, creating their user account first if it doesn't exist yet."""
 		email = email.strip().lower()
 		if not self._authorize_side_admin(side, added_by):
 			frappe.throw(_("Only an admin of your own side can add members"), frappe.PermissionError)
@@ -112,8 +106,7 @@ class ConnectThread(Document):
 		return member, created_user
 
 	def remove_member(self, member_name, removed_by):
-		"""Soft-remove a member from this thread. Only an admin of that member's own side may
-		remove them — mirrors add_member's authorization model."""
+		"""Soft-removes a member from this thread; only an admin of their own side may do this."""
 		member_doc = frappe.get_doc("Connect Thread Member", member_name)
 		if member_doc.thread != self.name:
 			frappe.throw(_("Member does not belong to this thread"))

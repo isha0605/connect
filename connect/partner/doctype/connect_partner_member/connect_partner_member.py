@@ -22,11 +22,7 @@ class ConnectPartnerMember(Document):
 			frappe.throw(_("{0} already has an admin. Only one admin is allowed per partner.").format(self.partner))
 
 	def remove(self, removed_by):
-		"""Removes this person from the company roster — the admin action for someone who's
-		left. Revokes their access to every thread they were part of on the Partner side (via
-		Connect Thread's own remove_member, so each thread also gets its own system message),
-		but never touches anything they've already sent — messages and other activity stay
-		exactly as they were."""
+		"""Removes this person from the company roster, revoking their thread access but leaving their past messages untouched."""
 		from connect.permissions import _is_partner_admin
 
 		if not _is_partner_admin(self.partner, removed_by):

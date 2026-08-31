@@ -62,15 +62,7 @@ class Partner(Document):
 
 
 def recompute_rating_from_reviews(partner_name, exclude=None):
-	"""Recompute a Partner's rating/reviews_count/dimension scores from its
-	(now standalone) Partner Review records. Called via doc_events on Partner
-	Review insert/update/trash — reviews are no longer a Partner child table,
-	so this can't run inside Partner.before_save anymore.
-
-	`exclude`: on_trash fires *before* the row is actually removed from the DB,
-	so a plain re-query would still count the row being deleted. Pass the
-	doc's own name there to exclude it from the recompute.
-	"""
+	"""Recomputes a Partner's rating, review count, and dimension scores from its Partner Review records."""
 	filters = {"partner": partner_name}
 	if exclude:
 		filters["name"] = ["!=", exclude]

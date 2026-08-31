@@ -3,8 +3,7 @@ from frappe.desk.doctype.notification_log.notification_log import enqueue_create
 
 
 def _notification_targets(doc):
-	"""Who's allowed to know this message exists at all — every other current member of the
-	thread."""
+	"""Returns everyone else currently in the thread, who's allowed to know this message exists."""
 	return frappe.get_all(
 		"Connect Thread Member",
 		filters={"thread": doc.thread, "is_removed": 0, "user": ["!=", doc.sender]},
@@ -50,11 +49,7 @@ def notify_thread_members(doc, method=None):
 
 
 def notify_message_deleted(doc):
-	"""Live-push a deletion the same way a new message gets pushed — called explicitly from
-	api.delete_message (there's no after_delete doc_event hook wired up for Connect Message,
-	and by the time one would fire the doc's own fields needed to compute the audience are
-	already gone). The sender doesn't need this: they already remove the message from their
-	own view right after the delete call succeeds."""
+	"""Live-pushes a message deletion to every other thread member."""
 	members = _notification_targets(doc)
 	if not members:
 		return
@@ -64,8 +59,7 @@ def notify_message_deleted(doc):
 
 
 def notify_message_edited(doc):
-	"""Same audience as a new message. The editor's own tab already shows the new content
-	right after the edit call resolves."""
+	"""Live-pushes an edited message to every other thread member."""
 	members = _notification_targets(doc)
 	if not members:
 		return
@@ -75,9 +69,7 @@ def notify_message_edited(doc):
 
 
 def notify_dm_recipient(doc, method=None):
-	"""Mirrors notify_thread_members, simplified: a DM thread has exactly one other party, so
-	there's no audience computation — just push straight to whichever of user_a/user_b isn't
-	the sender."""
+	"""Live-pushes a new DM to the one other participant in the thread."""
 	pair = frappe.db.get_value("Connect DM Thread", doc.dm_thread, ["user_a", "user_b"], as_dict=True)
 	if not pair:
 		return
@@ -125,8 +117,7 @@ def notify_dm_message_edited(doc):
 
 
 def notify_dm_thread_pin_changed(thread_doc, message_doc, actor):
-	"""DM counterpart to notify_thread_pin_changed — the "everyone but the actor" audience is
-	just the one other participant. `message_doc` is None on unpin."""
+	"""Live-pushes a pin/unpin change to the one other DM participant."""
 	recipient = thread_doc.user_b if thread_doc.user_a == actor else thread_doc.user_a
 	payload = {
 		"thread": thread_doc.name,
@@ -140,9 +131,7 @@ def notify_dm_thread_pin_changed(thread_doc, message_doc, actor):
 
 
 def notify_thread_pin_changed(thread_doc, message_doc, actor):
-	"""Pinning is thread-wide (not audience-restricted like a message's own visibility), so
-	every active member hears about it — except `actor`, whose own tab already updated right
-	after the pin/unpin call resolved. `message_doc` is None on unpin."""
+	"""Live-pushes a pin/unpin change to every other active thread member."""
 	members = frappe.get_all(
 		"Connect Thread Member",
 		filters={"thread": thread_doc.name, "is_removed": 0, "user": ["!=", actor]},

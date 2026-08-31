@@ -1,5 +1,3 @@
-# Copyright (c) 2026, Isha and contributors
-# For license information, please see license.txt
 
 import frappe
 from frappe import _
@@ -16,8 +14,7 @@ class ConnectDMMessage(Document):
 			self._validate_edit()
 
 	def _validate_edit(self):
-		"""DM counterpart to Connect Message's _validate_edit — own-message-only, same as the
-		company thread version (no admin override here since a DM has no such role)."""
+		"""sender's own-message-only edit rule."""
 		user = frappe.session.user
 		_dm_thread_pair(self.dm_thread, user)
 		if self.sender != user:
@@ -39,8 +36,7 @@ class ConnectDMMessage(Document):
 			notify_dm_message_edited(self)
 
 	def on_trash(self):
-		"""DM counterpart to Connect Message's on_trash — own-message-only, same as the
-		company thread version (no admin override here since a DM has no such role)."""
+		"""DM counterpart to Connect Message's own-message-only delete rule."""
 		from connect.notifications import notify_dm_message_deleted
 
 		user = frappe.session.user

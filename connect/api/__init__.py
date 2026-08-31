@@ -15,8 +15,7 @@ from connect.permissions import _is_customer_admin, _is_partner_admin, _my_compa
 
 @frappe.whitelist()
 def get_my_company_members():
-	"""The caller's own company roster (Customer Member or Partner Member rows) — used to
-	populate the 'transfer admin to' picker. Not thread-scoped, unlike everything else here."""
+	"""Returns the caller's own company roster, used to populate the "transfer admin to" picker."""
 	user = frappe.session.user
 	doctype, company, _row = _my_company_membership(user)
 	if not doctype:
@@ -28,9 +27,7 @@ def get_my_company_members():
 
 @frappe.whitelist()
 def get_my_team():
-	"""The caller's own company roster, enriched with name/photo — powers the sidebar
-	Settings popup's Users section. Unlike get_my_company_members (a bare user/is_admin list
-	for the 'transfer admin to' picker), this is meant to render directly."""
+	"""Returns the caller's own company roster with names and photos, to render the Settings Users list."""
 	user = frappe.session.user
 	doctype, company, _row = _my_company_membership(user)
 	if not doctype:
@@ -53,9 +50,7 @@ def get_my_team():
 
 @frappe.whitelist()
 def remove_team_member(member):
-	"""Remove someone from the caller's own company roster — the doctype (Customer Team
-	Member vs Connect Partner Member) is inferred from the caller's own side, matching
-	get_my_team/get_my_company_members."""
+	"""Removes someone from the caller's own company roster, on whichever side the caller belongs to."""
 	user = frappe.session.user
 	doctype, _company, _row = _my_company_membership(user)
 	if not doctype:
@@ -68,11 +63,7 @@ def remove_team_member(member):
 
 @frappe.whitelist()
 def add_team_member(email, role=None, password=None):
-	"""Invite someone directly onto the caller's own company roster — not thread-scoped, unlike
-	Connect Thread's add_member. Creates their User account first if it doesn't exist yet, same
-	server-side pattern (a portal admin has no create-permission on User). An admin can also set
-	the new account's password here directly, so they don't have to hand-edit it in the database
-	afterward — only applies to a newly-created account, never to one that already existed."""
+	"""Invites someone onto the caller's own company roster, creating their user account first if it doesn't exist."""
 	user = frappe.session.user
 	doctype, company, _row = _my_company_membership(user)
 	if not doctype:
@@ -122,9 +113,7 @@ def add_team_member(email, role=None, password=None):
 
 @frappe.whitelist()
 def get_my_profile():
-	"""The caller's own name/photo/contact details — powers the sidebar avatar and the
-	Settings popup's Profile section. `role` is company-scoped (Connect Partner Member),
-	not a User field, so it's looked up separately and only set for partner-side users."""
+	"""Returns the caller's own name, photo, and contact details for the sidebar avatar and Settings Profile section."""
 	user = frappe.session.user
 	profile = frappe.db.get_value("User", user, ["full_name", "user_image", "phone"], as_dict=True) or {}
 	role = frappe.db.get_value("Connect Partner Member", {"user": user}, "role")
@@ -139,10 +128,7 @@ def get_my_profile():
 
 @frappe.whitelist()
 def update_my_profile(full_name, phone=None, role=None):
-	"""Self-service profile edit — matches the Profile section in the Settings popup. Any
-	logged-in user may edit themselves; there's nothing company- or thread-scoped to check
-	here. `role` only persists for partner-side users (it lives on their Connect Partner
-	Member row); it's silently ignored for anyone without one."""
+	"""Lets any logged-in user edit their own profile details."""
 	full_name = (full_name or "").strip()
 	if not full_name:
 		frappe.throw(_("Name can't be empty"))
@@ -169,9 +155,7 @@ MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
 
 @frappe.whitelist()
 def upload_profile_image():
-	"""Sets the caller's own User.user_image from an uploaded file — powers the clickable
-	avatar in the Settings popup's Profile section. Stored as a public file since avatars are
-	rendered to other users across the app (thread lists, member rows, hover cards)."""
+	"""Sets the caller's own profile photo from an uploaded image, stored publicly since avatars are shown to other users."""
 	uploaded = frappe.request.files.get("file") if frappe.request else None
 	if not uploaded:
 		frappe.throw(_("No file was uploaded"))
@@ -205,11 +189,7 @@ def upload_profile_image():
 
 @frappe.whitelist(allow_guest=True)
 def get_my_context():
-	"""customer side reads real Customer Team Member membership (the doctype the rest of
-	the app — Requirement, Shortlist, Pricing — already uses); partner side reads
-	Connect Partner Member (the real partner-side user/login model, see
-	_is_partner_admin/_is_partner_member in connect.permissions). Guest-safe: an
-	unrecognized/Guest user just falls through to customer=None, partner=None."""
+	"""Returns the caller's customer or partner company membership, or nulls for a guest."""
 	user = frappe.session.user
 	customer = _get_customer_for_user(user)
 	customer_membership = None
@@ -228,11 +208,7 @@ def get_my_context():
 
 @frappe.whitelist(allow_guest=True)
 def signup_customer(full_name, company_name, email, password):
-	"""Self-serve signup for a new customer company: creates the User and a new
-	Customer, seats the signing-up user as that Customer's admin, and logs them
-	in immediately. Deliberately minimal (no industry/apps/etc.) -- the existing
-	onboarding wizard already auto-opens for any logged-in user with no saved
-	Requirement, so it picks up the rest of the company profile from here."""
+	"""Lets a new customer self-signup by creating their user, company, and admin membership in one step."""
 	full_name = (full_name or "").strip()
 	company_name = (company_name or "").strip()
 	email = (email or "").strip().lower()
@@ -283,10 +259,7 @@ SEARCHABLE_TEXT_FIELDS = ["partner_name", "tagline", "industry", "country", "cit
 
 
 class _NaturalLanguageMatch(DistinctOptionFunction):
-	"""MATCH(col1, col2, ...) AGAINST (term IN NATURAL LANGUAGE MODE) over multiple columns.
-	frappe.query_builder.functions.Match only supports a single column in BOOLEAN MODE, which
-	doesn't fit relevance-ranked multi-field search — this mirrors its implementation for the
-	NATURAL LANGUAGE MODE case instead."""
+	"""A multi-column MATCH()/AGAINST() function, since frappe's built-in Match only supports one column."""
 
 	def __init__(self, *columns):
 		super().__init__("MATCH", *columns)
@@ -304,11 +277,7 @@ class _NaturalLanguageMatch(DistinctOptionFunction):
 
 
 def _fts_rank(search_term, allowed_names):
-	"""MariaDB natural-language FULLTEXT search (see the partner_fts index) —
-	real relevance ranking, handles multi-word queries well. Returns names in
-	relevance order. MySQL's default ft_min_word_len (usually 4) means short
-	terms ("erp") won't match here at all; that's what the fuzzy fallback below
-	is for."""
+	"""Ranks partner names by MariaDB full-text search relevance against the search term."""
 	if not allowed_names:
 		return []
 	Partner = frappe.qb.DocType("Partner")
@@ -327,10 +296,7 @@ def _fts_rank(search_term, allowed_names):
 
 
 def _fuzzy_rank(search_term, candidates, threshold=0.65):
-	"""Typo-tolerant fallback over a bounded candidate set (stdlib difflib, no
-	extra dependency — the partner directory is small enough that scoring every
-	candidate in Python is cheap). Catches both misspellings ("Tridot" ->
-	"Tridots") and terms too short for FULLTEXT's min-word-length ("erp")."""
+	"""Ranks partners by typo-tolerant fuzzy match, as a fallback for terms full-text search misses."""
 	term = (search_term or "").strip().lower()
 	if not term:
 		return candidates
@@ -373,32 +339,7 @@ def search_partners(
 	extra_filters=None,
 	sort=None, limit=100,
 ):
-	"""Guest-safe partner search backing the Find Partners page.
-
-	Structured filters combine as AND and always run as a real DB query —
-	`product`/`delivery_mode`/`business_process`/`implementation_type`/`language`
-	filter through their Partner child tables via Frappe's built-in child-table
-	join syntax (["<child doctype>", "<field>", "=", value]).
-
-	`search` layers full-text search with a fuzzy/typo-tolerant fallback on top
-	of whatever the structured filters already narrowed down to:
-	1. FULLTEXT relevance search (partner_fts index) — real ranking, good for
-	   multi-word queries, but MySQL won't match very short terms.
-	2. Fuzzy scoring (Python) over whatever FULLTEXT missed — catches typos and
-	   short terms. Only pays its cost on the (small) leftover candidate set.
-
-	`sort`, when given, overrides both the default rating-desc ordering and
-	search relevance ranking — an explicit sort choice should win over either.
-
-	`max_response_time` filters on the average-response-time field
-	(response_time_hours) — "I want partners who typically respond within X
-	hours".
-
-	`extra_filters` is a JSON list of [fieldname, operator, value] triples from
-	the CRM-style Filter component (frappe-ui's meta-driven field/operator/value
-	picker) — validated against Partner's own meta before being appended, so a
-	malformed/garbage fieldname or operator is dropped rather than passed through.
-	"""
+	"""Searches partners for the Find Partners page, combining structured filters with full-text and fuzzy search."""
 	# TEMPORARY: only surface the original curated (fully-profiled) partners
 	# while the rest of the bulk-imported directory is still bare (name/tier/
 	# country only, no logo/description/team). Remove this filter to bring the
@@ -561,10 +502,7 @@ REQUIREMENT_MIGRATION_TAGS = {"SAP Migration", "Data Migration"}
 
 @frappe.whitelist(allow_guest=True)
 def count_matching_partners(answers=None):
-	"""Live "partners that match so far" count for the finder wizard's dot-grid,
-	recomputed cumulatively after every answer. Filters combine as AND, narrowing
-	as more (mappable) answers come in — only questions with a real mapping to
-	Partner data affect the count."""
+	"""Returns a live count of partners matching the finder wizard's answers so far, for the wizard's dot-grid."""
 	if isinstance(answers, str):
 		answers = json.loads(answers or "{}")
 	answers = answers or {}
@@ -606,21 +544,7 @@ def count_matching_partners(answers=None):
 
 
 def _score_partners_by_requirements(answers):
-	"""Shared scoring for the finder wizard: every is_featured partner scored by
-	how many of the wizard's answered questions they fail to satisfy. Covers
-	every question with a real, defensible signal in the Partner schema
-	(industry, apps, delivery mode, looking_for, current situation, additional
-	requirements); company size/timeline/budget are deliberately left out, same
-	as count_matching_partners above, since they have no clean Partner-data
-	equivalent to guess at. Returns the full, unfiltered
-	[(missing_count, -rating, name, missing_labels)] list sorted best-first —
-	callers decide their own cutoff:
-	- wizard_match_state counts only missing_count == 0 (an exact match),
-	  which is the same thing the results page's own "N Partners Match Your
-	  Requirements" header counts, so the two numbers agree by construction.
-	- list_matching_partners keeps a wider pool (0 misses, plus near-misses)
-	  so the "explore partners missing a few requirements" section always has
-	  something to show, even when nobody's a perfect match."""
+	"""Scores every featured partner by how many of the wizard's answered questions they fail to match, shared by wizard_match_state and list_matching_partners."""
 	names = [n.name for n in frappe.get_list(
 		"Partner", filters=[["Partner", "is_featured", "=", 1]], fields=["name"], limit_page_length=0,
 	)]
@@ -702,10 +626,7 @@ def _score_partners_by_requirements(answers):
 
 @frappe.whitelist(allow_guest=True)
 def wizard_match_state(answers=None):
-	"""Live per-partner matched state for the finder wizard's dot pictogram —
-	counts exact matches only (missing_count == 0), the same thing the results
-	page's own "N Partners Match Your Requirements" header counts, so the two
-	numbers always agree without needing a separate threshold to keep in sync."""
+	"""Returns exact-match partner names and count for the finder wizard's dot pictogram."""
 	if isinstance(answers, str):
 		answers = json.loads(answers or "{}")
 	answers = answers or {}
@@ -718,21 +639,7 @@ def wizard_match_state(answers=None):
 
 @frappe.whitelist(allow_guest=True)
 def list_matching_partners(answers=None, limit=8):
-	"""Ranked partner results for the finder wizard's final step. Same scoring
-	as wizard_match_state (see _score_partners_by_requirements), returning full
-	rows (same shape as search_partners) instead of just names.
-
-	Full matches (0 missed) come first; partners missing a requirement are
-	included after with `missing_label` naming exactly what they're short on,
-	so a strong-but-imperfect match doesn't just disappear — capped at missing
-	roughly a third of what was actually answered (never let that cap empty the
-	results outright: if nobody clears it, e.g. an industry with no featured
-	partner at all, fall back to whoever comes closest instead of showing
-	nothing). The cap scales with how much was answered rather than sitting at
-	a flat "missing <= 2" — with only 2-3 questions answered (a wizard reopen
-	commonly prefills a sparse answer set), a flat cap of 2 let nearly the
-	entire featured pool through as a "near match", which just looks like a
-	vague, unfiltered list rather than an actual ranking."""
+	"""Returns ranked partner results for the finder wizard's final step, including close-but-imperfect matches."""
 	if isinstance(answers, str):
 		answers = json.loads(answers or "{}")
 	answers = answers or {}
@@ -784,11 +691,7 @@ def list_matching_partners(answers=None, limit=8):
 
 @frappe.whitelist(allow_guest=True)
 def list_partner_countries():
-	"""Distinct countries with at least one Partner, for the Country filter dropdown.
-
-	Document List resources can't express DISTINCT, so this is a small API
-	Resource instead — mirrors search_partners in spirit.
-	"""
+	"""Returns distinct countries with at least one partner, for the Country filter dropdown."""
 	rows = frappe.get_all(
 		"Partner", fields=["country"], filters={"country": ["is", "set"], "is_featured": 1}, distinct=True
 	)
@@ -797,13 +700,7 @@ def list_partner_countries():
 
 @frappe.whitelist(allow_guest=True)
 def list_partner_filter_options():
-	"""Option lists for the Find Partners filter panel's Business Process /
-	Implementation Type / Language dropdowns, plus the finder wizard's Apps
-	question. Studio's "Document List" resource type calls frappe.client.get_list
-	under the hood, which isn't guest-whitelisted regardless of the target
-	doctype's own Guest permission — so those dropdowns silently returned
-	nothing for guest visitors. This is a small API Resource instead, same fix
-	as list_partner_countries above."""
+	"""Returns filter dropdown options as a plain API call, since Studio's Document List resource isn't guest-accessible."""
 	return {
 		"business_processes": frappe.get_all("Business Process", pluck="title", order_by="title"),
 		"implementation_types": frappe.get_all("Implementation Type", pluck="title", order_by="title"),
@@ -831,8 +728,7 @@ def get_my_customer():
 
 @frappe.whitelist(allow_guest=True)
 def get_my_shortlisted_partner_names():
-	"""Lightweight list of shortlisted partner names for the current user's company —
-	used to mark bookmark state on Find Partners without re-fetching full partner rows."""
+	"""Returns the current user's shortlisted partner names, to mark bookmark state without refetching full partner data."""
 	customer = _get_customer_for_user()
 	if not customer:
 		return []
@@ -848,7 +744,7 @@ def add_to_shortlist(partner):
 		frappe.get_doc({"doctype": "Shortlist", "customer": customer, "partner": partner}).insert(
 			ignore_permissions=True
 		)
-		return {"shortlisted": True}
+	return {"shortlisted": True}
 
 
 @frappe.whitelist()
@@ -859,7 +755,7 @@ def remove_from_shortlist(partner):
 	existing = frappe.db.get_value("Shortlist", {"customer": customer, "partner": partner})
 	if existing:
 		frappe.delete_doc("Shortlist", existing, ignore_permissions=True)
-		return {"shortlisted": False}
+	return {"shortlisted": False}
 
 
 @frappe.whitelist()
@@ -914,11 +810,7 @@ def save_customer_requirement(
 	looking_for=None, company_size=None, current_situation=None, timeline=None, delivery_preference=None, budget=None,
 	special_requirements=None, additional_notes=None, outcome=None,
 ):
-	"""Create or update the current user's company's one Requirement — company_name/
-	country/industry/apps are the 4 primary questions; everything else comes from
-	the bundled, optional "Additional Requirements" step. Upserts by customer, so
-	both the Find My Match wizard and the Settings "Edit Requirements" form share
-	a single canonical requirement that either flow can fill in or update."""
+	"""Creates or updates the caller's one Requirement, so the wizard and the Settings form share a single saved record."""
 	customer = _get_customer_for_user()
 	if not customer:
 		frappe.throw("Your account isn't linked to a customer company yet.", frappe.PermissionError)
@@ -958,9 +850,7 @@ def save_customer_requirement(
 
 @frappe.whitelist(allow_guest=True)
 def get_my_requirement():
-	"""The current user's company's saved requirement, for prefilling the Settings
-	"Edit Requirements" form — None if they haven't saved one yet (add mode), and
-	for a logged-out visitor (same as no customer link)."""
+	"""Returns the caller's saved Requirement to prefill the Settings "Edit Requirements" form."""
 	customer = _get_customer_for_user()
 	if not customer:
 		return None
@@ -987,9 +877,7 @@ def get_my_requirement():
 
 @frappe.whitelist(allow_guest=True)
 def get_partner_preview(partner):
-	"""Lightweight partner snapshot for the Find Partners list view's quick-preview
-	side drawer — just enough to decide whether to open the full profile. Fetched
-	on demand per click rather than bloating every row of search_partners."""
+	"""Returns a lightweight partner snapshot for the quick-preview drawer, fetched only when needed."""
 	fields = [
 		"name", "partner_name", "logo", "description", "tier", "specialist",
 		"rating", "reviews_count", "city", "country", "pmm_level", "hourly_rate",
@@ -1008,11 +896,7 @@ def get_partner_preview(partner):
 
 @frappe.whitelist(allow_guest=True)
 def get_partner_document(partner):
-	"""Full Partner record for the Partner Profile page. Studio's "Document" resource
-	type calls frappe.client.get, which isn't guest-whitelisted regardless of the target
-	doctype's own Guest permission — same fix as list_partner_filter_options. Returns
-	everything a logged-in visitor already sees on this page; nothing here is any more
-	sensitive than what search_partners/get_partner_preview already expose to guests."""
+	"""Returns the full Partner record as a plain API call, since Studio's Document resource isn't guest-accessible."""
 	if not frappe.db.exists("Partner", partner):
 		frappe.throw(_("Partner not found"), frappe.DoesNotExistError)
 	return frappe.get_doc("Partner", partner).as_dict()
@@ -1020,9 +904,7 @@ def get_partner_document(partner):
 
 @frappe.whitelist(allow_guest=True)
 def list_partner_reviews(partner):
-	"""Reviews tab on Partner Profile. Studio's "Document List" resource type calls
-	frappe.client.get_list under the hood, which isn't guest-whitelisted regardless of
-	the target doctype's own Guest permission — same fix as list_partner_filter_options."""
+	"""Returns a partner's reviews as a plain API call, since Studio's Document List resource isn't guest-accessible."""
 	return frappe.get_all(
 		"Partner Review",
 		filters={"partner": partner},
@@ -1048,28 +930,7 @@ def _pack_is_primary_match(pack_key, has_erpnext, has_hr):
 
 @frappe.whitelist(allow_guest=True)
 def get_pricing_view(partner, requirement=None):
-	"""Drives the Partner Profile Pricing tab. Guest-safe like the rest of the
-	profile page — a logged-out visitor or one with no saved Requirement simply
-	lands on "no_requirement", same honest fallback either way.
-
-	Every partner gets an hourly-rate add-on breakdown regardless of whether they
-	offer starter packs — `addon_rate` is the fixed ₹2,000/hr pack-derived rate
-	for starter-pack partners (has to match their own pack price-per-hour
-	exactly), or the partner's own disclosed/estimated hourly_rate otherwise.
-	Packaged pricing (`state: "eligible"`) additionally requires starter_pack AND
-	a requirement that wants ERPNext or Frappe HR.
-
-	`requirement` is optional and normally left unset: the caller's own most
-	recent Requirement (via Customer Team Member) is resolved automatically, so
-	the frontend doesn't need to track a requirement id of its own. Passing one
-	explicitly overrides that lookup.
-
-	`partner` can arrive as the literal string "undefined" — the Pricing tab's
-	resource fires as soon as the page mounts, which can race the route param
-	it reads `partner` from. Treat that (and any other unresolved partner) as
-	"nothing to show yet" rather than raising, so a client-side timing hiccup
-	doesn't surface a fatal DoesNotExistError in the console.
-	"""
+	"""Returns pricing info for the Partner Profile Pricing tab, based on the partner's plans and the caller's saved requirement."""
 	if not partner or partner == "undefined" or not frappe.db.exists("Partner", partner):
 		return {"state": "loading"}
 
@@ -1122,12 +983,7 @@ def get_pricing_view(partner, requirement=None):
 
 @frappe.whitelist()
 def save_price_estimate(partner, selected_addons, total, requirement=None, pack_type=None):
-	"""Record a customer's starter-pack estimate (pack + selected add-ons) at the
-	moment they choose to contact the partner about it, so the partner sees
-	exactly what was being estimated rather than a blind inquiry. requirement/
-	pack_type are optional — the no_requirement and mismatch pricing states have
-	no eligible pack, only an hourly-rate add-on estimate, so base_price is 0 and
-	pack_type stays blank for those."""
+	"""Saves a customer's price estimate (pack plus add-ons) at the moment they contact the partner about it."""
 	customer = _get_customer_for_user()
 	if not customer:
 		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
@@ -1155,8 +1011,7 @@ def save_price_estimate(partner, selected_addons, total, requirement=None, pack_
 
 @frappe.whitelist()
 def get_my_review_for_partner(partner):
-	"""The current user's own review of this partner, if they've already left one —
-	lets the "Write a Review" form load as an edit instead of a blank form."""
+	"""Returns the caller's own review of a partner, if one exists, so the review form opens pre-filled."""
 	customer = _get_customer_for_user()
 	if not customer:
 		return None
@@ -1170,9 +1025,7 @@ def submit_partner_review(
 	business_understanding=None, implementation_quality=None, communication=None,
 	timeliness=None, support=None, technical_expertise=None,
 ):
-	"""Create or update the current customer's review of a partner. Partner.rating,
-	reviews_count, and the dimension scores are recomputed by Partner Review's own
-	after_insert/on_update hook, not here."""
+	"""Creates or updates the caller's review of a partner."""
 	customer = _get_customer_for_user()
 	if not customer:
 		frappe.throw("Your account isn't linked to a customer company yet.", frappe.PermissionError)

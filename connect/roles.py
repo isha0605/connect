@@ -25,16 +25,7 @@ def _set_role(user, role, should_have):
 
 
 def grant_company_role(doc, method=None):
-	"""Fires on Customer Team Member creation (and the still-live legacy Connect Partner
-	Member doctype) — real company membership: roster visibility,
-	admin-transfer eligibility, and thread-creation permission all still read this table
-	directly (see connect.permissions), unaffected by this role. This role only
-	ever gates the messaging doctypes.
-
-	Note: there is no partner-side equivalent yet — Partner Team Member (the public
-	team/bio roster shown on a partner's profile) has no `user` field, so partner login
-	accounts still need their Connect Partner role granted manually until a real
-	partner-membership doctype exists."""
+	"""Grants the messaging role tied to a real company membership row."""
 	_set_role(doc.user, _COMPANY_ROLE_BY_DOCTYPE[doc.doctype], True)
 
 
@@ -43,17 +34,12 @@ def revoke_company_role(doc, method=None):
 
 
 def grant_thread_guest_role(doc, method=None):
-	"""Fires on Connect Thread Member creation. A person added to a thread without being a
-	real company member (e.g. a sales rep only there to chat) gets messaging access only —
-	no roster visibility, no admin eligibility, no thread-creation permission. Deliberately
-	a separate role from Connect Customer/Partner so the two populations never get
-	conflated, even though both roles currently unlock the same four doctypes."""
+	"""Grants messaging-only access to someone added to a thread without a real company membership."""
 	_set_role(doc.user, _GUEST_ROLE_BY_SIDE[doc.side], True)
 
 
 def revoke_thread_guest_role(doc, method=None):
-	"""Only strip the guest role if this was the user's last thread on that side — they
-	may still be an active member of other threads."""
+	"""Revokes the guest role only if this was the user's last thread on that side."""
 	still_has_other_thread = frappe.db.exists(
 		"Connect Thread Member",
 		{"user": doc.user, "side": doc.side, "name": ["!=", doc.name]},
