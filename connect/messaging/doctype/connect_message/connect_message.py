@@ -6,7 +6,6 @@ from frappe import _
 from frappe.model.document import Document
 
 from connect.notifications import notify_message_deleted, notify_message_edited
-from connect.permissions import _check_can_modify_message
 
 
 class ConnectMessage(Document):
@@ -17,9 +16,7 @@ class ConnectMessage(Document):
 			self._validate_edit()
 
 	def _validate_edit(self):
-		"""Restricts edits to your own text messages; files, images, and system messages can't be edited."""
-		user = frappe.session.user
-		_check_can_modify_message(self.thread, self.sender, user, _("You can only edit your own messages"))
+		"""Restricts edits to text messages; ownership itself is enforced by has_message_permission."""
 		if self.message_type != "Text":
 			frappe.throw(_("Only text messages can be edited"))
 
@@ -37,13 +34,10 @@ class ConnectMessage(Document):
 			notify_message_edited(self)
 
 	def on_trash(self):
-		"""Deletes a message for everyone, restricted to the sender's own messages like other chat apps."""
-		user = frappe.session.user
-		_check_can_modify_message(self.thread, self.sender, user, _("You can only delete your own messages"))
-
+		"""Deletes a message for everyone; ownership itself is enforced by has_message_permission."""
 		if self.attachment:
 			file_name = frappe.db.get_value("File", {"file_url": self.attachment}, "name")
 			if file_name:
-				frappe.delete_doc("File", file_name, ignore_permissions=True)
+				frappe.delete_doc("File", file_name)
 
 		notify_message_deleted(self)

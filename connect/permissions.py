@@ -76,17 +76,6 @@ def _check_can_read(thread, user):
 		frappe.throw(_("You don't have access to this thread"), frappe.PermissionError)
 
 
-def _check_can_modify_message(thread, sender, user, error_message):
-	from frappe import _
-
-	if sender != user and not _has_full_access(user):
-		frappe.throw(error_message, frappe.PermissionError)
-	if not _has_full_access(user):
-		membership = _thread_membership(thread, user)
-		if not membership or membership.is_removed:
-			frappe.throw(_("You no longer have access to this thread"), frappe.PermissionError)
-
-
 def _dm_thread_pair_or_none(thread, user):
 	pair = frappe.db.get_value("Connect DM Thread", thread, ["user_a", "user_b"], as_dict=True)
 	if not pair or user not in (pair.user_a, pair.user_b):
@@ -101,12 +90,6 @@ def _dm_thread_pair(thread, user):
 	if not pair:
 		frappe.throw(_("You don't have access to this conversation"), frappe.PermissionError)
 	return pair
-
-
-def _check_can_modify_dm_message(dm_thread, sender, user, error_message):
-	_dm_thread_pair(dm_thread, user)
-	if sender != user:
-		frappe.throw(error_message, frappe.PermissionError)
 
 
 def has_thread_permission(doc, ptype="read", user=None, **kwargs):
@@ -160,14 +143,15 @@ def has_message_permission(doc, ptype="read", user=None, **kwargs):
 	if ptype in ("write", "create", "delete", "submit", "cancel"):
 		if membership.is_removed or membership.permission != "Write":
 			return False
-		if ptype == "create":
-			# Beyond thread membership, a message you're creating must actually be
-			# *yours* — api.send_message always sets sender=session user, but that's
-			# just app-layer convention; without this, the raw doctype API (create=1
-			# is granted to every Connect Customer/Partner role) would let any Write
-			# member insert a message with someone else's email as sender, or with
-			# message_type="System" to forge an authoritative-looking system notice.
-			if doc.get("sender") != user or doc.get("message_type") == "System":
+		if ptype in ("write", "create", "delete"):
+			# Beyond thread membership, editing/deleting/creating a message requires it
+			# be *yours* — api.send_message/edit_message/delete_message all operate as
+			# the session user, but that's just app-layer convention; without this, the
+			# raw doctype API (create/write/delete=1 is granted to every Connect
+			# Customer/Partner role) would let any Write member touch anyone's message.
+			if doc.get("sender") != user:
+				return False
+			if ptype == "create" and doc.get("message_type") == "System":
 				return False
 		return True
 

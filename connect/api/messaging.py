@@ -389,16 +389,16 @@ def send_message(
 
 @frappe.whitelist()
 def delete_message(message):
-	"""Deletes a message for everyone; authorization and cleanup live in Connect Message's on_trash()."""
-	frappe.delete_doc("Connect Message", message, ignore_permissions=True)
+	"""Deletes a message for everyone; authorization and cleanup live in has_message_permission and Connect Message's on_trash()."""
+	frappe.delete_doc("Connect Message", message)
 
 
 @frappe.whitelist()
 def edit_message(message, content):
-	"""Edits your own text message in place; authorization and validation live in Connect Message's validate()."""
+	"""Edits your own text message in place; authorization and validation live in has_message_permission and Connect Message's validate()."""
 	doc = frappe.get_doc("Connect Message", message)
 	doc.content = content
-	doc.save(ignore_permissions=True)
+	doc.save()
 	return doc.as_dict()
 
 
@@ -592,16 +592,16 @@ def send_dm_message(thread, content="", file_url=None, file_name=None, file_type
 
 @frappe.whitelist()
 def delete_dm_message(message):
-	"""Deletes a DM for everyone; authorization and cleanup live in Connect DM Message's on_trash()."""
-	frappe.delete_doc("Connect DM Message", message, ignore_permissions=True)
+	"""Deletes a DM for everyone; authorization and cleanup live in has_dm_message_permission and Connect DM Message's on_trash()."""
+	frappe.delete_doc("Connect DM Message", message)
 
 
 @frappe.whitelist()
 def edit_dm_message(message, content):
-	"""Edits your own DM in place; authorization and validation live in Connect DM Message's validate()."""
+	"""Edits your own DM in place; authorization and validation live in has_dm_message_permission and Connect DM Message's validate()."""
 	doc = frappe.get_doc("Connect DM Message", message)
 	doc.content = content
-	doc.save(ignore_permissions=True)
+	doc.save()
 	return doc.as_dict()
 
 
