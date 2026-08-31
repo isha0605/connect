@@ -34,34 +34,27 @@ def get_my_dm_threads():
 	threads = frappe.get_list(
 		"Connect DM Thread",
 		or_filters=[["user_a", "=", user], ["user_b", "=", user]],
-		fields=["name", "user_a", "user_b", "last_read_at_a", "last_read_at_b", "creation"],
-		order_by="modified desc",
+		fields=[
+			"name", "user_a", "user_b", "last_read_at_a", "last_read_at_b", "creation",
+			"last_message_at", "last_message_preview", "last_message_sender",
+		],
+		order_by="last_message_at desc, creation desc",
 		limit_page_length=100,
 	)
+	if not threads:
+		return []
+
+	others = list({(t.user_b if t.user_a == user else t.user_a) for t in threads})
+	profiles = {
+		p.name: p
+		for p in frappe.get_all("User", filters={"name": ["in", others]}, fields=["name", "full_name", "user_image"])
+	}
 
 	result = []
 	for t in threads:
 		other = t.user_b if t.user_a == user else t.user_a
 		last_read_at = t.last_read_at_a if t.user_a == user else t.last_read_at_b
-		profile = frappe.db.get_value("User", other, ["full_name", "user_image"], as_dict=True) or {}
-
-		last = frappe.get_list(
-			"Connect DM Message",
-			filters={"dm_thread": t.name},
-			fields=["content", "message_type", "file_name", "sender", "creation"],
-			order_by="creation desc",
-			limit_page_length=1,
-		)
-		if last:
-			m = last[0]
-			preview = ("📎 " + (m.file_name or _("Attachment"))) if m.message_type == "File" else (m.content or "")
-			last_message = preview[:140]
-			last_message_at = m.creation
-			last_message_sender = m.sender
-		else:
-			last_message = ""
-			last_message_at = t.creation
-			last_message_sender = None
+		profile = profiles.get(other, {})
 
 		unread_filters = {"dm_thread": t.name, "sender": ["!=", user]}
 		if last_read_at:
@@ -73,9 +66,9 @@ def get_my_dm_threads():
 			"other_user": other,
 			"other_user_full_name": profile.get("full_name"),
 			"other_user_image": profile.get("user_image"),
-			"last_message": last_message,
-			"last_message_at": last_message_at,
-			"last_message_sender": last_message_sender,
+			"last_message": t.last_message_preview or "",
+			"last_message_at": t.last_message_at or t.creation,
+			"last_message_sender": t.last_message_sender,
 			"unread_count": unread_count,
 		})
 	return result
@@ -121,9 +114,6 @@ def send_dm_message(thread, content="", file_url=None, file_name=None, file_type
 	if file_doc_name:
 		_attach_file_to_message(file_doc_name, "Connect DM Message", doc.name)
 
-	# bumps the thread to the top of get_my_dm_threads' order_by=modified desc — a plain
-	# message insert doesn't touch its parent thread's own timestamp on its own
-	frappe.db.set_value("Connect DM Thread", thread, "modified", now_datetime(), update_modified=False)
 	return doc.as_dict()
 
 

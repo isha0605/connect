@@ -1,4 +1,5 @@
 import frappe
+from frappe import _
 from frappe.desk.doctype.notification_log.notification_log import enqueue_create_notification
 
 
@@ -9,6 +10,94 @@ def _notification_targets(doc):
 		filters={"thread": doc.thread, "is_removed": 0, "user": ["!=", doc.sender]},
 		pluck="user",
 	)
+
+
+def _message_preview_text(message):
+	"""The sidebar preview string for a message (dict or doc) — same 140-char truncation and
+	per-type formatting get_my_threads/get_my_dm_threads used to compute inline on every read."""
+	if message.get("message_type") == "File":
+		text = "📎 " + (message.get("file_name") or _("Attachment"))
+	elif message.get("message_type") == "Requirement":
+		text = _("Requirement details")
+	else:
+		text = message.get("content") or ""
+	return text[:140]
+
+
+def _set_thread_last_message(thread_doctype, thread_name, message=None):
+	"""Writes (or clears, if message is None) the denormalized last_message* fields on a thread —
+	the single source get_my_threads/get_my_dm_threads read from instead of looking up the actual
+	latest message on every sidebar load."""
+	values = (
+		{
+			"last_message": message["name"],
+			"last_message_at": message["creation"],
+			"last_message_preview": _message_preview_text(message),
+			"last_message_sender": message["sender"],
+		}
+		if message
+		else {"last_message": None, "last_message_at": None, "last_message_preview": None, "last_message_sender": None}
+	)
+	frappe.db.set_value(thread_doctype, thread_name, values, update_modified=False)
+
+
+def _recompute_thread_last_message(thread_doctype, message_doctype, thread_name, thread_field, exclude=None):
+	"""Re-derives a thread's cached last message from the DB — used when the message that was
+	cached gets deleted, so the cache falls back to whatever's now the true latest (or clears if
+	the thread has no messages left)."""
+	filters = {thread_field: thread_name}
+	if exclude:
+		filters["name"] = ["!=", exclude]
+	rows = frappe.get_all(
+		message_doctype,
+		filters=filters,
+		fields=["name", "creation", "sender", "message_type", "content", "file_name"],
+		order_by="creation desc",
+		limit_page_length=1,
+	)
+	_set_thread_last_message(thread_doctype, thread_name, rows[0] if rows else None)
+
+
+def sync_thread_last_message(doc, method=None):
+	"""after_insert on Connect Message: a new message is unambiguously the thread's latest, so
+	this writes straight from the doc with no extra query."""
+	_set_thread_last_message("Connect Thread", doc.thread, doc.as_dict())
+
+
+def sync_dm_thread_last_message(doc, method=None):
+	"""after_insert on Connect DM Message — DM counterpart to sync_thread_last_message. Also
+	replaces the old ad-hoc `frappe.db.set_value(..., "modified", ...)` call that used to live in
+	send_dm_message just to bump the DM inbox's sort order."""
+	_set_thread_last_message("Connect DM Thread", doc.dm_thread, doc.as_dict())
+
+
+def resync_thread_last_message_on_edit(doc):
+	"""Called from Connect Message's on_update, only when the message was actually edited (see
+	its _was_edited flag) — refreshes the cached preview if this message is still the thread's
+	last one. A no-op otherwise: editing an older message doesn't change what the sidebar shows."""
+	if frappe.db.get_value("Connect Thread", doc.thread, "last_message") == doc.name:
+		_set_thread_last_message("Connect Thread", doc.thread, doc.as_dict())
+
+
+def resync_dm_thread_last_message_on_edit(doc):
+	"""DM counterpart to resync_thread_last_message_on_edit."""
+	if frappe.db.get_value("Connect DM Thread", doc.dm_thread, "last_message") == doc.name:
+		_set_thread_last_message("Connect DM Thread", doc.dm_thread, doc.as_dict())
+
+
+def resync_thread_last_message_on_trash(doc):
+	"""Called from Connect Message's on_trash, before the row is actually removed — if this
+	message is the thread's cached last one, recomputes from whatever's left."""
+	if frappe.db.get_value("Connect Thread", doc.thread, "last_message") == doc.name:
+		_recompute_thread_last_message("Connect Thread", "Connect Message", doc.thread, "thread", exclude=doc.name)
+
+
+def resync_dm_thread_last_message_on_trash(doc):
+	"""DM counterpart to resync_thread_last_message_on_trash."""
+	if frappe.db.get_value("Connect DM Thread", doc.dm_thread, "last_message") == doc.name:
+		_recompute_thread_last_message(
+			"Connect DM Thread", "Connect DM Message", doc.dm_thread, "dm_thread", exclude=doc.name
+		)
 
 
 def notify_thread_members(doc, method=None):

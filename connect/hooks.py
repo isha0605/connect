@@ -183,10 +183,16 @@ fixtures = [
 
 doc_events = {
 	"Connect Message": {
-		"after_insert": "connect.notifications.notify_thread_members",
+		"after_insert": [
+			"connect.notifications.notify_thread_members",
+			"connect.notifications.sync_thread_last_message",
+		],
 	},
 	"Connect DM Message": {
-		"after_insert": "connect.notifications.notify_dm_recipient",
+		"after_insert": [
+			"connect.notifications.notify_dm_recipient",
+			"connect.notifications.sync_dm_thread_last_message",
+		],
 	},
 	"Connect Partner Member": {
 		"after_insert": "connect.roles.grant_company_role",

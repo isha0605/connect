@@ -10,7 +10,11 @@
   "user_b",
   "last_read_at_a",
   "last_read_at_b",
-  "pinned_message"
+  "pinned_message",
+  "last_message",
+  "last_message_at",
+  "last_message_preview",
+  "last_message_sender"
  ],
  "fields": [
   {
@@ -46,6 +50,29 @@
    "fieldtype": "Link",
    "label": "Pinned Message",
    "options": "Connect DM Message"
+  },
+  {
+   "description": "Denormalized from the thread's actual latest Connect DM Message, kept in sync by doc_events on insert/edit/delete — see connect.notifications. Lets the DM inbox list (get_my_dm_threads) render without a per-thread lookup.",
+   "fieldname": "last_message",
+   "fieldtype": "Link",
+   "label": "Last Message",
+   "options": "Connect DM Message"
+  },
+  {
+   "fieldname": "last_message_at",
+   "fieldtype": "Datetime",
+   "label": "Last Message At"
+  },
+  {
+   "fieldname": "last_message_preview",
+   "fieldtype": "Data",
+   "label": "Last Message Preview"
+  },
+  {
+   "fieldname": "last_message_sender",
+   "fieldtype": "Link",
+   "label": "Last Message Sender",
+   "options": "User"
   }
  ],
  "index_web_pages_for_search": 1,

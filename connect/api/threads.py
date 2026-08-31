@@ -82,50 +82,35 @@ def get_my_threads():
 	user = frappe.session.user
 	threads = frappe.get_list(
 		"Connect Thread",
-		fields=["name", "customer", "partner", "status", "creation"],
-		order_by="modified desc",
+		fields=[
+			"name", "customer", "partner", "status", "creation",
+			"last_message_at", "last_message_preview", "last_message_sender",
+		],
+		order_by="last_message_at desc, creation desc",
 		limit_page_length=100,
 	)
+	if not threads:
+		return []
+
+	memberships = {
+		m.thread: m
+		for m in frappe.get_all(
+			"Connect Thread Member",
+			filters={"thread": ["in", [t.name for t in threads]], "user": user},
+			fields=["thread", "last_read_at", "is_removed", "removed_on"],
+		)
+	}
 
 	result = []
 	for t in threads:
-		membership = frappe.db.get_value(
-			"Connect Thread Member",
-			{"thread": t.name, "user": user},
-			["last_read_at", "is_removed", "removed_on"],
-			as_dict=True,
-		) or {}
+		membership = memberships.get(t.name, {})
 
-		message_filters = [["thread", "=", t.name]]
+		message_filters = [["thread", "=", t.name], ["sender", "!=", user]]
 		if membership.get("is_removed") and membership.get("removed_on"):
 			message_filters.append(["creation", "<=", membership["removed_on"]])
-
-		last = frappe.get_list(
-			"Connect Message",
-			filters=message_filters,
-			fields=["content", "message_type", "file_name", "creation", "sender"],
-			order_by="creation desc",
-			limit_page_length=1,
-		)
-		if last:
-			m = last[0]
-			if m.message_type == "File":
-				preview = "📎 " + (m.file_name or _("Attachment"))
-			elif m.message_type == "Requirement":
-				preview = _("Requirement details")
-			else:
-				preview = m.content or ""
-			last_message_at = m.creation
-			last_message_sender = m.sender
-		else:
-			preview = ""
-			last_message_at = t.creation
-			last_message_sender = None
-
-		unread_filters = message_filters + [["sender", "!=", user]]
 		if membership.get("last_read_at"):
-			unread_filters.append(["creation", ">", membership["last_read_at"]])
-		unread_count = frappe.db.count("Connect Message", filters=unread_filters)
+			message_filters.append(["creation", ">", membership["last_read_at"]])
+		unread_count = frappe.db.count("Connect Message", filters=message_filters)
 
 		result.append({
 			"name": t.name,
@@ -133,9 +118,9 @@ def get_my_threads():
 			"partner": t.partner,
 			"status": t.status,
 			"creation": t.creation,
-			"last_message": preview[:140],
-			"last_message_at": last_message_at,
-			"last_message_sender": last_message_sender,
+			"last_message": t.last_message_preview or "",
+			"last_message_at": t.last_message_at or t.creation,
+			"last_message_sender": t.last_message_sender,
 			"unread_count": unread_count,
 		})
 

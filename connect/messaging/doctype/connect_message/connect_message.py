@@ -5,7 +5,12 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
-from connect.notifications import notify_message_deleted, notify_message_edited
+from connect.notifications import (
+	notify_message_deleted,
+	notify_message_edited,
+	resync_thread_last_message_on_edit,
+	resync_thread_last_message_on_trash,
+)
 
 
 class ConnectMessage(Document):
@@ -32,6 +37,7 @@ class ConnectMessage(Document):
 	def on_update(self):
 		if self.flags.get("_was_edited"):
 			notify_message_edited(self)
+			resync_thread_last_message_on_edit(self)
 
 	def on_trash(self):
 		"""Deletes a message for everyone; ownership itself is enforced by has_message_permission."""
@@ -41,3 +47,4 @@ class ConnectMessage(Document):
 				frappe.delete_doc("File", file_name)
 
 		notify_message_deleted(self)
+		resync_thread_last_message_on_trash(self)
