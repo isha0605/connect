@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime
 
-from connect.api import _get_customer_for_user
+from connect.api import _get_customer_for_user, _latest_requirement_for_customer
 from connect.permissions import _check_can_read, _get_partner_admin
 
 
@@ -38,16 +38,14 @@ def get_requirement_snapshot():
 	if not customer:
 		return None
 
-	requirement = frappe.db.get_value("Requirement", {"customer": customer}, "name", order_by="creation desc")
-	if not requirement:
+	req = _latest_requirement_for_customer(customer)
+	if not req:
 		return None
-
-	req = frappe.get_doc("Requirement", requirement)
 	return {
 		"company_name": req.company_name,
 		"country": req.country,
 		"industry": req.industry,
-		"apps": [a.app for a in req.apps],
+		"apps": req.apps,
 		"looking_for": req.looking_for,
 		"company_size": req.company_size,
 		"current_situation": req.current_situation,

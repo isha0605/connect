@@ -5,7 +5,7 @@ import os
 
 import frappe
 from frappe import _
-from frappe.utils import cint, flt, get_fullname, nowdate, validate_email_address
+from frappe.utils import cint, flt, get_fullname, now_datetime, nowdate, validate_email_address
 from pypika.functions import DistinctOptionFunction
 from pypika.utils import builder
 
@@ -35,17 +35,22 @@ def get_my_team():
 
 	fieldname = "customer" if doctype == "Customer Team Member" else "partner"
 	role_field = "designation" if doctype == "Customer Team Member" else "role"
-	rows = frappe.get_all(
-		doctype,
-		filters={fieldname: company},
-		fields=["name", "user", "is_admin", "is_removed", f"{role_field} as role"],
-		order_by="is_admin desc, creation asc",
+
+	Member = frappe.qb.DocType(doctype)
+	UserTable = frappe.qb.DocType("User")
+	return (
+		frappe.qb.from_(Member)
+		.left_join(UserTable)
+		.on(Member.user == UserTable.name)
+		.select(
+			Member.name, Member.user, Member.is_admin, Member.is_removed,
+			Member[role_field].as_("role"), UserTable.full_name, UserTable.user_image,
+		)
+		.where(Member[fieldname] == company)
+		.orderby(Member.is_admin, order=frappe.qb.desc)
+		.orderby(Member.creation, order=frappe.qb.asc)
+		.run(as_dict=True)
 	)
-	for row in rows:
-		profile = frappe.db.get_value("User", row.user, ["full_name", "user_image"], as_dict=True) or {}
-		row["full_name"] = profile.get("full_name")
-		row["user_image"] = profile.get("user_image")
-	return rows
 
 
 @frappe.whitelist()
@@ -115,14 +120,23 @@ def add_team_member(email, role=None, password=None):
 def get_my_profile():
 	"""Returns the caller's own name, photo, and contact details for the sidebar avatar and Settings Profile section."""
 	user = frappe.session.user
-	profile = frappe.db.get_value("User", user, ["full_name", "user_image", "phone"], as_dict=True) or {}
-	role = frappe.db.get_value("Connect Partner Member", {"user": user}, "role")
+	UserTable = frappe.qb.DocType("User")
+	PartnerMember = frappe.qb.DocType("Connect Partner Member")
+	rows = (
+		frappe.qb.from_(UserTable)
+		.left_join(PartnerMember)
+		.on(PartnerMember.user == UserTable.name)
+		.select(UserTable.full_name, UserTable.user_image, UserTable.phone, PartnerMember.role)
+		.where(UserTable.name == user)
+		.run(as_dict=True)
+	)
+	profile = rows[0] if rows else {}
 	return {
 		"email": user,
 		"full_name": profile.get("full_name"),
 		"user_image": profile.get("user_image"),
 		"phone": profile.get("phone"),
-		"role": role,
+		"role": profile.get("role"),
 	}
 
 
@@ -195,10 +209,13 @@ def get_my_context():
 	customer_membership = None
 	if customer:
 		is_admin = frappe.db.get_value("Customer Team Member", {"customer": customer, "user": user}, "is_admin")
-		customer_membership = {"customer": customer, "is_admin": cint(is_admin)}
+		customer_name = frappe.db.get_value("Customer", customer, "customer_name")
+		customer_membership = {"customer": customer, "customer_name": customer_name, "is_admin": cint(is_admin)}
 	partner_membership = frappe.db.get_value(
 		"Connect Partner Member", {"user": user}, ["partner", "is_admin"], as_dict=True
 	)
+	if partner_membership:
+		partner_membership["partner_name"] = frappe.db.get_value("Partner", partner_membership.partner, "partner_name")
 	return {
 		"user": user,
 		"customer": customer_membership,
@@ -256,6 +273,99 @@ PARTNER_FIELDS = [
 	"response_time_hours",
 ]
 SEARCHABLE_TEXT_FIELDS = ["partner_name", "tagline", "industry", "country", "city"]
+
+# The "is this partner visible at all" gate — combined as AND with whatever
+# else a caller filters on. Callers that append more filters must copy this
+# (list(BASE_PARTNER_FILTERS)) rather than mutate it in place.
+BASE_PARTNER_FILTERS = [["Partner", "is_featured", "=", 1], ["Partner", "enabled", "=", 1]]
+
+
+def _child_values_by_partner(child_doctype, value_field, names, parentfield=None):
+	"""Every `value_field` value from `child_doctype` for each partner in `names`, in one query,
+	grouped into a dict of lists keyed by partner name (full list, in idx order — callers wanting
+	just a preview slice it themselves, e.g. apps[:2]). Always scoped to parenttype="Partner"; pass
+	`parentfield` too for a child doctype shared with another doctype's own Table field (e.g.
+	"Partner App" is also Requirement.apps) so a same-named parent from the other doctype can't
+	leak in."""
+	if not names:
+		return {}
+	filters = {"parent": ["in", names], "parenttype": "Partner"}
+	if parentfield:
+		filters["parentfield"] = parentfield
+	values_by_partner = {}
+	for r in frappe.get_all(child_doctype, filters=filters, fields=["parent", value_field], order_by="idx asc"):
+		values_by_partner.setdefault(r.parent, []).append(r.get(value_field))
+	return values_by_partner
+
+
+def _apps_by_partner(names):
+	"""Every Partner App (Partner.apps) value for each partner in `names` — see
+	_child_values_by_partner. Kept as its own name since "apps per partner" is looked up from
+	several places (search, wizard scoring, shortlist), not just the wizard scoring pass."""
+	return _child_values_by_partner("Partner App", "app", names, parentfield="apps")
+
+
+def _partners_matching_child(child_doctype, field, operator, value, parentfield=None):
+	"""Names of partners with at least one `child_doctype` row satisfying `field <operator> value`
+	— a WHERE name IN (subquery) membership check, not a join. Joining the child table directly
+	onto Partner (Frappe's own ["<Child Doctype>", field, op, value] filter syntax does exactly
+	that) multiplies a partner's row once per matching child row — combine two or more such
+	filters at once (search_partners' filter panel lets you) and a partner with 2 matching rows in
+	one child table and 3 in another comes back 6 times instead of once. A membership subquery is
+	a plain yes/no test per partner, so it can't fan out no matter how many child rows exist."""
+	ChildTable = frappe.qb.DocType(child_doctype)
+	query = (
+		frappe.qb.from_(ChildTable)
+		.select(ChildTable.parent)
+		.distinct()
+		.where(ChildTable.parenttype == "Partner")
+	)
+	if parentfield:
+		query = query.where(ChildTable.parentfield == parentfield)
+	if operator == "=":
+		query = query.where(ChildTable[field] == value)
+	elif operator == "in":
+		query = query.where(ChildTable[field].isin(value))
+	elif operator == "is_set":
+		query = query.where(ChildTable[field] != "")
+	else:
+		raise ValueError(f"Unsupported operator: {operator}")
+	return {row[0] for row in query.run()}
+
+
+def _parse_answers(answers):
+	"""Normalizes the finder wizard's `answers` payload — arrives as a JSON string over the wire
+	(a whitelisted endpoint's raw argument) but as a plain dict when one wizard function calls
+	another directly in Python."""
+	if isinstance(answers, str):
+		answers = json.loads(answers or "{}")
+	return answers or {}
+
+
+def attach_success_story_previews(rows):
+	"""Batch-attaches success_story_count/success_story_categories to each row in `rows` (each
+	needs a "name" key matching a Partner document) — one query regardless of how many rows. Used
+	everywhere a partner listing shows this preview: Find Partners search, the finder wizard's
+	results, and the customer's Shortlisted page."""
+	names = [r["name"] for r in rows]
+	if not names:
+		return rows
+	buckets = {}
+	for row in frappe.get_all(
+		"Partner Success Story",
+		filters={"parent": ["in", names], "parenttype": "Partner", "parentfield": "success_stories"},
+		fields=["parent", "category"],
+		order_by="idx asc",
+	):
+		bucket = buckets.setdefault(row.parent, {"count": 0, "categories": []})
+		bucket["count"] += 1
+		if row.category and row.category not in bucket["categories"]:
+			bucket["categories"].append(row.category)
+	for r in rows:
+		stories = buckets.get(r["name"], {"count": 0, "categories": []})
+		r["success_story_count"] = stories["count"]
+		r["success_story_categories"] = stories["categories"]
+	return rows
 
 
 class _NaturalLanguageMatch(DistinctOptionFunction):
@@ -344,25 +454,29 @@ def search_partners(
 	# while the rest of the bulk-imported directory is still bare (name/tier/
 	# country only, no logo/description/team). Remove this filter to bring the
 	# full directory back — is_featured stays set on the underlying records.
-	filters = [["Partner", "is_featured", "=", 1]]
-	if industry:
-		filters.append(["Partner", "industry", "=", industry])
-	if region:
-		filters.append(["Partner", "region", "=", region])
-	if country:
-		filters.append(["Partner", "country", "=", country])
-	if product:
-		filters.append(["Partner App", "app", "=", product])
-	if delivery_mode:
-		filters.append(["Partner Delivery Mode", "delivery_mode", "=", delivery_mode])
-	if tier:
-		filters.append(["Partner", "tier", "=", tier])
-	if business_process:
-		filters.append(["Partner Business Process", "business_process", "=", business_process])
-	if implementation_type:
-		filters.append(["Partner Implementation Type", "implementation_type", "=", implementation_type])
-	if language:
-		filters.append(["Partner Language", "language", "=", language])
+	filters = list(BASE_PARTNER_FILTERS)
+	for value, field in [
+		(industry, "industry"), (region, "region"), (country, "country"), (tier, "tier"),
+	]:
+		if value:
+			filters.append(["Partner", field, "=", value])
+
+	# Child-table filters resolve via a membership subquery (_partners_matching_child), not
+	# Frappe's built-in child-table join filter syntax — combining 2+ such filters as native join
+	# tuples multiplies a partner's row once per matching child row on each side.
+	child_matches = []
+	for value, doctype, field, parentfield in [
+		(product, "Partner App", "app", "apps"),
+		(delivery_mode, "Partner Delivery Mode", "delivery_mode", None),
+		(business_process, "Partner Business Process", "business_process", None),
+		(implementation_type, "Partner Implementation Type", "implementation_type", None),
+		(language, "Partner Language", "language", None),
+	]:
+		if value:
+			child_matches.append(_partners_matching_child(doctype, field, "=", value, parentfield=parentfield))
+	if child_matches:
+		filters.append(["Partner", "name", "in", list(set.intersection(*child_matches))])
+
 	if min_rating not in (None, ""):
 		filters.append(["Partner", "rating", ">=", flt(min_rating)])
 	if min_pmm_level not in (None, ""):
@@ -419,39 +533,11 @@ def search_partners(
 			partners.sort(key=sort_key)
 
 	partner_names = [p.name for p in partners]
-	apps_by_partner = {}
-	if partner_names:
-		for row in frappe.get_all(
-			"Partner App",
-			filters={"parent": ["in", partner_names]},
-			fields=["parent", "app"],
-			order_by="idx asc",
-		):
-			bucket = apps_by_partner.setdefault(row.parent, [])
-			if len(bucket) < 2:
-				bucket.append(row.app)
-
+	apps_by_partner = _apps_by_partner(partner_names)
 	for p in partners:
-		p["apps_preview"] = apps_by_partner.get(p.name, [])
+		p["apps_preview"] = apps_by_partner.get(p.name, [])[:2]
 
-	success_stories_by_partner = {}
-	if partner_names:
-		for row in frappe.get_all(
-			"Partner Success Story",
-			filters={"parent": ["in", partner_names]},
-			fields=["parent", "category"],
-			order_by="idx asc",
-		):
-			bucket = success_stories_by_partner.setdefault(row.parent, {"count": 0, "categories": []})
-			bucket["count"] += 1
-			if row.category and row.category not in bucket["categories"]:
-				bucket["categories"].append(row.category)
-
-	for p in partners:
-		stories = success_stories_by_partner.get(p.name, {"count": 0, "categories": []})
-		p["success_story_count"] = stories["count"]
-		p["success_story_categories"] = stories["categories"]
-
+	attach_success_story_previews(partners)
 	return partners
 
 
@@ -503,40 +589,50 @@ REQUIREMENT_MIGRATION_TAGS = {"SAP Migration", "Data Migration"}
 @frappe.whitelist(allow_guest=True)
 def count_matching_partners(answers=None):
 	"""Returns a live count of partners matching the finder wizard's answers so far, for the wizard's dot-grid."""
-	if isinstance(answers, str):
-		answers = json.loads(answers or "{}")
-	answers = answers or {}
+	answers = _parse_answers(answers)
 	# Same temporary is_featured scope as search_partners, so the wizard's live
 	# count never exceeds what the directory actually shows right now.
-	filters = [["Partner", "is_featured", "=", 1]]
+	filters = list(BASE_PARTNER_FILTERS)
 
 	industry = answers.get("industry")
 	if industry:
 		filters.append(["Partner", "industry", "=", WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry)])
 
+	# Same membership-subquery approach as search_partners — see _partners_matching_child.
+	child_matches = []
+
 	impl_type = LOOKING_FOR_TO_IMPL_TYPE.get(answers.get("looking_for"))
 	if impl_type:
-		filters.append(["Partner Implementation Type", "implementation_type", "=", impl_type])
+		child_matches.append(
+			_partners_matching_child("Partner Implementation Type", "implementation_type", "=", impl_type)
+		)
 
 	situation = answers.get("current_situation")
 	migration = CURRENT_SITUATION_TO_MIGRATION.get(situation)
 	if migration:
-		filters.append(["Partner Migration Path", "migration_path", "=", migration])
+		child_matches.append(_partners_matching_child("Partner Migration Path", "migration_path", "=", migration))
 	else:
 		impl_type_2 = CURRENT_SITUATION_TO_IMPL_TYPE.get(situation)
 		if impl_type_2:
-			filters.append(["Partner Implementation Type", "implementation_type", "=", impl_type_2])
+			child_matches.append(
+				_partners_matching_child("Partner Implementation Type", "implementation_type", "=", impl_type_2)
+			)
 
 	mode = DELIVERY_TO_MODE.get(answers.get("delivery_preference"))
 	if mode:
-		filters.append(["Partner Delivery Mode", "delivery_mode", "=", mode])
+		child_matches.append(_partners_matching_child("Partner Delivery Mode", "delivery_mode", "=", mode))
 
 	requirements = answers.get("requirements") or []
 	bp_values = [REQUIREMENT_TO_BUSINESS_PROCESS[r] for r in requirements if r in REQUIREMENT_TO_BUSINESS_PROCESS]
 	if bp_values:
-		filters.append(["Partner Business Process", "business_process", "in", bp_values])
+		child_matches.append(
+			_partners_matching_child("Partner Business Process", "business_process", "in", bp_values)
+		)
 	elif any(r in REQUIREMENT_MIGRATION_TAGS for r in requirements):
-		filters.append(["Partner Migration Path", "migration_path", "is", "set"])
+		child_matches.append(_partners_matching_child("Partner Migration Path", "migration_path", "is_set", None))
+
+	if child_matches:
+		filters.append(["Partner", "name", "in", list(set.intersection(*child_matches))])
 
 	# limit_page_length=0: frappe.get_list defaults to page size 20 when omitted.
 	partners = frappe.get_list("Partner", filters=filters, fields=["name"], limit_page_length=0)
@@ -546,7 +642,7 @@ def count_matching_partners(answers=None):
 def _score_partners_by_requirements(answers):
 	"""Scores every featured partner by how many of the wizard's answered questions they fail to match, shared by wizard_match_state and list_matching_partners."""
 	names = [n.name for n in frappe.get_list(
-		"Partner", filters=[["Partner", "is_featured", "=", 1]], fields=["name"], limit_page_length=0,
+		"Partner", filters=BASE_PARTNER_FILTERS, fields=["name"], limit_page_length=0,
 	)]
 	if not names:
 		return [], {}
@@ -554,17 +650,11 @@ def _score_partners_by_requirements(answers):
 	rows = frappe.get_list("Partner", filters=[["Partner", "name", "in", names]], fields=PARTNER_FIELDS)
 	by_name = {r.name: r for r in rows}
 
-	delivery_by, apps_by_partner, migrations_by, impl_by, bp_by = {}, {}, {}, {}, {}
-	for r in frappe.get_all("Partner Delivery Mode", filters={"parent": ["in", names]}, fields=["parent", "delivery_mode"]):
-		delivery_by.setdefault(r.parent, []).append(r.delivery_mode)
-	for r in frappe.get_all("Partner App", filters={"parent": ["in", names]}, fields=["parent", "app"], order_by="idx asc"):
-		apps_by_partner.setdefault(r.parent, []).append(r.app)
-	for r in frappe.get_all("Partner Migration Path", filters={"parent": ["in", names]}, fields=["parent", "migration_path"]):
-		migrations_by.setdefault(r.parent, []).append(r.migration_path)
-	for r in frappe.get_all("Partner Implementation Type", filters={"parent": ["in", names]}, fields=["parent", "implementation_type"]):
-		impl_by.setdefault(r.parent, []).append(r.implementation_type)
-	for r in frappe.get_all("Partner Business Process", filters={"parent": ["in", names]}, fields=["parent", "business_process"]):
-		bp_by.setdefault(r.parent, []).append(r.business_process)
+	apps_by_partner = _apps_by_partner(names)
+	delivery_by = _child_values_by_partner("Partner Delivery Mode", "delivery_mode", names)
+	migrations_by = _child_values_by_partner("Partner Migration Path", "migration_path", names)
+	impl_by = _child_values_by_partner("Partner Implementation Type", "implementation_type", names)
+	bp_by = _child_values_by_partner("Partner Business Process", "business_process", names)
 
 	industry = answers.get("industry")
 	wanted_industry = WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry) if industry else None
@@ -627,9 +717,7 @@ def _score_partners_by_requirements(answers):
 @frappe.whitelist(allow_guest=True)
 def wizard_match_state(answers=None):
 	"""Returns exact-match partner names and count for the finder wizard's dot pictogram."""
-	if isinstance(answers, str):
-		answers = json.loads(answers or "{}")
-	answers = answers or {}
+	answers = _parse_answers(answers)
 
 	all_scored, _apps_by_partner, _answered_dims = _score_partners_by_requirements(answers)
 	exact = [s for s in all_scored if s[0] == 0]
@@ -640,9 +728,7 @@ def wizard_match_state(answers=None):
 @frappe.whitelist(allow_guest=True)
 def list_matching_partners(answers=None, limit=8):
 	"""Returns ranked partner results for the finder wizard's final step, including close-but-imperfect matches."""
-	if isinstance(answers, str):
-		answers = json.loads(answers or "{}")
-	answers = answers or {}
+	answers = _parse_answers(answers)
 	limit = cint(limit) or 8
 
 	all_scored, apps_by_partner, answered_dims = _score_partners_by_requirements(answers)
@@ -657,35 +743,16 @@ def list_matching_partners(answers=None, limit=8):
 	rows = frappe.get_list("Partner", filters=[["Partner", "name", "in", names]], fields=PARTNER_FIELDS)
 	by_name = {r.name: r for r in rows}
 
-	apps_preview_by_partner = {}
-	for name, apps in apps_by_partner.items():
-		apps_preview_by_partner[name] = apps[:2]
-
 	scored = scored[:limit]
-	result_names = [name for *_rest, name, _missing in scored]
-
-	success_stories_by_partner = {}
-	if result_names:
-		for row in frappe.get_all(
-			"Partner Success Story",
-			filters={"parent": ["in", result_names]},
-			fields=["parent", "category"],
-			order_by="idx asc",
-		):
-			bucket = success_stories_by_partner.setdefault(row.parent, {"count": 0, "categories": []})
-			bucket["count"] += 1
-			if row.category and row.category not in bucket["categories"]:
-				bucket["categories"].append(row.category)
 
 	result = []
 	for _missing_count, _neg_rating, name, missing in scored:
 		row = dict(by_name[name])
-		row["apps_preview"] = apps_preview_by_partner.get(name, [])
+		row["apps_preview"] = apps_by_partner.get(name, [])[:2]
 		row["missing_label"] = ", ".join(missing) if missing else None
-		stories = success_stories_by_partner.get(name, {"count": 0, "categories": []})
-		row["success_story_count"] = stories["count"]
-		row["success_story_categories"] = stories["categories"]
 		result.append(row)
+
+	attach_success_story_previews(result)
 	return result
 
 
@@ -693,7 +760,7 @@ def list_matching_partners(answers=None, limit=8):
 def list_partner_countries():
 	"""Returns distinct countries with at least one partner, for the Country filter dropdown."""
 	rows = frappe.get_all(
-		"Partner", fields=["country"], filters={"country": ["is", "set"], "is_featured": 1}, distinct=True
+		"Partner", fields=["country"], filters={"country": ["is", "set"], "is_featured": 1, "enabled": 1}, distinct=True
 	)
 	return sorted({row.country for row in rows if row.country})
 
@@ -717,6 +784,46 @@ def _get_customer_for_user(user=None):
 	return frappe.db.get_value("Customer Team Member", {"user": user}, "customer")
 
 
+REQUIREMENT_FIELDS = [
+	"name", "company_name", "country", "industry", "looking_for", "company_size",
+	"current_situation", "timeline", "delivery_preference", "budget",
+	"special_requirements", "additional_notes",
+]
+
+
+def _latest_requirement_for_customer(customer):
+	"""The customer's most recent Requirement row plus its apps, in 2 queries total — just the
+	fields get_my_requirement/get_requirement_snapshot actually return. frappe.get_doc(...) would
+	cost one query for every column on the doctype (not just the ~12 used here) plus one query per
+	child table it defines, whether read or not."""
+	RequirementTable = frappe.qb.DocType("Requirement")
+	rows = (
+		frappe.qb.from_(RequirementTable)
+		.select(*[RequirementTable[f] for f in REQUIREMENT_FIELDS])
+		.where(RequirementTable.customer == customer)
+		.orderby(RequirementTable.creation, order=frappe.qb.desc)
+		.limit(1)
+		.run(as_dict=True)
+	)
+	if not rows:
+		return None
+	req = rows[0]
+
+	AppTable = frappe.qb.DocType("Partner App")
+	req["apps"] = (
+		frappe.qb.from_(AppTable)
+		.select(AppTable.app)
+		.where(
+			(AppTable.parent == req.name)
+			& (AppTable.parenttype == "Requirement")
+			& (AppTable.parentfield == "apps")
+		)
+		.orderby(AppTable.idx)
+		.run(pluck=True)
+	)
+	return req
+
+
 @frappe.whitelist(allow_guest=True)
 def get_my_customer():
 	"""Current session user's Customer company — feeds the portal shell (sidebar identity etc)."""
@@ -737,13 +844,19 @@ def get_my_shortlisted_partner_names():
 
 @frappe.whitelist()
 def add_to_shortlist(partner):
+	"""Idempotent: a second call for an already-shortlisted partner is a silent no-op rather than
+	an error, matching the UI's bookmark-toggle semantics. Relies on the (customer, partner)
+	unique constraint on Shortlist (see connect.patches.add_shortlist_unique_constraint) to
+	reject a duplicate instead of checking for one first."""
 	customer = _get_customer_for_user()
 	if not customer:
 		frappe.throw("Your account isn't linked to a customer company yet.", frappe.PermissionError)
-	if not frappe.db.exists("Shortlist", {"customer": customer, "partner": partner}):
+	try:
 		frappe.get_doc({"doctype": "Shortlist", "customer": customer, "partner": partner}).insert(
 			ignore_permissions=True
 		)
+	except frappe.UniqueValidationError:
+		pass
 	return {"shortlisted": True}
 
 
@@ -775,42 +888,23 @@ def list_my_shortlist():
 	by_name = {p.name: p for p in partners}
 	ordered = [by_name[n] for n in names if n in by_name]
 
-	apps_by_partner = {}
-	for row in frappe.get_all(
-		"Partner App", filters={"parent": ["in", names]}, fields=["parent", "app"], order_by="idx asc"
-	):
-		bucket = apps_by_partner.setdefault(row.parent, [])
-		if len(bucket) < 2:
-			bucket.append(row.app)
+	apps_by_partner = _apps_by_partner(names)
 	for p in ordered:
-		p["apps_preview"] = apps_by_partner.get(p.name, [])
+		p["apps_preview"] = apps_by_partner.get(p.name, [])[:2]
 
-	success_stories_by_partner = {}
-	for row in frappe.get_all(
-		"Partner Success Story",
-		filters={"parent": ["in", names]},
-		fields=["parent", "category"],
-		order_by="idx asc",
-	):
-		bucket = success_stories_by_partner.setdefault(row.parent, {"count": 0, "categories": []})
-		bucket["count"] += 1
-		if row.category and row.category not in bucket["categories"]:
-			bucket["categories"].append(row.category)
-	for p in ordered:
-		stories = success_stories_by_partner.get(p.name, {"count": 0, "categories": []})
-		p["success_story_count"] = stories["count"]
-		p["success_story_categories"] = stories["categories"]
-
+	attach_success_story_previews(ordered)
 	return ordered
 
 
 @frappe.whitelist()
 def save_customer_requirement(
-	company_name, country, industry, apps=None,
+	country, industry, apps=None,
 	looking_for=None, company_size=None, current_situation=None, timeline=None, delivery_preference=None, budget=None,
 	special_requirements=None, additional_notes=None, outcome=None,
 ):
-	"""Creates or updates the caller's one Requirement, so the wizard and the Settings form share a single saved record."""
+	"""Creates or updates the caller's one Requirement, so the wizard and the Settings form share a single saved
+	record. company_name isn't a parameter here — it's already collected at signup (Customer.customer_name),
+	so it's read from there instead of asking again."""
 	customer = _get_customer_for_user()
 	if not customer:
 		frappe.throw("Your account isn't linked to a customer company yet.", frappe.PermissionError)
@@ -820,7 +914,7 @@ def save_customer_requirement(
 
 	values = {
 		"customer": customer,
-		"company_name": company_name,
+		"company_name": frappe.db.get_value("Customer", customer, "customer_name"),
 		"country": country,
 		"industry": industry,
 		"apps": [{"app": a} for a in (apps or [])],
@@ -854,24 +948,23 @@ def get_my_requirement():
 	customer = _get_customer_for_user()
 	if not customer:
 		return None
-	name = frappe.db.get_value("Requirement", {"customer": customer}, "name", order_by="creation desc")
-	if not name:
+	req = _latest_requirement_for_customer(customer)
+	if not req:
 		return None
-	doc = frappe.get_doc("Requirement", name)
 	return {
-		"name": doc.name,
-		"company_name": doc.company_name,
-		"country": doc.country,
-		"industry": doc.industry,
-		"apps": [a.app for a in doc.apps],
-		"looking_for": doc.looking_for,
-		"company_size": doc.company_size,
-		"current_situation": doc.current_situation,
-		"timeline": doc.timeline,
-		"delivery_preference": doc.delivery_preference,
-		"budget": doc.budget,
-		"special_requirements": doc.special_requirements,
-		"additional_notes": doc.additional_notes,
+		"name": req.name,
+		"company_name": req.company_name,
+		"country": req.country,
+		"industry": req.industry,
+		"apps": req.apps,
+		"looking_for": req.looking_for,
+		"company_size": req.company_size,
+		"current_situation": req.current_situation,
+		"timeline": req.timeline,
+		"delivery_preference": req.delivery_preference,
+		"budget": req.budget,
+		"special_requirements": req.special_requirements,
+		"additional_notes": req.additional_notes,
 	}
 
 
@@ -887,7 +980,7 @@ def get_partner_preview(partner):
 	if not doc:
 		frappe.throw(_("Partner not found"), frappe.DoesNotExistError)
 
-	doc["apps"] = frappe.get_all("Partner App", filters={"parent": partner}, pluck="app", order_by="idx asc")
+	doc["apps"] = _apps_by_partner([partner]).get(partner, [])
 	doc["migrations"] = frappe.get_all(
 		"Partner Migration Path", filters={"parent": partner}, pluck="migration_path", order_by="idx asc"
 	)
@@ -899,7 +992,13 @@ def get_partner_document(partner):
 	"""Returns the full Partner record as a plain API call, since Studio's Document resource isn't guest-accessible."""
 	if not frappe.db.exists("Partner", partner):
 		frappe.throw(_("Partner not found"), frappe.DoesNotExistError)
-	return frappe.get_doc("Partner", partner).as_dict()
+	doc = frappe.get_doc("Partner", partner).as_dict()
+	# computed, not stored — "founded_years_ago" would silently go stale every
+	# year if we persisted it instead of deriving it from year_founded on read
+	doc["founded_years_ago"] = (
+		now_datetime().year - doc["year_founded"] if doc.get("year_founded") else None
+	)
+	return doc
 
 
 @frappe.whitelist(allow_guest=True)
@@ -934,9 +1033,10 @@ def get_pricing_view(partner, requirement=None):
 	if not partner or partner == "undefined" or not frappe.db.exists("Partner", partner):
 		return {"state": "loading"}
 
-	partner_doc = frappe.get_doc("Partner", partner)
-	addons = [a.as_dict() for a in partner_doc.addons]
-	addon_rate = 2000 if partner_doc.starter_pack else flt(partner_doc.hourly_rate)
+	partner_info = frappe.db.get_value("Partner", partner, ["starter_pack", "hourly_rate"], as_dict=True)
+	hourly_rate = flt(partner_info.hourly_rate)
+	addons = frappe.get_all("Partner Addon", filters={"parent": partner}, fields=["*"], order_by="idx")
+	addon_rate = 2000 if partner_info.starter_pack else hourly_rate
 
 	if not requirement:
 		customer = _get_customer_for_user()
@@ -945,31 +1045,35 @@ def get_pricing_view(partner, requirement=None):
 				"Requirement", {"customer": customer}, "name", order_by="creation desc"
 			)
 
-	if not partner_doc.starter_pack:
+	if not partner_info.starter_pack:
 		return {
-			"state": "hourly_only", "rate": partner_doc.hourly_rate,
+			"state": "hourly_only", "rate": hourly_rate,
 			"addons": addons, "addon_rate": addon_rate, "requirement": requirement,
 		}
 
 	if not requirement:
-		return {"state": "no_requirement", "rate": partner_doc.hourly_rate, "addons": addons, "addon_rate": addon_rate}
+		return {"state": "no_requirement", "rate": hourly_rate, "addons": addons, "addon_rate": addon_rate}
 
-	req = frappe.get_doc("Requirement", requirement)
-	req_apps = [a.app for a in req.apps]
+	req_apps = frappe.get_all(
+		"Partner App",
+		filters={"parent": requirement, "parenttype": "Requirement", "parentfield": "apps"},
+		pluck="app",
+		order_by="idx",
+	)
 	has_erpnext = "ERPNext" in req_apps
 	has_hr = "Frappe HR" in req_apps
 
 	if not (has_erpnext or has_hr):
 		return {
 			"state": "mismatch",
-			"rate": partner_doc.hourly_rate,
+			"rate": hourly_rate,
 			"requested_product": ", ".join(req_apps) if req_apps else None,
-			"requirement": req.name,
+			"requirement": requirement,
 			"addons": addons,
 			"addon_rate": addon_rate,
 		}
 
-	packs = [p.as_dict() for p in partner_doc.packs]
+	packs = frappe.get_all("Partner Pack", filters={"parent": partner}, fields=["*"], order_by="idx")
 	for p in packs:
 		p["is_primary_match"] = _pack_is_primary_match(p["pack_key"], has_erpnext, has_hr)
 
@@ -977,7 +1081,7 @@ def get_pricing_view(partner, requirement=None):
 		"state": "eligible",
 		"packs": packs,
 		"addons": addons,
-		"requirement": req.name,
+		"requirement": requirement,
 	}
 
 
@@ -991,8 +1095,9 @@ def save_price_estimate(partner, selected_addons, total, requirement=None, pack_
 	if isinstance(selected_addons, str):
 		selected_addons = json.loads(selected_addons or "[]")
 
-	partner_doc = frappe.get_doc("Partner", partner)
-	base_price = next((p.price for p in partner_doc.packs if p.pack_name == pack_type), 0)
+	base_price = 0
+	if pack_type:
+		base_price = frappe.db.get_value("Partner Pack", {"parent": partner, "pack_name": pack_type}, "price") or 0
 
 	doc = frappe.get_doc({
 		"doctype": "Price Estimate",
@@ -1015,8 +1120,10 @@ def get_my_review_for_partner(partner):
 	customer = _get_customer_for_user()
 	if not customer:
 		return None
-	name = frappe.db.get_value("Partner Review", {"partner": partner, "customer": customer}, "name")
-	return frappe.get_doc("Partner Review", name).as_dict() if name else None
+	rows = frappe.get_all(
+		"Partner Review", filters={"partner": partner, "customer": customer}, fields=["*"], limit_page_length=1
+	)
+	return rows[0] if rows else None
 
 
 @frappe.whitelist()
