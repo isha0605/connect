@@ -125,7 +125,7 @@ def start_partner_thread(partner, message=None):
 			"doctype": "Connect Thread",
 			"customer": customer,
 			"partner": partner,
-		}).insert(ignore_permissions=True).name
+		}).insert().name
 
 	_ensure_thread_member(thread, user, "Customer", user)
 
@@ -311,7 +311,7 @@ def _attach_file_to_message(file_doc_name, doctype, name):
 	file_doc = frappe.get_doc("File", file_doc_name)
 	file_doc.attached_to_doctype = doctype
 	file_doc.attached_to_name = name
-	file_doc.save(ignore_permissions=True)
+	file_doc.save()
 
 
 def _get_message_preview(doctype, name):
@@ -333,7 +333,7 @@ def remove_chat_attachment(file_url):
 	)
 	if not file_name:
 		frappe.throw(_("Attachment not found"))
-	frappe.delete_doc("File", file_name, ignore_permissions=True)
+	frappe.delete_doc("File", file_name)
 
 
 @frappe.whitelist()
@@ -379,7 +379,7 @@ def send_message(
 		message.file_name = file_name
 		message.file_type = file_type
 		message.file_size = file_size
-	message.insert(ignore_permissions=True)
+	message.insert()
 
 	if file_doc_name:
 		_attach_file_to_message(file_doc_name, "Connect Message", message.name)
@@ -486,7 +486,7 @@ def start_dm(user):
 		return existing
 
 	doc = frappe.get_doc({"doctype": "Connect DM Thread", "user_a": user_a, "user_b": user_b})
-	doc.insert(ignore_permissions=True)
+	doc.insert()
 	return doc.name
 
 
@@ -579,7 +579,7 @@ def send_dm_message(thread, content="", file_url=None, file_name=None, file_type
 		doc.file_name = file_name
 		doc.file_type = file_type
 		doc.file_size = file_size
-	doc.insert(ignore_permissions=True)
+	doc.insert()
 
 	if file_doc_name:
 		_attach_file_to_message(file_doc_name, "Connect DM Message", doc.name)
