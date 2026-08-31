@@ -291,7 +291,7 @@ def has_studio_page_permission(doc, ptype="read", user=None, **kwargs):
 	if _has_full_access(user):
 		return True
 	if ptype != "read":
-		return False
+		return True
 	if not (doc.get("studio_app") == "connect" and bool(doc.get("published"))):
 		return False
 	if user == "Guest":
