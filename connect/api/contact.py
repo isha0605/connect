@@ -5,12 +5,6 @@ from connect.api.messages import send_message
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.permissions import _get_partner_admin
 
-# Kept as its own file rather than folded into connect.api.threads with the rest of the
-# thread-management endpoints — it's called from several other Studio pages (find_partners,
-# partner_profile, shortlisted) as a literal dotted-path string in their own embedded
-# click-handler scripts, so its module path (connect.api.contact) can't change without
-# updating every one of those.
-
 
 def _format_requirement_message(customer, note=None):
 	"""Turns the customer's saved Requirement into a readable message body, with an optional note appended."""
