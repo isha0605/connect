@@ -133,6 +133,6 @@ class ConnectThread(Document):
 		self.status = "Closed"
 		self.closed_by = user
 		self.closed_on = now_datetime()
-		self.save(ignore_permissions=True)
+		self.save()
 
 		self.post_system_message(_("Thread closed by {0}").format(user))
