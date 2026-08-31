@@ -152,6 +152,26 @@ has_permission = {
 	"Requirement": "connect.customer.doctype.requirement.requirement.has_permission",
 }
 
+# Fixtures
+# --------
+# has_studio_page_permission/get_studio_page_permission_query_conditions above can only
+# narrow access down, never grant it (Frappe's has_permission hooks are deny-only) — every
+# logged-in user needs this base read grant before those hooks get a chance to scope it down
+# to just this app's own published pages. Owned here (not edited into studio's own
+# studio_page.json) so it survives `git pull`/updates on the studio app.
+#
+# All 3 rows below must travel together: the moment a doctype has ANY Custom DocPerm record,
+# Frappe stops reading that doctype's JSON-defined permissions entirely — for every role, not
+# just the one being added (see frappe.permissions.get_valid_perms). So System Manager and
+# Studio User are re-declared here as an exact mirror of studio_page.json's own rows, purely
+# to keep their existing access from silently disappearing once the "All" row exists.
+fixtures = [
+	{
+		"doctype": "Custom DocPerm",
+		"filters": [["parent", "=", "Studio Page"]],
+	},
+]
+
 # Document Events
 # ---------------
 # Hook on document methods and events
