@@ -17,6 +17,10 @@ def _is_partner_admin(partner, user):
 	)
 
 
+def _get_partner_admin(partner):
+	return frappe.db.get_value("Connect Partner Member", {"partner": partner, "is_admin": 1}, "user")
+
+
 def _my_company_membership(user):
 	"""Returns which company (and doctype/row) this user belongs to, or Nones if neither."""
 	customer_row = frappe.db.get_value(
@@ -63,6 +67,15 @@ def _check_can_write(thread, user):
 		frappe.throw(_("This thread is closed"))
 
 
+def _check_can_read(thread, user):
+	from frappe import _
+
+	if _has_full_access(user):
+		return
+	if not _thread_membership(thread, user):
+		frappe.throw(_("You don't have access to this thread"), frappe.PermissionError)
+
+
 def _check_can_modify_message(thread, sender, user, error_message):
 	from frappe import _
 
@@ -74,11 +87,18 @@ def _check_can_modify_message(thread, sender, user, error_message):
 			frappe.throw(_("You no longer have access to this thread"), frappe.PermissionError)
 
 
+def _dm_thread_pair_or_none(thread, user):
+	pair = frappe.db.get_value("Connect DM Thread", thread, ["user_a", "user_b"], as_dict=True)
+	if not pair or user not in (pair.user_a, pair.user_b):
+		return None
+	return pair
+
+
 def _dm_thread_pair(thread, user):
 	from frappe import _
 
-	pair = frappe.db.get_value("Connect DM Thread", thread, ["user_a", "user_b"], as_dict=True)
-	if not pair or user not in (pair.user_a, pair.user_b):
+	pair = _dm_thread_pair_or_none(thread, user)
+	if not pair:
 		frappe.throw(_("You don't have access to this conversation"), frappe.PermissionError)
 	return pair
 

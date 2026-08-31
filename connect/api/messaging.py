@@ -7,11 +7,12 @@ from frappe.utils import now_datetime
 
 from connect.api import _get_customer_for_user
 from connect.permissions import (
+	_check_can_read,
 	_check_can_write,
 	_dm_thread_pair,
-	_has_full_access,
+	_dm_thread_pair_or_none,
+	_get_partner_admin,
 	_my_side,
-	_thread_membership,
 )
 
 
@@ -98,6 +99,18 @@ def get_requirement_snapshot():
 	}
 
 
+def _ensure_thread_member(thread, user, side, added_by):
+	if not frappe.db.exists("Connect Thread Member", {"thread": thread, "user": user}):
+		frappe.get_doc({
+			"doctype": "Connect Thread Member",
+			"thread": thread,
+			"user": user,
+			"side": side,
+			"permission": "Write",
+			"added_by": added_by,
+		}).insert(ignore_permissions=True)
+
+
 @frappe.whitelist()
 def start_partner_thread(partner, message=None):
 	"""Finds or creates the (customer, partner) thread and adds both sides as members, for the Contact Partner action."""
@@ -114,26 +127,11 @@ def start_partner_thread(partner, message=None):
 			"partner": partner,
 		}).insert(ignore_permissions=True).name
 
-	if not frappe.db.exists("Connect Thread Member", {"thread": thread, "user": user}):
-		frappe.get_doc({
-			"doctype": "Connect Thread Member",
-			"thread": thread,
-			"user": user,
-			"side": "Customer",
-			"permission": "Write",
-			"added_by": user,
-		}).insert(ignore_permissions=True)
+	_ensure_thread_member(thread, user, "Customer", user)
 
-	partner_admin = frappe.db.get_value("Connect Partner Member", {"partner": partner, "is_admin": 1}, "user")
-	if partner_admin and not frappe.db.exists("Connect Thread Member", {"thread": thread, "user": partner_admin}):
-		frappe.get_doc({
-			"doctype": "Connect Thread Member",
-			"thread": thread,
-			"user": partner_admin,
-			"side": "Partner",
-			"permission": "Write",
-			"added_by": user,
-		}).insert(ignore_permissions=True)
+	partner_admin = _get_partner_admin(partner)
+	if partner_admin:
+		_ensure_thread_member(thread, partner_admin, "Partner", user)
 
 	is_new_thread = not frappe.db.exists("Connect Message", {"thread": thread})
 	if is_new_thread and message:
@@ -158,16 +156,13 @@ def make_thread_admin(thread, member):
 def get_thread_admins(thread):
 	"""Returns the two companies' admin emails, to show an Admin badge and gate per-member actions."""
 	user = frappe.session.user
-	if not (_has_full_access(user) or _thread_membership(thread, user)):
-		frappe.throw(_("You don't have access to this thread"), frappe.PermissionError)
+	_check_can_read(thread, user)
 
 	thread_doc = frappe.db.get_value("Connect Thread", thread, ["customer", "partner"], as_dict=True)
 	if not thread_doc:
 		frappe.throw(_("Thread not found"))
 
-	partner_admin = frappe.db.get_value(
-		"Connect Partner Member", {"partner": thread_doc.partner, "is_admin": 1}, "user"
-	)
+	partner_admin = _get_partner_admin(thread_doc.partner)
 	customer_admin = frappe.db.get_value(
 		"Customer Team Member", {"customer": thread_doc.customer, "is_admin": 1}, "user"
 	)
@@ -178,8 +173,7 @@ def get_thread_admins(thread):
 def get_thread_member_profiles(thread):
 	"""Returns name and photo for everyone who's ever been a thread member, for the sender hover card in chat."""
 	user = frappe.session.user
-	if not (_has_full_access(user) or _thread_membership(thread, user)):
-		frappe.throw(_("You don't have access to this thread"), frappe.PermissionError)
+	_check_can_read(thread, user)
 
 	emails = frappe.get_list("Connect Thread Member", filters={"thread": thread}, pluck="user", distinct=True)
 	if not emails:
@@ -300,11 +294,34 @@ def upload_chat_attachment(thread):
 @frappe.whitelist()
 def upload_dm_attachment(thread):
 	"""Stages a file upload for a DM, the DM counterpart to upload_chat_attachment."""
-	user = frappe.session.user
-	pair = frappe.db.get_value("Connect DM Thread", thread, ["user_a", "user_b"], as_dict=True)
-	if not pair or user not in (pair.user_a, pair.user_b):
-		frappe.throw(_("You don't have access to this conversation"), frappe.PermissionError)
+	_dm_thread_pair(thread, frappe.session.user)
 	return _stage_chat_attachment()
+
+
+def _claim_staged_attachment(file_url, user):
+	"""Resolves a staged File upload by url/owner, or throws — shared by send_message and send_dm_message."""
+	file_doc_name = frappe.db.get_value("File", {"file_url": file_url, "owner": user}, "name")
+	if not file_doc_name:
+		frappe.throw(_("Attachment not found"))
+	return file_doc_name
+
+
+def _attach_file_to_message(file_doc_name, doctype, name):
+	"""Re-parents a staged File onto the message it was sent with — shared by send_message and send_dm_message."""
+	file_doc = frappe.get_doc("File", file_doc_name)
+	file_doc.attached_to_doctype = doctype
+	file_doc.attached_to_name = name
+	file_doc.save(ignore_permissions=True)
+
+
+def _get_message_preview(doctype, name):
+	"""Shared field set for a pinned-message preview — used by get_pinned_message and get_pinned_dm_message."""
+	return frappe.db.get_value(
+		doctype,
+		name,
+		["name", "sender", "message_type", "content", "file_name", "creation"],
+		as_dict=True,
+	)
 
 
 @frappe.whitelist()
@@ -338,11 +355,7 @@ def send_message(
 
 	_check_can_write(thread, user)
 
-	file_doc_name = None
-	if file_url:
-		file_doc_name = frappe.db.get_value("File", {"file_url": file_url, "owner": user}, "name")
-		if not file_doc_name:
-			frappe.throw(_("Attachment not found"))
+	file_doc_name = _claim_staged_attachment(file_url, user) if file_url else None
 
 	if requirement_data:
 		message_type = "Requirement"
@@ -369,10 +382,7 @@ def send_message(
 	message.insert(ignore_permissions=True)
 
 	if file_doc_name:
-		file_doc = frappe.get_doc("File", file_doc_name)
-		file_doc.attached_to_doctype = "Connect Message"
-		file_doc.attached_to_name = message.name
-		file_doc.save(ignore_permissions=True)
+		_attach_file_to_message(file_doc_name, "Connect Message", message.name)
 
 	return message.as_dict()
 
@@ -410,19 +420,12 @@ def unpin_message(thread):
 
 @frappe.whitelist()
 def get_pinned_message(thread):
-	user = frappe.session.user
-	if not _thread_membership(thread, user) and not _has_full_access(user):
-		frappe.throw(_("You don't have access to this thread"), frappe.PermissionError)
+	_check_can_read(thread, frappe.session.user)
 
 	pinned = frappe.db.get_value("Connect Thread", thread, "pinned_message")
 	if not pinned:
 		return None
-	return frappe.db.get_value(
-		"Connect Message",
-		pinned,
-		["name", "sender", "message_type", "content", "file_name", "creation"],
-		as_dict=True,
-	)
+	return _get_message_preview("Connect Message", pinned)
 
 
 @frappe.whitelist()
@@ -545,8 +548,8 @@ def get_my_dm_threads():
 def mark_dm_thread_read(thread):
 	"""Best-effort, mirrors mark_thread_read — a stale/foreign thread name is a silent no-op."""
 	user = frappe.session.user
-	pair = frappe.db.get_value("Connect DM Thread", thread, ["user_a", "user_b"], as_dict=True)
-	if not pair or user not in (pair.user_a, pair.user_b):
+	pair = _dm_thread_pair_or_none(thread, user)
+	if not pair:
 		return
 	field = "last_read_at_a" if pair.user_a == user else "last_read_at_b"
 	frappe.db.set_value("Connect DM Thread", thread, field, now_datetime())
@@ -556,19 +559,13 @@ def mark_dm_thread_read(thread):
 def send_dm_message(thread, content="", file_url=None, file_name=None, file_type=None, file_size=None):
 	"""Sends a DM text or file message, the DM counterpart to send_message."""
 	user = frappe.session.user
-	pair = frappe.db.get_value("Connect DM Thread", thread, ["user_a", "user_b"], as_dict=True)
-	if not pair or user not in (pair.user_a, pair.user_b):
-		frappe.throw(_("You don't have access to this conversation"), frappe.PermissionError)
+	_dm_thread_pair(thread, user)
 
 	content = (content or "").strip()
 	if not content and not file_url:
 		frappe.throw(_("Message cannot be empty"))
 
-	file_doc_name = None
-	if file_url:
-		file_doc_name = frappe.db.get_value("File", {"file_url": file_url, "owner": user}, "name")
-		if not file_doc_name:
-			frappe.throw(_("Attachment not found"))
+	file_doc_name = _claim_staged_attachment(file_url, user) if file_url else None
 
 	doc = frappe.get_doc({
 		"doctype": "Connect DM Message",
@@ -585,10 +582,7 @@ def send_dm_message(thread, content="", file_url=None, file_name=None, file_type
 	doc.insert(ignore_permissions=True)
 
 	if file_doc_name:
-		file_doc = frappe.get_doc("File", file_doc_name)
-		file_doc.attached_to_doctype = "Connect DM Message"
-		file_doc.attached_to_name = doc.name
-		file_doc.save(ignore_permissions=True)
+		_attach_file_to_message(file_doc_name, "Connect DM Message", doc.name)
 
 	# bumps the thread to the top of get_my_dm_threads' order_by=modified desc — a plain
 	# message insert doesn't touch its parent thread's own timestamp on its own
@@ -629,15 +623,9 @@ def unpin_dm_message(thread):
 
 @frappe.whitelist()
 def get_pinned_dm_message(thread):
-	user = frappe.session.user
-	_dm_thread_pair(thread, user)
+	_dm_thread_pair(thread, frappe.session.user)
 
 	pinned = frappe.db.get_value("Connect DM Thread", thread, "pinned_message")
 	if not pinned:
 		return None
-	return frappe.db.get_value(
-		"Connect DM Message",
-		pinned,
-		["name", "sender", "message_type", "content", "file_name", "creation"],
-		as_dict=True,
-	)
+	return _get_message_preview("Connect DM Message", pinned)
