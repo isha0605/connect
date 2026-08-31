@@ -15,7 +15,7 @@ class ConnectDMThread(Document):
 		_dm_thread_pair(self.name, user)
 		message_doc = frappe.get_doc("Connect DM Message", message)
 		self.pinned_message = message_doc.name
-		self.save(ignore_permissions=True)
+		self.save()
 		notify_dm_thread_pin_changed(self, message_doc, user)
 
 	def unpin(self, user):
@@ -23,5 +23,5 @@ class ConnectDMThread(Document):
 
 		_dm_thread_pair(self.name, user)
 		self.pinned_message = None
-		self.save(ignore_permissions=True)
+		self.save()
 		notify_dm_thread_pin_changed(self, None, user)
