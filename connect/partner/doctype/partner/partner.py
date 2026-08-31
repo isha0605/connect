@@ -69,7 +69,7 @@ class Partner(Document):
 
 
 def recompute_rating_from_reviews(partner_name, exclude=None):
-	"""Recomputes a Partner's rating, review count, and dimension scores from its Partner Review records."""
+	"""Recomputes a Partner's rating and dimension scores from its Partner Review records."""
 	filters = {"partner": partner_name}
 	if exclude:
 		filters["name"] = ["!=", exclude]
@@ -79,8 +79,7 @@ def recompute_rating_from_reviews(partner_name, exclude=None):
 		fields=["rating", *DIMENSION_SCORE_FIELDS],
 	)
 
-	values = {"reviews_count": len(reviews)}
-	values["rating"] = sum(flt(r.rating) for r in reviews) / len(reviews) if reviews else 0
+	values = {"rating": sum(flt(r.rating) for r in reviews) / len(reviews) if reviews else 0}
 
 	for dimension in DIMENSION_SCORE_FIELDS:
 		dim_values = [flt(r.get(dimension)) for r in reviews if r.get(dimension)]
@@ -91,7 +90,7 @@ def recompute_rating_from_reviews(partner_name, exclude=None):
 
 PARTNER_FIELDS = [
 	"name", "partner_name", "logo", "tagline", "tier", "specialist",
-	"rating", "reviews_count", "industry", "country", "city", "rollouts", "hourly_rate",
+	"rating", "industry", "country", "city", "rollouts", "hourly_rate",
 	"response_time_hours",
 ]
 SEARCHABLE_TEXT_FIELDS = ["partner_name", "tagline", "industry", "country", "city"]
@@ -596,7 +595,7 @@ def get_partner_preview(partner):
 	"""Returns a lightweight partner snapshot for the quick-preview drawer, fetched only when needed."""
 	fields = [
 		"name", "partner_name", "logo", "description", "tier", "specialist",
-		"rating", "reviews_count", "city", "country", "pmm_level", "hourly_rate",
+		"rating", "city", "country", "pmm_level", "hourly_rate",
 		"certs_erpnext", "certs_frappe_framework", "industry", "address",
 	]
 	doc = frappe.db.get_value("Partner", partner, fields, as_dict=True)
