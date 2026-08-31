@@ -5,21 +5,21 @@ import frappe
 
 
 def execute():
-	"""Add a MariaDB FULLTEXT index on Partner's searchable text fields, backing
-	relevance-ranked full-text search in connect.api.search_partners. FULLTEXT +
-	MATCH/AGAINST is MariaDB/MySQL-specific; skipped on other backends."""
+	"""Adds a MariaDB FULLTEXT index on Partner's searchable text fields, to back relevance-ranked partner search."""
 	if frappe.db.db_type != "mariadb":
 		return
 
 	if not frappe.db.table_exists("Partner"):
 		return
 
-	existing = frappe.db.sql(
-		"""
-		SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS
-		WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tabPartner' AND INDEX_NAME = 'partner_fts'
-		"""
-	)
+	statistics = frappe.qb.Schema("information_schema").statistics
+	existing = (
+		frappe.qb.from_(statistics)
+		.select(statistics.index_name)
+		.where(statistics.table_schema == frappe.qb.functions("DATABASE"))
+		.where(statistics.table_name == "tabPartner")
+		.where(statistics.index_name == "partner_fts")
+	).run()
 	if existing:
 		return
 

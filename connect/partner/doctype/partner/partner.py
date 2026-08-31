@@ -1,13 +1,16 @@
 # Copyright (c) 2026
 # For license information, please see license.txt
 
-import json
 import difflib
+import json
 import math
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, cint, now_datetime
+from frappe.utils import cint, flt, now_datetime
+from pypika.functions import DistinctOptionFunction
+from pypika.utils import builder
 
 COUNTRY_TO_REGION = {
 	"united states": "North America",
@@ -49,6 +52,7 @@ COUNTRY_TO_REGION = {
 	"chile": "Latin America",
 }
 
+
 DIMENSION_SCORE_FIELDS = (
 	"business_understanding",
 	"implementation_quality",
@@ -58,61 +62,6 @@ DIMENSION_SCORE_FIELDS = (
 	"technical_expertise",
 )
 
-PARTNER_FIELDS = [
-	"name", "partner_name", "logo", "tagline", "tier", "specialist",
-	"rating", "industry", "country", "city", "rollouts", "hourly_rate",
-	"response_time_hours",
-]
-SEARCHABLE_TEXT_FIELDS = ["partner_name", "tagline", "industry", "country", "city"]
-
-# The "is this partner visible at all" gate — combined as AND with whatever
-# else a caller filters on. Callers that append more filters must copy this
-# (list(BASE_PARTNER_FILTERS)) rather than mutate it in place.
-BASE_PARTNER_FILTERS = [["Partner", "is_featured", "=", 1], ["Partner", "enabled", "=", 1]]
-
-SORT_OPTIONS = {
-	"rating_desc": ("rating", True),
-	"rollouts_desc": ("rollouts", True),
-	"name_asc": ("partner_name", False),
-}
-
-FILTER_OPERATORS = {"is", "is not", "in", "not in", "=", "!=", "like", "not like", ">", "<", ">=", "<=", "between", "timespan"}
-
-WIZARD_TO_PARTNER_INDUSTRY = {
-	"Manufacturing": "Manufacturing",
-	"Retail & Distribution": "Retail",
-	"Healthcare": "Healthcare",
-	"Education": "Education",
-	"Services": "Professional Services",
-	"Construction": "Other",
-	"Logistics": "Logistics",
-	"Technology": "Technology",
-	"Other": "Other",
-}
-
-LOOKING_FOR_TO_IMPL_TYPE = {
-	"New ERP Implementation": "New Implementation",
-	"Replace Existing ERP": "Migration",
-	"Custom App Development": "Customization",
-}
-CURRENT_SITUATION_TO_MIGRATION = {
-	"Tally": "Tally to ERPNext",
-	"SAP": "SAP to ERPNext",
-	"Odoo": "Odoo to ERPNext",
-}
-CURRENT_SITUATION_TO_IMPL_TYPE = {
-	"Excel / Spreadsheets": "New Implementation",
-	"No System Yet": "New Implementation",
-	"Existing ERPNext": "Support & Maintenance",
-}
-DELIVERY_TO_MODE = {"Remote": "Remote", "Hybrid": "Hybrid", "On-site": "Onsite"}
-REQUIREMENT_TO_BUSINESS_PROCESS = {
-	"HR & Payroll": "HR & Payroll",
-	"Manufacturing Planning": "Manufacturing Execution",
-	"Inventory Management": "Inventory Management",
-}
-REQUIREMENT_MIGRATION_TAGS = {"SAP Migration", "Data Migration"}
-
 
 class Partner(Document):
 	def before_save(self):
@@ -120,15 +69,7 @@ class Partner(Document):
 
 
 def recompute_rating_from_reviews(partner_name, exclude=None):
-	"""Recompute a Partner's rating/dimension scores from its (now standalone)
-	Partner Review records. Called via doc_events on Partner Review
-	insert/update/trash — reviews are no longer a Partner child table, so this
-	can't run inside Partner.before_save anymore.
-
-	`exclude`: on_trash fires *before* the row is actually removed from the DB,
-	so a plain re-query would still count the row being deleted. Pass the
-	doc's own name there to exclude it from the recompute.
-	"""
+	"""Recomputes a Partner's rating and dimension scores from its Partner Review records."""
 	filters = {"partner": partner_name}
 	if exclude:
 		filters["name"] = ["!=", exclude]
@@ -147,34 +88,146 @@ def recompute_rating_from_reviews(partner_name, exclude=None):
 	frappe.db.set_value("Partner", partner_name, values, update_modified=False)
 
 
-def _fts_rank(search_term: str, allowed_names: list[str]):
-	"""MariaDB natural-language FULLTEXT search (see the partner_fts index) —
-	real relevance ranking, handles multi-word queries well. Returns names in
-	relevance order. MySQL's default ft_min_word_len (usually 4) means short
-	terms ("erp") won't match here at all; that's what the fuzzy fallback below
-	is for."""
+PARTNER_FIELDS = [
+	"name", "partner_name", "logo", "tagline", "tier", "specialist",
+	"rating", "industry", "country", "city", "rollouts", "hourly_rate",
+	"response_time_hours",
+]
+SEARCHABLE_TEXT_FIELDS = ["partner_name", "tagline", "industry", "country", "city"]
+
+# The "is this partner visible at all" gate — combined as AND with whatever
+# else a caller filters on. Callers that append more filters must copy this
+# (list(BASE_PARTNER_FILTERS)) rather than mutate it in place.
+BASE_PARTNER_FILTERS = [["Partner", "is_featured", "=", 1], ["Partner", "enabled", "=", 1]]
+
+
+def _child_values_by_partner(child_doctype, value_field, names, parentfield=None):
+	"""Every `value_field` value from `child_doctype` for each partner in `names`, in one query,
+	grouped into a dict of lists keyed by partner name (full list, in idx order — callers wanting
+	just a preview slice it themselves, e.g. apps[:2]). Always scoped to parenttype="Partner"; pass
+	`parentfield` too for a child doctype shared with another doctype's own Table field (e.g.
+	"Partner App" is also Requirement.apps) so a same-named parent from the other doctype can't
+	leak in."""
+	if not names:
+		return {}
+	filters = {"parent": ["in", names], "parenttype": "Partner"}
+	if parentfield:
+		filters["parentfield"] = parentfield
+	values_by_partner = {}
+	for r in frappe.get_all(child_doctype, filters=filters, fields=["parent", value_field], order_by="idx asc"):
+		values_by_partner.setdefault(r.parent, []).append(r.get(value_field))
+	return values_by_partner
+
+
+def _apps_by_partner(names):
+	"""Every Partner App (Partner.apps) value for each partner in `names` — see
+	_child_values_by_partner. Kept as its own name since "apps per partner" is looked up from
+	several places (search, wizard scoring, shortlist), not just the wizard scoring pass."""
+	return _child_values_by_partner("Partner App", "app", names, parentfield="apps")
+
+
+def _partners_matching_child(child_doctype, field, operator, value, parentfield=None):
+	"""Names of partners with at least one `child_doctype` row satisfying `field <operator> value`
+	— a WHERE name IN (subquery) membership check, not a join. Joining the child table directly
+	onto Partner (Frappe's own ["<Child Doctype>", field, op, value] filter syntax does exactly
+	that) multiplies a partner's row once per matching child row — combine two or more such
+	filters at once (search_partners' filter panel lets you) and a partner with 2 matching rows in
+	one child table and 3 in another comes back 6 times instead of once. A membership subquery is
+	a plain yes/no test per partner, so it can't fan out no matter how many child rows exist."""
+	ChildTable = frappe.qb.DocType(child_doctype)
+	query = (
+		frappe.qb.from_(ChildTable)
+		.select(ChildTable.parent)
+		.distinct()
+		.where(ChildTable.parenttype == "Partner")
+	)
+	if parentfield:
+		query = query.where(ChildTable.parentfield == parentfield)
+	if operator == "=":
+		query = query.where(ChildTable[field] == value)
+	elif operator == "in":
+		query = query.where(ChildTable[field].isin(value))
+	elif operator == "is_set":
+		query = query.where(ChildTable[field] != "")
+	else:
+		raise ValueError(f"Unsupported operator: {operator}")
+	return {row[0] for row in query.run()}
+
+
+def _parse_answers(answers):
+	"""Normalizes the finder wizard's `answers` payload — arrives as a JSON string over the wire
+	(a whitelisted endpoint's raw argument) but as a plain dict when one wizard function calls
+	another directly in Python."""
+	if isinstance(answers, str):
+		answers = json.loads(answers or "{}")
+	return answers or {}
+
+
+def attach_success_story_previews(rows):
+	"""Batch-attaches success_story_count/success_story_categories to each row in `rows` (each
+	needs a "name" key matching a Partner document) — one query regardless of how many rows. Used
+	everywhere a partner listing shows this preview: Find Partners search, the finder wizard's
+	results, and the customer's Shortlisted page."""
+	names = [r["name"] for r in rows]
+	if not names:
+		return rows
+	buckets = {}
+	for row in frappe.get_all(
+		"Partner Success Story",
+		filters={"parent": ["in", names], "parenttype": "Partner", "parentfield": "success_stories"},
+		fields=["parent", "category"],
+		order_by="idx asc",
+	):
+		bucket = buckets.setdefault(row.parent, {"count": 0, "categories": []})
+		bucket["count"] += 1
+		if row.category and row.category not in bucket["categories"]:
+			bucket["categories"].append(row.category)
+	for r in rows:
+		stories = buckets.get(r["name"], {"count": 0, "categories": []})
+		r["success_story_count"] = stories["count"]
+		r["success_story_categories"] = stories["categories"]
+	return rows
+
+
+class _NaturalLanguageMatch(DistinctOptionFunction):
+	"""A multi-column MATCH()/AGAINST() function, since frappe's built-in Match only supports one column."""
+
+	def __init__(self, *columns):
+		super().__init__("MATCH", *columns)
+		self._against = None
+
+	def get_function_sql(self, **kwargs):
+		sql = super(DistinctOptionFunction, self).get_function_sql(**kwargs)
+		if self._against is None:
+			raise Exception("Chain the `Against()` method with match to complete the query")
+		return f"{sql} AGAINST ({frappe.db.escape(self._against)} IN NATURAL LANGUAGE MODE)"
+
+	@builder
+	def Against(self, text):
+		self._against = text
+
+
+def _fts_rank(search_term, allowed_names):
+	"""Ranks partner names by MariaDB full-text search relevance against the search term."""
 	if not allowed_names:
 		return []
-	rows = frappe.db.sql(
-		"""
-		SELECT name FROM `tabPartner`
-		WHERE name IN %(names)s
-		AND MATCH(partner_name, tagline, description, industry, city, country)
-			AGAINST (%(term)s IN NATURAL LANGUAGE MODE)
-		ORDER BY MATCH(partner_name, tagline, description, industry, city, country)
-			AGAINST (%(term)s IN NATURAL LANGUAGE MODE) DESC
-		""",
-		{"term": search_term, "names": allowed_names},
-		as_dict=True,
-	)
+	Partner = frappe.qb.DocType("Partner")
+	rank = _NaturalLanguageMatch(
+		Partner.partner_name, Partner.tagline, Partner.description,
+		Partner.industry, Partner.city, Partner.country,
+	).Against(search_term)
+	rows = (
+		frappe.qb.from_(Partner)
+		.select(Partner.name, rank.as_("rank"))
+		.where(Partner.name.isin(allowed_names))
+		.where(rank)
+		.orderby("rank", order=frappe.qb.desc)
+	).run(as_dict=True)
 	return [r.name for r in rows]
 
 
-def _fuzzy_rank(search_term: str, candidates: list[dict], threshold: float = 0.65):
-	"""Typo-tolerant fallback over a bounded candidate set (stdlib difflib, no
-	extra dependency — the partner directory is small enough that scoring every
-	candidate in Python is cheap). Catches both misspellings ("Tridot" ->
-	"Tridots") and terms too short for FULLTEXT's min-word-length ("erp")."""
+def _fuzzy_rank(search_term, candidates, threshold=0.65):
+	"""Ranks partners by typo-tolerant fuzzy match, as a fallback for terms full-text search misses."""
 	term = (search_term or "").strip().lower()
 	if not term:
 		return candidates
@@ -197,163 +250,50 @@ def _fuzzy_rank(search_term: str, candidates: list[dict], threshold: float = 0.6
 	return [c for _, c in scored]
 
 
-def _partners_matching_child(child_doctype: str, field: str, operator: str, value):
-	"""Names of partners with at least one <child_doctype> row satisfying
-	<field> <operator> <value> — built as a WHERE name IN (subquery) membership
-	check, not a join. Joining the child table directly onto Partner (Frappe's
-	own ["Child Doctype", field, op, value] filter syntax does exactly that)
-	multiplies a partner's row once per matching child row — combine two or
-	more such filters at once (as search_partners' filter panel lets you) and
-	a partner with, say, 2 matching rows in one child table and 3 in another
-	comes back 6 times instead of once. A membership subquery is a plain
-	yes/no test per partner, so it can't fan out no matter how many child rows
-	exist on either side."""
-	ChildTable = frappe.qb.DocType(child_doctype)
-	query = (
-		frappe.qb.from_(ChildTable)
-		.select(ChildTable.parent)
-		.distinct()
-		.where(ChildTable.parenttype == "Partner")
-	)
-	if operator == "=":
-		query = query.where(ChildTable[field] == value)
-	elif operator == "in":
-		query = query.where(ChildTable[field].isin(value))
-	elif operator == "is_set":
-		query = query.where(ChildTable[field] != "")
-	else:
-		raise ValueError(f"Unsupported operator: {operator}")
-	return {row[0] for row in query.run()}
+SORT_OPTIONS = {
+	"rating_desc": ("rating", True),
+	"rollouts_desc": ("rollouts", True),
+	"name_asc": ("partner_name", False),
+}
 
 
-def _child_values_by_partner(child_doctype: str, value_field: str, names: list[str], parentfield: str | None = None):
-	"""Every `value_field` value from `child_doctype` for each partner in
-	`names`, in one query, grouped into a dict of lists keyed by partner name
-	(full list, in idx order — callers wanting just a preview slice it
-	themselves, e.g. apps[:2]). Always scoped to parenttype="Partner"; pass
-	`parentfield` too for a child doctype shared with another doctype's own
-	Table field (e.g. "Partner App" is also Requirement.apps) so a same-named
-	parent from the other doctype can't leak in."""
-	if not names:
-		return {}
-	filters = {"parent": ["in", names], "parenttype": "Partner"}
-	if parentfield:
-		filters["parentfield"] = parentfield
-	values_by_partner = {}
-	for r in frappe.get_all(
-		child_doctype, filters=filters, fields=["parent", value_field], order_by="idx asc"
-	):
-		values_by_partner.setdefault(r.parent, []).append(r.get(value_field))
-	return values_by_partner
-
-
-def _apps_by_partner(names: list[str]):
-	"""Every Partner App (Partner.apps) value for each partner in `names` —
-	see _child_values_by_partner. Kept as its own name since "apps per
-	partner" is looked up from several places (search, wizard scoring,
-	shortlist), not just the wizard scoring pass."""
-	return _child_values_by_partner("Partner App", "app", names, parentfield="apps")
-
-
-def _parse_answers(answers: dict | str | None):
-	"""Normalizes the finder wizard's `answers` payload — arrives as a JSON
-	string over the wire (a whitelisted endpoint's raw argument) but as a
-	plain dict when one wizard function calls another directly in Python."""
-	if isinstance(answers, str):
-		answers = json.loads(answers or "{}")
-	return answers or {}
-
-
-def attach_success_story_previews(rows: list[dict]):
-	"""Batch-attaches success_story_count/success_story_categories to each row
-	in `rows` (each needs a "name" key matching a Partner document) — one
-	query regardless of how many rows. Used everywhere a partner listing shows
-	this preview: Find Partners search, the finder wizard's results, and the
-	customer's Shortlisted page."""
-	names = [r["name"] for r in rows]
-	if not names:
-		return rows
-	buckets = {}
-	for row in frappe.get_all(
-		"Partner Success Story",
-		filters={"parent": ["in", names], "parenttype": "Partner", "parentfield": "success_stories"},
-		fields=["parent", "category"],
-		order_by="idx asc",
-	):
-		bucket = buckets.setdefault(row.parent, {"count": 0, "categories": []})
-		bucket["count"] += 1
-		if row.category and row.category not in bucket["categories"]:
-			bucket["categories"].append(row.category)
-	for r in rows:
-		stories = buckets.get(r["name"], {"count": 0, "categories": []})
-		r["success_story_count"] = stories["count"]
-		r["success_story_categories"] = stories["categories"]
-	return rows
+# Operators the CRM-style Filter component can emit (its own WIRE_OPERATOR map) —
+# validated against this whitelist before reaching the query.
+FILTER_OPERATORS = {"is", "is not", "in", "not in", "=", "!=", "like", "not like", ">", "<", ">=", "<=", "between", "timespan"}
 
 
 def search_partners(
-	search: str | None = None,
-	industry: str | None = None,
-	product: str | None = None,
-	region: str | None = None,
-	delivery_mode: str | None = None,
-	country: str | None = None,
-	tier: str | None = None,
-	business_process: str | None = None,
-	implementation_type: str | None = None,
-	language: str | None = None,
-	min_rating: float | None = None,
-	min_pmm_level: float | None = None,
-	max_response_time: int | None = None,
-	extra_filters: str | list | None = None,
-	sort: str | None = None,
-	limit: int = 100,
+	search=None, industry=None, product=None, region=None, delivery_mode=None, country=None,
+	tier=None, business_process=None, implementation_type=None, language=None,
+	min_rating=None, min_pmm_level=None, max_response_time=None,
+	extra_filters=None,
+	sort=None, limit=100,
 ):
-	"""Guest-safe partner search backing the Find Partners page.
-
-	Structured filters combine as AND. `product`/`delivery_mode`/
-	`business_process`/`implementation_type`/`language` each resolve to "which
-	partners have at least one matching child-table row" via a WHERE name IN
-	(subquery) membership check (see _partners_matching_child) rather than
-	Frappe's built-in child-table join filter syntax — a join multiplies a
-	partner's row once per matching child row, so combining more than one such
-	filter at once (this panel lets you) could silently duplicate results. A
-	membership subquery can't do that.
-
-	`search` layers full-text search with a fuzzy/typo-tolerant fallback on top
-	of whatever the structured filters already narrowed down to:
-	1. FULLTEXT relevance search (partner_fts index) — real ranking, good for
-	   multi-word queries, but MySQL won't match very short terms.
-	2. Fuzzy scoring (Python) over whatever FULLTEXT missed — catches typos and
-	   short terms. Only pays its cost on the (small) leftover candidate set.
-
-	`sort`, when given, overrides both the default rating-desc ordering and
-	search relevance ranking — an explicit sort choice should win over either.
-
-	`max_response_time` filters on the average-response-time field
-	(response_time_hours) — "I want partners who typically respond within X
-	hours".
-
-	`extra_filters` is a JSON list of [fieldname, operator, value] triples from
-	the CRM-style Filter component (frappe-ui's meta-driven field/operator/value
-	picker) — validated against Partner's own meta before being appended, so a
-	malformed/garbage fieldname or operator is dropped rather than passed through.
-	"""
+	"""Searches partners for the Find Partners page, combining structured filters with full-text and fuzzy search."""
+	# TEMPORARY: only surface the original curated (fully-profiled) partners
+	# while the rest of the bulk-imported directory is still bare (name/tier/
+	# country only, no logo/description/team). Remove this filter to bring the
+	# full directory back — is_featured stays set on the underlying records.
 	filters = list(BASE_PARTNER_FILTERS)
-	for field, value in [("industry", industry), ("region", region), ("country", country), ("tier", tier)]:
+	for value, field in [
+		(industry, "industry"), (region, "region"), (country, "country"), (tier, "tier"),
+	]:
 		if value:
 			filters.append(["Partner", field, "=", value])
 
+	# Child-table filters resolve via a membership subquery (_partners_matching_child), not
+	# Frappe's built-in child-table join filter syntax — combining 2+ such filters as native join
+	# tuples multiplies a partner's row once per matching child row on each side.
 	child_matches = []
-	for value, child_doctype, field in [
-		(product, "Partner App", "app"),
-		(delivery_mode, "Partner Delivery Mode", "delivery_mode"),
-		(business_process, "Partner Business Process", "business_process"),
-		(implementation_type, "Partner Implementation Type", "implementation_type"),
-		(language, "Partner Language", "language"),
+	for value, doctype, field, parentfield in [
+		(product, "Partner App", "app", "apps"),
+		(delivery_mode, "Partner Delivery Mode", "delivery_mode", None),
+		(business_process, "Partner Business Process", "business_process", None),
+		(implementation_type, "Partner Implementation Type", "implementation_type", None),
+		(language, "Partner Language", "language", None),
 	]:
 		if value:
-			child_matches.append(_partners_matching_child(child_doctype, field, "=", value))
+			child_matches.append(_partners_matching_child(doctype, field, "=", value, parentfield=parentfield))
 	if child_matches:
 		filters.append(["Partner", "name", "in", list(set.intersection(*child_matches))])
 
@@ -388,6 +328,9 @@ def search_partners(
 			"Partner", fields=PARTNER_FIELDS, filters=filters, order_by=order_by, limit_page_length=limit
 		)
 	else:
+		# Candidates passing the structured filters — unranked, no text match yet.
+		# limit_page_length=0 is required here: frappe.get_list defaults to a page
+		# size of 20 when omitted, which would silently truncate ranking input.
 		candidates = frappe.get_list("Partner", fields=PARTNER_FIELDS, filters=filters, limit_page_length=0)
 		by_name = {c.name: c for c in candidates}
 
@@ -418,22 +361,70 @@ def search_partners(
 	return partners
 
 
-def count_matching_partners(answers: dict | str | None = None):
-	"""Live "partners that match so far" count for the finder wizard's dot-grid,
-	recomputed cumulatively after every answer. Filters combine as AND, narrowing
-	as more (mappable) answers come in — only questions with a real mapping to
-	Partner data affect the count."""
+# The finder wizard's industry options don't share the same value set as
+# Partner.industry (different taxonomy, written for customers rather than
+# partner classification) — translate to the closest Partner industry value.
+WIZARD_TO_PARTNER_INDUSTRY = {
+	"Manufacturing": "Manufacturing",
+	"Retail & Distribution": "Retail",
+	"Healthcare": "Healthcare",
+	"Education": "Education",
+	"Services": "Professional Services",
+	"Construction": "Other",
+	"Logistics": "Logistics",
+	"Technology": "Technology",
+	"Other": "Other",
+}
+
+
+# Real, defensible mappings from the wizard's customer-facing answers to Partner
+# classification data. Deliberately partial — an answer with no clean equivalent
+# (company size, timeline, budget, several "looking for" / "current situation"
+# values) is left unmapped rather than guessed at, so the live count only ever
+# narrows on a real signal.
+LOOKING_FOR_TO_IMPL_TYPE = {
+	"New ERP Implementation": "New Implementation",
+	"Replace Existing ERP": "Migration",
+	"Custom App Development": "Customization",
+}
+CURRENT_SITUATION_TO_MIGRATION = {
+	"Tally": "Tally to ERPNext",
+	"SAP": "SAP to ERPNext",
+	"Odoo": "Odoo to ERPNext",
+}
+CURRENT_SITUATION_TO_IMPL_TYPE = {
+	"Excel / Spreadsheets": "New Implementation",
+	"No System Yet": "New Implementation",
+	"Existing ERPNext": "Support & Maintenance",
+}
+DELIVERY_TO_MODE = {"Remote": "Remote", "Hybrid": "Hybrid", "On-site": "Onsite"}
+REQUIREMENT_TO_BUSINESS_PROCESS = {
+	"HR & Payroll": "HR & Payroll",
+	"Manufacturing Planning": "Manufacturing Execution",
+	"Inventory Management": "Inventory Management",
+}
+REQUIREMENT_MIGRATION_TAGS = {"SAP Migration", "Data Migration"}
+
+
+def count_matching_partners(answers=None):
+	"""Returns a live count of partners matching the finder wizard's answers so far, for the wizard's dot-grid."""
 	answers = _parse_answers(answers)
+	# Same temporary is_featured scope as search_partners, so the wizard's live
+	# count never exceeds what the directory actually shows right now.
 	filters = list(BASE_PARTNER_FILTERS)
-	child_matches = []
 
 	industry = answers.get("industry")
 	if industry:
 		filters.append(["Partner", "industry", "=", WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry)])
 
+	# Same membership-subquery approach as search_partners — see _partners_matching_child.
+	child_matches = []
+
 	impl_type = LOOKING_FOR_TO_IMPL_TYPE.get(answers.get("looking_for"))
 	if impl_type:
-		child_matches.append(_partners_matching_child("Partner Implementation Type", "implementation_type", "=", impl_type))
+		child_matches.append(
+			_partners_matching_child("Partner Implementation Type", "implementation_type", "=", impl_type)
+		)
 
 	situation = answers.get("current_situation")
 	migration = CURRENT_SITUATION_TO_MIGRATION.get(situation)
@@ -442,7 +433,9 @@ def count_matching_partners(answers: dict | str | None = None):
 	else:
 		impl_type_2 = CURRENT_SITUATION_TO_IMPL_TYPE.get(situation)
 		if impl_type_2:
-			child_matches.append(_partners_matching_child("Partner Implementation Type", "implementation_type", "=", impl_type_2))
+			child_matches.append(
+				_partners_matching_child("Partner Implementation Type", "implementation_type", "=", impl_type_2)
+			)
 
 	mode = DELIVERY_TO_MODE.get(answers.get("delivery_preference"))
 	if mode:
@@ -451,22 +444,22 @@ def count_matching_partners(answers: dict | str | None = None):
 	requirements = answers.get("requirements") or []
 	bp_values = [REQUIREMENT_TO_BUSINESS_PROCESS[r] for r in requirements if r in REQUIREMENT_TO_BUSINESS_PROCESS]
 	if bp_values:
-		child_matches.append(_partners_matching_child("Partner Business Process", "business_process", "in", bp_values))
+		child_matches.append(
+			_partners_matching_child("Partner Business Process", "business_process", "in", bp_values)
+		)
 	elif any(r in REQUIREMENT_MIGRATION_TAGS for r in requirements):
 		child_matches.append(_partners_matching_child("Partner Migration Path", "migration_path", "is_set", None))
 
 	if child_matches:
 		filters.append(["Partner", "name", "in", list(set.intersection(*child_matches))])
 
+	# limit_page_length=0: frappe.get_list defaults to page size 20 when omitted.
 	partners = frappe.get_list("Partner", filters=filters, fields=["name"], limit_page_length=0)
 	return len(partners)
 
 
-def _score_partners_by_requirements(answers: dict):
-	"""Shared scoring for the finder wizard: every is_featured partner scored by
-	how many of the wizard's answered questions they fail to satisfy. Returns the
-	full, unfiltered [(missing_count, -rating, name, missing_labels)] list sorted
-	best-first — callers decide their own cutoff."""
+def _score_partners_by_requirements(answers):
+	"""Scores every featured partner by how many of the wizard's answered questions they fail to match, shared by wizard_match_state and list_matching_partners."""
 	names = [n.name for n in frappe.get_list(
 		"Partner", filters=BASE_PARTNER_FILTERS, fields=["name"], limit_page_length=0,
 	)]
@@ -501,6 +494,12 @@ def _score_partners_by_requirements(answers: dict):
 	wanted_bps = [REQUIREMENT_TO_BUSINESS_PROCESS[r] for r in requirements if r in REQUIREMENT_TO_BUSINESS_PROCESS]
 	wants_migration_tag = any(r in REQUIREMENT_MIGRATION_TAGS for r in requirements)
 
+	# How many of the (up to 6) scored dimensions were actually answered — used by
+	# list_matching_partners to scale its near-match tolerance. A flat "missing <= 2"
+	# cap is generous when 8 questions were answered but makes almost the entire
+	# featured pool look like a "near match" when only 2-3 were, which is exactly
+	# the sparse-answers case a wizard reopen tends to produce (unset fields stay
+	# unset unless the visitor deliberately fills them in).
 	answered_dims = sum([
 		bool(wanted_industry), bool(wanted_apps), bool(wanted_mode), bool(wanted_impl_type),
 		bool(wanted_migration or wanted_situation_impl_type), bool(wanted_bps or wants_migration_tag),
@@ -534,11 +533,8 @@ def _score_partners_by_requirements(answers: dict):
 	return all_scored, apps_by_partner, answered_dims
 
 
-def wizard_match_state(answers: dict | str | None = None):
-	"""Live per-partner matched state for the finder wizard's dot pictogram —
-	counts exact matches only (missing_count == 0), the same thing the results
-	page's own "N Partners Match Your Requirements" header counts, so the two
-	numbers always agree without needing a separate threshold to keep in sync."""
+def wizard_match_state(answers=None):
+	"""Returns exact-match partner names and count for the finder wizard's dot pictogram."""
 	answers = _parse_answers(answers)
 
 	all_scored, _apps_by_partner, _answered_dims = _score_partners_by_requirements(answers)
@@ -547,10 +543,8 @@ def wizard_match_state(answers: dict | str | None = None):
 	return {"matched_names": matched_names, "count": len(matched_names)}
 
 
-def list_matching_partners(answers: dict | str | None = None, limit: int = 8):
-	"""Ranked partner results for the finder wizard's final step. Same scoring
-	as wizard_match_state (see _score_partners_by_requirements), returning full
-	rows (same shape as search_partners) instead of just names."""
+def list_matching_partners(answers=None, limit=8):
+	"""Returns ranked partner results for the finder wizard's final step, including close-but-imperfect matches."""
 	answers = _parse_answers(answers)
 	limit = cint(limit) or 8
 
@@ -580,7 +574,7 @@ def list_matching_partners(answers: dict | str | None = None, limit: int = 8):
 
 
 def list_partner_countries():
-	"""Distinct countries with at least one Partner, for the Country filter dropdown."""
+	"""Returns distinct countries with at least one partner, for the Country filter dropdown."""
 	rows = frappe.get_all(
 		"Partner", fields=["country"], filters={"country": ["is", "set"], "is_featured": 1, "enabled": 1}, distinct=True
 	)
@@ -588,9 +582,7 @@ def list_partner_countries():
 
 
 def list_partner_filter_options():
-	"""Option lists for the Find Partners filter panel's Business Process /
-	Implementation Type / Language dropdowns, plus the finder wizard's Apps
-	question."""
+	"""Returns filter dropdown options as a plain API call, since Studio's Document List resource isn't guest-accessible."""
 	return {
 		"business_processes": frappe.get_all("Business Process", pluck="title", order_by="title"),
 		"implementation_types": frappe.get_all("Implementation Type", pluck="title", order_by="title"),
@@ -599,19 +591,8 @@ def list_partner_filter_options():
 	}
 
 
-def _pack_is_primary_match(pack_key: str, has_erpnext: bool, has_hr: bool):
-	if pack_key == "allinone":
-		return has_erpnext and has_hr
-	if pack_key in ("core", "manufacturing"):
-		return has_erpnext and not has_hr
-	if pack_key == "hr":
-		return has_hr and not has_erpnext
-	return False
-
-
-def get_partner_preview(partner: str):
-	"""Lightweight partner snapshot for the Find Partners list view's quick-preview
-	side drawer — just enough to decide whether to open the full profile."""
+def get_partner_preview(partner):
+	"""Returns a lightweight partner snapshot for the quick-preview drawer, fetched only when needed."""
 	fields = [
 		"name", "partner_name", "logo", "description", "tier", "specialist",
 		"rating", "city", "country", "pmm_level", "hourly_rate",
@@ -621,20 +602,15 @@ def get_partner_preview(partner: str):
 	if not doc:
 		frappe.throw(_("Partner not found"), frappe.DoesNotExistError)
 
-	doc["apps"] = frappe.get_all(
-		"Partner App",
-		filters={"parent": partner, "parenttype": "Partner", "parentfield": "apps"},
-		pluck="app",
-		order_by="idx asc",
-	)
+	doc["apps"] = _apps_by_partner([partner]).get(partner, [])
 	doc["migrations"] = frappe.get_all(
 		"Partner Migration Path", filters={"parent": partner}, pluck="migration_path", order_by="idx asc"
 	)
 	return doc
 
 
-def get_partner_document(partner: str):
-	"""Full Partner record for the Partner Profile page."""
+def get_partner_document(partner):
+	"""Returns the full Partner record as a plain API call, since Studio's Document resource isn't guest-accessible."""
 	if not frappe.db.exists("Partner", partner):
 		frappe.throw(_("Partner not found"), frappe.DoesNotExistError)
 	doc = frappe.get_doc("Partner", partner).as_dict()
@@ -644,4 +620,3 @@ def get_partner_document(partner: str):
 		now_datetime().year - doc["year_founded"] if doc.get("year_founded") else None
 	)
 	return doc
-

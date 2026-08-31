@@ -27,7 +27,7 @@ def has_permission(doc, user=None, permission_type=None):
 	return bool(frappe.db.exists("Customer Team Member", {"customer": doc.name, "user": user}))
 
 
-def get_customer_for_user(user: str | None = None):
+def get_customer_for_user(user=None):
 	"""Customer company the given (or current session) user belongs to, via Customer Team Member."""
 	user = user or frappe.session.user
 	if not user or user == "Guest":
@@ -43,10 +43,8 @@ def get_my_customer():
 	return frappe.db.get_value("Customer", customer, ["name", "customer_name"], as_dict=True)
 
 
-def signup_customer(full_name: str, company_name: str, email: str, password: str):
-	"""Self-serve signup for a new customer company: creates the User and a new
-	Customer, seats the signing-up user as that Customer's admin, and logs them
-	in immediately."""
+def signup_customer(full_name, company_name, email, password):
+	"""Lets a new customer self-signup by creating their user, company, and admin membership in one step."""
 	full_name = (full_name or "").strip()
 	company_name = (company_name or "").strip()
 	email = (email or "").strip().lower()
@@ -61,7 +59,7 @@ def signup_customer(full_name: str, company_name: str, email: str, password: str
 			_("{0} is already registered. Ask your team admin to add you instead.").format(company_name)
 		)
 
-	first_name, _, last_name = full_name.partition(" ")
+	first_name, _sep, last_name = full_name.partition(" ")
 
 	user = frappe.new_doc("User")
 	user.email = email

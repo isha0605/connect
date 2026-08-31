@@ -64,8 +64,7 @@ CUSTOMER_TEMPLATES = [
 
 
 def execute():
-	"""Seed the platform's global default quick-reply templates, one per side. Safe to re-run —
-	skips any (title, side) pair that already exists rather than duplicating it."""
+	"""Seeds the platform's global default quick-reply templates, one per side, safe to re-run."""
 	if not frappe.db.table_exists("Connect Message Template"):
 		return
 

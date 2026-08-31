@@ -28,13 +28,6 @@
        },
        "children": [
         {
-         "baseStyles": {
-          "marginBottom": "0px",
-          "marginLeft": "0px",
-          "marginRight": "0px",
-          "marginTop": "0px",
-          "width": "237px"
-         },
          "children": [],
          "classes": [],
          "componentId": "SidebarHeader-44d32fbf8",
@@ -168,7 +161,7 @@
          "componentName": "SidebarItem",
          "componentProps": {
           "icon": "lucide-message-square",
-          "label": "Messaging",
+          "label": "Chat",
           "to": "/messaging-d87b"
          }
         },
@@ -353,7 +346,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const saved = myRequirement.data || {};\nlet special = [];\ntry { special = JSON.parse(saved.special_requirements || '[]'); } catch (e) { special = []; }\nconst prefill = {\n  country: saved.country || undefined,\n  industry: saved.industry || undefined,\n  apps: saved.apps || [],\n  looking_for: saved.looking_for || undefined,\n  company_size: saved.company_size || undefined,\n  current_situation: saved.current_situation || undefined,\n  timeline: saved.timeline || undefined,\n  delivery_preference: saved.delivery_preference || undefined,\n  budget: saved.budget || undefined,\n  requirements: special,\n  additional_notes: saved.additional_notes || undefined,\n};\nObject.keys(prefill).forEach((k) => { if (prefill[k] === undefined) delete prefill[k]; });\nwizardCountryInput.value = saved.country || '';\nwizardLookingForSelect.value = saved.looking_for || '';\nwizardCompanySizeSelect.value = saved.company_size || '';\nwizardCurrentSituationSelect.value = saved.current_situation || '';\nwizardTimelineSelect.value = saved.timeline || '';\nwizardDeliveryPreferenceSelect.value = saved.delivery_preference || '';\nwizardBudgetSelect.value = saved.budget || '';\nwizardAdditionalNotesInput.value = saved.additional_notes || '';\nfinderOpen.value = true; finderStep.value = 1; finderAnswers.value = prefill; finderOutcome.value = ''; lastAnsweredKey.value = ''; matchedNames.value = [];\ncall('connect.api.wizard_match_state', { answers: JSON.stringify(prefill) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const saved = myRequirement.data || {};\nlet special = [];\ntry { special = JSON.parse(saved.special_requirements || '[]'); } catch (e) { special = []; }\nconst prefill = {\n  company_name: saved.company_name || undefined,\n  country: saved.country || undefined,\n  industry: saved.industry || undefined,\n  apps: saved.apps || [],\n  looking_for: saved.looking_for || undefined,\n  company_size: saved.company_size || undefined,\n  current_situation: saved.current_situation || undefined,\n  timeline: saved.timeline || undefined,\n  delivery_preference: saved.delivery_preference || undefined,\n  budget: saved.budget || undefined,\n  requirements: special,\n  additional_notes: saved.additional_notes || undefined,\n};\nObject.keys(prefill).forEach((k) => { if (prefill[k] === undefined) delete prefill[k]; });\nwizardCompanyNameInput.value = saved.company_name || '';\nwizardCountryInput.value = saved.country || '';\nwizardLookingForSelect.value = saved.looking_for || '';\nwizardCompanySizeSelect.value = saved.company_size || '';\nwizardCurrentSituationSelect.value = saved.current_situation || '';\nwizardTimelineSelect.value = saved.timeline || '';\nwizardDeliveryPreferenceSelect.value = saved.delivery_preference || '';\nwizardBudgetSelect.value = saved.budget || '';\nwizardAdditionalNotesInput.value = saved.additional_notes || '';\nfinderOpen.value = true; finderStep.value = 1; finderAnswers.value = prefill; finderOutcome.value = ''; lastAnsweredKey.value = ''; matchedNames.value = [];\ncall('connect.api.wizard_match_state', { answers: JSON.stringify(prefill) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "Button-2af82f219",
@@ -1770,7 +1763,7 @@
                              "componentProps": {
                               "fontSize": "text-xs",
                               "tag": "span",
-                              "text": "{{ dataItem.rating ? dataItem.rating : 'No ratings yet' }}"
+                              "text": "{{ dataItem.rating ? dataItem.rating + ' (' + (dataItem.reviews_count || 0) + ')' : 'No ratings yet' }}"
                              },
                              "componentSlots": {},
                              "mobileStyles": {},
@@ -1960,7 +1953,7 @@
                           "click": {
                            "action": "Run Script",
                            "event": "click",
-                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.start_partner_thread', { partner: dataItem.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.messaging.start_partner_thread', { partner: dataItem.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                           }
                          },
                          "componentId": "Button-contact-wizard-match",
@@ -2487,7 +2480,7 @@
                              "componentProps": {
                               "fontSize": "text-xs",
                               "tag": "span",
-                              "text": "{{ dataItem.rating ? dataItem.rating : 'No ratings yet' }}"
+                              "text": "{{ dataItem.rating ? dataItem.rating + ' (' + (dataItem.reviews_count || 0) + ')' : 'No ratings yet' }}"
                              },
                              "componentSlots": {},
                              "mobileStyles": {},
@@ -2677,7 +2670,7 @@
                           "click": {
                            "action": "Run Script",
                            "event": "click",
-                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.start_partner_thread', { partner: dataItem.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.messaging.start_partner_thread', { partner: dataItem.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                           }
                          },
                          "componentId": "Button-contact-wizard-near",
@@ -2963,54 +2956,18 @@
                        "children": [
                         {
                          "attributes": {},
-                         "baseStyles": {
-                          "alignItems": "center",
-                          "backgroundColor": "var(--surface-base, oklch(1 0 0))",
-                          "backgroundImage": "{{ dataItem.logo ? 'url(' + dataItem.logo + ')' : 'none' }}",
-                          "backgroundPosition": "center",
-                          "backgroundRepeat": "no-repeat",
-                          "backgroundSize": "contain",
-                          "borderColor": "var(--outline-gray-3, oklch(0.83 0 0))",
-                          "borderRadius": "6px",
-                          "borderStyle": "solid",
-                          "borderWidth": "1px",
-                          "display": "flex",
-                          "flexShrink": "0",
-                          "height": "52px",
-                          "justifyContent": "center",
-                          "margin": "5px",
-                          "overflow": "hidden",
-                          "padding": "0px",
-                          "width": "52px"
-                         },
-                         "children": [
-                          {
-                           "attributes": {},
-                           "baseStyles": {
-                            "color": "var(--ink-gray-6)",
-                            "display": "{{ dataItem.logo ? 'none' : 'flex' }}",
-                            "fontWeight": "600"
-                           },
-                           "children": [],
-                           "classes": [],
-                           "componentEvents": {},
-                           "componentId": "grid-logo-fallback-gold",
-                           "componentName": "TextBlock",
-                           "componentProps": {
-                            "fontSize": "text-sm",
-                            "tag": "span",
-                            "text": "{{ (dataItem.partner_name || '?').charAt(0).toUpperCase() }}"
-                           },
-                           "componentSlots": {},
-                           "mobileStyles": {},
-                           "tabletStyles": {}
-                          }
-                         ],
+                         "baseStyles": {},
+                         "children": [],
                          "classes": [],
                          "componentEvents": {},
                          "componentId": "e9c6c3ff12",
-                         "componentName": "container",
-                         "componentProps": {},
+                         "componentName": "Avatar",
+                         "componentProps": {
+                          "image": "{{ dataItem.logo }}",
+                          "label": "{{ dataItem.partner_name }}",
+                          "shape": "square",
+                          "size": "xl"
+                         },
                          "componentSlots": {},
                          "mobileStyles": {},
                          "tabletStyles": {}
@@ -3304,7 +3261,7 @@
                         {
                          "attributes": {},
                          "baseStyles": {
-                          "color": "var(--ink-gray-6, oklch(0.439 0 0))"
+                          "width": "100%"
                          },
                          "children": [],
                          "classes": [],
@@ -3318,9 +3275,9 @@
                          "componentId": "a18d616fe1",
                          "componentName": "Button",
                          "componentProps": {
-                          "iconLeft": "lucide-send",
+                          "iconLeft": "",
                           "label": "Contact",
-                          "variant": "subtle"
+                          "variant": "outline"
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
@@ -3565,54 +3522,18 @@
                        "children": [
                         {
                          "attributes": {},
-                         "baseStyles": {
-                          "alignItems": "center",
-                          "backgroundColor": "var(--surface-base, oklch(1 0 0))",
-                          "backgroundImage": "{{ dataItem.logo ? 'url(' + dataItem.logo + ')' : 'none' }}",
-                          "backgroundPosition": "center",
-                          "backgroundRepeat": "no-repeat",
-                          "backgroundSize": "contain",
-                          "borderColor": "var(--outline-gray-3, oklch(0.83 0 0))",
-                          "borderRadius": "6px",
-                          "borderStyle": "solid",
-                          "borderWidth": "1px",
-                          "display": "flex",
-                          "flexShrink": "0",
-                          "height": "52px",
-                          "justifyContent": "center",
-                          "margin": "5px",
-                          "overflow": "hidden",
-                          "padding": "0px",
-                          "width": "52px"
-                         },
-                         "children": [
-                          {
-                           "attributes": {},
-                           "baseStyles": {
-                            "color": "var(--ink-gray-6)",
-                            "display": "{{ dataItem.logo ? 'none' : 'flex' }}",
-                            "fontWeight": "600"
-                           },
-                           "children": [],
-                           "classes": [],
-                           "componentEvents": {},
-                           "componentId": "grid-logo-fallback-silver",
-                           "componentName": "TextBlock",
-                           "componentProps": {
-                            "fontSize": "text-sm",
-                            "tag": "span",
-                            "text": "{{ (dataItem.partner_name || '?').charAt(0).toUpperCase() }}"
-                           },
-                           "componentSlots": {},
-                           "mobileStyles": {},
-                           "tabletStyles": {}
-                          }
-                         ],
+                         "baseStyles": {},
+                         "children": [],
                          "classes": [],
                          "componentEvents": {},
                          "componentId": "2580f3572e",
-                         "componentName": "container",
-                         "componentProps": {},
+                         "componentName": "Avatar",
+                         "componentProps": {
+                          "image": "{{ dataItem.logo }}",
+                          "label": "{{ dataItem.partner_name }}",
+                          "shape": "square",
+                          "size": "xl"
+                         },
                          "componentSlots": {},
                          "mobileStyles": {},
                          "tabletStyles": {}
@@ -3906,7 +3827,7 @@
                         {
                          "attributes": {},
                          "baseStyles": {
-                          "color": "var(--ink-gray-6, oklch(0.439 0 0))"
+                          "width": "100%"
                          },
                          "children": [],
                          "classes": [],
@@ -3920,9 +3841,9 @@
                          "componentId": "689b168756",
                          "componentName": "Button",
                          "componentProps": {
-                          "iconLeft": "lucide-send",
+                          "iconLeft": "",
                           "label": "Contact",
-                          "variant": "subtle"
+                          "variant": "outline"
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
@@ -4167,54 +4088,18 @@
                        "children": [
                         {
                          "attributes": {},
-                         "baseStyles": {
-                          "alignItems": "center",
-                          "backgroundColor": "var(--surface-base, oklch(1 0 0))",
-                          "backgroundImage": "{{ dataItem.logo ? 'url(' + dataItem.logo + ')' : 'none' }}",
-                          "backgroundPosition": "center",
-                          "backgroundRepeat": "no-repeat",
-                          "backgroundSize": "contain",
-                          "borderColor": "var(--outline-gray-3, oklch(0.83 0 0))",
-                          "borderRadius": "6px",
-                          "borderStyle": "solid",
-                          "borderWidth": "1px",
-                          "display": "flex",
-                          "flexShrink": "0",
-                          "height": "52px",
-                          "justifyContent": "center",
-                          "margin": "5px",
-                          "overflow": "hidden",
-                          "padding": "0px",
-                          "width": "52px"
-                         },
-                         "children": [
-                          {
-                           "attributes": {},
-                           "baseStyles": {
-                            "color": "var(--ink-gray-6)",
-                            "display": "{{ dataItem.logo ? 'none' : 'flex' }}",
-                            "fontWeight": "600"
-                           },
-                           "children": [],
-                           "classes": [],
-                           "componentEvents": {},
-                           "componentId": "grid-logo-fallback-bronze",
-                           "componentName": "TextBlock",
-                           "componentProps": {
-                            "fontSize": "text-sm",
-                            "tag": "span",
-                            "text": "{{ (dataItem.partner_name || '?').charAt(0).toUpperCase() }}"
-                           },
-                           "componentSlots": {},
-                           "mobileStyles": {},
-                           "tabletStyles": {}
-                          }
-                         ],
+                         "baseStyles": {},
+                         "children": [],
                          "classes": [],
                          "componentEvents": {},
                          "componentId": "1e14c9cd2e",
-                         "componentName": "container",
-                         "componentProps": {},
+                         "componentName": "Avatar",
+                         "componentProps": {
+                          "image": "{{ dataItem.logo }}",
+                          "label": "{{ dataItem.partner_name }}",
+                          "shape": "square",
+                          "size": "xl"
+                         },
                          "componentSlots": {},
                          "mobileStyles": {},
                          "tabletStyles": {}
@@ -4508,7 +4393,7 @@
                         {
                          "attributes": {},
                          "baseStyles": {
-                          "color": "var(--ink-gray-6, oklch(0.439 0 0))"
+                          "width": "100%"
                          },
                          "children": [],
                          "classes": [],
@@ -4522,9 +4407,9 @@
                          "componentId": "990b3c6438",
                          "componentName": "Button",
                          "componentProps": {
-                          "iconLeft": "lucide-send",
+                          "iconLeft": "",
                           "label": "Contact",
-                          "variant": "subtle"
+                          "variant": "outline"
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
@@ -4707,10 +4592,7 @@
                         "flexShrink": "0",
                         "height": "52px",
                         "justifyContent": "center",
-                        "marginBottom": "28px",
-                        "marginLeft": "0px",
-                        "marginRight": "0px",
-                        "marginTop": "0px",
+                        "margin": "5px",
                         "overflow": "hidden",
                         "padding": "0px",
                         "width": "52px"
@@ -5005,7 +4887,7 @@
                              "componentProps": {
                               "fontSize": "text-xs",
                               "tag": "span",
-                              "text": "{{ item.rating ? item.rating : 'No ratings yet' }}"
+                              "text": "{{ item.rating ? item.rating + ' (' + (item.reviews_count || 0) + ')' : 'No ratings yet' }}"
                              },
                              "componentSlots": {},
                              "mobileStyles": {},
@@ -5189,7 +5071,7 @@
                           "click": {
                            "action": "Run Script",
                            "event": "click",
-                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.start_partner_thread', { partner: item.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.messaging.start_partner_thread', { partner: item.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                           }
                          },
                          "componentId": "Button-contact-gold",
@@ -5343,10 +5225,7 @@
                         "flexShrink": "0",
                         "height": "52px",
                         "justifyContent": "center",
-                        "marginBottom": "25px",
-                        "marginLeft": "0px",
-                        "marginRight": "0px",
-                        "marginTop": "0px",
+                        "margin": "5px",
                         "overflow": "hidden",
                         "width": "52px"
                        },
@@ -5655,7 +5534,7 @@
                              "componentProps": {
                               "fontSize": "text-xs",
                               "tag": "span",
-                              "text": "{{ item.rating ? item.rating : 'No ratings yet' }}"
+                              "text": "{{ item.rating ? item.rating + ' (' + (item.reviews_count || 0) + ')' : 'No ratings yet' }}"
                              },
                              "componentSlots": {},
                              "mobileStyles": {},
@@ -5839,7 +5718,7 @@
                           "click": {
                            "action": "Run Script",
                            "event": "click",
-                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.start_partner_thread', { partner: item.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.messaging.start_partner_thread', { partner: item.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                           }
                          },
                          "componentId": "Button-contact-silver",
@@ -5992,10 +5871,7 @@
                         "flexShrink": "0",
                         "height": "52px",
                         "justifyContent": "center",
-                        "marginBottom": "27px",
-                        "marginLeft": "0px",
-                        "marginRight": "0px",
-                        "marginTop": "0px",
+                        "margin": "5px",
                         "overflow": "hidden",
                         "width": "52px"
                        },
@@ -6086,10 +5962,7 @@
                           },
                           {
                            "attributes": {},
-                           "baseStyles": {
-                            "backgroundColor": "#e3d8d8",
-                            "color": "#694343"
-                           },
+                           "baseStyles": {},
                            "children": [],
                            "classes": [],
                            "componentEvents": {},
@@ -6307,7 +6180,7 @@
                              "componentProps": {
                               "fontSize": "text-xs",
                               "tag": "span",
-                              "text": "{{ item.rating ? item.rating : 'No ratings yet' }}"
+                              "text": "{{ item.rating ? item.rating + ' (' + (item.reviews_count || 0) + ')' : 'No ratings yet' }}"
                              },
                              "componentSlots": {},
                              "mobileStyles": {},
@@ -6491,7 +6364,7 @@
                           "click": {
                            "action": "Run Script",
                            "event": "click",
-                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.start_partner_thread', { partner: item.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.messaging.start_partner_thread', { partner: item.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                           }
                          },
                          "componentId": "Button-contact-bronze",
@@ -6716,54 +6589,37 @@
                      "children": [
                       {
                        "attributes": {},
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "backgroundColor": "var(--surface-base, oklch(1 0 0))",
-                        "backgroundImage": "{{ dataItem.logo ? 'url(' + dataItem.logo + ')' : 'none' }}",
-                        "backgroundPosition": "center",
-                        "backgroundRepeat": "no-repeat",
-                        "backgroundSize": "contain",
-                        "borderColor": "var(--outline-gray-3, oklch(0.83 0 0))",
-                        "borderRadius": "6px",
-                        "borderStyle": "solid",
-                        "borderWidth": "1px",
-                        "display": "flex",
-                        "flexShrink": "0",
-                        "height": "52px",
-                        "justifyContent": "center",
-                        "margin": "5px",
-                        "overflow": "hidden",
-                        "padding": "0px",
-                        "width": "52px"
-                       },
-                       "children": [
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "color": "var(--ink-gray-6)",
-                          "display": "{{ dataItem.logo ? 'none' : 'flex' }}",
-                          "fontWeight": "600"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "grid-list-logo-fallback-gold",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "fontSize": "text-sm",
-                          "tag": "span",
-                          "text": "{{ (dataItem.partner_name || '?').charAt(0).toUpperCase() }}"
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        }
-                       ],
+                       "baseStyles": {},
+                       "children": [],
                        "classes": [],
                        "componentEvents": {},
                        "componentId": "Avatar-04220ae14",
-                       "componentName": "container",
-                       "componentProps": {},
+                       "componentName": "Avatar",
+                       "componentProps": {
+                        "image": "{{ dataItem.logo }}",
+                        "label": "{{ dataItem.partner_name }}",
+                        "shape": "square",
+                        "size": "xl"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "display": "{{ dataItem.specialist ? 'inline-flex' : 'none' }}"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "Badge-51ea3273e",
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "\u2605 Frappe Specialist",
+                        "theme": "violet",
+                        "variant": "subtle"
+                       },
                        "componentSlots": {},
                        "mobileStyles": {},
                        "tabletStyles": {}
@@ -6803,7 +6659,6 @@
                      "componentName": "Button",
                      "componentProps": {
                       "icon": "{{ (myShortlist.data || []).includes(dataItem.name) ? 'lucide-bookmark-check' : 'lucide-bookmark' }}",
-                      "size": "md",
                       "variant": "ghost"
                      },
                      "componentSlots": {},
@@ -7022,7 +6877,7 @@
                       {
                        "attributes": {},
                        "baseStyles": {
-                        "color": "var(--ink-gray-6, oklch(0.439 0 0))"
+                        "width": "100%"
                        },
                        "children": [],
                        "classes": [],
@@ -7036,9 +6891,9 @@
                        "componentId": "Button-5e49c67a5",
                        "componentName": "Button",
                        "componentProps": {
-                        "iconLeft": "lucide-send",
-                        "label": "Connect",
-                        "variant": "subtle"
+                        "iconLeft": "",
+                        "label": "Contact",
+                        "variant": "outline"
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
@@ -7200,54 +7055,18 @@
                      "children": [
                       {
                        "attributes": {},
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "backgroundColor": "var(--surface-base, oklch(1 0 0))",
-                        "backgroundImage": "{{ dataItem.logo ? 'url(' + dataItem.logo + ')' : 'none' }}",
-                        "backgroundPosition": "center",
-                        "backgroundRepeat": "no-repeat",
-                        "backgroundSize": "contain",
-                        "borderColor": "var(--outline-gray-3, oklch(0.83 0 0))",
-                        "borderRadius": "6px",
-                        "borderStyle": "solid",
-                        "borderWidth": "1px",
-                        "display": "flex",
-                        "flexShrink": "0",
-                        "height": "52px",
-                        "justifyContent": "center",
-                        "margin": "5px",
-                        "overflow": "hidden",
-                        "padding": "0px",
-                        "width": "52px"
-                       },
-                       "children": [
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "color": "var(--ink-gray-6)",
-                          "display": "{{ dataItem.logo ? 'none' : 'flex' }}",
-                          "fontWeight": "600"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "grid-list-logo-fallback-silver",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "fontSize": "text-sm",
-                          "tag": "span",
-                          "text": "{{ (dataItem.partner_name || '?').charAt(0).toUpperCase() }}"
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        }
-                       ],
+                       "baseStyles": {},
+                       "children": [],
                        "classes": [],
                        "componentEvents": {},
                        "componentId": "Avatar-c470569b3",
-                       "componentName": "container",
-                       "componentProps": {},
+                       "componentName": "Avatar",
+                       "componentProps": {
+                        "image": "{{ dataItem.logo }}",
+                        "label": "{{ dataItem.partner_name }}",
+                        "shape": "square",
+                        "size": "xl"
+                       },
                        "componentSlots": {},
                        "mobileStyles": {},
                        "tabletStyles": {}
@@ -7306,7 +7125,6 @@
                      "componentName": "Button",
                      "componentProps": {
                       "icon": "{{ (myShortlist.data || []).includes(dataItem.name) ? 'lucide-bookmark-check' : 'lucide-bookmark' }}",
-                      "size": "md",
                       "variant": "ghost"
                      },
                      "componentSlots": {},
@@ -7525,7 +7343,7 @@
                       {
                        "attributes": {},
                        "baseStyles": {
-                        "color": "var(--ink-gray-6, oklch(0.439 0 0))"
+                        "width": "100%"
                        },
                        "children": [],
                        "classes": [],
@@ -7539,9 +7357,9 @@
                        "componentId": "Button-7c9051135",
                        "componentName": "Button",
                        "componentProps": {
-                        "iconLeft": "lucide-send",
-                        "label": "Connect",
-                        "variant": "subtle"
+                        "iconLeft": "",
+                        "label": "Contact",
+                        "variant": "outline"
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
@@ -7703,54 +7521,18 @@
                      "children": [
                       {
                        "attributes": {},
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "backgroundColor": "var(--surface-base, oklch(1 0 0))",
-                        "backgroundImage": "{{ dataItem.logo ? 'url(' + dataItem.logo + ')' : 'none' }}",
-                        "backgroundPosition": "center",
-                        "backgroundRepeat": "no-repeat",
-                        "backgroundSize": "contain",
-                        "borderColor": "var(--outline-gray-3, oklch(0.83 0 0))",
-                        "borderRadius": "6px",
-                        "borderStyle": "solid",
-                        "borderWidth": "1px",
-                        "display": "flex",
-                        "flexShrink": "0",
-                        "height": "52px",
-                        "justifyContent": "center",
-                        "margin": "5px",
-                        "overflow": "hidden",
-                        "padding": "0px",
-                        "width": "52px"
-                       },
-                       "children": [
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "color": "var(--ink-gray-6)",
-                          "display": "{{ dataItem.logo ? 'none' : 'flex' }}",
-                          "fontWeight": "600"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "grid-list-logo-fallback-bronze",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "fontSize": "text-sm",
-                          "tag": "span",
-                          "text": "{{ (dataItem.partner_name || '?').charAt(0).toUpperCase() }}"
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        }
-                       ],
+                       "baseStyles": {},
+                       "children": [],
                        "classes": [],
                        "componentEvents": {},
                        "componentId": "Avatar-f6123f890",
-                       "componentName": "container",
-                       "componentProps": {},
+                       "componentName": "Avatar",
+                       "componentProps": {
+                        "image": "{{ dataItem.logo }}",
+                        "label": "{{ dataItem.partner_name }}",
+                        "shape": "square",
+                        "size": "xl"
+                       },
                        "componentSlots": {},
                        "mobileStyles": {},
                        "tabletStyles": {}
@@ -7809,7 +7591,6 @@
                      "componentName": "Button",
                      "componentProps": {
                       "icon": "{{ (myShortlist.data || []).includes(dataItem.name) ? 'lucide-bookmark-check' : 'lucide-bookmark' }}",
-                      "size": "md",
                       "variant": "ghost"
                      },
                      "componentSlots": {},
@@ -8028,7 +7809,7 @@
                       {
                        "attributes": {},
                        "baseStyles": {
-                        "color": "var(--ink-gray-6, oklch(0.439 0 0))"
+                        "width": "100%"
                        },
                        "children": [],
                        "classes": [],
@@ -8042,9 +7823,9 @@
                        "componentId": "Button-c1ca2b190",
                        "componentName": "Button",
                        "componentProps": {
-                        "iconLeft": "lucide-send",
-                        "label": "Connect",
-                        "variant": "subtle"
+                        "iconLeft": "",
+                        "label": "Contact",
+                        "variant": "outline"
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
@@ -8483,51 +8264,15 @@
                 }
                },
                "componentId": "32c408e836",
-               "componentName": "Select",
+               "componentName": "TextInput",
                "componentProps": {
                 "label": "Country",
                 "modelValue": {
                  "$type": "variable",
                  "name": "wizardCountryInput"
                 },
-                "options": [
-                 "",
-                 "Argentina",
-                 "Australia",
-                 "Brazil",
-                 "Canada",
-                 "Chile",
-                 "China",
-                 "Colombia",
-                 "Egypt",
-                 "France",
-                 "Germany",
-                 "India",
-                 "Indonesia",
-                 "Ireland",
-                 "Israel",
-                 "Italy",
-                 "Japan",
-                 "Kenya",
-                 "Malaysia",
-                 "Mexico",
-                 "Netherlands",
-                 "New Zealand",
-                 "Nigeria",
-                 "Philippines",
-                 "Qatar",
-                 "Saudi Arabia",
-                 "Singapore",
-                 "South Africa",
-                 "Spain",
-                 "Sweden",
-                 "Switzerland",
-                 "United Arab Emirates",
-                 "United Kingdom",
-                 "United States",
-                 "Vietnam",
-                 "Other"
-                ]
+                "placeholder": "India",
+                "size": "lg"
                }
               }
              ],
@@ -9581,7 +9326,7 @@
                    "componentProps": {
                     "fontSize": "text-xs",
                     "tag": "span",
-                    "text": "Currently Used System"
+                    "text": "Current Situation"
                    }
                   },
                   {
@@ -9823,11 +9568,611 @@
             },
             {
              "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "fontWeight": "600",
+              "marginTop": "16px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "ea1afbba43",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-xs",
+              "tag": "span",
+              "text": "Special Requirements"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "row",
+              "flexWrap": "wrap",
+              "gap": "8px",
+              "marginTop": "6px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ ((finderAnswers.requirements || []).includes(\"ETO (Engineer-to-Order)\")) ? 'var(--surface-gray-2)' : 'var(--surface-white)' }}",
+                "border": "1.5px solid",
+                "borderColor": "{{ ((finderAnswers.requirements || []).includes(\"ETO (Engineer-to-Order)\")) ? 'var(--outline-gray-4)' : 'var(--outline-gray-2)' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "8px",
+                "padding": "10px 12px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flexShrink": "0",
+                  "height": "18px",
+                  "width": "18px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "4061ef6cbb",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "color": "{{ ((finderAnswers.requirements || []).includes(\"ETO (Engineer-to-Order)\")) ? 'var(--ink-gray-9)' : 'var(--ink-gray-4)' }}",
+                  "name": "{{ ((finderAnswers.requirements || []).includes(\"ETO (Engineer-to-Order)\")) ? 'check-square' : 'square' }}",
+                  "strokeWidth": 2
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "ccdc5bd691",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "ETO (Engineer-to-Order)"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"ETO (Engineer-to-Order)\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                }
+               },
+               "componentId": "516a52cda8",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ ((finderAnswers.requirements || []).includes(\"Manufacturing Planning\")) ? 'var(--surface-gray-2)' : 'var(--surface-white)' }}",
+                "border": "1.5px solid",
+                "borderColor": "{{ ((finderAnswers.requirements || []).includes(\"Manufacturing Planning\")) ? 'var(--outline-gray-4)' : 'var(--outline-gray-2)' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "8px",
+                "padding": "10px 12px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flexShrink": "0",
+                  "height": "18px",
+                  "width": "18px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "b8171855ed",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "color": "{{ ((finderAnswers.requirements || []).includes(\"Manufacturing Planning\")) ? 'var(--ink-gray-9)' : 'var(--ink-gray-4)' }}",
+                  "name": "{{ ((finderAnswers.requirements || []).includes(\"Manufacturing Planning\")) ? 'check-square' : 'square' }}",
+                  "strokeWidth": 2
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "1454038ed2",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Manufacturing Planning"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Manufacturing Planning\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                }
+               },
+               "componentId": "d3cbfc82be",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ ((finderAnswers.requirements || []).includes(\"Multi-site Operations\")) ? 'var(--surface-gray-2)' : 'var(--surface-white)' }}",
+                "border": "1.5px solid",
+                "borderColor": "{{ ((finderAnswers.requirements || []).includes(\"Multi-site Operations\")) ? 'var(--outline-gray-4)' : 'var(--outline-gray-2)' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "8px",
+                "padding": "10px 12px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flexShrink": "0",
+                  "height": "18px",
+                  "width": "18px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "c9dfa4ebfe",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "color": "{{ ((finderAnswers.requirements || []).includes(\"Multi-site Operations\")) ? 'var(--ink-gray-9)' : 'var(--ink-gray-4)' }}",
+                  "name": "{{ ((finderAnswers.requirements || []).includes(\"Multi-site Operations\")) ? 'check-square' : 'square' }}",
+                  "strokeWidth": 2
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "0ba3c46ebf",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Multi-site Operations"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Multi-site Operations\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                }
+               },
+               "componentId": "46e9d29511",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ ((finderAnswers.requirements || []).includes(\"HR & Payroll\")) ? 'var(--surface-gray-2)' : 'var(--surface-white)' }}",
+                "border": "1.5px solid",
+                "borderColor": "{{ ((finderAnswers.requirements || []).includes(\"HR & Payroll\")) ? 'var(--outline-gray-4)' : 'var(--outline-gray-2)' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "8px",
+                "padding": "10px 12px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flexShrink": "0",
+                  "height": "18px",
+                  "width": "18px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "da11b6a480",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "color": "{{ ((finderAnswers.requirements || []).includes(\"HR & Payroll\")) ? 'var(--ink-gray-9)' : 'var(--ink-gray-4)' }}",
+                  "name": "{{ ((finderAnswers.requirements || []).includes(\"HR & Payroll\")) ? 'check-square' : 'square' }}",
+                  "strokeWidth": 2
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "c4b2bb2d7f",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "HR & Payroll"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"HR & Payroll\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                }
+               },
+               "componentId": "acda2f65b2",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ ((finderAnswers.requirements || []).includes(\"Inventory Management\")) ? 'var(--surface-gray-2)' : 'var(--surface-white)' }}",
+                "border": "1.5px solid",
+                "borderColor": "{{ ((finderAnswers.requirements || []).includes(\"Inventory Management\")) ? 'var(--outline-gray-4)' : 'var(--outline-gray-2)' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "8px",
+                "padding": "10px 12px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flexShrink": "0",
+                  "height": "18px",
+                  "width": "18px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "2e11b8a597",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "color": "{{ ((finderAnswers.requirements || []).includes(\"Inventory Management\")) ? 'var(--ink-gray-9)' : 'var(--ink-gray-4)' }}",
+                  "name": "{{ ((finderAnswers.requirements || []).includes(\"Inventory Management\")) ? 'check-square' : 'square' }}",
+                  "strokeWidth": 2
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "92dd32a1d1",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Inventory Management"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Inventory Management\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                }
+               },
+               "componentId": "4d930b812d",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ ((finderAnswers.requirements || []).includes(\"CRM\")) ? 'var(--surface-gray-2)' : 'var(--surface-white)' }}",
+                "border": "1.5px solid",
+                "borderColor": "{{ ((finderAnswers.requirements || []).includes(\"CRM\")) ? 'var(--outline-gray-4)' : 'var(--outline-gray-2)' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "8px",
+                "padding": "10px 12px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flexShrink": "0",
+                  "height": "18px",
+                  "width": "18px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "7b5d73b83b",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "color": "{{ ((finderAnswers.requirements || []).includes(\"CRM\")) ? 'var(--ink-gray-9)' : 'var(--ink-gray-4)' }}",
+                  "name": "{{ ((finderAnswers.requirements || []).includes(\"CRM\")) ? 'check-square' : 'square' }}",
+                  "strokeWidth": 2
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "25d76c01d1",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "CRM"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"CRM\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                }
+               },
+               "componentId": "425183f4c0",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ ((finderAnswers.requirements || []).includes(\"Custom Development\")) ? 'var(--surface-gray-2)' : 'var(--surface-white)' }}",
+                "border": "1.5px solid",
+                "borderColor": "{{ ((finderAnswers.requirements || []).includes(\"Custom Development\")) ? 'var(--outline-gray-4)' : 'var(--outline-gray-2)' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "8px",
+                "padding": "10px 12px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flexShrink": "0",
+                  "height": "18px",
+                  "width": "18px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "432c72d16b",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "color": "{{ ((finderAnswers.requirements || []).includes(\"Custom Development\")) ? 'var(--ink-gray-9)' : 'var(--ink-gray-4)' }}",
+                  "name": "{{ ((finderAnswers.requirements || []).includes(\"Custom Development\")) ? 'check-square' : 'square' }}",
+                  "strokeWidth": 2
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "8d12b767b9",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Custom Development"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Custom Development\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                }
+               },
+               "componentId": "7ac9c0b3f6",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ ((finderAnswers.requirements || []).includes(\"SAP Migration\")) ? 'var(--surface-gray-2)' : 'var(--surface-white)' }}",
+                "border": "1.5px solid",
+                "borderColor": "{{ ((finderAnswers.requirements || []).includes(\"SAP Migration\")) ? 'var(--outline-gray-4)' : 'var(--outline-gray-2)' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "8px",
+                "padding": "10px 12px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flexShrink": "0",
+                  "height": "18px",
+                  "width": "18px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "b6f366e562",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "color": "{{ ((finderAnswers.requirements || []).includes(\"SAP Migration\")) ? 'var(--ink-gray-9)' : 'var(--ink-gray-4)' }}",
+                  "name": "{{ ((finderAnswers.requirements || []).includes(\"SAP Migration\")) ? 'check-square' : 'square' }}",
+                  "strokeWidth": 2
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "22ed461f6e",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "SAP Migration"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"SAP Migration\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                }
+               },
+               "componentId": "777735f765",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ ((finderAnswers.requirements || []).includes(\"Data Migration\")) ? 'var(--surface-gray-2)' : 'var(--surface-white)' }}",
+                "border": "1.5px solid",
+                "borderColor": "{{ ((finderAnswers.requirements || []).includes(\"Data Migration\")) ? 'var(--outline-gray-4)' : 'var(--outline-gray-2)' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "8px",
+                "padding": "10px 12px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flexShrink": "0",
+                  "height": "18px",
+                  "width": "18px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "87dd136820",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "color": "{{ ((finderAnswers.requirements || []).includes(\"Data Migration\")) ? 'var(--ink-gray-9)' : 'var(--ink-gray-4)' }}",
+                  "name": "{{ ((finderAnswers.requirements || []).includes(\"Data Migration\")) ? 'check-square' : 'square' }}",
+                  "strokeWidth": 2
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "cc61b2d9df",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Data Migration"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Data Migration\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                }
+               },
+               "componentId": "cf4b73afb4",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ ((finderAnswers.requirements || []).includes(\"Training Required\")) ? 'var(--surface-gray-2)' : 'var(--surface-white)' }}",
+                "border": "1.5px solid",
+                "borderColor": "{{ ((finderAnswers.requirements || []).includes(\"Training Required\")) ? 'var(--outline-gray-4)' : 'var(--outline-gray-2)' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "8px",
+                "padding": "10px 12px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flexShrink": "0",
+                  "height": "18px",
+                  "width": "18px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "52cfcba3a2",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "color": "{{ ((finderAnswers.requirements || []).includes(\"Training Required\")) ? 'var(--ink-gray-9)' : 'var(--ink-gray-4)' }}",
+                  "name": "{{ ((finderAnswers.requirements || []).includes(\"Training Required\")) ? 'check-square' : 'square' }}",
+                  "strokeWidth": 2
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "b4c543fd2d",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Training Required"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = finderAnswers.value.requirements || []; const val = \"Training Required\"; const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; finderAnswers.value = { ...finderAnswers.value, requirements: next }; lastAnsweredKey.value = 'requirements'; call('connect.api.wizard_match_state', { answers: JSON.stringify(finderAnswers.value) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                }
+               },
+               "componentId": "a0795a3bcc",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "96d755750d",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
               "color": "var(--ink-gray-8)",
               "fontWeight": "500",
               "marginTop": "16px"
              },
-             "children": [],
              "classes": [],
              "componentId": "TextBlock-wizard-notes-label",
              "componentName": "TextBlock",
@@ -9841,7 +10186,6 @@
              "baseStyles": {
               "marginTop": "6px"
              },
-             "children": [],
              "classes": [],
              "componentEvents": {
               "update:modelValue": {
@@ -11129,50 +11473,12 @@
              "children": [],
              "classes": [],
              "componentId": "field-settings-country-input",
-             "componentName": "Select",
+             "componentName": "TextInput",
              "componentProps": {
               "modelValue": {
                "$type": "variable",
                "name": "settingsCountry"
-              },
-              "options": [
-               "",
-               "Argentina",
-               "Australia",
-               "Brazil",
-               "Canada",
-               "Chile",
-               "China",
-               "Colombia",
-               "Egypt",
-               "France",
-               "Germany",
-               "India",
-               "Indonesia",
-               "Ireland",
-               "Israel",
-               "Italy",
-               "Japan",
-               "Kenya",
-               "Malaysia",
-               "Mexico",
-               "Netherlands",
-               "New Zealand",
-               "Nigeria",
-               "Philippines",
-               "Qatar",
-               "Saudi Arabia",
-               "Singapore",
-               "South Africa",
-               "Spain",
-               "Sweden",
-               "Switzerland",
-               "United Arab Emirates",
-               "United Kingdom",
-               "United States",
-               "Vietnam",
-               "Other"
-              ]
+              }
              }
             }
            ],
@@ -11475,7 +11781,7 @@
              "componentName": "TextBlock",
              "componentProps": {
               "tag": "span",
-              "text": "Currently Used System"
+              "text": "Current Situation"
              }
             },
             {
@@ -11675,6 +11981,85 @@
          "componentId": "container-settings-row-3",
          "componentName": "container",
          "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1",
+          "flexDirection": "column",
+          "minWidth": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "fontSize": "text-sm",
+            "fontWeight": "500",
+            "marginBottom": "6px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "field-settings-special-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "span",
+            "text": "Special Requirements"
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "flexWrap": "wrap",
+            "gap": "4px 20px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "Repeater-settings-special",
+           "componentName": "Repeater",
+           "componentProps": {
+            "data": "{{ [\"ETO (Engineer-to-Order)\", \"Manufacturing Planning\", \"Multi-site Operations\", \"HR & Payroll\", \"Inventory Management\", \"CRM\", \"Custom Development\", \"SAP Migration\", \"Data Migration\", \"Training Required\", \"On-site Support\"] }}",
+            "dataKey": "self",
+            "emptyStateMessage": ""
+           },
+           "componentSlots": {
+            "default": {
+             "parentBlockId": "Repeater-settings-special",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {},
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "update:modelValue": {
+                 "action": "Run Script",
+                 "event": "update:modelValue",
+                 "script": "const cur = settingsSpecialRequirements.value || [];\nconst val = dataItem;\nconst next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val];\nsettingsSpecialRequirements.value = next;"
+                }
+               },
+               "componentId": "Repeater-settings-special-item",
+               "componentName": "Checkbox",
+               "componentProps": {
+                "label": "{{ dataItem }}",
+                "modelValue": "{{ (settingsSpecialRequirements || []).includes(dataItem) }}",
+                "size": "sm"
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Repeater-settings-special:default",
+             "slotName": "default"
+            }
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "field-settings-special",
+         "componentName": "container",
+         "originalElement": "div"
         }
        ],
        "classes": [],
@@ -11754,11 +12139,11 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-08-31 14:24:13.776259",
+ "creation": "2026-08-18 21:15:30.781345",
  "doctype": "Studio Page",
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-08-31 14:25:43.373755",
+ "modified": "2026-08-20 02:00:33.632694",
  "modified_by": "Administrator",
  "name": "find_partners",
  "owner": "Administrator",
@@ -11866,7 +12251,7 @@
    "variable_type": "String"
   },
   {
-   "initial_value": "\"grid\"",
+   "initial_value": "\"list\"",
    "variable_name": "viewMode",
    "variable_type": "String"
   },
@@ -12081,6 +12466,7 @@
    "variable_type": "Boolean"
   },
   {
+   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "wizardAdditionalNotesInput",
    "variable_type": "String"

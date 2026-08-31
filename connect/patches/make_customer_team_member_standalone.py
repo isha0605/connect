@@ -1,30 +1,20 @@
 import frappe
 
-from connect.connect.roles import CUSTOMER_ROLE
+from connect.roles import CUSTOMER_ROLE
 
 
 def execute():
-	"""Customer Team Member just became a standalone doctype (it was a child table of
-	Customer) so its after_insert/on_trash role-grant hooks (see connect.connect.roles)
-	actually fire. As a child table, rows were always written via
-	`customer_doc.append("team", ...); customer_doc.save()` — Frappe writes child rows with
-	raw db_insert/db_update during the parent's save, which never runs the child doctype's
-	own after_insert/on_trash controller hooks. So every Customer Team Member row ever
-	created (every signup, every make_thread_admin promotion) silently never granted its
-	user the Connect Customer role, even after hooks.py was wired up for it.
-
-	Backfills the new `customer` link field from the old child-table `parent` column (still
-	physically present on the table — schema sync only adds columns, it doesn't drop ones no
-	longer in the DocType), then grants CUSTOMER_ROLE to every row's user so nobody who
-	should already have messaging access is still missing it."""
+	"""Backfills Customer Team Member's new `customer` field and re-grants its role, now that the doctype is standalone instead of a child table."""
 	if not frappe.db.has_column("Customer Team Member", "parent"):
 		return
 
-	rows = frappe.db.sql(
-		"""select name, parent from `tabCustomer Team Member`
-		where parent is not null and parent != '' and (customer is null or customer = '')""",
-		as_dict=True,
-	)
+	CTM = frappe.qb.DocType("Customer Team Member")
+	rows = (
+		frappe.qb.from_(CTM)
+		.select(CTM.name, CTM.parent)
+		.where(CTM.parent.isnotnull() & (CTM.parent != ""))
+		.where(CTM.customer.isnull() | (CTM.customer == ""))
+	).run(as_dict=True)
 	for row in rows:
 		frappe.db.set_value("Customer Team Member", row.name, "customer", row.parent, update_modified=False)
 

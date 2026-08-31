@@ -2,62 +2,34 @@
 # For license information, please see license.txt
 
 import json
+
 import frappe
-from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, cint
+from frappe.utils import flt
+
+from connect.customer.doctype.customer.customer import get_customer_for_user
 
 
 class PriceEstimate(Document):
 	pass
 
 
-def save_price_estimate(
-	partner: str,
-	selected_addons: str | list,
-	total: float,
-	requirement: str | None = None,
-	pack_type: str | None = None,
-):
-	"""Record a customer's starter-pack estimate (pack + selected add-ons) at the
-	moment they choose to contact the partner about it, so the partner sees
-	exactly what was being estimated rather than a blind inquiry. requirement/
-	pack_type are optional — the no_requirement and mismatch pricing states have
-	no eligible pack, only an hourly-rate add-on estimate, so base_price is 0 and
-	pack_type stays blank for those."""
-	from connect.customer.doctype.customer.customer import get_customer_for_user
-	customer = get_customer_for_user()
-	if not customer:
-		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
-
-	if isinstance(selected_addons, str):
-		selected_addons = json.loads(selected_addons or "[]")
-
-	base_price = 0
-	if pack_type:
-		base_price = frappe.db.get_value("Partner Pack", {"parent": partner, "pack_name": pack_type}, "price") or 0
-
-	doc = frappe.get_doc({
-		"doctype": "Price Estimate",
-		"user": frappe.session.user,
-		"partner": partner,
-		"requirement": requirement,
-		"pack_type": pack_type,
-		"base_price": base_price,
-		"total": flt(total),
-	})
-	for addon in selected_addons:
-		doc.append("selected_options", {"feature_name": addon.get("name"), "price": addon.get("price")})
-	doc.insert(ignore_permissions=True)
-	return doc.name
+# Which packs are the "closest fit" for a given requirement's product interest,
+# derived from Requirement.apps (there's no dedicated product_interest field —
+# apps already carries this signal, since its options come from the real App
+# doctype and already include "ERPNext" and "Frappe HR").
+def _pack_is_primary_match(pack_key, has_erpnext, has_hr):
+	if pack_key == "allinone":
+		return has_erpnext and has_hr
+	if pack_key in ("core", "manufacturing"):
+		return has_erpnext and not has_hr
+	if pack_key == "hr":
+		return has_hr and not has_erpnext
+	return False
 
 
-def get_pricing_view(partner: str, requirement: str | None = None):
-	"""Drives the Partner Profile Pricing tab. Guest-safe like the rest of the
-	profile page — a logged-out visitor or one with no saved Requirement simply
-	lands on "no_requirement", same honest fallback either way."""
-	from connect.customer.doctype.customer.customer import get_customer_for_user
-	from connect.partner.doctype.partner.partner import _pack_is_primary_match
+def get_pricing_view(partner, requirement=None):
+	"""Returns pricing info for the Partner Profile Pricing tab, based on the partner's plans and the caller's saved requirement."""
 	if not partner or partner == "undefined" or not frappe.db.exists("Partner", partner):
 		return {"state": "loading"}
 
@@ -111,3 +83,31 @@ def get_pricing_view(partner: str, requirement: str | None = None):
 		"addons": addons,
 		"requirement": requirement,
 	}
+
+
+def save_price_estimate(partner, selected_addons, total, requirement=None, pack_type=None):
+	"""Saves a customer's price estimate (pack plus add-ons) at the moment they contact the partner about it."""
+	customer = get_customer_for_user()
+	if not customer:
+		frappe.throw("Your account isn't linked to a customer company yet.", frappe.PermissionError)
+
+	if isinstance(selected_addons, str):
+		selected_addons = json.loads(selected_addons or "[]")
+
+	base_price = 0
+	if pack_type:
+		base_price = frappe.db.get_value("Partner Pack", {"parent": partner, "pack_name": pack_type}, "price") or 0
+
+	doc = frappe.get_doc({
+		"doctype": "Price Estimate",
+		"user": frappe.session.user,
+		"partner": partner,
+		"requirement": requirement,
+		"pack_type": pack_type,
+		"base_price": base_price,
+		"total": flt(total),
+	})
+	for addon in selected_addons:
+		doc.append("selected_options", {"feature_name": addon.get("name"), "price": addon.get("price")})
+	doc.insert(ignore_permissions=True)
+	return doc.name

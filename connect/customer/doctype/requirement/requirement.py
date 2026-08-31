@@ -2,19 +2,16 @@
 # For license information, please see license.txt
 
 import json
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.query_builder import Order
+
+from connect.customer.doctype.customer.customer import get_customer_for_user
 
 
 class Requirement(Document):
-	def before_insert(self):
-		from connect.customer.doctype.customer.customer import get_customer_for_user
-		if not self.customer:
-			self.customer = get_customer_for_user()
-		if not self.customer:
-			frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
+	pass
 
 
 def _customer_names_for_user(user):
@@ -40,28 +37,13 @@ def has_permission(doc, user=None, permission_type=None):
 
 
 def save_customer_requirement(
-	country: str,
-	industry: str,
-	apps: str | list | None = None,
-	looking_for: str | None = None,
-	company_size: str | None = None,
-	current_situation: str | None = None,
-	timeline: str | None = None,
-	delivery_preference: str | None = None,
-	budget: str | None = None,
-	special_requirements: str | None = None,
-	additional_notes: str | None = None,
-	outcome: str | None = None,
+	country, industry, apps=None,
+	looking_for=None, company_size=None, current_situation=None, timeline=None, delivery_preference=None, budget=None,
+	special_requirements=None, additional_notes=None, outcome=None,
 ):
-	"""Create or update the current user's company's one Requirement —
-	country/industry/apps are the 3 primary questions; everything else comes
-	from the bundled, optional "Additional Requirements" step. company_name
-	is deliberately not a parameter here — it's already collected at signup
-	(Customer.customer_name), so it's read from there instead of asking again.
-	Upserts by customer, so both the Find My Match wizard and the Settings
-	"Edit Requirements" form share a single canonical requirement that either
-	flow can fill in or update."""
-	from connect.customer.doctype.customer.customer import get_customer_for_user
+	"""Creates or updates the caller's one Requirement, so the wizard and the Settings form share a single saved
+	record. company_name isn't a parameter here — it's already collected at signup (Customer.customer_name),
+	so it's read from there instead of asking again."""
 	customer = get_customer_for_user()
 	if not customer:
 		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
@@ -107,18 +89,16 @@ REQUIREMENT_FIELDS = [
 
 
 def _latest_requirement_for_customer(customer):
-	"""The customer's most recent Requirement — just the fields
-	get_my_requirement/get_requirement_snapshot actually return, plus its apps,
-	in 2 queries total (one row + one child-table fetch). frappe.get_doc(...)
-	would do this in more queries for less: one SELECT * for every column on
-	the doctype (not just the ~12 we use) plus one query per child table the
-	doctype defines, whether we read it or not."""
+	"""The customer's most recent Requirement row plus its apps, in 2 queries total — just the
+	fields get_my_requirement/get_requirement_snapshot actually return. frappe.get_doc(...) would
+	cost one query for every column on the doctype (not just the ~12 used here) plus one query per
+	child table it defines, whether read or not."""
 	RequirementTable = frappe.qb.DocType("Requirement")
 	rows = (
 		frappe.qb.from_(RequirementTable)
 		.select(*[RequirementTable[f] for f in REQUIREMENT_FIELDS])
 		.where(RequirementTable.customer == customer)
-		.orderby(RequirementTable.creation, order=Order.desc)
+		.orderby(RequirementTable.creation, order=frappe.qb.desc)
 		.limit(1)
 		.run(as_dict=True)
 	)
@@ -142,10 +122,7 @@ def _latest_requirement_for_customer(customer):
 
 
 def get_my_requirement():
-	"""The current user's company's saved requirement, for prefilling the Settings
-	"Edit Requirements" form — None if they haven't saved one yet (add mode), and
-	for a logged-out visitor (same as no customer link)."""
-	from connect.customer.doctype.customer.customer import get_customer_for_user
+	"""Returns the caller's saved Requirement to prefill the Settings "Edit Requirements" form."""
 	customer = get_customer_for_user()
 	if not customer:
 		return None
@@ -170,14 +147,11 @@ def get_my_requirement():
 
 
 def get_requirement_snapshot():
-	"""The caller's most recently saved Requirement, as a plain dict of the fields a
-	Requirement-type chat message card can show/edit — used to seed the composer's draft
-	card on a fresh Contact-Partner thread (see start_partner_thread's `is_new_thread`).
-	None if the caller isn't a customer or has no saved Requirement yet."""
-	from connect.customer.doctype.customer.customer import get_customer_for_user
+	"""Returns the caller's saved Requirement as a dict, to seed a draft Requirement card in a new thread."""
 	customer = get_customer_for_user()
 	if not customer:
 		return None
+
 	req = _latest_requirement_for_customer(customer)
 	if not req:
 		return None
@@ -192,6 +166,4 @@ def get_requirement_snapshot():
 		"timeline": req.timeline,
 		"delivery_preference": req.delivery_preference,
 		"budget": req.budget,
-		"special_requirements": req.special_requirements,
-		"additional_notes": req.additional_notes,
 	}

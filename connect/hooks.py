@@ -60,7 +60,7 @@ app_license = "mit"
 # home_page = "login"
 
 # custom content for the "Sign up" panel on the default /login page — points
-# guests at the app's own /connect/signup flow (creates a Customer) instead of
+# guests at the app's own /signup flow (creates a Customer) instead of
 # Frappe's generic signup form (creates a bare User)
 signup_form_template = "connect/templates/includes/signup_redirect.html"
 
@@ -132,30 +132,50 @@ signup_form_template = "connect/templates/includes/signup_redirect.html"
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
-	"Connect Thread": "connect.connect.permissions.get_thread_permission_query_conditions",
-	"Connect Thread Member": "connect.connect.permissions.get_thread_member_permission_query_conditions",
-	"Connect Message": "connect.connect.permissions.get_message_permission_query_conditions",
-	"Connect Message Template": "connect.connect.permissions.get_message_template_permission_query_conditions",
-	"Connect DM Thread": "connect.connect.permissions.get_dm_thread_permission_query_conditions",
-	"Connect DM Message": "connect.connect.permissions.get_dm_message_permission_query_conditions",
-	"Studio Page": "connect.connect.permissions.get_studio_page_permission_query_conditions",
+	"Connect Thread": "connect.permissions.get_thread_permission_query_conditions",
+	"Connect Thread Member": "connect.permissions.get_thread_member_permission_query_conditions",
+	"Connect Message": "connect.permissions.get_message_permission_query_conditions",
+	"Connect Message Template": "connect.permissions.get_message_template_permission_query_conditions",
+	"Connect DM Thread": "connect.permissions.get_dm_thread_permission_query_conditions",
+	"Connect DM Message": "connect.permissions.get_dm_message_permission_query_conditions",
+	"Studio Page": "connect.permissions.get_studio_page_permission_query_conditions",
 	"Customer": "connect.customer.doctype.customer.customer.get_permission_query_conditions",
 	"Shortlist": "connect.customer.doctype.shortlist.shortlist.get_permission_query_conditions",
 	"Requirement": "connect.customer.doctype.requirement.requirement.get_permission_query_conditions",
 }
 
 has_permission = {
-	"Connect Thread": "connect.connect.permissions.has_thread_permission",
-	"Connect Thread Member": "connect.connect.permissions.has_thread_member_permission",
-	"Connect Message": "connect.connect.permissions.has_message_permission",
-	"Connect Message Template": "connect.connect.permissions.has_message_template_permission",
-	"Connect DM Thread": "connect.connect.permissions.has_dm_thread_permission",
-	"Connect DM Message": "connect.connect.permissions.has_dm_message_permission",
-	"Studio Page": "connect.connect.permissions.has_studio_page_permission",
+	"Connect Thread": "connect.permissions.has_thread_permission",
+	"Connect Thread Member": "connect.permissions.has_thread_member_permission",
+	"Connect Message": "connect.permissions.has_message_permission",
+	"Connect Message Template": "connect.permissions.has_message_template_permission",
+	"Connect DM Thread": "connect.permissions.has_dm_thread_permission",
+	"Connect DM Message": "connect.permissions.has_dm_message_permission",
+	"Studio Page": "connect.permissions.has_studio_page_permission",
 	"Customer": "connect.customer.doctype.customer.customer.has_permission",
 	"Shortlist": "connect.customer.doctype.shortlist.shortlist.has_permission",
 	"Requirement": "connect.customer.doctype.requirement.requirement.has_permission",
 }
+
+# Fixtures
+# --------
+# has_studio_page_permission/get_studio_page_permission_query_conditions above can only
+# narrow access down, never grant it (Frappe's has_permission hooks are deny-only) — every
+# logged-in user needs this base read grant before those hooks get a chance to scope it down
+# to just this app's own published pages. Owned here (not edited into studio's own
+# studio_page.json) so it survives `git pull`/updates on the studio app.
+#
+# All 3 rows below must travel together: the moment a doctype has ANY Custom DocPerm record,
+# Frappe stops reading that doctype's JSON-defined permissions entirely — for every role, not
+# just the one being added (see frappe.permissions.get_valid_perms). So System Manager and
+# Studio User are re-declared here as an exact mirror of studio_page.json's own rows, purely
+# to keep their existing access from silently disappearing once the "All" row exists.
+fixtures = [
+	{
+		"doctype": "Custom DocPerm",
+		"filters": [["parent", "=", "Studio Page"]],
+	},
+]
 
 # Document Events
 # ---------------
@@ -163,26 +183,22 @@ has_permission = {
 
 doc_events = {
 	"Connect Message": {
-		"after_insert": "connect.connect.notifications.notify_thread_members",
+		"after_insert": "connect.notifications.notify_thread_members",
 	},
 	"Connect DM Message": {
-		"after_insert": "connect.connect.notifications.notify_dm_recipient",
-	},
-	"Connect Customer Member": {
-		"after_insert": "connect.connect.roles.grant_company_role",
-		"on_trash": "connect.connect.roles.revoke_company_role",
+		"after_insert": "connect.notifications.notify_dm_recipient",
 	},
 	"Connect Partner Member": {
-		"after_insert": "connect.connect.roles.grant_company_role",
-		"on_trash": "connect.connect.roles.revoke_company_role",
+		"after_insert": "connect.roles.grant_company_role",
+		"on_trash": "connect.roles.revoke_company_role",
 	},
 	"Customer Team Member": {
-		"after_insert": "connect.connect.roles.grant_company_role",
-		"on_trash": "connect.connect.roles.revoke_company_role",
+		"after_insert": "connect.roles.grant_company_role",
+		"on_trash": "connect.roles.revoke_company_role",
 	},
 	"Connect Thread Member": {
-		"after_insert": "connect.connect.roles.grant_thread_guest_role",
-		"on_trash": "connect.connect.roles.revoke_thread_guest_role",
+		"after_insert": "connect.roles.grant_thread_guest_role",
+		"on_trash": "connect.roles.revoke_thread_guest_role",
 	},
 }
 

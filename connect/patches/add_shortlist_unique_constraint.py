@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe.query_builder import functions as fn
 
 
 def execute():
@@ -18,17 +19,16 @@ def execute():
 	if not frappe.db.table_exists("Shortlist"):
 		return
 
-	duplicates = frappe.db.sql(
-		"""
-		SELECT customer, partner
-		FROM `tabShortlist`
-		GROUP BY customer, partner
-		HAVING COUNT(*) > 1
-		""",
-		as_dict=True,
-	)
+	ShortlistTable = frappe.qb.DocType("Shortlist")
+	duplicates = (
+		frappe.qb.from_(ShortlistTable)
+		.select(ShortlistTable.customer, ShortlistTable.partner)
+		.groupby(ShortlistTable.customer, ShortlistTable.partner)
+		.having(fn.Count("*") > 1)
+	).run(as_dict=True)
+
 	for row in duplicates:
-		names = frappe.db.get_all(
+		names = frappe.get_all(
 			"Shortlist",
 			filters={"customer": row.customer, "partner": row.partner},
 			pluck="name",
