@@ -455,27 +455,15 @@ def create_message_template(title, content):
 
 @frappe.whitelist()
 def update_message_template(name, title=None, content=None):
-	"""Owner-only, personal templates only — has_message_template_permission enforces both."""
 	doc = frappe.get_doc("Connect Message Template", name)
-	if doc.is_global:
-		frappe.throw(_("Global templates can't be edited here"), frappe.PermissionError)
-
-	if title is not None:
-		doc.title = title
-	if content is not None:
-		doc.content = content
-	doc.save()
+	doc.update_personal(title=title, content=content)
 	return doc.as_dict()
 
 
 @frappe.whitelist()
 def delete_message_template(name):
-	"""Owner-only, personal templates only — has_message_template_permission enforces both."""
 	doc = frappe.get_doc("Connect Message Template", name)
-	if doc.is_global:
-		frappe.throw(_("Global templates can't be deleted here"), frappe.PermissionError)
-
-	doc.delete()
+	doc.delete_personal()
 	return {"deleted": name}
 
 
