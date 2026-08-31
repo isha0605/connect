@@ -7,21 +7,6 @@ from frappe.model.document import Document
 
 
 class Shortlist(Document):
-	def validate(self):
-		ShortlistTable = frappe.qb.DocType("Shortlist")
-		duplicate = (
-			frappe.qb.from_(ShortlistTable)
-			.select(ShortlistTable.name)
-			.where(
-				(ShortlistTable.customer == self.customer)
-				& (ShortlistTable.partner == self.partner)
-				& (ShortlistTable.name != self.name)
-			)
-			.run()
-		)
-		if duplicate:
-			frappe.throw(f"{self.partner} is already shortlisted for {self.customer}.")
-
 	def before_insert(self):
 		from connect.customer.doctype.customer.customer import get_customer_for_user
 		if not self.customer:
@@ -63,22 +48,22 @@ def get_my_shortlisted_partner_names():
 
 
 def add_to_shortlist(partner: str):
+	"""Idempotent: a second call for an already-shortlisted partner is a silent
+	no-op rather than an error, matching the UI's bookmark-toggle semantics.
+	Relies on the (customer, partner) unique constraint on Shortlist (see
+	connect.patches.add_shortlist_unique_constraint) to reject a duplicate
+	instead of checking for one first."""
 	from connect.customer.doctype.customer.customer import get_customer_for_user
 	customer = get_customer_for_user()
 	if not customer:
 		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
 
-	ShortlistTable = frappe.qb.DocType("Shortlist")
-	exists = (
-		frappe.qb.from_(ShortlistTable)
-		.select(ShortlistTable.name)
-		.where((ShortlistTable.customer == customer) & (ShortlistTable.partner == partner))
-		.run()
-	)
-	if not exists:
+	try:
 		frappe.get_doc({"doctype": "Shortlist", "customer": customer, "partner": partner}).insert(
 			ignore_permissions=True
 		)
+	except frappe.UniqueValidationError:
+		pass
 	return {"shortlisted": True}
 
 
