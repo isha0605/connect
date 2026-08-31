@@ -14,9 +14,6 @@ IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 
 
 class IntegrationTestShortlist(IntegrationTestCase):
-	"""
-	Integration tests for Shortlist.
-	Use this class for testing interactions between multiple components.
-	"""
+	"""Integration tests for Shortlist."""
 
 	pass

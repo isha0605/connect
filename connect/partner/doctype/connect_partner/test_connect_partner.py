@@ -14,9 +14,6 @@ IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 
 
 class IntegrationTestConnectPartner(IntegrationTestCase):
-	"""
-	Integration tests for ConnectPartner.
-	Use this class for testing interactions between multiple components.
-	"""
+	"""Integration tests for ConnectPartner."""
 
 	pass
