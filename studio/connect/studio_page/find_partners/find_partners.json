@@ -70,7 +70,7 @@
            }
           ],
           "showLogo": true,
-          "subtitle": "{{ myContext.data && myContext.data.partner ? myContext.data.partner.partner : '' }}",
+          "subtitle": "{{ myContext.data && myContext.data.partner ? myContext.data.partner.partner_name : '' }}",
           "title": "Partner Portal"
          }
         }
@@ -82,7 +82,7 @@
       },
       {
        "baseStyles": {
-        "display": "{{ !(myContext.data && (myContext.data.customer || myContext.data.partner)) ? 'flex' : 'none' }}"
+        "display": "{{ myContext.fetched && !(myContext.data && (myContext.data.customer || myContext.data.partner)) ? 'flex' : 'none' }}"
        },
        "children": [
         {
@@ -195,7 +195,7 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "const req = myRequirement.data;\nsettingsCompanyName.value = req ? (req.company_name || '') : '';\nsettingsCountry.value = req ? (req.country || '') : '';\nsettingsIndustry.value = req ? (req.industry || '') : '';\nsettingsApps.value = req ? (req.apps || []) : [];\nsettingsLookingFor.value = req ? (req.looking_for || '') : '';\nsettingsCompanySize.value = req ? (req.company_size || '') : '';\nsettingsCurrentSituation.value = req ? (req.current_situation || '') : '';\nsettingsTimeline.value = req ? (req.timeline || '') : '';\nsettingsDeliveryPreference.value = req ? (req.delivery_preference || '') : '';\nsettingsBudget.value = req ? (req.budget || '') : '';\nsettingsSpecialRequirements.value = req ? JSON.parse(req.special_requirements || '[]') : [];\nsettingsOpen.value = true;"
+           "script": "const req = myRequirement.data;\nsettingsCountry.value = req ? (req.country || '') : '';\nsettingsIndustry.value = req ? (req.industry || '') : '';\nsettingsApps.value = req ? (req.apps || []) : [];\nsettingsLookingFor.value = req ? (req.looking_for || '') : '';\nsettingsCompanySize.value = req ? (req.company_size || '') : '';\nsettingsCurrentSituation.value = req ? (req.current_situation || '') : '';\nsettingsTimeline.value = req ? (req.timeline || '') : '';\nsettingsDeliveryPreference.value = req ? (req.delivery_preference || '') : '';\nsettingsBudget.value = req ? (req.budget || '') : '';\nsettingsSpecialRequirements.value = req ? JSON.parse(req.special_requirements || '[]') : [];\nsettingsOpen.value = true;"
           }
          },
          "componentId": "SidebarItem-0c25e4ce4",
@@ -346,7 +346,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const saved = myRequirement.data || {};\nlet special = [];\ntry { special = JSON.parse(saved.special_requirements || '[]'); } catch (e) { special = []; }\nconst prefill = {\n  company_name: saved.company_name || undefined,\n  country: saved.country || undefined,\n  industry: saved.industry || undefined,\n  apps: saved.apps || [],\n  looking_for: saved.looking_for || undefined,\n  company_size: saved.company_size || undefined,\n  current_situation: saved.current_situation || undefined,\n  timeline: saved.timeline || undefined,\n  delivery_preference: saved.delivery_preference || undefined,\n  budget: saved.budget || undefined,\n  requirements: special,\n  additional_notes: saved.additional_notes || undefined,\n};\nObject.keys(prefill).forEach((k) => { if (prefill[k] === undefined) delete prefill[k]; });\nwizardCompanyNameInput.value = saved.company_name || '';\nwizardCountryInput.value = saved.country || '';\nwizardLookingForSelect.value = saved.looking_for || '';\nwizardCompanySizeSelect.value = saved.company_size || '';\nwizardCurrentSituationSelect.value = saved.current_situation || '';\nwizardTimelineSelect.value = saved.timeline || '';\nwizardDeliveryPreferenceSelect.value = saved.delivery_preference || '';\nwizardBudgetSelect.value = saved.budget || '';\nwizardAdditionalNotesInput.value = saved.additional_notes || '';\nfinderOpen.value = true; finderStep.value = 0; finderAnswers.value = prefill; finderOutcome.value = ''; lastAnsweredKey.value = ''; matchedNames.value = [];\ncall('connect.api.wizard_match_state', { answers: JSON.stringify(prefill) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
+                 "script": "const saved = myRequirement.data || {};\nlet special = [];\ntry { special = JSON.parse(saved.special_requirements || '[]'); } catch (e) { special = []; }\nconst prefill = {\n  company_name: saved.company_name || undefined,\n  country: saved.country || undefined,\n  industry: saved.industry || undefined,\n  apps: saved.apps || [],\n  looking_for: saved.looking_for || undefined,\n  company_size: saved.company_size || undefined,\n  current_situation: saved.current_situation || undefined,\n  timeline: saved.timeline || undefined,\n  delivery_preference: saved.delivery_preference || undefined,\n  budget: saved.budget || undefined,\n  requirements: special,\n  additional_notes: saved.additional_notes || undefined,\n};\nObject.keys(prefill).forEach((k) => { if (prefill[k] === undefined) delete prefill[k]; });\nwizardCompanyNameInput.value = saved.company_name || '';\nwizardCountryInput.value = saved.country || '';\nwizardLookingForSelect.value = saved.looking_for || '';\nwizardCompanySizeSelect.value = saved.company_size || '';\nwizardCurrentSituationSelect.value = saved.current_situation || '';\nwizardTimelineSelect.value = saved.timeline || '';\nwizardDeliveryPreferenceSelect.value = saved.delivery_preference || '';\nwizardBudgetSelect.value = saved.budget || '';\nwizardAdditionalNotesInput.value = saved.additional_notes || '';\nfinderOpen.value = true; finderStep.value = 1; finderAnswers.value = prefill; finderOutcome.value = ''; lastAnsweredKey.value = ''; matchedNames.value = [];\ncall('connect.api.wizard_match_state', { answers: JSON.stringify(prefill) }).then((r) => { matchedNames.value = r.matched_names; matchCount.value = r.count; });"
                 }
                },
                "componentId": "Button-2af82f219",
@@ -8302,7 +8302,7 @@
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "finderStep.value = 0;"
+               "script": "finderOpen.value = false;"
               }
              },
              "componentId": "800f757c41",
@@ -8310,31 +8310,6 @@
              "componentProps": {
               "label": "Back",
               "variant": "ghost"
-             }
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-5)",
-              "cursor": "pointer",
-              "marginLeft": "auto",
-              "textDecoration": "underline",
-              "whiteSpace": "nowrap"
-             },
-             "children": [],
-             "classes": [],
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "finderOpen.value = false;"
-              }
-             },
-             "componentId": "e431446f89",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-xs",
-              "tag": "span",
-              "text": "Skip Step"
              }
             },
             {
@@ -8953,31 +8928,6 @@
              }
             },
             {
-             "baseStyles": {
-              "color": "var(--ink-gray-5)",
-              "cursor": "pointer",
-              "marginLeft": "auto",
-              "textDecoration": "underline",
-              "whiteSpace": "nowrap"
-             },
-             "children": [],
-             "classes": [],
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "finderOpen.value = false;"
-              }
-             },
-             "componentId": "2e792b4e2c",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-xs",
-              "tag": "span",
-              "text": "Skip Step"
-             }
-            },
-            {
              "children": [],
              "classes": [],
              "componentEvents": {
@@ -9161,31 +9111,6 @@
              "componentProps": {
               "label": "Back",
               "variant": "ghost"
-             }
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-5)",
-              "cursor": "pointer",
-              "marginLeft": "auto",
-              "textDecoration": "underline",
-              "whiteSpace": "nowrap"
-             },
-             "children": [],
-             "classes": [],
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "finderOpen.value = false;"
-              }
-             },
-             "componentId": "9ec646536b",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-xs",
-              "tag": "span",
-              "text": "Skip Step"
              }
             },
             {
@@ -10345,7 +10270,7 @@
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "const a = finderAnswers.value;\nconst smallTeam = [\"1\\u201310\", \"11\\u201350\"].includes(a.company_size);\nconst smallBudget = [\"Under \\u20b92L\", \"\\u20b92L\\u2013\\u20b910L\"].includes(a.budget);\nconst immediate = a.timeline === \"Immediately\";\nconst standard = [\"New ERP Implementation\", \"Replace Existing ERP\"].includes(a.looking_for);\nconst qualifies = smallTeam && smallBudget && immediate && standard;\nfinderOutcome.value = qualifies ? 'starter' : 'matches';\ncall('connect.api.save_customer_requirement', {\n  company_name: a.company_name, country: a.country, industry: a.industry,\n  apps: JSON.stringify(a.apps || []),\n  looking_for: a.looking_for, company_size: a.company_size,\n  current_situation: a.current_situation, timeline: a.timeline,\n  delivery_preference: a.delivery_preference, budget: a.budget,\n  special_requirements: JSON.stringify(a.requirements || []), additional_notes: a.additional_notes,\n  outcome: qualifies ? 'Starter Pack' : 'Matches',\n}).then(() => {\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch(() => {\n  toast({ title: 'Not saved', text: 'Log in to save your requirements for later.', icon: 'alert-circle' });\n});\ncall('connect.api.list_matching_partners', { answers: JSON.stringify(a) }).then((r) => {\n  wizardMatches.value = r || [];\n  try { localStorage.setItem('connect_wizard_results', JSON.stringify({ answers: a, matches: r || [] })); } catch (e) {}\n});\nfinderOpen.value = false;"
+               "script": "const a = finderAnswers.value;\nconst smallTeam = [\"1\\u201310\", \"11\\u201350\"].includes(a.company_size);\nconst smallBudget = [\"Under \\u20b92L\", \"\\u20b92L\\u2013\\u20b910L\"].includes(a.budget);\nconst immediate = a.timeline === \"Immediately\";\nconst standard = [\"New ERP Implementation\", \"Replace Existing ERP\"].includes(a.looking_for);\nconst qualifies = smallTeam && smallBudget && immediate && standard;\nfinderOutcome.value = qualifies ? 'starter' : 'matches';\ncall('connect.api.save_customer_requirement', {\n  country: a.country, industry: a.industry,\n  apps: JSON.stringify(a.apps || []),\n  looking_for: a.looking_for, company_size: a.company_size,\n  current_situation: a.current_situation, timeline: a.timeline,\n  delivery_preference: a.delivery_preference, budget: a.budget,\n  special_requirements: JSON.stringify(a.requirements || []), additional_notes: a.additional_notes,\n  outcome: qualifies ? 'Starter Pack' : 'Matches',\n}).then(() => {\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch(() => {\n  toast({ title: 'Not saved', text: 'Log in to save your requirements for later.', icon: 'alert-circle' });\n});\ncall('connect.api.list_matching_partners', { answers: JSON.stringify(a) }).then((r) => {\n  wizardMatches.value = r || [];\n  try { localStorage.setItem('connect_wizard_results', JSON.stringify({ answers: a, matches: r || [] })); } catch (e) {}\n});\nfinderOpen.value = false;"
               }
              },
              "componentId": "fa7c6b5ff8",
@@ -11537,48 +11462,6 @@
              },
              "children": [],
              "classes": [],
-             "componentId": "field-settings-company-name-label",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "tag": "span",
-              "text": "Company Name"
-             }
-            },
-            {
-             "children": [],
-             "classes": [],
-             "componentId": "field-settings-company-name-input",
-             "componentName": "TextInput",
-             "componentProps": {
-              "modelValue": {
-               "$type": "variable",
-               "name": "settingsCompanyName"
-              }
-             }
-            }
-           ],
-           "classes": [],
-           "componentId": "field-settings-company-name",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flex": "1",
-            "flexDirection": "column",
-            "minWidth": "0px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-7)",
-              "fontSize": "text-sm",
-              "fontWeight": "500",
-              "marginBottom": "6px"
-             },
-             "children": [],
-             "classes": [],
              "componentId": "field-settings-country-label",
              "componentName": "TextBlock",
              "componentProps": {
@@ -12219,13 +12102,13 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "settingsSaving.value = true;\ncall('connect.api.save_customer_requirement', {\n  company_name: settingsCompanyName.value,\n  country: settingsCountry.value,\n  industry: settingsIndustry.value,\n  apps: settingsApps.value,\n  looking_for: settingsLookingFor.value,\n  company_size: settingsCompanySize.value,\n  current_situation: settingsCurrentSituation.value,\n  timeline: settingsTimeline.value,\n  delivery_preference: settingsDeliveryPreference.value,\n  budget: settingsBudget.value,\n  special_requirements: JSON.stringify(settingsSpecialRequirements.value || []),\n}).then(() => {\n  settingsSaving.value = false;\n  settingsOpen.value = false;\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch((err) => {\n  settingsSaving.value = false;\n  toast({ title: 'Could not save', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+           "script": "settingsSaving.value = true;\ncall('connect.api.save_customer_requirement', {\n  country: settingsCountry.value,\n  industry: settingsIndustry.value,\n  apps: settingsApps.value,\n  looking_for: settingsLookingFor.value,\n  company_size: settingsCompanySize.value,\n  current_situation: settingsCurrentSituation.value,\n  timeline: settingsTimeline.value,\n  delivery_preference: settingsDeliveryPreference.value,\n  budget: settingsBudget.value,\n  special_requirements: JSON.stringify(settingsSpecialRequirements.value || []),\n}).then(() => {\n  settingsSaving.value = false;\n  settingsOpen.value = false;\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch((err) => {\n  settingsSaving.value = false;\n  toast({ title: 'Could not save', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
           }
          },
          "componentId": "Button-settings-save",
          "componentName": "Button",
          "componentProps": {
-          "disabled": "{{ !settingsCompanyName || !settingsCountry || !settingsIndustry }}",
+          "disabled": "{{ !settingsCountry || !settingsIndustry }}",
           "label": "{{ settingsSaving ? 'Saving...' : 'Save' }}",
           "variant": "solid"
          }

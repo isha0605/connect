@@ -64,7 +64,7 @@
            }
           ],
           "showLogo": true,
-          "subtitle": "{{ myContext.data && myContext.data.partner ? myContext.data.partner.partner : '' }}",
+          "subtitle": "{{ myContext.data && myContext.data.partner ? myContext.data.partner.partner_name : '' }}",
           "title": "Partner Portal"
          }
         }
@@ -76,7 +76,7 @@
       },
       {
        "baseStyles": {
-        "display": "{{ !(myCustomer.data) && !(myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+        "display": "{{ myCustomer.fetched && myContext.fetched && !(myCustomer.data) && !(myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
        },
        "children": [
         {
@@ -770,7 +770,7 @@
                            "componentProps": {
                             "fontSize": "text-xs",
                             "tag": "span",
-                            "text": "{{ item.rating ? item.rating + ' (' + (item.reviews_count || 0) + ')' : 'No ratings yet' }}"
+                            "text": "{{ item.rating ? item.rating : 'No ratings yet' }}"
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
@@ -930,7 +930,7 @@
                        "attributes": {},
                        "baseStyles": {
                         "alignItems": "center",
-                        "color": "var(--ink-amber-6)",
+                        "color": "var(--ink-gray-8, oklch(0.205 0 0))",
                         "display": "flex",
                         "flexShrink": "0",
                         "height": "36px",
@@ -969,7 +969,7 @@
                         "click": {
                          "action": "Run Script",
                          "event": "click",
-                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.messaging.start_partner_thread', { partner: item.name }).then(() => {\n  router.push('/messaging-d87b');\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.messaging.start_partner_thread', { partner: item.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                         }
                        },
                        "componentId": "Button-contact-shortlist",
