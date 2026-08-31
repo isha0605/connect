@@ -6,13 +6,7 @@ from frappe.model.document import Document
 
 
 class Shortlist(Document):
-	def validate(self):
-		duplicate = frappe.db.exists(
-			"Shortlist",
-			{"customer": self.customer, "partner": self.partner, "name": ["!=", self.name]},
-		)
-		if duplicate:
-			frappe.throw(f"{self.partner} is already shortlisted for {self.customer}.")
+	pass
 
 
 def _customer_names_for_user(user):
@@ -26,8 +20,8 @@ def get_permission_query_conditions(user):
 	customers = _customer_names_for_user(user)
 	if not customers:
 		return "1=0"
-	names = ", ".join(frappe.db.escape(c) for c in customers)
-	return f"`tabShortlist`.customer in ({names})"
+	ShortlistTable = frappe.qb.DocType("Shortlist")
+	return ShortlistTable.customer.isin(customers).get_sql()
 
 
 def has_permission(doc, user=None, permission_type=None):
