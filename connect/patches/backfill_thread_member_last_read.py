@@ -3,9 +3,7 @@ from frappe.utils import now_datetime
 
 
 def execute():
-	"""New members start with no unread badge for pre-existing history — back-date
-	last_read_at to now for every row that predates this field, same as a fresh
-	'you've seen everything up to today' baseline."""
+	"""Back-dates last_read_at to now for pre-existing rows, so old history doesn't show as unread."""
 	if not frappe.db.table_exists("Connect Thread Member"):
 		return
 
