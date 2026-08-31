@@ -5,7 +5,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
-from connect.permissions import _has_full_access, _thread_membership
+from connect.permissions import _check_can_modify_message
 
 
 class ConnectMessage(Document):
@@ -18,12 +18,7 @@ class ConnectMessage(Document):
 	def _validate_edit(self):
 		"""Restricts edits to your own text messages; files, images, and system messages can't be edited."""
 		user = frappe.session.user
-		if self.sender != user and not _has_full_access(user):
-			frappe.throw(_("You can only edit your own messages"), frappe.PermissionError)
-		if not _has_full_access(user):
-			membership = _thread_membership(self.thread, user)
-			if not membership or membership.is_removed:
-				frappe.throw(_("You no longer have access to this thread"), frappe.PermissionError)
+		_check_can_modify_message(self.thread, self.sender, user, _("You can only edit your own messages"))
 		if self.message_type != "Text":
 			frappe.throw(_("Only text messages can be edited"))
 
@@ -47,12 +42,7 @@ class ConnectMessage(Document):
 		from connect.notifications import notify_message_deleted
 
 		user = frappe.session.user
-		if self.sender != user and not _has_full_access(user):
-			frappe.throw(_("You can only delete your own messages"), frappe.PermissionError)
-		if not _has_full_access(user):
-			membership = _thread_membership(self.thread, user)
-			if not membership or membership.is_removed:
-				frappe.throw(_("You no longer have access to this thread"), frappe.PermissionError)
+		_check_can_modify_message(self.thread, self.sender, user, _("You can only delete your own messages"))
 
 		if self.attachment:
 			file_name = frappe.db.get_value("File", {"file_url": self.attachment}, "name")

@@ -63,6 +63,17 @@ def _check_can_write(thread, user):
 		frappe.throw(_("This thread is closed"))
 
 
+def _check_can_modify_message(thread, sender, user, error_message):
+	from frappe import _
+
+	if sender != user and not _has_full_access(user):
+		frappe.throw(error_message, frappe.PermissionError)
+	if not _has_full_access(user):
+		membership = _thread_membership(thread, user)
+		if not membership or membership.is_removed:
+			frappe.throw(_("You no longer have access to this thread"), frappe.PermissionError)
+
+
 def _dm_thread_pair(thread, user):
 	from frappe import _
 
@@ -70,6 +81,12 @@ def _dm_thread_pair(thread, user):
 	if not pair or user not in (pair.user_a, pair.user_b):
 		frappe.throw(_("You don't have access to this conversation"), frappe.PermissionError)
 	return pair
+
+
+def _check_can_modify_dm_message(dm_thread, sender, user, error_message):
+	_dm_thread_pair(dm_thread, user)
+	if sender != user:
+		frappe.throw(error_message, frappe.PermissionError)
 
 
 def has_thread_permission(doc, ptype="read", user=None, **kwargs):

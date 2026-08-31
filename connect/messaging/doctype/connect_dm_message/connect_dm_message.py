@@ -3,7 +3,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
-from connect.permissions import _dm_thread_pair
+from connect.permissions import _check_can_modify_dm_message
 
 
 class ConnectDMMessage(Document):
@@ -16,9 +16,7 @@ class ConnectDMMessage(Document):
 	def _validate_edit(self):
 		"""sender's own-message-only edit rule."""
 		user = frappe.session.user
-		_dm_thread_pair(self.dm_thread, user)
-		if self.sender != user:
-			frappe.throw(_("You can only edit your own messages"), frappe.PermissionError)
+		_check_can_modify_dm_message(self.dm_thread, self.sender, user, _("You can only edit your own messages"))
 		if self.message_type != "Text":
 			frappe.throw(_("Only text messages can be edited"))
 
@@ -36,13 +34,11 @@ class ConnectDMMessage(Document):
 			notify_dm_message_edited(self)
 
 	def on_trash(self):
-		"""DM counterpart to Connect Message's own-message-only delete rule."""
+		"""Connect Message's own-message-only delete rule."""
 		from connect.notifications import notify_dm_message_deleted
 
 		user = frappe.session.user
-		_dm_thread_pair(self.dm_thread, user)
-		if self.sender != user:
-			frappe.throw(_("You can only delete your own messages"), frappe.PermissionError)
+		_check_can_modify_dm_message(self.dm_thread, self.sender, user, _("You can only delete your own messages"))
 
 		if self.attachment:
 			file_name = frappe.db.get_value("File", {"file_url": self.attachment}, "name")
