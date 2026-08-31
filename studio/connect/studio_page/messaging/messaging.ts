@@ -154,7 +154,7 @@ export default function setup(context) {
 		if (!title || !content || creatingTemplate.value) return
 		creatingTemplate.value = true
 		try {
-			await call("connect.api.messaging.create_message_template", { title, content })
+			await call("connect.api.message_templates.create_message_template", { title, content })
 			context.myTemplates.reload()
 			closeCreateTemplateForm()
 			toast({ title: "Template created", icon: "check", iconClasses: "text-green-600" })
@@ -193,7 +193,7 @@ export default function setup(context) {
 				: []
 			context.dmMessages.filters = { dm_thread: name }
 			context.dmMessages.reload()
-			call("connect.api.messaging.mark_dm_thread_read", { thread: name })
+			call("connect.api.dm.mark_dm_thread_read", { thread: name })
 				.then(() => context.myDMThreads.reload())
 				.catch(() => {})
 			fetchPinnedMessage()
@@ -208,7 +208,7 @@ export default function setup(context) {
 		context.threadAdmins.reload()
 		context.memberProfiles.params = { thread: name }
 		context.memberProfiles.reload()
-		call("connect.api.messaging.mark_thread_read", { thread: name })
+		call("connect.api.threads.mark_thread_read", { thread: name })
 			.then(() => context.myThreads.reload())
 			.catch(() => {})
 		fetchPinnedMessage()
@@ -457,7 +457,7 @@ export default function setup(context) {
 
 	function closeThread() {
 		if (!window.confirm("Close this thread?")) return
-		call("connect.api.messaging.close_thread", { thread: selectedThread.value })
+		call("connect.api.threads.close_thread", { thread: selectedThread.value })
 			.then(() => {
 				context.myThreads.reload()
 				context.messages.reload()
@@ -566,7 +566,7 @@ export default function setup(context) {
 
 	// ---- Requirement cards ----
 	// A Requirement-type message stores its snapshot as a JSON blob in `content` (see
-	// connect.api.messaging.send_message) rather than free text, so it can render as a structured card
+	// connect.api.messages.send_message) rather than free text, so it can render as a structured card
 	// instead of a text bubble (see message-requirement-card in the JSON).
 	function parseRequirementContent(item) {
 		try {
@@ -823,7 +823,7 @@ export default function setup(context) {
 
 	async function fetchRequirementDraft() {
 		try {
-			const snapshot = await call("connect.api.messaging.get_requirement_snapshot")
+			const snapshot = await call("connect.api.threads.get_requirement_snapshot")
 			if (snapshot) draftRequirement.value = snapshot
 		} catch (e) {
 			// no saved requirement to prefill — composer just starts empty, same as before
@@ -976,7 +976,7 @@ export default function setup(context) {
 			toast({ title: "Only admins can add members", icon: "x-circle", iconClasses: "text-red-600" })
 			return
 		}
-		call("connect.api.messaging.add_thread_member", {
+		call("connect.api.threads.add_thread_member", {
 			thread: selectedThread.value,
 			email: newMemberEmail.value,
 			side: side,
@@ -1005,7 +1005,7 @@ export default function setup(context) {
 
 	function makeAdmin(item) {
 		if (!window.confirm(`Make ${item.user} the admin? You will lose admin rights.`)) return
-		call("connect.api.messaging.make_thread_admin", { thread: selectedThread.value, member: item.name })
+		call("connect.api.threads.make_thread_admin", { thread: selectedThread.value, member: item.name })
 			.then(() => {
 				context.myContext.reload()
 				context.threadAdmins.reload()
@@ -1023,7 +1023,7 @@ export default function setup(context) {
 
 	function removeMember(item) {
 		if (!window.confirm(`Remove ${item.user} from this thread?`)) return
-		call("connect.api.messaging.remove_thread_member", { thread: selectedThread.value, member: item.name })
+		call("connect.api.threads.remove_thread_member", { thread: selectedThread.value, member: item.name })
 			.then(() => {
 				context.threadMembers.reload()
 				toast({ title: "Member removed", icon: "check", iconClasses: "text-green-600" })
@@ -1175,7 +1175,7 @@ export default function setup(context) {
 		deletingMessage.value = true
 		try {
 			const isDM = selectedThreadType.value === "dm"
-			await call(isDM ? "connect.api.messaging.delete_dm_message" : "connect.api.messaging.delete_message", {
+			await call(isDM ? "connect.api.dm.delete_dm_message" : "connect.api.messages.delete_message", {
 				message: messageToDelete.value.name,
 			})
 			showDeleteMessageDialog.value = false
@@ -1240,7 +1240,7 @@ export default function setup(context) {
 		editingMessage.value = true
 		try {
 			const isDM = selectedThreadType.value === "dm"
-			await call(isDM ? "connect.api.messaging.edit_dm_message" : "connect.api.messaging.edit_message", {
+			await call(isDM ? "connect.api.dm.edit_dm_message" : "connect.api.messages.edit_message", {
 				message: messageToEdit.value.name,
 				content,
 			})
@@ -1268,7 +1268,7 @@ export default function setup(context) {
 	}
 
 	// ---- Pinning a message ----
-	// One pin at a time per thread (see connect.api.messaging.pin_message) — the currently pinned
+	// One pin at a time per thread (see connect.api.messages.pin_message) — the currently pinned
 	// message's own fields are kept here rather than re-derived from context.messages.data
 	// since the pinned message can scroll out of the loaded window (200-message limit).
 	const pinnedMessage = ref(null)
@@ -1280,7 +1280,7 @@ export default function setup(context) {
 		}
 		try {
 			const method =
-				selectedThreadType.value === "dm" ? "connect.api.messaging.get_pinned_dm_message" : "connect.api.messaging.get_pinned_message"
+				selectedThreadType.value === "dm" ? "connect.api.dm.get_pinned_dm_message" : "connect.api.messages.get_pinned_message"
 			pinnedMessage.value = await call(method, { thread: selectedThread.value })
 		} catch (e) {
 			pinnedMessage.value = null
@@ -1296,12 +1296,12 @@ export default function setup(context) {
 		const isDM = selectedThreadType.value === "dm"
 		try {
 			if (isPinned(item)) {
-				await call(isDM ? "connect.api.messaging.unpin_dm_message" : "connect.api.messaging.unpin_message", {
+				await call(isDM ? "connect.api.dm.unpin_dm_message" : "connect.api.messages.unpin_message", {
 					thread: selectedThread.value,
 				})
 				pinnedMessage.value = null
 			} else {
-				await call(isDM ? "connect.api.messaging.pin_dm_message" : "connect.api.messaging.pin_message", { message: item.name })
+				await call(isDM ? "connect.api.dm.pin_dm_message" : "connect.api.messages.pin_message", { message: item.name })
 				await fetchPinnedMessage()
 			}
 		} catch (e) {
@@ -1318,7 +1318,7 @@ export default function setup(context) {
 		if (!selectedThread.value || !pinnedMessage.value) return
 		try {
 			const isDM = selectedThreadType.value === "dm"
-			await call(isDM ? "connect.api.messaging.unpin_dm_message" : "connect.api.messaging.unpin_message", {
+			await call(isDM ? "connect.api.dm.unpin_dm_message" : "connect.api.messages.unpin_message", {
 				thread: selectedThread.value,
 			})
 			pinnedMessage.value = null
@@ -1389,7 +1389,7 @@ export default function setup(context) {
 		try {
 			const isDM = selectedThreadType.value === "dm"
 			for (const name of names) {
-				await call(isDM ? "connect.api.messaging.delete_dm_message" : "connect.api.messaging.delete_message", { message: name })
+				await call(isDM ? "connect.api.dm.delete_dm_message" : "connect.api.messages.delete_message", { message: name })
 			}
 			showDeleteClusterDialog.value = false
 			clusterToDelete.value = null
@@ -1426,10 +1426,10 @@ export default function setup(context) {
 			draftAttachments.value = []
 			try {
 				if (content) {
-					await call("connect.api.messaging.send_dm_message", { thread, content })
+					await call("connect.api.dm.send_dm_message", { thread, content })
 				}
 				for (const a of dmReadyAttachments) {
-					await call("connect.api.messaging.send_dm_message", {
+					await call("connect.api.dm.send_dm_message", {
 						thread,
 						content: "",
 						file_url: a.file_url,
@@ -1467,10 +1467,10 @@ export default function setup(context) {
 
 		try {
 			if (content) {
-				await call("connect.api.messaging.send_message", { thread, content })
+				await call("connect.api.messages.send_message", { thread, content })
 			}
 			for (const a of readyAttachments) {
-				await call("connect.api.messaging.send_message", {
+				await call("connect.api.messages.send_message", {
 					thread,
 					content: "",
 					file_url: a.file_url,
@@ -1480,7 +1480,7 @@ export default function setup(context) {
 				})
 			}
 			if (requirementToSend) {
-				await call("connect.api.messaging.send_message", { thread, requirement_data: requirementToSend })
+				await call("connect.api.messages.send_message", { thread, requirement_data: requirementToSend })
 			}
 			context.messages.reload()
 			context.myThreads.reload()
@@ -1537,15 +1537,15 @@ export default function setup(context) {
 		upload(file, {
 			upload_endpoint:
 				selectedThreadType.value === "dm"
-					? "/api/method/connect.api.messaging.upload_dm_attachment"
-					: "/api/method/connect.api.messaging.upload_chat_attachment",
+					? "/api/method/connect.api.attachments.upload_dm_attachment"
+					: "/api/method/connect.api.attachments.upload_chat_attachment",
 			params: { thread: selectedThread.value },
 		})
 			.then((data) => {
 				const current = draftAttachments.value.find((a) => a.id === id)
 				if (!current) {
 					// removed while it was still uploading — clean up the now-orphaned file
-					call("connect.api.messaging.remove_chat_attachment", { file_url: data.file_url }).catch(() => {})
+					call("connect.api.attachments.remove_chat_attachment", { file_url: data.file_url }).catch(() => {})
 					return
 				}
 				current.file_url = data.file_url
@@ -1568,7 +1568,7 @@ export default function setup(context) {
 	function removeAttachment(item) {
 		draftAttachments.value = draftAttachments.value.filter((a) => a.id !== item.id)
 		if (item.file_url) {
-			call("connect.api.messaging.remove_chat_attachment", { file_url: item.file_url }).catch((e) => {
+			call("connect.api.attachments.remove_chat_attachment", { file_url: item.file_url }).catch((e) => {
 				toast({
 					title: "Could not remove attachment",
 					text: e.messages ? e.messages[0] : e.message,
@@ -1946,7 +1946,7 @@ export default function setup(context) {
 	async function connectWithUser(email) {
 		if (!email || email === (context.myContext.data && context.myContext.data.user)) return
 		try {
-			const thread = await call("connect.api.messaging.start_dm", { user: email })
+			const thread = await call("connect.api.dm.start_dm", { user: email })
 			await context.myDMThreads.reload()
 			const found = (context.myDMThreads.data || []).find((t) => t.name === thread)
 			selectThread(
