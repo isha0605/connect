@@ -927,7 +927,7 @@
                         "click": {
                          "action": "Run Script",
                          "event": "click",
-                         "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlistFull.data || [];\nmyShortlistFull.data = previous.filter((p) => p.name !== partner);\ncall('connect.api.remove_from_shortlist', { partner }).then(() => { myShortlistFull.reload(); }).catch((err) => {\n  myShortlistFull.data = previous;\n  toast({ title: 'Could not remove from shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                         "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlistFull.data || [];\nmyShortlistFull.data = previous.filter((p) => p.name !== partner);\ncall('connect.api.customer.remove_from_shortlist', { partner }).then(() => { myShortlistFull.reload(); }).catch((err) => {\n  myShortlistFull.data = previous;\n  toast({ title: 'Could not remove from shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                         }
                        },
                        "componentId": "Button-remove-shortlist",
@@ -1158,7 +1158,7 @@
                       "click": {
                        "action": "Run Script",
                        "event": "click",
-                       "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlistFull.data || [];\nmyShortlistFull.data = previous.filter((p) => p.name !== partner);\ncall('connect.api.remove_from_shortlist', { partner }).then(() => { myShortlistFull.reload(); }).catch((err) => {\n  myShortlistFull.data = previous;\n  toast({ title: 'Could not remove from shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                       "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = dataItem.name;\nconst previous = myShortlistFull.data || [];\nmyShortlistFull.data = previous.filter((p) => p.name !== partner);\ncall('connect.api.customer.remove_from_shortlist', { partner }).then(() => { myShortlistFull.reload(); }).catch((err) => {\n  myShortlistFull.data = previous;\n  toast({ title: 'Could not remove from shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                       }
                      },
                      "componentId": "Button-1a14da3a0",
@@ -2285,7 +2285,7 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "settingsSaving.value = true;\ncall('connect.api.save_customer_requirement', {\n  company_name: settingsCompanyName.value,\n  country: settingsCountry.value,\n  industry: settingsIndustry.value,\n  apps: settingsApps.value,\n  looking_for: settingsLookingFor.value,\n  company_size: settingsCompanySize.value,\n  current_situation: settingsCurrentSituation.value,\n  timeline: settingsTimeline.value,\n  delivery_preference: settingsDeliveryPreference.value,\n  budget: settingsBudget.value,\n  special_requirements: JSON.stringify(settingsSpecialRequirements.value || []),\n}).then(() => {\n  settingsSaving.value = false;\n  settingsOpen.value = false;\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch((err) => {\n  settingsSaving.value = false;\n  toast({ title: 'Could not save', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+           "script": "settingsSaving.value = true;\ncall('connect.api.customer.save_customer_requirement', {\n  company_name: settingsCompanyName.value,\n  country: settingsCountry.value,\n  industry: settingsIndustry.value,\n  apps: settingsApps.value,\n  looking_for: settingsLookingFor.value,\n  company_size: settingsCompanySize.value,\n  current_situation: settingsCurrentSituation.value,\n  timeline: settingsTimeline.value,\n  delivery_preference: settingsDeliveryPreference.value,\n  budget: settingsBudget.value,\n  special_requirements: JSON.stringify(settingsSpecialRequirements.value || []),\n}).then(() => {\n  settingsSaving.value = false;\n  settingsOpen.value = false;\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch((err) => {\n  settingsSaving.value = false;\n  toast({ title: 'Could not save', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
           }
          },
          "componentId": "Button-settings-save",
@@ -2340,7 +2340,7 @@
    "params": "{}",
    "resource_name": "myShortlistFull",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.list_my_shortlist"
+   "url": "/api/method/connect.api.customer.list_my_shortlist"
   },
   {
    "auto": 1,
@@ -2348,7 +2348,7 @@
    "params": "{}",
    "resource_name": "myCustomer",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.get_my_customer"
+   "url": "/api/method/connect.api.customer.get_my_customer"
   },
   {
    "auto": 1,
@@ -2356,7 +2356,7 @@
    "params": "{}",
    "resource_name": "myRequirement",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.get_my_requirement"
+   "url": "/api/method/connect.api.customer.get_my_requirement"
   },
   {
    "auto": 1,
@@ -2364,7 +2364,7 @@
    "params": "{}",
    "resource_name": "filterOptions",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.list_partner_filter_options"
+   "url": "/api/method/connect.api.partner.list_partner_filter_options"
   },
   {
    "auto": 1,
@@ -2372,7 +2372,7 @@
    "params": "{}",
    "resource_name": "myContext",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.get_my_context"
+   "url": "/api/method/connect.api.account.get_my_context"
   }
  ],
  "route": "/shortlisted",

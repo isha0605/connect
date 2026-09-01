@@ -3270,7 +3270,7 @@
                   "click": {
                    "action": "Run Script",
                    "event": "click",
-                   "script": "call('connect.api.get_my_review_for_partner', { partner: partner.data.name }).then((r) => { reviewRating.value = r ? r.rating : 0; reviewHeadline.value = r ? (r.headline || '') : ''; reviewQuote.value = r ? (r.quote || '') : ''; reviewDialogOpen.value = true; });"
+                   "script": "call('connect.api.partner.get_my_review_for_partner', { partner: partner.data.name }).then((r) => { reviewRating.value = r ? r.rating : 0; reviewHeadline.value = r ? (r.headline || '') : ''; reviewQuote.value = r ? (r.quote || '') : ''; reviewDialogOpen.value = true; });"
                   }
                  },
                  "componentId": "Button-open-write-review",
@@ -3815,7 +3815,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nconst addonRate = pricingView.data.addon_rate || 0;\nconst chosenAddons = (pricingView.data.addons || []).filter(a => (selectedAddons.value || []).includes(a.name));\nconst addonsPreGST = chosenAddons.reduce((s, a) => s + (a.typical_hours || 0) * addonRate, 0);\nconst total = addonsPreGST * 1.18;\nconst payload = chosenAddons.map(a => ({ name: a.addon_name, price: Math.round((a.typical_hours || 0) * addonRate * 1.18) }));\ncall('connect.api.save_price_estimate', {\n  partner: partner.data.name,\n  requirement: pricingView.data.requirement || null,\n  selected_addons: payload,\n  total: Math.round(total),\n}).then((name) => {\n  let summary = 'Estimating at hourly rate (\\u20b9' + Number(pricingView.data.rate || 0).toLocaleString('en-IN') + '/hr)';\n  if (chosenAddons.length) {\n    summary += ' + ' + chosenAddons.map(a => a.addon_name).join(', ');\n  }\n  summary += '. Estimated total: \\u20b9' + Math.round(total).toLocaleString('en-IN') + '.';\n  return call('connect.api.contact.start_partner_thread', { partner: partner.data.name, message: summary });\n}).then((result) => {\n  router.push('/messaging-d87b?thread=' + encodeURIComponent((result && result.thread) || ''));\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                 "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nconst addonRate = pricingView.data.addon_rate || 0;\nconst chosenAddons = (pricingView.data.addons || []).filter(a => (selectedAddons.value || []).includes(a.name));\nconst addonsPreGST = chosenAddons.reduce((s, a) => s + (a.typical_hours || 0) * addonRate, 0);\nconst total = addonsPreGST * 1.18;\nconst payload = chosenAddons.map(a => ({ name: a.addon_name, price: Math.round((a.typical_hours || 0) * addonRate * 1.18) }));\ncall('connect.api.customer.save_price_estimate', {\n  partner: partner.data.name,\n  requirement: pricingView.data.requirement || null,\n  selected_addons: payload,\n  total: Math.round(total),\n}).then((name) => {\n  let summary = 'Estimating at hourly rate (\\u20b9' + Number(pricingView.data.rate || 0).toLocaleString('en-IN') + '/hr)';\n  if (chosenAddons.length) {\n    summary += ' + ' + chosenAddons.map(a => a.addon_name).join(', ');\n  }\n  summary += '. Estimated total: \\u20b9' + Math.round(total).toLocaleString('en-IN') + '.';\n  return call('connect.api.contact.start_partner_thread', { partner: partner.data.name, message: summary });\n}).then((result) => {\n  router.push('/messaging-d87b?thread=' + encodeURIComponent((result && result.thread) || ''));\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                 }
                },
                "componentId": "Button-nopack-discuss",
@@ -4413,7 +4413,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nconst selectedPack = (pricingView.data.packs || []).find(p => p.pack_key === selectedPackKey.value);\nconst packType = selectedPack ? selectedPack.pack_name : '';\nconst packPrice = selectedPack ? (selectedPack.price || 0) : 0;\nconst chosenAddons = (pricingView.data.addons || []).filter(a => (selectedAddons.value || []).includes(a.name));\nconst addonsPreGST = chosenAddons.reduce((s, a) => s + (a.typical_hours || 0) * 2000, 0);\nconst total = packPrice + addonsPreGST * 1.18;\nconst payload = chosenAddons.map(a => ({ name: a.addon_name, price: Math.round((a.typical_hours || 0) * 2000 * 1.18) }));\ncall('connect.api.save_price_estimate', {\n  partner: partner.data.name,\n  requirement: pricingView.data.requirement,\n  pack_type: packType,\n  selected_addons: payload,\n  total: Math.round(total),\n}).then((name) => {\n  let summary = 'Estimating: ' + packType + ' pack (\\u20b9' + packPrice.toLocaleString('en-IN') + ')';\n  if (chosenAddons.length) {\n    summary += ' + ' + chosenAddons.map(a => a.addon_name).join(', ');\n  }\n  summary += '. Estimated total: \\u20b9' + Math.round(total).toLocaleString('en-IN') + '.';\n  return call('connect.api.contact.start_partner_thread', { partner: partner.data.name, message: summary });\n}).then((result) => {\n  router.push('/messaging-d87b?thread=' + encodeURIComponent((result && result.thread) || ''));\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                 "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nconst selectedPack = (pricingView.data.packs || []).find(p => p.pack_key === selectedPackKey.value);\nconst packType = selectedPack ? selectedPack.pack_name : '';\nconst packPrice = selectedPack ? (selectedPack.price || 0) : 0;\nconst chosenAddons = (pricingView.data.addons || []).filter(a => (selectedAddons.value || []).includes(a.name));\nconst addonsPreGST = chosenAddons.reduce((s, a) => s + (a.typical_hours || 0) * 2000, 0);\nconst total = packPrice + addonsPreGST * 1.18;\nconst payload = chosenAddons.map(a => ({ name: a.addon_name, price: Math.round((a.typical_hours || 0) * 2000 * 1.18) }));\ncall('connect.api.customer.save_price_estimate', {\n  partner: partner.data.name,\n  requirement: pricingView.data.requirement,\n  pack_type: packType,\n  selected_addons: payload,\n  total: Math.round(total),\n}).then((name) => {\n  let summary = 'Estimating: ' + packType + ' pack (\\u20b9' + packPrice.toLocaleString('en-IN') + ')';\n  if (chosenAddons.length) {\n    summary += ' + ' + chosenAddons.map(a => a.addon_name).join(', ');\n  }\n  summary += '. Estimated total: \\u20b9' + Math.round(total).toLocaleString('en-IN') + '.';\n  return call('connect.api.contact.start_partner_thread', { partner: partner.data.name, message: summary });\n}).then((result) => {\n  router.push('/messaging-d87b?thread=' + encodeURIComponent((result && result.thread) || ''));\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                 }
                },
                "componentId": "Button-pricing-contact-estimate",
@@ -4684,7 +4684,7 @@
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "reviewSubmitting.value = true; call('connect.api.submit_partner_review', { partner: partner.data.name, rating: reviewRating.value, headline: reviewHeadline.value, quote: reviewQuote.value }).then(() => { toast({ title: 'Review submitted', text: 'Thanks for sharing your feedback!', icon: 'check-circle' }); reviewDialogOpen.value = false; reviewSubmitting.value = false; partnerReviews.reload(); partner.reload(); }).catch(() => { reviewSubmitting.value = false; });"
+               "script": "reviewSubmitting.value = true; call('connect.api.partner.submit_partner_review', { partner: partner.data.name, rating: reviewRating.value, headline: reviewHeadline.value, quote: reviewQuote.value }).then(() => { toast({ title: 'Review submitted', text: 'Thanks for sharing your feedback!', icon: 'check-circle' }); reviewDialogOpen.value = false; reviewSubmitting.value = false; partnerReviews.reload(); partner.reload(); }).catch(() => { reviewSubmitting.value = false; });"
               }
              },
              "componentId": "Button-review-submit",
@@ -5460,7 +5460,7 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "settingsSaving.value = true;\ncall('connect.api.save_customer_requirement', {\n  company_name: settingsCompanyName.value,\n  country: settingsCountry.value,\n  industry: settingsIndustry.value,\n  apps: settingsApps.value,\n  looking_for: settingsLookingFor.value,\n  company_size: settingsCompanySize.value,\n  current_situation: settingsCurrentSituation.value,\n  timeline: settingsTimeline.value,\n  delivery_preference: settingsDeliveryPreference.value,\n  budget: settingsBudget.value,\n  special_requirements: JSON.stringify(settingsSpecialRequirements.value || []),\n}).then(() => {\n  settingsSaving.value = false;\n  settingsOpen.value = false;\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch((err) => {\n  settingsSaving.value = false;\n  toast({ title: 'Could not save', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+           "script": "settingsSaving.value = true;\ncall('connect.api.customer.save_customer_requirement', {\n  company_name: settingsCompanyName.value,\n  country: settingsCountry.value,\n  industry: settingsIndustry.value,\n  apps: settingsApps.value,\n  looking_for: settingsLookingFor.value,\n  company_size: settingsCompanySize.value,\n  current_situation: settingsCurrentSituation.value,\n  timeline: settingsTimeline.value,\n  delivery_preference: settingsDeliveryPreference.value,\n  budget: settingsBudget.value,\n  special_requirements: JSON.stringify(settingsSpecialRequirements.value || []),\n}).then(() => {\n  settingsSaving.value = false;\n  settingsOpen.value = false;\n  if (myRequirement && myRequirement.reload) { myRequirement.reload(); }\n  toast({ title: 'Saved', text: 'Your requirements have been saved.', icon: 'check' });\n}).catch((err) => {\n  settingsSaving.value = false;\n  toast({ title: 'Could not save', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
           }
          },
          "componentId": "Button-settings-save",
@@ -5515,7 +5515,7 @@
    "params": "{\"partner\": \"{{ route.params.partner_id }}\"}",
    "resource_name": "partner",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.get_partner_document"
+   "url": "/api/method/connect.api.partner.get_partner_document"
   },
   {
    "auto": 1,
@@ -5523,7 +5523,7 @@
    "params": "{\"partner\": \"{{ route.params.partner_id }}\"}",
    "resource_name": "partnerReviews",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.list_partner_reviews"
+   "url": "/api/method/connect.api.partner.list_partner_reviews"
   },
   {
    "auto": 1,
@@ -5531,7 +5531,7 @@
    "params": "{\"partner\": \"{{ route.params.partner_id }}\"}",
    "resource_name": "pricingView",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.get_pricing_view"
+   "url": "/api/method/connect.api.customer.get_pricing_view"
   },
   {
    "auto": 1,
@@ -5539,7 +5539,7 @@
    "params": "{}",
    "resource_name": "myRequirement",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.get_my_requirement"
+   "url": "/api/method/connect.api.customer.get_my_requirement"
   },
   {
    "auto": 1,
@@ -5547,7 +5547,7 @@
    "params": "{}",
    "resource_name": "filterOptions",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.list_partner_filter_options"
+   "url": "/api/method/connect.api.partner.list_partner_filter_options"
   },
   {
    "auto": 1,
@@ -5555,7 +5555,7 @@
    "params": "{}",
    "resource_name": "myContext",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.get_my_context"
+   "url": "/api/method/connect.api.account.get_my_context"
   }
  ],
  "route": "/partner-profile/:partner_id",
