@@ -25,7 +25,11 @@ def list_partner_reviews(partner):
 	return frappe.get_all(
 		"Partner Review",
 		filters={"partner": partner},
-		fields=["reviewer_name", "rating", "headline", "quote", "reviewed_on", "verified"],
+		fields=[
+			"reviewer_name", "customer", "rating", "headline", "quote", "reviewed_on", "verified",
+			"business_understanding", "implementation_quality", "communication",
+			"timeliness", "support", "technical_expertise",
+		],
 		order_by="reviewed_on desc",
 		limit_page_length=100,
 	)
