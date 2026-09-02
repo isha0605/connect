@@ -8,9 +8,11 @@ import math
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import cint, flt, now_datetime
+from frappe.utils import cint, flt, now_datetime, validate_email_address
 from pypika.functions import DistinctOptionFunction
 from pypika.utils import builder
+
+from connect.permissions import _my_company_membership
 
 COUNTRY_TO_REGION = {
 	"united states": "North America",
@@ -588,6 +590,7 @@ def list_partner_filter_options():
 		"implementation_types": frappe.get_all("Implementation Type", pluck="title", order_by="title"),
 		"languages": frappe.get_all("FC Language", pluck="title", order_by="title"),
 		"apps": frappe.get_all("App", pluck="title", order_by="title"),
+		"migration_paths": frappe.get_all("Migration Path", pluck="title", order_by="title"),
 	}
 
 
@@ -609,6 +612,26 @@ def get_partner_preview(partner):
 	return doc
 
 
+def _compute_display_industries(industry, success_stories):
+	"""Industries to show under the profile's "Industry" tags: the manually-set primary
+	industry, plus any success-story category with at least 2 published case studies —
+	the same "prove it with case studies" bar frappe.io/partners itself uses to decide
+	which industries a partner is shown as serving."""
+	counts = {}
+	for row in success_stories or []:
+		category = (row.get("category") or "").strip()
+		if category:
+			counts[category] = counts.get(category, 0) + 1
+
+	industries = []
+	if industry:
+		industries.append(industry)
+	for category, count in counts.items():
+		if count >= 2 and category not in industries:
+			industries.append(category)
+	return industries
+
+
 def get_partner_document(partner):
 	"""Returns the full Partner record as a plain API call, since Studio's Document resource isn't guest-accessible."""
 	if not frappe.db.exists("Partner", partner):
@@ -619,4 +642,261 @@ def get_partner_document(partner):
 	doc["founded_years_ago"] = (
 		now_datetime().year - doc["year_founded"] if doc.get("year_founded") else None
 	)
+	doc["display_industries"] = _compute_display_industries(doc.get("industry"), doc.get("success_stories"))
 	return doc
+
+
+def _my_partner():
+	"""Resolves the caller's own Partner, throwing if they aren't on a partner's roster."""
+	doctype, partner, _row = _my_company_membership(frappe.session.user)
+	if doctype != "Connect Partner Member":
+		frappe.throw(_("You are not a member of any partner company"), frappe.PermissionError)
+	return partner
+
+
+def _parse_json_arg(value, default):
+	"""Whitelisted list/dict args arrive as JSON strings over the wire but as the parsed
+	value already when called directly from Python — same shape `_parse_answers` handles."""
+	if isinstance(value, str):
+		return json.loads(value) if value else default
+	return value if value is not None else default
+
+
+ALLOWED_LOGO_EXTENSIONS = {
+	".png": "image/png",
+	".jpg": "image/jpeg",
+	".jpeg": "image/jpeg",
+	".gif": "image/gif",
+	".webp": "image/webp",
+	".svg": "image/svg+xml",
+}
+MAX_LOGO_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
+def upload_partner_logo():
+	"""Sets the caller's own partner's logo from an uploaded image — public, since it's shown to customers."""
+	import os
+
+	partner = _my_partner()
+	uploaded = frappe.request.files.get("file") if frappe.request else None
+	if not uploaded:
+		frappe.throw(_("No file was uploaded"))
+
+	filename = uploaded.filename or ""
+	ext = os.path.splitext(filename)[1].lower()
+	if ext not in ALLOWED_LOGO_EXTENSIONS:
+		frappe.throw(_("Only PNG, JPG, GIF, SVG, and WEBP images can be used as a logo"))
+
+	content = uploaded.stream.read()
+	if len(content) > MAX_LOGO_SIZE:
+		frappe.throw(_("Image is too large — the limit is {0} MB").format(MAX_LOGO_SIZE // (1024 * 1024)))
+
+	file_doc = frappe.get_doc({
+		"doctype": "File",
+		"file_name": filename,
+		"content": content,
+		"is_private": 0,
+		"attached_to_doctype": "Partner",
+		"attached_to_name": partner,
+		"attached_to_field": "logo",
+	})
+	file_doc.insert(ignore_permissions=True)
+
+	frappe.db.set_value("Partner", partner, "logo", file_doc.file_url)
+	return {"logo": file_doc.file_url}
+
+
+def upload_partner_asset():
+	"""Uploads an image for the caller's own partner without attaching it to a specific
+	field — used for things like the founder's photo, which lives on a "team" child row that
+	may not exist yet (a new partner has no team members), so there's no stable doctype/name
+	to attach a File to ahead of time. The caller stores the returned URL in whichever field
+	it belongs to and it's persisted normally on the next profile save."""
+	import os
+
+	partner = _my_partner()
+	uploaded = frappe.request.files.get("file") if frappe.request else None
+	if not uploaded:
+		frappe.throw(_("No file was uploaded"))
+
+	filename = uploaded.filename or ""
+	ext = os.path.splitext(filename)[1].lower()
+	if ext not in ALLOWED_LOGO_EXTENSIONS:
+		frappe.throw(_("Only PNG, JPG, GIF, SVG, and WEBP images can be uploaded"))
+
+	content = uploaded.stream.read()
+	if len(content) > MAX_LOGO_SIZE:
+		frappe.throw(_("Image is too large — the limit is {0} MB").format(MAX_LOGO_SIZE // (1024 * 1024)))
+
+	file_doc = frappe.get_doc({
+		"doctype": "File",
+		"file_name": filename,
+		"content": content,
+		"is_private": 0,
+		"attached_to_doctype": "Partner",
+		"attached_to_name": partner,
+	})
+	file_doc.insert(ignore_permissions=True)
+
+	return {"file_url": file_doc.file_url}
+
+
+# Table MultiSelect fields where the frontend only ever sends the flat list of link values
+# (matching what get_partner_document returns from _apps_by_partner-style helpers) — this maps
+# each to the single non-standard fieldname on its child doctype so doc.set() gets proper rows.
+_PROFILE_MULTISELECT_FIELDS = {
+	"apps": "app",
+	"migrations": "migration_path",
+	"business_processes": "business_process",
+	"implementation_types": "implementation_type",
+	"languages": "language",
+}
+
+_PROFILE_SIMPLE_FIELDS = (
+	# partner_name is deliberately excluded — it's the doc's autoname source (see
+	# "autoname": "field:partner_name" in partner.json), so letting partners edit it here
+	# would rename the document and break every Connect Partner Member row that references
+	# it by name. Renaming a partner is an admin-only operation done from the desk.
+	"tagline", "description", "country", "city", "address", "website",
+	"industry", "year_founded", "rollouts", "hourly_rate", "response_time_hours",
+	"sites_deployed", "typical_project_size", "proposal_timeline", "certified_experts",
+	"certs_erpnext", "certs_frappe_framework", "countries_served", "references_count",
+	"starter_pack", "demo_available", "logo_position_x", "logo_position_y",
+)
+
+
+def update_my_partner_profile(
+	partner_name=None, tagline=None, description=None, country=None, city=None,
+	address=None, website=None, industry=None, year_founded=None, rollouts=None,
+	hourly_rate=None, response_time_hours=None, sites_deployed=None,
+	typical_project_size=None, proposal_timeline=None, certified_experts=None,
+	certs_erpnext=None, certs_frappe_framework=None, countries_served=None,
+	references_count=None, starter_pack=None, demo_available=None,
+	logo_position_x=None, logo_position_y=None,
+	apps=None, migrations=None, business_processes=None, implementation_types=None, languages=None,
+	founder=None, success_stories=None, packs=None, addons=None,
+):
+	"""Lets any member of the caller's own partner company edit their public profile —
+	the same fields (and the same About / Success Stories / Pricing grouping) shown on the
+	customer-facing partner profile page."""
+	partner = _my_partner()
+	doc = frappe.get_doc("Partner", partner)
+
+	values = dict(
+		partner_name=partner_name, tagline=tagline, description=description, country=country,
+		city=city, address=address, website=website, industry=industry, year_founded=year_founded,
+		rollouts=rollouts, hourly_rate=hourly_rate, response_time_hours=response_time_hours,
+		sites_deployed=sites_deployed, typical_project_size=typical_project_size,
+		proposal_timeline=proposal_timeline, certified_experts=certified_experts,
+		certs_erpnext=certs_erpnext, certs_frappe_framework=certs_frappe_framework,
+		countries_served=countries_served, references_count=references_count,
+		starter_pack=starter_pack, demo_available=demo_available,
+		logo_position_x=logo_position_x, logo_position_y=logo_position_y,
+	)
+	for fieldname in _PROFILE_SIMPLE_FIELDS:
+		value = values[fieldname]
+		if value is not None:
+			doc.set(fieldname, value)
+
+	multiselect_values = dict(
+		apps=apps, migrations=migrations, business_processes=business_processes,
+		implementation_types=implementation_types, languages=languages,
+	)
+	for fieldname, child_field in _PROFILE_MULTISELECT_FIELDS.items():
+		value = multiselect_values[fieldname]
+		if value is not None:
+			doc.set(fieldname, [{child_field: v} for v in _parse_json_arg(value, [])])
+
+	founder = _parse_json_arg(founder, None)
+	if founder:
+		team = doc.get("team") or []
+		founder_row = next((row for row in team if row.is_founder), None)
+		if not founder_row and founder.get("member_name"):
+			founder_row = doc.append("team", {"is_founder": 1})
+		if founder_row:
+			founder_row.member_name = founder.get("member_name")
+			founder_row.designation = founder.get("designation")
+			founder_row.bio = founder.get("bio")
+			founder_row.photo = founder.get("photo")
+
+	if success_stories is not None:
+		doc.set("success_stories", [
+			{
+				"client_name": row.get("client_name"),
+				"client_logo": row.get("client_logo"),
+				"headline": row.get("headline"),
+				"category": row.get("category"),
+				"url": row.get("url"),
+			}
+			for row in _parse_json_arg(success_stories, [])
+		])
+
+	if packs is not None:
+		doc.set("packs", [
+			{
+				"pack_key": row.get("pack_key"),
+				"pack_name": row.get("pack_name"),
+				"price": row.get("price"),
+				"hours": row.get("hours"),
+				"validity_days": row.get("validity_days"),
+				"includes_summary": row.get("includes_summary"),
+			}
+			for row in _parse_json_arg(packs, [])
+		])
+
+	if addons is not None:
+		doc.set("addons", [
+			{"addon_name": row.get("addon_name"), "typical_hours": row.get("typical_hours")}
+			for row in _parse_json_arg(addons, [])
+		])
+
+	doc.save(ignore_permissions=True)
+	return {"partner": doc.name}
+
+
+def signup_partner(full_name, company_name, email, password, country=None):
+	"""Lets a new partner self-signup by creating their user, company, and admin membership in
+	one step — same shape as Customer's signup_customer. New partners start unverified (Bronze
+	tier, Pending Review) until manually promoted; My Profile is left for them to fill in."""
+	full_name = (full_name or "").strip()
+	company_name = (company_name or "").strip()
+	email = (email or "").strip().lower()
+	country = (country or "").strip()
+	if not full_name or not company_name or not email or not password:
+		frappe.throw(_("Please fill in all fields"))
+	if not validate_email_address(email, throw=False):
+		frappe.throw(_("Enter a valid email address"))
+	if frappe.db.exists("User", email):
+		frappe.throw(_("An account with this email already exists. Log in instead."))
+	if frappe.db.exists("Partner", company_name):
+		frappe.throw(
+			_("{0} is already registered. Ask your team admin to add you instead.").format(company_name)
+		)
+
+	first_name, _sep, last_name = full_name.partition(" ")
+
+	user = frappe.new_doc("User")
+	user.email = email
+	user.first_name = first_name
+	user.last_name = last_name
+	user.user_type = "Website User"
+	user.send_welcome_email = 0
+	user.new_password = password
+	user.insert(ignore_permissions=True)
+
+	partner = frappe.new_doc("Partner")
+	partner.partner_name = company_name
+	partner.tier = "Bronze"
+	partner.country = country
+	partner.insert(ignore_permissions=True)
+
+	frappe.get_doc({
+		"doctype": "Connect Partner Member",
+		"partner": partner.name,
+		"user": email,
+		"role": "Founder",
+		"is_admin": 1,
+	}).insert(ignore_permissions=True)
+
+	frappe.local.login_manager.login_as(email)
+	return {"ok": True, "partner": partner.name}

@@ -91,3 +91,50 @@ def submit_partner_review(
 		communication=communication, timeliness=timeliness, support=support,
 		technical_expertise=technical_expertise,
 	)
+
+
+@frappe.whitelist(allow_guest=True)
+def signup_partner(full_name, company_name, email, password, country=None):
+	from connect.partner.doctype.partner.partner import signup_partner
+	return signup_partner(full_name, company_name, email, password, country=country)
+
+
+@frappe.whitelist()
+def upload_partner_logo():
+	from connect.partner.doctype.partner.partner import upload_partner_logo
+	return upload_partner_logo()
+
+
+@frappe.whitelist()
+def upload_partner_asset():
+	from connect.partner.doctype.partner.partner import upload_partner_asset
+	return upload_partner_asset()
+
+
+@frappe.whitelist()
+def update_my_partner_profile(
+	partner_name=None, tagline=None, description=None, country=None, city=None,
+	address=None, website=None, industry=None, year_founded=None, rollouts=None,
+	hourly_rate=None, response_time_hours=None, sites_deployed=None,
+	typical_project_size=None, proposal_timeline=None, certified_experts=None,
+	certs_erpnext=None, certs_frappe_framework=None, countries_served=None,
+	references_count=None, starter_pack=None, demo_available=None,
+	logo_position_x=None, logo_position_y=None,
+	apps=None, migrations=None, business_processes=None, implementation_types=None, languages=None,
+	founder=None, success_stories=None, packs=None, addons=None,
+):
+	from connect.partner.doctype.partner.partner import update_my_partner_profile
+	return update_my_partner_profile(
+		partner_name=partner_name, tagline=tagline, description=description, country=country,
+		city=city, address=address, website=website, industry=industry, year_founded=year_founded,
+		rollouts=rollouts, hourly_rate=hourly_rate, response_time_hours=response_time_hours,
+		sites_deployed=sites_deployed, typical_project_size=typical_project_size,
+		proposal_timeline=proposal_timeline, certified_experts=certified_experts,
+		certs_erpnext=certs_erpnext, certs_frappe_framework=certs_frappe_framework,
+		countries_served=countries_served, references_count=references_count,
+		starter_pack=starter_pack, demo_available=demo_available,
+		logo_position_x=logo_position_x, logo_position_y=logo_position_y,
+		apps=apps, migrations=migrations, business_processes=business_processes,
+		implementation_types=implementation_types,
+		languages=languages, founder=founder, success_stories=success_stories, packs=packs, addons=addons,
+	)
