@@ -1,7 +1,6 @@
 # Copyright (c) 2026
 # For license information, please see license.txt
 
-import difflib
 import json
 import math
 
@@ -9,8 +8,6 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, flt, now_datetime
-from pypika.functions import DistinctOptionFunction
-from pypika.utils import builder
 
 COUNTRY_TO_REGION = {
 	"united states": "North America",
@@ -93,8 +90,6 @@ PARTNER_FIELDS = [
 	"rating", "industry", "country", "city", "rollouts", "hourly_rate",
 	"response_time_hours",
 ]
-SEARCHABLE_TEXT_FIELDS = ["partner_name", "tagline", "industry", "country", "city"]
-
 # The "is this partner visible at all" gate — combined as AND with whatever
 # else a caller filters on. Callers that append more filters must copy this
 # (list(BASE_PARTNER_FILTERS)) rather than mutate it in place.
@@ -189,65 +184,22 @@ def attach_success_story_previews(rows):
 	return rows
 
 
-class _NaturalLanguageMatch(DistinctOptionFunction):
-	"""A multi-column MATCH()/AGAINST() function, since frappe's built-in Match only supports one column."""
-
-	def __init__(self, *columns):
-		super().__init__("MATCH", *columns)
-		self._against = None
-
-	def get_function_sql(self, **kwargs):
-		sql = super(DistinctOptionFunction, self).get_function_sql(**kwargs)
-		if self._against is None:
-			raise Exception("Chain the `Against()` method with match to complete the query")
-		return f"{sql} AGAINST ({frappe.db.escape(self._against)} IN NATURAL LANGUAGE MODE)"
-
-	@builder
-	def Against(self, text):
-		self._against = text
-
-
-def _fts_rank(search_term, allowed_names):
-	"""Ranks partner names by MariaDB full-text search relevance against the search term."""
+def _sqlite_rank(search_term, allowed_names):
+	"""Ranks partner names by SQLite FTS5 relevance (with built-in spelling correction) against the
+	search term, restricted to allowed_names — replaces the old MariaDB-only FULLTEXT MATCH/AGAINST
+	ranking plus its difflib fuzzy-match fallback with connect.search.PartnerSearch, so this works
+	regardless of the site's DB backend. allowed_names is passed as a `name` filter rather than
+	baked into the index, since the structured filters (industry/region/child-table membership/etc.)
+	already narrowed it in SQL before this ever runs — see search_partners."""
 	if not allowed_names:
 		return []
-	Partner = frappe.qb.DocType("Partner")
-	rank = _NaturalLanguageMatch(
-		Partner.partner_name, Partner.tagline, Partner.description,
-		Partner.industry, Partner.city, Partner.country,
-	).Against(search_term)
-	rows = (
-		frappe.qb.from_(Partner)
-		.select(Partner.name, rank.as_("rank"))
-		.where(Partner.name.isin(allowed_names))
-		.where(rank)
-		.orderby("rank", order=frappe.qb.desc)
-	).run(as_dict=True)
-	return [r.name for r in rows]
+	from connect.search import PartnerSearch
 
-
-def _fuzzy_rank(search_term, candidates, threshold=0.65):
-	"""Ranks partners by typo-tolerant fuzzy match, as a fallback for terms full-text search misses."""
-	term = (search_term or "").strip().lower()
-	if not term:
-		return candidates
-
-	scored = []
-	for c in candidates:
-		blob = " ".join(str(c.get(f) or "") for f in SEARCHABLE_TEXT_FIELDS).lower()
-		if term in blob:
-			score = 1.0
-		else:
-			whole_ratio = difflib.SequenceMatcher(None, term, blob).ratio()
-			word_ratio = max(
-				(difflib.SequenceMatcher(None, term, w).ratio() for w in blob.split()), default=0
-			)
-			score = max(whole_ratio, word_ratio)
-		if score >= threshold:
-			scored.append((score, c))
-
-	scored.sort(key=lambda pair: pair[0], reverse=True)
-	return [c for _, c in scored]
+	search = PartnerSearch()
+	if not (search.is_search_enabled() and search.index_exists()):
+		return []
+	result = search.search(search_term, filters={"name": allowed_names})
+	return [r["name"] for r in result["results"]]
 
 
 SORT_OPTIONS = {
@@ -334,11 +286,12 @@ def search_partners(
 		candidates = frappe.get_list("Partner", fields=PARTNER_FIELDS, filters=filters, limit_page_length=0)
 		by_name = {c.name: c for c in candidates}
 
-		ranked_names = _fts_rank(search, list(by_name))
+		ranked_names = _sqlite_rank(search, list(by_name))
 		ordered = [by_name[n] for n in ranked_names]
 
-		leftover = [c for c in candidates if c.name not in set(ranked_names)]
-		ordered += _fuzzy_rank(search, leftover)
+		# Candidates the FTS pass didn't rank at all (no match, even with spelling
+		# correction) fall through unranked rather than being dropped.
+		ordered += [c for c in candidates if c.name not in set(ranked_names)]
 
 		partners = ordered[:limit]
 		if sort in SORT_OPTIONS:
