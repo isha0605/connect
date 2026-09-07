@@ -353,7 +353,7 @@
            "baseStyles": {
             "backgroundColor": "#f4f5f6",
             "backgroundImage": "{{ partner.data.logo ? 'url(' + partner.data.logo + ')' : 'none' }}",
-            "backgroundPosition": "center",
+            "backgroundPosition": "{{ (partner.data.logo_position_x ?? 50) + '% ' + (partner.data.logo_position_y ?? 50) + '%' }}",
             "backgroundRepeat": "no-repeat",
             "backgroundSize": "contain",
             "border": "1px solid var(--outline-gray-1)",
@@ -583,7 +583,7 @@
              "children": [
               {
                "baseStyles": {
-                "display": "{{ partner.data.industry ? 'flex' : 'none' }}",
+                "display": "{{ (partner.data.display_industries || []).length ? 'flex' : 'none' }}",
                 "flexDirection": "column",
                 "gap": "8px"
                },
@@ -640,14 +640,46 @@
                  },
                  "children": [
                   {
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "flexWrap": "wrap",
+                    "gap": "8px"
+                   },
                    "children": [],
                    "classes": [],
-                   "componentId": "Badge-4d97e5fa4",
-                   "componentName": "Badge",
+                   "componentId": "Repeater-industries",
+                   "componentName": "Repeater",
                    "componentProps": {
-                    "label": "{{ partner.data.industry }}",
-                    "theme": "gray",
-                    "variant": "subtle"
+                    "data": "{{ partner.data.display_industries || [] }}",
+                    "dataKey": "self",
+                    "emptyStateMessage": ""
+                   },
+                   "componentSlots": {
+                    "default": {
+                     "parentBlockId": "Repeater-industries",
+                     "slotContent": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {},
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "Badge-industries-item",
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ dataItem }}",
+                        "theme": "gray",
+                        "variant": "subtle"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "slotId": "Repeater-industries:default",
+                     "slotName": "default"
+                    }
                    }
                   }
                  ],
@@ -1353,6 +1385,13 @@
                "children": [
                 {
                  "baseStyles": {
+                  "backgroundColor": "#f4f5f6",
+                  "backgroundImage": "{{ (partner.data.team.find(t => t.is_founder) || {}).photo ? 'url(' + (partner.data.team.find(t => t.is_founder) || {}).photo + ')' : 'none' }}",
+                  "backgroundPosition": "{{ ((partner.data.team.find(t => t.is_founder) || {}).photo_position_x ?? 50) + '% ' + ((partner.data.team.find(t => t.is_founder) || {}).photo_position_y ?? 50) + '%' }}",
+                  "backgroundRepeat": "no-repeat",
+                  "backgroundSize": "cover",
+                  "border": "1px solid var(--outline-gray-1)",
+                  "borderRadius": "9999px",
                   "height": "197px",
                   "marginBottom": "0px",
                   "width": "143px"
@@ -1360,13 +1399,8 @@
                  "children": [],
                  "classes": [],
                  "componentId": "Avatar-90753c2b3",
-                 "componentName": "Avatar",
-                 "componentProps": {
-                  "image": "{{ (partner.data.team.find(t => t.is_founder) || {}).photo }}",
-                  "label": "{{ (partner.data.team.find(t => t.is_founder) || {}).member_name }}",
-                  "shape": "circle",
-                  "size": "xl"
-                 }
+                 "componentName": "container",
+                 "originalElement": "div"
                 },
                 {
                  "baseStyles": {
@@ -5497,7 +5531,7 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-08-30 20:34:12.456941",
+ "creation": "2026-09-02 22:13:27.468197",
  "doctype": "Studio Page",
  "frappe_app": "connect",
  "is_standard": 1,

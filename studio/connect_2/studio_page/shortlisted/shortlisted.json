@@ -201,6 +201,65 @@
        },
        "children": [
         {
+         "baseStyles": {
+          "alignItems": "center",
+          "cursor": "pointer",
+          "display": "flex",
+          "gap": "8px",
+          "justifyContent": "flex-start",
+          "padding": "6px 12px",
+          "paddingLeft": "3px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "flexShrink": "0",
+            "fontSize": "16px",
+            "fontWeight": "500",
+            "height": "36px",
+            "width": "36px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "sidebar-my-avatar-img",
+           "componentName": "Avatar",
+           "componentProps": {
+            "image": "{{ myProfile.data ? myProfile.data.user_image : '' }}",
+            "label": "{{ myProfile.data ? myProfile.data.full_name : '' }}",
+            "shape": "circle",
+            "size": "xl"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)"
+           },
+           "children": [],
+           "classes": [
+            "truncate"
+           ],
+           "componentId": "sidebar-my-avatar-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "Profile"
+           }
+          }
+         ],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "openProfileSettings();"
+          }
+         },
+         "componentId": "sidebar-my-avatar",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
          "children": [],
          "classes": [],
          "componentId": "SidebarCollapseToggle-761004fdf",
@@ -2313,6 +2372,1133 @@
       },
       "size": "2xl",
       "title": "Your Requirements"
+     }
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "row",
+        "height": "min(620px, 80vh)",
+        "position": "relative"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "backgroundColor": "var(--surface-sidebar)",
+          "borderRight": "1px solid var(--outline-gray-2)",
+          "display": "flex",
+          "flexDirection": "column",
+          "flexShrink": "0",
+          "gap": "2px",
+          "padding": "8px",
+          "width": "220px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "backgroundColor": "var(--surface-sidebar)",
+            "color": "var(--ink-gray-5)",
+            "cursor": "default",
+            "display": "flex",
+            "fontWeight": "500",
+            "gap": "6px",
+            "height": "30px",
+            "margin": "3px 0",
+            "padding": "7px 8px",
+            "position": "sticky",
+            "top": "0",
+            "zIndex": "10"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "profile-settings-nav-group-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-xs",
+            "tag": "span",
+            "text": "Settings"
+           }
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "backgroundColor": "{{ profileSettingsSection === 'profile' ? 'var(--surface-elevation-3)' : 'transparent' }}",
+            "borderRadius": "6px",
+            "boxShadow": "{{ profileSettingsSection === 'profile' ? '0 1px 2px 0 rgb(0 0 0 / 0.05)' : 'none' }}",
+            "cursor": "pointer",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "height": "28px",
+            "padding": "0 8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "flexShrink": "0",
+              "height": "15px",
+              "width": "15px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "profile-settings-nav-profile-icon",
+             "componentName": "FeatherIcon",
+             "componentProps": {
+              "name": "user"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)"
+             },
+             "children": [],
+             "classes": [
+              "truncate"
+             ],
+             "componentId": "profile-settings-nav-profile-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-base",
+              "tag": "span",
+              "text": "Profile"
+             }
+            }
+           ],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "selectProfileSettingsSection('profile');"
+            }
+           },
+           "componentId": "profile-settings-nav-profile",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "backgroundColor": "{{ profileSettingsSection === 'users' ? 'var(--surface-elevation-3)' : 'transparent' }}",
+            "borderRadius": "6px",
+            "boxShadow": "{{ profileSettingsSection === 'users' ? '0 1px 2px 0 rgb(0 0 0 / 0.05)' : 'none' }}",
+            "cursor": "pointer",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "height": "28px",
+            "padding": "0 8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "flexShrink": "0",
+              "height": "15px",
+              "width": "15px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "profile-settings-nav-users-icon",
+             "componentName": "FeatherIcon",
+             "componentProps": {
+              "name": "users"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)"
+             },
+             "children": [],
+             "classes": [
+              "truncate"
+             ],
+             "componentId": "profile-settings-nav-users-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-base",
+              "tag": "span",
+              "text": "Users"
+             }
+            }
+           ],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "selectProfileSettingsSection('users');"
+            }
+           },
+           "componentId": "profile-settings-nav-users",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "profile-settings-left-nav",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1",
+          "flexDirection": "column",
+          "minHeight": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minHeight": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "flex-start",
+              "display": "flex",
+              "flexShrink": "0",
+              "gap": "16px",
+              "justifyContent": "space-between",
+              "padding": "40px 40px 0"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "4px",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-profile-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-lg",
+                  "tag": "h2",
+                  "text": "Profile"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-profile-description",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "p",
+                  "text": "Manage your profile"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "profile-settings-profile-heading",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "profile-settings-profile-header",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "flex": "1",
+              "minHeight": "0px",
+              "overflowY": "auto",
+              "padding": "20px 40px 40px",
+              "scrollbarColor": "var(--outline-gray-3) transparent",
+              "scrollbarWidth": "thin"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "var(--surface-gray-1)",
+                "borderRadius": "8px",
+                "display": "flex",
+                "justifyContent": "center",
+                "marginBottom": "20px",
+                "padding": "20px 0"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "cursor": "pointer",
+                  "height": "88px",
+                  "position": "relative",
+                  "width": "88px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "height": "88px",
+                    "width": "88px"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "profile-settings-avatar",
+                   "componentName": "Avatar",
+                   "componentProps": {
+                    "image": "{{ myProfile.data ? myProfile.data.user_image : '' }}",
+                    "label": "{{ myProfile.data ? myProfile.data.full_name : '' }}",
+                    "shape": "circle",
+                    "size": "3xl"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "backgroundColor": "var(--black-overlay-100)",
+                    "borderRadius": "50%",
+                    "display": "flex",
+                    "height": "88px",
+                    "justifyContent": "center",
+                    "left": "0",
+                    "position": "absolute",
+                    "top": "0",
+                    "width": "88px"
+                   },
+                   "children": [
+                    {
+                     "children": [],
+                     "classes": [],
+                     "componentId": "profile-settings-avatar-spinner",
+                     "componentName": "Spinner",
+                     "componentProps": {
+                      "size": "md",
+                      "theme": "gray"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "profile-settings-avatar-overlay",
+                   "componentName": "container",
+                   "originalElement": "div",
+                   "visibilityCondition": "uploadingProfileImage"
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "openProfileImagePicker();"
+                  }
+                 },
+                 "componentId": "profile-settings-avatar-wrap",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentId": "profile-settings-photo-card",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "12px",
+                "marginBottom": "14px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flex": "1",
+                  "minWidth": "0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-name-input",
+                 "componentName": "TextInput",
+                 "componentProps": {
+                  "label": "Full name",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "editFullName"
+                  },
+                  "placeholder": "Your name",
+                  "size": "md",
+                  "variant": "outline"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "flex": "1",
+                  "minWidth": "0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-role-input",
+                 "componentName": "TextInput",
+                 "componentProps": {
+                  "label": "Role",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "editRole"
+                  },
+                  "placeholder": "e.g. Sales, Support",
+                  "size": "md",
+                  "variant": "outline"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "profile-settings-name-role-row",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "12px",
+                "marginBottom": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flex": "1",
+                  "minWidth": "0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-email-input",
+                 "componentName": "TextInput",
+                 "componentProps": {
+                  "disabled": true,
+                  "label": "Email",
+                  "modelValue": "{{ myProfile.data ? myProfile.data.email : '' }}",
+                  "size": "md",
+                  "type": "email",
+                  "variant": "outline"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "flex": "1",
+                  "minWidth": "0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-phone-input",
+                 "componentName": "TextInput",
+                 "componentProps": {
+                  "label": "Phone number",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "editPhone"
+                  },
+                  "placeholder": "Your phone number",
+                  "size": "md",
+                  "type": "tel",
+                  "variant": "outline"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "profile-settings-email-phone-row",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "justifyContent": "flex-end",
+                "marginTop": "20px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flexShrink": 0
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "saveMyProfile();"
+                  }
+                 },
+                 "componentId": "profile-settings-profile-save-btn",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "disabled": "{{ editFullName === originalFullName && editRole === originalRole && editPhone === originalPhone }}",
+                  "iconLeft": "lucide-check",
+                  "label": "Save",
+                  "loading": "{{ savingProfile }}",
+                  "loadingText": "Saving...",
+                  "theme": "gray",
+                  "variant": "solid"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "profile-settings-profile-save-row",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "profile-settings-body",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "profile-settings-profile-section",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "profileSettingsSection === 'profile'"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minHeight": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "flex-start",
+              "display": "flex",
+              "flexShrink": "0",
+              "gap": "16px",
+              "justifyContent": "space-between",
+              "padding": "40px 40px 0"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "4px",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-users-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-lg",
+                  "tag": "h2",
+                  "text": "Users"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-users-description",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "p",
+                  "text": "People at your company"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "profile-settings-users-heading",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "profile-settings-users-header",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "flex": "1",
+              "minHeight": "0px",
+              "overflowY": "auto",
+              "padding": "20px 40px 40px",
+              "scrollbarColor": "var(--outline-gray-3) transparent",
+              "scrollbarWidth": "thin"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "borderBottom": "1px solid var(--outline-gray-2)",
+                "color": "var(--ink-gray-5)",
+                "display": "grid",
+                "fontSize": "12px",
+                "fontWeight": "500",
+                "gap": "10px",
+                "gridTemplateColumns": "minmax(120px,1fr) minmax(140px,1.4fr) 90px 40px",
+                "padding": "0 0 8px",
+                "width": "100%"
+               },
+               "children": [
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-team-header-name",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "span",
+                  "text": "Name"
+                 }
+                },
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-team-header-email",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "span",
+                  "text": "Email"
+                 }
+                },
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-team-header-role",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "span",
+                  "text": "Role"
+                 }
+                },
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-team-header-actions",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "span",
+                  "text": ""
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "profile-settings-team-header",
+               "componentName": "container",
+               "originalElement": "div",
+               "visibilityCondition": "myTeam.data && myTeam.data.length"
+              },
+              {
+               "baseStyles": {
+                "gap": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderBottom": "1px solid var(--outline-gray-1)",
+                  "display": "grid",
+                  "gap": "10px",
+                  "gridTemplateColumns": "minmax(120px,1fr) minmax(140px,1.4fr) 90px 40px",
+                  "padding": "8px 0",
+                  "width": "100%"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "gap": "6px",
+                    "minWidth": "0px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-9)",
+                      "fontWeight": "500",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "profile-settings-team-row-name",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ dataItem.full_name || dataItem.user }}"
+                     }
+                    },
+                    {
+                     "children": [],
+                     "classes": [],
+                     "componentId": "profile-settings-team-row-disabled-badge",
+                     "componentName": "Badge",
+                     "componentProps": {
+                      "label": "Disabled",
+                      "size": "sm",
+                      "theme": "gray",
+                      "variant": "subtle"
+                     },
+                     "visibilityCondition": "dataItem.is_removed"
+                    },
+                    {
+                     "children": [],
+                     "classes": [],
+                     "componentId": "profile-settings-team-row-admin-badge",
+                     "componentName": "Badge",
+                     "componentProps": {
+                      "label": "Admin",
+                      "size": "sm",
+                      "theme": "gray",
+                      "variant": "subtle"
+                     },
+                     "visibilityCondition": "dataItem.is_admin"
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "profile-settings-team-row-name-cell",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "color": "var(--ink-gray-5)",
+                    "display": "flex",
+                    "minWidth": "0px",
+                    "overflow": "hidden",
+                    "textOverflow": "ellipsis",
+                    "whiteSpace": "nowrap"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "profile-settings-team-row-email",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ dataItem.user }}"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "flexWrap": "wrap",
+                    "gap": "6px"
+                   },
+                   "children": [
+                    {
+                     "children": [],
+                     "classes": [],
+                     "componentId": "profile-settings-team-row-title-badge",
+                     "componentName": "Badge",
+                     "componentProps": {
+                      "label": "{{ dataItem.role }}",
+                      "size": "sm",
+                      "theme": "gray",
+                      "variant": "subtle"
+                     },
+                     "visibilityCondition": "dataItem.role"
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "profile-settings-team-row-role-cell",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "justifyContent": "flex-end"
+                   },
+                   "children": [
+                    {
+                     "children": [
+                      {
+                       "children": [],
+                       "classes": [
+                        "opacity-0",
+                        "group-hover:opacity-100"
+                       ],
+                       "componentId": "profile-settings-team-row-actions-trigger",
+                       "componentName": "Button",
+                       "componentProps": {
+                        "icon": "lucide-more-horizontal",
+                        "size": "sm",
+                        "variant": "ghost"
+                       }
+                      }
+                     ],
+                     "classes": [],
+                     "componentId": "profile-settings-team-row-actions",
+                     "componentName": "Dropdown",
+                     "componentProps": {
+                      "align": "end",
+                      "options": "{{ teamRowOptions(dataItem) }}"
+                     },
+                     "visibilityCondition": "!dataItem.is_removed"
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "profile-settings-team-row-actions-cell",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  }
+                 ],
+                 "classes": [
+                  "group"
+                 ],
+                 "componentId": "profile-settings-team-row",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentId": "profile-settings-team-repeater",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ myTeam.data }}",
+                "dataKey": "user"
+               }
+              },
+              {
+               "children": [],
+               "classes": [],
+               "componentId": "profile-settings-team-empty",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "p",
+                "text": "No team members yet."
+               },
+               "visibilityCondition": "myTeam.data && !myTeam.data.length"
+              }
+             ],
+             "classes": [],
+             "componentId": "profile-settings-users-body",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "row",
+              "flexShrink": "0",
+              "justifyContent": "flex-end",
+              "padding": "12px 40px"
+             },
+             "children": [
+              {
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "showAddTeamMemberDialog.value = true;"
+                }
+               },
+               "componentId": "add-team-member-btn",
+               "componentName": "Button",
+               "componentProps": {
+                "iconLeft": "lucide-user-plus",
+                "label": "Add",
+                "variant": "outline"
+               },
+               "visibilityCondition": "isAnyAdmin()"
+              }
+             ],
+             "classes": [],
+             "componentId": "profile-settings-users-footer",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "profile-settings-users-section",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "profileSettingsSection === 'users'"
+          }
+         ],
+         "classes": [],
+         "componentId": "profile-settings-right-pane",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "backgroundColor": "transparent",
+          "borderRadius": "6px",
+          "cursor": "pointer",
+          "display": "flex",
+          "height": "28px",
+          "justifyContent": "center",
+          "position": "absolute",
+          "right": "16px",
+          "top": "16px",
+          "width": "28px",
+          "zIndex": "20"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "height": "16px",
+            "width": "16px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "profile-settings-close-icon",
+           "componentName": "FeatherIcon",
+           "componentProps": {
+            "name": "x"
+           }
+          }
+         ],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "showProfileSettingsDialog.value = false;"
+          }
+         },
+         "componentId": "profile-settings-close-btn",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "profile-settings-dialog-body",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "profile-settings-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "bare": true,
+      "modelValue": {
+       "$type": "variable",
+       "name": "showProfileSettingsDialog"
+      },
+      "size": "4xl"
+     }
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "12px"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "new-team-member-email",
+         "componentName": "TextInput",
+         "componentProps": {
+          "label": "Email",
+          "modelValue": {
+           "$type": "variable",
+           "name": "newTeamMemberEmail"
+          },
+          "placeholder": "teammate@company.com",
+          "type": "email"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "new-team-member-role",
+         "componentName": "TextInput",
+         "componentProps": {
+          "label": "Role (optional)",
+          "modelValue": {
+           "$type": "variable",
+           "name": "newTeamMemberRole"
+          },
+          "placeholder": "e.g. Sales, Tech, Manager"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "new-team-member-password",
+         "componentName": "TextInput",
+         "componentProps": {
+          "label": "Password (optional)",
+          "modelValue": {
+           "$type": "variable",
+           "name": "newTeamMemberPassword"
+          },
+          "placeholder": "Leave blank to set later",
+          "type": "password"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "addTeamMember();"
+          }
+         },
+         "componentId": "add-team-member-submit",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "Add member",
+          "loading": "{{ addingTeamMember }}",
+          "loadingText": "Adding...",
+          "theme": "gray",
+          "variant": "solid"
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "add-team-member-form",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "add-team-member-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "showAddTeamMemberDialog"
+      },
+      "size": "sm",
+      "title": "Add team member"
+     }
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "14px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "disable-team-member-description",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-sm",
+          "tag": "p",
+          "text": "{{ memberToDisable ? memberToDisable.user + ' will lose access to every thread they are part of.' : '' }}"
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "8px",
+          "justifyContent": "flex-end"
+         },
+         "children": [
+          {
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "showDisableTeamMemberDialog.value = false;"
+            }
+           },
+           "componentId": "disable-team-member-cancel-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "theme": "gray",
+            "variant": "outline"
+           }
+          },
+          {
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "disableTeamMember();"
+            }
+           },
+           "componentId": "disable-team-member-confirm-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Disable",
+            "loading": "{{ disablingTeamMember }}",
+            "loadingText": "Disabling...",
+            "theme": "red",
+            "variant": "solid"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "disable-team-member-actions",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "disable-team-member-body",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "disable-team-member-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "showDisableTeamMemberDialog"
+      },
+      "size": "sm",
+      "title": "Disable team member?"
      }
     }
    ],
@@ -4696,6 +5882,20 @@
    "resource_name": "myContext",
    "resource_type": "API Resource",
    "url": "/api/method/connect.api.account.get_my_context"
+  },
+  {
+   "auto": 1,
+   "method": "GET",
+   "resource_name": "myProfile",
+   "resource_type": "API Resource",
+   "url": "connect.api.account.get_my_profile"
+  },
+  {
+   "auto": 1,
+   "method": "GET",
+   "resource_name": "myTeam",
+   "resource_type": "API Resource",
+   "url": "connect.api.account.get_my_team"
   }
  ],
  "route": "/shortlisted",
