@@ -159,6 +159,13 @@ has_permission = {
 	"Partner CRM Settings": "connect.permissions.has_partner_crm_settings_permission",
 }
 
+# Search
+# ------
+# Registers connect.search.PartnerSearch (a SQLite FTS5 index) so Frappe core
+# builds/rebuilds it automatically and keeps it updated on every Partner change.
+
+sqlite_search = ["connect.search.PartnerSearch"]
+
 # Fixtures
 # --------
 # has_studio_page_permission/get_studio_page_permission_query_conditions above can only
