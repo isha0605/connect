@@ -1,5 +1,3 @@
-import os
-
 import frappe
 from frappe import _
 from frappe.utils import cint, validate_email_address
@@ -110,23 +108,20 @@ def add_team_member(email, role=None, password=None):
 def get_my_profile():
 	"""Returns the caller's own name, photo, and contact details for the sidebar avatar and Settings Profile section."""
 	user = frappe.session.user
-	UserTable = frappe.qb.DocType("User")
-	PartnerMember = frappe.qb.DocType("Connect Partner Member")
-	rows = (
-		frappe.qb.from_(UserTable)
-		.left_join(PartnerMember)
-		.on(PartnerMember.user == UserTable.name)
-		.select(UserTable.full_name, UserTable.user_image, UserTable.phone, PartnerMember.role)
-		.where(UserTable.name == user)
-		.run(as_dict=True)
-	)
-	profile = rows[0] if rows else {}
+	user_fields = frappe.db.get_value("User", user, ["full_name", "user_image", "phone"], as_dict=True) or {}
+
+	doctype, _company, row = _my_company_membership(user)
+	role = None
+	if doctype:
+		role_field = "designation" if doctype == "Customer Team Member" else "role"
+		role = frappe.db.get_value(doctype, row.name, role_field)
+
 	return {
 		"email": user,
-		"full_name": profile.get("full_name"),
-		"user_image": profile.get("user_image"),
-		"phone": profile.get("phone"),
-		"role": profile.get("role"),
+		"full_name": user_fields.get("full_name"),
+		"user_image": user_fields.get("user_image"),
+		"phone": user_fields.get("phone"),
+		"role": role,
 	}
 
 
@@ -139,39 +134,26 @@ def update_my_profile(full_name, phone=None, role=None):
 	user = frappe.session.user
 	frappe.db.set_value("User", user, {"full_name": full_name, "phone": (phone or "").strip()})
 
-	member_name = frappe.db.get_value("Connect Partner Member", {"user": user}, "name")
-	if member_name:
-		frappe.db.set_value("Connect Partner Member", member_name, "role", (role or "").strip())
+	doctype, _company, row = _my_company_membership(user)
+	if doctype:
+		role_field = "designation" if doctype == "Customer Team Member" else "role"
+		frappe.db.set_value(doctype, row.name, role_field, (role or "").strip())
 
 	return {"email": user, "full_name": full_name}
 
 
-ALLOWED_PROFILE_IMAGE_EXTENSIONS = {
-	".png": "image/png",
-	".jpg": "image/jpeg",
-	".jpeg": "image/jpeg",
-	".gif": "image/gif",
-	".webp": "image/webp",
-}
-MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
-
-
 def upload_profile_image():
-	"""Sets the caller's own profile photo from an uploaded image, stored publicly since avatars are shown to other users."""
+	"""Sets the caller's own profile photo from an uploaded image, stored publicly since avatars are shown to other users.
+
+	Extension and size are enforced by the File doctype itself, from System Settings'
+	allowed_file_extensions / max_file_size — not duplicated here.
+	"""
 	uploaded = frappe.request.files.get("file") if frappe.request else None
 	if not uploaded:
 		frappe.throw(_("No file was uploaded"))
 
 	filename = uploaded.filename or ""
-	ext = os.path.splitext(filename)[1].lower()
-	if ext not in ALLOWED_PROFILE_IMAGE_EXTENSIONS:
-		frappe.throw(_("Only PNG, JPG, GIF, and WEBP images can be used as a profile photo"))
-
 	content = uploaded.stream.read()
-	if len(content) > MAX_PROFILE_IMAGE_SIZE:
-		frappe.throw(
-			_("Image is too large — the limit is {0} MB").format(MAX_PROFILE_IMAGE_SIZE // (1024 * 1024))
-		)
 
 	user = frappe.session.user
 	file_doc = frappe.get_doc({
