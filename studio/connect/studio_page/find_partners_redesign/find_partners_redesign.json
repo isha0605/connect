@@ -1,0 +1,2282 @@
+{
+ "allow_guest": 1,
+ "blocks": [
+  {
+   "baseStyles": {
+    "display": "flex",
+    "flexDirection": "row",
+    "height": "100%",
+    "overflowX": "hidden",
+    "position": "static",
+    "width": "inherit"
+   },
+   "blockName": "body",
+   "children": [
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "{{ (myContext.data && myContext.data.customer) ? 'flex' : 'none' }}"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "height": "52px",
+          "marginBottom": "0px",
+          "paddingRight": "0px",
+          "width": "50px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "SidebarHeader-fpr-customer",
+         "componentName": "SidebarHeader",
+         "componentProps": {
+          "menuItems": [
+           {
+            "icon": "lucide-log-out",
+            "label": "Log out",
+            "onClick": "() => { call('logout').then(() => { window.location.href = '/connect/find-partners'; }); }"
+           }
+          ],
+          "showLogo": true,
+          "subtitle": "{{ myCustomer.data ? myCustomer.data.customer_name : '' }}",
+          "title": "Customer Portal"
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "container-SidebarHeader-fpr-wrap-in",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "SidebarHeader-fpr-partner",
+         "componentName": "SidebarHeader",
+         "componentProps": {
+          "menuItems": [
+           {
+            "icon": "lucide-log-out",
+            "label": "Log out",
+            "onClick": "() => { call('logout').then(() => { window.location.href = '/login'; }); }"
+           }
+          ],
+          "showLogo": true,
+          "subtitle": "{{ myContext.data && myContext.data.partner ? myContext.data.partner.partner_name : '' }}",
+          "title": "Partner Portal"
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "container-SidebarHeader-fpr-wrap-partner",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "display": "{{ myContext.fetched && !(myContext.data && (myContext.data.customer || myContext.data.partner)) ? 'flex' : 'none' }}"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "SidebarHeader-fpr-guest",
+         "componentName": "SidebarHeader",
+         "componentProps": {
+          "menuItems": [
+           {
+            "icon": "lucide-log-in",
+            "label": "Log in",
+            "onClick": "() => { window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname); }"
+           },
+           {
+            "icon": "lucide-user-plus",
+            "label": "Sign up",
+            "onClick": "() => { window.location.href = '/connect/signup?redirect-to=' + encodeURIComponent(window.location.pathname); }"
+           }
+          ],
+          "showLogo": true,
+          "subtitle": "Guest",
+          "title": "Customer Portal"
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "container-SidebarHeader-fpr-wrap-out",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flex": "1",
+        "flexDirection": "column",
+        "minHeight": "0px",
+        "overflowY": "auto",
+        "padding": "4px 8px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "backgroundColor": "var(--surface-gray-2)",
+          "borderRadius": "6px",
+          "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "SidebarItem-fpr-find-partners",
+         "componentName": "SidebarItem",
+         "componentProps": {
+          "icon": "lucide-search",
+          "label": "Find partners",
+          "to": "/find-partners"
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "SidebarItem-fpr-shortlisted",
+         "componentName": "SidebarItem",
+         "componentProps": {
+          "icon": "lucide-bookmark",
+          "label": "Shortlisted",
+          "to": "/shortlisted"
+         }
+        },
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "SidebarItem-fpr-chat",
+         "componentName": "SidebarItem",
+         "componentProps": {
+          "icon": "lucide-message-square",
+          "label": "Chat",
+          "to": "/messaging-d87b"
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
+         },
+         "children": [
+          {
+           "children": [],
+           "classes": [],
+           "componentId": "account-label-text-8f8af283",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "span",
+            "text": "Account"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "SidebarLabel-fpr-57d9602b",
+         "componentName": "SidebarLabel"
+        },
+        {
+         "baseStyles": {
+          "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
+         },
+         "children": [],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "// TODO: open the Settings dialog once it's built on this page (see the real find_partners.json for the reference implementation: myRequirement resource + settingsXxx variables)"
+          }
+         },
+         "componentId": "SidebarItem-fpr-settings-156e4970",
+         "componentName": "SidebarItem",
+         "componentProps": {
+          "icon": "lucide-settings",
+          "label": "Settings"
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "container-fpr-nav",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "marginTop": "auto",
+        "padding": "0px 8px 8px"
+       },
+       "children": [
+        {
+         "children": [],
+         "classes": [],
+         "componentId": "SidebarCollapseToggle-fpr",
+         "componentName": "SidebarCollapseToggle"
+        }
+       ],
+       "classes": [],
+       "componentId": "container-fpr-collapse",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "Sidebar-fpr",
+     "componentName": "Sidebar",
+     "componentProps": {
+      "collapsed": true,
+      "collapsedWidth": "3rem",
+      "width": "15rem"
+     }
+    },
+    {
+     "baseStyles": {
+      "display": "flex",
+      "flex": "1",
+      "flexDirection": "column",
+      "overflow": "hidden"
+     },
+     "children": [
+      {
+       "baseStyles": {
+        "alignItems": "center",
+        "borderBottom": "1px solid var(--outline-gray-2)",
+        "display": "flex",
+        "flexDirection": "row",
+        "justifyContent": "space-between",
+        "padding": "14px 24px",
+        "width": "100%"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "display": "flex",
+          "flexDirection": "row"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-9)",
+            "display": "none",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "brand-13f5da92",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-base",
+            "tag": "span",
+            "text": "Frappe Connect"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--outline-gray-3)",
+            "display": "none",
+            "margin": "0 12px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "divider-7ee92c56",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "span",
+            "text": "|"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "breadcrumb-6e1545bc",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-base",
+            "tag": "span",
+            "text": "Partners"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "header-left-c1f36b20",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "color": "var(--ink-gray-7)",
+          "cursor": "pointer",
+          "display": "flex",
+          "flexDirection": "row"
+         },
+         "children": [
+          {
+           "children": [],
+           "classes": [],
+           "componentId": "header-login-label-218f7769",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "Log in or create account"
+           }
+          },
+          {
+           "baseStyles": {
+            "marginLeft": "6px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "header-login-arrow-40b074e7",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "span",
+            "text": "\u2192"
+           }
+          }
+         ],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "window.location.href = '/login';"
+          }
+         },
+         "componentId": "header-login-link-0921c3f3",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "header-3ba6d72b",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flex": "1",
+        "flexDirection": "row",
+        "overflow": "hidden",
+        "width": "100%"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "flexShrink": "0",
+          "padding": "48px 40px",
+          "width": "480px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-9)",
+            "fontWeight": "600",
+            "lineHeight": "1.25"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "heading-4ea44477",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-3xl",
+            "tag": "h1",
+            "text": "Work with certified partners with vast expertise"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-6)",
+            "marginTop": "8px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "subheading-196cf663",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "p",
+            "text": "Frappe builds innovative products and our global network of partners help businesses implement them smoothly."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "{{ wizardStep === 1 ? 'flex' : 'none' }}",
+            "flexDirection": "column"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "marginTop": "24px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-8)",
+                "fontWeight": "500"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "question-93b42699",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-base",
+                "tag": "span",
+                "text": "Which industry do you work in?"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "step-counter-1d958642",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "1 / 3"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "question-row-1ef4e61b",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "4px",
+              "marginTop": "16px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderRadius": "6px",
+                  "cursor": "pointer",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "gap": "10px",
+                  "padding": "6px 8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "border": "2px solid {{ selectedIndustry === 'Manufacturing' ? 'var(--ink-gray-9, #171717)' : 'var(--outline-gray-4, oklch(0.72 0 0))' }}",
+                    "borderRadius": "50%",
+                    "display": "flex",
+                    "flexShrink": "0",
+                    "height": "18px",
+                    "justifyContent": "center",
+                    "width": "18px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "backgroundColor": "{{ selectedIndustry === 'Manufacturing' ? 'var(--ink-gray-9, #171717)' : 'transparent' }}",
+                      "borderRadius": "50%",
+                      "height": "9px",
+                      "width": "9px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "radio-dot-e374574a-inner",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "radio-dot-e374574a",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "industry-label-446a73e3",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-base",
+                    "tag": "span",
+                    "text": "Manufacturing"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "selectedIndustry.value = 'Manufacturing'; selectedSegment.value = '';"
+                  }
+                 },
+                 "componentId": "industry-option-row-8829b197",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "display": "{{ selectedIndustry === 'Manufacturing' ? 'flex' : 'none' }}",
+                  "flexDirection": "column",
+                  "marginBottom": "4px",
+                  "marginLeft": "26px",
+                  "marginTop": "4px",
+                  "maxWidth": "260px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)",
+                    "marginBottom": "4px"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "segment-label-e3b4e14c",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "Select a segment *"
+                   }
+                  },
+                  {
+                   "children": [],
+                   "classes": [],
+                   "componentId": "segment-select-input-fa9850a3",
+                   "componentName": "Select",
+                   "componentProps": {
+                    "modelValue": {
+                     "$type": "variable",
+                     "name": "selectedSegment"
+                    },
+                    "options": [
+                     "Pick one",
+                     "Automotive Manufacturing",
+                     "Chemical Manufacturing",
+                     "Discrete Manufacturing",
+                     "Electronics Manufacturing",
+                     "Food and Beverages",
+                     "Furniture Manufacturing",
+                     "Jewellery Manufacturing",
+                     "Medical Device Manufacturing",
+                     "Pharmaceutical Manufacturing",
+                     "Process Manufacturing",
+                     "Steel Manufacturing",
+                     "Textile Manufacturing"
+                    ]
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "segment-select-wrap-40adaf81",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentId": "industry-option-wrap-bd6cdab6",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderRadius": "6px",
+                  "cursor": "pointer",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "gap": "10px",
+                  "padding": "6px 8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "border": "2px solid {{ selectedIndustry === 'Services' ? 'var(--ink-gray-9, #171717)' : 'var(--outline-gray-4, oklch(0.72 0 0))' }}",
+                    "borderRadius": "50%",
+                    "display": "flex",
+                    "flexShrink": "0",
+                    "height": "18px",
+                    "justifyContent": "center",
+                    "width": "18px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "backgroundColor": "{{ selectedIndustry === 'Services' ? 'var(--ink-gray-9, #171717)' : 'transparent' }}",
+                      "borderRadius": "50%",
+                      "height": "9px",
+                      "width": "9px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "radio-dot-49851d48-inner",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "radio-dot-49851d48",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "industry-label-f5850eef",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-base",
+                    "tag": "span",
+                    "text": "Services"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "selectedIndustry.value = 'Services'; selectedSegment.value = '';"
+                  }
+                 },
+                 "componentId": "industry-option-row-a48f9784",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "display": "{{ selectedIndustry === 'Services' ? 'flex' : 'none' }}",
+                  "flexDirection": "column",
+                  "marginBottom": "4px",
+                  "marginLeft": "26px",
+                  "marginTop": "4px",
+                  "maxWidth": "260px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)",
+                    "marginBottom": "4px"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "segment-label-1658562d",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "Select a segment *"
+                   }
+                  },
+                  {
+                   "children": [],
+                   "classes": [],
+                   "componentId": "segment-select-input-fe017589",
+                   "componentName": "Select",
+                   "componentProps": {
+                    "modelValue": {
+                     "$type": "variable",
+                     "name": "selectedSegment"
+                    },
+                    "options": [
+                     "Pick one",
+                     "Segment A",
+                     "Segment B",
+                     "Segment C"
+                    ]
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "segment-select-wrap-f980422c",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentId": "industry-option-wrap-e759046f",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderRadius": "6px",
+                  "cursor": "pointer",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "gap": "10px",
+                  "padding": "6px 8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "border": "2px solid {{ selectedIndustry === 'Trading and Distribution' ? 'var(--ink-gray-9, #171717)' : 'var(--outline-gray-4, oklch(0.72 0 0))' }}",
+                    "borderRadius": "50%",
+                    "display": "flex",
+                    "flexShrink": "0",
+                    "height": "18px",
+                    "justifyContent": "center",
+                    "width": "18px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "backgroundColor": "{{ selectedIndustry === 'Trading and Distribution' ? 'var(--ink-gray-9, #171717)' : 'transparent' }}",
+                      "borderRadius": "50%",
+                      "height": "9px",
+                      "width": "9px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "radio-dot-cfa8b8e2-inner",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "radio-dot-cfa8b8e2",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "industry-label-17b9a62a",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-base",
+                    "tag": "span",
+                    "text": "Trading and Distribution"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "selectedIndustry.value = 'Trading and Distribution'; selectedSegment.value = '';"
+                  }
+                 },
+                 "componentId": "industry-option-row-7eb18dbf",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "display": "{{ selectedIndustry === 'Trading and Distribution' ? 'flex' : 'none' }}",
+                  "flexDirection": "column",
+                  "marginBottom": "4px",
+                  "marginLeft": "26px",
+                  "marginTop": "4px",
+                  "maxWidth": "260px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)",
+                    "marginBottom": "4px"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "segment-label-9c1f4fa7",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "Select a segment *"
+                   }
+                  },
+                  {
+                   "children": [],
+                   "classes": [],
+                   "componentId": "segment-select-input-f2f0990f",
+                   "componentName": "Select",
+                   "componentProps": {
+                    "modelValue": {
+                     "$type": "variable",
+                     "name": "selectedSegment"
+                    },
+                    "options": [
+                     "Pick one",
+                     "Segment A",
+                     "Segment B",
+                     "Segment C"
+                    ]
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "segment-select-wrap-daa93570",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentId": "industry-option-wrap-d232807b",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderRadius": "6px",
+                  "cursor": "pointer",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "gap": "10px",
+                  "padding": "6px 8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "border": "2px solid {{ selectedIndustry === 'Others' ? 'var(--ink-gray-9, #171717)' : 'var(--outline-gray-4, oklch(0.72 0 0))' }}",
+                    "borderRadius": "50%",
+                    "display": "flex",
+                    "flexShrink": "0",
+                    "height": "18px",
+                    "justifyContent": "center",
+                    "width": "18px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "backgroundColor": "{{ selectedIndustry === 'Others' ? 'var(--ink-gray-9, #171717)' : 'transparent' }}",
+                      "borderRadius": "50%",
+                      "height": "9px",
+                      "width": "9px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "radio-dot-b2d98a2f-inner",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "radio-dot-b2d98a2f",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "industry-label-c92bc387",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-base",
+                    "tag": "span",
+                    "text": "Others"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "selectedIndustry.value = 'Others'; selectedSegment.value = '';"
+                  }
+                 },
+                 "componentId": "industry-option-row-fdde39a0",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "display": "{{ selectedIndustry === 'Others' ? 'flex' : 'none' }}",
+                  "flexDirection": "column",
+                  "marginBottom": "4px",
+                  "marginLeft": "26px",
+                  "marginTop": "4px",
+                  "maxWidth": "260px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)",
+                    "marginBottom": "4px"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "segment-label-c0fe0415",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "Select a segment *"
+                   }
+                  },
+                  {
+                   "children": [],
+                   "classes": [],
+                   "componentId": "segment-select-input-8983add5",
+                   "componentName": "Select",
+                   "componentProps": {
+                    "modelValue": {
+                     "$type": "variable",
+                     "name": "selectedSegment"
+                    },
+                    "options": [
+                     "Pick one",
+                     "Segment A",
+                     "Segment B",
+                     "Segment C"
+                    ]
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "segment-select-wrap-2603046e",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentId": "industry-option-wrap-40b3dd02",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "options-list-0252d5cf",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "step1-content-3c7af498",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "{{ wizardStep === 2 ? 'flex' : 'none' }}",
+            "flexDirection": "column"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "marginTop": "24px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-8)",
+                "fontWeight": "500"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "question-a0a4a430",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-base",
+                "tag": "span",
+                "text": "Where is your company based?"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "step-counter-39de19e1",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "2 / 3"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "question-row-17a00057",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "row",
+              "flexWrap": "wrap",
+              "gap": "10px",
+              "marginTop": "16px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedRegions || []).includes('India') ? 'var(--surface-gray-1, #fafafa)' : 'var(--surface-white, #fff)' }}",
+                "border": "1px solid {{ (selectedRegions || []).includes('India') ? 'var(--ink-gray-9, #171717)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "9999px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "pill-label-e3db68dd",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "India"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "backgroundColor": "var(--surface-gray-2, #f4f4f4)",
+                  "borderRadius": "9999px",
+                  "display": "flex",
+                  "justifyContent": "center",
+                  "marginLeft": "4px",
+                  "padding": "1px 8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "pill-count-text-d7dfaeb2",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "70"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "pill-count-badge-4e9e9d1a",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = selectedRegions.value || [];\nconst val = 'India';\nconst next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val];\nselectedRegions.value = next;"
+                }
+               },
+               "componentId": "region-pill-692e9512",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedRegions || []).includes('Asia') ? 'var(--surface-gray-1, #fafafa)' : 'var(--surface-white, #fff)' }}",
+                "border": "1px solid {{ (selectedRegions || []).includes('Asia') ? 'var(--ink-gray-9, #171717)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "9999px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "pill-label-30b58630",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Asia"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "backgroundColor": "var(--surface-gray-2, #f4f4f4)",
+                  "borderRadius": "9999px",
+                  "display": "flex",
+                  "justifyContent": "center",
+                  "marginLeft": "4px",
+                  "padding": "1px 8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "pill-count-text-5b09e20f",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "20"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "pill-count-badge-ead6f8da",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = selectedRegions.value || [];\nconst val = 'Asia';\nconst next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val];\nselectedRegions.value = next;"
+                }
+               },
+               "componentId": "region-pill-1daf7754",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedRegions || []).includes('Middle East') ? 'var(--surface-gray-1, #fafafa)' : 'var(--surface-white, #fff)' }}",
+                "border": "1px solid {{ (selectedRegions || []).includes('Middle East') ? 'var(--ink-gray-9, #171717)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "9999px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "pill-label-a1f37c3f",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Middle East"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "backgroundColor": "var(--surface-gray-2, #f4f4f4)",
+                  "borderRadius": "9999px",
+                  "display": "flex",
+                  "justifyContent": "center",
+                  "marginLeft": "4px",
+                  "padding": "1px 8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "pill-count-text-00f19d8e",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "9"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "pill-count-badge-b569ddf5",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = selectedRegions.value || [];\nconst val = 'Middle East';\nconst next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val];\nselectedRegions.value = next;"
+                }
+               },
+               "componentId": "region-pill-41bd83f0",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedRegions || []).includes('Europe') ? 'var(--surface-gray-1, #fafafa)' : 'var(--surface-white, #fff)' }}",
+                "border": "1px solid {{ (selectedRegions || []).includes('Europe') ? 'var(--ink-gray-9, #171717)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "9999px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "pill-label-75b759e0",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Europe"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "backgroundColor": "var(--surface-gray-2, #f4f4f4)",
+                  "borderRadius": "9999px",
+                  "display": "flex",
+                  "justifyContent": "center",
+                  "marginLeft": "4px",
+                  "padding": "1px 8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "pill-count-text-53ed2e43",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "9"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "pill-count-badge-f5496ed7",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = selectedRegions.value || [];\nconst val = 'Europe';\nconst next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val];\nselectedRegions.value = next;"
+                }
+               },
+               "componentId": "region-pill-74c54515",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedRegions || []).includes('Americas') ? 'var(--surface-gray-1, #fafafa)' : 'var(--surface-white, #fff)' }}",
+                "border": "1px solid {{ (selectedRegions || []).includes('Americas') ? 'var(--ink-gray-9, #171717)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "9999px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "pill-label-a7d69d93",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Americas"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "backgroundColor": "var(--surface-gray-2, #f4f4f4)",
+                  "borderRadius": "9999px",
+                  "display": "flex",
+                  "justifyContent": "center",
+                  "marginLeft": "4px",
+                  "padding": "1px 8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "pill-count-text-4be684c2",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "9"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "pill-count-badge-10eb1fe9",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const cur = selectedRegions.value || [];\nconst val = 'Americas';\nconst next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val];\nselectedRegions.value = next;"
+                }
+               },
+               "componentId": "region-pill-ae7ab059",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "region-pills-row-f4c4c5a1",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "step2-content-2fdf739e",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "{{ wizardStep === 3 ? 'flex' : 'none' }}",
+            "flexDirection": "column"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "marginTop": "24px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-8)",
+                "fontWeight": "500"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "question-08fd02b6",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-base",
+                "tag": "span",
+                "text": "What kind of implementation are you looking for?"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "step-counter-0083228f",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "3 / 3"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "question-row-b2cf8092",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "2px",
+              "marginTop": "16px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "borderRadius": "6px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "10px",
+                "padding": "6px 8px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "border": "2px solid {{ selectedImplementationType === 'Standard' ? 'var(--ink-gray-9, #171717)' : 'var(--outline-gray-4, oklch(0.72 0 0))' }}",
+                  "borderRadius": "50%",
+                  "display": "flex",
+                  "flexShrink": "0",
+                  "height": "18px",
+                  "justifyContent": "center",
+                  "width": "18px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "backgroundColor": "{{ selectedImplementationType === 'Standard' ? 'var(--ink-gray-9, #171717)' : 'transparent' }}",
+                    "borderRadius": "50%",
+                    "height": "9px",
+                    "width": "9px"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "radio-dot-inner-ddaa4212",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "radio-dot-87a5f0d5",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "option-label-9e87c7fa",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "Standard implementation for small businesses"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "selectedImplementationType.value = 'Standard';"
+                }
+               },
+               "componentId": "radio-row-c88df7db",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "borderRadius": "6px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "10px",
+                "padding": "6px 8px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "border": "2px solid {{ selectedImplementationType === 'Customized' ? 'var(--ink-gray-9, #171717)' : 'var(--outline-gray-4, oklch(0.72 0 0))' }}",
+                  "borderRadius": "50%",
+                  "display": "flex",
+                  "flexShrink": "0",
+                  "height": "18px",
+                  "justifyContent": "center",
+                  "width": "18px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "backgroundColor": "{{ selectedImplementationType === 'Customized' ? 'var(--ink-gray-9, #171717)' : 'transparent' }}",
+                    "borderRadius": "50%",
+                    "height": "9px",
+                    "width": "9px"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "radio-dot-inner-c5651490",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "radio-dot-dac04213",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "option-label-8538a7d5",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "Customized implementation"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "selectedImplementationType.value = 'Customized';"
+                }
+               },
+               "componentId": "radio-row-c4947f46",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "implementation-options-list-50b4b6de",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "step3-content-8068299f",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "display": "{{ wizardStep === 1 ? 'flex' : 'none' }}",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "marginTop": "24px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)",
+              "cursor": "pointer",
+              "textDecoration": "underline"
+             },
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "wizardStep.value = 2;"
+              }
+             },
+             "componentId": "skip-link-1878f876",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "Skip"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "row",
+              "gap": "8px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "backgroundColor": "var(--ink-gray-9, #171717)",
+                "minWidth": "110px"
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "wizardStep.value = 2;"
+                }
+               },
+               "componentId": "primary-btn-82353037",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "Continue",
+                "variant": "solid"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "buttons-left-group-911b060a",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "buttons-row-04ddcf9a",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "display": "{{ wizardStep === 2 ? 'flex' : 'none' }}",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "marginTop": "24px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)",
+              "cursor": "pointer",
+              "textDecoration": "underline"
+             },
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "wizardStep.value = 3;"
+              }
+             },
+             "componentId": "skip-link-a455a658",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "Skip"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "row",
+              "gap": "8px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "backgroundColor": "var(--ink-gray-9, #171717)",
+                "minWidth": "110px"
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "wizardStep.value = 3;"
+                }
+               },
+               "componentId": "primary-btn-647569e5",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "Continue",
+                "variant": "solid"
+               }
+              },
+              {
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "wizardStep.value = 1;"
+                }
+               },
+               "componentId": "back-btn-1a67a709",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "Back",
+                "variant": "subtle"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "buttons-left-group-d4ccf21a",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "buttons-row-429e1429",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "display": "{{ wizardStep === 3 ? 'flex' : 'none' }}",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "marginTop": "24px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)",
+              "cursor": "pointer",
+              "textDecoration": "underline"
+             },
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "// TODO: finish wizard without a selection once backend integration starts"
+              }
+             },
+             "componentId": "skip-link-fca697cc",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "Skip"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "row",
+              "gap": "8px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "backgroundColor": "var(--ink-gray-9, #171717)",
+                "minWidth": "110px"
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "// TODO: wire to connect.api.partner.search_partners / matching wizard once backend integration starts"
+                }
+               },
+               "componentId": "primary-btn-bbe3cca0",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "Find partners",
+                "variant": "solid"
+               }
+              },
+              {
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "wizardStep.value = 2;"
+                }
+               },
+               "componentId": "back-btn-caca6ed2",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "Back",
+                "variant": "subtle"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "buttons-left-group-996aa5f4",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "buttons-row-c1325f00",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "left-panel-7639197f",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1",
+          "flexDirection": "column",
+          "padding": "48px 40px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "flexShrink": "0",
+            "width": "100%"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "WorldMapPins-c4683845",
+           "componentName": "WorldMapPins",
+           "componentProps": {
+            "selectedRegions": {
+             "$type": "variable",
+             "name": "selectedRegions"
+            }
+           },
+           "isCustomVueComponent": true
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "justifyContent": "space-around",
+            "marginTop": "24px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "2px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-9)",
+                "fontWeight": "600"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "stat-count-e08cffce",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-lg",
+                "tag": "span",
+                "text": "70"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "stat-region-a10e2647",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-xs",
+                "tag": "span",
+                "text": "India"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "stat-0848794f",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "2px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-9)",
+                "fontWeight": "600"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "stat-count-12844290",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-lg",
+                "tag": "span",
+                "text": "20"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "stat-region-8d70fbcb",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-xs",
+                "tag": "span",
+                "text": "Asia Pacific"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "stat-0c31e4ca",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "2px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-9)",
+                "fontWeight": "600"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "stat-count-ae4bf385",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-lg",
+                "tag": "span",
+                "text": "20"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "stat-region-f60dd251",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-xs",
+                "tag": "span",
+                "text": "Middle East"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "stat-b6fdb21b",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "2px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-9)",
+                "fontWeight": "600"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "stat-count-c049da90",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-lg",
+                "tag": "span",
+                "text": "20"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "stat-region-ea6c37f6",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-xs",
+                "tag": "span",
+                "text": "Europe"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "stat-67b1f9c3",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "2px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-9)",
+                "fontWeight": "600"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "stat-count-484ad980",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-lg",
+                "tag": "span",
+                "text": "20"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "stat-region-f2aa22d9",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-xs",
+                "tag": "span",
+                "text": "Africa"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "stat-0ceae2d6",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "2px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-9)",
+                "fontWeight": "600"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "stat-count-9c3414b9",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-lg",
+                "tag": "span",
+                "text": "20"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "stat-region-b2bcbda9",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-xs",
+                "tag": "span",
+                "text": "Americas"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "stat-8584bd35",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "stats-row-3b424ed1",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "right-panel-afb7cad2",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "main-row-47438506",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "container-fpr-content-wrapper",
+     "componentName": "container",
+     "originalElement": "div"
+    }
+   ],
+   "classes": [],
+   "componentId": "root",
+   "componentName": "div",
+   "originalElement": "body"
+  }
+ ],
+ "creation": "2026-09-07 11:37:55.133890",
+ "doctype": "Studio Page",
+ "frappe_app": "connect",
+ "is_standard": 1,
+ "modified": "2026-09-07 20:41:44.854502",
+ "modified_by": "Administrator",
+ "name": "find_partners_redesign",
+ "owner": "Administrator",
+ "page_name": "page-04fa8364",
+ "page_title": "Find Partners Redesign",
+ "published": 1,
+ "resources": [
+  {
+   "auto": 1,
+   "method": "GET",
+   "params": "{}",
+   "resource_name": "myContext",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.account.get_my_context"
+  },
+  {
+   "auto": 1,
+   "method": "GET",
+   "params": "{}",
+   "resource_name": "myCustomer",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.customer.get_my_customer"
+  }
+ ],
+ "route": "/find-partners-redesign",
+ "studio_app": "connect",
+ "variables": [
+  {
+   "initial_value": "\"\"",
+   "variable_name": "selectedIndustry",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "selectedSegment",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "2",
+   "variable_name": "wizardStep",
+   "variable_type": "Number"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "selectedImplementationType",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "[]",
+   "variable_name": "selectedRegions",
+   "variable_type": "Object"
+  }
+ ]
+}
