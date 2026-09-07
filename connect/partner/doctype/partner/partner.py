@@ -818,6 +818,8 @@ def update_my_partner_profile(
 			founder_row.designation = founder.get("designation")
 			founder_row.bio = founder.get("bio")
 			founder_row.photo = founder.get("photo")
+			founder_row.photo_position_x = founder.get("photo_position_x", 50)
+			founder_row.photo_position_y = founder.get("photo_position_y", 50)
 
 	if success_stories is not None:
 		doc.set("success_stories", [

@@ -242,6 +242,10 @@ export default function setup(context) {
 	const editFounderDesignation = ref("")
 	const editFounderBio = ref("")
 	const editFounderPhoto = ref("")
+	// Same reframe-by-dragging affordance as the company logo above, kept on the founder's
+	// own row since (unlike the logo) it isn't a Partner-level field.
+	const editFounderPhotoPositionX = ref(50)
+	const editFounderPhotoPositionY = ref(50)
 
 	// Success stories / packs / add-ons are edited as "current list + add-new mini-form", not
 	// inline-editable rows — Studio's TextInput modelValue only binds to a named variable, not
@@ -370,16 +374,7 @@ export default function setup(context) {
 	})
 
 	const editPacks = ref([])
-	const newPackKey = ref("")
-	const newPackName = ref("")
-	const newPackPrice = ref("")
-	const newPackHours = ref("")
-	const newPackValidityDays = ref("")
-	const newPackIncludesSummary = ref("")
-
 	const editAddons = ref([])
-	const newAddonName = ref("")
-	const newAddonHours = ref("")
 
 	const savingProfile = ref(false)
 
@@ -421,6 +416,8 @@ export default function setup(context) {
 		editFounderDesignation.value = founder.designation || ""
 		editFounderBio.value = founder.bio || ""
 		editFounderPhoto.value = founder.photo || ""
+		editFounderPhotoPositionX.value = founder.photo_position_x ?? 50
+		editFounderPhotoPositionY.value = founder.photo_position_y ?? 50
 
 		editSuccessStories.value = (p.success_stories || []).map((row) => ({
 			client_name: row.client_name,
@@ -563,72 +560,30 @@ export default function setup(context) {
 		editSuccessStories.value = editSuccessStories.value.filter((row) => row !== story)
 	}
 
-	function addPack() {
-		if (!newPackKey.value || !newPackName.value.trim()) return
-		editPacks.value = [
-			...editPacks.value,
-			{
-				pack_key: newPackKey.value,
-				pack_name: newPackName.value.trim(),
-				price: newPackPrice.value,
-				hours: newPackHours.value,
-				validity_days: newPackValidityDays.value,
-				includes_summary: newPackIncludesSummary.value.trim(),
-			},
-		]
-		newPackKey.value = ""
-		newPackName.value = ""
-		newPackPrice.value = ""
-		newPackHours.value = ""
-		newPackValidityDays.value = ""
-		newPackIncludesSummary.value = ""
-	}
-
-	function removePack(pack) {
-		editPacks.value = editPacks.value.filter((row) => row !== pack)
-	}
-
-	function addAddon() {
-		if (!newAddonName.value.trim()) return
-		editAddons.value = [
-			...editAddons.value,
-			{ addon_name: newAddonName.value.trim(), typical_hours: newAddonHours.value },
-		]
-		newAddonName.value = ""
-		newAddonHours.value = ""
-	}
-
-	function removeAddon(addon) {
-		editAddons.value = editAddons.value.filter((row) => row !== addon)
-	}
-
 	// Same throwaway-<input> file picker used for the account avatar (see find_partners.ts /
 	// shortlisted.ts's openProfileImagePicker) — it's the smallest way to reach the browser's
 	// native file dialog from a click handler.
-	// Tracks whether the mousedown-to-mouseup on the logo box actually moved (vs. a plain
-	// click), so a drag doesn't also reopen the file picker via the box's own click handler.
-	let logoDragMoved = false
-
-	function startLogoDrag(event) {
-		if (!editLogo.value) return
+	// Shared drag-to-reposition core for both the company logo and the founder's photo: tracks
+	// mousedown-to-mouseup movement against a pair of CSS background-position refs, and (if the
+	// gesture actually moved) swallows the click that would otherwise reopen the file picker.
+	function startPositionDrag(event, positionXRef, positionYRef) {
 		event.preventDefault()
-		logoDragMoved = false
+		let dragMoved = false
 		const target = event.currentTarget
 		const box = target.getBoundingClientRect()
 		const startX = event.clientX
 		const startY = event.clientY
-		const startPosX = editLogoPositionX.value
-		const startPosY = editLogoPositionY.value
+		const startPosX = positionXRef.value
+		const startPosY = positionYRef.value
 
 		function move(e) {
 			const dxPct = ((e.clientX - startX) / box.width) * 100
 			const dyPct = ((e.clientY - startY) / box.height) * 100
-			if (Math.abs(dxPct) > 1 || Math.abs(dyPct) > 1) logoDragMoved = true
-			// the logo box uses backgroundSize: contain — the whole (never-cropped) image
-			// just slides directly with the position percentage, so cursor movement maps
-			// straight onto it: drag right/down moves the logo right/down.
-			editLogoPositionX.value = Math.max(0, Math.min(100, startPosX + dxPct))
-			editLogoPositionY.value = Math.max(0, Math.min(100, startPosY + dyPct))
+			if (Math.abs(dxPct) > 1 || Math.abs(dyPct) > 1) dragMoved = true
+			// background-position moves the image with the cursor regardless of contain vs.
+			// cover — drag right/down moves the visible image right/down either way.
+			positionXRef.value = Math.max(0, Math.min(100, startPosX + dxPct))
+			positionYRef.value = Math.max(0, Math.min(100, startPosY + dyPct))
 		}
 
 		function swallowClick(e) {
@@ -639,13 +594,23 @@ export default function setup(context) {
 		function stop() {
 			document.removeEventListener("mousemove", move)
 			document.removeEventListener("mouseup", stop)
-			if (logoDragMoved) {
+			if (dragMoved) {
 				target.addEventListener("click", swallowClick, { capture: true, once: true })
 			}
 		}
 
 		document.addEventListener("mousemove", move)
 		document.addEventListener("mouseup", stop)
+	}
+
+	function startLogoDrag(event) {
+		if (!editLogo.value) return
+		startPositionDrag(event, editLogoPositionX, editLogoPositionY)
+	}
+
+	function startFounderPhotoDrag(event) {
+		if (!editFounderPhoto.value) return
+		startPositionDrag(event, editFounderPhotoPositionX, editFounderPhotoPositionY)
 	}
 
 	// Logo/founder-photo pickers are frappe-ui's <FileUploader> (see the page JSON) rather
@@ -723,6 +688,8 @@ export default function setup(context) {
 					designation: editFounderDesignation.value.trim(),
 					bio: editFounderBio.value.trim(),
 					photo: editFounderPhoto.value.trim(),
+					photo_position_x: editFounderPhotoPositionX.value,
+					photo_position_y: editFounderPhotoPositionY.value,
 				},
 				success_stories: editSuccessStories.value,
 				packs: editPacks.value,
@@ -772,6 +739,8 @@ export default function setup(context) {
 		editFounderDesignation,
 		editFounderBio,
 		editFounderPhoto,
+		editFounderPhotoPositionX,
+		editFounderPhotoPositionY,
 		editSuccessStories,
 		successStoryCategory,
 		displayIndustries,
@@ -784,15 +753,7 @@ export default function setup(context) {
 		newStoryCategory,
 		newStoryUrl,
 		editPacks,
-		newPackKey,
-		newPackName,
-		newPackPrice,
-		newPackHours,
-		newPackValidityDays,
-		newPackIncludesSummary,
 		editAddons,
-		newAddonName,
-		newAddonHours,
 		savingProfile,
 		toggleApp,
 		toggleMigration,
@@ -808,15 +769,12 @@ export default function setup(context) {
 		addLanguage,
 		addSuccessStory,
 		removeSuccessStory,
-		addPack,
-		removePack,
-		addAddon,
-		removeAddon,
 		onLogoUploaded,
 		onLogoUploadFailed,
 		onFounderPhotoUploaded,
 		onFounderPhotoUploadFailed,
 		startLogoDrag,
+		startFounderPhotoDrag,
 		saveMyProfile,
 		showProfileSettingsDialog,
 		profileSettingsSection,
