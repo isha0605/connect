@@ -142,6 +142,7 @@ permission_query_conditions = {
 	"Customer": "connect.customer.doctype.customer.customer.get_permission_query_conditions",
 	"Shortlist": "connect.customer.doctype.shortlist.shortlist.get_permission_query_conditions",
 	"Requirement": "connect.customer.doctype.requirement.requirement.get_permission_query_conditions",
+	"Partner CRM Settings": "connect.permissions.get_partner_crm_settings_permission_query_conditions",
 }
 
 has_permission = {
@@ -155,6 +156,7 @@ has_permission = {
 	"Customer": "connect.customer.doctype.customer.customer.has_permission",
 	"Shortlist": "connect.customer.doctype.shortlist.shortlist.has_permission",
 	"Requirement": "connect.customer.doctype.requirement.requirement.has_permission",
+	"Partner CRM Settings": "connect.permissions.has_partner_crm_settings_permission",
 }
 
 # Fixtures
@@ -186,6 +188,7 @@ doc_events = {
 		"after_insert": [
 			"connect.notifications.notify_thread_members",
 			"connect.notifications.sync_thread_last_message",
+			"connect.crm_integration.queue_crm_lead_sync",
 		],
 	},
 	"Connect DM Message": {
