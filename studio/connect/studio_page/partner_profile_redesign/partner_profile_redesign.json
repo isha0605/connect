@@ -528,7 +528,7 @@
             "click": {
              "action": "Run Script",
              "event": "click",
-             "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\ncall('connect.api.contact.start_partner_thread', { partner: route.params.partner_id }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+             "script": "if (!myContext.data || !myContext.data.customer) {\n  loginDialogOpen.value = true;\n} else {\n  contactStep.value = 1;\n  contactDialogOpen.value = true;\n}"
             }
            },
            "componentId": "contact-btn-ppr",
@@ -2741,7 +2741,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\ncall('connect.api.contact.start_partner_thread', { partner: route.params.partner_id }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                 "script": "if (!myContext.data || !myContext.data.customer) {\n  loginDialogOpen.value = true;\n} else {\n  contactStep.value = 1;\n  contactDialogOpen.value = true;\n}"
                 }
                },
                "componentId": "pricing-starter-card-link",
@@ -2906,7 +2906,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\ncall('connect.api.contact.start_partner_thread', { partner: route.params.partner_id }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                 "script": "if (!myContext.data || !myContext.data.customer) {\n  loginDialogOpen.value = true;\n} else {\n  contactStep.value = 1;\n  contactDialogOpen.value = true;\n}"
                 }
                },
                "componentId": "pricing-custom-card-link",
@@ -4460,6 +4460,513 @@
         },
         "size": "md",
         "title": "{{ 'Review ' + (partner.data ? partner.data.partner_name : '') }}"
+       }
+      },
+      {
+       "children": [
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-6)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "login-modal-subtext",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "paragraph-sm",
+            "tag": "span",
+            "text": "Continue to contact partners and share project details"
+           }
+          },
+          {
+           "baseStyles": {
+            "justifyContent": "center",
+            "marginTop": "16px",
+            "width": "100%"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "login-modal-cta-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "iconLeft": "lucide-cloud",
+            "label": "Log in via Frappe Cloud",
+            "variant": "outline"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "cursor": "pointer",
+            "marginTop": "12px",
+            "textAlign": "center",
+            "width": "100%"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "login-modal-signup-link",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "Sign up"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "login-modal-body",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "login-modal",
+       "componentName": "Dialog",
+       "componentProps": {
+        "modelValue": {
+         "$type": "variable",
+         "name": "loginDialogOpen"
+        },
+        "size": "sm",
+        "title": "Login to continue"
+       }
+      },
+      {
+       "children": [
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-6)",
+            "marginBottom": "16px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "contact-modal-subtext",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "paragraph-sm",
+            "tag": "span",
+            "text": "{{ contactStep === 1 ? 'First, please tell us more about your company' : 'Add project details to contact partners' }}"
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "{{ contactStep === 1 ? 'flex' : 'none' }}",
+            "flexDirection": "column",
+            "gap": "14px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-company-name-input",
+             "componentName": "TextInput",
+             "componentProps": {
+              "label": "Company name *",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactCompanyName"
+              },
+              "placeholder": "Acme Technologies"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-employee-count-input",
+             "componentName": "Select",
+             "componentProps": {
+              "label": "Number of employees *",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactEmployeeCount"
+              },
+              "options": [
+               "1-10",
+               "11-50",
+               "51-200",
+               "201-500",
+               "501-1000",
+               "1000+"
+              ],
+              "placeholder": "Select"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-industry-input",
+             "componentName": "Select",
+             "componentProps": {
+              "label": "Relevant industry *",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactIndustry"
+              },
+              "options": [
+               "Textile manufacturing",
+               "Automotive manufacturing",
+               "Electronics manufacturing",
+               "Food and beverages",
+               "Pharmaceutical manufacturing",
+               "Retail",
+               "Healthcare",
+               "FinTech",
+               "Education",
+               "Logistics",
+               "Professional services",
+               "Technology",
+               "Other"
+              ]
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-region-input",
+             "componentName": "Select",
+             "componentProps": {
+              "label": "Which region are you based in? *",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactRegion"
+              },
+              "options": [
+               "India",
+               "Asia Pacific",
+               "Middle East",
+               "Africa",
+               "Europe",
+               "North America",
+               "Latin America",
+               "Other"
+              ]
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-current-tools-input",
+             "componentName": "Select",
+             "componentProps": {
+              "label": "Which apps do you currently use?",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactCurrentTools"
+              },
+              "options": [
+               "Tally",
+               "SAP",
+               "Zoho",
+               "Odoo",
+               "QuickBooks",
+               "Excel / Google Sheets",
+               "WhatsApp",
+               "None of the above"
+              ],
+              "placeholder": "Select"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-current-ops-input",
+             "componentName": "Textarea",
+             "componentProps": {
+              "label": "Describe your current operations",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactCurrentOperations"
+              },
+              "placeholder": "e.g. Orders come in over email and WhatsApp, we track stock in spreadsheets, and invoicing runs through Tally.",
+              "rows": 3
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "contact-step1-fields",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "{{ contactStep === 2 ? 'flex' : 'none' }}",
+            "flexDirection": "column",
+            "gap": "14px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-implementation-type-input",
+             "componentName": "Select",
+             "componentProps": {
+              "label": "Implementation type *",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactImplementationType"
+              },
+              "options": [
+               "Starter pack (Standard Implementation)",
+               "Custom solution"
+              ]
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-interested-apps-input",
+             "componentName": "Select",
+             "componentProps": {
+              "label": "Which Frappe apps are you interested in? *",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactInterestedApps"
+              },
+              "options": [
+               "ERPNext",
+               "Frappe HR",
+               "Frappe CRM",
+               "Helpdesk",
+               "Frappe Insights",
+               "Learning",
+               "Frappe Framework"
+              ],
+              "placeholder": "Select"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-interested-modules-input",
+             "componentName": "Select",
+             "componentProps": {
+              "label": "Which modules are you interested in? *",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactInterestedModules"
+              },
+              "options": [
+               "Procure to Pay",
+               "Order to Cash",
+               "Inventory Management",
+               "Manufacturing Execution",
+               "HR & Payroll",
+               "Accounting & Finance",
+               "CRM & Sales",
+               "Projects"
+              ],
+              "placeholder": "Select"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-problems-input",
+             "componentName": "Textarea",
+             "componentProps": {
+              "label": "What problems are you looking to solve?",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactProblems"
+              },
+              "placeholder": "e.g. Our spreadsheets and Tally don't talk to each other, so month-end reconciliation takes days and stock counts are often wrong.",
+              "rows": 3
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-additional-message-input",
+             "componentName": "Textarea",
+             "componentProps": {
+              "label": "Additional message for Partner (Optional)",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactAdditionalMessage"
+              },
+              "placeholder": "e.g. what caught your eye about them, or a specific question",
+              "rows": 3
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "contact-step2-fields",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "backgroundColor": "var(--surface-gray-1, #f8f8f8)",
+            "borderRadius": "8px",
+            "display": "{{ contactStep === 2 ? 'flex' : 'none' }}",
+            "flexDirection": "row",
+            "gap": "6px",
+            "marginTop": "20px",
+            "padding": "8px 10px",
+            "width": "fit-content"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "flexShrink": "0",
+              "height": "14px",
+              "width": "14px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "contact-footer-info-icon",
+             "componentName": "FeatherIcon",
+             "componentProps": {
+              "color": "var(--ink-gray-6)",
+              "name": "clock",
+              "strokeWidth": 1.75
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "contact-footer-info-text",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-xs",
+              "tag": "span",
+              "text": "{{ (partner.data && partner.data.packs && partner.data.packs.length) ? Math.min(...partner.data.packs.map(p => p.hours)) + '-' + Math.max(...partner.data.packs.map(p => p.hours)) + ' hrs' : '40-100 hrs' + ' \u00b7 Estimated billed hours' }}"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "contact-footer-info-row",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "justifyContent": "flex-end",
+            "marginTop": "16px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "display": "{{ contactStep === 2 ? 'flex' : 'none' }}",
+              "marginRight": "auto"
+             },
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "contactStep.value = 1;"
+              }
+             },
+             "componentId": "contact-back-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "lucide-chevron-left",
+              "label": "Back",
+              "variant": "outline"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "contactDialogOpen.value = false;\ncontactStep.value = 1;"
+              }
+             },
+             "componentId": "contact-cancel-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Cancel",
+              "variant": "outline"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "{{ contactStep === 1 ? 'flex' : 'none' }}"
+             },
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "contactStep.value = 2;"
+              }
+             },
+             "componentId": "contact-continue-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Continue",
+              "variant": "solid"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "{{ contactStep === 2 ? 'flex' : 'none' }}"
+             },
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "contactDialogOpen.value = false;\ncontactStep.value = 1;"
+              }
+             },
+             "componentId": "contact-send-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "lucide-send",
+              "label": "Send inquiry",
+              "variant": "solid"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "contact-footer-actions-row",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "contact-modal-body",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "contact-partner-modal",
+       "componentName": "Dialog",
+       "componentProps": {
+        "modelValue": {
+         "$type": "variable",
+         "name": "contactDialogOpen"
+        },
+        "size": "lg",
+        "title": "Contact Partner"
        }
       },
       {
@@ -5501,7 +6008,7 @@
             "click": {
              "action": "Run Script",
              "event": "click",
-             "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\ncall('connect.api.contact.start_partner_thread', { partner: route.params.partner_id }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+             "script": "if (!myContext.data || !myContext.data.customer) {\n  loginDialogOpen.value = true;\n} else {\n  contactStep.value = 1;\n  contactDialogOpen.value = true;\n}"
             }
            },
            "componentId": "contact-btn-ppr",
@@ -7717,7 +8224,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\ncall('connect.api.contact.start_partner_thread', { partner: route.params.partner_id }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                 "script": "if (!myContext.data || !myContext.data.customer) {\n  loginDialogOpen.value = true;\n} else {\n  contactStep.value = 1;\n  contactDialogOpen.value = true;\n}"
                 }
                },
                "componentId": "pricing-starter-card-link",
@@ -7882,7 +8389,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\ncall('connect.api.contact.start_partner_thread', { partner: route.params.partner_id }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                 "script": "if (!myContext.data || !myContext.data.customer) {\n  loginDialogOpen.value = true;\n} else {\n  contactStep.value = 1;\n  contactDialogOpen.value = true;\n}"
                 }
                },
                "componentId": "pricing-custom-card-link",
@@ -9449,6 +9956,513 @@
        }
       },
       {
+       "children": [
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-6)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "login-modal-subtext",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "paragraph-sm",
+            "tag": "span",
+            "text": "Continue to contact partners and share project details"
+           }
+          },
+          {
+           "baseStyles": {
+            "justifyContent": "center",
+            "marginTop": "16px",
+            "width": "100%"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "login-modal-cta-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "iconLeft": "lucide-cloud",
+            "label": "Log in via Frappe Cloud",
+            "variant": "outline"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "cursor": "pointer",
+            "marginTop": "12px",
+            "textAlign": "center",
+            "width": "100%"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "login-modal-signup-link",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "Sign up"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "login-modal-body",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "login-modal",
+       "componentName": "Dialog",
+       "componentProps": {
+        "modelValue": {
+         "$type": "variable",
+         "name": "loginDialogOpen"
+        },
+        "size": "sm",
+        "title": "Login to continue"
+       }
+      },
+      {
+       "children": [
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-6)",
+            "marginBottom": "16px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "contact-modal-subtext",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "paragraph-sm",
+            "tag": "span",
+            "text": "{{ contactStep === 1 ? 'First, please tell us more about your company' : 'Add project details to contact partners' }}"
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "{{ contactStep === 1 ? 'flex' : 'none' }}",
+            "flexDirection": "column",
+            "gap": "14px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-company-name-input",
+             "componentName": "TextInput",
+             "componentProps": {
+              "label": "Company name *",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactCompanyName"
+              },
+              "placeholder": "Acme Technologies"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-employee-count-input",
+             "componentName": "Select",
+             "componentProps": {
+              "label": "Number of employees *",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactEmployeeCount"
+              },
+              "options": [
+               "1-10",
+               "11-50",
+               "51-200",
+               "201-500",
+               "501-1000",
+               "1000+"
+              ],
+              "placeholder": "Select"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-industry-input",
+             "componentName": "Select",
+             "componentProps": {
+              "label": "Relevant industry *",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactIndustry"
+              },
+              "options": [
+               "Textile manufacturing",
+               "Automotive manufacturing",
+               "Electronics manufacturing",
+               "Food and beverages",
+               "Pharmaceutical manufacturing",
+               "Retail",
+               "Healthcare",
+               "FinTech",
+               "Education",
+               "Logistics",
+               "Professional services",
+               "Technology",
+               "Other"
+              ]
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-region-input",
+             "componentName": "Select",
+             "componentProps": {
+              "label": "Which region are you based in? *",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactRegion"
+              },
+              "options": [
+               "India",
+               "Asia Pacific",
+               "Middle East",
+               "Africa",
+               "Europe",
+               "North America",
+               "Latin America",
+               "Other"
+              ]
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-current-tools-input",
+             "componentName": "Select",
+             "componentProps": {
+              "label": "Which apps do you currently use?",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactCurrentTools"
+              },
+              "options": [
+               "Tally",
+               "SAP",
+               "Zoho",
+               "Odoo",
+               "QuickBooks",
+               "Excel / Google Sheets",
+               "WhatsApp",
+               "None of the above"
+              ],
+              "placeholder": "Select"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-current-ops-input",
+             "componentName": "Textarea",
+             "componentProps": {
+              "label": "Describe your current operations",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactCurrentOperations"
+              },
+              "placeholder": "e.g. Orders come in over email and WhatsApp, we track stock in spreadsheets, and invoicing runs through Tally.",
+              "rows": 3
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "contact-step1-fields",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "{{ contactStep === 2 ? 'flex' : 'none' }}",
+            "flexDirection": "column",
+            "gap": "14px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-implementation-type-input",
+             "componentName": "Select",
+             "componentProps": {
+              "label": "Implementation type *",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactImplementationType"
+              },
+              "options": [
+               "Starter pack (Standard Implementation)",
+               "Custom solution"
+              ]
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-interested-apps-input",
+             "componentName": "Select",
+             "componentProps": {
+              "label": "Which Frappe apps are you interested in? *",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactInterestedApps"
+              },
+              "options": [
+               "ERPNext",
+               "Frappe HR",
+               "Frappe CRM",
+               "Helpdesk",
+               "Frappe Insights",
+               "Learning",
+               "Frappe Framework"
+              ],
+              "placeholder": "Select"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-interested-modules-input",
+             "componentName": "Select",
+             "componentProps": {
+              "label": "Which modules are you interested in? *",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactInterestedModules"
+              },
+              "options": [
+               "Procure to Pay",
+               "Order to Cash",
+               "Inventory Management",
+               "Manufacturing Execution",
+               "HR & Payroll",
+               "Accounting & Finance",
+               "CRM & Sales",
+               "Projects"
+              ],
+              "placeholder": "Select"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-problems-input",
+             "componentName": "Textarea",
+             "componentProps": {
+              "label": "What problems are you looking to solve?",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactProblems"
+              },
+              "placeholder": "e.g. Our spreadsheets and Tally don't talk to each other, so month-end reconciliation takes days and stock counts are often wrong.",
+              "rows": 3
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "contact-additional-message-input",
+             "componentName": "Textarea",
+             "componentProps": {
+              "label": "Additional message for Partner (Optional)",
+              "modelValue": {
+               "$type": "variable",
+               "name": "contactAdditionalMessage"
+              },
+              "placeholder": "e.g. what caught your eye about them, or a specific question",
+              "rows": 3
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "contact-step2-fields",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "backgroundColor": "var(--surface-gray-1, #f8f8f8)",
+            "borderRadius": "8px",
+            "display": "{{ contactStep === 2 ? 'flex' : 'none' }}",
+            "flexDirection": "row",
+            "gap": "6px",
+            "marginTop": "20px",
+            "padding": "8px 10px",
+            "width": "fit-content"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "flexShrink": "0",
+              "height": "14px",
+              "width": "14px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "contact-footer-info-icon",
+             "componentName": "FeatherIcon",
+             "componentProps": {
+              "color": "var(--ink-gray-6)",
+              "name": "clock",
+              "strokeWidth": 1.75
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "contact-footer-info-text",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-xs",
+              "tag": "span",
+              "text": "{{ (partner.data && partner.data.packs && partner.data.packs.length) ? Math.min(...partner.data.packs.map(p => p.hours)) + '-' + Math.max(...partner.data.packs.map(p => p.hours)) + ' hrs' : '40-100 hrs' + ' \u00b7 Estimated billed hours' }}"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "contact-footer-info-row",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "justifyContent": "flex-end",
+            "marginTop": "16px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "display": "{{ contactStep === 2 ? 'flex' : 'none' }}",
+              "marginRight": "auto"
+             },
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "contactStep.value = 1;"
+              }
+             },
+             "componentId": "contact-back-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "lucide-chevron-left",
+              "label": "Back",
+              "variant": "outline"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "contactDialogOpen.value = false;\ncontactStep.value = 1;"
+              }
+             },
+             "componentId": "contact-cancel-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Cancel",
+              "variant": "outline"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "{{ contactStep === 1 ? 'flex' : 'none' }}"
+             },
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "contactStep.value = 2;"
+              }
+             },
+             "componentId": "contact-continue-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Continue",
+              "variant": "solid"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "{{ contactStep === 2 ? 'flex' : 'none' }}"
+             },
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "contactDialogOpen.value = false;\ncontactStep.value = 1;"
+              }
+             },
+             "componentId": "contact-send-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "lucide-send",
+              "label": "Send inquiry",
+              "variant": "solid"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "contact-footer-actions-row",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "contact-modal-body",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "contact-partner-modal",
+       "componentName": "Dialog",
+       "componentProps": {
+        "modelValue": {
+         "$type": "variable",
+         "name": "contactDialogOpen"
+        },
+        "size": "lg",
+        "title": "Contact Partner"
+       }
+      },
+      {
        "baseStyles": {
         "display": "flex",
         "flexDirection": "column",
@@ -10033,6 +11047,76 @@
    "initial_value": "false",
    "variable_name": "showAllReviews",
    "variable_type": "Boolean"
+  },
+  {
+   "initial_value": "false",
+   "variable_name": "loginDialogOpen",
+   "variable_type": "Boolean"
+  },
+  {
+   "initial_value": "false",
+   "variable_name": "contactDialogOpen",
+   "variable_type": "Boolean"
+  },
+  {
+   "initial_value": "1",
+   "variable_name": "contactStep",
+   "variable_type": "Number"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "contactCompanyName",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "contactEmployeeCount",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"Textile manufacturing\"",
+   "variable_name": "contactIndustry",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"India\"",
+   "variable_name": "contactRegion",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "contactCurrentTools",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "contactCurrentOperations",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"Starter pack (Standard Implementation)\"",
+   "variable_name": "contactImplementationType",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "contactInterestedApps",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "contactInterestedModules",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "contactProblems",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "contactAdditionalMessage",
+   "variable_type": "String"
   }
  ]
 }
