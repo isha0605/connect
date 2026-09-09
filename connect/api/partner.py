@@ -49,9 +49,17 @@ def region_presence_counts():
 
 
 @frappe.whitelist(allow_guest=True)
-def list_directory_partners(limit=9):
+def list_directory_partners(
+	limit=9, search=None, tier=None, country=None, industry=None,
+	business_process=None, implementation_type=None, language=None,
+	min_rating=None, max_response_time=None,
+):
 	from connect.partner.doctype.partner.partner import list_directory_partners
-	return list_directory_partners(limit=limit)
+	return list_directory_partners(
+		limit=limit, search=search, tier=tier, country=country, industry=industry,
+		business_process=business_process, implementation_type=implementation_type, language=language,
+		min_rating=min_rating, max_response_time=max_response_time,
+	)
 
 
 @frappe.whitelist(allow_guest=True)
@@ -64,6 +72,12 @@ def list_partner_tiers():
 def list_partner_countries():
 	from connect.partner.doctype.partner.partner import list_partner_countries
 	return list_partner_countries()
+
+
+@frappe.whitelist(allow_guest=True)
+def list_partner_industries():
+	from connect.partner.doctype.partner.partner import list_partner_industries
+	return list_partner_industries()
 
 
 @frappe.whitelist(allow_guest=True)

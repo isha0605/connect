@@ -396,127 +396,556 @@
           {
            "children": [],
            "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+            }
+           },
            "componentId": "TextInput-yix6k299g",
            "componentName": "TextInput",
            "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "searchTerm"
+            },
             "placeholder": "Enter your name"
            }
           },
           {
            "children": [],
            "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+            }
+           },
            "componentId": "Select-cfbfoxmob",
            "componentName": "Select",
            "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "tierFilter"
+            },
             "options": [
-             {
-              "label": "John Doe",
-              "value": "john-doe"
-             },
-             {
-              "label": "Jane Doe",
-              "value": "jane-doe"
-             },
-             {
-              "label": "John Smith",
-              "value": "john-smith"
-             },
-             {
-              "disabled": true,
-              "label": "Jane Smith",
-              "value": "jane-smith"
-             },
-             {
-              "label": "John Wayne",
-              "value": "john-wayne"
-             },
-             {
-              "label": "Jane Wayne",
-              "value": "jane-wayne"
-             }
+             "Gold",
+             "Silver",
+             "Bronze"
             ],
-            "placeholder": "Person"
+            "placeholder": "Tier"
            }
           },
           {
            "children": [],
            "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+            }
+           },
            "componentId": "Select-ox4r26isv",
            "componentName": "Select",
            "componentProps": {
-            "options": [
-             {
-              "label": "John Doe",
-              "value": "john-doe"
-             },
-             {
-              "label": "Jane Doe",
-              "value": "jane-doe"
-             },
-             {
-              "label": "John Smith",
-              "value": "john-smith"
-             },
-             {
-              "disabled": true,
-              "label": "Jane Smith",
-              "value": "jane-smith"
-             },
-             {
-              "label": "John Wayne",
-              "value": "john-wayne"
-             },
-             {
-              "label": "Jane Wayne",
-              "value": "jane-wayne"
-             }
-            ],
-            "placeholder": "Person"
+            "modelValue": {
+             "$type": "variable",
+             "name": "countryFilter"
+            },
+            "options": "{{ partnerCountries.data || [] }}",
+            "placeholder": "Country"
            }
           },
           {
            "children": [],
            "classes": [],
+           "componentEvents": {
+            "update:modelValue": {
+             "action": "Run Script",
+             "event": "update:modelValue",
+             "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+            }
+           },
            "componentId": "Select-cyb0hegis",
            "componentName": "Select",
            "componentProps": {
-            "options": [
-             {
-              "label": "John Doe",
-              "value": "john-doe"
-             },
-             {
-              "label": "Jane Doe",
-              "value": "jane-doe"
-             },
-             {
-              "label": "John Smith",
-              "value": "john-smith"
-             },
-             {
-              "disabled": true,
-              "label": "Jane Smith",
-              "value": "jane-smith"
-             },
-             {
-              "label": "John Wayne",
-              "value": "john-wayne"
-             },
-             {
-              "label": "Jane Wayne",
-              "value": "jane-wayne"
-             }
-            ],
-            "placeholder": "Person"
+            "modelValue": {
+             "$type": "variable",
+             "name": "industryFilter"
+            },
+            "options": "{{ partnerIndustries.data || [] }}",
+            "placeholder": "Industry"
            }
           },
           {
            "children": [],
            "classes": [],
-           "componentId": "Filter-xscwu9iel",
-           "componentName": "Filter",
+           "componentId": "Popover-filter-panel",
+           "componentName": "Popover",
            "componentProps": {
-            "doctype": "User"
+            "align": "end",
+            "side": "bottom"
+           },
+           "componentSlots": {
+            "default": {
+             "parentBlockId": "Popover-filter-panel",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "16px",
+                "padding": "16px"
+               },
+               "children": [
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "14px",
+                  "minWidth": "18rem"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "column"
+                   },
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)",
+                      "fontWeight": "600",
+                      "marginBottom": "6px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "TextBlock-flt-bp-label",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-xs",
+                      "tag": "span",
+                      "text": "Business Process"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "width": "100%"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {
+                      "update:modelValue": {
+                       "action": "Run Script",
+                       "event": "update:modelValue",
+                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                      }
+                     },
+                     "componentId": "Select-flt-bp",
+                     "componentName": "Select",
+                     "componentProps": {
+                      "emptyText": "No options",
+                      "modelValue": {
+                       "$type": "variable",
+                       "name": "businessProcessFilter"
+                      },
+                      "options": "{{ (filterOptions.data ? filterOptions.data.business_processes : []) || [] }}",
+                      "placeholder": "Any",
+                      "size": "sm",
+                      "variant": "outline"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "container-flt-bp",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "originalElement": "div",
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "column"
+                   },
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)",
+                      "fontWeight": "600",
+                      "marginBottom": "6px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "TextBlock-flt-impl-label",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-xs",
+                      "tag": "span",
+                      "text": "Implementation Type"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "width": "100%"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {
+                      "update:modelValue": {
+                       "action": "Run Script",
+                       "event": "update:modelValue",
+                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                      }
+                     },
+                     "componentId": "Select-flt-impl",
+                     "componentName": "Select",
+                     "componentProps": {
+                      "emptyText": "No options",
+                      "modelValue": {
+                       "$type": "variable",
+                       "name": "implementationTypeFilter"
+                      },
+                      "options": "{{ (filterOptions.data ? filterOptions.data.implementation_types : []) || [] }}",
+                      "placeholder": "Any",
+                      "size": "sm",
+                      "variant": "outline"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "container-flt-impl",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "originalElement": "div",
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "column"
+                   },
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)",
+                      "fontWeight": "600",
+                      "marginBottom": "6px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "TextBlock-flt-lang-label",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-xs",
+                      "tag": "span",
+                      "text": "Language"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "width": "100%"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {
+                      "update:modelValue": {
+                       "action": "Run Script",
+                       "event": "update:modelValue",
+                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                      }
+                     },
+                     "componentId": "Select-flt-lang",
+                     "componentName": "Select",
+                     "componentProps": {
+                      "emptyText": "No options",
+                      "modelValue": {
+                       "$type": "variable",
+                       "name": "languageFilter"
+                      },
+                      "options": "{{ (filterOptions.data ? filterOptions.data.languages : []) || [] }}",
+                      "placeholder": "Any",
+                      "size": "sm",
+                      "variant": "outline"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "container-flt-lang",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "originalElement": "div",
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "column"
+                   },
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)",
+                      "fontWeight": "600",
+                      "marginBottom": "6px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "TextBlock-flt-rating-label",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-xs",
+                      "tag": "span",
+                      "text": "Minimum Rating"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "width": "100%"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {
+                      "update:modelValue": {
+                       "action": "Run Script",
+                       "event": "update:modelValue",
+                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                      }
+                     },
+                     "componentId": "Select-flt-rating",
+                     "componentName": "Select",
+                     "componentProps": {
+                      "emptyText": "No options",
+                      "modelValue": {
+                       "$type": "variable",
+                       "name": "minRatingFilter"
+                      },
+                      "options": [
+                       "4",
+                       "3"
+                      ],
+                      "placeholder": "Any",
+                      "size": "sm",
+                      "variant": "outline"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "container-flt-rating",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "originalElement": "div",
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "column"
+                   },
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)",
+                      "fontWeight": "600",
+                      "marginBottom": "6px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "TextBlock-flt-response-label",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-xs",
+                      "tag": "span",
+                      "text": "Response Time (hours)"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "width": "100%"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {
+                      "update:modelValue": {
+                       "action": "Run Script",
+                       "event": "update:modelValue",
+                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                      }
+                     },
+                     "componentId": "Select-flt-response",
+                     "componentName": "Select",
+                     "componentProps": {
+                      "emptyText": "No options",
+                      "modelValue": {
+                       "$type": "variable",
+                       "name": "maxResponseTimeFilter"
+                      },
+                      "options": [
+                       "12",
+                       "24",
+                       "48"
+                      ],
+                      "placeholder": "Any",
+                      "size": "sm",
+                      "variant": "outline"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "container-flt-response",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "originalElement": "div",
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "container-filter-panel-grid",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "alignSelf": "flex-start"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "searchTerm.value = ''; tierFilter.value = ''; countryFilter.value = ''; industryFilter.value = ''; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = ''; directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                  }
+                 },
+                 "componentId": "Button-flt-clear",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "iconLeft": "lucide-x",
+                  "label": "Clear filters",
+                  "size": "sm",
+                  "variant": "ghost"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "tabletStyles": {}
+                }
+               ],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "container-filter-panel",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "mobileStyles": {},
+               "originalElement": "div",
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Popover-filter-panel:default",
+             "slotName": "default"
+            },
+            "trigger": {
+             "parentBlockId": "Popover-filter-panel",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {
+                "flexShrink": "0"
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "Button-filter-trigger",
+               "componentName": "Button",
+               "componentProps": {
+                "iconLeft": "lucide-filter",
+                "label": "Filter",
+                "variant": "outline"
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Popover-filter-panel:trigger",
+             "slotName": "trigger"
+            }
            }
           }
          ],
@@ -1644,7 +2073,7 @@
  "doctype": "Studio Page",
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-09 19:49:39.308723",
+ "modified": "2026-09-09 20:29:26.479347",
  "modified_by": "Administrator",
  "name": "partner_directory_redesign",
  "owner": "Administrator",
@@ -1691,9 +2120,88 @@
    "resource_name": "partnerTiers",
    "resource_type": "API Resource",
    "url": "/api/method/connect.api.partner.list_partner_tiers"
+  },
+  {
+   "__unsaved": 1,
+   "auto": 1,
+   "method": "GET",
+   "resource_name": "partnerCountries",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.partner.list_partner_countries"
+  },
+  {
+   "__unsaved": 1,
+   "auto": 1,
+   "method": "GET",
+   "resource_name": "partnerIndustries",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.partner.list_partner_industries"
+  },
+  {
+   "__unsaved": 1,
+   "auto": 1,
+   "method": "GET",
+   "resource_name": "filterOptions",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.partner.list_partner_filter_options"
   }
  ],
  "route": "/partner-directory-redesign",
  "studio_app": "connect",
- "variables": []
+ "variables": [
+  {
+   "__unsaved": 1,
+   "initial_value": "\"\"",
+   "variable_name": "searchTerm",
+   "variable_type": "String"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "\"\"",
+   "variable_name": "tierFilter",
+   "variable_type": "String"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "\"\"",
+   "variable_name": "countryFilter",
+   "variable_type": "String"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "\"\"",
+   "variable_name": "industryFilter",
+   "variable_type": "String"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "\"\"",
+   "variable_name": "businessProcessFilter",
+   "variable_type": "String"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "\"\"",
+   "variable_name": "implementationTypeFilter",
+   "variable_type": "String"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "\"\"",
+   "variable_name": "languageFilter",
+   "variable_type": "String"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "\"\"",
+   "variable_name": "minRatingFilter",
+   "variable_type": "String"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "\"\"",
+   "variable_name": "maxResponseTimeFilter",
+   "variable_type": "String"
+  }
+ ]
 }

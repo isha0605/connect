@@ -562,20 +562,21 @@ def region_presence_counts():
 	return counts
 
 
-def list_directory_partners(limit=9):
-	"""Returns the top `limit` featured partners (name, logo, tier, rating, rate, response time,
-	success stories) for the Partner Directory redesign's card list — same is_featured/enabled
-	scope as search_partners, ordered by rating so the strongest profiles show first."""
-	limit = cint(limit) or 9
-	rows = frappe.get_list(
-		"Partner",
-		fields=[
-			"name", "partner_name", "logo", "tier", "specialist", "rating", "country", "city",
-			"hourly_rate", "response_time_hours", "industry",
-		],
-		filters=BASE_PARTNER_FILTERS,
-		order_by="rating desc",
-		limit_page_length=limit,
+def list_directory_partners(
+	limit=9, search=None, tier=None, country=None, industry=None,
+	business_process=None, implementation_type=None, language=None,
+	min_rating=None, max_response_time=None,
+):
+	"""Returns featured partners (name, logo, tier, rating, rate, response time, success stories)
+	for the Partner Directory redesign's card list and its filter row. Filtering/search/ordering is
+	delegated to search_partners — the same engine behind the Find Partners page — so both stay
+	consistent; this only adds the review_count/success-story preview fields the card list needs on
+	top, same as before this had its own filters."""
+	rows = search_partners(
+		search=search, tier=tier, country=country, industry=industry,
+		business_process=business_process, implementation_type=implementation_type, language=language,
+		min_rating=min_rating, max_response_time=max_response_time,
+		limit=cint(limit) or 9,
 	)
 
 	names = [r.name for r in rows]
@@ -603,6 +604,17 @@ def list_partner_countries():
 		"Partner", fields=["country"], filters={"country": ["is", "set"], "is_featured": 1, "enabled": 1}, distinct=True
 	)
 	return sorted({row.country for row in rows if row.country})
+
+
+def list_partner_industries():
+	"""Returns distinct industries actually in use among directory-listed partners (same
+	is_featured/enabled scope as list_directory_partners), for the Industry filter dropdown —
+	deliberately not the Partner.industry Select's full static option list, so a value with zero
+	partners behind it (e.g. "Nonprofit") doesn't show up as a dead-end filter."""
+	rows = frappe.get_all(
+		"Partner", fields=["industry"], filters={"industry": ["is", "set"], "is_featured": 1, "enabled": 1}, distinct=True
+	)
+	return sorted({row.industry for row in rows if row.industry})
 
 
 def list_partner_filter_options():
