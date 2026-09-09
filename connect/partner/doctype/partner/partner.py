@@ -10,6 +10,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, flt, now_datetime, validate_email_address
 
+from connect.partner.logo import attach_normalized_logos
 from connect.permissions import _my_company_membership
 
 COUNTRY_TO_REGION = {
@@ -658,6 +659,9 @@ def get_partner_document(partner):
 		now_datetime().year - doc["year_founded"] if doc.get("year_founded") else None
 	)
 	doc["display_industries"] = _compute_display_industries(doc.get("industry"), doc.get("success_stories"))
+	# adds client_logo_display per success story — a greyscale-normalized copy of
+	# the client logo where one has been built, else the original URL
+	attach_normalized_logos(doc.get("success_stories"))
 	return doc
 
 
