@@ -1284,34 +1284,18 @@
                 },
                 {
                  "baseStyles": {
-                  "alignItems": "center",
-                  "alignSelf": "flex-start",
-                  "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                  "borderRadius": "9999px",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "gap": "4px",
-                  "padding": "3px 6px"
+                  "alignSelf": "flex-start"
                  },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6, #525252)"
-                   },
-                   "children": [],
-                   "classes": [],
-                   "componentId": "country-pill-text",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-xs",
-                    "tag": "span",
-                    "text": "{{ partner.data ? partner.data.country : '' }}"
-                   }
-                  }
-                 ],
+                 "children": [],
                  "classes": [],
                  "componentId": "country-pill",
-                 "componentName": "container",
+                 "componentName": "Badge",
+                 "componentProps": {
+                  "label": "{{ partner.data ? partner.data.country : '' }}",
+                  "size": "sm",
+                  "theme": "gray",
+                  "variant": "subtle"
+                 },
                  "originalElement": "div"
                 }
                ],
@@ -1370,63 +1354,49 @@
                      "slotContent": [
                       {
                        "attributes": {},
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                        "borderRadius": "9999px",
-                        "display": "flex",
-                        "flexDirection": "row",
-                        "gap": "4px",
-                        "padding": "3px 6px"
-                       },
-                       "children": [
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "color": "var(--ink-gray-6, #525252)"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "industry-pill-item-text",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "fontSize": "text-xs",
-                          "tag": "span",
-                          "text": "{{ item }}"
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        },
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "display": "{{ item === (partner.data && partner.data.industry) ? 'flex' : 'none' }}",
-                          "flexShrink": "0",
-                          "height": "12px",
-                          "width": "12px"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "industry-pill-item-check",
-                         "componentName": "FeatherIcon",
-                         "componentProps": {
-                          "color": "var(--ink-gray-6)",
-                          "name": "check",
-                          "strokeWidth": 2
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        }
-                       ],
+                       "baseStyles": {},
+                       "children": [],
                        "classes": [],
                        "componentEvents": {},
                        "componentId": "industry-pill-item",
-                       "componentName": "container",
-                       "componentSlots": {},
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ item }}",
+                        "size": "sm",
+                        "theme": "gray",
+                        "variant": "subtle"
+                       },
+                       "componentSlots": {
+                        "suffix": {
+                         "parentBlockId": "industry-pill-item",
+                         "slotContent": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "display": "{{ item === (partner.data && partner.data.industry) ? 'flex' : 'none' }}",
+                            "flexShrink": "0",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "industry-pill-item-check",
+                           "componentName": "FeatherIcon",
+                           "componentProps": {
+                            "color": "var(--ink-gray-6)",
+                            "name": "check",
+                            "strokeWidth": 2
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "slotId": "industry-pill-item:suffix",
+                         "slotName": "suffix"
+                        }
+                       },
                        "mobileStyles": {},
                        "originalElement": "div",
                        "tabletStyles": {}
@@ -1438,34 +1408,16 @@
                    }
                   },
                   {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                    "borderRadius": "9999px",
-                    "display": "{{ (partner.data && partner.data.display_industries || []).length > 5 ? 'flex' : 'none' }}",
-                    "flexDirection": "row",
-                    "gap": "4px",
-                    "padding": "3px 6px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-6, #525252)"
-                     },
-                     "children": [],
-                     "classes": [],
-                     "componentId": "industries-overflow-pill-text",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-xs",
-                      "tag": "span",
-                      "text": "{{ '+' + ((partner.data && partner.data.display_industries || []).length - 5) }}"
-                     }
-                    }
-                   ],
+                   "children": [],
                    "classes": [],
                    "componentId": "industries-overflow-pill",
-                   "componentName": "container",
+                   "componentName": "Badge",
+                   "componentProps": {
+                    "label": "{{ '+' + ((partner.data && partner.data.display_industries || []).length - 5) }}",
+                    "size": "sm",
+                    "theme": "gray",
+                    "variant": "subtle"
+                   },
                    "originalElement": "div"
                   }
                  ],
@@ -1530,63 +1482,49 @@
                      "slotContent": [
                       {
                        "attributes": {},
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                        "borderRadius": "9999px",
-                        "display": "flex",
-                        "flexDirection": "row",
-                        "gap": "4px",
-                        "padding": "3px 6px"
-                       },
-                       "children": [
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "color": "var(--ink-gray-6, #525252)"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "app-pill-item-text",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "fontSize": "text-xs",
-                          "tag": "span",
-                          "text": "{{ item.app }}"
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        },
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "display": "{{ ((item.app === 'ERPNext' && partner.data.certs_erpnext > 0) || (item.app === 'Frappe Framework' && partner.data.certs_frappe_framework > 0)) ? 'flex' : 'none' }}",
-                          "flexShrink": "0",
-                          "height": "12px",
-                          "width": "12px"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "app-pill-item-check",
-                         "componentName": "FeatherIcon",
-                         "componentProps": {
-                          "color": "var(--ink-gray-6)",
-                          "name": "check",
-                          "strokeWidth": 2
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        }
-                       ],
+                       "baseStyles": {},
+                       "children": [],
                        "classes": [],
                        "componentEvents": {},
                        "componentId": "app-pill-item",
-                       "componentName": "container",
-                       "componentSlots": {},
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ item.app }}",
+                        "size": "sm",
+                        "theme": "gray",
+                        "variant": "subtle"
+                       },
+                       "componentSlots": {
+                        "suffix": {
+                         "parentBlockId": "app-pill-item",
+                         "slotContent": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "display": "{{ ((item.app === 'ERPNext' && partner.data.certs_erpnext > 0) || (item.app === 'Frappe Framework' && partner.data.certs_frappe_framework > 0)) ? 'flex' : 'none' }}",
+                            "flexShrink": "0",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "app-pill-item-check",
+                           "componentName": "FeatherIcon",
+                           "componentProps": {
+                            "color": "var(--ink-gray-6)",
+                            "name": "check",
+                            "strokeWidth": 2
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "slotId": "app-pill-item:suffix",
+                         "slotName": "suffix"
+                        }
+                       },
                        "mobileStyles": {},
                        "originalElement": "div",
                        "tabletStyles": {}
@@ -1658,40 +1596,18 @@
                      "slotContent": [
                       {
                        "attributes": {},
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                        "borderRadius": "9999px",
-                        "display": "flex",
-                        "flexDirection": "row",
-                        "gap": "4px",
-                        "padding": "3px 6px"
-                       },
-                       "children": [
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "color": "var(--ink-gray-6, #525252)"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "migration-pill-item-text",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "fontSize": "text-xs",
-                          "tag": "span",
-                          "text": "{{ item.migration_path }}"
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        }
-                       ],
+                       "baseStyles": {},
+                       "children": [],
                        "classes": [],
                        "componentEvents": {},
                        "componentId": "migration-pill-item",
-                       "componentName": "container",
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ item.migration_path }}",
+                        "size": "sm",
+                        "theme": "gray",
+                        "variant": "subtle"
+                       },
                        "componentSlots": {},
                        "mobileStyles": {},
                        "originalElement": "div",
@@ -6774,34 +6690,18 @@
                 },
                 {
                  "baseStyles": {
-                  "alignItems": "center",
-                  "alignSelf": "flex-start",
-                  "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                  "borderRadius": "9999px",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "gap": "4px",
-                  "padding": "3px 6px"
+                  "alignSelf": "flex-start"
                  },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6, #525252)"
-                   },
-                   "children": [],
-                   "classes": [],
-                   "componentId": "country-pill-text",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-xs",
-                    "tag": "span",
-                    "text": "{{ partner.data ? partner.data.country : '' }}"
-                   }
-                  }
-                 ],
+                 "children": [],
                  "classes": [],
                  "componentId": "country-pill",
-                 "componentName": "container",
+                 "componentName": "Badge",
+                 "componentProps": {
+                  "label": "{{ partner.data ? partner.data.country : '' }}",
+                  "size": "sm",
+                  "theme": "gray",
+                  "variant": "subtle"
+                 },
                  "originalElement": "div"
                 }
                ],
@@ -6860,64 +6760,49 @@
                      "slotContent": [
                       {
                        "attributes": {},
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                        "borderRadius": "9999px",
-                        "display": "flex",
-                        "flexDirection": "row",
-                        "gap": "4px",
-                        "padding": "3px 6px"
-                       },
-                       "children": [
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "color": "var(--ink-gray-6, #525252)"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "industry-pill-item-text",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "fontSize": "text-xs",
-                          "tag": "span",
-                          "text": "{{ item }}"
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        },
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "display": "{{ item === (partner.data && partner.data.industry) ? 'flex' : 'none' }}",
-                          "flexShrink": "0",
-                          "height": "12px",
-                          "width": "12px"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "industry-pill-item-check",
-                         "componentName": "FeatherIcon",
-                         "componentProps": {
-                          "color": "var(--ink-gray-6)",
-                          "name": "check",
-                          "strokeWidth": 2
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        }
-                       ],
+                       "baseStyles": {},
+                       "children": [],
                        "classes": [],
                        "componentEvents": {},
                        "componentId": "industry-pill-item",
-                       "componentName": "container",
-                       "componentProps": {},
-                       "componentSlots": {},
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ item }}",
+                        "size": "sm",
+                        "theme": "gray",
+                        "variant": "subtle"
+                       },
+                       "componentSlots": {
+                        "suffix": {
+                         "parentBlockId": "industry-pill-item",
+                         "slotContent": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "display": "{{ item === (partner.data && partner.data.industry) ? 'flex' : 'none' }}",
+                            "flexShrink": "0",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "industry-pill-item-check",
+                           "componentName": "FeatherIcon",
+                           "componentProps": {
+                            "color": "var(--ink-gray-6)",
+                            "name": "check",
+                            "strokeWidth": 2
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "slotId": "industry-pill-item:suffix",
+                         "slotName": "suffix"
+                        }
+                       },
                        "mobileStyles": {},
                        "originalElement": "div",
                        "tabletStyles": {}
@@ -6929,34 +6814,16 @@
                    }
                   },
                   {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                    "borderRadius": "9999px",
-                    "display": "{{ (partner.data && partner.data.display_industries || []).length > 5 ? 'flex' : 'none' }}",
-                    "flexDirection": "row",
-                    "gap": "4px",
-                    "padding": "3px 6px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-6, #525252)"
-                     },
-                     "children": [],
-                     "classes": [],
-                     "componentId": "industries-overflow-pill-text",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-xs",
-                      "tag": "span",
-                      "text": "{{ '+' + ((partner.data && partner.data.display_industries || []).length - 5) }}"
-                     }
-                    }
-                   ],
+                   "children": [],
                    "classes": [],
                    "componentId": "industries-overflow-pill",
-                   "componentName": "container",
+                   "componentName": "Badge",
+                   "componentProps": {
+                    "label": "{{ '+' + ((partner.data && partner.data.display_industries || []).length - 5) }}",
+                    "size": "sm",
+                    "theme": "gray",
+                    "variant": "subtle"
+                   },
                    "originalElement": "div"
                   }
                  ],
@@ -7021,64 +6888,49 @@
                      "slotContent": [
                       {
                        "attributes": {},
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                        "borderRadius": "9999px",
-                        "display": "flex",
-                        "flexDirection": "row",
-                        "gap": "4px",
-                        "padding": "3px 6px"
-                       },
-                       "children": [
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "color": "var(--ink-gray-6, #525252)"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "app-pill-item-text",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "fontSize": "text-xs",
-                          "tag": "span",
-                          "text": "{{ item.app }}"
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        },
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "display": "{{ ((item.app === 'ERPNext' && partner.data.certs_erpnext > 0) || (item.app === 'Frappe Framework' && partner.data.certs_frappe_framework > 0)) ? 'flex' : 'none' }}",
-                          "flexShrink": "0",
-                          "height": "12px",
-                          "width": "12px"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "app-pill-item-check",
-                         "componentName": "FeatherIcon",
-                         "componentProps": {
-                          "color": "var(--ink-gray-6)",
-                          "name": "check",
-                          "strokeWidth": 2
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        }
-                       ],
+                       "baseStyles": {},
+                       "children": [],
                        "classes": [],
                        "componentEvents": {},
                        "componentId": "app-pill-item",
-                       "componentName": "container",
-                       "componentProps": {},
-                       "componentSlots": {},
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ item.app }}",
+                        "size": "sm",
+                        "theme": "gray",
+                        "variant": "subtle"
+                       },
+                       "componentSlots": {
+                        "suffix": {
+                         "parentBlockId": "app-pill-item",
+                         "slotContent": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "display": "{{ ((item.app === 'ERPNext' && partner.data.certs_erpnext > 0) || (item.app === 'Frappe Framework' && partner.data.certs_frappe_framework > 0)) ? 'flex' : 'none' }}",
+                            "flexShrink": "0",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "app-pill-item-check",
+                           "componentName": "FeatherIcon",
+                           "componentProps": {
+                            "color": "var(--ink-gray-6)",
+                            "name": "check",
+                            "strokeWidth": 2
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "slotId": "app-pill-item:suffix",
+                         "slotName": "suffix"
+                        }
+                       },
                        "mobileStyles": {},
                        "originalElement": "div",
                        "tabletStyles": {}
@@ -7150,41 +7002,18 @@
                      "slotContent": [
                       {
                        "attributes": {},
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                        "borderRadius": "9999px",
-                        "display": "flex",
-                        "flexDirection": "row",
-                        "gap": "4px",
-                        "padding": "3px 6px"
-                       },
-                       "children": [
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "color": "var(--ink-gray-6, #525252)"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "migration-pill-item-text",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "fontSize": "text-xs",
-                          "tag": "span",
-                          "text": "{{ item.migration_path }}"
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        }
-                       ],
+                       "baseStyles": {},
+                       "children": [],
                        "classes": [],
                        "componentEvents": {},
                        "componentId": "migration-pill-item",
-                       "componentName": "container",
-                       "componentProps": {},
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ item.migration_path }}",
+                        "size": "sm",
+                        "theme": "gray",
+                        "variant": "subtle"
+                       },
                        "componentSlots": {},
                        "mobileStyles": {},
                        "originalElement": "div",
@@ -10991,7 +10820,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-10 00:44:20.897347",
+ "modified": "2026-09-10 00:46:20.387090",
  "modified_by": "Administrator",
  "name": "partner_profile_redesign",
  "owner": "Administrator",
