@@ -11,6 +11,7 @@ from frappe.model.document import Document
 from frappe.utils import cint, flt, now_datetime, validate_email_address
 
 from connect.partner.logo import attach_normalized_logos
+from connect.partner.story_image import queue_missing_story_images
 from connect.permissions import _my_company_membership
 
 COUNTRY_TO_REGION = {
@@ -67,6 +68,11 @@ DIMENSION_SCORE_FIELDS = (
 class Partner(Document):
 	def before_save(self):
 		self.region = COUNTRY_TO_REGION.get((self.country or "").strip().lower(), "Other")
+
+	def on_update(self):
+		# background-fetches each success story's own frappe.io cover photo —
+		# never blocks this save, and no-ops for rows that already have one
+		queue_missing_story_images(self.get("success_stories"))
 
 
 def recompute_rating_from_reviews(partner_name, exclude=None):

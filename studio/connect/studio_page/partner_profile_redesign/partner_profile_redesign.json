@@ -4053,6 +4053,7 @@
         },
         {
          "baseStyles": {
+          "cursor": "pointer",
           "display": "{{ (partner.data && partner.data.success_stories || []).length > 0 ? 'flex' : 'none' }}",
           "flexDirection": "column",
           "gap": "16px",
@@ -4062,7 +4063,7 @@
           {
            "baseStyles": {
             "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-            "backgroundImage": "{{ (partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[0 % partner.data.photos.length].image + ')' : 'none' }}",
+            "backgroundImage": "{{ ((partner.data && partner.data.success_stories || [])[0] || {}).cover_image ? 'url(' + ((partner.data && partner.data.success_stories || [])[0] || {}).cover_image + ')' : ((partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[0 % partner.data.photos.length].image + ')' : 'none') }}",
             "backgroundPosition": "center",
             "backgroundRepeat": "no-repeat",
             "backgroundSize": "cover",
@@ -4108,13 +4109,7 @@
              },
              "children": [],
              "classes": [],
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "const u = ((partner.data && partner.data.success_stories || [])[0] || {}).url; if (u) window.open(u, '_blank');"
-              }
-             },
+             "componentEvents": {},
              "componentId": "featured-story-headline",
              "componentName": "TextBlock",
              "componentProps": {
@@ -4131,6 +4126,13 @@
           }
          ],
          "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "const u = ((partner.data && partner.data.success_stories || [])[0] || {}).url; if (u) window.open(u, '_blank');"
+          }
+         },
          "componentId": "featured-story",
          "componentName": "container",
          "originalElement": "div"
@@ -4159,6 +4161,7 @@
             {
              "attributes": {},
              "baseStyles": {
+              "cursor": "pointer",
               "display": "flex",
               "flex": "1 0 0",
               "flexDirection": "column",
@@ -4170,7 +4173,7 @@
                "attributes": {},
                "baseStyles": {
                 "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                "backgroundImage": "{{ (partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[(partner.data && partner.data.success_stories || []).indexOf(dataItem) % partner.data.photos.length].image + ')' : 'none' }}",
+                "backgroundImage": "{{ dataItem.cover_image ? 'url(' + dataItem.cover_image + ')' : ((partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[dataIndex % partner.data.photos.length].image + ')' : 'none') }}",
                 "backgroundPosition": "center",
                 "backgroundRepeat": "no-repeat",
                 "backgroundSize": "cover",
@@ -4227,13 +4230,7 @@
                  },
                  "children": [],
                  "classes": [],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "const u = dataItem.url; if (u) window.open(u, '_blank');"
-                  }
-                 },
+                 "componentEvents": {},
                  "componentId": "story-grid-item-headline",
                  "componentName": "TextBlock",
                  "componentProps": {
@@ -4257,7 +4254,13 @@
               }
              ],
              "classes": [],
-             "componentEvents": {},
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "const u = dataItem.url; if (u) window.open(u, '_blank');"
+              }
+             },
              "componentId": "story-grid-item",
              "componentName": "container",
              "componentSlots": {},
@@ -5346,6 +5349,7 @@
             {
              "attributes": {},
              "baseStyles": {
+              "cursor": "pointer",
               "display": "flex",
               "flexDirection": "column",
               "gap": "16px"
@@ -5355,7 +5359,7 @@
                "attributes": {},
                "baseStyles": {
                 "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                "backgroundImage": "{{ (partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[dataIndex % partner.data.photos.length].image + ')' : 'none' }}",
+                "backgroundImage": "{{ dataItem.cover_image ? 'url(' + dataItem.cover_image + ')' : ((partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[dataIndex % partner.data.photos.length].image + ')' : 'none') }}",
                 "backgroundPosition": "center",
                 "backgroundRepeat": "no-repeat",
                 "backgroundSize": "cover",
@@ -5411,13 +5415,7 @@
                  },
                  "children": [],
                  "classes": [],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "if (dataItem.url) window.open(dataItem.url, '_blank');"
-                  }
-                 },
+                 "componentEvents": {},
                  "componentId": "partner-story-item-headline",
                  "componentName": "TextBlock",
                  "componentProps": {
@@ -5441,7 +5439,13 @@
               }
              ],
              "classes": [],
-             "componentEvents": {},
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "if (dataItem.url) window.open(dataItem.url, '_blank');"
+              }
+             },
              "componentId": "partner-story-item",
              "componentName": "container",
              "componentSlots": {},
@@ -9549,6 +9553,7 @@
         },
         {
          "baseStyles": {
+          "cursor": "pointer",
           "display": "{{ (partner.data && partner.data.success_stories || []).length > 0 ? 'flex' : 'none' }}",
           "flexDirection": "column",
           "gap": "16px",
@@ -9558,7 +9563,7 @@
           {
            "baseStyles": {
             "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-            "backgroundImage": "{{ (partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[0 % partner.data.photos.length].image + ')' : 'none' }}",
+            "backgroundImage": "{{ ((partner.data && partner.data.success_stories || [])[0] || {}).cover_image ? 'url(' + ((partner.data && partner.data.success_stories || [])[0] || {}).cover_image + ')' : ((partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[0 % partner.data.photos.length].image + ')' : 'none') }}",
             "backgroundPosition": "center",
             "backgroundRepeat": "no-repeat",
             "backgroundSize": "cover",
@@ -9604,13 +9609,7 @@
              },
              "children": [],
              "classes": [],
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "const u = ((partner.data && partner.data.success_stories || [])[0] || {}).url; if (u) window.open(u, '_blank');"
-              }
-             },
+             "componentEvents": {},
              "componentId": "featured-story-headline",
              "componentName": "TextBlock",
              "componentProps": {
@@ -9627,6 +9626,13 @@
           }
          ],
          "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "const u = ((partner.data && partner.data.success_stories || [])[0] || {}).url; if (u) window.open(u, '_blank');"
+          }
+         },
          "componentId": "featured-story",
          "componentName": "container",
          "originalElement": "div"
@@ -9655,6 +9661,7 @@
             {
              "attributes": {},
              "baseStyles": {
+              "cursor": "pointer",
               "display": "flex",
               "flex": "1 0 0",
               "flexDirection": "column",
@@ -9666,7 +9673,7 @@
                "attributes": {},
                "baseStyles": {
                 "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                "backgroundImage": "{{ (partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[(partner.data && partner.data.success_stories || []).indexOf(dataItem) % partner.data.photos.length].image + ')' : 'none' }}",
+                "backgroundImage": "{{ dataItem.cover_image ? 'url(' + dataItem.cover_image + ')' : ((partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[dataIndex % partner.data.photos.length].image + ')' : 'none') }}",
                 "backgroundPosition": "center",
                 "backgroundRepeat": "no-repeat",
                 "backgroundSize": "cover",
@@ -9724,13 +9731,7 @@
                  },
                  "children": [],
                  "classes": [],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "const u = dataItem.url; if (u) window.open(u, '_blank');"
-                  }
-                 },
+                 "componentEvents": {},
                  "componentId": "story-grid-item-headline",
                  "componentName": "TextBlock",
                  "componentProps": {
@@ -9755,7 +9756,13 @@
               }
              ],
              "classes": [],
-             "componentEvents": {},
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "const u = dataItem.url; if (u) window.open(u, '_blank');"
+              }
+             },
              "componentId": "story-grid-item",
              "componentName": "container",
              "componentProps": {},
@@ -10845,6 +10852,7 @@
             {
              "attributes": {},
              "baseStyles": {
+              "cursor": "pointer",
               "display": "flex",
               "flexDirection": "column",
               "gap": "16px"
@@ -10854,7 +10862,7 @@
                "attributes": {},
                "baseStyles": {
                 "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                "backgroundImage": "{{ (partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[dataIndex % partner.data.photos.length].image + ')' : 'none' }}",
+                "backgroundImage": "{{ dataItem.cover_image ? 'url(' + dataItem.cover_image + ')' : ((partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[dataIndex % partner.data.photos.length].image + ')' : 'none') }}",
                 "backgroundPosition": "center",
                 "backgroundRepeat": "no-repeat",
                 "backgroundSize": "cover",
@@ -10911,13 +10919,7 @@
                  },
                  "children": [],
                  "classes": [],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "if (dataItem.url) window.open(dataItem.url, '_blank');"
-                  }
-                 },
+                 "componentEvents": {},
                  "componentId": "partner-story-item-headline",
                  "componentName": "TextBlock",
                  "componentProps": {
@@ -10942,7 +10944,13 @@
               }
              ],
              "classes": [],
-             "componentEvents": {},
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "if (dataItem.url) window.open(dataItem.url, '_blank');"
+              }
+             },
              "componentId": "partner-story-item",
              "componentName": "container",
              "componentProps": {},

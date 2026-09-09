@@ -90,7 +90,11 @@ def _read_source(source_url: str) -> bytes | None:
 		headers={"User-Agent": "Mozilla/5.0 (compatible; FrappeConnect/1.0)"},
 	)
 	response.raise_for_status()
-	return response.raw.read(MAX_SOURCE_BYTES + 1)
+	# decode_content=True: reading .raw directly otherwise returns the raw
+	# transfer-encoded bytes unchanged if the server gzips the response, not the
+	# actual image bytes (caught this the hard way in story_image.py's HTML
+	# fetch — images usually aren't gzipped, but nothing guarantees it here).
+	return response.raw.read(MAX_SOURCE_BYTES + 1, decode_content=True)
 
 
 def _luma(pixel) -> float:
