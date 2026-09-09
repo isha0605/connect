@@ -3,6 +3,7 @@
 
 import json
 import math
+from collections import Counter
 
 import frappe
 from frappe import _
@@ -526,6 +527,67 @@ def list_matching_partners(answers=None, limit=8):
 
 	attach_success_story_previews(result)
 	return result
+
+
+def region_presence_counts():
+	"""Returns partner counts for the Find Partners redesign's region map, bucketed into the
+	map's 6 regions (finer-grained than the Region select field — India is split out of Asia
+	Pacific to match the map's own regions). Counts the full enabled directory, not just the
+	is_featured-curated subset search_partners currently scopes to, since this is a presence
+	overview rather than a list of profiles to show."""
+	rows = frappe.get_all("Partner", fields=["country", "region"], filters={"enabled": 1})
+
+	counts = {"india": 0, "asia": 0, "middle_east": 0, "africa": 0, "europe": 0, "americas": 0}
+	for row in rows:
+		if (row.country or "").strip().lower() == "india":
+			counts["india"] += 1
+		elif row.region == "Asia Pacific":
+			counts["asia"] += 1
+		elif row.region == "Middle East":
+			counts["middle_east"] += 1
+		elif row.region == "Africa":
+			counts["africa"] += 1
+		elif row.region == "Europe":
+			counts["europe"] += 1
+		elif row.region in ("North America", "Latin America"):
+			counts["americas"] += 1
+		# region "Oceania"/"Other" partners aren't represented in any of the map's 6 regions
+	return counts
+
+
+def list_directory_partners(limit=9):
+	"""Returns the top `limit` featured partners (name, logo, tier, rating, rate, response time,
+	success stories) for the Partner Directory redesign's card list — same is_featured/enabled
+	scope as search_partners, ordered by rating so the strongest profiles show first."""
+	limit = cint(limit) or 9
+	rows = frappe.get_list(
+		"Partner",
+		fields=[
+			"name", "partner_name", "logo", "tier", "specialist", "rating", "country", "city",
+			"hourly_rate", "response_time_hours", "industry",
+		],
+		filters=BASE_PARTNER_FILTERS,
+		order_by="rating desc",
+		limit_page_length=limit,
+	)
+
+	names = [r.name for r in rows]
+	review_partners = frappe.get_all("Partner Review", filters={"partner": ["in", names]}, pluck="partner") if names else []
+	review_counts = Counter(review_partners)
+	for row in rows:
+		row["review_count"] = review_counts.get(row.name, 0)
+
+	attach_success_story_previews(rows)
+	return rows
+
+
+def list_partner_tiers():
+	"""Returns the tiers actually in use among directory-listed partners (same is_featured/enabled
+	scope as list_directory_partners), in Gold/Silver/Bronze order, for the Tier filter dropdown."""
+	rows = frappe.get_all("Partner", fields=["tier"], filters=BASE_PARTNER_FILTERS, distinct=True)
+	present = {row.tier for row in rows if row.tier}
+	tier_order = ["Gold", "Silver", "Bronze"]
+	return [t for t in tier_order if t in present]
 
 
 def list_partner_countries():

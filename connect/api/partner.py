@@ -43,6 +43,24 @@ def list_matching_partners(answers=None, limit=8):
 
 
 @frappe.whitelist(allow_guest=True)
+def region_presence_counts():
+	from connect.partner.doctype.partner.partner import region_presence_counts
+	return region_presence_counts()
+
+
+@frappe.whitelist(allow_guest=True)
+def list_directory_partners(limit=9):
+	from connect.partner.doctype.partner.partner import list_directory_partners
+	return list_directory_partners(limit=limit)
+
+
+@frappe.whitelist(allow_guest=True)
+def list_partner_tiers():
+	from connect.partner.doctype.partner.partner import list_partner_tiers
+	return list_partner_tiers()
+
+
+@frappe.whitelist(allow_guest=True)
 def list_partner_countries():
 	from connect.partner.doctype.partner.partner import list_partner_countries
 	return list_partner_countries()
