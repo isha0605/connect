@@ -5249,7 +5249,7 @@
       },
       {
        "baseStyles": {
-        "display": "{{ (partner.data && partner.data.partner_stories || []).length > 0 ? 'flex' : 'none' }}",
+        "display": "flex",
         "flexDirection": "column",
         "gap": "20px",
         "margin": "0 auto",
@@ -5302,7 +5302,7 @@
              "componentProps": {
               "fontSize": "text-xs",
               "tag": "span",
-              "text": "{{ (partner.data && partner.data.partner_stories || []).length }}"
+              "text": "{{ ((partner.data && partner.data.partner_stories && partner.data.partner_stories.length) ? partner.data.partner_stories : [{'headline':'How they cut invoice turnaround by 70% for a mid-size manufacturer','category':'Manufacturing','url':''},{'headline':'Rolling out multi-warehouse inventory across 12 sites in 6 weeks','category':'Logistics','url':''}]).length }}"
              }
             }
            ],
@@ -5319,7 +5319,7 @@
         },
         {
          "baseStyles": {
-          "display": "{{ (partner.data && partner.data.partner_stories || []).length > 0 ? 'grid' : 'none' }}",
+          "display": "{{ ((partner.data && partner.data.partner_stories && partner.data.partner_stories.length) ? partner.data.partner_stories : [{'headline':'How they cut invoice turnaround by 70% for a mid-size manufacturer','category':'Manufacturing','url':''},{'headline':'Rolling out multi-warehouse inventory across 12 sites in 6 weeks','category':'Logistics','url':''}]).length > 0 ? 'grid' : 'none' }}",
           "gap": "24px",
           "gridTemplateColumns": "repeat(3, minmax(0, 1fr))",
           "width": "100%"
@@ -5329,7 +5329,7 @@
          "componentId": "partner-stories-grid",
          "componentName": "Repeater",
          "componentProps": {
-          "data": "{{ (partner.data && partner.data.partner_stories || []) }}",
+          "data": "{{ ((partner.data && partner.data.partner_stories && partner.data.partner_stories.length) ? partner.data.partner_stories : [{'headline':'How they cut invoice turnaround by 70% for a mid-size manufacturer','category':'Manufacturing','url':''},{'headline':'Rolling out multi-warehouse inventory across 12 sites in 6 weeks','category':'Logistics','url':''}]) }}",
           "dataKey": "self",
           "emptyStateMessage": ""
          },
@@ -5349,7 +5349,7 @@
                "attributes": {},
                "baseStyles": {
                 "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                "backgroundImage": "{{ (partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[(partner.data && partner.data.partner_stories || []).indexOf(dataItem) % partner.data.photos.length].image + ')' : 'none' }}",
+                "backgroundImage": "{{ (partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[dataIndex % partner.data.photos.length].image + ')' : 'none' }}",
                 "backgroundPosition": "center",
                 "backgroundRepeat": "no-repeat",
                 "backgroundSize": "cover",
@@ -10742,7 +10742,7 @@
       },
       {
        "baseStyles": {
-        "display": "{{ (partner.data && partner.data.partner_stories || []).length > 0 ? 'flex' : 'none' }}",
+        "display": "flex",
         "flexDirection": "column",
         "gap": "20px",
         "margin": "0 auto",
@@ -10795,7 +10795,7 @@
              "componentProps": {
               "fontSize": "text-xs",
               "tag": "span",
-              "text": "{{ (partner.data && partner.data.partner_stories || []).length }}"
+              "text": "{{ ((partner.data && partner.data.partner_stories && partner.data.partner_stories.length) ? partner.data.partner_stories : [{'headline':'How they cut invoice turnaround by 70% for a mid-size manufacturer','category':'Manufacturing','url':''},{'headline':'Rolling out multi-warehouse inventory across 12 sites in 6 weeks','category':'Logistics','url':''}]).length }}"
              }
             }
            ],
@@ -10812,7 +10812,7 @@
         },
         {
          "baseStyles": {
-          "display": "{{ (partner.data && partner.data.partner_stories || []).length > 0 ? 'grid' : 'none' }}",
+          "display": "{{ ((partner.data && partner.data.partner_stories && partner.data.partner_stories.length) ? partner.data.partner_stories : [{'headline':'How they cut invoice turnaround by 70% for a mid-size manufacturer','category':'Manufacturing','url':''},{'headline':'Rolling out multi-warehouse inventory across 12 sites in 6 weeks','category':'Logistics','url':''}]).length > 0 ? 'grid' : 'none' }}",
           "gap": "24px",
           "gridTemplateColumns": "repeat(3, minmax(0, 1fr))",
           "width": "100%"
@@ -10822,7 +10822,7 @@
          "componentId": "partner-stories-grid",
          "componentName": "Repeater",
          "componentProps": {
-          "data": "{{ (partner.data && partner.data.partner_stories || []) }}",
+          "data": "{{ ((partner.data && partner.data.partner_stories && partner.data.partner_stories.length) ? partner.data.partner_stories : [{'headline':'How they cut invoice turnaround by 70% for a mid-size manufacturer','category':'Manufacturing','url':''},{'headline':'Rolling out multi-warehouse inventory across 12 sites in 6 weeks','category':'Logistics','url':''}]) }}",
           "dataKey": "self",
           "emptyStateMessage": ""
          },
@@ -10842,7 +10842,7 @@
                "attributes": {},
                "baseStyles": {
                 "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                "backgroundImage": "{{ (partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[(partner.data && partner.data.partner_stories || []).indexOf(dataItem) % partner.data.photos.length].image + ')' : 'none' }}",
+                "backgroundImage": "{{ (partner.data && partner.data.photos && partner.data.photos.length) ? 'url(' + partner.data.photos[dataIndex % partner.data.photos.length].image + ')' : 'none' }}",
                 "backgroundPosition": "center",
                 "backgroundRepeat": "no-repeat",
                 "backgroundSize": "cover",
