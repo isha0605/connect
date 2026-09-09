@@ -1,0 +1,331 @@
+{
+ "block": {
+  "attributes": {},
+  "baseStyles": {},
+  "children": [
+   {
+    "attributes": {},
+    "baseStyles": {
+     "display": "{{ (myContext.data && myContext.data.customer) ? 'flex' : 'none' }}"
+    },
+    "children": [
+     {
+      "attributes": {},
+      "baseStyles": {
+       "height": "52px",
+       "marginBottom": "0px",
+       "paddingRight": "0px",
+       "width": "100%"
+      },
+      "children": [],
+      "classes": [],
+      "componentEvents": {},
+      "componentId": "SidebarHeader-fpr-customer",
+      "componentName": "SidebarHeader",
+      "componentProps": {
+       "menuItems": [
+        {
+         "icon": "lucide-log-out",
+         "label": "Log out",
+         "onClick": "() => { call('logout').then(() => { window.location.href = '/connect/find-partners'; }); }"
+        }
+       ],
+       "showLogo": true,
+       "subtitle": "{{ myCustomer.data ? myCustomer.data.customer_name : '' }}",
+       "title": "Customer Portal"
+      },
+      "componentSlots": {},
+      "mobileStyles": {},
+      "tabletStyles": {}
+     }
+    ],
+    "classes": [],
+    "componentEvents": {},
+    "componentId": "container-SidebarHeader-fpr-wrap-in",
+    "componentName": "container",
+    "componentProps": {},
+    "componentSlots": {},
+    "mobileStyles": {},
+    "originalElement": "div",
+    "tabletStyles": {}
+   },
+   {
+    "attributes": {},
+    "baseStyles": {
+     "display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+    },
+    "children": [
+     {
+      "attributes": {},
+      "baseStyles": {},
+      "children": [],
+      "classes": [],
+      "componentEvents": {},
+      "componentId": "SidebarHeader-fpr-partner",
+      "componentName": "SidebarHeader",
+      "componentProps": {
+       "menuItems": [
+        {
+         "icon": "lucide-log-out",
+         "label": "Log out",
+         "onClick": "() => { call('logout').then(() => { window.location.href = '/login'; }); }"
+        }
+       ],
+       "showLogo": true,
+       "subtitle": "{{ myContext.data && myContext.data.partner ? myContext.data.partner.partner_name : '' }}",
+       "title": "Partner Portal"
+      },
+      "componentSlots": {},
+      "mobileStyles": {},
+      "tabletStyles": {}
+     }
+    ],
+    "classes": [],
+    "componentEvents": {},
+    "componentId": "container-SidebarHeader-fpr-wrap-partner",
+    "componentName": "container",
+    "componentProps": {},
+    "componentSlots": {},
+    "mobileStyles": {},
+    "originalElement": "div",
+    "tabletStyles": {}
+   },
+   {
+    "attributes": {},
+    "baseStyles": {
+     "display": "{{ myContext.fetched && !(myContext.data && (myContext.data.customer || myContext.data.partner)) ? 'flex' : 'none' }}"
+    },
+    "children": [
+     {
+      "attributes": {},
+      "baseStyles": {},
+      "children": [],
+      "classes": [],
+      "componentEvents": {},
+      "componentId": "SidebarHeader-fpr-guest",
+      "componentName": "SidebarHeader",
+      "componentProps": {
+       "menuItems": [
+        {
+         "icon": "lucide-log-in",
+         "label": "Log in",
+         "onClick": "() => { window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname); }"
+        },
+        {
+         "icon": "lucide-user-plus",
+         "label": "Sign up",
+         "onClick": "() => { window.location.href = '/connect/signup?redirect-to=' + encodeURIComponent(window.location.pathname); }"
+        }
+       ],
+       "showLogo": true,
+       "subtitle": "Guest",
+       "title": "Customer Portal"
+      },
+      "componentSlots": {},
+      "mobileStyles": {},
+      "tabletStyles": {}
+     }
+    ],
+    "classes": [],
+    "componentEvents": {},
+    "componentId": "container-SidebarHeader-fpr-wrap-out",
+    "componentName": "container",
+    "componentProps": {},
+    "componentSlots": {},
+    "mobileStyles": {},
+    "originalElement": "div",
+    "tabletStyles": {}
+   },
+   {
+    "attributes": {},
+    "baseStyles": {
+     "display": "flex",
+     "flex": "1",
+     "flexDirection": "column",
+     "minHeight": "0px",
+     "overflowY": "auto",
+     "padding": "4px 8px"
+    },
+    "children": [
+     {
+      "attributes": {},
+      "baseStyles": {
+       "backgroundColor": "var(--surface-gray-2)",
+       "borderRadius": "6px",
+       "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
+      },
+      "children": [],
+      "classes": [],
+      "componentEvents": {},
+      "componentId": "SidebarItem-fpr-find-partners",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "icon": "lucide-search",
+       "label": "Find partners",
+       "to": "/find-partners"
+      },
+      "componentSlots": {},
+      "mobileStyles": {},
+      "tabletStyles": {}
+     },
+     {
+      "attributes": {},
+      "baseStyles": {
+       "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
+      },
+      "children": [],
+      "classes": [],
+      "componentEvents": {},
+      "componentId": "SidebarItem-fpr-shortlisted",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "icon": "lucide-bookmark",
+       "label": "Shortlisted",
+       "to": "/shortlisted"
+      },
+      "componentSlots": {},
+      "mobileStyles": {},
+      "tabletStyles": {}
+     },
+     {
+      "attributes": {},
+      "baseStyles": {},
+      "children": [],
+      "classes": [],
+      "componentEvents": {},
+      "componentId": "SidebarItem-fpr-chat",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "icon": "lucide-message-square",
+       "label": "Chat",
+       "to": "/messaging-d87b"
+      },
+      "componentSlots": {},
+      "mobileStyles": {},
+      "tabletStyles": {}
+     },
+     {
+      "attributes": {},
+      "baseStyles": {
+       "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
+      },
+      "children": [
+       {
+        "attributes": {},
+        "baseStyles": {},
+        "children": [],
+        "classes": [],
+        "componentEvents": {},
+        "componentId": "account-label-text-8f8af283",
+        "componentName": "TextBlock",
+        "componentProps": {
+         "tag": "span",
+         "text": "Account"
+        },
+        "componentSlots": {},
+        "mobileStyles": {},
+        "tabletStyles": {}
+       }
+      ],
+      "classes": [],
+      "componentEvents": {},
+      "componentId": "SidebarLabel-fpr-57d9602b",
+      "componentName": "SidebarLabel",
+      "componentProps": {},
+      "componentSlots": {},
+      "mobileStyles": {},
+      "tabletStyles": {}
+     },
+     {
+      "attributes": {},
+      "baseStyles": {
+       "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
+      },
+      "children": [],
+      "classes": [],
+      "componentEvents": {
+       "click": {
+        "action": "Run Script",
+        "event": "click",
+        "script": "// TODO: open the Settings dialog once it's built on this page (see the real find_partners.json for the reference implementation: myRequirement resource + settingsXxx variables)"
+       }
+      },
+      "componentId": "SidebarItem-fpr-settings-156e4970",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "icon": "lucide-settings",
+       "label": "Settings"
+      },
+      "componentSlots": {},
+      "mobileStyles": {},
+      "tabletStyles": {}
+     }
+    ],
+    "classes": [],
+    "componentEvents": {},
+    "componentId": "container-fpr-nav",
+    "componentName": "container",
+    "componentProps": {},
+    "componentSlots": {},
+    "mobileStyles": {},
+    "originalElement": "div",
+    "tabletStyles": {}
+   },
+   {
+    "attributes": {},
+    "baseStyles": {
+     "marginTop": "auto",
+     "padding": "0px 8px 8px"
+    },
+    "children": [
+     {
+      "attributes": {},
+      "baseStyles": {},
+      "children": [],
+      "classes": [],
+      "componentEvents": {},
+      "componentId": "SidebarCollapseToggle-fpr",
+      "componentName": "SidebarCollapseToggle",
+      "componentProps": {},
+      "componentSlots": {},
+      "mobileStyles": {},
+      "tabletStyles": {}
+     }
+    ],
+    "classes": [],
+    "componentEvents": {},
+    "componentId": "container-fpr-collapse",
+    "componentName": "container",
+    "componentProps": {},
+    "componentSlots": {},
+    "mobileStyles": {},
+    "originalElement": "div",
+    "tabletStyles": {}
+   }
+  ],
+  "classes": [],
+  "componentEvents": {},
+  "componentId": "Sidebar-fpr",
+  "componentName": "Sidebar",
+  "componentProps": {
+   "collapsed": true,
+   "collapsedWidth": "3rem",
+   "width": "15rem"
+  },
+  "componentSlots": {},
+  "mobileStyles": {},
+  "tabletStyles": {}
+ },
+ "component_id": "appsidebar",
+ "component_name": "AppSidebar",
+ "creation": "2026-09-08 14:43:03.099866",
+ "docstatus": 0,
+ "doctype": "Studio Component",
+ "idx": 0,
+ "inputs": [],
+ "is_disabled": 0,
+ "modified": "2026-09-08 14:43:03.099866",
+ "modified_by": "Administrator",
+ "name": "appsidebar",
+ "owner": "Administrator"
+}
