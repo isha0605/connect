@@ -14,1694 +14,6 @@
    "blockName": "body",
    "children": [
     {
-     "children": [
-      {
-       "baseStyles": {
-        "display": "{{ (myContext.data && myContext.data.customer) ? 'flex' : 'none' }}"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "height": "52px",
-          "marginBottom": "0px",
-          "paddingRight": "0px",
-          "width": "50px"
-         },
-         "children": [],
-         "classes": [],
-         "componentId": "SidebarHeader-pd-customer",
-         "componentName": "SidebarHeader",
-         "componentProps": {
-          "menuItems": [
-           {
-            "icon": "lucide-log-out",
-            "label": "Log out",
-            "onClick": "() => { call('logout').then(() => { window.location.href = '/connect/find-partners'; }); }"
-           }
-          ],
-          "showLogo": true,
-          "subtitle": "{{ myCustomer.data ? myCustomer.data.customer_name : '' }}",
-          "title": "Customer Portal"
-         }
-        }
-       ],
-       "classes": [],
-       "componentId": "container-SidebarHeader-pd-wrap-in",
-       "componentName": "container",
-       "originalElement": "div"
-      },
-      {
-       "baseStyles": {
-        "display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
-       },
-       "children": [
-        {
-         "children": [],
-         "classes": [],
-         "componentId": "SidebarHeader-pd-partner",
-         "componentName": "SidebarHeader",
-         "componentProps": {
-          "menuItems": [
-           {
-            "icon": "lucide-log-out",
-            "label": "Log out",
-            "onClick": "() => { call('logout').then(() => { window.location.href = '/login'; }); }"
-           }
-          ],
-          "showLogo": true,
-          "subtitle": "{{ myContext.data && myContext.data.partner ? myContext.data.partner.partner_name : '' }}",
-          "title": "Partner Portal"
-         }
-        }
-       ],
-       "classes": [],
-       "componentId": "container-SidebarHeader-pd-wrap-partner",
-       "componentName": "container",
-       "originalElement": "div"
-      },
-      {
-       "baseStyles": {
-        "display": "{{ myContext.fetched && !(myContext.data && (myContext.data.customer || myContext.data.partner)) ? 'flex' : 'none' }}"
-       },
-       "children": [
-        {
-         "children": [],
-         "classes": [],
-         "componentId": "SidebarHeader-pd-guest",
-         "componentName": "SidebarHeader",
-         "componentProps": {
-          "menuItems": [
-           {
-            "icon": "lucide-log-in",
-            "label": "Log in",
-            "onClick": "() => { window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname); }"
-           },
-           {
-            "icon": "lucide-user-plus",
-            "label": "Sign up",
-            "onClick": "() => { window.location.href = '/connect/signup?redirect-to=' + encodeURIComponent(window.location.pathname); }"
-           }
-          ],
-          "showLogo": true,
-          "subtitle": "Guest",
-          "title": "Customer Portal"
-         }
-        }
-       ],
-       "classes": [],
-       "componentId": "container-SidebarHeader-pd-wrap-out",
-       "componentName": "container",
-       "originalElement": "div"
-      },
-      {
-       "baseStyles": {
-        "display": "flex",
-        "flex": "1",
-        "flexDirection": "column",
-        "minHeight": "0px",
-        "overflowY": "auto",
-        "padding": "4px 8px"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "backgroundColor": "var(--surface-gray-2)",
-          "borderRadius": "6px",
-          "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
-         },
-         "children": [],
-         "classes": [],
-         "componentId": "SidebarItem-pd-find-partners",
-         "componentName": "SidebarItem",
-         "componentProps": {
-          "icon": "lucide-search",
-          "label": "Find partners",
-          "to": "/find-partners"
-         }
-        },
-        {
-         "baseStyles": {
-          "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
-         },
-         "children": [],
-         "classes": [],
-         "componentId": "SidebarItem-pd-shortlisted",
-         "componentName": "SidebarItem",
-         "componentProps": {
-          "icon": "lucide-bookmark",
-          "label": "Shortlisted",
-          "to": "/shortlisted"
-         }
-        },
-        {
-         "children": [],
-         "classes": [],
-         "componentId": "SidebarItem-pd-chat",
-         "componentName": "SidebarItem",
-         "componentProps": {
-          "icon": "lucide-message-square",
-          "label": "Chat",
-          "to": "/messaging-d87b"
-         }
-        },
-        {
-         "baseStyles": {
-          "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
-         },
-         "children": [
-          {
-           "children": [],
-           "classes": [],
-           "componentId": "account-label-text-pd",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "tag": "span",
-            "text": "Account"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "SidebarLabel-pd",
-         "componentName": "SidebarLabel"
-        },
-        {
-         "baseStyles": {
-          "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
-         },
-         "children": [],
-         "classes": [],
-         "componentEvents": {
-          "click": {
-           "action": "Run Script",
-           "event": "click",
-           "script": "// TODO: open the Settings dialog once it's built on this page (see the real find_partners.json for the reference implementation: myRequirement resource + settingsXxx variables)"
-          }
-         },
-         "componentId": "SidebarItem-pd-settings",
-         "componentName": "SidebarItem",
-         "componentProps": {
-          "icon": "lucide-settings",
-          "label": "Settings"
-         }
-        }
-       ],
-       "classes": [],
-       "componentId": "container-pd-nav",
-       "componentName": "container",
-       "originalElement": "div"
-      },
-      {
-       "baseStyles": {
-        "marginTop": "auto",
-        "padding": "0px 8px 8px"
-       },
-       "children": [
-        {
-         "children": [],
-         "classes": [],
-         "componentId": "SidebarCollapseToggle-pd",
-         "componentName": "SidebarCollapseToggle"
-        }
-       ],
-       "classes": [],
-       "componentId": "container-pd-collapse",
-       "componentName": "container",
-       "originalElement": "div"
-      }
-     ],
-     "classes": [],
-     "componentId": "Sidebar-pd",
-     "componentName": "Sidebar",
-     "componentProps": {
-      "collapsed": true,
-      "collapsedWidth": "3rem",
-      "width": "15rem"
-     }
-    },
-    {
-     "baseStyles": {
-      "display": "flex",
-      "flex": "1",
-      "flexDirection": "column",
-      "overflow": "auto"
-     },
-     "children": [
-      {
-       "baseStyles": {
-        "alignItems": "center",
-        "display": "flex",
-        "flexDirection": "row",
-        "justifyContent": "space-between",
-        "padding": "16px 20px"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "color": "var(--ink-gray-9, #171717)",
-          "fontWeight": "600"
-         },
-         "children": [],
-         "classes": [],
-         "componentId": "text-header-title",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-lg",
-          "tag": "span",
-          "text": "Partners"
-         }
-        },
-        {
-         "baseStyles": {
-          "color": "var(--ink-gray-7, #545454)",
-          "cursor": "pointer",
-          "display": "{{ myContext.fetched && !(myContext.data && (myContext.data.customer || myContext.data.partner)) ? 'inline' : 'none' }}"
-         },
-         "children": [],
-         "classes": [],
-         "componentId": "text-header-login-link",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-sm",
-          "tag": "span",
-          "text": "Log in or create account"
-         }
-        }
-       ],
-       "classes": [],
-       "componentId": "header-row",
-       "componentName": "container",
-       "originalElement": "div"
-      },
-      {
-       "baseStyles": {
-        "display": "flex",
-        "flexDirection": "column",
-        "margin": "0 auto",
-        "maxWidth": "800px",
-        "padding": "0 20px",
-        "width": "100%"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "color": "var(--ink-gray-9, #171717)",
-          "fontWeight": "600",
-          "maxWidth": "640px"
-         },
-         "children": [],
-         "classes": [],
-         "componentId": "text-hero-heading",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-2xl",
-          "tag": "span",
-          "text": "Work with certified partners with vast expertise"
-         }
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "display": "flex",
-          "flexDirection": "row",
-          "gap": "10px",
-          "marginTop": "20px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "var(--surface-white, #ffffff)",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderRadius": "8px",
-            "display": "flex",
-            "flexDirection": "row",
-            "gap": "8px",
-            "padding": "9px 12px",
-            "width": "180px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "flexShrink": "0",
-              "height": "15px",
-              "width": "15px"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "icon-search-search-box",
-             "componentName": "FeatherIcon",
-             "componentProps": {
-              "color": "var(--ink-gray-5, #a6a6a6)",
-              "name": "search",
-              "strokeWidth": 1.75
-             }
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-5, #a6a6a6)"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-search-placeholder",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Search"
-             }
-            }
-           ],
-           "classes": [],
-           "componentId": "search-box",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "var(--surface-gray-1, #fafafa)",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "gap": "6px",
-            "padding": "9px 12px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-8, #383838)"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-dd-label-country",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "3 selected"
-             }
-            },
-            {
-             "baseStyles": {
-              "flexShrink": "0",
-              "height": "14px",
-              "width": "14px"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "icon-chevron-down-dd-country",
-             "componentName": "FeatherIcon",
-             "componentProps": {
-              "color": "var(--ink-gray-6, #6b6b6b)",
-              "name": "chevron-down",
-              "strokeWidth": 1.75
-             }
-            }
-           ],
-           "classes": [],
-           "componentId": "dropdown-country",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "var(--surface-gray-1, #fafafa)",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "gap": "6px",
-            "maxWidth": "170px",
-            "padding": "9px 12px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-8, #383838)",
-              "maxWidth": "130px",
-              "overflow": "hidden",
-              "textOverflow": "ellipsis",
-              "whiteSpace": "nowrap"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-dd-label-industry",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Chemical Manufacturing"
-             }
-            },
-            {
-             "baseStyles": {
-              "flexShrink": "0",
-              "height": "14px",
-              "width": "14px"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "icon-chevron-down-dd-industry",
-             "componentName": "FeatherIcon",
-             "componentProps": {
-              "color": "var(--ink-gray-6, #6b6b6b)",
-              "name": "chevron-down",
-              "strokeWidth": 1.75
-             }
-            }
-           ],
-           "classes": [],
-           "componentId": "dropdown-industry",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "var(--surface-gray-1, #fafafa)",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "gap": "6px",
-            "padding": "9px 12px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-5, #a6a6a6)"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-dd-label-implementation",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Implementation"
-             }
-            },
-            {
-             "baseStyles": {
-              "flexShrink": "0",
-              "height": "14px",
-              "width": "14px"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "icon-chevron-down-dd-implementation",
-             "componentName": "FeatherIcon",
-             "componentProps": {
-              "color": "var(--ink-gray-6, #6b6b6b)",
-              "name": "chevron-down",
-              "strokeWidth": 1.75
-             }
-            }
-           ],
-           "classes": [],
-           "componentId": "dropdown-implementation",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "height": "36px",
-            "justifyContent": "center",
-            "width": "36px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "flexShrink": "0",
-              "height": "15px",
-              "width": "15px"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "icon-sliders-filters-btn",
-             "componentName": "FeatherIcon",
-             "componentProps": {
-              "color": "var(--ink-gray-6, #6b6b6b)",
-              "name": "sliders",
-              "strokeWidth": 1.75
-             }
-            }
-           ],
-           "classes": [],
-           "componentId": "filters-icon-btn",
-           "componentName": "container",
-           "originalElement": "div"
-          }
-         ],
-         "classes": [],
-         "componentId": "filters-row",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "color": "var(--ink-gray-5, #a6a6a6)",
-          "marginBottom": "8px",
-          "marginTop": "16px"
-         },
-         "children": [],
-         "classes": [],
-         "componentId": "text-result-count",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-sm",
-          "tag": "span",
-          "text": "{{ (directoryPartners.data || []).length + ' partners' }}"
-         }
-        }
-       ],
-       "classes": [],
-       "componentId": "hero-section",
-       "componentName": "container",
-       "originalElement": "div"
-      },
-      {
-       "baseStyles": {
-        "display": "flex",
-        "flexDirection": "column",
-        "margin": "0 auto",
-        "maxWidth": "800px",
-        "padding": "0 20px",
-        "width": "100%"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "display": "{{ directoryPartners.data ? 'block' : 'none' }}",
-          "isolation": "isolate"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "alignItems": "flex-start",
-            "display": "flex",
-            "flexDirection": "column",
-            "flexShrink": 1,
-            "flexWrap": "nowrap",
-            "gap": "8px",
-            "height": "fit-content",
-            "justifyContent": "flex-start",
-            "width": "100%"
-           },
-           "blockName": "container",
-           "children": [
-            {
-             "children": [],
-             "classes": [],
-             "componentId": "ListRows-91e783f6b",
-             "componentName": "ListRows",
-             "componentProps": {
-              "items": "{{ directoryPartners.data || [] }}",
-              "rowKey": "name"
-             },
-             "componentSlots": {
-              "default": {
-               "parentBlockId": "ListRows-91e783f6b",
-               "slotContent": [
-                {
-                 "attributes": {},
-                 "baseStyles": {
-                  "flexWrap": "nowrap",
-                  "gap": "20px",
-                  "paddingBlock": "12px"
-                 },
-                 "children": [
-                  {
-                   "attributes": {},
-                   "baseStyles": {},
-                   "children": [
-                    {
-                     "attributes": {},
-                     "baseStyles": {
-                      "alignItems": "center",
-                      "backgroundColor": "var(--surface-base, oklch(1 0 0))",
-                      "backgroundImage": "{{ item.logo ? 'url(' + item.logo + ')' : 'none' }}",
-                      "backgroundPosition": "center",
-                      "backgroundRepeat": "no-repeat",
-                      "backgroundSize": "contain",
-                      "borderColor": "var(--outline-gray-3, oklch(0.83 0 0))",
-                      "borderRadius": "6px",
-                      "borderStyle": "solid",
-                      "borderWidth": "1px",
-                      "display": "flex",
-                      "flexShrink": "0",
-                      "height": "52px",
-                      "justifyContent": "center",
-                      "margin": "5px",
-                      "overflow": "hidden",
-                      "padding": "0px",
-                      "width": "52px"
-                     },
-                     "children": [
-                      {
-                       "attributes": {},
-                       "baseStyles": {
-                        "color": "var(--ink-gray-6)",
-                        "display": "{{ item.logo ? 'none' : 'flex' }}",
-                        "fontWeight": "600"
-                       },
-                       "children": [],
-                       "classes": [],
-                       "componentEvents": {},
-                       "componentId": "LogoView-gold-initial",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "fontSize": "text-sm",
-                        "tag": "span",
-                        "text": "{{ (item.partner_name || '?').charAt(0).toUpperCase() }}"
-                       },
-                       "componentSlots": {},
-                       "mobileStyles": {},
-                       "tabletStyles": {}
-                      }
-                     ],
-                     "classes": [],
-                     "componentEvents": {},
-                     "componentId": "LogoView-gold",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "mobileStyles": {},
-                     "originalElement": "div",
-                     "tabletStyles": {}
-                    }
-                   ],
-                   "classes": [],
-                   "componentEvents": {},
-                   "componentId": "ListCell-avatar-gold",
-                   "componentName": "ListCell",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "mobileStyles": {},
-                   "tabletStyles": {}
-                  },
-                  {
-                   "attributes": {},
-                   "baseStyles": {
-                    "gap": "0px",
-                    "gridRow": "span 1",
-                    "margin": "0px"
-                   },
-                   "children": [
-                    {
-                     "attributes": {},
-                     "baseStyles": {
-                      "display": "flex",
-                      "flexDirection": "column",
-                      "gap": "8px"
-                     },
-                     "children": [
-                      {
-                       "attributes": {},
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "display": "flex",
-                        "flexDirection": "row",
-                        "flexWrap": "wrap",
-                        "gap": "10px"
-                       },
-                       "children": [
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "color": "var(--ink-gray-8)",
-                          "fontWeight": "600"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "row-gold-name",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "fontSize": "text-base",
-                          "tag": "span",
-                          "text": "{{ item.partner_name }}"
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        },
-                        {
-                         "attributes": {},
-                         "baseStyles": {},
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "row-gold-tier-badge",
-                         "componentName": "Badge",
-                         "componentProps": {
-                          "label": "{{ item.tier }}",
-                          "theme": "{{ item.tier === 'Gold' ? 'amber' : item.tier === 'Silver' ? 'gray' : item.tier === 'Bronze' ? 'orange' : 'gray' }}",
-                          "variant": "subtle"
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        }
-                       ],
-                       "classes": [],
-                       "componentEvents": {},
-                       "componentId": "row-gold-name-row",
-                       "componentName": "container",
-                       "componentProps": {},
-                       "componentSlots": {},
-                       "mobileStyles": {},
-                       "originalElement": "div",
-                       "tabletStyles": {}
-                      },
-                      {
-                       "attributes": {},
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "display": "flex",
-                        "flexDirection": "row",
-                        "gap": "4px"
-                       },
-                       "children": [
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "flexShrink": "0",
-                          "height": "12px",
-                          "width": "12px"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "row-gold-location-icon",
-                         "componentName": "FeatherIcon",
-                         "componentProps": {
-                          "color": "var(--ink-gray-5)",
-                          "name": "map-pin",
-                          "strokeWidth": 2
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        },
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "color": "var(--ink-gray-5)"
-                         },
-                         "children": [],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "row-gold-location-text",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "fontSize": "text-xs",
-                          "tag": "span",
-                          "text": "{{ item.city ? item.city + ', ' + item.country : item.country }}"
-                         },
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "tabletStyles": {}
-                        }
-                       ],
-                       "classes": [],
-                       "componentEvents": {},
-                       "componentId": "row-gold-location",
-                       "componentName": "container",
-                       "componentProps": {},
-                       "componentSlots": {},
-                       "mobileStyles": {},
-                       "originalElement": "div",
-                       "tabletStyles": {}
-                      },
-                      {
-                       "attributes": {},
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "display": "flex",
-                        "flexDirection": "row",
-                        "flexWrap": "wrap",
-                        "gap": "24px"
-                       },
-                       "children": [
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "alignItems": "center",
-                          "display": "flex",
-                          "flexDirection": "row",
-                          "gap": "4px"
-                         },
-                         "children": [
-                          {
-                           "attributes": {},
-                           "baseStyles": {
-                            "flexShrink": "0",
-                            "height": "12px",
-                            "width": "12px"
-                           },
-                           "children": [],
-                           "classes": [],
-                           "componentEvents": {},
-                           "componentId": "row-gold-rate-icon",
-                           "componentName": "FeatherIcon",
-                           "componentProps": {
-                            "color": "var(--ink-gray-5)",
-                            "name": "tag",
-                            "strokeWidth": 2
-                           },
-                           "componentSlots": {},
-                           "mobileStyles": {},
-                           "tabletStyles": {}
-                          },
-                          {
-                           "attributes": {},
-                           "baseStyles": {
-                            "color": "var(--ink-gray-5)"
-                           },
-                           "children": [],
-                           "classes": [],
-                           "componentEvents": {},
-                           "componentId": "row-gold-rate-text",
-                           "componentName": "TextBlock",
-                           "componentProps": {
-                            "fontSize": "text-xs",
-                            "tag": "span",
-                            "text": "{{ item.hourly_rate ? ('From \u20b9' + Number(item.hourly_rate).toLocaleString('en-IN') + '/hr') : 'Rate on request' }}"
-                           },
-                           "componentSlots": {},
-                           "mobileStyles": {},
-                           "tabletStyles": {}
-                          }
-                         ],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "row-gold-rate",
-                         "componentName": "container",
-                         "componentProps": {},
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "originalElement": "div",
-                         "tabletStyles": {}
-                        },
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "alignItems": "center",
-                          "display": "flex",
-                          "flexDirection": "row",
-                          "gap": "4px"
-                         },
-                         "children": [
-                          {
-                           "attributes": {},
-                           "baseStyles": {
-                            "flexShrink": "0",
-                            "height": "12px",
-                            "width": "12px"
-                           },
-                           "children": [],
-                           "classes": [],
-                           "componentEvents": {},
-                           "componentId": "row-gold-rating-icon",
-                           "componentName": "FeatherIcon",
-                           "componentProps": {
-                            "color": "var(--ink-gray-5)",
-                            "name": "star",
-                            "strokeWidth": 2
-                           },
-                           "componentSlots": {},
-                           "mobileStyles": {},
-                           "tabletStyles": {}
-                          },
-                          {
-                           "attributes": {},
-                           "baseStyles": {
-                            "color": "var(--ink-gray-5)"
-                           },
-                           "children": [],
-                           "classes": [],
-                           "componentEvents": {},
-                           "componentId": "row-gold-rating-text",
-                           "componentName": "TextBlock",
-                           "componentProps": {
-                            "fontSize": "text-xs",
-                            "tag": "span",
-                            "text": "{{ item.rating ? item.rating + ' (' + (item.review_count || 0) + ')' : 'No ratings yet' }}"
-                           },
-                           "componentSlots": {},
-                           "mobileStyles": {},
-                           "tabletStyles": {}
-                          }
-                         ],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "row-gold-rating",
-                         "componentName": "container",
-                         "componentProps": {},
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "originalElement": "div",
-                         "tabletStyles": {}
-                        },
-                        {
-                         "attributes": {},
-                         "baseStyles": {
-                          "alignItems": "center",
-                          "display": "{{ item.response_time_hours ? 'flex' : 'none' }}",
-                          "flexDirection": "row",
-                          "gap": "4px"
-                         },
-                         "children": [
-                          {
-                           "attributes": {},
-                           "baseStyles": {
-                            "flexShrink": "0",
-                            "height": "12px",
-                            "width": "12px"
-                           },
-                           "children": [],
-                           "classes": [],
-                           "componentEvents": {},
-                           "componentId": "row-gold-response-icon",
-                           "componentName": "FeatherIcon",
-                           "componentProps": {
-                            "color": "var(--ink-gray-5)",
-                            "name": "clock",
-                            "strokeWidth": 2
-                           },
-                           "componentSlots": {},
-                           "mobileStyles": {},
-                           "tabletStyles": {}
-                          },
-                          {
-                           "attributes": {},
-                           "baseStyles": {
-                            "color": "var(--ink-gray-5)"
-                           },
-                           "children": [],
-                           "classes": [],
-                           "componentEvents": {},
-                           "componentId": "row-gold-response-text",
-                           "componentName": "TextBlock",
-                           "componentProps": {
-                            "fontSize": "text-xs",
-                            "tag": "span",
-                            "text": "{{ 'Typically ' + item.response_time_hours + 'h' }}"
-                           },
-                           "componentSlots": {},
-                           "mobileStyles": {},
-                           "tabletStyles": {}
-                          }
-                         ],
-                         "classes": [],
-                         "componentEvents": {},
-                         "componentId": "row-gold-response",
-                         "componentName": "container",
-                         "componentProps": {},
-                         "componentSlots": {},
-                         "mobileStyles": {},
-                         "originalElement": "div",
-                         "tabletStyles": {}
-                        }
-                       ],
-                       "classes": [],
-                       "componentEvents": {},
-                       "componentId": "row-gold-stats-row",
-                       "componentName": "container",
-                       "componentProps": {},
-                       "componentSlots": {},
-                       "mobileStyles": {},
-                       "originalElement": "div",
-                       "tabletStyles": {}
-                      },
-                      {
-                       "attributes": {},
-                       "baseStyles": {
-                        "color": "var(--ink-gray-5)",
-                        "display": "{{ item.success_story_count ? 'block' : 'none' }}"
-                       },
-                       "children": [],
-                       "classes": [],
-                       "componentEvents": {},
-                       "componentId": "row-gold-stories",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "fontSize": "text-xs",
-                        "tag": "span",
-                        "text": "{{ item.success_story_count + ' success ' + (item.success_story_count === 1 ? 'story' : 'stories') + ' across ' + (item.success_story_categories || []).slice(0, 3).join(', ') + ((item.success_story_categories || []).length > 3 ? ' +' + ((item.success_story_categories.length) - 3) + ' more' : '') }}"
-                       },
-                       "componentSlots": {},
-                       "mobileStyles": {},
-                       "tabletStyles": {}
-                      }
-                     ],
-                     "classes": [],
-                     "componentEvents": {},
-                     "componentId": "row-gold-details",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "mobileStyles": {},
-                     "originalElement": "div",
-                     "tabletStyles": {}
-                    }
-                   ],
-                   "classes": [],
-                   "componentEvents": {},
-                   "componentId": "ListCell-details-gold",
-                   "componentName": "ListCell",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "mobileStyles": {},
-                   "tabletStyles": {}
-                  },
-                  {
-                   "attributes": {},
-                   "baseStyles": {},
-                   "children": [
-                    {
-                     "attributes": {},
-                     "baseStyles": {
-                      "alignItems": "center",
-                      "display": "flex",
-                      "flexDirection": "row",
-                      "gap": "8px"
-                     },
-                     "children": [
-                      {
-                       "attributes": {},
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "color": "{{ (myShortlist.data || []).includes(item.name) ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}",
-                        "display": "flex",
-                        "flexShrink": "0",
-                        "height": "32px",
-                        "justifyContent": "center",
-                        "width": "32px"
-                       },
-                       "children": [],
-                       "classes": [],
-                       "componentEvents": {
-                        "click": {
-                         "action": "Run Script",
-                         "event": "click",
-                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
-                        }
-                       },
-                       "componentId": "Button-shortlist-gold",
-                       "componentName": "Button",
-                       "componentProps": {
-                        "icon": "{{ (myShortlist.data || []).includes(item.name) ? 'lucide-bookmark-check' : 'lucide-bookmark' }}",
-                        "size": "md",
-                        "variant": "ghost"
-                       },
-                       "componentSlots": {},
-                       "mobileStyles": {},
-                       "tabletStyles": {}
-                      },
-                      {
-                       "attributes": {},
-                       "baseStyles": {
-                        "color": "var(--ink-gray-6, oklch(0.439 0 0))"
-                       },
-                       "children": [],
-                       "classes": [],
-                       "componentEvents": {
-                        "click": {
-                         "action": "Run Script",
-                         "event": "click",
-                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.contact.start_partner_thread', { partner: item.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
-                        }
-                       },
-                       "componentId": "Button-contact-gold",
-                       "componentName": "Button",
-                       "componentProps": {
-                        "iconLeft": "lucide-send",
-                        "label": "Connect",
-                        "variant": "subtle"
-                       },
-                       "componentSlots": {},
-                       "mobileStyles": {},
-                       "tabletStyles": {}
-                      }
-                     ],
-                     "classes": [],
-                     "componentEvents": {},
-                     "componentId": "row-gold-actions",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "mobileStyles": {},
-                     "originalElement": "div",
-                     "tabletStyles": {}
-                    }
-                   ],
-                   "classes": [],
-                   "componentEvents": {},
-                   "componentId": "ListCell-actions-gold",
-                   "componentName": "ListCell",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "mobileStyles": {},
-                   "tabletStyles": {}
-                  }
-                 ],
-                 "classes": [],
-                 "componentEvents": {},
-                 "componentId": "ListRow-gold",
-                 "componentName": "ListRow",
-                 "componentProps": {
-                  "to": "{{ '/partner-profile/' + item.name }}",
-                  "value": "{{ value }}"
-                 },
-                 "componentSlots": {},
-                 "mobileStyles": {},
-                 "tabletStyles": {}
-                }
-               ],
-               "slotId": "ListRows-0836d29f6:default",
-               "slotName": "default"
-              }
-             }
-            }
-           ],
-           "classes": [],
-           "componentId": "container-npica7qj3",
-           "componentName": "container",
-           "originalElement": "div"
-          }
-         ],
-         "classes": [],
-         "componentId": "List-pd",
-         "componentName": "List",
-         "componentProps": {
-          "columns": [
-           "auto",
-           "minmax(0,1fr)",
-           "auto"
-          ],
-          "divider": "full",
-          "rowHeight": 142
-         }
-        }
-       ],
-       "classes": [],
-       "componentId": "card-list-top",
-       "componentName": "container",
-       "originalElement": "div"
-      },
-      {
-       "baseStyles": {
-        "padding": "0 20px"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "color": "var(--ink-gray-9, #171717)",
-          "fontWeight": "600",
-          "marginBottom": "14px",
-          "marginTop": "32px"
-         },
-         "children": [],
-         "classes": [],
-         "componentId": "text-apps-heading",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-base",
-          "tag": "span",
-          "text": "Which app are you looking to implement?"
-         }
-        }
-       ],
-       "classes": [],
-       "componentId": "apps-heading-wrap",
-       "componentName": "container",
-       "originalElement": "div"
-      },
-      {
-       "baseStyles": {
-        "display": "flex",
-        "flexDirection": "row",
-        "flexWrap": "wrap",
-        "gap": "10px",
-        "padding": "0 20px 20px"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "backgroundColor": "var(--surface-white, #ffffff)",
-          "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-          "borderRadius": "8px",
-          "cursor": "pointer",
-          "display": "flex",
-          "flexDirection": "row",
-          "padding": "8px 14px",
-          "whiteSpace": "nowrap"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-8, #383838)"
-           },
-           "children": [],
-           "classes": [],
-           "componentId": "text-app-pill-label-erpnext",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "ERPNext"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "app-pill-erpnext",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "backgroundColor": "var(--surface-white, #ffffff)",
-          "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-          "borderRadius": "8px",
-          "cursor": "pointer",
-          "display": "flex",
-          "flexDirection": "row",
-          "padding": "8px 14px",
-          "whiteSpace": "nowrap"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-8, #383838)"
-           },
-           "children": [],
-           "classes": [],
-           "componentId": "text-app-pill-label-frappe-hr",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "Frappe HR"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "app-pill-frappe-hr",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "backgroundColor": "var(--surface-white, #ffffff)",
-          "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-          "borderRadius": "8px",
-          "cursor": "pointer",
-          "display": "flex",
-          "flexDirection": "row",
-          "padding": "8px 14px",
-          "whiteSpace": "nowrap"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-8, #383838)"
-           },
-           "children": [],
-           "classes": [],
-           "componentId": "text-app-pill-label-crm",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "CRM"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "app-pill-crm",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "backgroundColor": "var(--surface-white, #ffffff)",
-          "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-          "borderRadius": "8px",
-          "cursor": "pointer",
-          "display": "flex",
-          "flexDirection": "row",
-          "padding": "8px 14px",
-          "whiteSpace": "nowrap"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-8, #383838)"
-           },
-           "children": [],
-           "classes": [],
-           "componentId": "text-app-pill-label-helpdesk",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "Helpdesk"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "app-pill-helpdesk",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "backgroundColor": "var(--surface-white, #ffffff)",
-          "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-          "borderRadius": "8px",
-          "cursor": "pointer",
-          "display": "flex",
-          "flexDirection": "row",
-          "padding": "8px 14px",
-          "whiteSpace": "nowrap"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-8, #383838)"
-           },
-           "children": [],
-           "classes": [],
-           "componentId": "text-app-pill-label-insights",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "Insights"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "app-pill-insights",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "backgroundColor": "var(--surface-white, #ffffff)",
-          "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-          "borderRadius": "8px",
-          "cursor": "pointer",
-          "display": "flex",
-          "flexDirection": "row",
-          "padding": "8px 14px",
-          "whiteSpace": "nowrap"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-8, #383838)"
-           },
-           "children": [],
-           "classes": [],
-           "componentId": "text-app-pill-label-drive",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "Drive"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "app-pill-drive",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "backgroundColor": "var(--surface-white, #ffffff)",
-          "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-          "borderRadius": "8px",
-          "cursor": "pointer",
-          "display": "flex",
-          "flexDirection": "row",
-          "padding": "8px 14px",
-          "whiteSpace": "nowrap"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-8, #383838)"
-           },
-           "children": [],
-           "classes": [],
-           "componentId": "text-app-pill-label-learning",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "Learning"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "app-pill-learning",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "backgroundColor": "var(--surface-white, #ffffff)",
-          "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-          "borderRadius": "8px",
-          "cursor": "pointer",
-          "display": "flex",
-          "flexDirection": "row",
-          "padding": "8px 14px",
-          "whiteSpace": "nowrap"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-8, #383838)"
-           },
-           "children": [],
-           "classes": [],
-           "componentId": "text-app-pill-label-education",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "Education"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "app-pill-education",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "backgroundColor": "var(--surface-white, #ffffff)",
-          "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-          "borderRadius": "8px",
-          "cursor": "pointer",
-          "display": "flex",
-          "flexDirection": "row",
-          "padding": "8px 14px",
-          "whiteSpace": "nowrap"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-8, #383838)"
-           },
-           "children": [],
-           "classes": [],
-           "componentId": "text-app-pill-label-school",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "School"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "app-pill-school",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "backgroundColor": "var(--surface-white, #ffffff)",
-          "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-          "borderRadius": "8px",
-          "cursor": "pointer",
-          "display": "flex",
-          "flexDirection": "row",
-          "padding": "8px 14px",
-          "whiteSpace": "nowrap"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-8, #383838)"
-           },
-           "children": [],
-           "classes": [],
-           "componentId": "text-app-pill-label-lending",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "Lending"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "app-pill-lending",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "backgroundColor": "var(--surface-white, #ffffff)",
-          "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-          "borderRadius": "8px",
-          "cursor": "pointer",
-          "display": "flex",
-          "flexDirection": "row",
-          "padding": "8px 14px",
-          "whiteSpace": "nowrap"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-8, #383838)"
-           },
-           "children": [],
-           "classes": [],
-           "componentId": "text-app-pill-label-framework",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "Framework"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "app-pill-framework",
-         "componentName": "container",
-         "originalElement": "div"
-        }
-       ],
-       "classes": [],
-       "componentId": "apps-pills-row",
-       "componentName": "container",
-       "originalElement": "div"
-      },
-      {
-       "baseStyles": {
-        "alignItems": "center",
-        "borderTop": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-        "display": "flex",
-        "flexDirection": "row",
-        "gap": "10px",
-        "justifyContent": "space-between",
-        "marginTop": "24px",
-        "padding": "32px 20px"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "color": "var(--ink-gray-6, #6b6b6b)"
-         },
-         "children": [],
-         "classes": [],
-         "componentId": "text-feedback-copy",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-sm",
-          "tag": "span",
-          "text": "Help us improve by providing feedback on your search experience"
-         }
-        },
-        {
-         "children": [],
-         "classes": [],
-         "componentId": "feedback-show-btn",
-         "componentName": "Button",
-         "componentProps": {
-          "label": "Share feedback",
-          "size": "sm",
-          "variant": "outline"
-         }
-        }
-       ],
-       "classes": [],
-       "componentId": "feedback-section",
-       "componentName": "container",
-       "originalElement": "div"
-      }
-     ],
-     "classes": [],
-     "componentId": "container-pd-content-wrapper",
-     "componentName": "container",
-     "originalElement": "div"
-    }
-   ],
-   "classes": [],
-   "componentId": "root",
-   "componentName": "div",
-   "originalElement": "body"
-  }
- ],
- "creation": "2026-09-08 15:28:18.599693",
- "doctype": "Studio Page",
- "draft_blocks": [
-  {
-   "baseStyles": {
-    "backgroundColor": "var(--surface-gray-1, #fafafa)",
-    "display": "flex",
-    "flexDirection": "row",
-    "height": "100%",
-    "overflowX": "hidden",
-    "position": "static",
-    "width": "inherit"
-   },
-   "blockName": "body",
-   "children": [
-    {
      "baseStyles": {
       "display": "flex"
      },
@@ -2000,6 +312,7 @@
         "display": "flex",
         "flexDirection": "column",
         "margin": "0 auto",
+        "marginLeft": "296px",
         "maxWidth": "800px",
         "padding": "0 20px",
         "width": "100%"
@@ -2331,7 +644,6 @@
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
-                       "rawStyles": {},
                        "tabletStyles": {}
                       }
                      ],
@@ -2343,7 +655,6 @@
                      "componentSlots": {},
                      "mobileStyles": {},
                      "originalElement": "div",
-                     "rawStyles": {},
                      "tabletStyles": {}
                     }
                    ],
@@ -2354,7 +665,6 @@
                    "componentProps": {},
                    "componentSlots": {},
                    "mobileStyles": {},
-                   "rawStyles": {},
                    "tabletStyles": {}
                   },
                   {
@@ -2401,7 +711,6 @@
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
-                         "rawStyles": {},
                          "tabletStyles": {}
                         },
                         {
@@ -2419,7 +728,6 @@
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
-                         "rawStyles": {},
                          "tabletStyles": {}
                         }
                        ],
@@ -2431,7 +739,6 @@
                        "componentSlots": {},
                        "mobileStyles": {},
                        "originalElement": "div",
-                       "rawStyles": {},
                        "tabletStyles": {}
                       },
                       {
@@ -2462,7 +769,6 @@
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
-                         "rawStyles": {},
                          "tabletStyles": {}
                         },
                         {
@@ -2482,7 +788,6 @@
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
-                         "rawStyles": {},
                          "tabletStyles": {}
                         }
                        ],
@@ -2494,7 +799,6 @@
                        "componentSlots": {},
                        "mobileStyles": {},
                        "originalElement": "div",
-                       "rawStyles": {},
                        "tabletStyles": {}
                       },
                       {
@@ -2535,7 +839,6 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "rawStyles": {},
                            "tabletStyles": {}
                           },
                           {
@@ -2555,7 +858,6 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "rawStyles": {},
                            "tabletStyles": {}
                           }
                          ],
@@ -2567,7 +869,6 @@
                          "componentSlots": {},
                          "mobileStyles": {},
                          "originalElement": "div",
-                         "rawStyles": {},
                          "tabletStyles": {}
                         },
                         {
@@ -2598,7 +899,6 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "rawStyles": {},
                            "tabletStyles": {}
                           },
                           {
@@ -2618,7 +918,6 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "rawStyles": {},
                            "tabletStyles": {}
                           }
                          ],
@@ -2630,7 +929,6 @@
                          "componentSlots": {},
                          "mobileStyles": {},
                          "originalElement": "div",
-                         "rawStyles": {},
                          "tabletStyles": {}
                         },
                         {
@@ -2661,7 +959,6 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "rawStyles": {},
                            "tabletStyles": {}
                           },
                           {
@@ -2681,7 +978,6 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "rawStyles": {},
                            "tabletStyles": {}
                           }
                          ],
@@ -2693,7 +989,6 @@
                          "componentSlots": {},
                          "mobileStyles": {},
                          "originalElement": "div",
-                         "rawStyles": {},
                          "tabletStyles": {}
                         }
                        ],
@@ -2705,7 +1000,6 @@
                        "componentSlots": {},
                        "mobileStyles": {},
                        "originalElement": "div",
-                       "rawStyles": {},
                        "tabletStyles": {}
                       },
                       {
@@ -2726,7 +1020,6 @@
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
-                       "rawStyles": {},
                        "tabletStyles": {}
                       }
                      ],
@@ -2738,7 +1031,6 @@
                      "componentSlots": {},
                      "mobileStyles": {},
                      "originalElement": "div",
-                     "rawStyles": {},
                      "tabletStyles": {}
                     }
                    ],
@@ -2749,7 +1041,6 @@
                    "componentProps": {},
                    "componentSlots": {},
                    "mobileStyles": {},
-                   "rawStyles": {},
                    "tabletStyles": {}
                   },
                   {
@@ -2794,7 +1085,6 @@
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
-                       "rawStyles": {},
                        "tabletStyles": {}
                       },
                       {
@@ -2820,7 +1110,6 @@
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
-                       "rawStyles": {},
                        "tabletStyles": {}
                       }
                      ],
@@ -2832,7 +1121,6 @@
                      "componentSlots": {},
                      "mobileStyles": {},
                      "originalElement": "div",
-                     "rawStyles": {},
                      "tabletStyles": {}
                     }
                    ],
@@ -2843,7 +1131,6 @@
                    "componentProps": {},
                    "componentSlots": {},
                    "mobileStyles": {},
-                   "rawStyles": {},
                    "tabletStyles": {}
                   }
                  ],
@@ -2857,7 +1144,6 @@
                  },
                  "componentSlots": {},
                  "mobileStyles": {},
-                 "rawStyles": {},
                  "tabletStyles": {}
                 }
                ],
@@ -3354,9 +1640,11 @@
    "originalElement": "body"
   }
  ],
+ "creation": "2026-09-09 19:44:24.796523",
+ "doctype": "Studio Page",
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-09 15:42:58.886597",
+ "modified": "2026-09-09 19:49:39.308723",
  "modified_by": "Administrator",
  "name": "partner_directory_redesign",
  "owner": "Administrator",
