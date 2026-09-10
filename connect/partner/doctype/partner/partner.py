@@ -304,8 +304,9 @@ def search_partners(
 	if child_matches:
 		filters.append(["Partner", "name", "in", list(set.intersection(*child_matches))])
 
+	exclude = _normalize_multi(exclude)
 	if exclude:
-		filters.append(["Partner", "name", "not in", list(exclude)])
+		filters.append(["Partner", "name", "not in", exclude if isinstance(exclude, list) else [exclude]])
 
 	if min_rating not in (None, ""):
 		filters.append(["Partner", "rating", ">=", flt(min_rating)])
@@ -627,40 +628,23 @@ def _decorate_directory_rows(rows):
 def list_directory_partners(
 	limit=9, search=None, tier=None, country=None, industry=None, category=None,
 	business_process=None, implementation_type=None, language=None,
-	min_rating=None, max_response_time=None,
+	min_rating=None, max_response_time=None, exclude=None,
 ):
 	"""Returns featured partners (name, logo, tier, rating, rate, response time, success stories)
 	for the Partner Directory redesign's card list and its filter row. Filtering/search/ordering is
 	delegated to search_partners — the same engine behind the Find Partners page — so both stay
 	consistent; this only adds the review_count/success-story preview fields the card list needs on
 	top, same as before this had its own filters. `country`/`category` accept either a single value
-	or a JSON array (the Region/Industry filters' multi-select)."""
+	or a JSON array (the Region/Industry filters' multi-select). `exclude` (name not-in) is what
+	the "Proven in other industries" section uses to call this same function a second time with
+	category dropped, without repeating whoever's already shown in the main list."""
 	rows = search_partners(
 		search=search, tier=tier, country=country, industry=industry, category=category,
 		business_process=business_process, implementation_type=implementation_type, language=language,
-		min_rating=min_rating, max_response_time=max_response_time,
+		min_rating=min_rating, max_response_time=max_response_time, exclude=exclude,
 		limit=cint(limit) or 9,
 	)
 	return _decorate_directory_rows(rows)
-
-
-def list_directory_partners_for_wizard(industry=None, category=None, limit=9):
-	"""Hands the Find Partners wizard's industry/segment answer off to the Partner Directory as a
-	real filter, in one call: `matches` are partners filtered on both industry and the segment's
-	success-story category; `fallback` are same-industry partners who don't have a published story
-	in that specific category (dropping the category filter, excluding anyone already in `matches`)
-	— the "Proven in other industries" section, so a narrow segment pick doesn't dead-end the page
-	when no partner has that exact category yet."""
-	matches = search_partners(industry=industry or None, category=category or None, limit=cint(limit) or 9)
-	fallback = []
-	if category:
-		fallback = search_partners(
-			industry=industry or None, exclude=[m.name for m in matches], limit=cint(limit) or 9,
-		)
-	return {
-		"matches": _decorate_directory_rows(matches),
-		"fallback": _decorate_directory_rows(fallback),
-	}
 
 
 def list_country_facets(search=None, tier=None, industry=None, category=None,
