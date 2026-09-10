@@ -404,7 +404,7 @@
             "update:modelValue": {
              "action": "Run Script",
              "event": "update:modelValue",
-             "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+             "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
             }
            },
            "componentId": "TextInput-yix6k299g",
@@ -428,7 +428,7 @@
             "update:modelValue": {
              "action": "Run Script",
              "event": "update:modelValue",
-             "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+             "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
             }
            },
            "componentId": "Select-cfbfoxmob",
@@ -644,7 +644,7 @@
                         "click": {
                          "action": "Run Script",
                          "event": "click",
-                         "script": "const cur = selectedCountries.value || []; const val = item.label; selectedCountries.value = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                         "script": "const cur = selectedCountries.value || []; const val = item.label; selectedCountries.value = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                         }
                        },
                        "componentId": "country-filter-option-row",
@@ -692,7 +692,7 @@
                     "click": {
                      "action": "Run Script",
                      "event": "click",
-                     "script": "selectedCountries.value = []; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                     "script": "selectedCountries.value = []; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                     }
                    },
                    "componentId": "country-filter-clear-all",
@@ -713,7 +713,7 @@
                     "click": {
                      "action": "Run Script",
                      "event": "click",
-                     "script": "selectedCountries.value = (filterFacets.data && filterFacets.data.regions || []).flatMap(g => g.options.map(o => o.value)); const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                     "script": "selectedCountries.value = (filterFacets.data && filterFacets.data.regions || []).flatMap(g => g.options.map(o => o.value)); const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                     }
                    },
                    "componentId": "country-filter-select-all",
@@ -983,7 +983,7 @@
                         "click": {
                          "action": "Run Script",
                          "event": "click",
-                         "script": "const cur = selectedCategories.value || []; const val = item.label; selectedCategories.value = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                         "script": "const cur = selectedCategories.value || []; const val = item.label; selectedCategories.value = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                         }
                        },
                        "componentId": "industry-filter-option-row",
@@ -1031,7 +1031,7 @@
                     "click": {
                      "action": "Run Script",
                      "event": "click",
-                     "script": "selectedCategories.value = []; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                     "script": "selectedCategories.value = []; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                     }
                    },
                    "componentId": "industry-filter-clear-all",
@@ -1052,7 +1052,7 @@
                     "click": {
                      "action": "Run Script",
                      "event": "click",
-                     "script": "selectedCategories.value = (filterFacets.data && filterFacets.data.industries || []).flatMap(g => g.options.map(o => o.value)); const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                     "script": "selectedCategories.value = (filterFacets.data && filterFacets.data.industries || []).flatMap(g => g.options.map(o => o.value)); const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                     }
                    },
                    "componentId": "industry-filter-select-all",
@@ -1194,7 +1194,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                       "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-bp",
@@ -1264,7 +1264,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                       "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-impl",
@@ -1334,7 +1334,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                       "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-lang",
@@ -1404,7 +1404,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                       "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-rating",
@@ -1477,7 +1477,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                       "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-response",
@@ -1534,7 +1534,7 @@
                   "click": {
                    "action": "Run Script",
                    "event": "click",
-                   "script": "searchTerm.value = ''; tierFilter.value = ''; selectedCountries.value = []; selectedCategories.value = []; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = ''; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                   "script": "searchTerm.value = ''; tierFilter.value = ''; selectedCountries.value = []; selectedCategories.value = []; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = ''; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                   }
                  },
                  "componentId": "Button-flt-clear",
@@ -1632,7 +1632,7 @@
        "children": [
         {
          "baseStyles": {
-          "display": "{{ (route.query.category ? ((wizardHandoff.data && wizardHandoff.data.matches && wizardHandoff.data.matches.length) ? 'block' : 'none') : (directoryPartners.data ? 'block' : 'none')) }}",
+          "display": "{{ directoryPartners.data ? 'block' : 'none' }}",
           "isolation": "isolate"
          },
          "children": [
@@ -1656,7 +1656,7 @@
              "componentId": "ListRows-91e783f6b",
              "componentName": "ListRows",
              "componentProps": {
-              "items": "{{ (route.query.category ? ((wizardHandoff.data && wizardHandoff.data.matches) || []) : (directoryPartners.data || [])) }}",
+              "items": "{{ directoryPartners.data || [] }}",
               "rowKey": "name"
              },
              "componentSlots": {
@@ -2248,7 +2248,7 @@
         {
          "baseStyles": {
           "borderTop": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-          "display": "{{ (route.query.category && wizardHandoff.data && wizardHandoff.data.fallback && wizardHandoff.data.fallback.length) ? 'flex' : 'none' }}",
+          "display": "{{ (selectedCategories.value && selectedCategories.value.length && categoryFallback.data && categoryFallback.data.length) ? 'flex' : 'none' }}",
           "flexDirection": "column",
           "marginTop": "32px",
           "paddingTop": "24px"
@@ -2282,12 +2282,12 @@
            "componentProps": {
             "fontSize": "text-sm",
             "tag": "span",
-            "text": "{{ 'No published ' + (route.query.category || '') + ' work yet.' }}"
+            "text": "{{ 'No published ' + ((selectedCategories.value || []).join(', ')) + ' work yet.' }}"
            }
           },
           {
            "baseStyles": {
-            "display": "{{ (wizardHandoff.data && wizardHandoff.data.fallback && wizardHandoff.data.fallback.length) ? 'block' : 'none' }}",
+            "display": "{{ (categoryFallback.data && categoryFallback.data.length) ? 'block' : 'none' }}",
             "isolation": "isolate"
            },
            "children": [
@@ -2311,7 +2311,7 @@
                "componentId": "ListRows-91e783f6b-fb",
                "componentName": "ListRows",
                "componentProps": {
-                "items": "{{ (wizardHandoff.data && wizardHandoff.data.fallback) || [] }}",
+                "items": "{{ categoryFallback.data || [] }}",
                 "rowKey": "name"
                },
                "componentSlots": {
@@ -3783,7 +3783,7 @@
             "update:modelValue": {
              "action": "Run Script",
              "event": "update:modelValue",
-             "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+             "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
             }
            },
            "componentId": "TextInput-yix6k299g",
@@ -3807,7 +3807,7 @@
             "update:modelValue": {
              "action": "Run Script",
              "event": "update:modelValue",
-             "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+             "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
             }
            },
            "componentId": "Select-cfbfoxmob",
@@ -4023,7 +4023,7 @@
                         "click": {
                          "action": "Run Script",
                          "event": "click",
-                         "script": "const cur = selectedCountries.value || []; const val = item.label; selectedCountries.value = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                         "script": "const cur = selectedCountries.value || []; const val = item.label; selectedCountries.value = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                         }
                        },
                        "componentId": "country-filter-option-row",
@@ -4071,7 +4071,7 @@
                     "click": {
                      "action": "Run Script",
                      "event": "click",
-                     "script": "selectedCountries.value = []; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                     "script": "selectedCountries.value = []; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                     }
                    },
                    "componentId": "country-filter-clear-all",
@@ -4092,7 +4092,7 @@
                     "click": {
                      "action": "Run Script",
                      "event": "click",
-                     "script": "selectedCountries.value = (filterFacets.data && filterFacets.data.regions || []).flatMap(g => g.options.map(o => o.value)); const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                     "script": "selectedCountries.value = (filterFacets.data && filterFacets.data.regions || []).flatMap(g => g.options.map(o => o.value)); const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                     }
                    },
                    "componentId": "country-filter-select-all",
@@ -4362,7 +4362,7 @@
                         "click": {
                          "action": "Run Script",
                          "event": "click",
-                         "script": "const cur = selectedCategories.value || []; const val = item.label; selectedCategories.value = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                         "script": "const cur = selectedCategories.value || []; const val = item.label; selectedCategories.value = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                         }
                        },
                        "componentId": "industry-filter-option-row",
@@ -4410,7 +4410,7 @@
                     "click": {
                      "action": "Run Script",
                      "event": "click",
-                     "script": "selectedCategories.value = []; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                     "script": "selectedCategories.value = []; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                     }
                    },
                    "componentId": "industry-filter-clear-all",
@@ -4431,7 +4431,7 @@
                     "click": {
                      "action": "Run Script",
                      "event": "click",
-                     "script": "selectedCategories.value = (filterFacets.data && filterFacets.data.industries || []).flatMap(g => g.options.map(o => o.value)); const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                     "script": "selectedCategories.value = (filterFacets.data && filterFacets.data.industries || []).flatMap(g => g.options.map(o => o.value)); const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                     }
                    },
                    "componentId": "industry-filter-select-all",
@@ -4573,7 +4573,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                       "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-bp",
@@ -4643,7 +4643,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                       "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-impl",
@@ -4713,7 +4713,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                       "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-lang",
@@ -4783,7 +4783,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                       "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-rating",
@@ -4856,7 +4856,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                       "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-response",
@@ -4913,7 +4913,7 @@
                   "click": {
                    "action": "Run Script",
                    "event": "click",
-                   "script": "searchTerm.value = ''; tierFilter.value = ''; selectedCountries.value = []; selectedCategories.value = []; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = ''; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                   "script": "searchTerm.value = ''; tierFilter.value = ''; selectedCountries.value = []; selectedCategories.value = []; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = ''; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
                   }
                  },
                  "componentId": "Button-flt-clear",
@@ -5011,7 +5011,7 @@
        "children": [
         {
          "baseStyles": {
-          "display": "{{ (route.query.category ? ((wizardHandoff.data && wizardHandoff.data.matches && wizardHandoff.data.matches.length) ? 'block' : 'none') : (directoryPartners.data ? 'block' : 'none')) }}",
+          "display": "{{ directoryPartners.data ? 'block' : 'none' }}",
           "isolation": "isolate"
          },
          "children": [
@@ -5035,7 +5035,7 @@
              "componentId": "ListRows-91e783f6b",
              "componentName": "ListRows",
              "componentProps": {
-              "items": "{{ (route.query.category ? ((wizardHandoff.data && wizardHandoff.data.matches) || []) : (directoryPartners.data || [])) }}",
+              "items": "{{ directoryPartners.data || [] }}",
               "rowKey": "name"
              },
              "componentSlots": {
@@ -5627,7 +5627,7 @@
         {
          "baseStyles": {
           "borderTop": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-          "display": "{{ (route.query.category && wizardHandoff.data && wizardHandoff.data.fallback && wizardHandoff.data.fallback.length) ? 'flex' : 'none' }}",
+          "display": "{{ (selectedCategories.value && selectedCategories.value.length && categoryFallback.data && categoryFallback.data.length) ? 'flex' : 'none' }}",
           "flexDirection": "column",
           "marginTop": "32px",
           "paddingTop": "24px"
@@ -5661,12 +5661,12 @@
            "componentProps": {
             "fontSize": "text-sm",
             "tag": "span",
-            "text": "{{ 'No published ' + (route.query.category || '') + ' work yet.' }}"
+            "text": "{{ 'No published ' + ((selectedCategories.value || []).join(', ')) + ' work yet.' }}"
            }
           },
           {
            "baseStyles": {
-            "display": "{{ (wizardHandoff.data && wizardHandoff.data.fallback && wizardHandoff.data.fallback.length) ? 'block' : 'none' }}",
+            "display": "{{ (categoryFallback.data && categoryFallback.data.length) ? 'block' : 'none' }}",
             "isolation": "isolate"
            },
            "children": [
@@ -5690,7 +5690,7 @@
                "componentId": "ListRows-91e783f6b-fb",
                "componentName": "ListRows",
                "componentProps": {
-                "items": "{{ (wizardHandoff.data && wizardHandoff.data.fallback) || [] }}",
+                "items": "{{ categoryFallback.data || [] }}",
                 "rowKey": "name"
                },
                "componentSlots": {
@@ -6755,7 +6755,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-10 13:33:56.007184",
+ "modified": "2026-09-10 14:49:05.737794",
  "modified_by": "Administrator",
  "name": "partner_directory_redesign",
  "owner": "Administrator",
@@ -6827,18 +6827,18 @@
   {
    "auto": 1,
    "method": "GET",
-   "params": "{\"industry\": \"{{ route.query.industry }}\", \"category\": \"{{ route.query.category }}\"}",
-   "resource_name": "wizardHandoff",
+   "on_success": "function onSuccess(data) {\n  if (route.query.category && !(selectedCategories.value || []).length) {\n    selectedCategories.value = [route.query.category];\n    const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();\n  }\n}",
+   "resource_name": "filterFacets",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.partner.list_directory_partners_for_wizard"
+   "url": "/api/method/connect.api.partner.list_directory_filter_facets"
   },
   {
    "__unsaved": 1,
    "auto": 1,
    "method": "GET",
-   "resource_name": "filterFacets",
+   "resource_name": "categoryFallback",
    "resource_type": "API Resource",
-   "url": "/api/method/connect.api.partner.list_directory_filter_facets"
+   "url": "/api/method/connect.api.partner.list_directory_partners"
   }
  ],
  "route": "/partner-directory-redesign",
@@ -6890,13 +6890,11 @@
    "variable_type": "String"
   },
   {
-   "__unsaved": 1,
    "initial_value": "[]",
    "variable_name": "selectedCountries",
    "variable_type": "Object"
   },
   {
-   "__unsaved": 1,
    "initial_value": "[]",
    "variable_name": "selectedCategories",
    "variable_type": "Object"
