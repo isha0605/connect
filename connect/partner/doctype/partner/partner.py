@@ -227,6 +227,7 @@ FILTER_OPERATORS = {"is", "is not", "in", "not in", "=", "!=", "like", "not like
 def search_partners(
 	search=None, industry=None, product=None, region=None, delivery_mode=None, country=None,
 	tier=None, business_process=None, implementation_type=None, language=None,
+	category=None, exclude=None,
 	min_rating=None, min_pmm_level=None, max_response_time=None,
 	extra_filters=None,
 	sort=None, limit=100,
@@ -253,11 +254,15 @@ def search_partners(
 		(business_process, "Partner Business Process", "business_process", None),
 		(implementation_type, "Partner Implementation Type", "implementation_type", None),
 		(language, "Partner Language", "language", None),
+		(category, "Partner Success Story", "category", "success_stories"),
 	]:
 		if value:
 			child_matches.append(_partners_matching_child(doctype, field, "=", value, parentfield=parentfield))
 	if child_matches:
 		filters.append(["Partner", "name", "in", list(set.intersection(*child_matches))])
+
+	if exclude:
+		filters.append(["Partner", "name", "not in", list(exclude)])
 
 	if min_rating not in (None, ""):
 		filters.append(["Partner", "rating", ">=", flt(min_rating)])
@@ -562,6 +567,20 @@ def region_presence_counts():
 	return counts
 
 
+def _decorate_directory_rows(rows):
+	"""Adds the review_count/success-story preview fields the directory card list needs on top of
+	whatever search_partners already returned. Shared by list_directory_partners and the wizard
+	hand-off (list_directory_partners_for_wizard) so both render identical cards."""
+	names = [r.name for r in rows]
+	review_partners = frappe.get_all("Partner Review", filters={"partner": ["in", names]}, pluck="partner") if names else []
+	review_counts = Counter(review_partners)
+	for row in rows:
+		row["review_count"] = review_counts.get(row.name, 0)
+
+	attach_success_story_previews(rows)
+	return rows
+
+
 def list_directory_partners(
 	limit=9, search=None, tier=None, country=None, industry=None,
 	business_process=None, implementation_type=None, language=None,
@@ -578,15 +597,26 @@ def list_directory_partners(
 		min_rating=min_rating, max_response_time=max_response_time,
 		limit=cint(limit) or 9,
 	)
+	return _decorate_directory_rows(rows)
 
-	names = [r.name for r in rows]
-	review_partners = frappe.get_all("Partner Review", filters={"partner": ["in", names]}, pluck="partner") if names else []
-	review_counts = Counter(review_partners)
-	for row in rows:
-		row["review_count"] = review_counts.get(row.name, 0)
 
-	attach_success_story_previews(rows)
-	return rows
+def list_directory_partners_for_wizard(industry=None, category=None, limit=9):
+	"""Hands the Find Partners wizard's industry/segment answer off to the Partner Directory as a
+	real filter, in one call: `matches` are partners filtered on both industry and the segment's
+	success-story category; `fallback` are same-industry partners who don't have a published story
+	in that specific category (dropping the category filter, excluding anyone already in `matches`)
+	— the "Proven in other industries" section, so a narrow segment pick doesn't dead-end the page
+	when no partner has that exact category yet."""
+	matches = search_partners(industry=industry or None, category=category or None, limit=cint(limit) or 9)
+	fallback = []
+	if category:
+		fallback = search_partners(
+			industry=industry or None, exclude=[m.name for m in matches], limit=cint(limit) or 9,
+		)
+	return {
+		"matches": _decorate_directory_rows(matches),
+		"fallback": _decorate_directory_rows(fallback),
+	}
 
 
 def list_partner_tiers():

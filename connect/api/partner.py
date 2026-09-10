@@ -63,6 +63,12 @@ def list_directory_partners(
 
 
 @frappe.whitelist(allow_guest=True)
+def list_directory_partners_for_wizard(industry=None, category=None, limit=9):
+	from connect.partner.doctype.partner.partner import list_directory_partners_for_wizard
+	return list_directory_partners_for_wizard(industry=industry, category=category, limit=limit)
+
+
+@frappe.whitelist(allow_guest=True)
 def list_partner_tiers():
 	from connect.partner.doctype.partner.partner import list_partner_tiers
 	return list_partner_tiers()
