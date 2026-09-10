@@ -16,6 +16,7 @@ a story page itself — it only ever reads the persisted field.
 """
 
 import re
+import urllib.parse
 
 import frappe
 
@@ -28,6 +29,17 @@ _OG_IMAGE_PATTERNS = (
 	re.compile(r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']', re.IGNORECASE),
 	re.compile(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']', re.IGNORECASE),
 )
+
+
+def _normalize_url(url: str) -> str:
+	"""Percent-encodes a scraped URL's path/query, leaving scheme/host and any
+	existing %XX escapes alone. og:image content attributes routinely contain
+	literal spaces/parens straight from the filename (e.g. "logo (2).png"),
+	which break both raw fetches and unquoted CSS url() usage downstream."""
+	parts = urllib.parse.urlsplit(url)
+	path = urllib.parse.quote(parts.path, safe="/%")
+	query = urllib.parse.quote(parts.query, safe="=&%")
+	return urllib.parse.urlunsplit((parts.scheme, parts.netloc, path, query, parts.fragment))
 
 
 def fetch_og_image(story_url: str) -> str | None:
@@ -56,7 +68,7 @@ def fetch_og_image(story_url: str) -> str | None:
 	for pattern in _OG_IMAGE_PATTERNS:
 		match = pattern.search(html)
 		if match:
-			return match.group(1)
+			return _normalize_url(match.group(1))
 	return None
 
 
