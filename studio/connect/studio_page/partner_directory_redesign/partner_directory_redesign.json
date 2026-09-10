@@ -1600,500 +1600,6 @@
         },
         {
          "baseStyles": {
-          "padding": "0 20px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-9, #171717)",
-            "fontWeight": "600",
-            "marginBottom": "14px",
-            "marginTop": "32px"
-           },
-           "children": [],
-           "classes": [],
-           "componentId": "text-apps-heading",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-base",
-            "tag": "span",
-            "text": "Which app are you looking to implement?"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "apps-heading-wrap",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "display": "flex",
-          "flexDirection": "row",
-          "flexWrap": "wrap",
-          "gap": "10px",
-          "padding": "0 20px 20px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-erpnext",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "ERPNext"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'ERPNext'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-erpnext",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-frappe-hr",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Frappe HR"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Frappe HR'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-frappe-hr",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-crm",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "CRM"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Frappe CRM'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-crm",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-helpdesk",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Helpdesk"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Helpdesk'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-helpdesk",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-insights",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Insights"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Frappe Insights'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-insights",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Drive') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Drive') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Drive') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-drive",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Drive"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Drive'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-drive",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Learning') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Learning') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Learning') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-learning",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Learning"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Learning'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-learning",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Education') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Education') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Education') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-education",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Education"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Education'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-education",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('School') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('School') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('School') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-school",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "School"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'School'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-school",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Lending') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Lending') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Lending') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-lending",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Lending"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Lending'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-lending",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-framework",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Framework"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Frappe Framework'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-framework",
-           "componentName": "container",
-           "originalElement": "div"
-          }
-         ],
-         "classes": [],
-         "componentId": "apps-pills-row",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
           "color": "var(--ink-gray-5, #a6a6a6)",
           "marginBottom": "8px",
           "marginTop": "16px"
@@ -2150,7 +1656,7 @@
              "componentId": "ListRows-91e783f6b",
              "componentName": "ListRows",
              "componentProps": {
-              "items": "{{ directoryPartners.data || [] }}",
+              "items": "{{ (directoryPartners.data || []).slice(0, 2) }}",
               "rowKey": "name"
              },
              "componentSlots": {
@@ -2704,6 +2210,1075 @@
                  "classes": [],
                  "componentEvents": {},
                  "componentId": "ListRow-gold",
+                 "componentName": "ListRow",
+                 "componentProps": {
+                  "to": "{{ '/partner-profile-redesign/' + item.name }}",
+                  "value": "{{ value }}"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "tabletStyles": {}
+                }
+               ],
+               "slotId": "ListRows-0836d29f6:default",
+               "slotName": "default"
+              }
+             }
+            },
+            {
+             "baseStyles": {
+              "padding": "0 20px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-9, #171717)",
+                "fontWeight": "600",
+                "marginBottom": "14px",
+                "marginTop": "32px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "text-apps-heading",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-base",
+                "tag": "span",
+                "text": "Which app are you looking to implement?"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "apps-heading-wrap",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "row",
+              "flexWrap": "wrap",
+              "gap": "10px",
+              "padding": "0 20px 20px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-erpnext",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "ERPNext"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'ERPNext'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-erpnext",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-frappe-hr",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Frappe HR"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Frappe HR'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-frappe-hr",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-crm",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "CRM"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Frappe CRM'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-crm",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-helpdesk",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Helpdesk"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Helpdesk'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-helpdesk",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-insights",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Insights"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Frappe Insights'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-insights",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Drive') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Drive') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Drive') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-drive",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Drive"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Drive'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-drive",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Learning') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Learning') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Learning') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-learning",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Learning"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Learning'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-learning",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Education') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Education') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Education') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-education",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Education"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Education'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-education",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('School') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('School') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('School') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-school",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "School"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'School'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-school",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Lending') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Lending') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Lending') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-lending",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Lending"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Lending'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-lending",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-framework",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Framework"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Frappe Framework'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-framework",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "apps-pills-row",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "ListRows-91e783f6b-b2",
+             "componentName": "ListRows",
+             "componentProps": {
+              "items": "{{ (directoryPartners.data || []).slice(2) }}",
+              "rowKey": "name"
+             },
+             "componentSlots": {
+              "default": {
+               "parentBlockId": "ListRows-91e783f6b",
+               "slotContent": [
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "flexWrap": "nowrap",
+                  "gap": "20px",
+                  "paddingBlock": "12px"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "baseStyles": {},
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "backgroundColor": "var(--surface-base, oklch(1 0 0))",
+                      "backgroundImage": "{{ item.logo ? 'url(\"' + item.logo + '\")' : 'none' }}",
+                      "backgroundPosition": "center",
+                      "backgroundRepeat": "no-repeat",
+                      "backgroundSize": "contain",
+                      "borderColor": "var(--outline-gray-3, oklch(0.83 0 0))",
+                      "borderRadius": "6px",
+                      "borderStyle": "solid",
+                      "borderWidth": "1px",
+                      "display": "flex",
+                      "flexShrink": "0",
+                      "height": "52px",
+                      "justifyContent": "center",
+                      "margin": "5px",
+                      "overflow": "hidden",
+                      "padding": "0px",
+                      "width": "52px"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "display": "{{ item.logo ? 'none' : 'flex' }}",
+                        "fontWeight": "600"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "LogoView-gold-initial-b2",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ (item.partner_name || '?').charAt(0).toUpperCase() }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "LogoView-gold-b2",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "ListCell-avatar-gold-b2",
+                   "componentName": "ListCell",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "gap": "0px",
+                    "gridRow": "span 1",
+                    "margin": "0px"
+                   },
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "display": "flex",
+                      "flexDirection": "column",
+                      "gap": "8px"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "flexWrap": "wrap",
+                        "gap": "10px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-8)",
+                          "fontWeight": "600"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-name-b2",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-base",
+                          "tag": "span",
+                          "text": "{{ item.partner_name }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {},
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-tier-badge-b2",
+                         "componentName": "Badge",
+                         "componentProps": {
+                          "label": "{{ item.tier }}",
+                          "theme": "{{ item.tier === 'Gold' ? 'amber' : item.tier === 'Silver' ? 'gray' : item.tier === 'Bronze' ? 'orange' : 'gray' }}",
+                          "variant": "subtle"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "row-gold-name-row-b2",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "gap": "4px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "flexShrink": "0",
+                          "height": "12px",
+                          "width": "12px"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-location-icon-b2",
+                         "componentName": "FeatherIcon",
+                         "componentProps": {
+                          "color": "var(--ink-gray-5)",
+                          "name": "map-pin",
+                          "strokeWidth": 2
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-5)"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-location-text-b2",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.city ? item.city + ', ' + item.country : item.country }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "row-gold-location-b2",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "flexWrap": "wrap",
+                        "gap": "24px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "gap": "4px"
+                         },
+                         "children": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "flexShrink": "0",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-rate-icon-b2",
+                           "componentName": "FeatherIcon",
+                           "componentProps": {
+                            "color": "var(--ink-gray-5)",
+                            "name": "tag",
+                            "strokeWidth": 2
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          },
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-rate-text-b2",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-xs",
+                            "tag": "span",
+                            "text": "{{ item.hourly_rate ? ('From \u20b9' + Number(item.hourly_rate).toLocaleString('en-IN') + '/hr') : 'Rate on request' }}"
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-rate-b2",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "gap": "4px"
+                         },
+                         "children": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "flexShrink": "0",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-rating-icon-b2",
+                           "componentName": "FeatherIcon",
+                           "componentProps": {
+                            "color": "var(--ink-gray-5)",
+                            "name": "star",
+                            "strokeWidth": 2
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          },
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-rating-text-b2",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-xs",
+                            "tag": "span",
+                            "text": "{{ item.rating ? item.rating + ' (' + (item.review_count || 0) + ')' : 'No ratings yet' }}"
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-rating-b2",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "{{ item.response_time_hours ? 'flex' : 'none' }}",
+                          "flexDirection": "row",
+                          "gap": "4px"
+                         },
+                         "children": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "flexShrink": "0",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-response-icon-b2",
+                           "componentName": "FeatherIcon",
+                           "componentProps": {
+                            "color": "var(--ink-gray-5)",
+                            "name": "clock",
+                            "strokeWidth": 2
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          },
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-response-text-b2",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-xs",
+                            "tag": "span",
+                            "text": "{{ 'Typically ' + item.response_time_hours + 'h' }}"
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-response-b2",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "row-gold-stats-row-b2",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-5)",
+                        "display": "{{ item.success_story_count ? 'block' : 'none' }}"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "row-gold-stories-b2",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-xs",
+                        "tag": "span",
+                        "text": "{{ item.success_story_count + ' success ' + (item.success_story_count === 1 ? 'story' : 'stories') + ' across ' + (item.success_story_categories || []).slice(0, 3).join(', ') + ((item.success_story_categories || []).length > 3 ? ' +' + ((item.success_story_categories.length) - 3) + ' more' : '') }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "row-gold-details-b2",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "ListCell-details-gold-b2",
+                   "componentName": "ListCell",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {},
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "8px"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "color": "{{ (myShortlist.data || []).includes(item.name) ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}",
+                        "display": "flex",
+                        "flexShrink": "0",
+                        "height": "32px",
+                        "justifyContent": "center",
+                        "width": "32px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                        }
+                       },
+                       "componentId": "Button-shortlist-gold-b2",
+                       "componentName": "Button",
+                       "componentProps": {
+                        "icon": "{{ (myShortlist.data || []).includes(item.name) ? 'lucide-bookmark-check' : 'lucide-bookmark' }}",
+                        "size": "md",
+                        "variant": "ghost"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6, oklch(0.439 0 0))"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.contact.start_partner_thread', { partner: item.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                        }
+                       },
+                       "componentId": "Button-contact-gold-b2",
+                       "componentName": "Button",
+                       "componentProps": {
+                        "iconLeft": "lucide-send",
+                        "label": "Connect",
+                        "variant": "subtle"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "row-gold-actions-b2",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "ListCell-actions-gold-b2",
+                   "componentName": "ListCell",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "ListRow-gold-b2",
                  "componentName": "ListRow",
                  "componentProps": {
                   "to": "{{ '/partner-profile-redesign/' + item.name }}",
@@ -5075,500 +5650,6 @@
         },
         {
          "baseStyles": {
-          "padding": "0 20px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-9, #171717)",
-            "fontWeight": "600",
-            "marginBottom": "14px",
-            "marginTop": "32px"
-           },
-           "children": [],
-           "classes": [],
-           "componentId": "text-apps-heading",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-base",
-            "tag": "span",
-            "text": "Which app are you looking to implement?"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "apps-heading-wrap",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "display": "flex",
-          "flexDirection": "row",
-          "flexWrap": "wrap",
-          "gap": "10px",
-          "padding": "0 20px 20px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-erpnext",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "ERPNext"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'ERPNext'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-erpnext",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-frappe-hr",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Frappe HR"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Frappe HR'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-frappe-hr",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-crm",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "CRM"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Frappe CRM'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-crm",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-helpdesk",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Helpdesk"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Helpdesk'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-helpdesk",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-insights",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Insights"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Frappe Insights'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-insights",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Drive') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Drive') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Drive') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-drive",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Drive"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Drive'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-drive",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Learning') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Learning') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Learning') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-learning",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Learning"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Learning'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-learning",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Education') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Education') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Education') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-education",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Education"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Education'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-education",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('School') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('School') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('School') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-school",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "School"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'School'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-school",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Lending') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Lending') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Lending') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-lending",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Lending"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Lending'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-lending",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-            "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "borderColor": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-            "borderRadius": "8px",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexDirection": "row",
-            "padding": "8px 14px",
-            "whiteSpace": "nowrap"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "text-app-pill-label-framework",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Framework"
-             }
-            }
-           ],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "const app = 'Frappe Framework'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
-            }
-           },
-           "componentId": "app-pill-framework",
-           "componentName": "container",
-           "originalElement": "div"
-          }
-         ],
-         "classes": [],
-         "componentId": "apps-pills-row",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
           "color": "var(--ink-gray-5, #a6a6a6)",
           "marginBottom": "8px",
           "marginLeft": "6px",
@@ -5626,7 +5707,7 @@
              "componentId": "ListRows-91e783f6b",
              "componentName": "ListRows",
              "componentProps": {
-              "items": "{{ directoryPartners.data || [] }}",
+              "items": "{{ (directoryPartners.data || []).slice(0, 2) }}",
               "rowKey": "name"
              },
              "componentSlots": {
@@ -6180,6 +6261,1075 @@
                  "classes": [],
                  "componentEvents": {},
                  "componentId": "ListRow-gold",
+                 "componentName": "ListRow",
+                 "componentProps": {
+                  "to": "{{ '/partner-profile-redesign/' + item.name }}",
+                  "value": "{{ value }}"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "tabletStyles": {}
+                }
+               ],
+               "slotId": "ListRows-0836d29f6:default",
+               "slotName": "default"
+              }
+             }
+            },
+            {
+             "baseStyles": {
+              "padding": "0 20px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-9, #171717)",
+                "fontWeight": "600",
+                "marginBottom": "14px",
+                "marginTop": "32px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "text-apps-heading",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-base",
+                "tag": "span",
+                "text": "Which app are you looking to implement?"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "apps-heading-wrap",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "row",
+              "flexWrap": "wrap",
+              "gap": "10px",
+              "padding": "0 20px 20px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-erpnext",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "ERPNext"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'ERPNext'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-erpnext",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-frappe-hr",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Frappe HR"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Frappe HR'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-frappe-hr",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-crm",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "CRM"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Frappe CRM'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-crm",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-helpdesk",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Helpdesk"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Helpdesk'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-helpdesk",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-insights",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Insights"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Frappe Insights'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-insights",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Drive') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Drive') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Drive') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-drive",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Drive"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Drive'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-drive",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Learning') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Learning') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Learning') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-learning",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Learning"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Learning'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-learning",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Education') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Education') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Education') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-education",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Education"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Education'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-education",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('School') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('School') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('School') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-school",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "School"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'School'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-school",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Lending') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Lending') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Lending') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-lending",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Lending"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Lending'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-lending",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
+                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                "borderColor": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
+                "borderRadius": "8px",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "padding": "8px 14px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "text-app-pill-label-framework",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Framework"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const app = 'Frappe Framework'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();"
+                }
+               },
+               "componentId": "app-pill-framework",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "apps-pills-row",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "ListRows-91e783f6b-b2",
+             "componentName": "ListRows",
+             "componentProps": {
+              "items": "{{ (directoryPartners.data || []).slice(2) }}",
+              "rowKey": "name"
+             },
+             "componentSlots": {
+              "default": {
+               "parentBlockId": "ListRows-91e783f6b",
+               "slotContent": [
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "flexWrap": "nowrap",
+                  "gap": "20px",
+                  "paddingBlock": "12px"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "baseStyles": {},
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "backgroundColor": "var(--surface-base, oklch(1 0 0))",
+                      "backgroundImage": "{{ item.logo ? 'url(\"' + item.logo + '\")' : 'none' }}",
+                      "backgroundPosition": "center",
+                      "backgroundRepeat": "no-repeat",
+                      "backgroundSize": "contain",
+                      "borderColor": "var(--outline-gray-3, oklch(0.83 0 0))",
+                      "borderRadius": "6px",
+                      "borderStyle": "solid",
+                      "borderWidth": "1px",
+                      "display": "flex",
+                      "flexShrink": "0",
+                      "height": "52px",
+                      "justifyContent": "center",
+                      "margin": "5px",
+                      "overflow": "hidden",
+                      "padding": "0px",
+                      "width": "52px"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "display": "{{ item.logo ? 'none' : 'flex' }}",
+                        "fontWeight": "600"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "LogoView-gold-initial-b2",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ (item.partner_name || '?').charAt(0).toUpperCase() }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "LogoView-gold-b2",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "ListCell-avatar-gold-b2",
+                   "componentName": "ListCell",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "gap": "0px",
+                    "gridRow": "span 1",
+                    "margin": "0px"
+                   },
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "display": "flex",
+                      "flexDirection": "column",
+                      "gap": "8px"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "flexWrap": "wrap",
+                        "gap": "10px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-8)",
+                          "fontWeight": "600"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-name-b2",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-base",
+                          "tag": "span",
+                          "text": "{{ item.partner_name }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {},
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-tier-badge-b2",
+                         "componentName": "Badge",
+                         "componentProps": {
+                          "label": "{{ item.tier }}",
+                          "theme": "{{ item.tier === 'Gold' ? 'amber' : item.tier === 'Silver' ? 'gray' : item.tier === 'Bronze' ? 'orange' : 'gray' }}",
+                          "variant": "subtle"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "row-gold-name-row-b2",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "gap": "4px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "flexShrink": "0",
+                          "height": "12px",
+                          "width": "12px"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-location-icon-b2",
+                         "componentName": "FeatherIcon",
+                         "componentProps": {
+                          "color": "var(--ink-gray-5)",
+                          "name": "map-pin",
+                          "strokeWidth": 2
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-5)"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-location-text-b2",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.city ? item.city + ', ' + item.country : item.country }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "row-gold-location-b2",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "flexWrap": "wrap",
+                        "gap": "24px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "gap": "4px"
+                         },
+                         "children": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "flexShrink": "0",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-rate-icon-b2",
+                           "componentName": "FeatherIcon",
+                           "componentProps": {
+                            "color": "var(--ink-gray-5)",
+                            "name": "tag",
+                            "strokeWidth": 2
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          },
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-rate-text-b2",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-xs",
+                            "tag": "span",
+                            "text": "{{ item.hourly_rate ? ('From \u20b9' + Number(item.hourly_rate).toLocaleString('en-IN') + '/hr') : 'Rate on request' }}"
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-rate-b2",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "gap": "4px"
+                         },
+                         "children": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "flexShrink": "0",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-rating-icon-b2",
+                           "componentName": "FeatherIcon",
+                           "componentProps": {
+                            "color": "var(--ink-gray-5)",
+                            "name": "star",
+                            "strokeWidth": 2
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          },
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-rating-text-b2",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-xs",
+                            "tag": "span",
+                            "text": "{{ item.rating ? item.rating + ' (' + (item.review_count || 0) + ')' : 'No ratings yet' }}"
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-rating-b2",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "{{ item.response_time_hours ? 'flex' : 'none' }}",
+                          "flexDirection": "row",
+                          "gap": "4px"
+                         },
+                         "children": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "flexShrink": "0",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-response-icon-b2",
+                           "componentName": "FeatherIcon",
+                           "componentProps": {
+                            "color": "var(--ink-gray-5)",
+                            "name": "clock",
+                            "strokeWidth": 2
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          },
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-response-text-b2",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-xs",
+                            "tag": "span",
+                            "text": "{{ 'Typically ' + item.response_time_hours + 'h' }}"
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-response-b2",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "row-gold-stats-row-b2",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-5)",
+                        "display": "{{ item.success_story_count ? 'block' : 'none' }}"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "row-gold-stories-b2",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-xs",
+                        "tag": "span",
+                        "text": "{{ item.success_story_count + ' success ' + (item.success_story_count === 1 ? 'story' : 'stories') + ' across ' + (item.success_story_categories || []).slice(0, 3).join(', ') + ((item.success_story_categories || []).length > 3 ? ' +' + ((item.success_story_categories.length) - 3) + ' more' : '') }}"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "row-gold-details-b2",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "ListCell-details-gold-b2",
+                   "componentName": "ListCell",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {},
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "8px"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "color": "{{ (myShortlist.data || []).includes(item.name) ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}",
+                        "display": "flex",
+                        "flexShrink": "0",
+                        "height": "32px",
+                        "justifyContent": "center",
+                        "width": "32px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                        }
+                       },
+                       "componentId": "Button-shortlist-gold-b2",
+                       "componentName": "Button",
+                       "componentProps": {
+                        "icon": "{{ (myShortlist.data || []).includes(item.name) ? 'lucide-bookmark-check' : 'lucide-bookmark' }}",
+                        "size": "md",
+                        "variant": "ghost"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6, oklch(0.439 0 0))"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.contact.start_partner_thread', { partner: item.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                        }
+                       },
+                       "componentId": "Button-contact-gold-b2",
+                       "componentName": "Button",
+                       "componentProps": {
+                        "iconLeft": "lucide-send",
+                        "label": "Connect",
+                        "variant": "subtle"
+                       },
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "row-gold-actions-b2",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "originalElement": "div",
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "ListCell-actions-gold-b2",
+                   "componentName": "ListCell",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "ListRow-gold-b2",
                  "componentName": "ListRow",
                  "componentProps": {
                   "to": "{{ '/partner-profile-redesign/' + item.name }}",
