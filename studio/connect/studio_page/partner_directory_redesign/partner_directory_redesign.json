@@ -404,7 +404,7 @@
             "update:modelValue": {
              "action": "Run Script",
              "event": "update:modelValue",
-             "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+             "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
             }
            },
            "componentId": "TextInput-yix6k299g",
@@ -428,7 +428,7 @@
             "update:modelValue": {
              "action": "Run Script",
              "event": "update:modelValue",
-             "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+             "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
             }
            },
            "componentId": "Select-cfbfoxmob",
@@ -447,53 +447,681 @@
            }
           },
           {
-           "baseStyles": {
-            "flexShrink": "0",
-            "width": "10rem"
-           },
            "children": [],
            "classes": [],
-           "componentEvents": {
-            "update:modelValue": {
-             "action": "Run Script",
-             "event": "update:modelValue",
-             "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
-            }
-           },
-           "componentId": "Select-ox4r26isv",
-           "componentName": "Select",
+           "componentId": "Popover-country-filter",
+           "componentName": "Popover",
            "componentProps": {
-            "modelValue": {
-             "$type": "variable",
-             "name": "countryFilter"
+            "align": "start",
+            "side": "bottom"
+           },
+           "componentSlots": {
+            "default": {
+             "parentBlockId": "Popover-country-filter",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "minWidth": "16rem",
+                "padding": "8px 0px"
+               },
+               "children": [
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "fontWeight": "600",
+                  "padding": "8px 12px 0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "country-filter-panel-header",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-xs",
+                  "tag": "span",
+                  "text": "Country"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "maxHeight": "280px",
+                  "overflowY": "auto"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "country-filter-rows",
+                   "componentName": "ListRows",
+                   "componentProps": {
+                    "items": "{{ (filterFacets.data && filterFacets.data.regions || []).flatMap(g => [{ rowType: 'group', label: g.region, count: null }, ...g.options.map(o => ({ rowType: 'option', label: o.value, count: o.count }))]) }}",
+                    "rowKey": "label"
+                   },
+                   "componentSlots": {
+                    "default": {
+                     "parentBlockId": "country-filter-rows",
+                     "slotContent": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "display": "{{ item.rowType === 'group' ? 'flex' : 'none' }}",
+                        "flexDirection": "row",
+                        "justifyContent": "space-between",
+                        "marginTop": "4px",
+                        "padding": "8px 12px 4px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-5)",
+                          "fontWeight": "600"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "country-filter-group-label",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.label }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-4)"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "country-filter-group-count",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.count != null ? item.count : '' }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "country-filter-group-row",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "cursor": "pointer",
+                        "display": "{{ item.rowType === 'option' ? 'flex' : 'none' }}",
+                        "flexDirection": "row",
+                        "gap": "8px",
+                        "padding": "6px 12px",
+                        "width": "100%"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "country-filter-option-checkbox",
+                         "componentName": "Checkbox",
+                         "componentProps": {
+                          "modelValue": "{{ (selectedCountries.value || []).includes(item.label) }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-8)",
+                          "flex": "1"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "country-filter-option-label",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-sm",
+                          "tag": "span",
+                          "text": "{{ item.label }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-4)"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "country-filter-option-count",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.count }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "const cur = selectedCountries.value || []; const val = item.label; selectedCountries.value = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                        }
+                       },
+                       "componentId": "country-filter-option-row",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "slotId": "country-filter-rows:default",
+                     "slotName": "default"
+                    }
+                   },
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "country-filter-rows-wrap",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "borderTop": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                  "padding": "8px 12px"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "selectedCountries.value = []; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                    }
+                   },
+                   "componentId": "country-filter-clear-all",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "label": "Clear All",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "selectedCountries.value = (filterFacets.data && filterFacets.data.regions || []).flatMap(g => g.options.map(o => o.value)); const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                    }
+                   },
+                   "componentId": "country-filter-select-all",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "label": "Select All",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "country-filter-footer",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "tabletStyles": {}
+                }
+               ],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "country-filter-panel",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "mobileStyles": {},
+               "originalElement": "div",
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Popover-country-filter:default",
+             "slotName": "default"
             },
-            "options": "{{ partnerCountries.data || [] }}",
-            "placeholder": "Country"
+            "trigger": {
+             "parentBlockId": "Popover-country-filter",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {
+                "flexShrink": "0",
+                "justifyContent": "space-between",
+                "overflow": "hidden",
+                "textOverflow": "ellipsis",
+                "whiteSpace": "nowrap",
+                "width": "10rem"
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "country-filter-trigger",
+               "componentName": "Button",
+               "componentProps": {
+                "iconRight": "lucide-chevron-down",
+                "label": "{{ (selectedCountries.value && selectedCountries.value.length) ? selectedCountries.value.join(', ') : 'Country' }}",
+                "variant": "outline"
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Popover-country-filter:trigger",
+             "slotName": "trigger"
+            }
            }
           },
           {
-           "baseStyles": {
-            "flexShrink": "0",
-            "width": "10rem"
-           },
            "children": [],
            "classes": [],
-           "componentEvents": {
-            "update:modelValue": {
-             "action": "Run Script",
-             "event": "update:modelValue",
-             "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
-            }
-           },
-           "componentId": "Select-cyb0hegis",
-           "componentName": "Select",
+           "componentId": "Popover-industry-filter",
+           "componentName": "Popover",
            "componentProps": {
-            "modelValue": {
-             "$type": "variable",
-             "name": "industryFilter"
+            "align": "start",
+            "side": "bottom"
+           },
+           "componentSlots": {
+            "default": {
+             "parentBlockId": "Popover-industry-filter",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "minWidth": "16rem",
+                "padding": "8px 0px"
+               },
+               "children": [
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "fontWeight": "600",
+                  "padding": "8px 12px 0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "industry-filter-panel-header",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-xs",
+                  "tag": "span",
+                  "text": "Industry"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "maxHeight": "280px",
+                  "overflowY": "auto"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "industry-filter-rows",
+                   "componentName": "ListRows",
+                   "componentProps": {
+                    "items": "{{ (filterFacets.data && filterFacets.data.industries || []).flatMap(g => [{ rowType: 'group', label: g.industry, count: g.count }, ...g.options.map(o => ({ rowType: 'option', label: o.value, count: o.count }))]) }}",
+                    "rowKey": "label"
+                   },
+                   "componentSlots": {
+                    "default": {
+                     "parentBlockId": "industry-filter-rows",
+                     "slotContent": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "display": "{{ item.rowType === 'group' ? 'flex' : 'none' }}",
+                        "flexDirection": "row",
+                        "justifyContent": "space-between",
+                        "marginTop": "4px",
+                        "padding": "8px 12px 4px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-5)",
+                          "fontWeight": "600"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "industry-filter-group-label",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.label }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-4)"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "industry-filter-group-count",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.count != null ? item.count : '' }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "industry-filter-group-row",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "cursor": "pointer",
+                        "display": "{{ item.rowType === 'option' ? 'flex' : 'none' }}",
+                        "flexDirection": "row",
+                        "gap": "8px",
+                        "padding": "6px 12px",
+                        "width": "100%"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "industry-filter-option-checkbox",
+                         "componentName": "Checkbox",
+                         "componentProps": {
+                          "modelValue": "{{ (selectedCategories.value || []).includes(item.label) }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-8)",
+                          "flex": "1"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "industry-filter-option-label",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-sm",
+                          "tag": "span",
+                          "text": "{{ item.label }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-4)"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "industry-filter-option-count",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.count }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "const cur = selectedCategories.value || []; const val = item.label; selectedCategories.value = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                        }
+                       },
+                       "componentId": "industry-filter-option-row",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "slotId": "industry-filter-rows:default",
+                     "slotName": "default"
+                    }
+                   },
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "industry-filter-rows-wrap",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "borderTop": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                  "padding": "8px 12px"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "selectedCategories.value = []; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                    }
+                   },
+                   "componentId": "industry-filter-clear-all",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "label": "Clear All",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "selectedCategories.value = (filterFacets.data && filterFacets.data.industries || []).flatMap(g => g.options.map(o => o.value)); const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                    }
+                   },
+                   "componentId": "industry-filter-select-all",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "label": "Select All",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "industry-filter-footer",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "tabletStyles": {}
+                }
+               ],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "industry-filter-panel",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "mobileStyles": {},
+               "originalElement": "div",
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Popover-industry-filter:default",
+             "slotName": "default"
             },
-            "options": "{{ partnerIndustries.data || [] }}",
-            "placeholder": "Industry"
+            "trigger": {
+             "parentBlockId": "Popover-industry-filter",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {
+                "flexShrink": "0",
+                "justifyContent": "space-between",
+                "overflow": "hidden",
+                "textOverflow": "ellipsis",
+                "whiteSpace": "nowrap",
+                "width": "10rem"
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "industry-filter-trigger",
+               "componentName": "Button",
+               "componentProps": {
+                "iconRight": "lucide-chevron-down",
+                "label": "{{ (selectedCategories.value && selectedCategories.value.length) ? selectedCategories.value.join(', ') : 'Industry' }}",
+                "variant": "outline"
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Popover-industry-filter:trigger",
+             "slotName": "trigger"
+            }
            }
           },
           {
@@ -566,7 +1194,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-bp",
@@ -636,7 +1264,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-impl",
@@ -706,7 +1334,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-lang",
@@ -776,7 +1404,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-rating",
@@ -849,7 +1477,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-response",
@@ -906,7 +1534,7 @@
                   "click": {
                    "action": "Run Script",
                    "event": "click",
-                   "script": "searchTerm.value = ''; tierFilter.value = ''; countryFilter.value = ''; industryFilter.value = ''; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = ''; directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                   "script": "searchTerm.value = ''; tierFilter.value = ''; selectedCountries.value = []; selectedCategories.value = []; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = ''; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
                   }
                  },
                  "componentId": "Button-flt-clear",
@@ -3155,7 +3783,7 @@
             "update:modelValue": {
              "action": "Run Script",
              "event": "update:modelValue",
-             "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+             "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
             }
            },
            "componentId": "TextInput-yix6k299g",
@@ -3179,7 +3807,7 @@
             "update:modelValue": {
              "action": "Run Script",
              "event": "update:modelValue",
-             "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+             "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
             }
            },
            "componentId": "Select-cfbfoxmob",
@@ -3198,53 +3826,681 @@
            }
           },
           {
-           "baseStyles": {
-            "flexShrink": "0",
-            "width": "8rem"
-           },
            "children": [],
            "classes": [],
-           "componentEvents": {
-            "update:modelValue": {
-             "action": "Run Script",
-             "event": "update:modelValue",
-             "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
-            }
-           },
-           "componentId": "Select-ox4r26isv",
-           "componentName": "Select",
+           "componentId": "Popover-country-filter",
+           "componentName": "Popover",
            "componentProps": {
-            "modelValue": {
-             "$type": "variable",
-             "name": "countryFilter"
+            "align": "start",
+            "side": "bottom"
+           },
+           "componentSlots": {
+            "default": {
+             "parentBlockId": "Popover-country-filter",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "minWidth": "16rem",
+                "padding": "8px 0px"
+               },
+               "children": [
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "fontWeight": "600",
+                  "padding": "8px 12px 0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "country-filter-panel-header",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-xs",
+                  "tag": "span",
+                  "text": "Country"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "maxHeight": "280px",
+                  "overflowY": "auto"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "country-filter-rows",
+                   "componentName": "ListRows",
+                   "componentProps": {
+                    "items": "{{ (filterFacets.data && filterFacets.data.regions || []).flatMap(g => [{ rowType: 'group', label: g.region, count: null }, ...g.options.map(o => ({ rowType: 'option', label: o.value, count: o.count }))]) }}",
+                    "rowKey": "label"
+                   },
+                   "componentSlots": {
+                    "default": {
+                     "parentBlockId": "country-filter-rows",
+                     "slotContent": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "display": "{{ item.rowType === 'group' ? 'flex' : 'none' }}",
+                        "flexDirection": "row",
+                        "justifyContent": "space-between",
+                        "marginTop": "4px",
+                        "padding": "8px 12px 4px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-5)",
+                          "fontWeight": "600"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "country-filter-group-label",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.label }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-4)"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "country-filter-group-count",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.count != null ? item.count : '' }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "country-filter-group-row",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "cursor": "pointer",
+                        "display": "{{ item.rowType === 'option' ? 'flex' : 'none' }}",
+                        "flexDirection": "row",
+                        "gap": "8px",
+                        "padding": "6px 12px",
+                        "width": "100%"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "country-filter-option-checkbox",
+                         "componentName": "Checkbox",
+                         "componentProps": {
+                          "modelValue": "{{ (selectedCountries.value || []).includes(item.label) }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-8)",
+                          "flex": "1"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "country-filter-option-label",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-sm",
+                          "tag": "span",
+                          "text": "{{ item.label }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-4)"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "country-filter-option-count",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.count }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "const cur = selectedCountries.value || []; const val = item.label; selectedCountries.value = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                        }
+                       },
+                       "componentId": "country-filter-option-row",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "slotId": "country-filter-rows:default",
+                     "slotName": "default"
+                    }
+                   },
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "country-filter-rows-wrap",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "borderTop": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                  "padding": "8px 12px"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "selectedCountries.value = []; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                    }
+                   },
+                   "componentId": "country-filter-clear-all",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "label": "Clear All",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "selectedCountries.value = (filterFacets.data && filterFacets.data.regions || []).flatMap(g => g.options.map(o => o.value)); const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                    }
+                   },
+                   "componentId": "country-filter-select-all",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "label": "Select All",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "country-filter-footer",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "tabletStyles": {}
+                }
+               ],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "country-filter-panel",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "mobileStyles": {},
+               "originalElement": "div",
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Popover-country-filter:default",
+             "slotName": "default"
             },
-            "options": "{{ partnerCountries.data || [] }}",
-            "placeholder": "Country"
+            "trigger": {
+             "parentBlockId": "Popover-country-filter",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {
+                "flexShrink": "0",
+                "justifyContent": "space-between",
+                "overflow": "hidden",
+                "textOverflow": "ellipsis",
+                "whiteSpace": "nowrap",
+                "width": "10rem"
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "country-filter-trigger",
+               "componentName": "Button",
+               "componentProps": {
+                "iconRight": "lucide-chevron-down",
+                "label": "{{ (selectedCountries.value && selectedCountries.value.length) ? selectedCountries.value.join(', ') : 'Country' }}",
+                "variant": "outline"
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Popover-country-filter:trigger",
+             "slotName": "trigger"
+            }
            }
           },
           {
-           "baseStyles": {
-            "flexShrink": "0",
-            "width": "8rem"
-           },
            "children": [],
            "classes": [],
-           "componentEvents": {
-            "update:modelValue": {
-             "action": "Run Script",
-             "event": "update:modelValue",
-             "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
-            }
-           },
-           "componentId": "Select-cyb0hegis",
-           "componentName": "Select",
+           "componentId": "Popover-industry-filter",
+           "componentName": "Popover",
            "componentProps": {
-            "modelValue": {
-             "$type": "variable",
-             "name": "industryFilter"
+            "align": "start",
+            "side": "bottom"
+           },
+           "componentSlots": {
+            "default": {
+             "parentBlockId": "Popover-industry-filter",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "minWidth": "16rem",
+                "padding": "8px 0px"
+               },
+               "children": [
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "fontWeight": "600",
+                  "padding": "8px 12px 0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "industry-filter-panel-header",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-xs",
+                  "tag": "span",
+                  "text": "Industry"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "maxHeight": "280px",
+                  "overflowY": "auto"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "industry-filter-rows",
+                   "componentName": "ListRows",
+                   "componentProps": {
+                    "items": "{{ (filterFacets.data && filterFacets.data.industries || []).flatMap(g => [{ rowType: 'group', label: g.industry, count: g.count }, ...g.options.map(o => ({ rowType: 'option', label: o.value, count: o.count }))]) }}",
+                    "rowKey": "label"
+                   },
+                   "componentSlots": {
+                    "default": {
+                     "parentBlockId": "industry-filter-rows",
+                     "slotContent": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "display": "{{ item.rowType === 'group' ? 'flex' : 'none' }}",
+                        "flexDirection": "row",
+                        "justifyContent": "space-between",
+                        "marginTop": "4px",
+                        "padding": "8px 12px 4px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-5)",
+                          "fontWeight": "600"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "industry-filter-group-label",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.label }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-4)"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "industry-filter-group-count",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.count != null ? item.count : '' }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "industry-filter-group-row",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      },
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "cursor": "pointer",
+                        "display": "{{ item.rowType === 'option' ? 'flex' : 'none' }}",
+                        "flexDirection": "row",
+                        "gap": "8px",
+                        "padding": "6px 12px",
+                        "width": "100%"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "industry-filter-option-checkbox",
+                         "componentName": "Checkbox",
+                         "componentProps": {
+                          "modelValue": "{{ (selectedCategories.value || []).includes(item.label) }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-8)",
+                          "flex": "1"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "industry-filter-option-label",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-sm",
+                          "tag": "span",
+                          "text": "{{ item.label }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-4)"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "industry-filter-option-count",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.count }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "const cur = selectedCategories.value || []; const val = item.label; selectedCategories.value = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val]; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                        }
+                       },
+                       "componentId": "industry-filter-option-row",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "slotId": "industry-filter-rows:default",
+                     "slotName": "default"
+                    }
+                   },
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "industry-filter-rows-wrap",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "tabletStyles": {}
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "borderTop": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                  "padding": "8px 12px"
+                 },
+                 "children": [
+                  {
+                   "attributes": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "selectedCategories.value = []; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                    }
+                   },
+                   "componentId": "industry-filter-clear-all",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "label": "Clear All",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "selectedCategories.value = (filterFacets.data && filterFacets.data.industries || []).flatMap(g => g.options.map(o => o.value)); const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
+                    }
+                   },
+                   "componentId": "industry-filter-select-all",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "label": "Select All",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "industry-filter-footer",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "originalElement": "div",
+                 "tabletStyles": {}
+                }
+               ],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "industry-filter-panel",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "mobileStyles": {},
+               "originalElement": "div",
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Popover-industry-filter:default",
+             "slotName": "default"
             },
-            "options": "{{ partnerIndustries.data || [] }}",
-            "placeholder": "Industry"
+            "trigger": {
+             "parentBlockId": "Popover-industry-filter",
+             "slotContent": [
+              {
+               "attributes": {},
+               "baseStyles": {
+                "flexShrink": "0",
+                "justifyContent": "space-between",
+                "overflow": "hidden",
+                "textOverflow": "ellipsis",
+                "whiteSpace": "nowrap",
+                "width": "10rem"
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {},
+               "componentId": "industry-filter-trigger",
+               "componentName": "Button",
+               "componentProps": {
+                "iconRight": "lucide-chevron-down",
+                "label": "{{ (selectedCategories.value && selectedCategories.value.length) ? selectedCategories.value.join(', ') : 'Industry' }}",
+                "variant": "outline"
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "tabletStyles": {}
+              }
+             ],
+             "slotId": "Popover-industry-filter:trigger",
+             "slotName": "trigger"
+            }
            }
           },
           {
@@ -3317,7 +4573,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-bp",
@@ -3387,7 +4643,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-impl",
@@ -3457,7 +4713,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-lang",
@@ -3527,7 +4783,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-rating",
@@ -3600,7 +4856,7 @@
                       "update:modelValue": {
                        "action": "Run Script",
                        "event": "update:modelValue",
-                       "script": "directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                       "script": "const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
                       }
                      },
                      "componentId": "Select-flt-response",
@@ -3657,7 +4913,7 @@
                   "click": {
                    "action": "Run Script",
                    "event": "click",
-                   "script": "searchTerm.value = ''; tierFilter.value = ''; countryFilter.value = ''; industryFilter.value = ''; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = ''; directoryPartners.update({ params: { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: countryFilter.value, industry: industryFilter.value, business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value } }); directoryPartners.reload();"
+                   "script": "searchTerm.value = ''; tierFilter.value = ''; selectedCountries.value = []; selectedCategories.value = []; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = ''; const params = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), category: JSON.stringify(selectedCategories.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; directoryPartners.update({ params }); directoryPartners.reload(); filterFacets.update({ params }); filterFacets.reload();"
                   }
                  },
                  "componentId": "Button-flt-clear",
@@ -5499,7 +6755,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-10 13:18:08.648739",
+ "modified": "2026-09-10 13:33:56.007184",
  "modified_by": "Administrator",
  "name": "partner_directory_redesign",
  "owner": "Administrator",
@@ -5575,6 +6831,14 @@
    "resource_name": "wizardHandoff",
    "resource_type": "API Resource",
    "url": "/api/method/connect.api.partner.list_directory_partners_for_wizard"
+  },
+  {
+   "__unsaved": 1,
+   "auto": 1,
+   "method": "GET",
+   "resource_name": "filterFacets",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.partner.list_directory_filter_facets"
   }
  ],
  "route": "/partner-directory-redesign",
@@ -5624,6 +6888,18 @@
    "initial_value": "\"\"",
    "variable_name": "maxResponseTimeFilter",
    "variable_type": "String"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "[]",
+   "variable_name": "selectedCountries",
+   "variable_type": "Object"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "[]",
+   "variable_name": "selectedCategories",
+   "variable_type": "Object"
   }
  ]
 }
