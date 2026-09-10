@@ -95,6 +95,44 @@ def recompute_rating_from_reviews(partner_name, exclude=None):
 	frappe.db.set_value("Partner", partner_name, values, update_modified=False)
 
 
+# Frappe's own /partners/regions taxonomy — used to group the directory's Country filter and to
+# guarantee every country shows up (even at count 0), not just ones with a matching partner today.
+REGION_COUNTRIES = {
+	"Asia Pacific": [
+		"India", "Philippines", "Indonesia", "Myanmar", "Pakistan", "Singapore",
+		"Australia", "Bangladesh", "China", "Sri Lanka", "Thailand", "Vietnam",
+	],
+	"Middle East": [
+		"Saudi Arabia", "UAE", "Egypt", "Qatar", "Kuwait", "Oman", "Bahrain", "Iraq", "Jordan", "Libya", "Yemen",
+	],
+	"Africa": [
+		"Kenya", "Tanzania", "Congo - Kinshasa", "Ghana", "Mauritius", "Nigeria", "South Africa", "Uganda",
+	],
+	"Europe": [
+		"Germany", "France", "Italy", "Malta", "Netherlands", "Spain", "Switzerland", "United Kingdom",
+	],
+	"Americas": ["United States", "Canada"],
+}
+
+
+def _normalize_multi(value):
+	"""A filter value arriving from the directory's multi-select facets is a JSON-array string
+	over the wire; a single string (from an older/simpler caller) stays a plain scalar so existing
+	single-value callers keep working unchanged."""
+	if value in (None, ""):
+		return None
+	if isinstance(value, (list, tuple)):
+		return list(value)
+	if isinstance(value, str) and value.strip().startswith("["):
+		try:
+			parsed = json.loads(value)
+			if isinstance(parsed, list):
+				return parsed
+		except ValueError:
+			pass
+	return value
+
+
 PARTNER_FIELDS = [
 	"name", "partner_name", "logo", "tagline", "tier", "specialist",
 	"rating", "industry", "country", "city", "rollouts", "hourly_rate",
@@ -237,12 +275,16 @@ def search_partners(
 	# while the rest of the bulk-imported directory is still bare (name/tier/
 	# country only, no logo/description/team). Remove this filter to bring the
 	# full directory back — is_featured stays set on the underlying records.
+	industry = _normalize_multi(industry)
+	country = _normalize_multi(country)
+	category = _normalize_multi(category)
+
 	filters = list(BASE_PARTNER_FILTERS)
 	for value, field in [
 		(industry, "industry"), (region, "region"), (country, "country"), (tier, "tier"),
 	]:
 		if value:
-			filters.append(["Partner", field, "=", value])
+			filters.append(["Partner", field, "in" if isinstance(value, list) else "=", value])
 
 	# Child-table filters resolve via a membership subquery (_partners_matching_child), not
 	# Frappe's built-in child-table join filter syntax — combining 2+ such filters as native join
@@ -257,7 +299,8 @@ def search_partners(
 		(category, "Partner Success Story", "category", "success_stories"),
 	]:
 		if value:
-			child_matches.append(_partners_matching_child(doctype, field, "=", value, parentfield=parentfield))
+			op = "in" if isinstance(value, list) else "="
+			child_matches.append(_partners_matching_child(doctype, field, op, value, parentfield=parentfield))
 	if child_matches:
 		filters.append(["Partner", "name", "in", list(set.intersection(*child_matches))])
 
@@ -582,7 +625,7 @@ def _decorate_directory_rows(rows):
 
 
 def list_directory_partners(
-	limit=9, search=None, tier=None, country=None, industry=None,
+	limit=9, search=None, tier=None, country=None, industry=None, category=None,
 	business_process=None, implementation_type=None, language=None,
 	min_rating=None, max_response_time=None,
 ):
@@ -590,9 +633,10 @@ def list_directory_partners(
 	for the Partner Directory redesign's card list and its filter row. Filtering/search/ordering is
 	delegated to search_partners — the same engine behind the Find Partners page — so both stay
 	consistent; this only adds the review_count/success-story preview fields the card list needs on
-	top, same as before this had its own filters."""
+	top, same as before this had its own filters. `country`/`category` accept either a single value
+	or a JSON array (the Region/Industry filters' multi-select)."""
 	rows = search_partners(
-		search=search, tier=tier, country=country, industry=industry,
+		search=search, tier=tier, country=country, industry=industry, category=category,
 		business_process=business_process, implementation_type=implementation_type, language=language,
 		min_rating=min_rating, max_response_time=max_response_time,
 		limit=cint(limit) or 9,
@@ -616,6 +660,86 @@ def list_directory_partners_for_wizard(industry=None, category=None, limit=9):
 	return {
 		"matches": _decorate_directory_rows(matches),
 		"fallback": _decorate_directory_rows(fallback),
+	}
+
+
+def list_country_facets(search=None, tier=None, industry=None, category=None,
+	business_process=None, implementation_type=None, language=None,
+	min_rating=None, max_response_time=None):
+	"""Country counts for the Directory's Region>Country multi-select, computed with every OTHER
+	active filter applied but NOT country itself — so checking a country never shrinks its own
+	sibling counts, only what the other facets (industry, tier, ...) show. Grouped under
+	REGION_COUNTRIES so every real country appears (even at 0), not just ones a partner happens to
+	be in today."""
+	rows = search_partners(
+		search=search, tier=tier, industry=industry, category=category,
+		business_process=business_process, implementation_type=implementation_type, language=language,
+		min_rating=min_rating, max_response_time=max_response_time, limit=10000,
+	)
+	counts = Counter((r.country or "").strip() for r in rows)
+	return [
+		{"region": region, "options": [{"value": c, "count": counts.get(c, 0)} for c in countries]}
+		for region, countries in REGION_COUNTRIES.items()
+	]
+
+
+def list_industry_facets(search=None, tier=None, country=None,
+	business_process=None, implementation_type=None, language=None,
+	min_rating=None, max_response_time=None):
+	"""Industry>Segment counts for the Directory's Industry multi-select, computed with every OTHER
+	active filter applied but not industry/category themselves. Groups are Partner.industry's real
+	values; each group's children are whichever success-story categories actually occur among that
+	industry's matching partners — derived from real data instead of a hand-guessed taxonomy, since
+	our success-story categories (scraped from frappe.io) don't map cleanly onto the industry
+	Select's own vocabulary (e.g. "Automotive Manufacturing" vs the Select's "Manufacturing")."""
+	rows = search_partners(
+		search=search, tier=tier, country=country,
+		business_process=business_process, implementation_type=implementation_type, language=language,
+		min_rating=min_rating, max_response_time=max_response_time, limit=10000,
+	)
+	names = [r.name for r in rows]
+	industry_counts = Counter(r.industry for r in rows if r.industry)
+
+	categories_by_partner = {}
+	if names:
+		for row in frappe.get_all(
+			"Partner Success Story", filters={"parent": ["in", names]}, fields=["parent", "category"]
+		):
+			if row.category:
+				categories_by_partner.setdefault(row.parent, set()).add(row.category)
+
+	facets = []
+	for industry, group_count in industry_counts.most_common():
+		group_names = [r.name for r in rows if r.industry == industry]
+		category_counts = Counter()
+		for pname in group_names:
+			for cat in categories_by_partner.get(pname, ()):
+				category_counts[cat] += 1
+		facets.append({
+			"industry": industry,
+			"count": group_count,
+			"options": [
+				{"value": cat, "count": n} for cat, n in sorted(category_counts.items(), key=lambda kv: -kv[1])
+			],
+		})
+	return facets
+
+
+def list_directory_filter_facets(search=None, tier=None, industry=None, country=None, category=None,
+	business_process=None, implementation_type=None, language=None,
+	min_rating=None, max_response_time=None):
+	"""Both facet panels in one call, so the Directory's filter row only needs one resource."""
+	return {
+		"regions": list_country_facets(
+			search=search, tier=tier, industry=industry, category=category,
+			business_process=business_process, implementation_type=implementation_type, language=language,
+			min_rating=min_rating, max_response_time=max_response_time,
+		),
+		"industries": list_industry_facets(
+			search=search, tier=tier, country=country,
+			business_process=business_process, implementation_type=implementation_type, language=language,
+			min_rating=min_rating, max_response_time=max_response_time,
+		),
 	}
 
 
