@@ -1935,7 +1935,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "// TODO: wire to connect.api.partner.search_partners / matching wizard once backend integration starts"
+                 "script": "const params = new URLSearchParams();\nif (selectedIndustry.value) params.set('industry', selectedIndustry.value);\nif (selectedSegment.value) params.set('category', selectedSegment.value);\nwindow.location.href = '/connect/partner-directory-redesign' + (params.toString() ? ('?' + params.toString()) : '');"
                 }
                },
                "componentId": "primary-btn-bbe3cca0",
@@ -2653,7 +2653,6 @@
                   {
                    "baseStyles": {
                     "color": "var(--ink-gray-6)",
-                    "display": "none",
                     "marginBottom": "4px"
                    },
                    "children": [],
@@ -2677,6 +2676,7 @@
                      "name": "selectedSegment"
                     },
                     "options": [
+                     "Pick one",
                      "Automotive Manufacturing",
                      "Chemical Manufacturing",
                      "Discrete Manufacturing",
@@ -2689,8 +2689,7 @@
                      "Process Manufacturing",
                      "Steel Manufacturing",
                      "Textile Manufacturing"
-                    ],
-                    "placeholder": "All segments"
+                    ]
                    }
                   }
                  ],
@@ -2793,7 +2792,6 @@
                   {
                    "baseStyles": {
                     "color": "var(--ink-gray-6)",
-                    "display": "none",
                     "marginBottom": "4px"
                    },
                    "children": [],
@@ -2817,18 +2815,11 @@
                      "name": "selectedSegment"
                     },
                     "options": [
-                     "Aviation Industry",
-                     "Education",
-                     "Finance",
-                     "Government",
-                     "Hospitality",
-                     "Logistics",
-                     "Nonprofit",
-                     "Professional services",
-                     "Real Estate",
-                     "Rental Business"
-                    ],
-                    "placeholder": "All segments"
+                     "Pick one",
+                     "Segment A",
+                     "Segment B",
+                     "Segment C"
+                    ]
                    }
                   }
                  ],
@@ -2931,7 +2922,6 @@
                   {
                    "baseStyles": {
                     "color": "var(--ink-gray-6)",
-                    "display": "none",
                     "marginBottom": "4px"
                    },
                    "children": [],
@@ -2955,12 +2945,11 @@
                      "name": "selectedSegment"
                     },
                     "options": [
-                     "Distribution",
-                     "E-commerce",
-                     "Fast Moving Consumer Goods",
-                     "Retail"
-                    ],
-                    "placeholder": "All segments"
+                     "Pick one",
+                     "Segment A",
+                     "Segment B",
+                     "Segment C"
+                    ]
                    }
                   }
                  ],
@@ -3063,7 +3052,6 @@
                   {
                    "baseStyles": {
                     "color": "var(--ink-gray-6)",
-                    "display": "none",
                     "marginBottom": "4px"
                    },
                    "children": [],
@@ -3087,10 +3075,11 @@
                      "name": "selectedSegment"
                     },
                     "options": [
-                     "Agriculture",
-                     "Engineering and Construction"
-                    ],
-                    "placeholder": "All segments"
+                     "Pick one",
+                     "Segment A",
+                     "Segment B",
+                     "Segment C"
+                    ]
                    }
                   }
                  ],
@@ -4016,27 +4005,6 @@
              },
              "children": [
               {
-               "baseStyles": {
-                "backgroundColor": "var(--ink-gray-9, #171717)",
-                "minWidth": "110px"
-               },
-               "children": [],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "// TODO: wire to connect.api.partner.search_partners / matching wizard once backend integration starts"
-                }
-               },
-               "componentId": "primary-btn-bbe3cca0",
-               "componentName": "Button",
-               "componentProps": {
-                "label": "Find partners",
-                "variant": "solid"
-               }
-              },
-              {
                "children": [],
                "classes": [],
                "componentEvents": {
@@ -4051,6 +4019,26 @@
                "componentProps": {
                 "label": "Back",
                 "variant": "subtle"
+               }
+              },
+              {
+               "baseStyles": {
+                "backgroundColor": "var(--ink-gray-9, #171717)"
+               },
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "const params = new URLSearchParams();\nif (selectedIndustry.value) params.set('industry', selectedIndustry.value);\nif (selectedSegment.value) params.set('category', selectedSegment.value);\nwindow.location.href = '/connect/partner-directory-redesign' + (params.toString() ? ('?' + params.toString()) : '');"
+                }
+               },
+               "componentId": "primary-btn-bbe3cca0",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "Find partners",
+                "variant": "solid"
                }
               }
              ],
@@ -4399,7 +4387,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-10 12:55:53.629014",
+ "modified": "2026-09-10 13:14:56.774767",
  "modified_by": "Administrator",
  "name": "find_partners_redesign",
  "owner": "Administrator",
@@ -4446,7 +4434,7 @@
    "variable_type": "String"
   },
   {
-   "initial_value": "1",
+   "initial_value": "3",
    "variable_name": "wizardStep",
    "variable_type": "Number"
   },
