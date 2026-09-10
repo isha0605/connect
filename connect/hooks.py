@@ -195,6 +195,7 @@ doc_events = {
 		"after_insert": [
 			"connect.notifications.notify_thread_members",
 			"connect.notifications.sync_thread_last_message",
+			"connect.notifications.notify_partner_of_new_requirement",
 			"connect.crm_integration.queue_crm_lead_sync",
 		],
 	},

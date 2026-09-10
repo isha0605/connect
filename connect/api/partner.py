@@ -43,9 +43,55 @@ def list_matching_partners(answers=None, limit=8):
 
 
 @frappe.whitelist(allow_guest=True)
+def region_presence_counts():
+	from connect.partner.doctype.partner.partner import region_presence_counts
+	return region_presence_counts()
+
+
+@frappe.whitelist(allow_guest=True)
+def list_directory_partners(
+	limit=9, search=None, tier=None, country=None, industry=None, category=None,
+	business_process=None, implementation_type=None, language=None,
+	min_rating=None, max_response_time=None, exclude=None,
+):
+	from connect.partner.doctype.partner.partner import list_directory_partners
+	return list_directory_partners(
+		limit=limit, search=search, tier=tier, country=country, industry=industry, category=category,
+		business_process=business_process, implementation_type=implementation_type, language=language,
+		min_rating=min_rating, max_response_time=max_response_time, exclude=exclude,
+	)
+
+
+@frappe.whitelist(allow_guest=True)
+def list_directory_filter_facets(
+	search=None, tier=None, industry=None, country=None, category=None,
+	business_process=None, implementation_type=None, language=None,
+	min_rating=None, max_response_time=None,
+):
+	from connect.partner.doctype.partner.partner import list_directory_filter_facets
+	return list_directory_filter_facets(
+		search=search, tier=tier, industry=industry, country=country, category=category,
+		business_process=business_process, implementation_type=implementation_type, language=language,
+		min_rating=min_rating, max_response_time=max_response_time,
+	)
+
+
+@frappe.whitelist(allow_guest=True)
+def list_partner_tiers():
+	from connect.partner.doctype.partner.partner import list_partner_tiers
+	return list_partner_tiers()
+
+
+@frappe.whitelist(allow_guest=True)
 def list_partner_countries():
 	from connect.partner.doctype.partner.partner import list_partner_countries
 	return list_partner_countries()
+
+
+@frappe.whitelist(allow_guest=True)
+def list_partner_industries():
+	from connect.partner.doctype.partner.partner import list_partner_industries
+	return list_partner_industries()
 
 
 @frappe.whitelist(allow_guest=True)

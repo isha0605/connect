@@ -3,12 +3,15 @@
 
 import json
 import math
+from collections import Counter
 
 import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, flt, now_datetime, validate_email_address
 
+from connect.partner.logo import attach_normalized_logos
+from connect.partner.story_image import queue_missing_story_images
 from connect.permissions import _my_company_membership
 
 COUNTRY_TO_REGION = {
@@ -66,6 +69,11 @@ class Partner(Document):
 	def before_save(self):
 		self.region = COUNTRY_TO_REGION.get((self.country or "").strip().lower(), "Other")
 
+	def on_update(self):
+		# background-fetches each success story's own frappe.io cover photo —
+		# never blocks this save, and no-ops for rows that already have one
+		queue_missing_story_images(self.get("success_stories"))
+
 
 def recompute_rating_from_reviews(partner_name, exclude=None):
 	"""Recomputes a Partner's rating and dimension scores from its Partner Review records."""
@@ -85,6 +93,44 @@ def recompute_rating_from_reviews(partner_name, exclude=None):
 		values[f"{dimension}_score"] = sum(dim_values) / len(dim_values) if dim_values else 0
 
 	frappe.db.set_value("Partner", partner_name, values, update_modified=False)
+
+
+# Frappe's own /partners/regions taxonomy — used to group the directory's Country filter and to
+# guarantee every country shows up (even at count 0), not just ones with a matching partner today.
+REGION_COUNTRIES = {
+	"Asia Pacific": [
+		"India", "Philippines", "Indonesia", "Myanmar", "Pakistan", "Singapore",
+		"Australia", "Bangladesh", "China", "Sri Lanka", "Thailand", "Vietnam",
+	],
+	"Middle East": [
+		"Saudi Arabia", "UAE", "Egypt", "Qatar", "Kuwait", "Oman", "Bahrain", "Iraq", "Jordan", "Libya", "Yemen",
+	],
+	"Africa": [
+		"Kenya", "Tanzania", "Congo - Kinshasa", "Ghana", "Mauritius", "Nigeria", "South Africa", "Uganda",
+	],
+	"Europe": [
+		"Germany", "France", "Italy", "Malta", "Netherlands", "Spain", "Switzerland", "United Kingdom",
+	],
+	"Americas": ["United States", "Canada"],
+}
+
+
+def _normalize_multi(value):
+	"""A filter value arriving from the directory's multi-select facets is a JSON-array string
+	over the wire; a single string (from an older/simpler caller) stays a plain scalar so existing
+	single-value callers keep working unchanged."""
+	if value in (None, ""):
+		return None
+	if isinstance(value, (list, tuple)):
+		return list(value)
+	if isinstance(value, str) and value.strip().startswith("["):
+		try:
+			parsed = json.loads(value)
+			if isinstance(parsed, list):
+				return parsed
+		except ValueError:
+			pass
+	return value
 
 
 PARTNER_FIELDS = [
@@ -219,6 +265,7 @@ FILTER_OPERATORS = {"is", "is not", "in", "not in", "=", "!=", "like", "not like
 def search_partners(
 	search=None, industry=None, product=None, region=None, delivery_mode=None, country=None,
 	tier=None, business_process=None, implementation_type=None, language=None,
+	category=None, exclude=None,
 	min_rating=None, min_pmm_level=None, max_response_time=None,
 	extra_filters=None,
 	sort=None, limit=100,
@@ -228,12 +275,16 @@ def search_partners(
 	# while the rest of the bulk-imported directory is still bare (name/tier/
 	# country only, no logo/description/team). Remove this filter to bring the
 	# full directory back — is_featured stays set on the underlying records.
+	industry = _normalize_multi(industry)
+	country = _normalize_multi(country)
+	category = _normalize_multi(category)
+
 	filters = list(BASE_PARTNER_FILTERS)
 	for value, field in [
 		(industry, "industry"), (region, "region"), (country, "country"), (tier, "tier"),
 	]:
 		if value:
-			filters.append(["Partner", field, "=", value])
+			filters.append(["Partner", field, "in" if isinstance(value, list) else "=", value])
 
 	# Child-table filters resolve via a membership subquery (_partners_matching_child), not
 	# Frappe's built-in child-table join filter syntax — combining 2+ such filters as native join
@@ -245,11 +296,17 @@ def search_partners(
 		(business_process, "Partner Business Process", "business_process", None),
 		(implementation_type, "Partner Implementation Type", "implementation_type", None),
 		(language, "Partner Language", "language", None),
+		(category, "Partner Success Story", "category", "success_stories"),
 	]:
 		if value:
-			child_matches.append(_partners_matching_child(doctype, field, "=", value, parentfield=parentfield))
+			op = "in" if isinstance(value, list) else "="
+			child_matches.append(_partners_matching_child(doctype, field, op, value, parentfield=parentfield))
 	if child_matches:
 		filters.append(["Partner", "name", "in", list(set.intersection(*child_matches))])
+
+	exclude = _normalize_multi(exclude)
+	if exclude:
+		filters.append(["Partner", "name", "not in", exclude if isinstance(exclude, list) else [exclude]])
 
 	if min_rating not in (None, ""):
 		filters.append(["Partner", "rating", ">=", flt(min_rating)])
@@ -528,12 +585,174 @@ def list_matching_partners(answers=None, limit=8):
 	return result
 
 
+def region_presence_counts():
+	"""Returns partner counts for the Find Partners redesign's region map, bucketed into the
+	map's 6 regions (finer-grained than the Region select field — India is split out of Asia
+	Pacific to match the map's own regions). Counts the full enabled directory, not just the
+	is_featured-curated subset search_partners currently scopes to, since this is a presence
+	overview rather than a list of profiles to show."""
+	rows = frappe.get_all("Partner", fields=["country", "region"], filters={"enabled": 1})
+
+	counts = {"india": 0, "asia": 0, "middle_east": 0, "africa": 0, "europe": 0, "americas": 0}
+	for row in rows:
+		if (row.country or "").strip().lower() == "india":
+			counts["india"] += 1
+		elif row.region == "Asia Pacific":
+			counts["asia"] += 1
+		elif row.region == "Middle East":
+			counts["middle_east"] += 1
+		elif row.region == "Africa":
+			counts["africa"] += 1
+		elif row.region == "Europe":
+			counts["europe"] += 1
+		elif row.region in ("North America", "Latin America"):
+			counts["americas"] += 1
+		# region "Oceania"/"Other" partners aren't represented in any of the map's 6 regions
+	return counts
+
+
+def _decorate_directory_rows(rows):
+	"""Adds the review_count/success-story preview fields the directory card list needs on top of
+	whatever search_partners already returned. Shared by list_directory_partners and the wizard
+	hand-off (list_directory_partners_for_wizard) so both render identical cards."""
+	names = [r.name for r in rows]
+	review_partners = frappe.get_all("Partner Review", filters={"partner": ["in", names]}, pluck="partner") if names else []
+	review_counts = Counter(review_partners)
+	for row in rows:
+		row["review_count"] = review_counts.get(row.name, 0)
+
+	attach_success_story_previews(rows)
+	return rows
+
+
+def list_directory_partners(
+	limit=9, search=None, tier=None, country=None, industry=None, category=None,
+	business_process=None, implementation_type=None, language=None,
+	min_rating=None, max_response_time=None, exclude=None,
+):
+	"""Returns featured partners (name, logo, tier, rating, rate, response time, success stories)
+	for the Partner Directory redesign's card list and its filter row. Filtering/search/ordering is
+	delegated to search_partners — the same engine behind the Find Partners page — so both stay
+	consistent; this only adds the review_count/success-story preview fields the card list needs on
+	top, same as before this had its own filters. `country`/`category` accept either a single value
+	or a JSON array (the Region/Industry filters' multi-select). `exclude` (name not-in) is what
+	the "Proven in other industries" section uses to call this same function a second time with
+	category dropped, without repeating whoever's already shown in the main list."""
+	rows = search_partners(
+		search=search, tier=tier, country=country, industry=industry, category=category,
+		business_process=business_process, implementation_type=implementation_type, language=language,
+		min_rating=min_rating, max_response_time=max_response_time, exclude=exclude,
+		limit=cint(limit) or 9,
+	)
+	return _decorate_directory_rows(rows)
+
+
+def list_country_facets(search=None, tier=None, industry=None, category=None,
+	business_process=None, implementation_type=None, language=None,
+	min_rating=None, max_response_time=None):
+	"""Country counts for the Directory's Region>Country multi-select, computed with every OTHER
+	active filter applied but NOT country itself — so checking a country never shrinks its own
+	sibling counts, only what the other facets (industry, tier, ...) show. Grouped under
+	REGION_COUNTRIES so every real country appears (even at 0), not just ones a partner happens to
+	be in today."""
+	rows = search_partners(
+		search=search, tier=tier, industry=industry, category=category,
+		business_process=business_process, implementation_type=implementation_type, language=language,
+		min_rating=min_rating, max_response_time=max_response_time, limit=10000,
+	)
+	counts = Counter((r.country or "").strip() for r in rows)
+	return [
+		{"region": region, "options": [{"value": c, "count": counts.get(c, 0)} for c in countries]}
+		for region, countries in REGION_COUNTRIES.items()
+	]
+
+
+def list_industry_facets(search=None, tier=None, country=None,
+	business_process=None, implementation_type=None, language=None,
+	min_rating=None, max_response_time=None):
+	"""Industry>Segment counts for the Directory's Industry multi-select, computed with every OTHER
+	active filter applied but not industry/category themselves. Groups are Partner.industry's real
+	values; each group's children are whichever success-story categories actually occur among that
+	industry's matching partners — derived from real data instead of a hand-guessed taxonomy, since
+	our success-story categories (scraped from frappe.io) don't map cleanly onto the industry
+	Select's own vocabulary (e.g. "Automotive Manufacturing" vs the Select's "Manufacturing")."""
+	rows = search_partners(
+		search=search, tier=tier, country=country,
+		business_process=business_process, implementation_type=implementation_type, language=language,
+		min_rating=min_rating, max_response_time=max_response_time, limit=10000,
+	)
+	names = [r.name for r in rows]
+	industry_counts = Counter(r.industry for r in rows if r.industry)
+
+	categories_by_partner = {}
+	if names:
+		for row in frappe.get_all(
+			"Partner Success Story", filters={"parent": ["in", names]}, fields=["parent", "category"]
+		):
+			if row.category:
+				categories_by_partner.setdefault(row.parent, set()).add(row.category)
+
+	facets = []
+	for industry, group_count in industry_counts.most_common():
+		group_names = [r.name for r in rows if r.industry == industry]
+		category_counts = Counter()
+		for pname in group_names:
+			for cat in categories_by_partner.get(pname, ()):
+				category_counts[cat] += 1
+		facets.append({
+			"industry": industry,
+			"count": group_count,
+			"options": [
+				{"value": cat, "count": n} for cat, n in sorted(category_counts.items(), key=lambda kv: -kv[1])
+			],
+		})
+	return facets
+
+
+def list_directory_filter_facets(search=None, tier=None, industry=None, country=None, category=None,
+	business_process=None, implementation_type=None, language=None,
+	min_rating=None, max_response_time=None):
+	"""Both facet panels in one call, so the Directory's filter row only needs one resource."""
+	return {
+		"regions": list_country_facets(
+			search=search, tier=tier, industry=industry, category=category,
+			business_process=business_process, implementation_type=implementation_type, language=language,
+			min_rating=min_rating, max_response_time=max_response_time,
+		),
+		"industries": list_industry_facets(
+			search=search, tier=tier, country=country,
+			business_process=business_process, implementation_type=implementation_type, language=language,
+			min_rating=min_rating, max_response_time=max_response_time,
+		),
+	}
+
+
+def list_partner_tiers():
+	"""Returns the tiers actually in use among directory-listed partners (same is_featured/enabled
+	scope as list_directory_partners), in Gold/Silver/Bronze order, for the Tier filter dropdown."""
+	rows = frappe.get_all("Partner", fields=["tier"], filters=BASE_PARTNER_FILTERS, distinct=True)
+	present = {row.tier for row in rows if row.tier}
+	tier_order = ["Gold", "Silver", "Bronze"]
+	return [t for t in tier_order if t in present]
+
+
 def list_partner_countries():
 	"""Returns distinct countries with at least one partner, for the Country filter dropdown."""
 	rows = frappe.get_all(
 		"Partner", fields=["country"], filters={"country": ["is", "set"], "is_featured": 1, "enabled": 1}, distinct=True
 	)
 	return sorted({row.country for row in rows if row.country})
+
+
+def list_partner_industries():
+	"""Returns distinct industries actually in use among directory-listed partners (same
+	is_featured/enabled scope as list_directory_partners), for the Industry filter dropdown —
+	deliberately not the Partner.industry Select's full static option list, so a value with zero
+	partners behind it (e.g. "Nonprofit") doesn't show up as a dead-end filter."""
+	rows = frappe.get_all(
+		"Partner", fields=["industry"], filters={"industry": ["is", "set"], "is_featured": 1, "enabled": 1}, distinct=True
+	)
+	return sorted({row.industry for row in rows if row.industry})
 
 
 def list_partner_filter_options():
@@ -596,6 +815,9 @@ def get_partner_document(partner):
 		now_datetime().year - doc["year_founded"] if doc.get("year_founded") else None
 	)
 	doc["display_industries"] = _compute_display_industries(doc.get("industry"), doc.get("success_stories"))
+	# adds client_logo_display per success story — a greyscale-normalized copy of
+	# the client logo where one has been built, else the original URL
+	attach_normalized_logos(doc.get("success_stories"))
 	return doc
 
 
