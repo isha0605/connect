@@ -1004,7 +1004,7 @@
        "children": [
         {
          "baseStyles": {
-          "display": "{{ directoryPartners.data ? 'block' : 'none' }}",
+          "display": "{{ (route.query.category ? ((wizardHandoff.data && wizardHandoff.data.matches && wizardHandoff.data.matches.length) ? 'block' : 'none') : (directoryPartners.data ? 'block' : 'none')) }}",
           "isolation": "isolate"
          },
          "children": [
@@ -1028,7 +1028,7 @@
              "componentId": "ListRows-91e783f6b",
              "componentName": "ListRows",
              "componentProps": {
-              "items": "{{ directoryPartners.data || [] }}",
+              "items": "{{ (route.query.category ? ((wizardHandoff.data && wizardHandoff.data.matches) || []) : (directoryPartners.data || [])) }}",
               "rowKey": "name"
              },
              "componentSlots": {
@@ -1616,6 +1616,667 @@
           "divider": "full",
           "rowHeight": 142
          }
+        },
+        {
+         "baseStyles": {
+          "borderTop": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+          "display": "{{ (route.query.category && wizardHandoff.data && wizardHandoff.data.fallback && wizardHandoff.data.fallback.length) ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "marginTop": "32px",
+          "paddingTop": "24px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-9)",
+            "fontWeight": "600",
+            "marginBottom": "4px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "wizard-fallback-heading",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "span",
+            "text": "Proven in other industries"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-6)",
+            "marginBottom": "12px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "wizard-fallback-message",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "{{ 'No published ' + (route.query.category || '') + ' work yet.' }}"
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "{{ (wizardHandoff.data && wizardHandoff.data.fallback && wizardHandoff.data.fallback.length) ? 'block' : 'none' }}",
+            "isolation": "isolate"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "flex-start",
+              "display": "flex",
+              "flexDirection": "column",
+              "flexShrink": 1,
+              "flexWrap": "nowrap",
+              "gap": "8px",
+              "height": "fit-content",
+              "justifyContent": "flex-start",
+              "width": "100%"
+             },
+             "blockName": "container",
+             "children": [
+              {
+               "children": [],
+               "classes": [],
+               "componentId": "ListRows-91e783f6b-fb",
+               "componentName": "ListRows",
+               "componentProps": {
+                "items": "{{ (wizardHandoff.data && wizardHandoff.data.fallback) || [] }}",
+                "rowKey": "name"
+               },
+               "componentSlots": {
+                "default": {
+                 "parentBlockId": "ListRows-91e783f6b-fb",
+                 "slotContent": [
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "flexWrap": "nowrap",
+                    "gap": "20px",
+                    "paddingBlock": "12px"
+                   },
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {},
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "backgroundColor": "var(--surface-base, oklch(1 0 0))",
+                        "backgroundImage": "{{ item.logo ? 'url(\"' + item.logo + '\")' : 'none' }}",
+                        "backgroundPosition": "center",
+                        "backgroundRepeat": "no-repeat",
+                        "backgroundSize": "contain",
+                        "borderColor": "var(--outline-gray-3, oklch(0.83 0 0))",
+                        "borderRadius": "6px",
+                        "borderStyle": "solid",
+                        "borderWidth": "1px",
+                        "display": "flex",
+                        "flexShrink": "0",
+                        "height": "52px",
+                        "justifyContent": "center",
+                        "margin": "5px",
+                        "overflow": "hidden",
+                        "padding": "0px",
+                        "width": "52px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6)",
+                          "display": "{{ item.logo ? 'none' : 'flex' }}",
+                          "fontWeight": "600"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "LogoView-gold-initial-fb",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-sm",
+                          "tag": "span",
+                          "text": "{{ (item.partner_name || '?').charAt(0).toUpperCase() }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "LogoView-gold-fb",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "ListCell-avatar-gold-fb",
+                     "componentName": "ListCell",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "gap": "0px",
+                      "gridRow": "span 1",
+                      "margin": "0px"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "gap": "8px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "flexWrap": "wrap",
+                          "gap": "10px"
+                         },
+                         "children": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "color": "var(--ink-gray-8)",
+                            "fontWeight": "600"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-name-fb",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-base",
+                            "tag": "span",
+                            "text": "{{ item.partner_name }}"
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          },
+                          {
+                           "attributes": {},
+                           "baseStyles": {},
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-tier-badge-fb",
+                           "componentName": "Badge",
+                           "componentProps": {
+                            "label": "{{ item.tier }}",
+                            "theme": "{{ item.tier === 'Gold' ? 'amber' : item.tier === 'Silver' ? 'gray' : item.tier === 'Bronze' ? 'orange' : 'gray' }}",
+                            "variant": "subtle"
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-name-row-fb",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "gap": "4px"
+                         },
+                         "children": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "flexShrink": "0",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-location-icon-fb",
+                           "componentName": "FeatherIcon",
+                           "componentProps": {
+                            "color": "var(--ink-gray-5)",
+                            "name": "map-pin",
+                            "strokeWidth": 2
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          },
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-location-text-fb",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-xs",
+                            "tag": "span",
+                            "text": "{{ item.city ? item.city + ', ' + item.country : item.country }}"
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-location-fb",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "flexWrap": "wrap",
+                          "gap": "24px"
+                         },
+                         "children": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "flexDirection": "row",
+                            "gap": "4px"
+                           },
+                           "children": [
+                            {
+                             "attributes": {},
+                             "baseStyles": {
+                              "flexShrink": "0",
+                              "height": "12px",
+                              "width": "12px"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentEvents": {},
+                             "componentId": "row-gold-rate-icon-fb",
+                             "componentName": "FeatherIcon",
+                             "componentProps": {
+                              "color": "var(--ink-gray-5)",
+                              "name": "tag",
+                              "strokeWidth": 2
+                             },
+                             "componentSlots": {},
+                             "mobileStyles": {},
+                             "tabletStyles": {}
+                            },
+                            {
+                             "attributes": {},
+                             "baseStyles": {
+                              "color": "var(--ink-gray-5)"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentEvents": {},
+                             "componentId": "row-gold-rate-text-fb",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-xs",
+                              "tag": "span",
+                              "text": "{{ item.hourly_rate ? ('From \u20b9' + Number(item.hourly_rate).toLocaleString('en-IN') + '/hr') : 'Rate on request' }}"
+                             },
+                             "componentSlots": {},
+                             "mobileStyles": {},
+                             "tabletStyles": {}
+                            }
+                           ],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-rate-fb",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "originalElement": "div",
+                           "tabletStyles": {}
+                          },
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "flexDirection": "row",
+                            "gap": "4px"
+                           },
+                           "children": [
+                            {
+                             "attributes": {},
+                             "baseStyles": {
+                              "flexShrink": "0",
+                              "height": "12px",
+                              "width": "12px"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentEvents": {},
+                             "componentId": "row-gold-rating-icon-fb",
+                             "componentName": "FeatherIcon",
+                             "componentProps": {
+                              "color": "var(--ink-gray-5)",
+                              "name": "star",
+                              "strokeWidth": 2
+                             },
+                             "componentSlots": {},
+                             "mobileStyles": {},
+                             "tabletStyles": {}
+                            },
+                            {
+                             "attributes": {},
+                             "baseStyles": {
+                              "color": "var(--ink-gray-5)"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentEvents": {},
+                             "componentId": "row-gold-rating-text-fb",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-xs",
+                              "tag": "span",
+                              "text": "{{ item.rating ? item.rating + ' (' + (item.review_count || 0) + ')' : 'No ratings yet' }}"
+                             },
+                             "componentSlots": {},
+                             "mobileStyles": {},
+                             "tabletStyles": {}
+                            }
+                           ],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-rating-fb",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "originalElement": "div",
+                           "tabletStyles": {}
+                          },
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "{{ item.response_time_hours ? 'flex' : 'none' }}",
+                            "flexDirection": "row",
+                            "gap": "4px"
+                           },
+                           "children": [
+                            {
+                             "attributes": {},
+                             "baseStyles": {
+                              "flexShrink": "0",
+                              "height": "12px",
+                              "width": "12px"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentEvents": {},
+                             "componentId": "row-gold-response-icon-fb",
+                             "componentName": "FeatherIcon",
+                             "componentProps": {
+                              "color": "var(--ink-gray-5)",
+                              "name": "clock",
+                              "strokeWidth": 2
+                             },
+                             "componentSlots": {},
+                             "mobileStyles": {},
+                             "tabletStyles": {}
+                            },
+                            {
+                             "attributes": {},
+                             "baseStyles": {
+                              "color": "var(--ink-gray-5)"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentEvents": {},
+                             "componentId": "row-gold-response-text-fb",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-xs",
+                              "tag": "span",
+                              "text": "{{ 'Typically ' + item.response_time_hours + 'h' }}"
+                             },
+                             "componentSlots": {},
+                             "mobileStyles": {},
+                             "tabletStyles": {}
+                            }
+                           ],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-response-fb",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "originalElement": "div",
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-stats-row-fb",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-5)",
+                          "display": "{{ item.success_story_count ? 'block' : 'none' }}"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-stories-fb",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.success_story_count + ' success ' + (item.success_story_count === 1 ? 'story' : 'stories') + ' across ' + (item.success_story_categories || []).slice(0, 3).join(', ') + ((item.success_story_categories || []).length > 3 ? ' +' + ((item.success_story_categories.length) - 3) + ' more' : '') }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "row-gold-details-fb",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "ListCell-details-gold-fb",
+                     "componentName": "ListCell",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {},
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "gap": "8px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "color": "{{ (myShortlist.data || []).includes(item.name) ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}",
+                          "display": "flex",
+                          "flexShrink": "0",
+                          "height": "32px",
+                          "justifyContent": "center",
+                          "width": "32px"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                          }
+                         },
+                         "componentId": "Button-shortlist-gold-fb",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "icon": "{{ (myShortlist.data || []).includes(item.name) ? 'lucide-bookmark-check' : 'lucide-bookmark' }}",
+                          "size": "md",
+                          "variant": "ghost"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6, oklch(0.439 0 0))"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.contact.start_partner_thread', { partner: item.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                          }
+                         },
+                         "componentId": "Button-contact-gold-fb",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "iconLeft": "lucide-send",
+                          "label": "Connect",
+                          "variant": "subtle"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "row-gold-actions-fb",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "ListCell-actions-gold-fb",
+                     "componentName": "ListCell",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "ListRow-gold-fb",
+                   "componentName": "ListRow",
+                   "componentProps": {
+                    "to": "{{ '/partner-profile/' + item.name }}",
+                    "value": "{{ value }}"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "slotId": "ListRows-0836d29f6:default",
+                 "slotName": "default"
+                }
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "container-npica7qj3-fb",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "List-pd-fb",
+           "componentName": "List",
+           "componentProps": {
+            "columns": [
+             "auto",
+             "minmax(0,1fr)",
+             "auto"
+            ],
+            "divider": "full",
+            "rowHeight": 142
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "wizard-fallback-section",
+         "componentName": "container",
+         "originalElement": "div"
         }
        ],
        "classes": [],
@@ -3094,7 +3755,7 @@
        "children": [
         {
          "baseStyles": {
-          "display": "{{ directoryPartners.data ? 'block' : 'none' }}",
+          "display": "{{ (route.query.category ? ((wizardHandoff.data && wizardHandoff.data.matches && wizardHandoff.data.matches.length) ? 'block' : 'none') : (directoryPartners.data ? 'block' : 'none')) }}",
           "isolation": "isolate"
          },
          "children": [
@@ -3118,7 +3779,7 @@
              "componentId": "ListRows-91e783f6b",
              "componentName": "ListRows",
              "componentProps": {
-              "items": "{{ directoryPartners.data || [] }}",
+              "items": "{{ (route.query.category ? ((wizardHandoff.data && wizardHandoff.data.matches) || []) : (directoryPartners.data || [])) }}",
               "rowKey": "name"
              },
              "componentSlots": {
@@ -3706,6 +4367,667 @@
           "divider": "full",
           "rowHeight": 142
          }
+        },
+        {
+         "baseStyles": {
+          "borderTop": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
+          "display": "{{ (route.query.category && wizardHandoff.data && wizardHandoff.data.fallback && wizardHandoff.data.fallback.length) ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "marginTop": "32px",
+          "paddingTop": "24px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-9)",
+            "fontWeight": "600",
+            "marginBottom": "4px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "wizard-fallback-heading",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "span",
+            "text": "Proven in other industries"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-6)",
+            "marginBottom": "12px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "wizard-fallback-message",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "{{ 'No published ' + (route.query.category || '') + ' work yet.' }}"
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "{{ (wizardHandoff.data && wizardHandoff.data.fallback && wizardHandoff.data.fallback.length) ? 'block' : 'none' }}",
+            "isolation": "isolate"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "flex-start",
+              "display": "flex",
+              "flexDirection": "column",
+              "flexShrink": 1,
+              "flexWrap": "nowrap",
+              "gap": "8px",
+              "height": "fit-content",
+              "justifyContent": "flex-start",
+              "width": "100%"
+             },
+             "blockName": "container",
+             "children": [
+              {
+               "children": [],
+               "classes": [],
+               "componentId": "ListRows-91e783f6b-fb",
+               "componentName": "ListRows",
+               "componentProps": {
+                "items": "{{ (wizardHandoff.data && wizardHandoff.data.fallback) || [] }}",
+                "rowKey": "name"
+               },
+               "componentSlots": {
+                "default": {
+                 "parentBlockId": "ListRows-91e783f6b-fb",
+                 "slotContent": [
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "flexWrap": "nowrap",
+                    "gap": "20px",
+                    "paddingBlock": "12px"
+                   },
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {},
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "backgroundColor": "var(--surface-base, oklch(1 0 0))",
+                        "backgroundImage": "{{ item.logo ? 'url(\"' + item.logo + '\")' : 'none' }}",
+                        "backgroundPosition": "center",
+                        "backgroundRepeat": "no-repeat",
+                        "backgroundSize": "contain",
+                        "borderColor": "var(--outline-gray-3, oklch(0.83 0 0))",
+                        "borderRadius": "6px",
+                        "borderStyle": "solid",
+                        "borderWidth": "1px",
+                        "display": "flex",
+                        "flexShrink": "0",
+                        "height": "52px",
+                        "justifyContent": "center",
+                        "margin": "5px",
+                        "overflow": "hidden",
+                        "padding": "0px",
+                        "width": "52px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6)",
+                          "display": "{{ item.logo ? 'none' : 'flex' }}",
+                          "fontWeight": "600"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "LogoView-gold-initial-fb",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-sm",
+                          "tag": "span",
+                          "text": "{{ (item.partner_name || '?').charAt(0).toUpperCase() }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "LogoView-gold-fb",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "ListCell-avatar-gold-fb",
+                     "componentName": "ListCell",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "gap": "0px",
+                      "gridRow": "span 1",
+                      "margin": "0px"
+                     },
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "gap": "8px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "flexWrap": "wrap",
+                          "gap": "10px"
+                         },
+                         "children": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "color": "var(--ink-gray-8)",
+                            "fontWeight": "600"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-name-fb",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-base",
+                            "tag": "span",
+                            "text": "{{ item.partner_name }}"
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          },
+                          {
+                           "attributes": {},
+                           "baseStyles": {},
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-tier-badge-fb",
+                           "componentName": "Badge",
+                           "componentProps": {
+                            "label": "{{ item.tier }}",
+                            "theme": "{{ item.tier === 'Gold' ? 'amber' : item.tier === 'Silver' ? 'gray' : item.tier === 'Bronze' ? 'orange' : 'gray' }}",
+                            "variant": "subtle"
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-name-row-fb",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "gap": "4px"
+                         },
+                         "children": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "flexShrink": "0",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-location-icon-fb",
+                           "componentName": "FeatherIcon",
+                           "componentProps": {
+                            "color": "var(--ink-gray-5)",
+                            "name": "map-pin",
+                            "strokeWidth": 2
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          },
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-location-text-fb",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-xs",
+                            "tag": "span",
+                            "text": "{{ item.city ? item.city + ', ' + item.country : item.country }}"
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-location-fb",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "flexWrap": "wrap",
+                          "gap": "24px"
+                         },
+                         "children": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "flexDirection": "row",
+                            "gap": "4px"
+                           },
+                           "children": [
+                            {
+                             "attributes": {},
+                             "baseStyles": {
+                              "flexShrink": "0",
+                              "height": "12px",
+                              "width": "12px"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentEvents": {},
+                             "componentId": "row-gold-rate-icon-fb",
+                             "componentName": "FeatherIcon",
+                             "componentProps": {
+                              "color": "var(--ink-gray-5)",
+                              "name": "tag",
+                              "strokeWidth": 2
+                             },
+                             "componentSlots": {},
+                             "mobileStyles": {},
+                             "tabletStyles": {}
+                            },
+                            {
+                             "attributes": {},
+                             "baseStyles": {
+                              "color": "var(--ink-gray-5)"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentEvents": {},
+                             "componentId": "row-gold-rate-text-fb",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-xs",
+                              "tag": "span",
+                              "text": "{{ item.hourly_rate ? ('From \u20b9' + Number(item.hourly_rate).toLocaleString('en-IN') + '/hr') : 'Rate on request' }}"
+                             },
+                             "componentSlots": {},
+                             "mobileStyles": {},
+                             "tabletStyles": {}
+                            }
+                           ],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-rate-fb",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "originalElement": "div",
+                           "tabletStyles": {}
+                          },
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "flexDirection": "row",
+                            "gap": "4px"
+                           },
+                           "children": [
+                            {
+                             "attributes": {},
+                             "baseStyles": {
+                              "flexShrink": "0",
+                              "height": "12px",
+                              "width": "12px"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentEvents": {},
+                             "componentId": "row-gold-rating-icon-fb",
+                             "componentName": "FeatherIcon",
+                             "componentProps": {
+                              "color": "var(--ink-gray-5)",
+                              "name": "star",
+                              "strokeWidth": 2
+                             },
+                             "componentSlots": {},
+                             "mobileStyles": {},
+                             "tabletStyles": {}
+                            },
+                            {
+                             "attributes": {},
+                             "baseStyles": {
+                              "color": "var(--ink-gray-5)"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentEvents": {},
+                             "componentId": "row-gold-rating-text-fb",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-xs",
+                              "tag": "span",
+                              "text": "{{ item.rating ? item.rating + ' (' + (item.review_count || 0) + ')' : 'No ratings yet' }}"
+                             },
+                             "componentSlots": {},
+                             "mobileStyles": {},
+                             "tabletStyles": {}
+                            }
+                           ],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-rating-fb",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "originalElement": "div",
+                           "tabletStyles": {}
+                          },
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "{{ item.response_time_hours ? 'flex' : 'none' }}",
+                            "flexDirection": "row",
+                            "gap": "4px"
+                           },
+                           "children": [
+                            {
+                             "attributes": {},
+                             "baseStyles": {
+                              "flexShrink": "0",
+                              "height": "12px",
+                              "width": "12px"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentEvents": {},
+                             "componentId": "row-gold-response-icon-fb",
+                             "componentName": "FeatherIcon",
+                             "componentProps": {
+                              "color": "var(--ink-gray-5)",
+                              "name": "clock",
+                              "strokeWidth": 2
+                             },
+                             "componentSlots": {},
+                             "mobileStyles": {},
+                             "tabletStyles": {}
+                            },
+                            {
+                             "attributes": {},
+                             "baseStyles": {
+                              "color": "var(--ink-gray-5)"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentEvents": {},
+                             "componentId": "row-gold-response-text-fb",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-xs",
+                              "tag": "span",
+                              "text": "{{ 'Typically ' + item.response_time_hours + 'h' }}"
+                             },
+                             "componentSlots": {},
+                             "mobileStyles": {},
+                             "tabletStyles": {}
+                            }
+                           ],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-response-fb",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "originalElement": "div",
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-stats-row-fb",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-5)",
+                          "display": "{{ item.success_story_count ? 'block' : 'none' }}"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-stories-fb",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-xs",
+                          "tag": "span",
+                          "text": "{{ item.success_story_count + ' success ' + (item.success_story_count === 1 ? 'story' : 'stories') + ' across ' + (item.success_story_categories || []).slice(0, 3).join(', ') + ((item.success_story_categories || []).length > 3 ? ' +' + ((item.success_story_categories.length) - 3) + ' more' : '') }}"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "row-gold-details-fb",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "ListCell-details-gold-fb",
+                     "componentName": "ListCell",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {},
+                     "children": [
+                      {
+                       "attributes": {},
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "gap": "8px"
+                       },
+                       "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "color": "{{ (myShortlist.data || []).includes(item.name) ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}",
+                          "display": "flex",
+                          "flexShrink": "0",
+                          "height": "32px",
+                          "justifyContent": "center",
+                          "width": "32px"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlist.data || [];\nconst wasShortlisted = previous.includes(partner);\nmyShortlist.data = wasShortlisted ? previous.filter((n) => n !== partner) : [...previous, partner];\nconst fn = wasShortlisted ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = previous;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                          }
+                         },
+                         "componentId": "Button-shortlist-gold-fb",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "icon": "{{ (myShortlist.data || []).includes(item.name) ? 'lucide-bookmark-check' : 'lucide-bookmark' }}",
+                          "size": "md",
+                          "variant": "ghost"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6, oklch(0.439 0 0))"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.contact.start_partner_thread', { partner: item.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                          }
+                         },
+                         "componentId": "Button-contact-gold-fb",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "iconLeft": "lucide-send",
+                          "label": "Connect",
+                          "variant": "subtle"
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        }
+                       ],
+                       "classes": [],
+                       "componentEvents": {},
+                       "componentId": "row-gold-actions-fb",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {},
+                       "originalElement": "div",
+                       "tabletStyles": {}
+                      }
+                     ],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "ListCell-actions-gold-fb",
+                     "componentName": "ListCell",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "ListRow-gold-fb",
+                   "componentName": "ListRow",
+                   "componentProps": {
+                    "to": "{{ '/partner-profile/' + item.name }}",
+                    "value": "{{ value }}"
+                   },
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "tabletStyles": {}
+                  }
+                 ],
+                 "slotId": "ListRows-0836d29f6:default",
+                 "slotName": "default"
+                }
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "container-npica7qj3-fb",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "List-pd-fb",
+           "componentName": "List",
+           "componentProps": {
+            "columns": [
+             "auto",
+             "minmax(0,1fr)",
+             "auto"
+            ],
+            "divider": "full",
+            "rowHeight": 142
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "wizard-fallback-section",
+         "componentName": "container",
+         "originalElement": "div"
         }
        ],
        "classes": [],
@@ -4177,7 +5499,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-10 12:09:51.365043",
+ "modified": "2026-09-10 13:18:08.648739",
  "modified_by": "Administrator",
  "name": "partner_directory_redesign",
  "owner": "Administrator",
@@ -4245,6 +5567,14 @@
    "resource_name": "filterOptions",
    "resource_type": "API Resource",
    "url": "/api/method/connect.api.partner.list_partner_filter_options"
+  },
+  {
+   "auto": 1,
+   "method": "GET",
+   "params": "{\"industry\": \"{{ route.query.industry }}\", \"category\": \"{{ route.query.category }}\"}",
+   "resource_name": "wizardHandoff",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.partner.list_directory_partners_for_wizard"
   }
  ],
  "route": "/partner-directory-redesign",
