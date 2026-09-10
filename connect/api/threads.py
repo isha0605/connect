@@ -100,6 +100,12 @@ def get_my_threads():
 			fields=["thread", "last_read_at", "is_removed", "removed_on"],
 		)
 	}
+	partner_logos = {
+		p.name: p.logo
+		for p in frappe.get_all(
+			"Partner", filters={"name": ["in", [t.partner for t in threads]]}, fields=["name", "logo"]
+		)
+	}
 
 	result = []
 	for t in threads:
@@ -116,6 +122,7 @@ def get_my_threads():
 			"name": t.name,
 			"customer": t.customer,
 			"partner": t.partner,
+			"partner_logo": partner_logos.get(t.partner),
 			"status": t.status,
 			"creation": t.creation,
 			"last_message": t.last_message_preview or "",

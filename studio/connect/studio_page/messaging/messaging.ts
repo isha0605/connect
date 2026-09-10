@@ -24,10 +24,18 @@ export default function setup(context) {
 		return !!(context.myContext.data && context.myContext.data.partner)
 	}
 
+	// Partner/Customer autoname by their raw company name, so the docname itself carries
+	// whatever legal suffix the company registered under — strip it for display only, since
+	// the underlying docname (used for filters, shortlist matching, etc.) must stay untouched.
+	function displayCompanyName(name) {
+		if (!name) return name
+		return name.replace(/\s*,?\s*(private\s+limited|pvt\.?\s*ltd\.?)\s*$/i, "").trim()
+	}
+
 	// Threads carry the other side's company name directly (Partner/Customer both
 	// autoname by their display name), so no extra lookup is needed here.
 	function otherPartyName(thread) {
-		return amPartner() ? thread.customer : thread.partner
+		return displayCompanyName(amPartner() ? thread.customer : thread.partner)
 	}
 
 	function threadTitle() {
@@ -49,13 +57,20 @@ export default function setup(context) {
 		return d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 	}
 
+	// Customer has no logo field yet, so only the customer-viewing-partner direction has an
+	// image to show; a partner viewing a customer thread always falls back to the Avatar's
+	// own initials rendering (driven by the `label` prop already bound alongside this).
+	function threadListLogo(thread) {
+		return amPartner() ? "" : (thread && thread.partner_logo) || ""
+	}
+
 	function threadListPreview(thread) {
-		if (!thread || !thread.last_message_preview) return "No messages yet"
+		if (!thread || !thread.last_message) return "No messages yet"
 		const me = context.myContext.data && context.myContext.data.user
 		const sender = thread.last_message_sender
 		let label = sender === me ? "You" : (sender || "").split("@")[0]
 		if (label && label !== "You") label = label.charAt(0).toUpperCase() + label.slice(1)
-		return (label ? label + ": " : "") + thread.last_message_preview
+		return (label ? label + ": " : "") + thread.last_message
 	}
 
 	function isPanelOpen() {
@@ -92,6 +107,18 @@ export default function setup(context) {
 			.catch(() => {})
 		fetchPinnedMessage()
 	}
+
+	// Auto-select the top conversation (myThreads is server-sorted by last activity) as soon as
+	// the inbox list loads, so the pane isn't left on "Select a conversation" on first render.
+	// Only fires while nothing is selected yet — later reloads (new message, send, etc.) must
+	// never yank the user back to the top thread.
+	watch(
+		() => context.myThreads.data,
+		(threads) => {
+			if (!selectedThread.value && threads && threads.length) selectThread(threads[0])
+		},
+		{ immediate: true },
+	)
 
 	// ---- Realtime ----
 	// A dedicated connection for this page rather than reusing Studio's own — page scripts
@@ -1024,6 +1051,7 @@ export default function setup(context) {
 		threadTitle,
 		threadListTime,
 		threadListPreview,
+		threadListLogo,
 		selectThread,
 		onMessagesScroll,
 		activeMemberCount,

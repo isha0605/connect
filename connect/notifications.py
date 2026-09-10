@@ -2,6 +2,8 @@ import frappe
 from frappe import _
 from frappe.desk.doctype.notification_log.notification_log import enqueue_create_notification
 
+from connect.permissions import _get_partner_admin
+
 
 def _notification_targets(doc):
 	"""Returns everyone else currently in the thread, who's allowed to know this message exists."""
@@ -155,6 +157,45 @@ def notify_message_edited(doc):
 	payload = {"name": doc.name, "thread": doc.thread, "content": doc.content, "is_edited": doc.is_edited}
 	for member in members:
 		frappe.publish_realtime("connect_message_edited", payload, user=member, after_commit=True)
+
+
+def notify_partner_of_new_requirement(doc, method=None):
+	"""after_insert on Connect Message: emails the partner's admin when a customer's first message
+	in the thread is a Requirement submission — a brand-new lead is easy to miss in the in-app
+	notification alone."""
+	if doc.message_type != "Requirement":
+		return
+	if frappe.db.count("Connect Message", {"thread": doc.thread}) != 1:
+		return  # not the first message in this thread
+
+	thread = frappe.db.get_value("Connect Thread", doc.thread, ["partner", "customer"], as_dict=True)
+	if not thread:
+		return
+
+	admin = _get_partner_admin(thread.partner)
+	if not admin:
+		return
+	recipient = frappe.db.get_value("User", admin, "email") or admin
+
+	customer_name = frappe.db.get_value("Customer", thread.customer, "customer_name") or thread.customer
+	requirement = frappe.parse_json(doc.content) if doc.content else {}
+	fields = [
+		("Company", requirement.get("company_name")),
+		("Industry", requirement.get("industry")),
+		("Looking for", requirement.get("looking_for")),
+		("Company size", requirement.get("company_size")),
+		("Timeline", requirement.get("timeline")),
+	]
+	details_html = "".join(
+		f"<p><b>{label}:</b> {frappe.utils.escape_html(value)}</p>" for label, value in fields if value
+	)
+
+	frappe.sendmail(
+		recipients=[recipient],
+		subject=_("New requirement from {0}").format(customer_name),
+		message=f"<p>{frappe.utils.escape_html(customer_name)} {_('just sent a new requirement on Connect.')}</p>{details_html}",
+		now=False,
+	)
 
 
 def notify_dm_recipient(doc, method=None):
