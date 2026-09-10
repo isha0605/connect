@@ -278,6 +278,7 @@ def search_partners(
 	industry = _normalize_multi(industry)
 	country = _normalize_multi(country)
 	category = _normalize_multi(category)
+	product = _normalize_multi(product)
 
 	filters = list(BASE_PARTNER_FILTERS)
 	for value, field in [
@@ -626,7 +627,7 @@ def _decorate_directory_rows(rows):
 
 
 def list_directory_partners(
-	limit=9, search=None, tier=None, country=None, industry=None, category=None,
+	limit=9, search=None, tier=None, country=None, industry=None, category=None, product=None,
 	business_process=None, implementation_type=None, language=None,
 	min_rating=None, max_response_time=None, exclude=None,
 ):
@@ -634,12 +635,12 @@ def list_directory_partners(
 	for the Partner Directory redesign's card list and its filter row. Filtering/search/ordering is
 	delegated to search_partners — the same engine behind the Find Partners page — so both stay
 	consistent; this only adds the review_count/success-story preview fields the card list needs on
-	top, same as before this had its own filters. `country`/`category` accept either a single value
-	or a JSON array (the Region/Industry filters' multi-select). `exclude` (name not-in) is what
-	the "Proven in other industries" section uses to call this same function a second time with
-	category dropped, without repeating whoever's already shown in the main list."""
+	top, same as before this had its own filters. `country`/`category`/`product` accept either a
+	single value or a JSON array (the Region/Industry/App filters' multi-select). `exclude` (name
+	not-in) is what the "Proven in other industries" section uses to call this same function a
+	second time with category dropped, without repeating whoever's already shown in the main list."""
 	rows = search_partners(
-		search=search, tier=tier, country=country, industry=industry, category=category,
+		search=search, tier=tier, country=country, industry=industry, category=category, product=product,
 		business_process=business_process, implementation_type=implementation_type, language=language,
 		min_rating=min_rating, max_response_time=max_response_time, exclude=exclude,
 		limit=cint(limit) or 9,

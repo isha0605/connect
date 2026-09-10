@@ -50,13 +50,14 @@ def region_presence_counts():
 
 @frappe.whitelist(allow_guest=True)
 def list_directory_partners(
-	limit=9, search=None, tier=None, country=None, industry=None, category=None,
+	limit=9, search=None, tier=None, country=None, industry=None, category=None, product=None,
 	business_process=None, implementation_type=None, language=None,
 	min_rating=None, max_response_time=None, exclude=None,
 ):
 	from connect.partner.doctype.partner.partner import list_directory_partners
 	return list_directory_partners(
 		limit=limit, search=search, tier=tier, country=country, industry=industry, category=category,
+		product=product,
 		business_process=business_process, implementation_type=implementation_type, language=language,
 		min_rating=min_rating, max_response_time=max_response_time, exclude=exclude,
 	)
