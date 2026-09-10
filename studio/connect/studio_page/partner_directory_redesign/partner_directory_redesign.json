@@ -263,6 +263,22 @@
      "children": [
       {
        "baseStyles": {
+        "color": "red",
+        "display": "block",
+        "padding": "8px",
+        "wordBreak": "break-all"
+       },
+       "classes": [],
+       "componentId": "debug-state-readout",
+       "componentName": "TextBlock",
+       "componentProps": {
+        "fontSize": "text-xs",
+        "tag": "span",
+        "text": "{{ 'DEBUG selectedCountries=' + JSON.stringify(selectedCountries) + ' | selectedCategories=' + JSON.stringify(selectedCategories) + ' | directoryPartners.params.country=' + (directoryPartners.params ? directoryPartners.params.country : 'null') + ' | directoryPartners.data.length=' + ((directoryPartners.data || []).length) }}"
+       }
+      },
+      {
+       "baseStyles": {
         "alignItems": "center",
         "display": "flex",
         "flexDirection": "row",
@@ -3639,6 +3655,22 @@
      "children": [
       {
        "baseStyles": {
+        "color": "red",
+        "display": "block",
+        "padding": "8px",
+        "wordBreak": "break-all"
+       },
+       "classes": [],
+       "componentId": "debug-state-readout",
+       "componentName": "TextBlock",
+       "componentProps": {
+        "fontSize": "text-xs",
+        "tag": "span",
+        "text": "{{ 'DEBUG selectedCountries=' + JSON.stringify(selectedCountries) + ' | selectedCategories=' + JSON.stringify(selectedCategories) + ' | directoryPartners.params.country=' + (directoryPartners.params ? directoryPartners.params.country : 'null') + ' | directoryPartners.data.length=' + ((directoryPartners.data || []).length) }}"
+       }
+      },
+      {
+       "baseStyles": {
         "alignItems": "center",
         "display": "flex",
         "flexDirection": "row",
@@ -6755,7 +6787,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-10 15:50:40.507252",
+ "modified": "2026-09-10 16:00:28.701497",
  "modified_by": "Administrator",
  "name": "partner_directory_redesign",
  "owner": "Administrator",
@@ -6832,7 +6864,7 @@
   {
    "auto": 1,
    "method": "GET",
-   "on_success": "function onSuccess(data) {\n  if (bootstrapped.value) return;\n  bootstrapped.value = true;\n  if (route.query.category) { selectedCategories.value = [route.query.category]; }\n  const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();\n}",
+   "on_success": "function onSuccess(data) {\n  if (bootstrapped.value) return;\n  bootstrapped.value = true;\n  if (route.query.category) { selectedCategories.value = [route.query.category]; }\n  if (route.query.region) { const REGION_TO_COUNTRIES = { 'India': ['India'], 'Asia': ['Philippines','Indonesia','Myanmar','Pakistan','Singapore','Australia','Bangladesh','China','Sri Lanka','Thailand','Vietnam'], 'Middle East': ['Saudi Arabia','UAE','Egypt','Qatar','Kuwait','Oman','Bahrain','Iraq','Jordan','Libya','Yemen'], 'Africa': ['Kenya','Tanzania','Congo - Kinshasa','Ghana','Mauritius','Nigeria','South Africa','Uganda'], 'Europe': ['Germany','France','Italy','Malta','Netherlands','Spain','Switzerland','United Kingdom'], 'Americas': ['United States','Canada'] }; let wizardRegions = []; try { wizardRegions = JSON.parse(route.query.region); } catch (e) { wizardRegions = [route.query.region]; } const mappedCountries = wizardRegions.flatMap(r => REGION_TO_COUNTRIES[r] || []); if (mappedCountries.length) { selectedCountries.value = mappedCountries; } }\n  const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();\n}",
    "resource_name": "filterFacets",
    "resource_type": "API Resource",
    "url": "/api/method/connect.api.partner.list_directory_filter_facets"
