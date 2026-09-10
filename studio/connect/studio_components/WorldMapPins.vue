@@ -140,7 +140,7 @@ function visiblePoints(region, points) {
 </script>
 
 <template>
-	<svg viewBox="0 0 119 60" class="world-map-pins" preserveAspectRatio="xMidYMid meet">
+	<svg viewBox="0 0 119 60" class="world-map-pins" preserveAspectRatio="xMidYMid slice">
 		<image :href="IMAGE_URL" x="0" y="0" width="119" height="60" />
 
 		<g v-for="(points, region) in REGION_DOTS" :key="region">
@@ -159,7 +159,7 @@ function visiblePoints(region, points) {
 <style scoped>
 .world-map-pins {
 	width: 100%;
-	height: auto;
+	height: 100%;
 	display: block;
 }
 
