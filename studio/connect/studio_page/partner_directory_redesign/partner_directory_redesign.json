@@ -941,6 +941,104 @@
                    "mobileStyles": {},
                    "originalElement": "div",
                    "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "column"
+                   },
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)",
+                      "fontWeight": "600",
+                      "marginBottom": "6px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "TextBlock-flt-app-label",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-xs",
+                      "tag": "span",
+                      "text": "Apps"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "width": "100%"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {
+                      "update:modelValue": {
+                       "action": "Run Script",
+                       "event": "update:modelValue",
+                       "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value };\nconst params = { ...baseParams, category: JSON.stringify(selectedCategories.value) };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();\ntry { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
+                      }
+                     },
+                     "componentId": "MultiSelect-flt-apps",
+                     "componentName": "MultiSelect",
+                     "componentProps": {
+                      "modelValue": {
+                       "$type": "variable",
+                       "name": "selectedApps"
+                      },
+                      "options": "{{ [{ label: 'ERPNext', value: 'ERPNext', icon: '/assets/connect/images/app_icons/erpnext.png' }, { label: 'Frappe HR', value: 'Frappe HR', icon: '/assets/connect/images/app_icons/frappe-hr.png' }, { label: 'CRM', value: 'Frappe CRM', icon: '/assets/connect/images/app_icons/crm.png' }, { label: 'Helpdesk', value: 'Helpdesk', icon: '/assets/connect/images/app_icons/helpdesk.png' }, { label: 'Insights', value: 'Frappe Insights', icon: '/assets/connect/images/app_icons/insights.png' }, { label: 'Learning', value: 'Learning', icon: '/assets/connect/images/app_icons/learning.png' }, { label: 'Framework', value: 'Frappe Framework', icon: '/assets/connect/images/app_icons/framework.png' }] }}",
+                      "placeholder": "Any",
+                      "size": "sm",
+                      "variant": "outline"
+                     },
+                     "componentSlots": {
+                      "item-prefix": {
+                       "parentBlockId": "MultiSelect-flt-apps",
+                       "slotContent": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "backgroundImage": "{{ 'url(\"' + item.icon + '\")' }}",
+                          "backgroundPosition": "center",
+                          "backgroundRepeat": "no-repeat",
+                          "backgroundSize": "contain",
+                          "borderRadius": "3px",
+                          "flexShrink": "0",
+                          "height": "14px",
+                          "width": "14px"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "app-filter-option-icon",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "tabletStyles": {}
+                        }
+                       ]
+                      }
+                     },
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "field-apps-filter",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "originalElement": "div",
+                   "tabletStyles": {}
                   }
                  ],
                  "classes": [],
@@ -1021,27 +1119,6 @@
              "slotName": "trigger"
             }
            }
-          },
-          {
-           "baseStyles": {
-            "display": "{{ (searchTerm || tierFilter || (selectedCountries && selectedCountries.length) || (selectedCategories && selectedCategories.length) || businessProcessFilter || implementationTypeFilter || languageFilter || minRatingFilter || maxResponseTimeFilter) ? 'inline-flex' : 'none' }}",
-            "flexShrink": "0"
-           },
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "searchTerm.value = ''; tierFilter.value = ''; selectedCountries.value = []; selectedCategories.value = []; selectedApps.value = []; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = '';\ntry { localStorage.removeItem('connect_directory_filters'); } catch (e) {}\nconst baseParams = { limit: 9, search: '', tier: '', country: '[]', product: '[]', business_process: '', implementation_type: '', language: '', min_rating: '', max_response_time: '' };\nconst params = { ...baseParams, category: '[]' };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();"
-            }
-           },
-           "componentId": "Button-reset-filters",
-           "componentName": "Button",
-           "componentProps": {
-            "iconLeft": "lucide-x",
-            "label": "Reset",
-            "variant": "ghost"
-           }
           }
          ],
          "classes": [],
@@ -1051,19 +1128,55 @@
         },
         {
          "baseStyles": {
-          "color": "var(--ink-gray-5, #a6a6a6)",
+          "alignItems": "center",
+          "display": "flex",
+          "justifyContent": "space-between",
           "marginBottom": "8px",
           "marginTop": "16px"
          },
-         "children": [],
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5, #a6a6a6)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "text-result-count",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "{{ (directoryPartners.data || []).length + ' partners' }}"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-9, #171717)",
+            "display": "{{ (searchTerm || tierFilter || (selectedCountries && selectedCountries.length) || (selectedCategories && selectedCategories.length) || businessProcessFilter || implementationTypeFilter || languageFilter || minRatingFilter || maxResponseTimeFilter) ? 'inline-flex' : 'none' }}",
+            "fontWeight": "500"
+           },
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "searchTerm.value = ''; tierFilter.value = ''; selectedCountries.value = []; selectedCategories.value = []; selectedApps.value = []; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = '';\ntry { localStorage.removeItem('connect_directory_filters'); } catch (e) {}\nconst baseParams = { limit: 9, search: '', tier: '', country: '[]', product: '[]', business_process: '', implementation_type: '', language: '', min_rating: '', max_response_time: '' };\nconst params = { ...baseParams, category: '[]' };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();"
+            }
+           },
+           "componentId": "Button-reset-count-row",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Reset",
+            "size": "sm",
+            "variant": "ghost"
+           }
+          }
+         ],
          "classes": [],
-         "componentId": "text-result-count",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-sm",
-          "tag": "span",
-          "text": "{{ (directoryPartners.data || []).length + ' partners' }}"
-         }
+         "componentId": "result-count-row",
+         "componentName": "container",
+         "originalElement": "div"
         }
        ],
        "classes": [],
@@ -1266,7 +1379,7 @@
                              "componentId": "row-gold-tier-badge-icon",
                              "componentName": "HTML",
                              "componentProps": {
-                              "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 28 28\" fill=\"none\"><path d=\"M13.4912 0.226893C13.7636 -0.0756311 14.236 -0.0756311 14.509 0.226893L16.4868 2.42128C16.6752 2.62965 16.969 2.70274 17.2316 2.60614L19.9959 1.58885C20.3773 1.44859 20.7952 1.66961 20.8973 2.06512L21.6363 4.9339C21.7064 5.20632 21.9337 5.40882 22.2102 5.44612L25.1275 5.83898C25.5298 5.89314 25.7981 6.28454 25.706 6.68242L25.0359 9.56839C24.9727 9.84243 25.08 10.128 25.3083 10.2906L27.7098 12.0036C28.0408 12.2398 28.0982 12.7119 27.8327 13.021L25.9077 15.263C25.7251 15.4759 25.6886 15.7791 25.8155 16.0298L27.1516 18.6705C27.3354 19.0347 27.1678 19.4793 26.7905 19.6288L24.0511 20.7133C23.7914 20.8162 23.6193 21.0676 23.6158 21.349L23.5798 24.3125C23.5752 24.721 23.2216 25.0364 22.8182 24.992L19.8922 24.6705C19.6145 24.64 19.3461 24.7819 19.2134 25.0295L17.8141 27.6368C17.6211 27.9963 17.1626 28.1101 16.8259 27.8821L14.3833 26.2282C14.1514 26.0711 13.8482 26.0711 13.6164 26.2282L11.1744 27.8821C10.8376 28.1101 10.3791 27.9963 10.1861 27.6368L8.78682 25.0295C8.65408 24.7819 8.38512 24.64 8.10748 24.6705L5.18144 24.992C4.77859 25.0364 4.42501 24.721 4.4198 24.3125L4.38444 21.349C4.38096 21.0676 4.2088 20.8162 3.94855 20.7133L1.20916 19.6288C0.831813 19.4793 0.664291 19.0347 0.848617 18.6705L2.1847 16.0298C2.31164 15.7791 2.27512 15.4759 2.09195 15.263L0.167536 13.021C-0.0979398 12.7119 -0.0411269 12.2398 0.289849 12.0036L2.69188 10.2906C2.91968 10.128 3.02749 9.84243 2.96373 9.56839L2.29425 6.68242C2.2015 6.28454 2.46987 5.89314 2.87214 5.83898L5.78948 5.44612C6.06655 5.40882 6.2932 5.20632 6.36333 4.9339L7.10237 2.06512C7.20439 1.66961 7.62232 1.44859 8.00372 1.58885L10.768 2.60614C11.0306 2.70274 11.3251 2.62965 11.5129 2.42128L13.4912 0.226893Z\" fill=\"' + (item.tier === 'Gold' ? '#D4A017' : item.tier === 'Silver' ? '#A6A6A6' : item.tier === 'Bronze' ? '#B86E47' : '#A6A6A6') + '\"></path><path d=\"M18.0202 9.62684C18.324 9.27238 18.8561 9.23364 19.2079 9.53963C19.5603 9.84586 19.5992 10.3815 19.2955 10.7361L13.0521 18.015C12.8945 18.1993 12.6649 18.3066 12.4232 18.3092C12.1815 18.3116 11.9502 18.2091 11.7885 18.0282L8.83117 14.7193C8.52048 14.3711 8.54773 13.835 8.8932 13.5217C9.23925 13.2084 9.77193 13.2365 10.0832 13.5844L12.4012 16.1779L18.0202 9.62684Z\" fill=\"white\"></path></svg>' }}"
+                              "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 28 28\" fill=\"none\"><path d=\"M13.4912 0.226893C13.7636 -0.0756311 14.236 -0.0756311 14.509 0.226893L16.4868 2.42128C16.6752 2.62965 16.969 2.70274 17.2316 2.60614L19.9959 1.58885C20.3773 1.44859 20.7952 1.66961 20.8973 2.06512L21.6363 4.9339C21.7064 5.20632 21.9337 5.40882 22.2102 5.44612L25.1275 5.83898C25.5298 5.89314 25.7981 6.28454 25.706 6.68242L25.0359 9.56839C24.9727 9.84243 25.08 10.128 25.3083 10.2906L27.7098 12.0036C28.0408 12.2398 28.0982 12.7119 27.8327 13.021L25.9077 15.263C25.7251 15.4759 25.6886 15.7791 25.8155 16.0298L27.1516 18.6705C27.3354 19.0347 27.1678 19.4793 26.7905 19.6288L24.0511 20.7133C23.7914 20.8162 23.6193 21.0676 23.6158 21.349L23.5798 24.3125C23.5752 24.721 23.2216 25.0364 22.8182 24.992L19.8922 24.6705C19.6145 24.64 19.3461 24.7819 19.2134 25.0295L17.8141 27.6368C17.6211 27.9963 17.1626 28.1101 16.8259 27.8821L14.3833 26.2282C14.1514 26.0711 13.8482 26.0711 13.6164 26.2282L11.1744 27.8821C10.8376 28.1101 10.3791 27.9963 10.1861 27.6368L8.78682 25.0295C8.65408 24.7819 8.38512 24.64 8.10748 24.6705L5.18144 24.992C4.77859 25.0364 4.42501 24.721 4.4198 24.3125L4.38444 21.349C4.38096 21.0676 4.2088 20.8162 3.94855 20.7133L1.20916 19.6288C0.831813 19.4793 0.664291 19.0347 0.848617 18.6705L2.1847 16.0298C2.31164 15.7791 2.27512 15.4759 2.09195 15.263L0.167536 13.021C-0.0979398 12.7119 -0.0411269 12.2398 0.289849 12.0036L2.69188 10.2906C2.91968 10.128 3.02749 9.84243 2.96373 9.56839L2.29425 6.68242C2.2015 6.28454 2.46987 5.89314 2.87214 5.83898L5.78948 5.44612C6.06655 5.40882 6.2932 5.20632 6.36333 4.9339L7.10237 2.06512C7.20439 1.66961 7.62232 1.44859 8.00372 1.58885L10.768 2.60614C11.0306 2.70274 11.3251 2.62965 11.5129 2.42128L13.4912 0.226893Z\" fill=\"' + (item.tier === 'Gold' ? '#D4A017' : item.tier === 'Silver' ? '#A6A6A6' : item.tier === 'Bronze' ? '#7A4A28' : '#A6A6A6') + '\"></path><path d=\"M18.0202 9.62684C18.324 9.27238 18.8561 9.23364 19.2079 9.53963C19.5603 9.84586 19.5992 10.3815 19.2955 10.7361L13.0521 18.015C12.8945 18.1993 12.6649 18.3066 12.4232 18.3092C12.1815 18.3116 11.9502 18.2091 11.7885 18.0282L8.83117 14.7193C8.52048 14.3711 8.54773 13.835 8.8932 13.5217C9.23925 13.2084 9.77193 13.2365 10.0832 13.5844L12.4012 16.1779L18.0202 9.62684Z\" fill=\"white\"></path></svg>' }}"
                              },
                              "componentSlots": {},
                              "mobileStyles": {},
@@ -1298,6 +1411,27 @@
                         "gap": "4px"
                        },
                        "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "flexShrink": "0",
+                          "height": "12px",
+                          "width": "12px"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-location-icon",
+                         "componentName": "FeatherIcon",
+                         "componentProps": {
+                          "color": "var(--ink-gray-5)",
+                          "name": "map-pin",
+                          "strokeWidth": 2
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
                         {
                          "attributes": {},
                          "baseStyles": {
@@ -1709,501 +1843,6 @@
              }
             },
             {
-             "baseStyles": {
-              "display": "{{ (searchTerm || tierFilter || (selectedCountries && selectedCountries.length) || (selectedCategories && selectedCategories.length) || businessProcessFilter || implementationTypeFilter || languageFilter || minRatingFilter || maxResponseTimeFilter) ? 'none' : 'block' }}",
-              "padding": "0 20px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9, #171717)",
-                "fontWeight": "600",
-                "marginBottom": "14px",
-                "marginTop": "32px"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "text-apps-heading",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-base",
-                "tag": "span",
-                "text": "Which app are you looking to implement?"
-               }
-              }
-             ],
-             "classes": [],
-             "componentId": "apps-heading-wrap",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "display": "{{ (searchTerm || tierFilter || (selectedCountries && selectedCountries.length) || (selectedCategories && selectedCategories.length) || businessProcessFilter || implementationTypeFilter || languageFilter || minRatingFilter || maxResponseTimeFilter) ? 'none' : 'flex' }}",
-              "flexDirection": "row",
-              "flexWrap": "wrap",
-              "gap": "10px",
-              "padding": "0 20px 20px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-erpnext",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "ERPNext"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'ERPNext'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-erpnext",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-frappe-hr",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Frappe HR"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Frappe HR'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-frappe-hr",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-crm",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "CRM"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Frappe CRM'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-crm",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-helpdesk",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Helpdesk"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Helpdesk'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-helpdesk",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-insights",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Insights"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Frappe Insights'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-insights",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Drive') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Drive') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Drive') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-drive",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Drive"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Drive'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-drive",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Learning') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Learning') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Learning') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-learning",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Learning"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Learning'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-learning",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Education') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Education') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Education') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-education",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Education"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Education'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-education",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('School') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('School') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('School') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-school",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "School"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'School'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-school",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Lending') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Lending') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Lending') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-lending",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Lending"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Lending'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-lending",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-framework",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Framework"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Frappe Framework'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-framework",
-               "componentName": "container",
-               "originalElement": "div"
-              }
-             ],
-             "classes": [],
-             "componentId": "apps-pills-row",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
              "children": [],
              "classes": [],
              "componentId": "ListRows-91e783f6b-b2",
@@ -2367,7 +2006,7 @@
                              "componentId": "row-gold-tier-badge-b2-icon",
                              "componentName": "HTML",
                              "componentProps": {
-                              "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 28 28\" fill=\"none\"><path d=\"M13.4912 0.226893C13.7636 -0.0756311 14.236 -0.0756311 14.509 0.226893L16.4868 2.42128C16.6752 2.62965 16.969 2.70274 17.2316 2.60614L19.9959 1.58885C20.3773 1.44859 20.7952 1.66961 20.8973 2.06512L21.6363 4.9339C21.7064 5.20632 21.9337 5.40882 22.2102 5.44612L25.1275 5.83898C25.5298 5.89314 25.7981 6.28454 25.706 6.68242L25.0359 9.56839C24.9727 9.84243 25.08 10.128 25.3083 10.2906L27.7098 12.0036C28.0408 12.2398 28.0982 12.7119 27.8327 13.021L25.9077 15.263C25.7251 15.4759 25.6886 15.7791 25.8155 16.0298L27.1516 18.6705C27.3354 19.0347 27.1678 19.4793 26.7905 19.6288L24.0511 20.7133C23.7914 20.8162 23.6193 21.0676 23.6158 21.349L23.5798 24.3125C23.5752 24.721 23.2216 25.0364 22.8182 24.992L19.8922 24.6705C19.6145 24.64 19.3461 24.7819 19.2134 25.0295L17.8141 27.6368C17.6211 27.9963 17.1626 28.1101 16.8259 27.8821L14.3833 26.2282C14.1514 26.0711 13.8482 26.0711 13.6164 26.2282L11.1744 27.8821C10.8376 28.1101 10.3791 27.9963 10.1861 27.6368L8.78682 25.0295C8.65408 24.7819 8.38512 24.64 8.10748 24.6705L5.18144 24.992C4.77859 25.0364 4.42501 24.721 4.4198 24.3125L4.38444 21.349C4.38096 21.0676 4.2088 20.8162 3.94855 20.7133L1.20916 19.6288C0.831813 19.4793 0.664291 19.0347 0.848617 18.6705L2.1847 16.0298C2.31164 15.7791 2.27512 15.4759 2.09195 15.263L0.167536 13.021C-0.0979398 12.7119 -0.0411269 12.2398 0.289849 12.0036L2.69188 10.2906C2.91968 10.128 3.02749 9.84243 2.96373 9.56839L2.29425 6.68242C2.2015 6.28454 2.46987 5.89314 2.87214 5.83898L5.78948 5.44612C6.06655 5.40882 6.2932 5.20632 6.36333 4.9339L7.10237 2.06512C7.20439 1.66961 7.62232 1.44859 8.00372 1.58885L10.768 2.60614C11.0306 2.70274 11.3251 2.62965 11.5129 2.42128L13.4912 0.226893Z\" fill=\"' + (item.tier === 'Gold' ? '#D4A017' : item.tier === 'Silver' ? '#A6A6A6' : item.tier === 'Bronze' ? '#B86E47' : '#A6A6A6') + '\"></path><path d=\"M18.0202 9.62684C18.324 9.27238 18.8561 9.23364 19.2079 9.53963C19.5603 9.84586 19.5992 10.3815 19.2955 10.7361L13.0521 18.015C12.8945 18.1993 12.6649 18.3066 12.4232 18.3092C12.1815 18.3116 11.9502 18.2091 11.7885 18.0282L8.83117 14.7193C8.52048 14.3711 8.54773 13.835 8.8932 13.5217C9.23925 13.2084 9.77193 13.2365 10.0832 13.5844L12.4012 16.1779L18.0202 9.62684Z\" fill=\"white\"></path></svg>' }}"
+                              "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 28 28\" fill=\"none\"><path d=\"M13.4912 0.226893C13.7636 -0.0756311 14.236 -0.0756311 14.509 0.226893L16.4868 2.42128C16.6752 2.62965 16.969 2.70274 17.2316 2.60614L19.9959 1.58885C20.3773 1.44859 20.7952 1.66961 20.8973 2.06512L21.6363 4.9339C21.7064 5.20632 21.9337 5.40882 22.2102 5.44612L25.1275 5.83898C25.5298 5.89314 25.7981 6.28454 25.706 6.68242L25.0359 9.56839C24.9727 9.84243 25.08 10.128 25.3083 10.2906L27.7098 12.0036C28.0408 12.2398 28.0982 12.7119 27.8327 13.021L25.9077 15.263C25.7251 15.4759 25.6886 15.7791 25.8155 16.0298L27.1516 18.6705C27.3354 19.0347 27.1678 19.4793 26.7905 19.6288L24.0511 20.7133C23.7914 20.8162 23.6193 21.0676 23.6158 21.349L23.5798 24.3125C23.5752 24.721 23.2216 25.0364 22.8182 24.992L19.8922 24.6705C19.6145 24.64 19.3461 24.7819 19.2134 25.0295L17.8141 27.6368C17.6211 27.9963 17.1626 28.1101 16.8259 27.8821L14.3833 26.2282C14.1514 26.0711 13.8482 26.0711 13.6164 26.2282L11.1744 27.8821C10.8376 28.1101 10.3791 27.9963 10.1861 27.6368L8.78682 25.0295C8.65408 24.7819 8.38512 24.64 8.10748 24.6705L5.18144 24.992C4.77859 25.0364 4.42501 24.721 4.4198 24.3125L4.38444 21.349C4.38096 21.0676 4.2088 20.8162 3.94855 20.7133L1.20916 19.6288C0.831813 19.4793 0.664291 19.0347 0.848617 18.6705L2.1847 16.0298C2.31164 15.7791 2.27512 15.4759 2.09195 15.263L0.167536 13.021C-0.0979398 12.7119 -0.0411269 12.2398 0.289849 12.0036L2.69188 10.2906C2.91968 10.128 3.02749 9.84243 2.96373 9.56839L2.29425 6.68242C2.2015 6.28454 2.46987 5.89314 2.87214 5.83898L5.78948 5.44612C6.06655 5.40882 6.2932 5.20632 6.36333 4.9339L7.10237 2.06512C7.20439 1.66961 7.62232 1.44859 8.00372 1.58885L10.768 2.60614C11.0306 2.70274 11.3251 2.62965 11.5129 2.42128L13.4912 0.226893Z\" fill=\"' + (item.tier === 'Gold' ? '#D4A017' : item.tier === 'Silver' ? '#A6A6A6' : item.tier === 'Bronze' ? '#7A4A28' : '#A6A6A6') + '\"></path><path d=\"M18.0202 9.62684C18.324 9.27238 18.8561 9.23364 19.2079 9.53963C19.5603 9.84586 19.5992 10.3815 19.2955 10.7361L13.0521 18.015C12.8945 18.1993 12.6649 18.3066 12.4232 18.3092C12.1815 18.3116 11.9502 18.2091 11.7885 18.0282L8.83117 14.7193C8.52048 14.3711 8.54773 13.835 8.8932 13.5217C9.23925 13.2084 9.77193 13.2365 10.0832 13.5844L12.4012 16.1779L18.0202 9.62684Z\" fill=\"white\"></path></svg>' }}"
                              },
                              "componentSlots": {},
                              "mobileStyles": {},
@@ -2399,6 +2038,27 @@
                         "gap": "4px"
                        },
                        "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "flexShrink": "0",
+                          "height": "12px",
+                          "width": "12px"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-location-icon-b2",
+                         "componentName": "FeatherIcon",
+                         "componentProps": {
+                          "color": "var(--ink-gray-5)",
+                          "name": "map-pin",
+                          "strokeWidth": 2
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
                         {
                          "attributes": {},
                          "baseStyles": {
@@ -3053,7 +2713,7 @@
                                "componentId": "row-gold-tier-badge-fb-icon",
                                "componentName": "HTML",
                                "componentProps": {
-                                "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 28 28\" fill=\"none\"><path d=\"M13.4912 0.226893C13.7636 -0.0756311 14.236 -0.0756311 14.509 0.226893L16.4868 2.42128C16.6752 2.62965 16.969 2.70274 17.2316 2.60614L19.9959 1.58885C20.3773 1.44859 20.7952 1.66961 20.8973 2.06512L21.6363 4.9339C21.7064 5.20632 21.9337 5.40882 22.2102 5.44612L25.1275 5.83898C25.5298 5.89314 25.7981 6.28454 25.706 6.68242L25.0359 9.56839C24.9727 9.84243 25.08 10.128 25.3083 10.2906L27.7098 12.0036C28.0408 12.2398 28.0982 12.7119 27.8327 13.021L25.9077 15.263C25.7251 15.4759 25.6886 15.7791 25.8155 16.0298L27.1516 18.6705C27.3354 19.0347 27.1678 19.4793 26.7905 19.6288L24.0511 20.7133C23.7914 20.8162 23.6193 21.0676 23.6158 21.349L23.5798 24.3125C23.5752 24.721 23.2216 25.0364 22.8182 24.992L19.8922 24.6705C19.6145 24.64 19.3461 24.7819 19.2134 25.0295L17.8141 27.6368C17.6211 27.9963 17.1626 28.1101 16.8259 27.8821L14.3833 26.2282C14.1514 26.0711 13.8482 26.0711 13.6164 26.2282L11.1744 27.8821C10.8376 28.1101 10.3791 27.9963 10.1861 27.6368L8.78682 25.0295C8.65408 24.7819 8.38512 24.64 8.10748 24.6705L5.18144 24.992C4.77859 25.0364 4.42501 24.721 4.4198 24.3125L4.38444 21.349C4.38096 21.0676 4.2088 20.8162 3.94855 20.7133L1.20916 19.6288C0.831813 19.4793 0.664291 19.0347 0.848617 18.6705L2.1847 16.0298C2.31164 15.7791 2.27512 15.4759 2.09195 15.263L0.167536 13.021C-0.0979398 12.7119 -0.0411269 12.2398 0.289849 12.0036L2.69188 10.2906C2.91968 10.128 3.02749 9.84243 2.96373 9.56839L2.29425 6.68242C2.2015 6.28454 2.46987 5.89314 2.87214 5.83898L5.78948 5.44612C6.06655 5.40882 6.2932 5.20632 6.36333 4.9339L7.10237 2.06512C7.20439 1.66961 7.62232 1.44859 8.00372 1.58885L10.768 2.60614C11.0306 2.70274 11.3251 2.62965 11.5129 2.42128L13.4912 0.226893Z\" fill=\"' + (item.tier === 'Gold' ? '#D4A017' : item.tier === 'Silver' ? '#A6A6A6' : item.tier === 'Bronze' ? '#B86E47' : '#A6A6A6') + '\"></path><path d=\"M18.0202 9.62684C18.324 9.27238 18.8561 9.23364 19.2079 9.53963C19.5603 9.84586 19.5992 10.3815 19.2955 10.7361L13.0521 18.015C12.8945 18.1993 12.6649 18.3066 12.4232 18.3092C12.1815 18.3116 11.9502 18.2091 11.7885 18.0282L8.83117 14.7193C8.52048 14.3711 8.54773 13.835 8.8932 13.5217C9.23925 13.2084 9.77193 13.2365 10.0832 13.5844L12.4012 16.1779L18.0202 9.62684Z\" fill=\"white\"></path></svg>' }}"
+                                "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 28 28\" fill=\"none\"><path d=\"M13.4912 0.226893C13.7636 -0.0756311 14.236 -0.0756311 14.509 0.226893L16.4868 2.42128C16.6752 2.62965 16.969 2.70274 17.2316 2.60614L19.9959 1.58885C20.3773 1.44859 20.7952 1.66961 20.8973 2.06512L21.6363 4.9339C21.7064 5.20632 21.9337 5.40882 22.2102 5.44612L25.1275 5.83898C25.5298 5.89314 25.7981 6.28454 25.706 6.68242L25.0359 9.56839C24.9727 9.84243 25.08 10.128 25.3083 10.2906L27.7098 12.0036C28.0408 12.2398 28.0982 12.7119 27.8327 13.021L25.9077 15.263C25.7251 15.4759 25.6886 15.7791 25.8155 16.0298L27.1516 18.6705C27.3354 19.0347 27.1678 19.4793 26.7905 19.6288L24.0511 20.7133C23.7914 20.8162 23.6193 21.0676 23.6158 21.349L23.5798 24.3125C23.5752 24.721 23.2216 25.0364 22.8182 24.992L19.8922 24.6705C19.6145 24.64 19.3461 24.7819 19.2134 25.0295L17.8141 27.6368C17.6211 27.9963 17.1626 28.1101 16.8259 27.8821L14.3833 26.2282C14.1514 26.0711 13.8482 26.0711 13.6164 26.2282L11.1744 27.8821C10.8376 28.1101 10.3791 27.9963 10.1861 27.6368L8.78682 25.0295C8.65408 24.7819 8.38512 24.64 8.10748 24.6705L5.18144 24.992C4.77859 25.0364 4.42501 24.721 4.4198 24.3125L4.38444 21.349C4.38096 21.0676 4.2088 20.8162 3.94855 20.7133L1.20916 19.6288C0.831813 19.4793 0.664291 19.0347 0.848617 18.6705L2.1847 16.0298C2.31164 15.7791 2.27512 15.4759 2.09195 15.263L0.167536 13.021C-0.0979398 12.7119 -0.0411269 12.2398 0.289849 12.0036L2.69188 10.2906C2.91968 10.128 3.02749 9.84243 2.96373 9.56839L2.29425 6.68242C2.2015 6.28454 2.46987 5.89314 2.87214 5.83898L5.78948 5.44612C6.06655 5.40882 6.2932 5.20632 6.36333 4.9339L7.10237 2.06512C7.20439 1.66961 7.62232 1.44859 8.00372 1.58885L10.768 2.60614C11.0306 2.70274 11.3251 2.62965 11.5129 2.42128L13.4912 0.226893Z\" fill=\"' + (item.tier === 'Gold' ? '#D4A017' : item.tier === 'Silver' ? '#A6A6A6' : item.tier === 'Bronze' ? '#7A4A28' : '#A6A6A6') + '\"></path><path d=\"M18.0202 9.62684C18.324 9.27238 18.8561 9.23364 19.2079 9.53963C19.5603 9.84586 19.5992 10.3815 19.2955 10.7361L13.0521 18.015C12.8945 18.1993 12.6649 18.3066 12.4232 18.3092C12.1815 18.3116 11.9502 18.2091 11.7885 18.0282L8.83117 14.7193C8.52048 14.3711 8.54773 13.835 8.8932 13.5217C9.23925 13.2084 9.77193 13.2365 10.0832 13.5844L12.4012 16.1779L18.0202 9.62684Z\" fill=\"white\"></path></svg>' }}"
                                },
                                "componentSlots": {},
                                "mobileStyles": {},
@@ -3085,6 +2745,27 @@
                           "gap": "4px"
                          },
                          "children": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "flexShrink": "0",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-location-icon-fb",
+                           "componentName": "FeatherIcon",
+                           "componentProps": {
+                            "color": "var(--ink-gray-5)",
+                            "name": "map-pin",
+                            "strokeWidth": 2
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          },
                           {
                            "attributes": {},
                            "baseStyles": {
@@ -3663,7 +3344,7 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-09-11 14:36:54.605126",
+ "creation": "2026-09-15 18:09:51.604141",
  "doctype": "Studio Page",
  "draft_blocks": [
   {
@@ -4619,6 +4300,104 @@
                    "mobileStyles": {},
                    "originalElement": "div",
                    "tabletStyles": {}
+                  },
+                  {
+                   "attributes": {},
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "column"
+                   },
+                   "children": [
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)",
+                      "fontWeight": "600",
+                      "marginBottom": "6px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {},
+                     "componentId": "TextBlock-flt-app-label",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-xs",
+                      "tag": "span",
+                      "text": "Apps"
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    },
+                    {
+                     "attributes": {},
+                     "baseStyles": {
+                      "width": "100%"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {
+                      "update:modelValue": {
+                       "action": "Run Script",
+                       "event": "update:modelValue",
+                       "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value };\nconst params = { ...baseParams, category: JSON.stringify(selectedCategories.value) };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();\ntry { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
+                      }
+                     },
+                     "componentId": "MultiSelect-flt-apps",
+                     "componentName": "MultiSelect",
+                     "componentProps": {
+                      "modelValue": {
+                       "$type": "variable",
+                       "name": "selectedApps"
+                      },
+                      "options": "{{ [{ label: 'ERPNext', value: 'ERPNext', icon: '/assets/connect/images/app_icons/erpnext.png' }, { label: 'Frappe HR', value: 'Frappe HR', icon: '/assets/connect/images/app_icons/frappe-hr.png' }, { label: 'CRM', value: 'Frappe CRM', icon: '/assets/connect/images/app_icons/crm.png' }, { label: 'Helpdesk', value: 'Helpdesk', icon: '/assets/connect/images/app_icons/helpdesk.png' }, { label: 'Insights', value: 'Frappe Insights', icon: '/assets/connect/images/app_icons/insights.png' }, { label: 'Learning', value: 'Learning', icon: '/assets/connect/images/app_icons/learning.png' }, { label: 'Framework', value: 'Frappe Framework', icon: '/assets/connect/images/app_icons/framework.png' }] }}",
+                      "placeholder": "Any",
+                      "size": "sm",
+                      "variant": "outline"
+                     },
+                     "componentSlots": {
+                      "item-prefix": {
+                       "parentBlockId": "MultiSelect-flt-apps",
+                       "slotContent": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "backgroundImage": "{{ 'url(\"' + item.icon + '\")' }}",
+                          "backgroundPosition": "center",
+                          "backgroundRepeat": "no-repeat",
+                          "backgroundSize": "contain",
+                          "borderRadius": "3px",
+                          "flexShrink": "0",
+                          "height": "14px",
+                          "width": "14px"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "app-filter-option-icon",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "tabletStyles": {}
+                        }
+                       ]
+                      }
+                     },
+                     "mobileStyles": {},
+                     "tabletStyles": {}
+                    }
+                   ],
+                   "classes": [],
+                   "componentEvents": {},
+                   "componentId": "field-apps-filter",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "mobileStyles": {},
+                   "originalElement": "div",
+                   "tabletStyles": {}
                   }
                  ],
                  "classes": [],
@@ -4699,11 +4478,42 @@
              "slotName": "trigger"
             }
            }
+          }
+         ],
+         "classes": [],
+         "componentId": "filters-row",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "display": "flex",
+          "justifyContent": "space-between",
+          "marginBottom": "8px",
+          "marginTop": "16px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5, #a6a6a6)",
+            "marginLeft": "6px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "text-result-count",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "{{ (directoryPartners.data || []).length + ' partners' }}"
+           }
           },
           {
            "baseStyles": {
+            "color": "var(--ink-gray-5, oklch(0.586 0 0))",
             "display": "{{ (searchTerm || tierFilter || (selectedCountries && selectedCountries.length) || (selectedCategories && selectedCategories.length) || businessProcessFilter || implementationTypeFilter || languageFilter || minRatingFilter || maxResponseTimeFilter) ? 'inline-flex' : 'none' }}",
-            "flexShrink": "0"
+            "fontWeight": "500"
            },
            "children": [],
            "classes": [],
@@ -4714,36 +4524,19 @@
              "script": "searchTerm.value = ''; tierFilter.value = ''; selectedCountries.value = []; selectedCategories.value = []; selectedApps.value = []; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = '';\ntry { localStorage.removeItem('connect_directory_filters'); } catch (e) {}\nconst baseParams = { limit: 9, search: '', tier: '', country: '[]', product: '[]', business_process: '', implementation_type: '', language: '', min_rating: '', max_response_time: '' };\nconst params = { ...baseParams, category: '[]' };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();"
             }
            },
-           "componentId": "Button-reset-filters",
+           "componentId": "Button-reset-count-row",
            "componentName": "Button",
            "componentProps": {
-            "iconLeft": "lucide-x",
             "label": "Reset",
+            "size": "sm",
             "variant": "ghost"
            }
           }
          ],
          "classes": [],
-         "componentId": "filters-row",
+         "componentId": "result-count-row",
          "componentName": "container",
          "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "color": "var(--ink-gray-5, #a6a6a6)",
-          "marginBottom": "8px",
-          "marginLeft": "6px",
-          "marginTop": "16px"
-         },
-         "children": [],
-         "classes": [],
-         "componentId": "text-result-count",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-sm",
-          "tag": "span",
-          "text": "{{ (directoryPartners.data || []).length + ' partners' }}"
-         }
         }
        ],
        "classes": [],
@@ -4949,13 +4742,14 @@
                              "componentId": "row-gold-tier-badge-icon",
                              "componentName": "HTML",
                              "componentProps": {
-                              "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 28 28\" fill=\"none\"><path d=\"M13.4912 0.226893C13.7636 -0.0756311 14.236 -0.0756311 14.509 0.226893L16.4868 2.42128C16.6752 2.62965 16.969 2.70274 17.2316 2.60614L19.9959 1.58885C20.3773 1.44859 20.7952 1.66961 20.8973 2.06512L21.6363 4.9339C21.7064 5.20632 21.9337 5.40882 22.2102 5.44612L25.1275 5.83898C25.5298 5.89314 25.7981 6.28454 25.706 6.68242L25.0359 9.56839C24.9727 9.84243 25.08 10.128 25.3083 10.2906L27.7098 12.0036C28.0408 12.2398 28.0982 12.7119 27.8327 13.021L25.9077 15.263C25.7251 15.4759 25.6886 15.7791 25.8155 16.0298L27.1516 18.6705C27.3354 19.0347 27.1678 19.4793 26.7905 19.6288L24.0511 20.7133C23.7914 20.8162 23.6193 21.0676 23.6158 21.349L23.5798 24.3125C23.5752 24.721 23.2216 25.0364 22.8182 24.992L19.8922 24.6705C19.6145 24.64 19.3461 24.7819 19.2134 25.0295L17.8141 27.6368C17.6211 27.9963 17.1626 28.1101 16.8259 27.8821L14.3833 26.2282C14.1514 26.0711 13.8482 26.0711 13.6164 26.2282L11.1744 27.8821C10.8376 28.1101 10.3791 27.9963 10.1861 27.6368L8.78682 25.0295C8.65408 24.7819 8.38512 24.64 8.10748 24.6705L5.18144 24.992C4.77859 25.0364 4.42501 24.721 4.4198 24.3125L4.38444 21.349C4.38096 21.0676 4.2088 20.8162 3.94855 20.7133L1.20916 19.6288C0.831813 19.4793 0.664291 19.0347 0.848617 18.6705L2.1847 16.0298C2.31164 15.7791 2.27512 15.4759 2.09195 15.263L0.167536 13.021C-0.0979398 12.7119 -0.0411269 12.2398 0.289849 12.0036L2.69188 10.2906C2.91968 10.128 3.02749 9.84243 2.96373 9.56839L2.29425 6.68242C2.2015 6.28454 2.46987 5.89314 2.87214 5.83898L5.78948 5.44612C6.06655 5.40882 6.2932 5.20632 6.36333 4.9339L7.10237 2.06512C7.20439 1.66961 7.62232 1.44859 8.00372 1.58885L10.768 2.60614C11.0306 2.70274 11.3251 2.62965 11.5129 2.42128L13.4912 0.226893Z\" fill=\"' + (item.tier === 'Gold' ? '#D4A017' : item.tier === 'Silver' ? '#A6A6A6' : item.tier === 'Bronze' ? '#B86E47' : '#A6A6A6') + '\"></path><path d=\"M18.0202 9.62684C18.324 9.27238 18.8561 9.23364 19.2079 9.53963C19.5603 9.84586 19.5992 10.3815 19.2955 10.7361L13.0521 18.015C12.8945 18.1993 12.6649 18.3066 12.4232 18.3092C12.1815 18.3116 11.9502 18.2091 11.7885 18.0282L8.83117 14.7193C8.52048 14.3711 8.54773 13.835 8.8932 13.5217C9.23925 13.2084 9.77193 13.2365 10.0832 13.5844L12.4012 16.1779L18.0202 9.62684Z\" fill=\"white\"></path></svg>' }}"
+                              "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 28 28\" fill=\"none\"><path d=\"M13.4912 0.226893C13.7636 -0.0756311 14.236 -0.0756311 14.509 0.226893L16.4868 2.42128C16.6752 2.62965 16.969 2.70274 17.2316 2.60614L19.9959 1.58885C20.3773 1.44859 20.7952 1.66961 20.8973 2.06512L21.6363 4.9339C21.7064 5.20632 21.9337 5.40882 22.2102 5.44612L25.1275 5.83898C25.5298 5.89314 25.7981 6.28454 25.706 6.68242L25.0359 9.56839C24.9727 9.84243 25.08 10.128 25.3083 10.2906L27.7098 12.0036C28.0408 12.2398 28.0982 12.7119 27.8327 13.021L25.9077 15.263C25.7251 15.4759 25.6886 15.7791 25.8155 16.0298L27.1516 18.6705C27.3354 19.0347 27.1678 19.4793 26.7905 19.6288L24.0511 20.7133C23.7914 20.8162 23.6193 21.0676 23.6158 21.349L23.5798 24.3125C23.5752 24.721 23.2216 25.0364 22.8182 24.992L19.8922 24.6705C19.6145 24.64 19.3461 24.7819 19.2134 25.0295L17.8141 27.6368C17.6211 27.9963 17.1626 28.1101 16.8259 27.8821L14.3833 26.2282C14.1514 26.0711 13.8482 26.0711 13.6164 26.2282L11.1744 27.8821C10.8376 28.1101 10.3791 27.9963 10.1861 27.6368L8.78682 25.0295C8.65408 24.7819 8.38512 24.64 8.10748 24.6705L5.18144 24.992C4.77859 25.0364 4.42501 24.721 4.4198 24.3125L4.38444 21.349C4.38096 21.0676 4.2088 20.8162 3.94855 20.7133L1.20916 19.6288C0.831813 19.4793 0.664291 19.0347 0.848617 18.6705L2.1847 16.0298C2.31164 15.7791 2.27512 15.4759 2.09195 15.263L0.167536 13.021C-0.0979398 12.7119 -0.0411269 12.2398 0.289849 12.0036L2.69188 10.2906C2.91968 10.128 3.02749 9.84243 2.96373 9.56839L2.29425 6.68242C2.2015 6.28454 2.46987 5.89314 2.87214 5.83898L5.78948 5.44612C6.06655 5.40882 6.2932 5.20632 6.36333 4.9339L7.10237 2.06512C7.20439 1.66961 7.62232 1.44859 8.00372 1.58885L10.768 2.60614C11.0306 2.70274 11.3251 2.62965 11.5129 2.42128L13.4912 0.226893Z\" fill=\"' + (item.tier === 'Gold' ? '#D4A017' : item.tier === 'Silver' ? '#A6A6A6' : item.tier === 'Bronze' ? '#7A4A28' : '#A6A6A6') + '\"></path><path d=\"M18.0202 9.62684C18.324 9.27238 18.8561 9.23364 19.2079 9.53963C19.5603 9.84586 19.5992 10.3815 19.2955 10.7361L13.0521 18.015C12.8945 18.1993 12.6649 18.3066 12.4232 18.3092C12.1815 18.3116 11.9502 18.2091 11.7885 18.0282L8.83117 14.7193C8.52048 14.3711 8.54773 13.835 8.8932 13.5217C9.23925 13.2084 9.77193 13.2365 10.0832 13.5844L12.4012 16.1779L18.0202 9.62684Z\" fill=\"white\"></path></svg>' }}"
                              },
                              "componentSlots": {},
                              "mobileStyles": {},
                              "tabletStyles": {}
                             }
-                           ]
+                           ],
+                           "slotId": "row-gold-tier-badge:prefix"
                           }
                          },
                          "mobileStyles": {},
@@ -4981,6 +4775,27 @@
                         "gap": "4px"
                        },
                        "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "flexShrink": "0",
+                          "height": "12px",
+                          "width": "12px"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-location-icon",
+                         "componentName": "FeatherIcon",
+                         "componentProps": {
+                          "color": "var(--ink-gray-5)",
+                          "name": "map-pin",
+                          "strokeWidth": 2
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
                         {
                          "attributes": {},
                          "baseStyles": {
@@ -5170,7 +4985,7 @@
                          "componentName": "FeatherIcon",
                          "componentProps": {
                           "color": "var(--ink-gray-5)",
-                          "name": "dollar-sign",
+                          "name": "tag",
                           "strokeWidth": 2
                          },
                          "componentSlots": {},
@@ -5392,501 +5207,6 @@
              }
             },
             {
-             "baseStyles": {
-              "display": "{{ (searchTerm || tierFilter || (selectedCountries && selectedCountries.length) || (selectedCategories && selectedCategories.length) || businessProcessFilter || implementationTypeFilter || languageFilter || minRatingFilter || maxResponseTimeFilter) ? 'none' : 'block' }}",
-              "padding": "0 20px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9, #171717)",
-                "fontWeight": "600",
-                "marginBottom": "14px",
-                "marginTop": "32px"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "text-apps-heading",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-base",
-                "tag": "span",
-                "text": "Which app are you looking to implement?"
-               }
-              }
-             ],
-             "classes": [],
-             "componentId": "apps-heading-wrap",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "display": "{{ (searchTerm || tierFilter || (selectedCountries && selectedCountries.length) || (selectedCategories && selectedCategories.length) || businessProcessFilter || implementationTypeFilter || languageFilter || minRatingFilter || maxResponseTimeFilter) ? 'none' : 'flex' }}",
-              "flexDirection": "row",
-              "flexWrap": "wrap",
-              "gap": "10px",
-              "padding": "0 20px 20px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('ERPNext') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-erpnext",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "ERPNext"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'ERPNext'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-erpnext",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Frappe HR') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-frappe-hr",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Frappe HR"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Frappe HR'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-frappe-hr",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Frappe CRM') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-crm",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "CRM"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Frappe CRM'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-crm",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Helpdesk') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-helpdesk",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Helpdesk"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Helpdesk'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-helpdesk",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Frappe Insights') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-insights",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Insights"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Frappe Insights'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-insights",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Drive') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Drive') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Drive') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-drive",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Drive"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Drive'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-drive",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Learning') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Learning') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Learning') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-learning",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Learning"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Learning'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-learning",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Education') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Education') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Education') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-education",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Education"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Education'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-education",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('School') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('School') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('School') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-school",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "School"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'School'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-school",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Lending') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Lending') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Lending') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-lending",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Lending"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Lending'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-lending",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--surface-white, #ffffff)' }}",
-                "border": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-                "borderColor": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--surface-gray-7, #2b2b2b)' : 'var(--outline-gray-2, oklch(0.89 0 0))' }}",
-                "borderRadius": "8px",
-                "cursor": "pointer",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "8px 14px",
-                "whiteSpace": "nowrap"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "{{ (selectedApps || []).includes('Frappe Framework') ? 'var(--text-on-gray, #ffffff)' : 'var(--ink-gray-8, #383838)' }}"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "text-app-pill-label-framework",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Framework"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "const app = 'Frappe Framework'; const cur = selectedApps.value || []; selectedApps.value = cur.includes(app) ? cur.filter(v => v !== app) : [...cur, app]; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-                }
-               },
-               "componentId": "app-pill-framework",
-               "componentName": "container",
-               "originalElement": "div"
-              }
-             ],
-             "classes": [],
-             "componentId": "apps-pills-row",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
              "children": [],
              "classes": [],
              "componentId": "ListRows-91e783f6b-b2",
@@ -6052,13 +5372,14 @@
                              "componentId": "row-gold-tier-badge-b2-icon",
                              "componentName": "HTML",
                              "componentProps": {
-                              "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 28 28\" fill=\"none\"><path d=\"M13.4912 0.226893C13.7636 -0.0756311 14.236 -0.0756311 14.509 0.226893L16.4868 2.42128C16.6752 2.62965 16.969 2.70274 17.2316 2.60614L19.9959 1.58885C20.3773 1.44859 20.7952 1.66961 20.8973 2.06512L21.6363 4.9339C21.7064 5.20632 21.9337 5.40882 22.2102 5.44612L25.1275 5.83898C25.5298 5.89314 25.7981 6.28454 25.706 6.68242L25.0359 9.56839C24.9727 9.84243 25.08 10.128 25.3083 10.2906L27.7098 12.0036C28.0408 12.2398 28.0982 12.7119 27.8327 13.021L25.9077 15.263C25.7251 15.4759 25.6886 15.7791 25.8155 16.0298L27.1516 18.6705C27.3354 19.0347 27.1678 19.4793 26.7905 19.6288L24.0511 20.7133C23.7914 20.8162 23.6193 21.0676 23.6158 21.349L23.5798 24.3125C23.5752 24.721 23.2216 25.0364 22.8182 24.992L19.8922 24.6705C19.6145 24.64 19.3461 24.7819 19.2134 25.0295L17.8141 27.6368C17.6211 27.9963 17.1626 28.1101 16.8259 27.8821L14.3833 26.2282C14.1514 26.0711 13.8482 26.0711 13.6164 26.2282L11.1744 27.8821C10.8376 28.1101 10.3791 27.9963 10.1861 27.6368L8.78682 25.0295C8.65408 24.7819 8.38512 24.64 8.10748 24.6705L5.18144 24.992C4.77859 25.0364 4.42501 24.721 4.4198 24.3125L4.38444 21.349C4.38096 21.0676 4.2088 20.8162 3.94855 20.7133L1.20916 19.6288C0.831813 19.4793 0.664291 19.0347 0.848617 18.6705L2.1847 16.0298C2.31164 15.7791 2.27512 15.4759 2.09195 15.263L0.167536 13.021C-0.0979398 12.7119 -0.0411269 12.2398 0.289849 12.0036L2.69188 10.2906C2.91968 10.128 3.02749 9.84243 2.96373 9.56839L2.29425 6.68242C2.2015 6.28454 2.46987 5.89314 2.87214 5.83898L5.78948 5.44612C6.06655 5.40882 6.2932 5.20632 6.36333 4.9339L7.10237 2.06512C7.20439 1.66961 7.62232 1.44859 8.00372 1.58885L10.768 2.60614C11.0306 2.70274 11.3251 2.62965 11.5129 2.42128L13.4912 0.226893Z\" fill=\"' + (item.tier === 'Gold' ? '#D4A017' : item.tier === 'Silver' ? '#A6A6A6' : item.tier === 'Bronze' ? '#B86E47' : '#A6A6A6') + '\"></path><path d=\"M18.0202 9.62684C18.324 9.27238 18.8561 9.23364 19.2079 9.53963C19.5603 9.84586 19.5992 10.3815 19.2955 10.7361L13.0521 18.015C12.8945 18.1993 12.6649 18.3066 12.4232 18.3092C12.1815 18.3116 11.9502 18.2091 11.7885 18.0282L8.83117 14.7193C8.52048 14.3711 8.54773 13.835 8.8932 13.5217C9.23925 13.2084 9.77193 13.2365 10.0832 13.5844L12.4012 16.1779L18.0202 9.62684Z\" fill=\"white\"></path></svg>' }}"
+                              "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 28 28\" fill=\"none\"><path d=\"M13.4912 0.226893C13.7636 -0.0756311 14.236 -0.0756311 14.509 0.226893L16.4868 2.42128C16.6752 2.62965 16.969 2.70274 17.2316 2.60614L19.9959 1.58885C20.3773 1.44859 20.7952 1.66961 20.8973 2.06512L21.6363 4.9339C21.7064 5.20632 21.9337 5.40882 22.2102 5.44612L25.1275 5.83898C25.5298 5.89314 25.7981 6.28454 25.706 6.68242L25.0359 9.56839C24.9727 9.84243 25.08 10.128 25.3083 10.2906L27.7098 12.0036C28.0408 12.2398 28.0982 12.7119 27.8327 13.021L25.9077 15.263C25.7251 15.4759 25.6886 15.7791 25.8155 16.0298L27.1516 18.6705C27.3354 19.0347 27.1678 19.4793 26.7905 19.6288L24.0511 20.7133C23.7914 20.8162 23.6193 21.0676 23.6158 21.349L23.5798 24.3125C23.5752 24.721 23.2216 25.0364 22.8182 24.992L19.8922 24.6705C19.6145 24.64 19.3461 24.7819 19.2134 25.0295L17.8141 27.6368C17.6211 27.9963 17.1626 28.1101 16.8259 27.8821L14.3833 26.2282C14.1514 26.0711 13.8482 26.0711 13.6164 26.2282L11.1744 27.8821C10.8376 28.1101 10.3791 27.9963 10.1861 27.6368L8.78682 25.0295C8.65408 24.7819 8.38512 24.64 8.10748 24.6705L5.18144 24.992C4.77859 25.0364 4.42501 24.721 4.4198 24.3125L4.38444 21.349C4.38096 21.0676 4.2088 20.8162 3.94855 20.7133L1.20916 19.6288C0.831813 19.4793 0.664291 19.0347 0.848617 18.6705L2.1847 16.0298C2.31164 15.7791 2.27512 15.4759 2.09195 15.263L0.167536 13.021C-0.0979398 12.7119 -0.0411269 12.2398 0.289849 12.0036L2.69188 10.2906C2.91968 10.128 3.02749 9.84243 2.96373 9.56839L2.29425 6.68242C2.2015 6.28454 2.46987 5.89314 2.87214 5.83898L5.78948 5.44612C6.06655 5.40882 6.2932 5.20632 6.36333 4.9339L7.10237 2.06512C7.20439 1.66961 7.62232 1.44859 8.00372 1.58885L10.768 2.60614C11.0306 2.70274 11.3251 2.62965 11.5129 2.42128L13.4912 0.226893Z\" fill=\"' + (item.tier === 'Gold' ? '#D4A017' : item.tier === 'Silver' ? '#A6A6A6' : item.tier === 'Bronze' ? '#7A4A28' : '#A6A6A6') + '\"></path><path d=\"M18.0202 9.62684C18.324 9.27238 18.8561 9.23364 19.2079 9.53963C19.5603 9.84586 19.5992 10.3815 19.2955 10.7361L13.0521 18.015C12.8945 18.1993 12.6649 18.3066 12.4232 18.3092C12.1815 18.3116 11.9502 18.2091 11.7885 18.0282L8.83117 14.7193C8.52048 14.3711 8.54773 13.835 8.8932 13.5217C9.23925 13.2084 9.77193 13.2365 10.0832 13.5844L12.4012 16.1779L18.0202 9.62684Z\" fill=\"white\"></path></svg>' }}"
                              },
                              "componentSlots": {},
                              "mobileStyles": {},
                              "tabletStyles": {}
                             }
-                           ]
+                           ],
+                           "slotId": "row-gold-tier-badge-b2:prefix"
                           }
                          },
                          "mobileStyles": {},
@@ -6084,6 +5405,27 @@
                         "gap": "4px"
                        },
                        "children": [
+                        {
+                         "attributes": {},
+                         "baseStyles": {
+                          "flexShrink": "0",
+                          "height": "12px",
+                          "width": "12px"
+                         },
+                         "children": [],
+                         "classes": [],
+                         "componentEvents": {},
+                         "componentId": "row-gold-location-icon-b2",
+                         "componentName": "FeatherIcon",
+                         "componentProps": {
+                          "color": "var(--ink-gray-5)",
+                          "name": "map-pin",
+                          "strokeWidth": 2
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
+                        },
                         {
                          "attributes": {},
                          "baseStyles": {
@@ -6755,13 +6097,14 @@
                                "componentId": "row-gold-tier-badge-fb-icon",
                                "componentName": "HTML",
                                "componentProps": {
-                                "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 28 28\" fill=\"none\"><path d=\"M13.4912 0.226893C13.7636 -0.0756311 14.236 -0.0756311 14.509 0.226893L16.4868 2.42128C16.6752 2.62965 16.969 2.70274 17.2316 2.60614L19.9959 1.58885C20.3773 1.44859 20.7952 1.66961 20.8973 2.06512L21.6363 4.9339C21.7064 5.20632 21.9337 5.40882 22.2102 5.44612L25.1275 5.83898C25.5298 5.89314 25.7981 6.28454 25.706 6.68242L25.0359 9.56839C24.9727 9.84243 25.08 10.128 25.3083 10.2906L27.7098 12.0036C28.0408 12.2398 28.0982 12.7119 27.8327 13.021L25.9077 15.263C25.7251 15.4759 25.6886 15.7791 25.8155 16.0298L27.1516 18.6705C27.3354 19.0347 27.1678 19.4793 26.7905 19.6288L24.0511 20.7133C23.7914 20.8162 23.6193 21.0676 23.6158 21.349L23.5798 24.3125C23.5752 24.721 23.2216 25.0364 22.8182 24.992L19.8922 24.6705C19.6145 24.64 19.3461 24.7819 19.2134 25.0295L17.8141 27.6368C17.6211 27.9963 17.1626 28.1101 16.8259 27.8821L14.3833 26.2282C14.1514 26.0711 13.8482 26.0711 13.6164 26.2282L11.1744 27.8821C10.8376 28.1101 10.3791 27.9963 10.1861 27.6368L8.78682 25.0295C8.65408 24.7819 8.38512 24.64 8.10748 24.6705L5.18144 24.992C4.77859 25.0364 4.42501 24.721 4.4198 24.3125L4.38444 21.349C4.38096 21.0676 4.2088 20.8162 3.94855 20.7133L1.20916 19.6288C0.831813 19.4793 0.664291 19.0347 0.848617 18.6705L2.1847 16.0298C2.31164 15.7791 2.27512 15.4759 2.09195 15.263L0.167536 13.021C-0.0979398 12.7119 -0.0411269 12.2398 0.289849 12.0036L2.69188 10.2906C2.91968 10.128 3.02749 9.84243 2.96373 9.56839L2.29425 6.68242C2.2015 6.28454 2.46987 5.89314 2.87214 5.83898L5.78948 5.44612C6.06655 5.40882 6.2932 5.20632 6.36333 4.9339L7.10237 2.06512C7.20439 1.66961 7.62232 1.44859 8.00372 1.58885L10.768 2.60614C11.0306 2.70274 11.3251 2.62965 11.5129 2.42128L13.4912 0.226893Z\" fill=\"' + (item.tier === 'Gold' ? '#D4A017' : item.tier === 'Silver' ? '#A6A6A6' : item.tier === 'Bronze' ? '#B86E47' : '#A6A6A6') + '\"></path><path d=\"M18.0202 9.62684C18.324 9.27238 18.8561 9.23364 19.2079 9.53963C19.5603 9.84586 19.5992 10.3815 19.2955 10.7361L13.0521 18.015C12.8945 18.1993 12.6649 18.3066 12.4232 18.3092C12.1815 18.3116 11.9502 18.2091 11.7885 18.0282L8.83117 14.7193C8.52048 14.3711 8.54773 13.835 8.8932 13.5217C9.23925 13.2084 9.77193 13.2365 10.0832 13.5844L12.4012 16.1779L18.0202 9.62684Z\" fill=\"white\"></path></svg>' }}"
+                                "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 28 28\" fill=\"none\"><path d=\"M13.4912 0.226893C13.7636 -0.0756311 14.236 -0.0756311 14.509 0.226893L16.4868 2.42128C16.6752 2.62965 16.969 2.70274 17.2316 2.60614L19.9959 1.58885C20.3773 1.44859 20.7952 1.66961 20.8973 2.06512L21.6363 4.9339C21.7064 5.20632 21.9337 5.40882 22.2102 5.44612L25.1275 5.83898C25.5298 5.89314 25.7981 6.28454 25.706 6.68242L25.0359 9.56839C24.9727 9.84243 25.08 10.128 25.3083 10.2906L27.7098 12.0036C28.0408 12.2398 28.0982 12.7119 27.8327 13.021L25.9077 15.263C25.7251 15.4759 25.6886 15.7791 25.8155 16.0298L27.1516 18.6705C27.3354 19.0347 27.1678 19.4793 26.7905 19.6288L24.0511 20.7133C23.7914 20.8162 23.6193 21.0676 23.6158 21.349L23.5798 24.3125C23.5752 24.721 23.2216 25.0364 22.8182 24.992L19.8922 24.6705C19.6145 24.64 19.3461 24.7819 19.2134 25.0295L17.8141 27.6368C17.6211 27.9963 17.1626 28.1101 16.8259 27.8821L14.3833 26.2282C14.1514 26.0711 13.8482 26.0711 13.6164 26.2282L11.1744 27.8821C10.8376 28.1101 10.3791 27.9963 10.1861 27.6368L8.78682 25.0295C8.65408 24.7819 8.38512 24.64 8.10748 24.6705L5.18144 24.992C4.77859 25.0364 4.42501 24.721 4.4198 24.3125L4.38444 21.349C4.38096 21.0676 4.2088 20.8162 3.94855 20.7133L1.20916 19.6288C0.831813 19.4793 0.664291 19.0347 0.848617 18.6705L2.1847 16.0298C2.31164 15.7791 2.27512 15.4759 2.09195 15.263L0.167536 13.021C-0.0979398 12.7119 -0.0411269 12.2398 0.289849 12.0036L2.69188 10.2906C2.91968 10.128 3.02749 9.84243 2.96373 9.56839L2.29425 6.68242C2.2015 6.28454 2.46987 5.89314 2.87214 5.83898L5.78948 5.44612C6.06655 5.40882 6.2932 5.20632 6.36333 4.9339L7.10237 2.06512C7.20439 1.66961 7.62232 1.44859 8.00372 1.58885L10.768 2.60614C11.0306 2.70274 11.3251 2.62965 11.5129 2.42128L13.4912 0.226893Z\" fill=\"' + (item.tier === 'Gold' ? '#D4A017' : item.tier === 'Silver' ? '#A6A6A6' : item.tier === 'Bronze' ? '#7A4A28' : '#A6A6A6') + '\"></path><path d=\"M18.0202 9.62684C18.324 9.27238 18.8561 9.23364 19.2079 9.53963C19.5603 9.84586 19.5992 10.3815 19.2955 10.7361L13.0521 18.015C12.8945 18.1993 12.6649 18.3066 12.4232 18.3092C12.1815 18.3116 11.9502 18.2091 11.7885 18.0282L8.83117 14.7193C8.52048 14.3711 8.54773 13.835 8.8932 13.5217C9.23925 13.2084 9.77193 13.2365 10.0832 13.5844L12.4012 16.1779L18.0202 9.62684Z\" fill=\"white\"></path></svg>' }}"
                                },
                                "componentSlots": {},
                                "mobileStyles": {},
                                "tabletStyles": {}
                               }
-                             ]
+                             ],
+                             "slotId": "row-gold-tier-badge-fb:prefix"
                             }
                            },
                            "mobileStyles": {},
@@ -6787,6 +6130,27 @@
                           "gap": "4px"
                          },
                          "children": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "flexShrink": "0",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "children": [],
+                           "classes": [],
+                           "componentEvents": {},
+                           "componentId": "row-gold-location-icon-fb",
+                           "componentName": "FeatherIcon",
+                           "componentProps": {
+                            "color": "var(--ink-gray-5)",
+                            "name": "map-pin",
+                            "strokeWidth": 2
+                           },
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "tabletStyles": {}
+                          },
                           {
                            "attributes": {},
                            "baseStyles": {
@@ -7367,7 +6731,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-15 11:59:09.905143",
+ "modified": "2026-09-15 18:10:26.568297",
  "modified_by": "Administrator",
  "name": "partner_directory_redesign",
  "owner": "Administrator",
@@ -7376,7 +6740,6 @@
  "published": 1,
  "resources": [
   {
-   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "params": "{}",
@@ -7385,7 +6748,6 @@
    "url": "/api/method/connect.api.account.get_my_context"
   },
   {
-   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "params": "{}",
@@ -7394,7 +6756,6 @@
    "url": "/api/method/connect.api.customer.get_my_customer"
   },
   {
-   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "params": "{\"limit\": \"9\"}",
@@ -7403,7 +6764,6 @@
    "url": "/api/method/connect.api.partner.list_directory_partners"
   },
   {
-   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "params": "{}",
@@ -7412,7 +6772,6 @@
    "url": "/api/method/connect.api.customer.get_my_shortlisted_partner_names"
   },
   {
-   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "params": "{}",
@@ -7421,7 +6780,6 @@
    "url": "/api/method/connect.api.partner.list_partner_tiers"
   },
   {
-   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "resource_name": "partnerCountries",
@@ -7429,7 +6787,6 @@
    "url": "/api/method/connect.api.partner.list_partner_countries"
   },
   {
-   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "resource_name": "partnerIndustries",
@@ -7437,7 +6794,6 @@
    "url": "/api/method/connect.api.partner.list_partner_industries"
   },
   {
-   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "resource_name": "filterOptions",
@@ -7445,7 +6801,6 @@
    "url": "/api/method/connect.api.partner.list_partner_filter_options"
   },
   {
-   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "resource_name": "categoryFallback",
@@ -7453,7 +6808,6 @@
    "url": "/api/method/connect.api.partner.list_directory_partners"
   },
   {
-   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "on_success": "function onSuccess(data) {\n  if (bootstrapped.value) return;\n  bootstrapped.value = true;\n  if (route.query.category || route.query.region) {\n    if (route.query.category) { selectedCategories.value = [route.query.category]; }\n    if (route.query.region) { const REGION_TO_COUNTRIES = { 'India': ['India'], 'Asia': ['Philippines','Indonesia','Myanmar','Pakistan','Singapore','Australia','Bangladesh','China','Sri Lanka','Thailand','Vietnam'], 'Middle East': ['Saudi Arabia','UAE','Egypt','Qatar','Kuwait','Oman','Bahrain','Iraq','Jordan','Libya','Yemen'], 'Africa': ['Kenya','Tanzania','Congo - Kinshasa','Ghana','Mauritius','Nigeria','South Africa','Uganda'], 'Europe': ['Germany','France','Italy','Malta','Netherlands','Spain','Switzerland','United Kingdom'], 'Americas': ['United States','Canada'] }; let wizardRegions = []; try { wizardRegions = JSON.parse(route.query.region); } catch (e) { wizardRegions = [route.query.region]; } const mappedCountries = wizardRegions.flatMap(r => REGION_TO_COUNTRIES[r] || []); if (mappedCountries.length) { selectedCountries.value = mappedCountries; } }\n  } else { try { const saved = JSON.parse(localStorage.getItem('connect_directory_filters') || 'null'); if (saved) { searchTerm.value = saved.searchTerm || ''; tierFilter.value = saved.tierFilter || ''; selectedCountries.value = saved.selectedCountries || []; selectedCategories.value = saved.selectedCategories || []; selectedApps.value = saved.selectedApps || []; } } catch (e) {} }\n  try { mockLoggedIn.value = localStorage.getItem('connect_mock_logged_in') === '1'; } catch (e) {}\n  try { localShortlist.value = JSON.parse(localStorage.getItem('connect_local_shortlist') || '[]'); } catch (e) { localShortlist.value = []; }\n  const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();\n}",
@@ -7466,109 +6820,91 @@
  "studio_app": "connect",
  "variables": [
   {
-   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "searchTerm",
    "variable_type": "String"
   },
   {
-   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "tierFilter",
    "variable_type": "String"
   },
   {
-   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "countryFilter",
    "variable_type": "String"
   },
   {
-   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "industryFilter",
    "variable_type": "String"
   },
   {
-   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "businessProcessFilter",
    "variable_type": "String"
   },
   {
-   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "implementationTypeFilter",
    "variable_type": "String"
   },
   {
-   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "languageFilter",
    "variable_type": "String"
   },
   {
-   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "minRatingFilter",
    "variable_type": "String"
   },
   {
-   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "maxResponseTimeFilter",
    "variable_type": "String"
   },
   {
-   "__unsaved": 1,
    "initial_value": "[]",
    "variable_name": "selectedCountries",
    "variable_type": "Object"
   },
   {
-   "__unsaved": 1,
    "initial_value": "[]",
    "variable_name": "selectedCategories",
    "variable_type": "Object"
   },
   {
-   "__unsaved": 1,
    "initial_value": "false",
    "variable_name": "bootstrapped",
    "variable_type": "Boolean"
   },
   {
-   "__unsaved": 1,
    "initial_value": "[]",
    "variable_name": "selectedApps",
    "variable_type": "Object"
   },
   {
-   "__unsaved": 1,
    "initial_value": "false",
    "variable_name": "showLoginDialog",
    "variable_type": "Boolean"
   },
   {
-   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "pendingAction",
    "variable_type": "String"
   },
   {
-   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "pendingPartner",
    "variable_type": "String"
   },
   {
-   "__unsaved": 1,
    "initial_value": "false",
    "variable_name": "mockLoggedIn",
    "variable_type": "Boolean"
   },
   {
-   "__unsaved": 1,
    "initial_value": "[]",
    "variable_name": "localShortlist",
    "variable_type": "Object"
