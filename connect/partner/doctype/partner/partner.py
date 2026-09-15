@@ -247,14 +247,20 @@ def _sqlite_rank(search_term, allowed_names):
 	ranking plus its difflib fuzzy-match fallback with connect.search.PartnerSearch, so this works
 	regardless of the site's DB backend. allowed_names is passed as a `name` filter rather than
 	baked into the index, since the structured filters (industry/region/child-table membership/etc.)
-	already narrowed it in SQL before this ever runs — see search_partners."""
+	already narrowed it in SQL before this ever runs — see search_partners.
+
+	Returns None (not []) when the search index itself is unavailable, so a caller can tell "the
+	index is down, fall back to showing everyone" apart from "the index ran and genuinely found no
+	match" — collapsing those into the same [] previously made every search silently return the
+	full unfiltered list regardless of the query, since a real zero-match query looked identical to
+	an unavailable index."""
 	if not allowed_names:
 		return []
 	from connect.search import PartnerSearch
 
 	search = PartnerSearch()
 	if not (search.is_search_enabled() and search.index_exists()):
-		return []
+		return None
 	result = search.search(search_term, filters={"name": allowed_names})
 	return [r["name"] for r in result["results"]]
 
@@ -356,13 +362,24 @@ def search_partners(
 		by_name = {c.name: c for c in candidates}
 
 		ranked_names = _sqlite_rank(search, list(by_name))
-		ordered = [by_name[n] for n in ranked_names]
-
-		# Candidates the FTS pass didn't rank at all (no match, even with spelling
-		# correction) fall through unranked rather than being dropped.
-		ordered += [c for c in candidates if c.name not in set(ranked_names)]
-
-		partners = ordered[:limit]
+		if ranked_names is None:
+			# Search index unavailable — fall back to the structured-filtered candidates
+			# unranked rather than showing nobody.
+			partners = candidates[:limit]
+		else:
+			ranked = [by_name[n] for n in ranked_names]
+			# Frappe's FTS5 layer only prefix-wildcards terms of 4+ chars (MIN_WORD_LENGTH in
+			# sqlite_search.py) — a still-being-typed query like "aur" is searched as an exact
+			# 3-letter word, which "Auriga IT" can never satisfy. Patch that gap (and any other
+			# tokenizer miss, e.g. a mid-word fragment) with a plain substring match over the
+			# same structured-filtered candidates, appended after the ranked results.
+			ranked_set = set(ranked_names)
+			term = search.lower()
+			substring_matches = [
+				c for c in candidates
+				if c.name not in ranked_set and term in (c.partner_name or "").lower()
+			]
+			partners = (ranked + substring_matches)[:limit]
 		if sort in SORT_OPTIONS:
 			field, desc = SORT_OPTIONS[sort]
 
