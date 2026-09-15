@@ -169,6 +169,15 @@ def _apps_by_partner(names):
 	return _child_values_by_partner("Partner App", "app", names, parentfield="apps")
 
 
+def _business_processes_by_partner(names):
+	"""Every Partner Business Process (Partner.business_processes) value for each partner in
+	`names` — see _child_values_by_partner. Used as the directory card's "Expertise across ..."
+	fallback line for partners with no success stories yet."""
+	return _child_values_by_partner(
+		"Partner Business Process", "business_process", names, parentfield="business_processes"
+	)
+
+
 def _partners_matching_child(child_doctype, field, operator, value, parentfield=None):
 	"""Names of partners with at least one `child_doctype` row satisfying `field <operator> value`
 	— a WHERE name IN (subquery) membership check, not a join. Joining the child table directly
@@ -623,7 +632,26 @@ def _decorate_directory_rows(rows):
 		row["review_count"] = review_counts.get(row.name, 0)
 
 	attach_success_story_previews(rows)
+
+	business_processes = _business_processes_by_partner(names)
+	for row in rows:
+		row["business_processes"] = business_processes.get(row.name, [])
 	return rows
+
+
+def list_partners_by_names(names):
+	"""Full directory-card rows for an explicit list of partner names, decorated the same way as
+	list_directory_partners. Used by the Shortlisted page to render partners a guest has bookmarked
+	locally (localStorage) before logging in, since no server-side Shortlist row exists for them yet."""
+	names = _normalize_multi(names)
+	if not names:
+		return []
+	filters = list(BASE_PARTNER_FILTERS) + [["Partner", "name", "in", names]]
+	rows = frappe.get_list("Partner", fields=PARTNER_FIELDS, filters=filters)
+	apps_by_partner = _apps_by_partner([r.name for r in rows])
+	for r in rows:
+		r["apps_preview"] = apps_by_partner.get(r.name, [])[:2]
+	return _decorate_directory_rows(rows)
 
 
 def list_directory_partners(
