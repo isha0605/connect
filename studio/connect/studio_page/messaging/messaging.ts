@@ -347,6 +347,11 @@ export default function setup(context) {
 		toast({ title: "Hire flow coming soon", icon: "check", iconClasses: "text-green-600" })
 	}
 
+	// No scheduling flow exists yet — this page is UI-only, so the button just acknowledges the click.
+	function bookSlot() {
+		toast({ title: "Booking flow coming soon", icon: "check", iconClasses: "text-green-600" })
+	}
+
 	function closeConversation() {
 		if (!window.confirm("Close this conversation?")) return
 		myThreads.data = myThreads.data.filter((t) => t.name !== selectedThread.value)
@@ -1073,6 +1078,7 @@ export default function setup(context) {
 		isShortlisted,
 		toggleShortlist,
 		hirePartner,
+		bookSlot,
 		closeConversation,
 		isAnyAdmin,
 		isRowAdmin,
