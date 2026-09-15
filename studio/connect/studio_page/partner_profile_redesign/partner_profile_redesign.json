@@ -490,7 +490,8 @@
          "children": [
           {
            "baseStyles": {
-            "backgroundColor": "var(--surface-gray-2)"
+            "backgroundColor": "var(--surface-gray-2)",
+            "display": "{{ (partner.data && partner.data.website) ? 'flex' : 'none' }}"
            },
            "children": [],
            "classes": [],
@@ -498,13 +499,13 @@
             "click": {
              "action": "Run Script",
              "event": "click",
-             "script": "const url = window.location.href;\nif (navigator.share) {\n  navigator.share({ title: (partner.data && partner.data.partner_name) || 'Partner', url }).catch(() => {});\n} else {\n  navigator.clipboard.writeText(url).then(() => {\n    toast({ title: 'Link copied', text: 'Profile link copied to clipboard', icon: 'check' });\n  });\n}"
+             "script": "const url = partner.data && partner.data.website;\nif (url) {\n  window.open(url.startsWith('http') ? url : 'https://' + url, '_blank', 'noopener');\n} else {\n  toast({ title: 'No website on file', text: 'This partner has not added a website yet', icon: 'info' });\n}"
             }
            },
-           "componentId": "share-btn-ppr",
+           "componentId": "website-btn-ppr",
            "componentName": "Button",
            "componentProps": {
-            "icon": "lucide-share-2",
+            "icon": "lucide-globe",
             "size": "md",
             "variant": "ghost"
            }
@@ -984,7 +985,7 @@
               {
                "baseStyles": {
                 "borderBottom": "1px solid var(--outline-gray-1, #ededed)",
-                "display": "flex",
+                "display": "{{ (partner.data && (partner.data.certs_erpnext || partner.data.certs_frappe_framework)) ? 'flex' : 'none' }}",
                 "flexDirection": "column",
                 "gap": "8px",
                 "padding": "12px 0",
@@ -993,53 +994,124 @@
                "children": [
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-7)",
-                  "fontWeight": "500"
+                  "color": "var(--ink-gray-6, #525252)",
+                  "letterSpacing": "0.99px"
                  },
                  "children": [],
                  "classes": [],
-                 "componentId": "field-certified-members-label",
+                 "componentId": "field-credentials-label",
                  "componentName": "TextBlock",
                  "componentProps": {
                   "fontSize": "text-xs",
                   "tag": "span",
-                  "text": "Certified members"
+                  "text": "CREDENTIALS"
                  }
                 },
                 {
                  "baseStyles": {
-                  "alignItems": "center",
-                  "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                  "borderRadius": "9999px",
                   "display": "flex",
                   "flexDirection": "row",
-                  "gap": "4px",
-                  "padding": "3px 6px"
+                  "flexWrap": "wrap",
+                  "gap": "16px"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-6, #525252)"
+                    "alignItems": "center",
+                    "display": "{{ (partner.data && partner.data.certs_erpnext) ? 'flex' : 'none' }}",
+                    "flexDirection": "row",
+                    "gap": "6px"
                    },
-                   "children": [],
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "flexShrink": "0",
+                      "height": "14px",
+                      "width": "14px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "credential-erpnext-icon",
+                     "componentName": "FeatherIcon",
+                     "componentProps": {
+                      "color": "var(--ink-gray-6, #525252)",
+                      "name": "graduation-cap",
+                      "strokeWidth": 2
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-7)"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "credential-erpnext-text",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ (partner.data && partner.data.certs_erpnext || 0) + ' ERPNext Experts' }}"
+                     }
+                    }
+                   ],
                    "classes": [],
-                   "componentId": "certified-members-pill-text",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-xs",
-                    "tag": "span",
-                    "text": "{{ (partner.data && partner.data.certified_experts) || 0 }}"
-                   }
+                   "componentId": "credential-erpnext",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "{{ (partner.data && partner.data.certs_frappe_framework) ? 'flex' : 'none' }}",
+                    "flexDirection": "row",
+                    "gap": "6px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "flexShrink": "0",
+                      "height": "14px",
+                      "width": "14px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "credential-framework-icon",
+                     "componentName": "FeatherIcon",
+                     "componentProps": {
+                      "color": "var(--ink-gray-6, #525252)",
+                      "name": "graduation-cap",
+                      "strokeWidth": 2
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-7)"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "credential-framework-text",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ (partner.data && partner.data.certs_frappe_framework || 0) + ' Framework Experts' }}"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "credential-framework",
+                   "componentName": "container",
+                   "originalElement": "div"
                   }
                  ],
                  "classes": [],
-                 "componentId": "certified-members-pill",
+                 "componentId": "credentials-row",
                  "componentName": "container",
                  "originalElement": "div"
                 }
                ],
                "classes": [],
-               "componentId": "field-certified-members",
+               "componentId": "field-credentials",
                "componentName": "container",
                "originalElement": "div"
               },
@@ -1703,7 +1775,7 @@
         },
         {
          "baseStyles": {
-          "display": "{{ (partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0] ? 'flex' : 'none' }}",
+          "display": "flex",
           "flexDirection": "column",
           "gap": "24px",
           "width": "100%"
@@ -1754,10 +1826,8 @@
           },
           {
            "baseStyles": {
-            "alignItems": "flex-start",
             "display": "flex",
-            "flexDirection": "row",
-            "justifyContent": "space-between",
+            "flexDirection": "column",
             "width": "100%"
            },
            "children": [
@@ -1765,13 +1835,14 @@
              "baseStyles": {
               "display": "flex",
               "flexDirection": "column",
-              "gap": "16px"
+              "gap": "24px",
+              "width": "100%"
              },
              "children": [
               {
                "baseStyles": {
                 "color": "var(--ink-gray-6, #525252)",
-                "width": "600px"
+                "width": "100%"
                },
                "children": [],
                "classes": [],
@@ -1785,68 +1856,82 @@
               },
               {
                "baseStyles": {
+                "alignItems": "center",
                 "display": "flex",
-                "flexDirection": "column",
-                "gap": "2px"
+                "flexDirection": "row",
+                "gap": "12px"
                },
                "children": [
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-8)",
-                  "fontWeight": "500"
+                  "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
+                  "backgroundImage": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? 'url(\"' + ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).photo + '\")' : 'none' }}",
+                  "backgroundPosition": "center",
+                  "backgroundRepeat": "no-repeat",
+                  "backgroundSize": "cover",
+                  "borderRadius": "50%",
+                  "flexShrink": "0",
+                  "height": "44px",
+                  "overflow": "hidden",
+                  "width": "44px"
                  },
                  "children": [],
                  "classes": [],
-                 "componentId": "vision-founder-name",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-base",
-                  "tag": "span",
-                  "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).member_name : '' }}"
-                 }
+                 "componentId": "vision-founder-photo",
+                 "componentName": "container",
+                 "originalElement": "div"
                 },
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-6, #525252)"
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "2px"
                  },
-                 "children": [],
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8, #171717)",
+                    "fontWeight": "600"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "vision-founder-name",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-base",
+                    "tag": "span",
+                    "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).member_name : '' }}"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6, #525252)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "vision-founder-title",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-p-base",
+                    "tag": "span",
+                    "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).designation : '' }}"
+                   }
+                  }
+                 ],
                  "classes": [],
-                 "componentId": "vision-founder-title",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-p-base",
-                  "tag": "span",
-                  "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).designation : '' }}"
-                 }
+                 "componentId": "vision-founder-meta",
+                 "componentName": "container",
+                 "originalElement": "div"
                 }
                ],
                "classes": [],
-               "componentId": "vision-founder-meta",
+               "componentId": "vision-author-row",
                "componentName": "container",
                "originalElement": "div"
               }
              ],
              "classes": [],
              "componentId": "vision-left-col",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-              "backgroundImage": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? 'url(\"' + ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).photo + '\")' : 'none' }}",
-              "backgroundPosition": "center",
-              "backgroundRepeat": "no-repeat",
-              "backgroundSize": "cover",
-              "borderRadius": "50%",
-              "flexShrink": "0",
-              "height": "80px",
-              "overflow": "hidden",
-              "width": "80px"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "vision-founder-photo",
              "componentName": "container",
              "originalElement": "div"
             }
@@ -3763,7 +3848,8 @@
           "alignItems": "center",
           "display": "flex",
           "flexDirection": "row",
-          "gap": "8px"
+          "gap": "8px",
+          "width": "100%"
          },
          "children": [
           {
@@ -3810,6 +3896,25 @@
            "componentId": "success-stories-badge",
            "componentName": "container",
            "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "marginLeft": "auto",
+            "width": "10rem"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "success-stories-industry-filter",
+           "componentName": "Select",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "selectedStoryIndustry"
+            },
+            "options": "{{ [{ label: 'All Industries', value: '' }].concat(Array.from(new Set((partner.data && partner.data.success_stories || []).map(s => s.category).filter(Boolean))).map(c => ({ label: c, value: c }))) }}",
+            "size": "sm",
+            "variant": "outline"
+           }
           }
          ],
          "classes": [],
@@ -3979,7 +4084,7 @@
         {
          "baseStyles": {
           "cursor": "pointer",
-          "display": "{{ (partner.data && partner.data.success_stories || []).length > 0 ? 'flex' : 'none' }}",
+          "display": "{{ ((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry || s.category === selectedStoryIndustry)).length > 0 ? 'flex' : 'none' }}",
           "flexDirection": "column",
           "gap": "16px",
           "width": "100%"
@@ -3988,7 +4093,7 @@
           {
            "baseStyles": {
             "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-            "backgroundImage": "{{ ((partner.data && partner.data.success_stories || [])[0] || {}).cover_image ? 'url(\"' + ((partner.data && partner.data.success_stories || [])[0] || {}).cover_image + '\")' : ((partner.data && partner.data.photos && partner.data.photos.length) ? 'url(\"' + partner.data.photos[0 % partner.data.photos.length].image + '\")' : 'none') }}",
+            "backgroundImage": "{{ (((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry || s.category === selectedStoryIndustry))[0] || {}).cover_image ? 'url(\"' + (((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry || s.category === selectedStoryIndustry))[0] || {}).cover_image + '\")' : ((partner.data && partner.data.photos && partner.data.photos.length) ? 'url(\"' + partner.data.photos[0 % partner.data.photos.length].image + '\")' : 'none') }}",
             "backgroundPosition": "center",
             "backgroundRepeat": "no-repeat",
             "backgroundSize": "cover",
@@ -4023,7 +4128,7 @@
              "componentProps": {
               "fontSize": "text-xs",
               "tag": "span",
-              "text": "{{ (((partner.data && partner.data.success_stories || [])[0] || {}).category || '').toUpperCase() }}"
+              "text": "{{ ((((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry || s.category === selectedStoryIndustry))[0] || {}).category || '').toUpperCase() }}"
              }
             },
             {
@@ -4039,7 +4144,7 @@
              "componentProps": {
               "fontSize": "text-p-base",
               "tag": "span",
-              "text": "{{ ((partner.data && partner.data.success_stories || [])[0] || {}).headline }}"
+              "text": "{{ (((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry || s.category === selectedStoryIndustry))[0] || {}).headline }}"
              }
             }
            ],
@@ -4054,7 +4159,7 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "const u = ((partner.data && partner.data.success_stories || [])[0] || {}).url; if (u) window.open(u, '_blank');"
+           "script": "const u = (((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry.value || s.category === selectedStoryIndustry.value))[0] || {}).url; if (u) window.open(u, '_blank');"
           }
          },
          "componentId": "featured-story",
@@ -4063,7 +4168,7 @@
         },
         {
          "baseStyles": {
-          "display": "{{ (partner.data && partner.data.success_stories || []).length > 1 ? 'flex' : 'none' }}",
+          "display": "{{ ((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry || s.category === selectedStoryIndustry)).length > 1 ? 'flex' : 'none' }}",
           "flexDirection": "row",
           "flexWrap": "wrap",
           "gap": "24px",
@@ -4074,7 +4179,7 @@
          "componentId": "stories-grid",
          "componentName": "Repeater",
          "componentProps": {
-          "data": "{{ (partner.data && partner.data.success_stories || []).slice(1) }}",
+          "data": "{{ ((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry || s.category === selectedStoryIndustry)).slice(1) }}",
           "dataKey": "self",
           "emptyStateMessage": ""
          },
@@ -5402,7 +5507,7 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-09-09 17:40:36.879151",
+ "creation": "2026-09-11 15:02:06.369823",
  "doctype": "Studio Page",
  "draft_blocks": [
   {
@@ -5894,7 +5999,8 @@
          "children": [
           {
            "baseStyles": {
-            "backgroundColor": "var(--surface-gray-2)"
+            "backgroundColor": "var(--surface-gray-2)",
+            "display": "{{ (partner.data && partner.data.website) ? 'flex' : 'none' }}"
            },
            "children": [],
            "classes": [],
@@ -5902,13 +6008,13 @@
             "click": {
              "action": "Run Script",
              "event": "click",
-             "script": "const url = window.location.href;\nif (navigator.share) {\n  navigator.share({ title: (partner.data && partner.data.partner_name) || 'Partner', url }).catch(() => {});\n} else {\n  navigator.clipboard.writeText(url).then(() => {\n    toast({ title: 'Link copied', text: 'Profile link copied to clipboard', icon: 'check' });\n  });\n}"
+             "script": "const url = partner.data && partner.data.website;\nif (url) {\n  window.open(url.startsWith('http') ? url : 'https://' + url, '_blank', 'noopener');\n} else {\n  toast({ title: 'No website on file', text: 'This partner has not added a website yet', icon: 'info' });\n}"
             }
            },
-           "componentId": "share-btn-ppr",
+           "componentId": "website-btn-ppr",
            "componentName": "Button",
            "componentProps": {
-            "icon": "lucide-share-2",
+            "icon": "lucide-globe",
             "size": "md",
             "variant": "ghost"
            }
@@ -5952,7 +6058,7 @@
            "componentName": "Button",
            "componentProps": {
             "iconLeft": "lucide-send",
-            "label": "Contact",
+            "label": "Connect",
             "variant": "solid"
            }
           }
@@ -6229,6 +6335,7 @@
        "baseStyles": {
         "display": "flex",
         "flexDirection": "column",
+        "gap": "14px",
         "margin": "0 auto",
         "maxWidth": "800px",
         "padding": "67px 0 0",
@@ -6316,7 +6423,10 @@
                 "display": "flex",
                 "flexDirection": "column",
                 "gap": "8px",
-                "padding": "12px 0",
+                "paddingBottom": "12px",
+                "paddingLeft": "0px",
+                "paddingRight": "0px",
+                "paddingTop": "0px",
                 "width": "100%"
                },
                "children": [
@@ -6340,7 +6450,7 @@
                    "componentProps": {
                     "fontSize": "text-xs",
                     "tag": "span",
-                    "text": "PMM"
+                    "text": "Maturity Score"
                    }
                   },
                   {
@@ -6388,7 +6498,7 @@
               {
                "baseStyles": {
                 "borderBottom": "1px solid var(--outline-gray-1, #ededed)",
-                "display": "flex",
+                "display": "{{ (partner.data && (partner.data.certs_erpnext || partner.data.certs_frappe_framework)) ? 'flex' : 'none' }}",
                 "flexDirection": "column",
                 "gap": "8px",
                 "padding": "12px 0",
@@ -6397,36 +6507,124 @@
                "children": [
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-7)",
-                  "fontWeight": "500"
+                  "color": "var(--ink-gray-6, #525252)",
+                  "letterSpacing": "0.99px"
                  },
                  "children": [],
                  "classes": [],
-                 "componentId": "field-certified-members-label",
+                 "componentId": "field-credentials-label",
                  "componentName": "TextBlock",
                  "componentProps": {
                   "fontSize": "text-xs",
                   "tag": "span",
-                  "text": "Certified members"
+                  "text": "CREDENTIALS"
                  }
                 },
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-6, #525252)"
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "flexWrap": "wrap",
+                  "gap": "16px"
                  },
-                 "children": [],
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "{{ (partner.data && partner.data.certs_erpnext) ? 'flex' : 'none' }}",
+                    "flexDirection": "row",
+                    "gap": "6px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "flexShrink": "0",
+                      "height": "14px",
+                      "width": "14px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "credential-erpnext-icon",
+                     "componentName": "FeatherIcon",
+                     "componentProps": {
+                      "color": "var(--ink-gray-6, #525252)",
+                      "name": "graduation-cap",
+                      "strokeWidth": 2
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-7)"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "credential-erpnext-text",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ (partner.data && partner.data.certs_erpnext || 0) + ' ERPNext Experts' }}"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "credential-erpnext",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "{{ (partner.data && partner.data.certs_frappe_framework) ? 'flex' : 'none' }}",
+                    "flexDirection": "row",
+                    "gap": "6px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "flexShrink": "0",
+                      "height": "14px",
+                      "width": "14px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "credential-framework-icon",
+                     "componentName": "FeatherIcon",
+                     "componentProps": {
+                      "color": "var(--ink-gray-6, #525252)",
+                      "name": "graduation-cap",
+                      "strokeWidth": 2
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-7)"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "credential-framework-text",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ (partner.data && partner.data.certs_frappe_framework || 0) + ' Framework Experts' }}"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "credential-framework",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  }
+                 ],
                  "classes": [],
-                 "componentId": "TextBlock-h809h3a2t",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "{{ (partner.data && partner.data.pmm_level != null) ? partner.data.pmm_level : '\u2014' }}"
-                 }
+                 "componentId": "credentials-row",
+                 "componentName": "container",
+                 "originalElement": "div"
                 }
                ],
                "classes": [],
-               "componentId": "field-certified-members",
+               "componentId": "field-credentials",
                "componentName": "container",
                "originalElement": "div"
               },
@@ -6663,7 +6861,10 @@
                 "display": "{{ partner.data && partner.data.country ? 'flex' : 'none' }}",
                 "flexDirection": "column",
                 "gap": "8px",
-                "padding": "12px 0",
+                "paddingBottom": "12px",
+                "paddingLeft": "0px",
+                "paddingRight": "0px",
+                "paddingTop": "0px",
                 "width": "100%"
                },
                "children": [
@@ -6765,37 +6966,7 @@
                         "theme": "gray",
                         "variant": "subtle"
                        },
-                       "componentSlots": {
-                        "suffix": {
-                         "parentBlockId": "industry-pill-item",
-                         "slotContent": [
-                          {
-                           "attributes": {},
-                           "baseStyles": {
-                            "display": "{{ item === (partner.data && partner.data.industry) ? 'flex' : 'none' }}",
-                            "flexShrink": "0",
-                            "height": "12px",
-                            "width": "12px"
-                           },
-                           "children": [],
-                           "classes": [],
-                           "componentEvents": {},
-                           "componentId": "industry-pill-item-check",
-                           "componentName": "FeatherIcon",
-                           "componentProps": {
-                            "color": "var(--ink-gray-6)",
-                            "name": "check",
-                            "strokeWidth": 2
-                           },
-                           "componentSlots": {},
-                           "mobileStyles": {},
-                           "tabletStyles": {}
-                          }
-                         ],
-                         "slotId": "industry-pill-item:suffix",
-                         "slotName": "suffix"
-                        }
-                       },
+                       "componentSlots": {},
                        "mobileStyles": {},
                        "tabletStyles": {}
                       }
@@ -6891,37 +7062,7 @@
                         "theme": "gray",
                         "variant": "subtle"
                        },
-                       "componentSlots": {
-                        "suffix": {
-                         "parentBlockId": "app-pill-item",
-                         "slotContent": [
-                          {
-                           "attributes": {},
-                           "baseStyles": {
-                            "display": "{{ ((item.app === 'ERPNext' && partner.data.certs_erpnext > 0) || (item.app === 'Frappe Framework' && partner.data.certs_frappe_framework > 0)) ? 'flex' : 'none' }}",
-                            "flexShrink": "0",
-                            "height": "12px",
-                            "width": "12px"
-                           },
-                           "children": [],
-                           "classes": [],
-                           "componentEvents": {},
-                           "componentId": "app-pill-item-check",
-                           "componentName": "FeatherIcon",
-                           "componentProps": {
-                            "color": "var(--ink-gray-6)",
-                            "name": "check",
-                            "strokeWidth": 2
-                           },
-                           "componentSlots": {},
-                           "mobileStyles": {},
-                           "tabletStyles": {}
-                          }
-                         ],
-                         "slotId": "app-pill-item:suffix",
-                         "slotName": "suffix"
-                        }
-                       },
+                       "componentSlots": {},
                        "mobileStyles": {},
                        "tabletStyles": {}
                       }
@@ -7043,6 +7184,165 @@
          "componentId": "about-services-card",
          "componentName": "container",
          "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "alignItems": "stretch",
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "14px",
+          "width": "100%"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "border": "1px solid var(--outline-gray-1, #ededed)",
+            "borderRadius": "10px",
+            "display": "flex",
+            "flex": "1 0 0",
+            "flexDirection": "column",
+            "gap": "4px",
+            "height": "76px",
+            "minWidth": "0px",
+            "padding": "16px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontWeight": "500"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "stat-sites-value",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-lg",
+              "tag": "span",
+              "text": "{{ (partner.data && partner.data.sites_deployed) ? partner.data.sites_deployed + '+' : '\u2014' }}"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6, #525252)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "stat-sites-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-p-sm",
+              "tag": "span",
+              "text": "FC sites"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "stat-sites",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "border": "1px solid var(--outline-gray-1, #ededed)",
+            "borderRadius": "10px",
+            "display": "flex",
+            "flex": "1 0 0",
+            "flexDirection": "column",
+            "gap": "4px",
+            "height": "76px",
+            "minWidth": "0px",
+            "padding": "16px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontWeight": "500"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "stat-retention-value",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-lg",
+              "tag": "span",
+              "text": "85%"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6, #525252)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "stat-retention-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-p-sm",
+              "tag": "span",
+              "text": "Client Retention rate"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "stat-retention",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "border": "1px solid var(--outline-gray-1, #ededed)",
+            "borderRadius": "10px",
+            "display": "flex",
+            "flex": "1 0 0",
+            "flexDirection": "column",
+            "gap": "4px",
+            "height": "76px",
+            "minWidth": "0px",
+            "padding": "16px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "fontWeight": "500"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "stat-years-value",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-lg",
+              "tag": "span",
+              "text": "{{ (partner.data && partner.data.year_founded) ? (new Date().getFullYear() - partner.data.year_founded) + 'y' : '\u2014' }}"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6, #525252)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "stat-years-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-p-sm",
+              "tag": "span",
+              "text": "Operating since"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "stat-years",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "success-stats-row",
+         "componentName": "container",
+         "originalElement": "div"
         }
        ],
        "classes": [],
@@ -7090,7 +7390,7 @@
         },
         {
          "baseStyles": {
-          "display": "{{ (partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0] ? 'flex' : 'none' }}",
+          "display": "flex",
           "flexDirection": "column",
           "gap": "24px",
           "width": "100%"
@@ -7141,10 +7441,8 @@
           },
           {
            "baseStyles": {
-            "alignItems": "flex-start",
             "display": "flex",
-            "flexDirection": "row",
-            "justifyContent": "space-between",
+            "flexDirection": "column",
             "width": "100%"
            },
            "children": [
@@ -7152,13 +7450,14 @@
              "baseStyles": {
               "display": "flex",
               "flexDirection": "column",
-              "gap": "16px"
+              "gap": "24px",
+              "width": "100%"
              },
              "children": [
               {
                "baseStyles": {
                 "color": "var(--ink-gray-6, #525252)",
-                "width": "600px"
+                "width": "100%"
                },
                "children": [],
                "classes": [],
@@ -7172,73 +7471,87 @@
               },
               {
                "baseStyles": {
+                "alignItems": "center",
                 "display": "flex",
-                "flexDirection": "column",
-                "gap": "2px"
+                "flexDirection": "row",
+                "gap": "12px"
                },
                "children": [
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-8)",
-                  "fontWeight": "500"
+                  "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
+                  "backgroundImage": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? 'url(\"' + ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).photo + '\")' : 'none' }}",
+                  "backgroundPosition": "center",
+                  "backgroundRepeat": "no-repeat",
+                  "backgroundSize": "cover",
+                  "borderRadius": "50%",
+                  "flexShrink": "0",
+                  "height": "44px",
+                  "marginLeft": "0px",
+                  "marginTop": "0px",
+                  "overflow": "hidden",
+                  "paddingBottom": "0px",
+                  "paddingLeft": "0px",
+                  "paddingTop": "0px",
+                  "width": "44px"
                  },
                  "children": [],
                  "classes": [],
-                 "componentId": "vision-founder-name",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-base",
-                  "tag": "span",
-                  "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).member_name : '' }}"
-                 }
+                 "componentId": "vision-founder-photo",
+                 "componentName": "container",
+                 "originalElement": "div"
                 },
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-6, #525252)"
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "2px"
                  },
-                 "children": [],
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8, #171717)",
+                    "fontWeight": "600"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "vision-founder-name",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-base",
+                    "tag": "span",
+                    "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).member_name : '' }}"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6, #525252)"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "vision-founder-title",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-p-base",
+                    "tag": "span",
+                    "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).designation : '' }}"
+                   }
+                  }
+                 ],
                  "classes": [],
-                 "componentId": "vision-founder-title",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-p-base",
-                  "tag": "span",
-                  "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).designation : '' }}"
-                 }
+                 "componentId": "vision-founder-meta",
+                 "componentName": "container",
+                 "originalElement": "div"
                 }
                ],
                "classes": [],
-               "componentId": "vision-founder-meta",
+               "componentId": "vision-author-row",
                "componentName": "container",
                "originalElement": "div"
               }
              ],
              "classes": [],
              "componentId": "vision-left-col",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-              "backgroundImage": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? 'url(\"' + ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).photo + '\")' : 'none' }}",
-              "backgroundPosition": "center",
-              "backgroundRepeat": "no-repeat",
-              "backgroundSize": "cover",
-              "borderRadius": "50%",
-              "flexShrink": "0",
-              "height": "212px",
-              "marginLeft": "0px",
-              "marginTop": "0px",
-              "overflow": "hidden",
-              "paddingBottom": "0px",
-              "paddingLeft": "0px",
-              "paddingTop": "0px",
-              "width": "187px"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "vision-founder-photo",
              "componentName": "container",
              "originalElement": "div"
             }
@@ -7373,6 +7686,7 @@
              "baseStyles": {
               "color": "var(--ink-gray-7)",
               "fontWeight": "500",
+              "lineHeight": "1.5",
               "whiteSpace": "pre-line"
              },
              "children": [],
@@ -7382,7 +7696,7 @@
              "componentProps": {
               "fontSize": "text-lg",
               "tag": "span",
-              "text": "Why work with us and\nwho should work with us"
+              "text": "Why work with us?"
              }
             }
            ],
@@ -7485,6 +7799,7 @@
              "baseStyles": {
               "color": "var(--ink-gray-7)",
               "fontWeight": "500",
+              "lineHeight": "1.5",
               "whiteSpace": "pre-line"
              },
              "children": [],
@@ -7535,144 +7850,7 @@
               "gap": "8px",
               "width": "100%"
              },
-             "children": [
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                "borderRadius": "9999px",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "3px 6px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-6, #525252)"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "qa-how-we-work-tag-0-text",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-xs",
-                  "tag": "span",
-                  "text": "Team syncs"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentId": "qa-how-we-work-tag-0",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                "borderRadius": "9999px",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "3px 6px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-6, #525252)"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "qa-how-we-work-tag-1-text",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-xs",
-                  "tag": "span",
-                  "text": "Remote team syncs"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentId": "qa-how-we-work-tag-1",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                "borderRadius": "9999px",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "3px 6px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-6, #525252)"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "qa-how-we-work-tag-2-text",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-xs",
-                  "tag": "span",
-                  "text": "Offline"
-                 }
-                },
-                {
-                 "baseStyles": {
-                  "backgroundImage": "url(/assets/connect/images/info-circle-icon.svg)",
-                  "backgroundPosition": "center",
-                  "backgroundRepeat": "no-repeat",
-                  "backgroundSize": "contain",
-                  "flexShrink": "0",
-                  "height": "12px",
-                  "width": "12px"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "qa-how-we-work-tag-2-icon",
-                 "componentName": "container",
-                 "originalElement": "div"
-                }
-               ],
-               "classes": [],
-               "componentId": "qa-how-we-work-tag-2",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                "borderRadius": "9999px",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "3px 6px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-6, #525252)"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "qa-how-we-work-tag-3-text",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-xs",
-                  "tag": "span",
-                  "text": "Async updates"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentId": "qa-how-we-work-tag-3",
-               "componentName": "container",
-               "originalElement": "div"
-              }
-             ],
+             "children": [],
              "classes": [],
              "componentId": "qa-how-we-work-tags",
              "componentName": "container",
@@ -7702,11 +7880,12 @@
          "children": [
           {
            "baseStyles": {
-            "alignItems": "center",
+            "alignItems": "flex-start",
             "display": "flex",
             "flexDirection": "row",
             "flexShrink": "0",
             "gap": "8px",
+            "justifyContent": "flex-start",
             "width": "240px"
            },
            "children": [
@@ -7748,6 +7927,7 @@
              "baseStyles": {
               "color": "var(--ink-gray-7)",
               "fontWeight": "500",
+              "lineHeight": "1.5",
               "whiteSpace": "pre-line"
              },
              "children": [],
@@ -7798,68 +7978,7 @@
               "gap": "8px",
               "width": "100%"
              },
-             "children": [
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                "borderRadius": "9999px",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "3px 6px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-6, #525252)"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "qa-successful-impl-tag-0-text",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-xs",
-                  "tag": "span",
-                  "text": "Maintenance packages"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentId": "qa-successful-impl-tag-0",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                "borderRadius": "9999px",
-                "display": "flex",
-                "flexDirection": "row",
-                "padding": "3px 6px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-6, #525252)"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "qa-successful-impl-tag-1-text",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-xs",
-                  "tag": "span",
-                  "text": "Knowledge transfer"
-                 }
-                }
-               ],
-               "classes": [],
-               "componentId": "qa-successful-impl-tag-1",
-               "componentName": "container",
-               "originalElement": "div"
-              }
-             ],
+             "children": [],
              "classes": [],
              "componentId": "qa-successful-impl-tags",
              "componentName": "container",
@@ -8416,7 +8535,8 @@
            "children": [
             {
              "baseStyles": {
-              "display": "{{ (partner.data && partner.data.photos && partner.data.photos.length > 0) ? 'flex' : 'none' }}",
+              "__last_display": "{{ (partner.data && partner.data.photos && partner.data.photos.length > 0) ? 'flex' : 'none' }}",
+              "display": "none",
               "flexDirection": "row",
               "gap": "10px",
               "width": "100%"
@@ -9162,7 +9282,8 @@
           "alignItems": "center",
           "display": "flex",
           "flexDirection": "row",
-          "gap": "8px"
+          "gap": "8px",
+          "width": "100%"
          },
          "children": [
           {
@@ -9209,6 +9330,25 @@
            "componentId": "success-stories-badge",
            "componentName": "container",
            "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "marginLeft": "auto",
+            "width": "10rem"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "success-stories-industry-filter",
+           "componentName": "Select",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "selectedStoryIndustry"
+            },
+            "options": "{{ [{ label: 'All Industries', value: '' }].concat(Array.from(new Set((partner.data && partner.data.success_stories || []).map(s => s.category).filter(Boolean))).map(c => ({ label: c, value: c }))) }}",
+            "size": "sm",
+            "variant": "subtle"
+           }
           }
          ],
          "classes": [],
@@ -9218,167 +9358,8 @@
         },
         {
          "baseStyles": {
-          "alignItems": "stretch",
-          "display": "flex",
-          "flexDirection": "row",
-          "gap": "14px",
-          "width": "100%"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "border": "1px solid var(--outline-gray-1, #ededed)",
-            "borderRadius": "10px",
-            "display": "flex",
-            "flex": "1 0 0",
-            "flexDirection": "column",
-            "gap": "4px",
-            "height": "76px",
-            "minWidth": "0px",
-            "padding": "16px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-7)",
-              "fontWeight": "500"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "stat-sites-value",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-lg",
-              "tag": "span",
-              "text": "{{ (partner.data && partner.data.sites_deployed) ? partner.data.sites_deployed + '+' : '\u2014' }}"
-             }
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-6, #525252)"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "stat-sites-label",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-p-sm",
-              "tag": "span",
-              "text": "FC sites"
-             }
-            }
-           ],
-           "classes": [],
-           "componentId": "stat-sites",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "border": "1px solid var(--outline-gray-1, #ededed)",
-            "borderRadius": "10px",
-            "display": "flex",
-            "flex": "1 0 0",
-            "flexDirection": "column",
-            "gap": "4px",
-            "height": "76px",
-            "minWidth": "0px",
-            "padding": "16px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-7)",
-              "fontWeight": "500"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "stat-retention-value",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-lg",
-              "tag": "span",
-              "text": "85%"
-             }
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-6, #525252)"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "stat-retention-label",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-p-sm",
-              "tag": "span",
-              "text": "Client Retention rate"
-             }
-            }
-           ],
-           "classes": [],
-           "componentId": "stat-retention",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "border": "1px solid var(--outline-gray-1, #ededed)",
-            "borderRadius": "10px",
-            "display": "flex",
-            "flex": "1 0 0",
-            "flexDirection": "column",
-            "gap": "4px",
-            "height": "76px",
-            "minWidth": "0px",
-            "padding": "16px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-7)",
-              "fontWeight": "500"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "stat-years-value",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-lg",
-              "tag": "span",
-              "text": "{{ (partner.data && partner.data.year_founded) ? (new Date().getFullYear() - partner.data.year_founded) + 'y' : '\u2014' }}"
-             }
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-6, #525252)"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "stat-years-label",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-p-sm",
-              "tag": "span",
-              "text": "Operating since"
-             }
-            }
-           ],
-           "classes": [],
-           "componentId": "stat-years",
-           "componentName": "container",
-           "originalElement": "div"
-          }
-         ],
-         "classes": [],
-         "componentId": "success-stats-row",
-         "componentName": "container",
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
           "cursor": "pointer",
-          "display": "{{ (partner.data && partner.data.success_stories || []).length > 0 ? 'flex' : 'none' }}",
+          "display": "{{ ((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry || s.category === selectedStoryIndustry)).length > 0 ? 'flex' : 'none' }}",
           "flexDirection": "column",
           "gap": "16px",
           "width": "100%"
@@ -9387,7 +9368,7 @@
           {
            "baseStyles": {
             "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-            "backgroundImage": "{{ ((partner.data && partner.data.success_stories || [])[0] || {}).cover_image ? 'url(\"' + ((partner.data && partner.data.success_stories || [])[0] || {}).cover_image + '\")' : ((partner.data && partner.data.photos && partner.data.photos.length) ? 'url(\"' + partner.data.photos[0 % partner.data.photos.length].image + '\")' : 'none') }}",
+            "backgroundImage": "{{ (((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry || s.category === selectedStoryIndustry))[0] || {}).cover_image ? 'url(\"' + (((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry || s.category === selectedStoryIndustry))[0] || {}).cover_image + '\")' : ((partner.data && partner.data.photos && partner.data.photos.length) ? 'url(\"' + partner.data.photos[0 % partner.data.photos.length].image + '\")' : 'none') }}",
             "backgroundPosition": "center",
             "backgroundRepeat": "no-repeat",
             "backgroundSize": "cover",
@@ -9422,7 +9403,7 @@
              "componentProps": {
               "fontSize": "text-xs",
               "tag": "span",
-              "text": "{{ (((partner.data && partner.data.success_stories || [])[0] || {}).category || '').toUpperCase() }}"
+              "text": "{{ ((((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry || s.category === selectedStoryIndustry))[0] || {}).category || '').toUpperCase() }}"
              }
             },
             {
@@ -9438,7 +9419,7 @@
              "componentProps": {
               "fontSize": "text-p-base",
               "tag": "span",
-              "text": "{{ ((partner.data && partner.data.success_stories || [])[0] || {}).headline }}"
+              "text": "{{ (((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry || s.category === selectedStoryIndustry))[0] || {}).headline }}"
              }
             }
            ],
@@ -9453,7 +9434,7 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "const u = ((partner.data && partner.data.success_stories || [])[0] || {}).url; if (u) window.open(u, '_blank');"
+           "script": "const u = (((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry.value || s.category === selectedStoryIndustry.value))[0] || {}).url; if (u) window.open(u, '_blank');"
           }
          },
          "componentId": "featured-story",
@@ -9462,7 +9443,7 @@
         },
         {
          "baseStyles": {
-          "display": "{{ (partner.data && partner.data.success_stories || []).length > 1 ? 'flex' : 'none' }}",
+          "display": "{{ ((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry || s.category === selectedStoryIndustry)).length > 1 ? 'flex' : 'none' }}",
           "flexDirection": "row",
           "flexWrap": "wrap",
           "gap": "24px",
@@ -9473,7 +9454,7 @@
          "componentId": "stories-grid",
          "componentName": "Repeater",
          "componentProps": {
-          "data": "{{ (partner.data && partner.data.success_stories || []).slice(1) }}",
+          "data": "{{ ((partner.data && partner.data.success_stories || []).filter(s => !selectedStoryIndustry || s.category === selectedStoryIndustry)).slice(1) }}",
           "dataKey": "self",
           "emptyStateMessage": ""
          },
@@ -9558,7 +9539,7 @@
                  "componentId": "story-grid-item-headline",
                  "componentName": "TextBlock",
                  "componentProps": {
-                  "fontSize": "text-sm",
+                  "fontSize": "text-p-sm",
                   "tag": "span",
                   "text": "{{ dataItem.headline }}"
                  },
@@ -9922,7 +9903,7 @@
              "componentId": "contact-employee-count-input",
              "componentName": "Select",
              "componentProps": {
-              "label": "Number of employees *",
+              "label": "Number of employees",
               "modelValue": {
                "$type": "variable",
                "name": "contactEmployeeCount"
@@ -9935,7 +9916,8 @@
                "501-1000",
                "1000+"
               ],
-              "placeholder": "Select"
+              "placeholder": "Select",
+              "required": true
              }
             },
             {
@@ -10746,7 +10728,7 @@
                  "componentId": "partner-story-item-headline",
                  "componentName": "TextBlock",
                  "componentProps": {
-                  "fontSize": "text-sm",
+                  "fontSize": "text-p-sm",
                   "tag": "span",
                   "text": "{{ dataItem.headline }}"
                  },
@@ -10809,7 +10791,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-10 16:19:24.918864",
+ "modified": "2026-09-15 11:59:10.334334",
  "modified_by": "Administrator",
  "name": "partner_profile_redesign",
  "owner": "Administrator",
@@ -10818,6 +10800,7 @@
  "published": 1,
  "resources": [
   {
+   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "params": "{}",
@@ -10826,6 +10809,7 @@
    "url": "/api/method/connect.api.account.get_my_context"
   },
   {
+   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "params": "{}",
@@ -10834,6 +10818,7 @@
    "url": "/api/method/connect.api.customer.get_my_customer"
   },
   {
+   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "params": "{\"partner\": \"{{ route.params.partner_id }}\"}",
@@ -10842,6 +10827,7 @@
    "url": "/api/method/connect.api.partner.get_partner_document"
   },
   {
+   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "params": "{}",
@@ -10850,6 +10836,7 @@
    "url": "/api/method/connect.api.customer.get_my_shortlisted_partner_names"
   },
   {
+   "__unsaved": 1,
    "auto": 1,
    "method": "GET",
    "params": "{\"partner\": \"{{ route.params.partner_id }}\"}",
@@ -10862,103 +10849,129 @@
  "studio_app": "connect",
  "variables": [
   {
+   "__unsaved": 1,
    "initial_value": "false",
    "variable_name": "reviewDialogOpen",
    "variable_type": "Boolean"
   },
   {
+   "__unsaved": 1,
    "initial_value": "0",
    "variable_name": "reviewRating",
    "variable_type": "Number"
   },
   {
+   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "reviewHeadline",
    "variable_type": "String"
   },
   {
+   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "reviewQuote",
    "variable_type": "String"
   },
   {
+   "__unsaved": 1,
    "initial_value": "false",
    "variable_name": "reviewSubmitting",
    "variable_type": "Boolean"
   },
   {
+   "__unsaved": 1,
    "initial_value": "false",
    "variable_name": "showAllReviews",
    "variable_type": "Boolean"
   },
   {
+   "__unsaved": 1,
    "initial_value": "false",
    "variable_name": "loginDialogOpen",
    "variable_type": "Boolean"
   },
   {
+   "__unsaved": 1,
    "initial_value": "false",
    "variable_name": "contactDialogOpen",
    "variable_type": "Boolean"
   },
   {
+   "__unsaved": 1,
    "initial_value": "1",
    "variable_name": "contactStep",
    "variable_type": "Number"
   },
   {
+   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "contactCompanyName",
    "variable_type": "String"
   },
   {
+   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "contactEmployeeCount",
    "variable_type": "String"
   },
   {
+   "__unsaved": 1,
    "initial_value": "\"Textile manufacturing\"",
    "variable_name": "contactIndustry",
    "variable_type": "String"
   },
   {
+   "__unsaved": 1,
    "initial_value": "\"India\"",
    "variable_name": "contactRegion",
    "variable_type": "String"
   },
   {
+   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "contactCurrentTools",
    "variable_type": "String"
   },
   {
+   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "contactCurrentOperations",
    "variable_type": "String"
   },
   {
+   "__unsaved": 1,
    "initial_value": "\"Starter pack (Standard Implementation)\"",
    "variable_name": "contactImplementationType",
    "variable_type": "String"
   },
   {
+   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "contactInterestedApps",
    "variable_type": "String"
   },
   {
+   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "contactInterestedModules",
    "variable_type": "String"
   },
   {
+   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "contactProblems",
    "variable_type": "String"
   },
   {
+   "__unsaved": 1,
    "initial_value": "\"\"",
    "variable_name": "contactAdditionalMessage",
+   "variable_type": "String"
+  },
+  {
+   "__unsaved": 1,
+   "initial_value": "\"\"",
+   "variable_name": "selectedStoryIndustry",
    "variable_type": "String"
   }
  ]
