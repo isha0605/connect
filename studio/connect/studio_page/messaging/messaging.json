@@ -2285,7 +2285,8 @@
                 "flexDirection": "row",
                 "gap": "14px",
                 "maxWidth": "800px",
-                "padding": "4px 10px"
+                "padding": "4px 10px",
+                "position": "relative"
                },
                "children": [
                 {
@@ -2339,8 +2340,15 @@
                   "icon": "lucide-smile",
                   "size": "sm",
                   "theme": "gray",
-                  "tooltip": "Emoji (coming soon)",
+                  "tooltip": "Emoji",
                   "variant": "ghost"
+                 },
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "toggleEmojiPicker();"
+                  }
                  }
                 },
                 {
@@ -2362,6 +2370,117 @@
                   "tooltip": "Attach file",
                   "variant": "ghost"
                  }
+                },
+                {
+                 "baseStyles": {
+                  "backgroundColor": "var(--surface-base)",
+                  "border": "1px solid var(--outline-gray-1)",
+                  "borderRadius": "10px",
+                  "bottom": "calc(100% + 8px)",
+                  "boxShadow": "0 4px 16px rgba(0,0,0,0.12)",
+                  "boxSizing": "border-box",
+                  "padding": "10px",
+                  "position": "absolute",
+                  "right": "0px",
+                  "width": "248px",
+                  "zIndex": "30",
+                  "maxHeight": "280px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "marginBottom": "8px",
+                    "width": "100%"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "emoji-picker-search",
+                   "componentName": "HTML",
+                   "componentProps": {
+                    "html": "<div class=\"cnct-emoji-search-box\"><svg class=\"cnct-emoji-search-icon\" xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line></svg><input id=\"cnct-emoji-search-input\" class=\"cnct-emoji-search-input\" type=\"text\" placeholder=\"Search emoji...\" oninput=\"window.__connectEmojiSearchInput && window.__connectEmojiSearchInput(this.value)\" /></div><style>.cnct-emoji-search-box{position:relative;display:flex;align-items:center;width:100%;min-width:0;box-sizing:border-box;}.cnct-emoji-search-icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--ink-gray-4);pointer-events:none;}.cnct-emoji-search-input{width:100%;box-sizing:border-box;height:26px;padding:0 8px 0 26px;border-radius:6px;border:1px solid var(--outline-gray-2);background-color:var(--surface-gray-2);color:var(--ink-gray-8);font-size:12px;font-family:inherit;outline:none;}.cnct-emoji-search-input:focus{background-color:var(--surface-base);border-color:var(--outline-gray-4);}</style>"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "flexWrap": "wrap",
+                    "maxHeight": "220px",
+                    "overflowY": "auto",
+                    "width": "100%"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "flexWrap": "wrap",
+                      "gap": "2px",
+                      "width": "100%"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "borderRadius": "6px",
+                        "cursor": "pointer",
+                        "display": "flex",
+                        "flexShrink": "0",
+                        "height": "30px",
+                        "justifyContent": "center",
+                        "width": "30px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {},
+                         "children": [],
+                         "classes": [],
+                         "componentId": "emoji-picker-item-char",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-lg",
+                          "tag": "span",
+                          "text": "{{ dataItem.char }}"
+                         }
+                        }
+                       ],
+                       "classes": [
+                        "hover:bg-surface-gray-2"
+                       ],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "insertEmoji(dataItem.char);"
+                        }
+                       },
+                       "componentId": "emoji-picker-item",
+                       "componentName": "container",
+                       "originalElement": "div"
+                      }
+                     ],
+                     "classes": [],
+                     "componentId": "emoji-picker-repeater",
+                     "componentName": "Repeater",
+                     "componentProps": {
+                      "data": "{{ emojiList() }}",
+                      "dataKey": "char",
+                      "emptyStateMessage": "No emoji found"
+                     },
+                     "originalElement": "div"
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "emoji-picker-scroll",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "emoji-picker",
+                 "componentName": "container",
+                 "originalElement": "div",
+                 "visibilityCondition": "showEmojiPicker"
                 }
                ],
                "classes": [],
@@ -6228,7 +6347,8 @@
                   "flexDirection": "row",
                   "flexShrink": 1,
                   "height": "fit-content",
-                  "width": "fit-content"
+                  "width": "fit-content",
+                  "position": "relative"
                  },
                  "blockName": "container",
                  "children": [
@@ -6241,8 +6361,15 @@
                     "icon": "lucide-smile",
                     "size": "sm",
                     "theme": "gray",
-                    "tooltip": "Emoji (coming soon)",
+                    "tooltip": "Emoji",
                     "variant": "ghost"
+                   },
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "toggleEmojiPicker();"
+                    }
                    }
                   },
                   {
@@ -6264,6 +6391,117 @@
                     "tooltip": "Attach file",
                     "variant": "ghost"
                    }
+                  },
+                  {
+                   "baseStyles": {
+                    "backgroundColor": "var(--surface-base)",
+                    "border": "1px solid var(--outline-gray-1)",
+                    "borderRadius": "10px",
+                    "bottom": "calc(100% + 8px)",
+                    "boxShadow": "0 4px 16px rgba(0,0,0,0.12)",
+                    "boxSizing": "border-box",
+                    "padding": "10px",
+                    "position": "absolute",
+                    "right": "0px",
+                    "width": "248px",
+                    "zIndex": "30",
+                    "maxHeight": "280px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "marginBottom": "8px",
+                      "width": "100%"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "emoji-picker-search",
+                     "componentName": "HTML",
+                     "componentProps": {
+                      "html": "<div class=\"cnct-emoji-search-box\"><svg class=\"cnct-emoji-search-icon\" xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line></svg><input id=\"cnct-emoji-search-input\" class=\"cnct-emoji-search-input\" type=\"text\" placeholder=\"Search emoji...\" oninput=\"window.__connectEmojiSearchInput && window.__connectEmojiSearchInput(this.value)\" /></div><style>.cnct-emoji-search-box{position:relative;display:flex;align-items:center;width:100%;min-width:0;box-sizing:border-box;}.cnct-emoji-search-icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--ink-gray-4);pointer-events:none;}.cnct-emoji-search-input{width:100%;box-sizing:border-box;height:26px;padding:0 8px 0 26px;border-radius:6px;border:1px solid var(--outline-gray-2);background-color:var(--surface-gray-2);color:var(--ink-gray-8);font-size:12px;font-family:inherit;outline:none;}.cnct-emoji-search-input:focus{background-color:var(--surface-base);border-color:var(--outline-gray-4);}</style>"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "flexWrap": "wrap",
+                      "maxHeight": "220px",
+                      "overflowY": "auto",
+                      "width": "100%"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "flexWrap": "wrap",
+                        "gap": "2px",
+                        "width": "100%"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "borderRadius": "6px",
+                          "cursor": "pointer",
+                          "display": "flex",
+                          "flexShrink": "0",
+                          "height": "30px",
+                          "justifyContent": "center",
+                          "width": "30px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {},
+                           "children": [],
+                           "classes": [],
+                           "componentId": "emoji-picker-item-char",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-lg",
+                            "tag": "span",
+                            "text": "{{ dataItem.char }}"
+                           }
+                          }
+                         ],
+                         "classes": [
+                          "hover:bg-surface-gray-2"
+                         ],
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "insertEmoji(dataItem.char);"
+                          }
+                         },
+                         "componentId": "emoji-picker-item",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        }
+                       ],
+                       "classes": [],
+                       "componentId": "emoji-picker-repeater",
+                       "componentName": "Repeater",
+                       "componentProps": {
+                        "data": "{{ emojiList() }}",
+                        "dataKey": "char",
+                        "emptyStateMessage": "No emoji found"
+                       },
+                       "originalElement": "div"
+                      }
+                     ],
+                     "classes": [],
+                     "componentId": "emoji-picker-scroll",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "emoji-picker",
+                   "componentName": "container",
+                   "originalElement": "div",
+                   "visibilityCondition": "showEmojiPicker"
                   }
                  ],
                  "classes": [],

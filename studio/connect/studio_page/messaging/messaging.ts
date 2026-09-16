@@ -1,5 +1,6 @@
 import { ref, computed, watch, onScopeDispose, nextTick } from "vue"
 import { toast, call, useFileUpload, initSocket, setConfig } from "frappe-ui"
+import RAW_EMOJIS from "./emojis.json"
 
 export default function setup(context) {
 	// ==============================================================================================
@@ -1072,6 +1073,80 @@ export default function setup(context) {
 	}
 	watch(draftMessage, () => nextTick(autoResizeComposer))
 
+	// ---- Emoji picker ----
+	// A small static grid, not a Studio/frappe-ui component — Studio's block set has no picker
+	// primitive, and emoji themselves need no library (they're just characters), so the popover
+	// is one more absolutely-positioned block (see emoji-picker in the JSON), same convention as
+	// sender-hover-card and the members/media side panels.
+	const showEmojiPicker = ref(false)
+	const emojiSearchQuery = ref("")
+
+	// The real emoji set frappe-ui itself ships (its TipTap editor's `:emoji` suggestion list) —
+	// vendored as a local JSON file (see emojis.json) rather than importing from the package,
+	// since that dataset isn't part of frappe-ui's public export surface (only the full TipTap
+	// extension is, which needs a TipTap Editor instance, not this page's plain Textarea).
+	if (!Array.isArray(RAW_EMOJIS)) {
+		console.error("emojis.json did not import as an array — got:", RAW_EMOJIS)
+	}
+	const EMOJI_LIST = (Array.isArray(RAW_EMOJIS) ? RAW_EMOJIS : []).map((e: { name: string; emoji: string }) => ({
+		char: e.emoji,
+		name: e.name,
+	}))
+
+	function emojiList() {
+		const query = emojiSearchQuery.value.trim().toLowerCase()
+		if (!query) return EMOJI_LIST
+		return EMOJI_LIST.filter((e) => e.name.includes(query))
+	}
+
+	function updateEmojiSearchQuery(value) {
+		emojiSearchQuery.value = value
+	}
+	if (typeof window !== "undefined") {
+		;(window as any).__connectEmojiSearchInput = updateEmojiSearchQuery
+	}
+
+	function toggleEmojiPicker() {
+		showEmojiPicker.value = !showEmojiPicker.value
+	}
+
+	// Inserts at the textarea's actual cursor position (falling back to appending at the end if
+	// the element isn't mounted yet) rather than always appending, so picking an emoji mid-message
+	// doesn't jump it to the end of what's already been typed.
+	function insertEmoji(char) {
+		const el = document.querySelector('[data-component-id="message-input"]') as HTMLTextAreaElement | null
+		const text = draftMessage.value || ""
+		if (el && typeof el.selectionStart === "number") {
+			const start = el.selectionStart
+			const end = el.selectionEnd ?? start
+			draftMessage.value = text.slice(0, start) + char + text.slice(end)
+			nextTick(() => {
+				el.focus()
+				const pos = start + char.length
+				el.setSelectionRange(pos, pos)
+			})
+		} else {
+			draftMessage.value = text + char
+		}
+		showEmojiPicker.value = false
+	}
+
+	// Closes the picker on any click outside it or its trigger button — everything else on this
+	// page (members/media panels) is closed by an explicit second click on its own toggle, but a
+	// picker that stays pinned open until you hunt for the same tiny button again is bad enough
+	// UX to warrant the one document-level listener on the page.
+	function handleDocumentClickForEmojiPicker(event: MouseEvent) {
+		if (!showEmojiPicker.value) return
+		const target = event.target as Node
+		const picker = document.querySelector('[data-component-id="emoji-picker"]')
+		const trigger = document.querySelector('[data-component-id="composer-emoji-btn"]')
+		if (picker && picker.contains(target)) return
+		if (trigger && trigger.contains(target)) return
+		showEmojiPicker.value = false
+	}
+	document.addEventListener("click", handleDocumentClickForEmojiPicker)
+	onScopeDispose(() => document.removeEventListener("click", handleDocumentClickForEmojiPicker))
+
 	// ---- Media panel (Files / Links) ----
 	const mediaTab = ref("Files")
 	const mediaSearchQuery = ref("")
@@ -1230,6 +1305,11 @@ export default function setup(context) {
 		messageActionsOptions,
 		otherMessageActionsOptions,
 		uploadingFile,
+		showEmojiPicker,
+		emojiSearchQuery,
+		emojiList,
+		toggleEmojiPicker,
+		insertEmoji,
 		openFilePicker,
 		removeAttachment,
 		formatFileSize,
