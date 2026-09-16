@@ -770,7 +770,7 @@ def get_partner_preview(partner):
 	"""Returns a lightweight partner snapshot for the quick-preview drawer, fetched only when needed."""
 	fields = [
 		"name", "partner_name", "logo", "description", "tier", "specialist",
-		"rating", "city", "country", "pmm_level", "hourly_rate",
+		"rating", "city", "country", "pmm_level", "hourly_rate", "response_time_hours",
 		"certs_erpnext", "certs_frappe_framework", "industry", "address",
 	]
 	doc = frappe.db.get_value("Partner", partner, fields, as_dict=True)

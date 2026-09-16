@@ -1,154 +1,21 @@
-import { ref, computed, watch, onScopeDispose, nextTick, reactive } from "vue"
-import { toast } from "frappe-ui"
+import { ref, computed, watch, onScopeDispose, nextTick } from "vue"
+import { toast, call, useFileUpload, initSocket, setConfig } from "frappe-ui"
 
 export default function setup(context) {
 	// ==============================================================================================
-	// MOCK DATA — this page is intentionally disconnected from the Connect backend (no API Resource
-	// calls, no Document List resources, no realtime socket) so the UI can be redesigned freely
-	// without touching the live chat in connect-2. Everything below stands in for what the Studio
-	// "resources" (now removed from messaging.json) used to fetch. Every binding elsewhere in this
-	// page reads from `myThreads.data`, `messages.data`, etc. exactly as before, so
-	// filling in real-looking content here is enough to preview real layouts — no JSON changes needed.
+	// Wired to the real Connect backend via the "resources" declared in messaging.json (myContext,
+	// myThreads, messages, threadMembers, threadAdmins, memberProfiles, partnerInfo, myShortlist) —
+	// each shows up on `context` under its resource_name. Studio merges the final template context
+	// as {...resources, ...whatever setup() returns}, so none of those names are returned below:
+	// doing so would shadow the live resource with whatever setup() last computed.
+	//
+	// This mirrors studio/connect_2/studio_page/messaging/messaging.ts (the other, already-wired
+	// chat page) wherever this page's UI has the same feature — see that file for the DM/templates/
+	// mentions/profile-settings machinery this page's UI has no hooks for, so none of it is ported.
+	// Two things this page's UI has that connect_2's doesn't (the partner logo/response-time header
+	// stats and the shortlist toggle) are wired against connect.api.partner.get_partner_preview and
+	// connect.api.customer.*_shortlist instead.
 	// ==============================================================================================
-
-	// TODO(human): Fill in the mock dataset below to match whatever conversation(s) you want to
-	// design against. Field shapes (mirrors the real Connect Message / Connect Thread Member /
-	// Partner doctypes and connect.api.threads/account responses):
-	//
-	// MOCK_MY_CONTEXT — the viewer's own identity. Set exactly one of partner/customer, null the
-	// other, to preview that side of the page:
-	//   { user: "you@example.com", partner: { is_admin: true } | null, customer: { is_admin: true } | null }
-	//
-	// MOCK_THREADS — inbox list, newest-first:
-	//   { name, customer, partner, partner_logo, last_message, last_message_at, last_message_sender, creation }
-	//
-	// MOCK_MESSAGES — chat messages, any order (client-sorted by creation):
-	//   { name, thread, sender, content, creation, message_type: "Text" | "File",
-	//     file_name?, file_type?, file_size?, attachment?, is_edited? }
-	//
-	// MOCK_THREAD_MEMBERS — roster rows:
-	//   { name, thread, user, side: "Partner" | "Customer", is_removed }
-	//
-	// MOCK_MEMBER_PROFILES — one entry per user email referenced above:
-	//   { name /* email */, full_name, user_image }
-	//
-	// MOCK_PARTNERS — one row per partner referenced in MOCK_THREADS:
-	//   { name, logo, response_time_hours }
-	//
-	// MOCK_SHORTLIST — partner names (strings) the mock customer has shortlisted
-	//
-	// MOCK_THREAD_ADMINS — per thread name: { partner_admin: <email>, customer_admin: <email> }
-
-	// Pinned to "today" rather than a fixed date so the inbox/message timestamps always render
-	// as clock time ("12:16 pm") instead of ageing into a full date string.
-	const mockNow = new Date()
-	function mockToday(hours, minutes) {
-		const d = new Date(mockNow.getTime())
-		d.setHours(hours, minutes, 0, 0)
-		return d.toISOString()
-	}
-
-	const MOCK_MY_CONTEXT = {
-		user: "you@bluewaveretail.com",
-		partner: null,
-		customer: { is_admin: true },
-	}
-
-	const MOCK_THREADS = [
-		{
-			name: "thread-tridots-tech",
-			customer: "Bluewave Retail",
-			partner: "Tridots Tech",
-			partner_logo: "",
-			last_message: "Hi Tridots, we're looking at a Starter pack implementation for ERPNext. Could you take this on?",
-			last_message_at: mockToday(12, 16),
-			last_message_sender: "you@bluewaveretail.com",
-			creation: mockToday(12, 16),
-		},
-	]
-
-	const MOCK_MESSAGES = [
-		{
-			name: "msg-tridots-1",
-			thread: "thread-tridots-tech",
-			sender: "you@bluewaveretail.com",
-			content: "Hi Tridots, we're looking at a Starter pack implementation for ERPNext. Could you take this on?",
-			creation: mockToday(12, 16),
-			message_type: "Text",
-		},
-		{
-			name: "msg-tridots-2",
-			thread: "thread-tridots-tech",
-			sender: "founder@tridotstech.com",
-			content: "",
-			creation: mockToday(12, 16),
-			message_type: "Company",
-			company_name: "Acme Technologies",
-			industry: "Retail",
-			employee_count: "5-10",
-		},
-		{
-			name: "msg-tridots-3",
-			thread: "thread-tridots-tech",
-			sender: "founder@tridotstech.com",
-			content: "",
-			creation: mockToday(12, 17),
-			message_type: "Event",
-			event_title: "Scheduled an introduction call",
-			event_datetime: "Thursday, Sep 10, 3:00 pm",
-			event_url: "https://meet.google.com/placeholder",
-		},
-	]
-
-	const MOCK_THREAD_MEMBERS = [
-		{ name: "member-1", thread: "thread-tridots-tech", user: "you@bluewaveretail.com", side: "Customer", is_removed: false },
-		{ name: "member-2", thread: "thread-tridots-tech", user: "priya@bluewaveretail.com", side: "Customer", is_removed: false },
-		{ name: "member-3", thread: "thread-tridots-tech", user: "founder@tridotstech.com", side: "Partner", is_removed: false },
-		{ name: "member-4", thread: "thread-tridots-tech", user: "sales@tridotstech.com", side: "Partner", is_removed: false },
-		{ name: "member-5", thread: "thread-tridots-tech", user: "support@tridotstech.com", side: "Partner", is_removed: false },
-	]
-
-	const MOCK_MEMBER_PROFILES = [
-		{ name: "you@bluewaveretail.com", full_name: "Riya Sharma", user_image: "" },
-		{ name: "priya@bluewaveretail.com", full_name: "Priya Nair", user_image: "" },
-		{ name: "founder@tridotstech.com", full_name: "Rakesh Sharma", user_image: "https://i.pravatar.cc/150?u=rakesh-sharma-tridots" },
-		{ name: "sales@tridotstech.com", full_name: "Meera Shah", user_image: "" },
-		{ name: "support@tridotstech.com", full_name: "Karan Mehta", user_image: "" },
-	]
-
-	const MOCK_PARTNERS = [{ name: "Tridots Tech", logo: "", response_time_hours: 5 }]
-
-	const MOCK_SHORTLIST = []
-
-	const MOCK_THREAD_ADMINS = {
-		"thread-tridots-tech": { customer_admin: "you@bluewaveretail.com", partner_admin: "founder@tridotstech.com" },
-	}
-
-	// ==============================================================================================
-	// End of mock dataset — everything from here down is plumbing, not content.
-	// ==============================================================================================
-
-	// The Studio editor recomputes its live template context on every change as a fresh
-	// {...resources, ...whatever setup() returned} object — it never keeps whatever this
-	// function mutates on the `context` parameter itself. So these have to be returned at the
-	// bottom (see the `return` statement) rather than assigned onto `context` here.
-	const myContext = reactive({ data: MOCK_MY_CONTEXT, reload: () => {} })
-	const myThreads = reactive({ data: MOCK_THREADS, reload: () => {} })
-	const messages = reactive({ data: [], reload: () => {} })
-	const threadMembers = reactive({ data: [], reload: () => {} })
-	const threadAdmins = reactive({ data: {}, reload: () => {} })
-	const memberProfiles = reactive({ data: MOCK_MEMBER_PROFILES, reload: () => {} })
-	const partnerInfo = reactive({ data: [], reload: () => {} })
-	const myShortlist = reactive({ data: MOCK_SHORTLIST, reload: () => {} })
-
-	// Session-only pinned-message state, keyed by thread — the real backend stores one pinned
-	// message per thread; here it just lives in memory for as long as the page is open.
-	const pinnedByThread = reactive({})
-	// Declared up here (not down by the rest of the pinning code below) because selectThread(),
-	// invoked synchronously below via the immediate watcher, calls fetchPinnedMessage() before
-	// setup() reaches that section — mock threads are available immediately, unlike the real
-	// API resource this replaced, which never resolved before setup() finished running.
-	const pinnedMessage = ref(null)
 
 	// ---- State ----
 	const selectedThread = ref("")
@@ -158,10 +25,16 @@ export default function setup(context) {
 	const togglingShortlist = ref(false)
 	const showMembersDialog = ref(false)
 	const showMediaDialog = ref(false)
+	// Declared here (not down by the rest of the pinning code) because selectThread(), invoked
+	// synchronously below via the immediate watcher whenever context.myThreads.data is already
+	// populated (e.g. cached from a prior load), calls fetchPinnedMessage() before setup() reaches
+	// that section — referencing a `const` declared later throws (temporal dead zone), which was
+	// silently aborting the rest of setup() and everything derived from it, including the emoji list.
+	const pinnedMessage = ref(null)
 
 	// ---- Threads (inbox list) ----
 	function threadList() {
-		return myThreads.data || []
+		return context.myThreads.data || []
 	}
 
 	function currentThread() {
@@ -169,7 +42,7 @@ export default function setup(context) {
 	}
 
 	function amPartner() {
-		return !!(myContext.data && myContext.data.partner)
+		return !!(context.myContext.data && context.myContext.data.partner)
 	}
 
 	// Partner/Customer autoname by their raw company name, so the docname itself carries
@@ -214,7 +87,7 @@ export default function setup(context) {
 
 	function threadListPreview(thread) {
 		if (!thread || !thread.last_message) return "No messages yet"
-		const me = myContext.data && myContext.data.user
+		const me = context.myContext.data && context.myContext.data.user
 		const sender = thread.last_message_sender
 		let label = sender === me ? "You" : (sender || "").split("@")[0]
 		if (label && label !== "You") label = label.charAt(0).toUpperCase() + label.slice(1)
@@ -239,10 +112,19 @@ export default function setup(context) {
 		const name = typeof item === "string" ? item : item.name
 		selectedThread.value = name
 
-		messages.data = MOCK_MESSAGES.filter((m) => m.thread === name)
-		threadMembers.data = MOCK_THREAD_MEMBERS.filter((m) => m.thread === name)
-		threadAdmins.data = MOCK_THREAD_ADMINS[name] || {}
-		partnerInfo.data = MOCK_PARTNERS.filter((p) => p.name === currentThread().partner)
+		context.messages.filters = { thread: name }
+		context.messages.reload()
+		context.threadMembers.filters = { thread: name }
+		context.threadMembers.reload()
+		context.threadAdmins.params = { thread: name }
+		context.threadAdmins.reload()
+		context.memberProfiles.params = { thread: name }
+		context.memberProfiles.reload()
+		context.partnerInfo.params = { partner: currentThread().partner }
+		context.partnerInfo.reload()
+		call("connect.api.threads.mark_thread_read", { thread: name })
+			.then(() => context.myThreads.reload())
+			.catch(() => {})
 
 		showMembersDialog.value = false
 		showMediaDialog.value = false
@@ -254,12 +136,67 @@ export default function setup(context) {
 	// Only fires while nothing is selected yet — later reloads (new message, send, etc.) must
 	// never yank the user back to the top thread.
 	watch(
-		() => myThreads.data,
+		() => context.myThreads.data,
 		(threads) => {
 			if (!selectedThread.value && threads && threads.length) selectThread(threads[0])
 		},
 		{ immediate: true },
 	)
+
+	// ---- Realtime ----
+	// A dedicated connection for this page rather than reusing Studio's own — page scripts run
+	// in a detached effect scope with no component instance, so the socket Studio provides via
+	// Vue's provide()/inject() further up the tree isn't reachable here. Mirrors connect_2's
+	// wiring exactly, minus the DM-only handlers this page has no DM UI for.
+	if (!(window as any).site_name) (window as any).site_name = window.location.hostname
+	const socket = initSocket()
+
+	// Without this, useFileUpload's client-side size check has no limit to compare against and
+	// silently lets oversized files through to the raw upload, which then fails as an opaque
+	// network error instead of an upfront, readable message. Studio-rendered pages don't get a
+	// window.frappe.boot object (unlike desk), so the limit has to be fetched rather than read
+	// off boot data.
+	call("frappe.core.api.file.get_max_file_size").then((maxFileSize) => {
+		if (maxFileSize) setConfig("maxFileSize", maxFileSize)
+	})
+
+	function handleNewMessage(payload) {
+		if (payload.thread === selectedThread.value) context.messages.reload()
+		context.myThreads.reload()
+	}
+	socket.on("connect_new_message", handleNewMessage)
+	onScopeDispose(() => socket.off("connect_new_message", handleNewMessage))
+
+	// A deleted/edited message's own sender already reflects the change locally right after the
+	// call resolves — these are purely for everyone else's open tabs.
+	function handleMessageDeleted(payload) {
+		if (payload.thread === selectedThread.value) context.messages.reload()
+	}
+	socket.on("connect_message_deleted", handleMessageDeleted)
+	onScopeDispose(() => socket.off("connect_message_deleted", handleMessageDeleted))
+
+	function handleMessageEdited(payload) {
+		if (payload.thread === selectedThread.value) context.messages.reload()
+	}
+	socket.on("connect_message_edited", handleMessageEdited)
+	onScopeDispose(() => socket.off("connect_message_edited", handleMessageEdited))
+
+	// The pin/unpin call itself already updates the acting tab's own `pinnedMessage` — this is
+	// purely for everyone else's open tabs.
+	function handleThreadPinChanged(payload) {
+		if (payload.thread !== selectedThread.value) return
+		pinnedMessage.value = payload.pinned_message
+			? {
+					name: payload.pinned_message,
+					sender: payload.sender,
+					message_type: payload.message_type,
+					content: payload.content,
+					file_name: payload.file_name,
+				}
+			: null
+	}
+	socket.on("connect_thread_pin_changed", handleThreadPinChanged)
+	onScopeDispose(() => socket.off("connect_thread_pin_changed", handleThreadPinChanged))
 
 	// Jump the message pane to the newest message on thread switch / send / incoming message.
 	// A plain scrollTop=scrollHeight right after nextTick can undershoot while a late-loading
@@ -294,7 +231,7 @@ export default function setup(context) {
 			}
 		})
 	}
-	watch(() => messages.data, scrollMessagesToBottom)
+	watch(() => context.messages.data, scrollMessagesToBottom)
 	onScopeDispose(() => messagesResizeObserver?.disconnect())
 
 	// ---- Conversation header stats ----
@@ -303,11 +240,12 @@ export default function setup(context) {
 	}
 
 	function activeMembers() {
-		return (threadMembers.data || []).filter((m) => !m.is_removed)
+		return (context.threadMembers.data || []).filter((m) => !m.is_removed)
 	}
 
+	// get_partner_preview returns a single object (not a list), unlike the mock this replaced.
 	function currentPartner() {
-		return (partnerInfo.data || [])[0] || null
+		return context.partnerInfo.data || null
 	}
 
 	function partnerLogo() {
@@ -327,46 +265,70 @@ export default function setup(context) {
 		return new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) + " local time"
 	}
 
-	const myShortlistNames = computed(() => myShortlist.data || [])
+	const myShortlistNames = computed(() => context.myShortlist.data || [])
 
 	function isShortlisted() {
 		return myShortlistNames.value.includes(currentThread().partner)
 	}
 
-	function toggleShortlist() {
+	async function toggleShortlist() {
 		const partner = currentThread().partner
 		if (!partner || togglingShortlist.value) return
-		const list = myShortlist.data
-		const idx = list.indexOf(partner)
-		if (idx === -1) list.push(partner)
-		else list.splice(idx, 1)
+		togglingShortlist.value = true
+		try {
+			if (isShortlisted()) {
+				await call("connect.api.customer.remove_from_shortlist", { partner })
+			} else {
+				await call("connect.api.customer.add_to_shortlist", { partner })
+			}
+			await context.myShortlist.reload()
+		} catch (e) {
+			toast({
+				title: "Could not update shortlist",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			togglingShortlist.value = false
+		}
 	}
 
-	// No hiring flow exists yet — this page is UI-only, so the button just acknowledges the click.
+	// No hiring flow exists yet anywhere in the app — the button just acknowledges the click.
 	function hirePartner() {
 		toast({ title: "Hire flow coming soon", icon: "check", iconClasses: "text-green-600" })
 	}
 
-	// No scheduling flow exists yet — this page is UI-only, so the button just acknowledges the click.
+	// No scheduling flow exists yet anywhere in the app — the button just acknowledges the click.
 	function bookSlot() {
 		toast({ title: "Booking flow coming soon", icon: "check", iconClasses: "text-green-600" })
 	}
 
 	function closeConversation() {
 		if (!window.confirm("Close this conversation?")) return
-		myThreads.data = myThreads.data.filter((t) => t.name !== selectedThread.value)
-		selectedThread.value = ""
-		if (myThreads.data.length) selectThread(myThreads.data[0])
-		toast({ title: "Conversation closed", icon: "check", iconClasses: "text-green-600" })
+		call("connect.api.threads.close_thread", { thread: selectedThread.value })
+			.then(() => {
+				context.myThreads.reload()
+				context.messages.reload()
+				toast({ title: "Conversation closed", icon: "check", iconClasses: "text-green-600" })
+			})
+			.catch((e) => {
+				toast({
+					title: "Could not close conversation",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
+			})
 	}
 
 	// ---- Admin checks (Members panel) ----
 	function isPartnerAdmin() {
-		return !!(myContext.data && myContext.data.partner && myContext.data.partner.is_admin)
+		return !!(context.myContext.data && context.myContext.data.partner && context.myContext.data.partner.is_admin)
 	}
 
 	function isCustomerAdmin() {
-		return !!(myContext.data && myContext.data.customer && myContext.data.customer.is_admin)
+		return !!(context.myContext.data && context.myContext.data.customer && context.myContext.data.customer.is_admin)
 	}
 
 	function isAnyAdmin() {
@@ -387,38 +349,68 @@ export default function setup(context) {
 			toast({ title: "Enter an email", icon: "x-circle", iconClasses: "text-red-600" })
 			return
 		}
-		const email = newMemberEmail.value
 		const side = amPartner() ? "Partner" : "Customer"
-		if (!memberProfiles.data.some((p) => p.name === email)) {
-			memberProfiles.data.push({ name: email, full_name: "", user_image: "" })
-		}
-		threadMembers.data.push({
-			name: "mock-member-" + Date.now(),
+		call("connect.api.threads.add_thread_member", {
 			thread: selectedThread.value,
-			user: email,
+			email: newMemberEmail.value,
 			side,
-			is_removed: false,
+			permission: newMemberPermission.value,
 		})
-		showAddMemberDialog.value = false
-		newMemberEmail.value = ""
-		newMemberPermission.value = "Write"
-		toast({ title: "Member added", icon: "check", iconClasses: "text-green-600" })
+			.then((data) => {
+				showAddMemberDialog.value = false
+				newMemberEmail.value = ""
+				newMemberPermission.value = "Write"
+				context.threadMembers.reload()
+				context.memberProfiles.reload()
+				toast({
+					title: data && data.created_user ? "New account created and added" : "Member added",
+					icon: "check",
+					iconClasses: "text-green-600",
+				})
+			})
+			.catch((e) => {
+				toast({
+					title: "Could not add member",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
+			})
 	}
 
 	function makeAdmin(item) {
 		if (!window.confirm(`Make ${item.user} the admin? You will lose admin rights.`)) return
-		const sideKey = item.side === "Partner" ? "partner" : "customer"
-		const adminField = item.side === "Partner" ? "partner_admin" : "customer_admin"
-		if (myContext.data[sideKey]) myContext.data[sideKey].is_admin = false
-		threadAdmins.data = { ...threadAdmins.data, [adminField]: item.user }
-		toast({ title: "Admin transferred", icon: "check", iconClasses: "text-green-600" })
+		call("connect.api.threads.make_thread_admin", { thread: selectedThread.value, member: item.name })
+			.then(() => {
+				context.myContext.reload()
+				context.threadAdmins.reload()
+				toast({ title: "Admin transferred", icon: "check", iconClasses: "text-green-600" })
+			})
+			.catch((e) => {
+				toast({
+					title: "Could not transfer admin",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
+			})
 	}
 
 	function removeMember(item) {
 		if (!window.confirm(`Remove ${item.user} from this thread?`)) return
-		const member = threadMembers.data.find((m) => m.name === item.name)
-		if (member) member.is_removed = true
-		toast({ title: "Member removed", icon: "check", iconClasses: "text-green-600" })
+		call("connect.api.threads.remove_thread_member", { thread: selectedThread.value, member: item.name })
+			.then(() => {
+				context.threadMembers.reload()
+				toast({ title: "Member removed", icon: "check", iconClasses: "text-green-600" })
+			})
+			.catch((e) => {
+				toast({
+					title: "Could not remove member",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
+			})
 	}
 
 	function memberRowOptions(item) {
@@ -431,7 +423,7 @@ export default function setup(context) {
 
 	// ---- Sender identity (hover card + avatars) ----
 	function memberProfile(email) {
-		const profiles = memberProfiles.data || []
+		const profiles = context.memberProfiles.data || []
 		return profiles.find((p) => p.name === email) || null
 	}
 
@@ -471,12 +463,12 @@ export default function setup(context) {
 	// "Partner"/"Customer" tag next to a message's sender — only meaningful pointed at the
 	// *other* side, so a customer sees who on the partner side is talking and vice versa.
 	function myOwnSide() {
-		return senderSide({ sender: myContext.data && myContext.data.user })
+		return senderSide({ sender: context.myContext.data && context.myContext.data.user })
 	}
 
 	function senderSide(item) {
 		const sender = item && item.sender
-		const member = (threadMembers.data || []).find((m) => m.user === sender)
+		const member = (context.threadMembers.data || []).find((m) => m.user === sender)
 		return member ? member.side : null
 	}
 
@@ -503,11 +495,39 @@ export default function setup(context) {
 		return hoveredSender.value === email
 	}
 
+	// ---- Requirement → Company card ----
+	// A "Requirement" message stores its snapshot as a JSON blob in `content` (see
+	// connect.api.messages.send_message), not the {company_name, industry, employee_count} shape
+	// the company-card block reads — this reshapes it into that view model at read time so the
+	// existing card renders unchanged. There's no server-side "Company" message_type; this is a
+	// display-only relabel, same trick clusterFileMessages below uses for grouping file messages.
+	function parseRequirementContent(item) {
+		try {
+			return JSON.parse((item && item.content) || "{}") || {}
+		} catch (e) {
+			return {}
+		}
+	}
+
+	function requirementToCompanyCard(item) {
+		const req = parseRequirementContent(item)
+		return {
+			...item,
+			message_type: "Company",
+			company_name: req.company_name || "",
+			industry: req.industry || "",
+			employee_count: req.company_size || "",
+		}
+	}
+
 	// ---- Messages ----
-	// The messages resource fetches creation DESC (newest-first) so the 200-row cap keeps the
-	// most recent messages — reverse here, once, back to the ascending order every reader expects.
+	// messages is a Document List resource sorted creation DESC (see messaging.json) — sorting by
+	// creation ascending here (rather than a blind .reverse()) stays correct regardless of the
+	// resource's own sort order or how ties resolve.
 	function currentMessages() {
-		return [...(messages.data || [])].reverse()
+		return [...(context.messages.data || [])]
+			.sort((a, b) => new Date(a.creation).getTime() - new Date(b.creation).getTime())
+			.map((item) => (item.message_type === "Requirement" ? requirementToCompanyCard(item) : item))
 	}
 
 	// consecutive files from the same sender, sent within 2 minutes of each other, are merged
@@ -602,7 +622,7 @@ export default function setup(context) {
 	}
 
 	function isMine(sender) {
-		return sender === (myContext.data && myContext.data.user)
+		return sender === (context.myContext.data && context.myContext.data.user)
 	}
 
 	function formatMessageTime(item) {
@@ -633,76 +653,136 @@ export default function setup(context) {
 		draftMessage.value = ""
 	}
 
-	function saveEditedMessage() {
+	// The backend enforces edit/delete ownership via Frappe's own permission system
+	// (has_message_permission) — a denied attempt surfaces as a generic PermissionError with no
+	// specific message, so swap in our own wording for that one case.
+	function permissionAwareErrorText(e, deniedText) {
+		if (e.exc_type === "PermissionError") return deniedText
+		return e.messages ? e.messages[0] : e.message
+	}
+
+	async function saveEditedMessage() {
 		if (!messageToEdit.value || editingMessage.value) return
 		const content = draftMessage.value.trim()
 		if (!content) return
-		const message = messages.data.find((m) => m.name === messageToEdit.value.name)
-		if (message) {
-			message.content = content
-			message.is_edited = true
+		editingMessage.value = true
+		try {
+			await call("connect.api.messages.edit_message", { message: messageToEdit.value.name, content })
+			messageToEdit.value = null
+			draftMessage.value = ""
+			context.messages.reload()
+		} catch (e) {
+			toast({
+				title: "Could not edit message",
+				text: permissionAwareErrorText(e, "You don't have permission to edit this message"),
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			editingMessage.value = false
 		}
-		messageToEdit.value = null
-		draftMessage.value = ""
 	}
 
 	// ---- Deleting a message ----
-	function deleteMessage(item) {
+	async function deleteMessage(item) {
 		if (!item || !window.confirm("Delete this message?")) return
-		messages.data = messages.data.filter((m) => m.name !== item.name)
+		try {
+			await call("connect.api.messages.delete_message", { message: item.name })
+			context.messages.reload()
+		} catch (e) {
+			toast({
+				title: "Could not delete message",
+				text: permissionAwareErrorText(e, "You don't have permission to delete this message"),
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		}
 	}
 
 	// ---- Deleting a whole file cluster ----
 	// A cluster is a synthetic client-side grouping of several messages sent close together —
 	// deleting the group deletes every file message it contains.
-	function deleteCluster(item) {
+	async function deleteCluster(item) {
 		const files = (item && item.files) || []
 		if (!files.length) return
 		const label = files.length === 1 ? "this file" : `these ${files.length} files`
 		if (!window.confirm(`Delete ${label}?`)) return
-		const names = new Set(files.map((f) => f.name))
-		messages.data = messages.data.filter((m) => !names.has(m.name))
+		try {
+			for (const file of files) {
+				await call("connect.api.messages.delete_message", { message: file.name })
+			}
+			context.messages.reload()
+		} catch (e) {
+			toast({
+				title: "Could not delete files",
+				text: permissionAwareErrorText(e, "You don't have permission to delete one or more of these files"),
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		}
 	}
 
 	// ---- Pinning a message ----
-	// One pin at a time per thread, held in pinnedByThread for the life of the page.
-	// (pinnedMessage itself is declared up top — see the comment there for why.)
+	// One pin at a time per thread (see connect.api.messages.pin_message). pinnedMessage itself is
+	// declared up in State — see the comment there for why.
 
-	function fetchPinnedMessage() {
-		pinnedMessage.value = (selectedThread.value && pinnedByThread[selectedThread.value]) || null
+	async function fetchPinnedMessage() {
+		if (!selectedThread.value) {
+			pinnedMessage.value = null
+			return
+		}
+		try {
+			pinnedMessage.value = await call("connect.api.messages.get_pinned_message", { thread: selectedThread.value })
+		} catch (e) {
+			pinnedMessage.value = null
+		}
 	}
 
 	function isPinned(item) {
 		return !!(pinnedMessage.value && item && pinnedMessage.value.name === item.name)
 	}
 
-	function togglePinMessage(item) {
+	async function togglePinMessage(item) {
 		if (!item || item.isFileCluster) return
-		if (isPinned(item)) {
-			delete pinnedByThread[selectedThread.value]
-			pinnedMessage.value = null
-		} else {
-			pinnedByThread[selectedThread.value] = {
-				name: item.name,
-				sender: item.sender,
-				message_type: item.message_type,
-				content: item.content,
-				file_name: item.file_name,
+		try {
+			if (isPinned(item)) {
+				await call("connect.api.messages.unpin_message", { thread: selectedThread.value })
+				pinnedMessage.value = null
+			} else {
+				await call("connect.api.messages.pin_message", { message: item.name })
+				await fetchPinnedMessage()
 			}
-			pinnedMessage.value = pinnedByThread[selectedThread.value]
+		} catch (e) {
+			toast({
+				title: "Could not update pinned message",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
 		}
 	}
 
-	function unpinMessage() {
+	async function unpinMessage() {
 		if (!selectedThread.value || !pinnedMessage.value) return
-		delete pinnedByThread[selectedThread.value]
-		pinnedMessage.value = null
+		try {
+			await call("connect.api.messages.unpin_message", { thread: selectedThread.value })
+			pinnedMessage.value = null
+		} catch (e) {
+			toast({
+				title: "Could not unpin message",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		}
 	}
 
 	function pinnedMessageLabel() {
 		if (!pinnedMessage.value) return ""
 		const sender = (pinnedMessage.value.sender || "").split("@")[0]
-		const body = pinnedMessage.value.message_type === "File" ? "📎 " + (pinnedMessage.value.file_name || "Attachment") : pinnedMessage.value.content
+		let body = pinnedMessage.value.content
+		if (pinnedMessage.value.message_type === "File") body = "📎 " + (pinnedMessage.value.file_name || "Attachment")
+		else if (pinnedMessage.value.message_type === "Requirement") body = "Company details"
 		return sender + ": " + body
 	}
 
@@ -759,23 +839,62 @@ export default function setup(context) {
 		input.click()
 	}
 
-	// No backend to upload to — a local object URL stands in for the file so previews, size,
-	// and type all render the same way a real uploaded attachment would.
+	// Uploaded ahead of Send so the composer can show a live progress state and a remove
+	// button per file — a file only becomes part of a real message once sendMessage is called.
+	// Tracked by `id` rather than object reference: draftAttachments is a Vue ref array, so
+	// items read back out of it are reactive proxies, never `===` to the raw object pushed in.
 	function uploadFile(file) {
 		const id = nextAttachmentId++
 		draftAttachments.value.push({
 			id,
 			file_name: file.name,
-			uploading: false,
-			file_url: URL.createObjectURL(file),
-			file_type: file.type,
-			file_size: file.size,
+			uploading: true,
+			file_url: null,
+			file_type: null,
+			file_size: null,
 		})
+
+		const { upload } = useFileUpload()
+		upload(file, {
+			upload_endpoint: "/api/method/connect.api.attachments.upload_chat_attachment",
+			params: { thread: selectedThread.value },
+		})
+			.then((data) => {
+				const current = draftAttachments.value.find((a) => a.id === id)
+				if (!current) {
+					// removed while it was still uploading — clean up the now-orphaned file
+					call("connect.api.attachments.remove_chat_attachment", { file_url: data.file_url }).catch(() => {})
+					return
+				}
+				current.file_url = data.file_url
+				current.file_name = data.file_name
+				current.file_type = data.file_type
+				current.file_size = data.file_size
+				current.uploading = false
+			})
+			.catch((e) => {
+				draftAttachments.value = draftAttachments.value.filter((a) => a.id !== id)
+				toast({
+					title: "Could not upload file",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
+			})
 	}
 
 	function removeAttachment(item) {
 		draftAttachments.value = draftAttachments.value.filter((a) => a.id !== item.id)
-		if (item.file_url) URL.revokeObjectURL(item.file_url)
+		if (item.file_url) {
+			call("connect.api.attachments.remove_chat_attachment", { file_url: item.file_url }).catch((e) => {
+				toast({
+					title: "Could not remove attachment",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
+			})
+		}
 	}
 
 	function formatFileSize(bytes) {
@@ -842,8 +961,11 @@ export default function setup(context) {
 		return Math.min(widest, maxLineWidth) + "px"
 	}
 
-	// Local object URLs (and any plain reachable URL used in mock data) both work with a
-	// straight fetch-to-blob download — no backend download route involved.
+	// window.open(url, "_blank") flashes a new tab open-then-closed for URLs that trigger a
+	// direct download — an <a download> click saves the file in place instead. Fetched as a blob
+	// rather than navigating straight to item.attachment: private files are served through
+	// Frappe's download route, which sets Content-Disposition to the deduped on-disk filename,
+	// and that header wins over the anchor's `download` attribute in Chrome.
 	async function downloadFile(item, event) {
 		if (event) {
 			event.preventDefault()
@@ -882,10 +1004,10 @@ export default function setup(context) {
 	window.addEventListener("keydown", handleFilePreviewKeydown)
 	onScopeDispose(() => window.removeEventListener("keydown", handleFilePreviewKeydown))
 
-	function sendMessage() {
+	async function sendMessage() {
 		if (!selectedThread.value || uploadingFile.value) return
 		if (messageToEdit.value) {
-			saveEditedMessage()
+			await saveEditedMessage()
 			return
 		}
 		const readyAttachments = draftAttachments.value.filter((a) => a.file_url)
@@ -893,41 +1015,37 @@ export default function setup(context) {
 		if (!content && !readyAttachments.length) return
 
 		const thread = selectedThread.value
-		const sender = (myContext.data && myContext.data.user) || ""
 		draftMessage.value = ""
 		draftAttachments.value = []
-		const now = new Date().toISOString()
 
-		if (content) {
-			messages.data.push({
-				name: "mock-msg-" + Date.now(),
-				thread,
-				sender,
-				content,
-				creation: now,
-				message_type: "Text",
+		try {
+			if (content) {
+				await call("connect.api.messages.send_message", { thread, content })
+			}
+			for (const a of readyAttachments) {
+				await call("connect.api.messages.send_message", {
+					thread,
+					content: "",
+					file_url: a.file_url,
+					file_name: a.file_name,
+					file_type: a.file_type,
+					file_size: a.file_size,
+				})
+			}
+			context.messages.reload()
+			context.myThreads.reload()
+		} catch (e) {
+			// A multi-part send (text + attachments) can partially succeed before one part fails —
+			// reload so the sender's own view reflects whatever actually went through, rather than
+			// looking empty until something else triggers a refresh.
+			context.messages.reload()
+			context.myThreads.reload()
+			toast({
+				title: "Could not send message",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
 			})
-		}
-		readyAttachments.forEach((a, i) => {
-			messages.data.push({
-				name: "mock-msg-" + Date.now() + "-" + i,
-				thread,
-				sender,
-				content: "",
-				creation: now,
-				message_type: "File",
-				attachment: a.file_url,
-				file_name: a.file_name,
-				file_type: a.file_type,
-				file_size: a.file_size,
-			})
-		})
-
-		const t = myThreads.data.find((t) => t.name === thread)
-		if (t) {
-			t.last_message = content || (readyAttachments[0] && readyAttachments[0].file_name) || ""
-			t.last_message_at = now
-			t.last_message_sender = sender
 		}
 	}
 
@@ -1011,6 +1129,8 @@ export default function setup(context) {
 		if (item && item.href) window.open(item.href, "_blank", "noopener")
 	}
 
+	// No backend for the scheduled-call feature yet (see the top-of-file note) — this stays
+	// wired for whenever real Event-type items exist, but nothing currently produces one.
 	function openEventLink(item) {
 		if (item && item.event_url) window.open(item.event_url, "_blank", "noopener")
 	}
@@ -1042,14 +1162,6 @@ export default function setup(context) {
 	}
 
 	return {
-		myContext,
-		myThreads,
-		messages,
-		threadMembers,
-		threadAdmins,
-		memberProfiles,
-		partnerInfo,
-		myShortlist,
 		selectedThread,
 		draftMessage,
 		draftAttachments,
