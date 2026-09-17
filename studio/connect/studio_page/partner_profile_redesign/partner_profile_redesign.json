@@ -370,11 +370,10 @@
          "baseStyles": {
           "alignItems": "center",
           "backgroundColor": "var(--surface-base, #fff)",
-          "backgroundImage": "{{ partner.data && partner.data.logo ? 'url(\"' + partner.data.logo + '\")' : 'none' }}",
+          "backgroundImage": "{{ (partner.data && (partner.data.logo_icon || partner.data.logo)) ? 'url(\"' + (partner.data && (partner.data.logo_icon || partner.data.logo)) + '\")' : 'none' }}",
           "backgroundPosition": "center",
           "backgroundRepeat": "no-repeat",
           "backgroundSize": "contain",
-          "border": "1px solid var(--outline-gray-3, #d1d1d1)",
           "borderRadius": "8px",
           "display": "flex",
           "flexShrink": "0",
@@ -387,7 +386,7 @@
           {
            "baseStyles": {
             "color": "var(--ink-gray-6, #525252)",
-            "display": "{{ partner.data && partner.data.logo ? 'none' : 'flex' }}",
+            "display": "{{ (partner.data && (partner.data.logo_icon || partner.data.logo)) ? 'none' : 'flex' }}",
             "fontWeight": "600"
            },
            "children": [],
@@ -1908,7 +1907,6 @@
               "backgroundSize": "contain",
               "flexShrink": "0",
               "height": "18px",
-              "objectFit": "contain",
               "width": "24px"
              },
              "children": [],
@@ -1919,7 +1917,7 @@
             },
             {
              "baseStyles": {
-              "backgroundColor": "var(--outline-gray-2, #ededed)",
+              "backgroundColor": "var(--outline-gray-2, #e2e2e2)",
               "flex": "1",
               "height": "1px"
              },
@@ -1937,22 +1935,30 @@
           },
           {
            "baseStyles": {
+            "alignItems": "flex-start",
             "display": "flex",
-            "flexDirection": "column",
+            "flexDirection": "row",
+            "gap": "24px",
+            "justifyContent": "space-between",
             "width": "100%"
            },
            "children": [
             {
              "baseStyles": {
+              "alignItems": "flex-start",
               "display": "flex",
               "flexDirection": "column",
-              "gap": "24px",
-              "width": "100%"
+              "gap": "16px",
+              "maxWidth": "100%",
+              "minWidth": "0px",
+              "width": "600px"
              },
              "children": [
               {
                "baseStyles": {
                 "color": "var(--ink-gray-6, #525252)",
+                "letterSpacing": "0.28px",
+                "lineHeight": "1.5",
                 "width": "100%"
                },
                "children": [],
@@ -1967,82 +1973,73 @@
               },
               {
                "baseStyles": {
-                "alignItems": "center",
                 "display": "flex",
-                "flexDirection": "row",
-                "gap": "12px"
+                "flexDirection": "column",
+                "gap": "2px",
+                "width": "100%"
                },
                "children": [
                 {
                  "baseStyles": {
-                  "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
-                  "backgroundImage": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? 'url(\"' + ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).photo + '\")' : 'none' }}",
-                  "backgroundPosition": "center",
-                  "backgroundRepeat": "no-repeat",
-                  "backgroundSize": "cover",
-                  "borderRadius": "50%",
-                  "flexShrink": "0",
-                  "height": "44px",
-                  "overflow": "hidden",
-                  "width": "44px"
+                  "color": "var(--ink-gray-8, #171717)",
+                  "fontWeight": "500",
+                  "letterSpacing": "0.21px",
+                  "lineHeight": "1.15"
                  },
                  "children": [],
                  "classes": [],
-                 "componentId": "vision-founder-photo",
-                 "componentName": "container",
-                 "originalElement": "div"
+                 "componentId": "vision-founder-name",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).member_name : '' }}"
+                 }
                 },
                 {
                  "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "2px"
+                  "color": "var(--ink-gray-6, #525252)",
+                  "letterSpacing": "0.28px",
+                  "lineHeight": "1.5"
                  },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8, #171717)",
-                    "fontWeight": "600"
-                   },
-                   "children": [],
-                   "classes": [],
-                   "componentId": "vision-founder-name",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).member_name : '' }}"
-                   }
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6, #525252)"
-                   },
-                   "children": [],
-                   "classes": [],
-                   "componentId": "vision-founder-title",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-p-base",
-                    "tag": "span",
-                    "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).designation : '' }}"
-                   }
-                  }
-                 ],
+                 "children": [],
                  "classes": [],
-                 "componentId": "vision-founder-meta",
-                 "componentName": "container",
-                 "originalElement": "div"
+                 "componentId": "vision-founder-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-p-base",
+                  "tag": "span",
+                  "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).designation : '' }}"
+                 }
                 }
                ],
                "classes": [],
-               "componentId": "vision-author-row",
+               "componentId": "vision-founder-meta",
                "componentName": "container",
                "originalElement": "div"
               }
              ],
              "classes": [],
              "componentId": "vision-left-col",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
+              "backgroundImage": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? 'url(\"' + ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).photo + '\")' : 'none' }}",
+              "backgroundPosition": "center",
+              "backgroundRepeat": "no-repeat",
+              "backgroundSize": "cover",
+              "borderRadius": "50%",
+              "flexShrink": "0",
+              "height": "80px",
+              "overflow": "hidden",
+              "width": "80px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "vision-founder-photo",
              "componentName": "container",
              "originalElement": "div"
             }
@@ -2063,7 +2060,7 @@
            "children": [
             {
              "baseStyles": {
-              "backgroundColor": "var(--outline-gray-2, #ededed)",
+              "backgroundColor": "var(--outline-gray-2, #e2e2e2)",
               "flex": "1",
               "height": "1px"
              },
@@ -2080,7 +2077,6 @@
               "backgroundSize": "contain",
               "flexShrink": "0",
               "height": "18px",
-              "objectFit": "contain",
               "transform": "rotate(180deg)",
               "width": "24px"
              },
@@ -3092,12 +3088,9 @@
         },
         {
          "baseStyles": {
-          "border": "1px solid var(--outline-gray-1, #ededed)",
-          "borderRadius": "12px",
           "display": "flex",
           "flexDirection": "column",
           "gap": "16px",
-          "padding": "16px",
           "width": "100%"
          },
          "children": [
@@ -3658,7 +3651,7 @@
                      "componentProps": {
                       "fontSize": "text-p-base",
                       "tag": "span",
-                      "text": "{{ item.customer }}"
+                      "text": "{{ item.customer_name || item.customer }}"
                      },
                      "componentSlots": {},
                      "mobileStyles": {},
@@ -5192,7 +5185,6 @@
          "baseStyles": {
           "alignItems": "center",
           "backgroundColor": "var(--surface-white, #fff)",
-          "border": "1px solid var(--outline-gray-1, #ededed)",
           "borderRadius": "12px",
           "display": "flex",
           "flexDirection": "row",
@@ -5618,7 +5610,7 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-09-17 00:51:14.736758",
+ "creation": "2026-09-17 15:18:52.454569",
  "doctype": "Studio Page",
  "draft_blocks": [
   {
@@ -5990,11 +5982,10 @@
          "baseStyles": {
           "alignItems": "center",
           "backgroundColor": "var(--surface-base, #fff)",
-          "backgroundImage": "{{ partner.data && partner.data.logo ? 'url(\"' + partner.data.logo + '\")' : 'none' }}",
+          "backgroundImage": "{{ (partner.data && (partner.data.logo_icon || partner.data.logo)) ? 'url(\"' + (partner.data && (partner.data.logo_icon || partner.data.logo)) + '\")' : 'none' }}",
           "backgroundPosition": "center",
           "backgroundRepeat": "no-repeat",
           "backgroundSize": "contain",
-          "border": "1px solid var(--outline-gray-3, #d1d1d1)",
           "borderRadius": "8px",
           "display": "flex",
           "flexShrink": "0",
@@ -6007,7 +5998,7 @@
           {
            "baseStyles": {
             "color": "var(--ink-gray-6, #525252)",
-            "display": "{{ partner.data && partner.data.logo ? 'none' : 'flex' }}",
+            "display": "{{ (partner.data && (partner.data.logo_icon || partner.data.logo)) ? 'none' : 'flex' }}",
             "fontWeight": "600"
            },
            "children": [],
@@ -6715,7 +6706,7 @@
                      "componentId": "credential-erpnext-text",
                      "componentName": "TextBlock",
                      "componentProps": {
-                      "fontSize": "text-base",
+                      "fontSize": "text-sm",
                       "tag": "span",
                       "text": "{{ (partner.data && partner.data.certs_erpnext || 0) + ' ERPNext Experts' }}"
                      }
@@ -6757,7 +6748,7 @@
                      "componentId": "credential-framework-text",
                      "componentName": "TextBlock",
                      "componentProps": {
-                      "fontSize": "text-base",
+                      "fontSize": "text-sm",
                       "tag": "span",
                       "text": "{{ (partner.data && partner.data.certs_frappe_framework || 0) + ' Framework Experts' }}"
                      }
@@ -6975,7 +6966,7 @@
                "componentProps": {
                 "color": "var(--ink-gray-6, #6b6b6b)",
                 "name": "briefcase",
-                "strokeWidth": 1.75
+                "strokeWidth": "1.25"
                }
               },
               {
@@ -7388,152 +7379,7 @@
           "gap": "14px",
           "width": "100%"
          },
-         "children": [
-          {
-           "baseStyles": {
-            "border": "1px solid var(--outline-gray-1, #ededed)",
-            "borderRadius": "10px",
-            "display": "flex",
-            "flex": "1 0 0",
-            "flexDirection": "column",
-            "gap": "4px",
-            "height": "76px",
-            "minWidth": "0px",
-            "padding": "16px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-7)",
-              "fontWeight": "500"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "stat-sites-value",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-lg",
-              "tag": "span",
-              "text": "{{ (partner.data && partner.data.sites_deployed) ? partner.data.sites_deployed + '+' : '\u2014' }}"
-             }
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-6, #525252)"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "stat-sites-label",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-p-sm",
-              "tag": "span",
-              "text": "FC sites"
-             }
-            }
-           ],
-           "classes": [],
-           "componentId": "stat-sites",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "border": "1px solid var(--outline-gray-1, #ededed)",
-            "borderRadius": "10px",
-            "display": "flex",
-            "flex": "1 0 0",
-            "flexDirection": "column",
-            "gap": "4px",
-            "height": "76px",
-            "minWidth": "0px",
-            "padding": "16px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-7)",
-              "fontWeight": "500"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "stat-retention-value",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-lg",
-              "tag": "span",
-              "text": "85%"
-             }
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-6, #525252)"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "stat-retention-label",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-p-sm",
-              "tag": "span",
-              "text": "Client Retention rate"
-             }
-            }
-           ],
-           "classes": [],
-           "componentId": "stat-retention",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "border": "1px solid var(--outline-gray-1, #ededed)",
-            "borderRadius": "10px",
-            "display": "flex",
-            "flex": "1 0 0",
-            "flexDirection": "column",
-            "gap": "4px",
-            "height": "76px",
-            "minWidth": "0px",
-            "padding": "16px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-7)",
-              "fontWeight": "500"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "stat-years-value",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-lg",
-              "tag": "span",
-              "text": "{{ (partner.data && partner.data.year_founded) ? (new Date().getFullYear() - partner.data.year_founded) + 'y' : '\u2014' }}"
-             }
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-6, #525252)"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "stat-years-label",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-p-sm",
-              "tag": "span",
-              "text": "Operating since"
-             }
-            }
-           ],
-           "classes": [],
-           "componentId": "stat-years",
-           "componentName": "container",
-           "originalElement": "div"
-          }
-         ],
+         "children": [],
          "classes": [],
          "componentId": "success-stats-row",
          "componentName": "container",
@@ -7610,7 +7456,6 @@
               "backgroundSize": "contain",
               "flexShrink": "0",
               "height": "18px",
-              "objectFit": "contain",
               "width": "24px"
              },
              "children": [],
@@ -7621,7 +7466,7 @@
             },
             {
              "baseStyles": {
-              "backgroundColor": "var(--outline-gray-2, #ededed)",
+              "backgroundColor": "var(--outline-gray-2, #e2e2e2)",
               "flex": "1",
               "height": "1px"
              },
@@ -7639,42 +7484,53 @@
           },
           {
            "baseStyles": {
+            "alignItems": "flex-start",
             "display": "flex",
-            "flexDirection": "column",
+            "flexDirection": "row",
+            "gap": "14px",
             "width": "100%"
            },
            "children": [
             {
              "baseStyles": {
+              "alignItems": "flex-start",
               "display": "flex",
               "flexDirection": "column",
-              "gap": "24px",
-              "width": "100%"
+              "gap": "16px",
+              "maxWidth": "100%",
+              "minWidth": "0px",
+              "width": "600px"
              },
              "children": [
               {
                "baseStyles": {
-                "color": "var(--ink-gray-6, #525252)",
-                "width": "100%"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "vision-quote-text",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-p-base",
-                "tag": "p",
-                "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).bio : '' }}"
-               }
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
                 "display": "flex",
                 "flexDirection": "row",
-                "gap": "12px"
+                "flexShrink": 1,
+                "gap": "80px",
+                "height": "fit-content",
+                "justifyContent": "space-between",
+                "width": "132%"
                },
+               "blockName": "container",
                "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6, #525252)",
+                  "letterSpacing": "0.28px",
+                  "lineHeight": "1.5",
+                  "width": "111%"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "vision-quote-text",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-p-base",
+                  "tag": "p",
+                  "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).bio : '' }}"
+                 }
+                },
                 {
                  "baseStyles": {
                   "backgroundColor": "var(--surface-gray-2, #f3f3f3)",
@@ -7684,66 +7540,66 @@
                   "backgroundSize": "cover",
                   "borderRadius": "50%",
                   "flexShrink": "0",
-                  "height": "44px",
-                  "marginLeft": "0px",
-                  "marginTop": "0px",
+                  "height": "80px",
                   "overflow": "hidden",
-                  "paddingBottom": "0px",
-                  "paddingLeft": "0px",
-                  "paddingTop": "0px",
-                  "width": "44px"
+                  "width": "80px"
                  },
                  "children": [],
                  "classes": [],
                  "componentId": "vision-founder-photo",
                  "componentName": "container",
                  "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "2px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8, #171717)",
-                    "fontWeight": "600"
-                   },
-                   "children": [],
-                   "classes": [],
-                   "componentId": "vision-founder-name",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).member_name : '' }}"
-                   }
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6, #525252)"
-                   },
-                   "children": [],
-                   "classes": [],
-                   "componentId": "vision-founder-title",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-p-base",
-                    "tag": "span",
-                    "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).designation : '' }}"
-                   }
-                  }
-                 ],
-                 "classes": [],
-                 "componentId": "vision-founder-meta",
-                 "componentName": "container",
-                 "originalElement": "div"
                 }
                ],
                "classes": [],
-               "componentId": "vision-author-row",
+               "componentId": "container-k4tredm0s",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "2px",
+                "width": "100%"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6, #525252)",
+                  "letterSpacing": "0.28px",
+                  "lineHeight": "1.5"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "vision-founder-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-p-base",
+                  "tag": "span",
+                  "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).designation : '' }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8, #171717)",
+                  "fontWeight": "500",
+                  "letterSpacing": "0.21px",
+                  "lineHeight": "1.15"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "vision-founder-name",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "p",
+                  "text": "{{ ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]) ? ((partner.data && partner.data.team || []).find(m => m.is_founder) || (partner.data && partner.data.team || [])[0]).member_name : '' }}"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "vision-founder-meta",
                "componentName": "container",
                "originalElement": "div"
               }
@@ -7770,7 +7626,7 @@
            "children": [
             {
              "baseStyles": {
-              "backgroundColor": "var(--outline-gray-2, #ededed)",
+              "backgroundColor": "var(--outline-gray-2, #e2e2e2)",
               "flex": "1",
               "height": "1px"
              },
@@ -7787,7 +7643,6 @@
               "backgroundSize": "contain",
               "flexShrink": "0",
               "height": "18px",
-              "objectFit": "contain",
               "transform": "rotate(180deg)",
               "width": "24px"
              },
@@ -7821,7 +7676,10 @@
         "flexDirection": "column",
         "margin": "0 auto",
         "maxWidth": "800px",
-        "padding": "42px 0 0",
+        "paddingBottom": "0px",
+        "paddingLeft": "0px",
+        "paddingRight": "0px",
+        "paddingTop": "115px",
         "width": "100%"
        },
        "children": [
@@ -7892,7 +7750,7 @@
              "componentId": "qa-why-us-label-heading",
              "componentName": "TextBlock",
              "componentProps": {
-              "fontSize": "text-lg",
+              "fontSize": "text-base",
               "tag": "span",
               "text": "Why work with us?"
              }
@@ -8005,7 +7863,7 @@
              "componentId": "qa-how-we-work-label-heading",
              "componentName": "TextBlock",
              "componentProps": {
-              "fontSize": "text-lg",
+              "fontSize": "text-base",
               "tag": "span",
               "text": "How we'll work together"
              }
@@ -8133,7 +7991,7 @@
              "componentId": "qa-successful-impl-label-heading",
              "componentName": "TextBlock",
              "componentProps": {
-              "fontSize": "text-lg",
+              "fontSize": "text-base",
               "tag": "span",
               "text": "How we define a\nsuccessful implementation"
              }
@@ -8258,26 +8116,27 @@
               "justifyContent": "center",
               "width": "32px"
              },
+             "blockName": "container",
              "children": [
               {
                "baseStyles": {
-                "backgroundImage": "url(/assets/connect/images/successful-implementation-icon.svg)",
-                "backgroundPosition": "center",
-                "backgroundRepeat": "no-repeat",
-                "backgroundSize": "contain",
                 "flexShrink": "0",
                 "height": "16px",
                 "width": "16px"
                },
                "children": [],
                "classes": [],
-               "componentId": "pricing-starter-card-icon",
-               "componentName": "container",
-               "originalElement": "div"
+               "componentId": "FeatherIcon-xeg2b2sd2",
+               "componentName": "FeatherIcon",
+               "componentProps": {
+                "color": "var(--ink-gray-8, #171717)",
+                "name": "package",
+                "strokeWidth": "1.25"
+               }
               }
              ],
              "classes": [],
-             "componentId": "pricing-starter-card-icon-box",
+             "componentId": "container-ow04j2z7v",
              "componentName": "container",
              "originalElement": "div"
             },
@@ -8605,12 +8464,9 @@
         },
         {
          "baseStyles": {
-          "border": "1px solid var(--outline-gray-1, #ededed)",
-          "borderRadius": "12px",
           "display": "flex",
           "flexDirection": "column",
           "gap": "16px",
-          "padding": "16px",
           "width": "100%"
          },
          "children": [
@@ -9173,7 +9029,7 @@
                      "componentProps": {
                       "fontSize": "text-p-base",
                       "tag": "span",
-                      "text": "{{ item.customer }}"
+                      "text": "{{ item.customer_name || item.customer }}"
                      },
                      "componentSlots": {},
                      "mobileStyles": {},
@@ -9471,7 +9327,10 @@
         "gap": "24px",
         "margin": "0 auto",
         "maxWidth": "800px",
-        "padding": "64px 0 0",
+        "paddingBottom": "0px",
+        "paddingLeft": "0px",
+        "paddingRight": "0px",
+        "paddingTop": "115px",
         "width": "100%"
        },
        "children": [
@@ -10558,7 +10417,6 @@
          "baseStyles": {
           "alignItems": "center",
           "backgroundColor": "var(--surface-white, #fff)",
-          "border": "1px solid var(--outline-gray-1, #ededed)",
           "borderRadius": "12px",
           "display": "flex",
           "flexDirection": "row",
@@ -10989,7 +10847,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-17 00:51:23.552615",
+ "modified": "2026-09-17 16:54:44.355612",
  "modified_by": "Administrator",
  "name": "partner_profile_redesign",
  "owner": "Administrator",
