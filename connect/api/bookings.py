@@ -9,10 +9,10 @@ from connect.permissions import _check_can_write
 # Used whenever a partner hasn't configured their own Partner Booking Slot rows yet, so the
 # "Book a slot" dialog always has something to offer instead of coming up empty.
 DEFAULT_SLOTS = [
-	{"time": "14:00:00", "capacity": 3},
-	{"time": "15:00:00", "capacity": 3},
-	{"time": "16:00:00", "capacity": 3},
-	{"time": "17:00:00", "capacity": 3},
+	{"time": "14:00:00", "capacity": 1},
+	{"time": "15:00:00", "capacity": 1},
+	{"time": "16:00:00", "capacity": 1},
+	{"time": "17:00:00", "capacity": 1},
 ]
 
 
