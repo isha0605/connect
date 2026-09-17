@@ -134,7 +134,7 @@ def _normalize_multi(value):
 
 
 PARTNER_FIELDS = [
-	"name", "partner_name", "logo", "tagline", "tier", "specialist",
+	"name", "partner_name", "logo", "logo_icon", "tagline", "tier", "specialist",
 	"rating", "industry", "country", "city", "rollouts", "hourly_rate",
 	"response_time_hours",
 ]
