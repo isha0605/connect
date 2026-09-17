@@ -21,6 +21,8 @@ def _message_preview_text(message):
 		text = "📎 " + (message.get("file_name") or _("Attachment"))
 	elif message.get("message_type") == "Requirement":
 		text = _("Requirement details")
+	elif message.get("message_type") == "Booking":
+		text = "📅 " + _("Scheduled an introduction call")
 	else:
 		text = message.get("content") or ""
 	return text[:140]
@@ -107,7 +109,12 @@ def notify_thread_members(doc, method=None):
 	if not members:
 		return
 
-	subject = "Shared requirement details" if doc.message_type == "Requirement" else frappe.utils.strip_html(doc.content)
+	if doc.message_type == "Requirement":
+		subject = "Shared requirement details"
+	elif doc.message_type == "Booking":
+		subject = "Scheduled an introduction call"
+	else:
+		subject = frappe.utils.strip_html(doc.content)
 	enqueue_create_notification(
 		members,
 		{

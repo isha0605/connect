@@ -73,6 +73,54 @@ export default function setup(context) {
 		return amPartner ? thread.customer : thread.partner
 	}
 
+	// Company threads carry the partner's uploaded logo (see get_my_threads' partner_logo) — shown
+	// only to the customer side, since a partner viewing their own customer threads has no customer
+	// logo to show and falls back to Avatar's label-initial rendering instead.
+	function threadAvatarImage(thread) {
+		if (!thread) return ""
+		if (thread.convType === "dm") return thread.other_user_image || ""
+		const amPartner = context.myContext.data && context.myContext.data.partner
+		return amPartner ? "" : thread.partner_logo || ""
+	}
+
+	// ---- Inbox search ----
+	// Filters the unified inbox (see unifiedThreadList) by whatever's typed into the Inbox search
+	// box (see thread-search-input in the JSON — a real frappe-ui TextInput bound to this ref via
+	// Studio's variable binding, not a raw <input>, so it gets frappe-ui's own focus/border styling
+	// for free instead of the browser's default blue outline).
+	const threadSearchQuery = ref("")
+
+	// ---- Inbox Active/Inactive tabs ----
+	// A DM thread has no `status` field at all (Connect DM Thread doesn't carry one — see
+	// get_my_dm_threads), so it's always "active"; only a company thread can be closed
+	// (see closeThread / Connect Thread's status: Open|Closed).
+	const activeInboxTab = ref("active")
+
+	function isThreadActive(thread) {
+		return thread.convType !== "company" || thread.status !== "Closed"
+	}
+
+	function activeThreadCount() {
+		return unifiedThreadList().filter(isThreadActive).length
+	}
+
+	function inactiveThreadCount() {
+		return unifiedThreadList().filter((t) => !isThreadActive(t)).length
+	}
+
+	function filteredThreadList() {
+		const query = threadSearchQuery.value.trim().toLowerCase()
+		const threads = unifiedThreadList().filter((t) =>
+			activeInboxTab.value === "active" ? isThreadActive(t) : !isThreadActive(t),
+		)
+		if (!query) return threads
+		return threads.filter((thread) => {
+			const name = (otherPartyName(thread) || "").toLowerCase()
+			const lastMessage = (thread.last_message || "").toLowerCase()
+			return name.includes(query) || lastMessage.includes(query)
+		})
+	}
+
 	function threadTitle() {
 		const t = currentThread()
 		if (!t.name) return "Select a conversation"
@@ -208,6 +256,8 @@ export default function setup(context) {
 		context.threadAdmins.reload()
 		context.memberProfiles.params = { thread: name }
 		context.memberProfiles.reload()
+		context.partnerInfo.params = { partner: currentThread().partner }
+		context.partnerInfo.reload()
 		call("connect.api.threads.mark_thread_read", { thread: name })
 			.then(() => context.myThreads.reload())
 			.catch(() => {})
@@ -474,6 +524,10 @@ export default function setup(context) {
 	}
 
 	// ---- Admin checks ----
+	function amPartner() {
+		return !!(context.myContext.data && context.myContext.data.partner)
+	}
+
 	function isPartnerAdmin() {
 		return !!(context.myContext.data && context.myContext.data.partner && context.myContext.data.partner.is_admin)
 	}
@@ -493,6 +547,224 @@ export default function setup(context) {
 	// ---- Members ----
 	function activeMembers() {
 		return (context.threadMembers.data || []).filter((m) => !m.is_removed)
+	}
+
+	function activeMemberCount() {
+		return activeMembers().length
+	}
+
+	// Chat header stats — partnerInfo is fetched on demand (see selectThread) rather than folded
+	// into get_my_threads, since that resource backs every row in the sidebar and this is only
+	// ever needed for whichever one thread is currently open.
+	function responseTimeLabel() {
+		const p = context.partnerInfo.data
+		if (!p || !p.response_time_hours) return ""
+		return "Typically " + p.response_time_hours + "h"
+	}
+
+	// No hiring flow exists yet anywhere in the app — just acknowledges the click.
+	function hirePartner() {
+		toast({ title: "Hire flow coming soon", icon: "check", iconClasses: "text-green-600" })
+	}
+
+	// ---- Book a slot ----
+	const showBookSlotDialog = ref(false)
+	const bookSlotDate = ref("")
+	const bookSlotTime = ref("")
+	const requestingSlot = ref(false)
+
+	function toDateStr(d) {
+		return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0")
+	}
+
+	function isWeekday(d) {
+		const day = d.getDay()
+		return day !== 0 && day !== 6
+	}
+
+	// Slots are open for the next 10 weekdays from today — there's no per-partner calendar
+	// config yet for a longer/shorter booking horizon, just the daily time template (see
+	// connect.api.bookings._partner_slot_template).
+	const BOOKING_WINDOW_DAYS = 10
+
+	function bookableDateSet() {
+		const dates = new Set()
+		const d = new Date()
+		d.setHours(0, 0, 0, 0)
+		while (dates.size < BOOKING_WINDOW_DAYS) {
+			if (isWeekday(d)) dates.add(toDateStr(d))
+			d.setDate(d.getDate() + 1)
+		}
+		return dates
+	}
+
+	function isBookableDate(dateStr) {
+		return bookableDateSet().has(dateStr)
+	}
+
+	function nextBookableDate() {
+		const d = new Date()
+		d.setHours(0, 0, 0, 0)
+		while (!isWeekday(d)) d.setDate(d.getDate() + 1)
+		return toDateStr(d)
+	}
+
+	function reloadBookingSlots() {
+		const t = currentThread()
+		if (!t.partner) return
+		context.bookingSlots.params = { partner: t.partner, booking_date: bookSlotDate.value }
+		context.bookingSlots.reload()
+	}
+
+	function openBookSlotDialog() {
+		bookSlotDate.value = nextBookableDate()
+		bookSlotTime.value = ""
+		showBookSlotDialog.value = true
+		reloadBookingSlots()
+	}
+
+	function closeBookSlotDialog() {
+		showBookSlotDialog.value = false
+	}
+
+	function selectBookingDate(dateStr) {
+		if (!isBookableDate(dateStr)) return
+		bookSlotDate.value = dateStr
+		bookSlotTime.value = ""
+		reloadBookingSlots()
+	}
+
+	function calendarMonthLabel() {
+		if (!bookSlotDate.value) return ""
+		return new Date(bookSlotDate.value + "T00:00:00").toLocaleDateString("en-US", { month: "long", year: "numeric" })
+	}
+
+	function selectedBookingDateHeading() {
+		if (!bookSlotDate.value) return ""
+		return new Date(bookSlotDate.value + "T00:00:00").toLocaleDateString("en-US", {
+			weekday: "long",
+			month: "long",
+			day: "numeric",
+		})
+	}
+
+	// A 6x7 grid (Sun-Sat) covering the selected date's month, padded with the tail of the
+	// previous month and the head of the next — same shape convention Requirement's Apps
+	// Repeater uses ({name} objects), just wrapped one level deeper for the week rows.
+	function calendarWeeks() {
+		if (!bookSlotDate.value) return []
+		const anchor = new Date(bookSlotDate.value + "T00:00:00")
+		const month = anchor.getMonth()
+		const gridStart = new Date(anchor.getFullYear(), month, 1)
+		gridStart.setDate(gridStart.getDate() - gridStart.getDay())
+
+		const bookable = bookableDateSet()
+		const weeks = []
+		const cursor = new Date(gridStart)
+		for (let w = 0; w < 6; w++) {
+			const days = []
+			for (let i = 0; i < 7; i++) {
+				const dateStr = toDateStr(cursor)
+				days.push({
+					dateStr,
+					dayNumber: cursor.getDate(),
+					inCurrentMonth: cursor.getMonth() === month,
+					isBookable: bookable.has(dateStr),
+					isSelected: dateStr === bookSlotDate.value,
+				})
+				cursor.setDate(cursor.getDate() + 1)
+			}
+			weeks.push({ weekIndex: w, days })
+		}
+		return weeks
+	}
+
+	function bookingSlotList() {
+		return context.bookingSlots.data || []
+	}
+
+	function selectBookingTime(slot) {
+		if (!slot || slot.spots_left <= 0) return
+		bookSlotTime.value = slot.time
+	}
+
+	function formatSlotTime(slot) {
+		if (!slot) return ""
+		return new Date("2000-01-01T" + slot.time).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+	}
+
+	function slotSpotsLabel(slot) {
+		if (!slot) return ""
+		return slot.spots_left > 0 ? slot.spots_left + " spots left" : "Full"
+	}
+
+	function isSlotSelected(slot) {
+		return !!(slot && bookSlotTime.value === slot.time)
+	}
+
+	function myTimezoneLabel() {
+		const offsetMinutes = -new Date().getTimezoneOffset()
+		const sign = offsetMinutes >= 0 ? "+" : "-"
+		const abs = Math.abs(offsetMinutes)
+		const hours = Math.floor(abs / 60)
+		const minutes = abs % 60
+		return "GMT" + sign + hours + ":" + String(minutes).padStart(2, "0")
+	}
+
+	// Whoever the caller isn't — a customer booking sees the partner's team, and vice versa.
+	function meetingAttendees() {
+		const wantSide = amPartner() ? "Customer" : "Partner"
+		return activeMembers().filter((m) => m.side === wantSide)
+	}
+
+	function canRequestSlot() {
+		return !!bookSlotTime.value && !requestingSlot.value
+	}
+
+	async function requestSlot() {
+		if (!canRequestSlot()) return
+		requestingSlot.value = true
+		try {
+			await call("connect.api.bookings.request_slot", {
+				thread: selectedThread.value,
+				booking_date: bookSlotDate.value,
+				booking_time: bookSlotTime.value,
+			})
+			showBookSlotDialog.value = false
+			context.messages.reload()
+			toast({ title: "Slot requested", icon: "check", iconClasses: "text-green-600" })
+		} catch (e) {
+			toast({
+				title: "Could not request slot",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			requestingSlot.value = false
+		}
+	}
+
+	// ---- Booking message card ----
+	// A Booking-type message stores its snapshot as a JSON blob in `content` (see
+	// connect.api.bookings.request_slot), same convention as Requirement messages.
+	function parseBookingContent(item) {
+		try {
+			return JSON.parse((item && item.content) || "{}") || {}
+		} catch (e) {
+			return {}
+		}
+	}
+
+	function bookingCardSubtitle(item) {
+		const b = parseBookingContent(item)
+		if (!b.date) return ""
+		const d = new Date(b.date + "T" + (b.time || "00:00:00"))
+		return (
+			d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }) +
+			", " +
+			d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+		)
 	}
 
 	// a trailing "@partial-name" at the very end of the draft triggers the picker — mentions
@@ -595,6 +867,30 @@ export default function setup(context) {
 			if (key === "apps") value = Array.isArray(value) ? value.join(", ") : value
 			return [label, value]
 		}).filter(([, value]) => value)
+	}
+
+	// The requirement card renders as two stacked boxes rather than one long one — "who they
+	// are" up top, "what they need" below.
+	const REQUIREMENT_FIELD_KEYS_PRIMARY = new Set(["company_name", "country", "industry", "company_size"])
+
+	function splitRequirementFieldRows(req) {
+		const primary = []
+		const secondary = []
+		REQUIREMENT_FIELD_LABELS.forEach(([key, label]) => {
+			let value = req[key]
+			if (key === "apps") value = Array.isArray(value) ? value.join(", ") : value
+			if (!value) return
+			;(REQUIREMENT_FIELD_KEYS_PRIMARY.has(key) ? primary : secondary).push([label, value])
+		})
+		return { primary, secondary }
+	}
+
+	function requirementPrimaryRows(item) {
+		return splitRequirementFieldRows(parseRequirementContent(item)).primary
+	}
+
+	function requirementSecondaryRows(item) {
+		return splitRequirementFieldRows(parseRequirementContent(item)).secondary
 	}
 
 	// preview_title-style header for the card — same fallback order a viewer would look for.
@@ -2142,6 +2438,9 @@ export default function setup(context) {
 		requirementSubtitle,
 		requirementAppItems,
 		parseRequirementContent,
+		requirementFieldRows,
+		requirementPrimaryRows,
+		requirementSecondaryRows,
 		copyRequirementDetails,
 		downloadRequirementDetails,
 		showProfileSettingsDialog,
@@ -2226,11 +2525,35 @@ export default function setup(context) {
 		isPanelOpen,
 		selectThread,
 		closeThread,
+		amPartner,
 		isPartnerAdmin,
 		isCustomerAdmin,
 		isAnyAdmin,
 		isRowAdmin,
 		activeMembers,
+		activeMemberCount,
+		responseTimeLabel,
+		hirePartner,
+		showBookSlotDialog,
+		bookSlotDate,
+		bookSlotTime,
+		requestingSlot,
+		openBookSlotDialog,
+		closeBookSlotDialog,
+		selectBookingDate,
+		calendarMonthLabel,
+		selectedBookingDateHeading,
+		calendarWeeks,
+		bookingSlotList,
+		selectBookingTime,
+		formatSlotTime,
+		slotSpotsLabel,
+		isSlotSelected,
+		myTimezoneLabel,
+		meetingAttendees,
+		canRequestSlot,
+		requestSlot,
+		bookingCardSubtitle,
 		addMember,
 		makeAdmin,
 		removeMember,
@@ -2287,6 +2610,12 @@ export default function setup(context) {
 		formatDateDivider,
 		formatFullDateTime,
 		avatarTheme,
+		threadAvatarImage,
+		threadSearchQuery,
+		activeInboxTab,
+		activeThreadCount,
+		inactiveThreadCount,
+		filteredThreadList,
 		memberProfile,
 		memberDisplayName,
 		memberImage,
