@@ -30,7 +30,6 @@ export default function setup(context) {
 	const originalRole = ref("")
 	const savingProfile = ref(false)
 	const uploadingProfileImage = ref(false)
-	const showInlineTemplates = ref(false)
 	const mediaTab = ref("Links")
 	const showAddMemberDialog = ref(false)
 	const newMemberEmail = ref("")
@@ -695,7 +694,7 @@ export default function setup(context) {
 
 	function slotSpotsLabel(slot) {
 		if (!slot) return ""
-		return slot.spots_left > 0 ? slot.spots_left + " spots left" : "Full"
+		return slot.spots_left > 0 ? "" : "Full"
 	}
 
 	function isSlotSelected(slot) {
@@ -800,7 +799,7 @@ export default function setup(context) {
 
 	function insertTemplate(template) {
 		draftMessage.value = template.content
-		showInlineTemplates.value = false
+		showTemplatesDialog.value = false
 	}
 
 	// Neutralizes text before it's interpolated into an HTML-component string (which renders
@@ -1420,6 +1419,9 @@ export default function setup(context) {
 	function messageActionsOptions(item) {
 		if (!item || !isMine(item.sender)) return []
 		const options = []
+		if (!item.isFileCluster) {
+			options.push({ label: "Reply", icon: "lucide-reply", onClick: () => startReply(item) })
+		}
 		if (!item.isFileCluster && item.message_type === "Text") {
 			options.push({ label: "Edit", icon: "lucide-pencil", onClick: () => confirmEditMessage(item) })
 		}
@@ -1435,11 +1437,12 @@ export default function setup(context) {
 		return options
 	}
 
-	// Right-click menu for someone else's message — just Pin/Unpin, since edit/delete are
-	// sender-only (see messageActionsOptions). File clusters aren't pinnable (see togglePinMessage).
+	// Right-click menu for someone else's message — Reply + Pin/Unpin, since edit/delete are
+	// sender-only (see messageActionsOptions). File clusters aren't pinnable/replyable.
 	function otherMessageActionsOptions(item) {
 		if (!item || item.isFileCluster) return []
 		return [
+			{ label: "Reply", icon: "lucide-reply", onClick: () => startReply(item) },
 			{
 				label: isPinned(item) ? "Unpin" : "Pin",
 				icon: isPinned(item) ? "lucide-pin-off" : "lucide-pin",
@@ -1509,9 +1512,10 @@ export default function setup(context) {
 
 	function confirmEditMessage(item) {
 		if (!item || item.isFileCluster || item.message_type !== "Text" || !isMine(item.sender)) return
+		replyToMessage.value = null
 		messageToEdit.value = item
 		draftMessage.value = item.content
-		showInlineTemplates.value = false
+		showTemplatesDialog.value = false
 		nextTick(() => {
 			const el = document.querySelector('[data-component-id="message-input"]') as HTMLTextAreaElement | null
 			el?.focus()
@@ -1521,6 +1525,46 @@ export default function setup(context) {
 	function cancelEditMessage() {
 		messageToEdit.value = null
 		draftMessage.value = ""
+	}
+
+	// ---- Replying to a message ----
+	// Same staged-in-composer pattern as editing: replyToMessage gates a "Replying to X" strip
+	// above the input, and is cleared once sendMessage() consumes it — quoting happens by
+	// reference (reply_to on the new message), not by copying text into the draft.
+	const replyToMessage = ref(null)
+
+	function startReply(item) {
+		if (!item || item.isFileCluster) return
+		messageToEdit.value = null
+		replyToMessage.value = item
+		nextTick(() => {
+			const el = document.querySelector('[data-component-id="message-input"]') as HTMLTextAreaElement | null
+			el?.focus()
+		})
+	}
+
+	function cancelReply() {
+		replyToMessage.value = null
+	}
+
+	// Resolves a reply_to id against the currently loaded window of messages (the same 200-message
+	// list the thread view renders from) — the replied-to message can scroll out of that window on
+	// a very long thread, in which case the quote is skipped rather than firing an extra fetch.
+	function getRepliedMessage(replyToName) {
+		if (!replyToName) return null
+		const list = (context.messages.data || []) as any[]
+		return list.find((m) => m.name === replyToName) || null
+	}
+
+	// Takes the message being quoted directly (not a reply_to id) — the composer passes
+	// replyToMessage itself, the bubble template resolves dataItem.reply_to via
+	// getRepliedMessage() first and passes that in.
+	function replyPreviewText(message) {
+		if (!message) return ""
+		if (message.message_type === "File") return message.file_name || "Attachment"
+		if (message.message_type === "Requirement") return "Requirement details"
+		if (message.message_type === "Booking") return "Booking"
+		return message.content || ""
 	}
 
 	function closeEditMessageDialog() {
@@ -1757,13 +1801,15 @@ export default function setup(context) {
 
 		const thread = selectedThread.value
 		const requirementToSend = draftRequirement.value
+		const replyToSend = replyToMessage.value ? replyToMessage.value.name : null
 		draftMessage.value = ""
 		draftAttachments.value = []
 		draftRequirement.value = null
+		replyToMessage.value = null
 
 		try {
 			if (content) {
-				await call("connect.api.messages.send_message", { thread, content })
+				await call("connect.api.messages.send_message", { thread, content, reply_to: replyToSend })
 			}
 			for (const a of readyAttachments) {
 				await call("connect.api.messages.send_message", {
@@ -2495,7 +2541,6 @@ export default function setup(context) {
 		showMembersDialog,
 		showMediaDialog,
 		showTemplatesDialog,
-		showInlineTemplates,
 		myMessageTemplates,
 		templateSearchQuery,
 		filteredMessageTemplates,
@@ -2584,6 +2629,11 @@ export default function setup(context) {
 		closeEditMessageDialog,
 		saveEditedMessage,
 		saveEditedMessageOnEnter,
+		replyToMessage,
+		startReply,
+		cancelReply,
+		getRepliedMessage,
+		replyPreviewText,
 		pinnedMessage,
 		isPinned,
 		togglePinMessage,

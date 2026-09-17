@@ -140,6 +140,7 @@ def notify_thread_members(doc, method=None):
 		"file_name": doc.file_name,
 		"file_type": doc.file_type,
 		"file_size": doc.file_size,
+		"reply_to": doc.reply_to,
 		"creation": str(doc.creation),
 	}
 	for member in members:
