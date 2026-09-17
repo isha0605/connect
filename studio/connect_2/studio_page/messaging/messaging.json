@@ -516,6 +516,9 @@
       "collapsed": true,
       "collapsedWidth": "3rem",
       "width": "15rem"
+     },
+     "mobileStyles": {
+      "display": "{{ !selectedThread ? 'flex' : 'none' }}"
      }
     },
     {
@@ -957,12 +960,22 @@
          "classes": [],
          "componentId": "sidebar-threads-container",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "width": "100%"
+         }
         }
        ],
        "classes": [],
        "componentId": "sidebar",
-       "componentName": "Sidebar"
+       "componentName": "Sidebar",
+       "mobileStyles": {
+        "width": "100%",
+        "display": "{{ !selectedThread ? 'flex' : 'none' }}"
+       },
+       "componentProps": {
+        "disableCollapse": true
+       }
       },
       {
        "baseStyles": {
@@ -1004,6 +1017,51 @@
             "minWidth": "0px"
            },
            "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "borderRadius": "6px",
+              "cursor": "pointer",
+              "display": "none",
+              "flexShrink": "0",
+              "height": "28px",
+              "justifyContent": "center",
+              "width": "28px"
+             },
+             "mobileStyles": {
+              "display": "flex"
+             },
+             "tabletStyles": {},
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-7)",
+                "height": "18px",
+                "width": "18px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "chat-header-back-icon",
+               "componentName": "FeatherIcon",
+               "componentProps": {
+                "name": "arrow-left"
+               }
+              }
+             ],
+             "classes": [
+              "hover:bg-surface-gray-2"
+             ],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "goBackToThreadList()"
+              }
+             },
+             "componentId": "chat-header-back-button",
+             "componentName": "container",
+             "originalElement": "div"
+            },
             {
              "baseStyles": {
               "flexShrink": "0",
@@ -4785,13 +4843,23 @@
          "componentId": "message-input-row",
          "componentName": "container",
          "originalElement": "div",
-         "visibilityCondition": "selectedThread"
+         "visibilityCondition": "selectedThread",
+         "mobileStyles": {
+          "paddingLeft": "10px",
+          "paddingRight": "10px"
+         }
         }
        ],
        "classes": [],
        "componentId": "chat-pane",
        "componentName": "container",
-       "originalElement": "div"
+       "originalElement": "div",
+       "mobileStyles": {
+        "display": "{{ selectedThread ? 'flex' : 'none' }}",
+        "marginRight": "0px",
+        "borderLeft": "none",
+        "borderRight": "none"
+       }
       }
      ],
      "classes": [],
@@ -5406,7 +5474,15 @@
          "classes": [],
          "componentId": "profile-settings-left-nav",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "width": "100%",
+          "flexDirection": "row",
+          "overflowX": "auto",
+          "borderRight": "none",
+          "borderBottom": "1px solid var(--outline-gray-2)",
+          "flexShrink": "0"
+         }
         },
         {
          "baseStyles": {
@@ -6164,7 +6240,11 @@
        "classes": [],
        "componentId": "profile-settings-dialog-body",
        "componentName": "container",
-       "originalElement": "div"
+       "originalElement": "div",
+       "mobileStyles": {
+        "flexDirection": "column",
+        "height": "80vh"
+       }
       }
      ],
      "classes": [],
@@ -6471,7 +6551,10 @@
          "classes": [],
          "componentId": "req-edit-row-req-edit-company-field",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "gridTemplateColumns": "1fr"
+         }
         },
         {
          "baseStyles": {
@@ -6570,7 +6653,10 @@
          "classes": [],
          "componentId": "req-edit-row-req-edit-industry-field",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "gridTemplateColumns": "1fr"
+         }
         },
         {
          "baseStyles": {
@@ -6611,7 +6697,7 @@
                "$type": "variable",
                "name": "editCompanySize"
               },
-              "placeholder": "e.g. 11\u201350",
+              "placeholder": "e.g. 11–50",
               "size": "sm",
               "variant": "outline"
              }
@@ -6669,7 +6755,10 @@
          "classes": [],
          "componentId": "req-edit-row-req-edit-company-size-field",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "gridTemplateColumns": "1fr"
+         }
         },
         {
          "baseStyles": {
@@ -6768,7 +6857,10 @@
          "classes": [],
          "componentId": "req-edit-row-req-edit-timeline-field",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "gridTemplateColumns": "1fr"
+         }
         },
         {
          "baseStyles": {
@@ -6809,7 +6901,7 @@
                "$type": "variable",
                "name": "editBudget"
               },
-              "placeholder": "e.g. \u20b92L\u2013\u20b910L",
+              "placeholder": "e.g. ₹2L–₹10L",
               "size": "sm",
               "variant": "outline"
              }
@@ -6867,7 +6959,10 @@
          "classes": [],
          "componentId": "req-edit-row-req-edit-budget-field",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "gridTemplateColumns": "1fr"
+         }
         },
         {
          "baseStyles": {
@@ -7514,6 +7609,34 @@
     },
     {
      "baseStyles": {
+      "display": "none"
+     },
+     "mobileStyles": {
+      "backgroundColor": "rgba(0,0,0,0.4)",
+      "bottom": "0px",
+      "display": "{{ isPanelOpen() ? 'flex' : 'none' }}",
+      "left": "0px",
+      "position": "fixed",
+      "right": "0px",
+      "top": "0px",
+      "zIndex": "99"
+     },
+     "tabletStyles": {},
+     "children": [],
+     "classes": [],
+     "componentEvents": {
+      "click": {
+       "action": "Run Script",
+       "event": "click",
+       "script": "showMembersDialog.value = false; showMediaDialog.value = false; showTemplatesDialog.value = false;"
+      }
+     },
+     "componentId": "members-panel-backdrop",
+     "componentName": "container",
+     "originalElement": "div"
+    },
+    {
+     "baseStyles": {
       "backgroundColor": "var(--surface-base)",
       "border": "{{ isPanelOpen() ? '1px solid var(--outline-gray-2)' : 'none' }}",
       "boxShadow": "0 1px 3px rgba(0,0,0,0.06)",
@@ -7526,6 +7649,39 @@
       "width": "{{ isPanelOpen() ? '320px' : '0px' }}"
      },
      "children": [
+      {
+       "baseStyles": {
+        "display": "none",
+        "flexShrink": "0",
+        "justifyContent": "center",
+        "paddingBottom": "6px",
+        "paddingTop": "10px",
+        "width": "100%"
+       },
+       "mobileStyles": {
+        "display": "flex"
+       },
+       "tabletStyles": {},
+       "children": [
+        {
+         "baseStyles": {
+          "backgroundColor": "var(--outline-gray-3)",
+          "borderRadius": "999px",
+          "height": "4px",
+          "width": "36px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "members-panel-drag-handle-bar",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "members-panel-drag-handle",
+       "componentName": "container",
+       "originalElement": "div"
+      },
       {
        "baseStyles": {
         "alignItems": "center",
@@ -7576,7 +7732,10 @@
        "classes": [],
        "componentId": "members-panel-header",
        "componentName": "container",
-       "originalElement": "div"
+       "originalElement": "div",
+       "mobileStyles": {
+        "minWidth": "0px"
+       }
       },
       {
        "baseStyles": {
@@ -8267,7 +8426,7 @@
                      "componentProps": {
                       "fontSize": "text-2xs",
                       "tag": "span",
-                      "text": "{{ formatFileSize(dataItem.file_size) + ' \u2022 ' + fileExtensionLabel(dataItem) }}"
+                      "text": "{{ formatFileSize(dataItem.file_size) + ' • ' + fileExtensionLabel(dataItem) }}"
                      }
                     }
                    ],
@@ -8343,7 +8502,7 @@
                    "componentProps": {
                     "fontSize": "text-xs",
                     "tag": "span",
-                    "text": "{{ '\u2022 ' + formatMessageTime(dataItem) }}"
+                    "text": "{{ '• ' + formatMessageTime(dataItem) }}"
                    }
                   }
                  ],
@@ -8452,7 +8611,7 @@
                      "componentProps": {
                       "fontSize": "text-sm",
                       "tag": "span",
-                      "text": "{{ '\u00b7 ' + formatRelativeDay(dataItem) }}"
+                      "text": "{{ '· ' + formatRelativeDay(dataItem) }}"
                      }
                     }
                    ],
@@ -8732,7 +8891,25 @@
      "classes": [],
      "componentId": "members-panel",
      "componentName": "container",
-     "originalElement": "div"
+     "originalElement": "div",
+     "mobileStyles": {
+      "position": "fixed",
+      "left": "0px",
+      "right": "0px",
+      "top": "auto",
+      "bottom": "0px",
+      "width": "100%",
+      "height": "75vh",
+      "maxHeight": "75vh",
+      "margin": "0px",
+      "border": "none",
+      "borderTopLeftRadius": "16px",
+      "borderTopRightRadius": "16px",
+      "boxShadow": "0 -4px 24px rgba(0,0,0,0.18)",
+      "transform": "{{ isPanelOpen() ? 'translateY(0%)' : 'translateY(100%)' }}",
+      "transition": "transform 0.25s ease",
+      "zIndex": "100"
+     }
     },
     {
      "children": [
@@ -8855,7 +9032,11 @@
          "classes": [],
          "componentId": "container-settings-row-company",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "flexDirection": "column",
+          "gap": "12px"
+         }
         },
         {
          "baseStyles": {
@@ -9097,10 +9278,10 @@
               },
               "options": [
                "",
-               "1\u201310",
-               "11\u201350",
-               "51\u2013200",
-               "201\u20131000",
+               "1–10",
+               "11–50",
+               "51–200",
+               "201–1000",
                "1000+"
               ]
              }
@@ -9115,7 +9296,11 @@
          "classes": [],
          "componentId": "container-settings-row-1",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "flexDirection": "column",
+          "gap": "12px"
+         }
         },
         {
          "baseStyles": {
@@ -9231,7 +9416,11 @@
          "classes": [],
          "componentId": "container-settings-row-2",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "flexDirection": "column",
+          "gap": "12px"
+         }
         },
         {
          "baseStyles": {
@@ -9325,11 +9514,11 @@
               },
               "options": [
                "",
-               "Under \u20b92L",
-               "\u20b92L\u2013\u20b910L",
-               "\u20b910L\u2013\u20b925L",
-               "\u20b925L\u2013\u20b950L",
-               "\u20b950L+",
+               "Under ₹2L",
+               "₹2L–₹10L",
+               "₹10L–₹25L",
+               "₹25L–₹50L",
+               "₹50L+",
                "Not decided"
               ]
              }
@@ -9344,7 +9533,11 @@
          "classes": [],
          "componentId": "container-settings-row-3",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "flexDirection": "column",
+          "gap": "12px"
+         }
         },
         {
          "baseStyles": {
@@ -9756,7 +9949,10 @@
          "classes": [],
          "componentId": "book-slot-calendar-column",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "width": "100%"
+         }
         },
         {
          "baseStyles": {
@@ -9907,7 +10103,10 @@
          "classes": [],
          "componentId": "book-slot-time-column",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "width": "100%"
+         }
         },
         {
          "baseStyles": {
@@ -10113,7 +10312,11 @@
        "classes": [],
        "componentId": "book-slot-body",
        "componentName": "container",
-       "originalElement": "div"
+       "originalElement": "div",
+       "mobileStyles": {
+        "flexDirection": "column",
+        "gap": "16px"
+       }
       },
       {
        "baseStyles": {
@@ -10831,6 +11034,9 @@
       "collapsed": true,
       "collapsedWidth": "3rem",
       "width": "15rem"
+     },
+     "mobileStyles": {
+      "display": "{{ !selectedThread ? 'flex' : 'none' }}"
      }
     },
     {
@@ -11272,12 +11478,22 @@
          "classes": [],
          "componentId": "sidebar-threads-container",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "width": "100%"
+         }
         }
        ],
        "classes": [],
        "componentId": "sidebar",
-       "componentName": "Sidebar"
+       "componentName": "Sidebar",
+       "mobileStyles": {
+        "width": "100%",
+        "display": "{{ !selectedThread ? 'flex' : 'none' }}"
+       },
+       "componentProps": {
+        "disableCollapse": true
+       }
       },
       {
        "baseStyles": {
@@ -11319,6 +11535,51 @@
             "minWidth": "0px"
            },
            "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "borderRadius": "6px",
+              "cursor": "pointer",
+              "display": "none",
+              "flexShrink": "0",
+              "height": "28px",
+              "justifyContent": "center",
+              "width": "28px"
+             },
+             "mobileStyles": {
+              "display": "flex"
+             },
+             "tabletStyles": {},
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-7)",
+                "height": "18px",
+                "width": "18px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "chat-header-back-icon",
+               "componentName": "FeatherIcon",
+               "componentProps": {
+                "name": "arrow-left"
+               }
+              }
+             ],
+             "classes": [
+              "hover:bg-surface-gray-2"
+             ],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "goBackToThreadList()"
+              }
+             },
+             "componentId": "chat-header-back-button",
+             "componentName": "container",
+             "originalElement": "div"
+            },
             {
              "baseStyles": {
               "flexShrink": "0",
@@ -15100,13 +15361,23 @@
          "componentId": "message-input-row",
          "componentName": "container",
          "originalElement": "div",
-         "visibilityCondition": "selectedThread"
+         "visibilityCondition": "selectedThread",
+         "mobileStyles": {
+          "paddingLeft": "10px",
+          "paddingRight": "10px"
+         }
         }
        ],
        "classes": [],
        "componentId": "chat-pane",
        "componentName": "container",
-       "originalElement": "div"
+       "originalElement": "div",
+       "mobileStyles": {
+        "display": "{{ selectedThread ? 'flex' : 'none' }}",
+        "marginRight": "0px",
+        "borderLeft": "none",
+        "borderRight": "none"
+       }
       }
      ],
      "classes": [],
@@ -15721,7 +15992,15 @@
          "classes": [],
          "componentId": "profile-settings-left-nav",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "width": "100%",
+          "flexDirection": "row",
+          "overflowX": "auto",
+          "borderRight": "none",
+          "borderBottom": "1px solid var(--outline-gray-2)",
+          "flexShrink": "0"
+         }
         },
         {
          "baseStyles": {
@@ -16479,7 +16758,11 @@
        "classes": [],
        "componentId": "profile-settings-dialog-body",
        "componentName": "container",
-       "originalElement": "div"
+       "originalElement": "div",
+       "mobileStyles": {
+        "flexDirection": "column",
+        "height": "80vh"
+       }
       }
      ],
      "classes": [],
@@ -16786,7 +17069,10 @@
          "classes": [],
          "componentId": "req-edit-row-req-edit-company-field",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "gridTemplateColumns": "1fr"
+         }
         },
         {
          "baseStyles": {
@@ -16885,7 +17171,10 @@
          "classes": [],
          "componentId": "req-edit-row-req-edit-industry-field",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "gridTemplateColumns": "1fr"
+         }
         },
         {
          "baseStyles": {
@@ -16926,7 +17215,7 @@
                "$type": "variable",
                "name": "editCompanySize"
               },
-              "placeholder": "e.g. 11\u201350",
+              "placeholder": "e.g. 11–50",
               "size": "sm",
               "variant": "outline"
              }
@@ -16984,7 +17273,10 @@
          "classes": [],
          "componentId": "req-edit-row-req-edit-company-size-field",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "gridTemplateColumns": "1fr"
+         }
         },
         {
          "baseStyles": {
@@ -17083,7 +17375,10 @@
          "classes": [],
          "componentId": "req-edit-row-req-edit-timeline-field",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "gridTemplateColumns": "1fr"
+         }
         },
         {
          "baseStyles": {
@@ -17124,7 +17419,7 @@
                "$type": "variable",
                "name": "editBudget"
               },
-              "placeholder": "e.g. \u20b92L\u2013\u20b910L",
+              "placeholder": "e.g. ₹2L–₹10L",
               "size": "sm",
               "variant": "outline"
              }
@@ -17182,7 +17477,10 @@
          "classes": [],
          "componentId": "req-edit-row-req-edit-budget-field",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "gridTemplateColumns": "1fr"
+         }
         },
         {
          "baseStyles": {
@@ -17829,6 +18127,34 @@
     },
     {
      "baseStyles": {
+      "display": "none"
+     },
+     "mobileStyles": {
+      "backgroundColor": "rgba(0,0,0,0.4)",
+      "bottom": "0px",
+      "display": "{{ isPanelOpen() ? 'flex' : 'none' }}",
+      "left": "0px",
+      "position": "fixed",
+      "right": "0px",
+      "top": "0px",
+      "zIndex": "99"
+     },
+     "tabletStyles": {},
+     "children": [],
+     "classes": [],
+     "componentEvents": {
+      "click": {
+       "action": "Run Script",
+       "event": "click",
+       "script": "showMembersDialog.value = false; showMediaDialog.value = false; showTemplatesDialog.value = false;"
+      }
+     },
+     "componentId": "members-panel-backdrop",
+     "componentName": "container",
+     "originalElement": "div"
+    },
+    {
+     "baseStyles": {
       "backgroundColor": "var(--surface-base)",
       "border": "{{ isPanelOpen() ? '1px solid var(--outline-gray-2)' : 'none' }}",
       "boxShadow": "0 1px 3px rgba(0,0,0,0.06)",
@@ -17841,6 +18167,39 @@
       "width": "{{ isPanelOpen() ? '320px' : '0px' }}"
      },
      "children": [
+      {
+       "baseStyles": {
+        "display": "none",
+        "flexShrink": "0",
+        "justifyContent": "center",
+        "paddingBottom": "6px",
+        "paddingTop": "10px",
+        "width": "100%"
+       },
+       "mobileStyles": {
+        "display": "flex"
+       },
+       "tabletStyles": {},
+       "children": [
+        {
+         "baseStyles": {
+          "backgroundColor": "var(--outline-gray-3)",
+          "borderRadius": "999px",
+          "height": "4px",
+          "width": "36px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "members-panel-drag-handle-bar",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "members-panel-drag-handle",
+       "componentName": "container",
+       "originalElement": "div"
+      },
       {
        "baseStyles": {
         "alignItems": "center",
@@ -17891,7 +18250,10 @@
        "classes": [],
        "componentId": "members-panel-header",
        "componentName": "container",
-       "originalElement": "div"
+       "originalElement": "div",
+       "mobileStyles": {
+        "minWidth": "0px"
+       }
       },
       {
        "baseStyles": {
@@ -18582,7 +18944,7 @@
                      "componentProps": {
                       "fontSize": "text-2xs",
                       "tag": "span",
-                      "text": "{{ formatFileSize(dataItem.file_size) + ' \u2022 ' + fileExtensionLabel(dataItem) }}"
+                      "text": "{{ formatFileSize(dataItem.file_size) + ' • ' + fileExtensionLabel(dataItem) }}"
                      }
                     }
                    ],
@@ -18658,7 +19020,7 @@
                    "componentProps": {
                     "fontSize": "text-xs",
                     "tag": "span",
-                    "text": "{{ '\u2022 ' + formatMessageTime(dataItem) }}"
+                    "text": "{{ '• ' + formatMessageTime(dataItem) }}"
                    }
                   }
                  ],
@@ -18767,7 +19129,7 @@
                      "componentProps": {
                       "fontSize": "text-sm",
                       "tag": "span",
-                      "text": "{{ '\u00b7 ' + formatRelativeDay(dataItem) }}"
+                      "text": "{{ '· ' + formatRelativeDay(dataItem) }}"
                      }
                     }
                    ],
@@ -19038,7 +19400,25 @@
      "classes": [],
      "componentId": "members-panel",
      "componentName": "container",
-     "originalElement": "div"
+     "originalElement": "div",
+     "mobileStyles": {
+      "position": "fixed",
+      "left": "0px",
+      "right": "0px",
+      "top": "auto",
+      "bottom": "0px",
+      "width": "100%",
+      "height": "75vh",
+      "maxHeight": "75vh",
+      "margin": "0px",
+      "border": "none",
+      "borderTopLeftRadius": "16px",
+      "borderTopRightRadius": "16px",
+      "boxShadow": "0 -4px 24px rgba(0,0,0,0.18)",
+      "transform": "{{ isPanelOpen() ? 'translateY(0%)' : 'translateY(100%)' }}",
+      "transition": "transform 0.25s ease",
+      "zIndex": "100"
+     }
     },
     {
      "children": [
@@ -19161,7 +19541,11 @@
          "classes": [],
          "componentId": "container-settings-row-company",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "flexDirection": "column",
+          "gap": "12px"
+         }
         },
         {
          "baseStyles": {
@@ -19403,10 +19787,10 @@
               },
               "options": [
                "",
-               "1\u201310",
-               "11\u201350",
-               "51\u2013200",
-               "201\u20131000",
+               "1–10",
+               "11–50",
+               "51–200",
+               "201–1000",
                "1000+"
               ]
              }
@@ -19421,7 +19805,11 @@
          "classes": [],
          "componentId": "container-settings-row-1",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "flexDirection": "column",
+          "gap": "12px"
+         }
         },
         {
          "baseStyles": {
@@ -19537,7 +19925,11 @@
          "classes": [],
          "componentId": "container-settings-row-2",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "flexDirection": "column",
+          "gap": "12px"
+         }
         },
         {
          "baseStyles": {
@@ -19631,11 +20023,11 @@
               },
               "options": [
                "",
-               "Under \u20b92L",
-               "\u20b92L\u2013\u20b910L",
-               "\u20b910L\u2013\u20b925L",
-               "\u20b925L\u2013\u20b950L",
-               "\u20b950L+",
+               "Under ₹2L",
+               "₹2L–₹10L",
+               "₹10L–₹25L",
+               "₹25L–₹50L",
+               "₹50L+",
                "Not decided"
               ]
              }
@@ -19650,7 +20042,11 @@
          "classes": [],
          "componentId": "container-settings-row-3",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "flexDirection": "column",
+          "gap": "12px"
+         }
         },
         {
          "baseStyles": {
@@ -20062,7 +20458,10 @@
          "classes": [],
          "componentId": "book-slot-calendar-column",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "width": "100%"
+         }
         },
         {
          "baseStyles": {
@@ -20213,7 +20612,10 @@
          "classes": [],
          "componentId": "book-slot-time-column",
          "componentName": "container",
-         "originalElement": "div"
+         "originalElement": "div",
+         "mobileStyles": {
+          "width": "100%"
+         }
         },
         {
          "baseStyles": {
@@ -20419,7 +20821,11 @@
        "classes": [],
        "componentId": "book-slot-body",
        "componentName": "container",
-       "originalElement": "div"
+       "originalElement": "div",
+       "mobileStyles": {
+        "flexDirection": "column",
+        "gap": "16px"
+       }
       },
       {
        "baseStyles": {

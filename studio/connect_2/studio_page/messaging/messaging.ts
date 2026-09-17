@@ -263,6 +263,12 @@ export default function setup(context) {
 		fetchPinnedMessage()
 	}
 
+	// On phone-width screens the thread list and the open conversation share one pane
+	// (master-detail); this is what the header's back button calls to return to the list.
+	function goBackToThreadList() {
+		selectedThread.value = ""
+	}
+
 	// ---- Realtime ----
 	// A dedicated connection for this page rather than reusing Studio's own — page scripts
 	// run in a detached effect scope with no component instance, so the socket Studio
@@ -2457,7 +2463,9 @@ export default function setup(context) {
 					}
 					return
 				}
-				if (list.length) selectThread(list[0])
+				// On phone-width screens the page opens on the thread list (master-detail), so skip
+				// the auto-open-most-recent-conversation default that desktop/tablet relies on.
+				if (list.length && window.innerWidth >= 576) selectThread(list[0])
 				return
 			}
 
@@ -2569,6 +2577,7 @@ export default function setup(context) {
 		threadListPreview,
 		isPanelOpen,
 		selectThread,
+		goBackToThreadList,
 		closeThread,
 		amPartner,
 		isPartnerAdmin,
