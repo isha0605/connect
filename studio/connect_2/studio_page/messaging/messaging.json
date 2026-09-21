@@ -1567,59 +1567,6 @@
                 {
                  "baseStyles": {
                   "alignItems": "center",
-                  "cursor": "pointer",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "gap": "4px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-4)",
-                    "flexShrink": "0",
-                    "height": "13px",
-                    "width": "13px"
-                   },
-                   "children": [],
-                   "classes": [],
-                   "componentId": "meta-members-icon",
-                   "componentName": "FeatherIcon",
-                   "componentProps": {
-                    "name": "users"
-                   }
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-7)"
-                   },
-                   "children": [],
-                   "classes": [
-                    "text-xs"
-                   ],
-                   "componentId": "meta-members-text",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "span",
-                    "text": "{{ activeMemberCount() }}"
-                   }
-                  }
-                 ],
-                 "classes": [],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "showMembersDialog.value = true; showMediaDialog.value = false;"
-                  }
-                 },
-                 "componentId": "meta-members",
-                 "componentName": "container",
-                 "originalElement": "div",
-                 "visibilityCondition": "selectedThreadType === 'company'"
-                },
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
                   "display": "flex",
                   "flexDirection": "row",
                   "gap": "4px"
@@ -1678,6 +1625,119 @@
            "componentId": "chat-header-left",
            "componentName": "container",
            "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "alignSelf": "center",
+            "cursor": "pointer",
+            "display": "flex",
+            "flexDirection": "row",
+            "flexShrink": "0",
+            "gap": "0px",
+            "paddingRight": "8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "row",
+              "gap": "0px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "border": "2px solid var(--surface-base)",
+                "borderRadius": "9999px",
+                "boxSizing": "content-box",
+                "display": "flex",
+                "flexShrink": "0",
+                "marginLeft": "{{ dataItem.index === 0 ? '0px' : '-8px' }}"
+               },
+               "children": [
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentId": "header-member-avatar",
+                 "componentName": "Avatar",
+                 "componentProps": {
+                  "image": "{{ dataItem.image }}",
+                  "label": "{{ dataItem.name }}",
+                  "shape": "circle",
+                  "size": "md",
+                  "theme": "{{ avatarTheme(dataItem.name) }}"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "header-member-ring",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "header-members-repeater",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ headerMemberAvatars() }}",
+              "dataKey": "key",
+              "emptyStateMessage": ""
+             }
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "backgroundColor": "var(--surface-gray-2)",
+              "border": "2px solid var(--surface-base)",
+              "borderRadius": "9999px",
+              "boxSizing": "content-box",
+              "color": "var(--ink-gray-6)",
+              "display": "flex",
+              "flexShrink": "0",
+              "fontSize": "12px",
+              "height": "24px",
+              "justifyContent": "center",
+              "marginLeft": "-8px",
+              "minWidth": "24px",
+              "padding": "0px 2px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "whiteSpace": "nowrap"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "header-members-overflow-text",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ headerMemberOverflow() + '+' }}"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "header-members-overflow",
+             "componentName": "container",
+             "originalElement": "div",
+             "visibilityCondition": "headerMemberOverflow() > 0"
+            }
+           ],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "showMembersDialog.value = true; showMediaDialog.value = false;"
+            }
+           },
+           "componentId": "header-members-stack",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "selectedThreadType === 'company'"
           }
          ],
          "classes": [],
@@ -13392,59 +13452,6 @@
                 {
                  "baseStyles": {
                   "alignItems": "center",
-                  "cursor": "pointer",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "gap": "4px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-4)",
-                    "flexShrink": "0",
-                    "height": "13px",
-                    "width": "13px"
-                   },
-                   "children": [],
-                   "classes": [],
-                   "componentId": "meta-members-icon",
-                   "componentName": "FeatherIcon",
-                   "componentProps": {
-                    "name": "users"
-                   }
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-7)"
-                   },
-                   "children": [],
-                   "classes": [
-                    "text-xs"
-                   ],
-                   "componentId": "meta-members-text",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "span",
-                    "text": "{{ activeMemberCount() }}"
-                   }
-                  }
-                 ],
-                 "classes": [],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "showMembersDialog.value = true; showMediaDialog.value = false;"
-                  }
-                 },
-                 "componentId": "meta-members",
-                 "componentName": "container",
-                 "originalElement": "div",
-                 "visibilityCondition": "selectedThreadType === 'company'"
-                },
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
                   "display": "flex",
                   "flexDirection": "row",
                   "gap": "4px"
@@ -13503,6 +13510,119 @@
            "componentId": "chat-header-left",
            "componentName": "container",
            "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "alignSelf": "center",
+            "cursor": "pointer",
+            "display": "flex",
+            "flexDirection": "row",
+            "flexShrink": "0",
+            "gap": "0px",
+            "paddingRight": "8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "row",
+              "gap": "0px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "border": "2px solid var(--surface-base)",
+                "borderRadius": "9999px",
+                "boxSizing": "content-box",
+                "display": "flex",
+                "flexShrink": "0",
+                "marginLeft": "{{ dataItem.index === 0 ? '0px' : '-8px' }}"
+               },
+               "children": [
+                {
+                 "children": [],
+                 "classes": [],
+                 "componentId": "header-member-avatar",
+                 "componentName": "Avatar",
+                 "componentProps": {
+                  "image": "{{ dataItem.image }}",
+                  "label": "{{ dataItem.name }}",
+                  "shape": "circle",
+                  "size": "md",
+                  "theme": "{{ avatarTheme(dataItem.name) }}"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "header-member-ring",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "header-members-repeater",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ headerMemberAvatars() }}",
+              "dataKey": "key",
+              "emptyStateMessage": ""
+             }
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "backgroundColor": "var(--surface-gray-2)",
+              "border": "2px solid var(--surface-base)",
+              "borderRadius": "9999px",
+              "boxSizing": "content-box",
+              "color": "var(--ink-gray-6)",
+              "display": "flex",
+              "flexShrink": "0",
+              "fontSize": "12px",
+              "height": "24px",
+              "justifyContent": "center",
+              "marginLeft": "-8px",
+              "minWidth": "24px",
+              "padding": "0px 2px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "whiteSpace": "nowrap"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "header-members-overflow-text",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ headerMemberOverflow() + '+' }}"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "header-members-overflow",
+             "componentName": "container",
+             "originalElement": "div",
+             "visibilityCondition": "headerMemberOverflow() > 0"
+            }
+           ],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "showMembersDialog.value = true; showMediaDialog.value = false;"
+            }
+           },
+           "componentId": "header-members-stack",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "selectedThreadType === 'company'"
           }
          ],
          "classes": [],

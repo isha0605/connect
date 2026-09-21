@@ -556,6 +556,25 @@ export default function setup(context) {
 		return activeMembers().length
 	}
 
+	// The overlapping avatar stack at the right of the chat header (Raven-style): the first few active
+	// members, then a "N+" bubble for the rest. Clicking it opens the members panel.
+	const HEADER_AVATAR_LIMIT = 3
+
+	function headerMemberAvatars() {
+		return activeMembers()
+			.slice(0, HEADER_AVATAR_LIMIT)
+			.map((m, index) => ({
+				key: m.user,
+				index,
+				name: memberDisplayName(m.user),
+				image: memberImage(m.user),
+			}))
+	}
+
+	function headerMemberOverflow() {
+		return Math.max(0, activeMemberCount() - HEADER_AVATAR_LIMIT)
+	}
+
 	// Chat header stats — partnerInfo is fetched on demand (see selectThread) rather than folded
 	// into get_my_threads, since that resource backs every row in the sidebar and this is only
 	// ever needed for whichever one thread is currently open.
@@ -3008,6 +3027,8 @@ export default function setup(context) {
 		activeMembers,
 		activeMemberCount,
 		responseTimeLabel,
+		headerMemberAvatars,
+		headerMemberOverflow,
 		addMember,
 		makeAdmin,
 		removeMember,
