@@ -111,16 +111,19 @@ def notify_thread_members(doc, method=None):
 		subject = "Shared requirement details"
 	else:
 		subject = frappe.utils.strip_html(doc.content)
-	enqueue_create_notification(
-		members,
-		{
-			"type": "Alert",
-			"document_type": "Connect Thread",
-			"document_name": doc.thread,
-			"subject": subject[:140],
-			"from_user": doc.sender,
-		},
-	)
+	# A silent message (sent outside the sender's working hours) is still delivered and pushed live, but
+	# doesn't ping anyone with a notification.
+	if not doc.flags.get("silent"):
+		enqueue_create_notification(
+			members,
+			{
+				"type": "Alert",
+				"document_type": "Connect Thread",
+				"document_name": doc.thread,
+				"subject": subject[:140],
+				"from_user": doc.sender,
+			},
+		)
 
 	# Live push for anyone with the thread open right now — same shape as the `messages`
 	# Document List resource in messaging.json, so the client can drop it straight into
@@ -244,16 +247,17 @@ def notify_dm_recipient(doc, method=None):
 		return
 	recipient = pair.user_b if pair.user_a == doc.sender else pair.user_a
 
-	enqueue_create_notification(
-		[recipient],
-		{
-			"type": "Alert",
-			"document_type": "Connect DM Thread",
-			"document_name": doc.dm_thread,
-			"subject": frappe.utils.strip_html(doc.content)[:140],
-			"from_user": doc.sender,
-		},
-	)
+	if not doc.flags.get("silent"):
+		enqueue_create_notification(
+			[recipient],
+			{
+				"type": "Alert",
+				"document_type": "Connect DM Thread",
+				"document_name": doc.dm_thread,
+				"subject": frappe.utils.strip_html(doc.content)[:140],
+				"from_user": doc.sender,
+			},
+		)
 
 	payload = {
 		"name": doc.name,

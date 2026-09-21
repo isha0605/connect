@@ -86,8 +86,8 @@ def mark_dm_thread_read(thread):
 
 
 @frappe.whitelist()
-def send_dm_message(thread, content="", file_url=None, file_name=None, file_type=None, file_size=None):
-	"""Sends a DM text or file message, the DM counterpart to send_message."""
+def send_dm_message(thread, content="", file_url=None, file_name=None, file_type=None, file_size=None, silent=0):
+	"""Sends a DM text or file message, the DM counterpart to send_message (including its `silent` option)."""
 	user = frappe.session.user
 	_dm_thread_pair(thread, user)
 
@@ -107,6 +107,7 @@ def send_dm_message(thread, content="", file_url=None, file_name=None, file_type
 		doc.file_name = file_name
 		doc.file_type = file_type
 		doc.file_size = file_size
+	doc.flags.silent = frappe.utils.cint(silent)
 	doc.insert()
 
 	if file_doc_name:

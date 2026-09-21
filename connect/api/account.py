@@ -52,3 +52,15 @@ def upload_profile_image():
 def get_my_context():
 	from connect.utils import get_my_context
 	return get_my_context()
+
+
+@frappe.whitelist()
+def get_my_work_settings():
+	from connect.messaging.doctype.connect_user_settings.connect_user_settings import get_my_settings
+	return get_my_settings()
+
+
+@frappe.whitelist()
+def update_my_work_settings(work_start, work_end, work_days, after_hours_behavior):
+	from connect.messaging.doctype.connect_user_settings.connect_user_settings import update_my_settings
+	return update_my_settings(work_start, work_end, work_days, after_hours_behavior)

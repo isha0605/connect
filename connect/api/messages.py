@@ -37,8 +37,10 @@ def send_message(
 	file_size=None,
 	requirement_data=None,
 	reply_to=None,
+	silent=0,
 ):
-	"""Creates a chat message carrying text, a file, or a Requirement snapshot — one path for every message type."""
+	"""Creates a chat message carrying text, a file, or a Requirement snapshot — one path for every message type.
+	A silent message is delivered like any other but doesn't create a notification for the other members."""
 	user = frappe.session.user
 	requirement_data = frappe.parse_json(requirement_data) if isinstance(requirement_data, str) else requirement_data
 	content = (content or "").strip()
@@ -72,6 +74,7 @@ def send_message(
 		message.file_name = file_name
 		message.file_type = file_type
 		message.file_size = file_size
+	message.flags.silent = frappe.utils.cint(silent)
 	message.insert()
 
 	if file_doc_name:
