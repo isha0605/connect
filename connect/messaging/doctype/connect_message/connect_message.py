@@ -40,7 +40,13 @@ class ConnectMessage(Document):
 	def on_trash(self):
 		"""Deletes a message for everyone; ownership itself is enforced by has_message_permission."""
 		if self.attachment:
-			file_name = frappe.db.get_value("File", {"file_url": self.attachment}, "name")
+			# Scoped to this message's own File: a forwarded copy shares the same file_url, and its File
+			# must outlive this message.
+			file_name = frappe.db.get_value(
+				"File",
+				{"file_url": self.attachment, "attached_to_doctype": "Connect Message", "attached_to_name": self.name},
+				"name",
+			)
 			if file_name:
 				frappe.delete_doc("File", file_name)
 

@@ -141,6 +141,7 @@ def notify_thread_members(doc, method=None):
 		"file_type": doc.file_type,
 		"file_size": doc.file_size,
 		"reply_to": doc.reply_to,
+		"is_forwarded": doc.is_forwarded,
 		"creation": str(doc.creation),
 	}
 	for member in members:
@@ -248,6 +249,7 @@ def notify_dm_recipient(doc, method=None):
 		"dm_thread": doc.dm_thread,
 		"sender": doc.sender,
 		"content": doc.content,
+		"is_forwarded": doc.is_forwarded,
 		"creation": str(doc.creation),
 	}
 	frappe.publish_realtime("connect_new_dm_message", payload, user=recipient, after_commit=True)
