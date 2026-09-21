@@ -11628,7 +11628,7 @@
       "select": {
        "action": "Run Script",
        "event": "select",
-       "script": "selectCommandContact(eventArgs[0]);"
+       "script": "selectCommandItem(eventArgs[0]);"
       }
      },
      "componentId": "command-palette",
@@ -11637,6 +11637,303 @@
       "groups": "{{ commandGroups }}",
       "searchQuery": "{{ commandSearchQuery }}",
       "show": "{{ showCommandPalette }}"
+     }
+    },
+    {
+     "baseStyles": {},
+     "children": [
+      {
+       "baseStyles": {},
+       "children": [],
+       "classes": [],
+       "componentId": "message-search-input",
+       "componentName": "TextInput",
+       "componentProps": {
+        "modelValue": {
+         "$type": "variable",
+         "name": "messageSearchQuery"
+        },
+        "placeholder": "Search messages and files",
+        "size": "md"
+       },
+       "componentSlots": {
+        "prefix": {
+         "parentBlockId": "message-search-input",
+         "slotId": "message-search-input:prefix",
+         "slotName": "prefix",
+         "slotContent": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "flexShrink": "0",
+            "height": "16px",
+            "width": "16px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "message-search-icon",
+           "componentName": "FeatherIcon",
+           "componentProps": {
+            "name": "search"
+           }
+          }
+         ]
+        }
+       }
+      },
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "8px",
+        "marginTop": "12px"
+       },
+       "children": [
+        {
+         "baseStyles": {},
+         "children": [],
+         "classes": [],
+         "componentId": "message-search-scope-all",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "All conversations",
+          "theme": "gray",
+          "variant": "{{ messageSearchScope === 'all' ? 'solid' : 'subtle' }}"
+         },
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "setMessageSearchScope('all');"
+          }
+         }
+        },
+        {
+         "baseStyles": {},
+         "children": [],
+         "classes": [],
+         "componentId": "message-search-scope-current",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "{{ messageSearchScopeLabel() }}",
+          "theme": "gray",
+          "variant": "{{ messageSearchScope === 'current' ? 'solid' : 'subtle' }}"
+         },
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "setMessageSearchScope('current');"
+          }
+         },
+         "visibilityCondition": "!!messageSearchConversation"
+        }
+       ],
+       "classes": [],
+       "componentId": "message-search-scopes",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "marginTop": "12px",
+        "maxHeight": "380px",
+        "overflowY": "auto"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "2px",
+          "width": "100%"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "alignItems": "flex-start",
+            "borderRadius": "8px",
+            "boxSizing": "border-box",
+            "cursor": "pointer",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "12px",
+            "padding": "10px 12px",
+            "width": "100%"
+           },
+           "children": [
+            {
+             "baseStyles": {},
+             "children": [],
+             "classes": [],
+             "componentId": "message-search-avatar",
+             "componentName": "Avatar",
+             "componentProps": {
+              "image": "{{ memberImage(dataItem.sender) }}",
+              "label": "{{ dataItem.senderName }}",
+              "shape": "circle",
+              "size": "lg",
+              "theme": "{{ avatarTheme(dataItem.senderName) }}"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "2px",
+              "minWidth": "0px",
+              "flex": "1"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "6px",
+                "alignItems": "baseline",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600",
+                  "flexShrink": "0"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "message-search-sender",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "{{ dataItem.senderName }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "flexShrink": "0"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "message-search-when",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "{{ dataItem.when }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "overflow": "hidden",
+                  "textOverflow": "ellipsis",
+                  "whiteSpace": "nowrap"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "message-search-conversation",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "{{ dataItem.conversation ? '\u00b7 ' + dataItem.conversation : '' }}"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "message-search-meta",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-7)",
+                "overflow": "hidden",
+                "textAlign": "left",
+                "display": "-webkit-box",
+                "WebkitLineClamp": "3",
+                "WebkitBoxOrient": "vertical",
+                "wordBreak": "break-word"
+               },
+               "children": [],
+               "classes": [
+                "text-p-sm"
+               ],
+               "componentId": "message-search-snippet",
+               "componentName": "HTML",
+               "componentProps": {
+                "html": "{{ dataItem.snippet }}"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "message-search-body",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [
+            "hover:bg-surface-gray-2"
+           ],
+           "componentId": "message-search-row",
+           "componentName": "container",
+           "originalElement": "div",
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "openMessageSearchResult(dataItem);"
+            }
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "message-search-repeater",
+         "componentName": "Repeater",
+         "componentProps": {
+          "data": "{{ messageSearchRows() }}",
+          "dataKey": "key",
+          "emptyStateMessage": ""
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "message-search-list",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "color": "var(--ink-gray-5)",
+        "display": "block",
+        "padding": "16px 0px",
+        "textAlign": "center"
+       },
+       "children": [],
+       "classes": [],
+       "componentId": "message-search-status",
+       "componentName": "TextBlock",
+       "componentProps": {
+        "fontSize": "text-sm",
+        "tag": "span",
+        "text": "{{ messageSearchStatus() }}"
+       },
+       "visibilityCondition": "messageSearchStatus() !== ''"
+      }
+     ],
+     "classes": [],
+     "componentId": "message-search-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "showMessageSearch"
+      },
+      "size": "xl",
+      "title": "Search messages"
      }
     }
    ],
@@ -23276,7 +23573,7 @@
       "select": {
        "action": "Run Script",
        "event": "select",
-       "script": "selectCommandContact(eventArgs[0]);"
+       "script": "selectCommandItem(eventArgs[0]);"
       }
      },
      "componentId": "command-palette",
@@ -23285,6 +23582,303 @@
       "groups": "{{ commandGroups }}",
       "searchQuery": "{{ commandSearchQuery }}",
       "show": "{{ showCommandPalette }}"
+     }
+    },
+    {
+     "baseStyles": {},
+     "children": [
+      {
+       "baseStyles": {},
+       "children": [],
+       "classes": [],
+       "componentId": "message-search-input",
+       "componentName": "TextInput",
+       "componentProps": {
+        "modelValue": {
+         "$type": "variable",
+         "name": "messageSearchQuery"
+        },
+        "placeholder": "Search messages and files",
+        "size": "md"
+       },
+       "componentSlots": {
+        "prefix": {
+         "parentBlockId": "message-search-input",
+         "slotId": "message-search-input:prefix",
+         "slotName": "prefix",
+         "slotContent": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "flexShrink": "0",
+            "height": "16px",
+            "width": "16px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "message-search-icon",
+           "componentName": "FeatherIcon",
+           "componentProps": {
+            "name": "search"
+           }
+          }
+         ]
+        }
+       }
+      },
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "8px",
+        "marginTop": "12px"
+       },
+       "children": [
+        {
+         "baseStyles": {},
+         "children": [],
+         "classes": [],
+         "componentId": "message-search-scope-all",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "All conversations",
+          "theme": "gray",
+          "variant": "{{ messageSearchScope === 'all' ? 'solid' : 'subtle' }}"
+         },
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "setMessageSearchScope('all');"
+          }
+         }
+        },
+        {
+         "baseStyles": {},
+         "children": [],
+         "classes": [],
+         "componentId": "message-search-scope-current",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "{{ messageSearchScopeLabel() }}",
+          "theme": "gray",
+          "variant": "{{ messageSearchScope === 'current' ? 'solid' : 'subtle' }}"
+         },
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "setMessageSearchScope('current');"
+          }
+         },
+         "visibilityCondition": "!!messageSearchConversation"
+        }
+       ],
+       "classes": [],
+       "componentId": "message-search-scopes",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "marginTop": "12px",
+        "maxHeight": "380px",
+        "overflowY": "auto"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "2px",
+          "width": "100%"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "alignItems": "flex-start",
+            "borderRadius": "8px",
+            "boxSizing": "border-box",
+            "cursor": "pointer",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "12px",
+            "padding": "10px 12px",
+            "width": "100%"
+           },
+           "children": [
+            {
+             "baseStyles": {},
+             "children": [],
+             "classes": [],
+             "componentId": "message-search-avatar",
+             "componentName": "Avatar",
+             "componentProps": {
+              "image": "{{ memberImage(dataItem.sender) }}",
+              "label": "{{ dataItem.senderName }}",
+              "shape": "circle",
+              "size": "lg",
+              "theme": "{{ avatarTheme(dataItem.senderName) }}"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "2px",
+              "minWidth": "0px",
+              "flex": "1"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "6px",
+                "alignItems": "baseline",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600",
+                  "flexShrink": "0"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "message-search-sender",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "{{ dataItem.senderName }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "flexShrink": "0"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "message-search-when",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "{{ dataItem.when }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "overflow": "hidden",
+                  "textOverflow": "ellipsis",
+                  "whiteSpace": "nowrap"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "message-search-conversation",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "{{ dataItem.conversation ? '\u00b7 ' + dataItem.conversation : '' }}"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "message-search-meta",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-7)",
+                "overflow": "hidden",
+                "textAlign": "left",
+                "display": "-webkit-box",
+                "WebkitLineClamp": "3",
+                "WebkitBoxOrient": "vertical",
+                "wordBreak": "break-word"
+               },
+               "children": [],
+               "classes": [
+                "text-p-sm"
+               ],
+               "componentId": "message-search-snippet",
+               "componentName": "HTML",
+               "componentProps": {
+                "html": "{{ dataItem.snippet }}"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "message-search-body",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [
+            "hover:bg-surface-gray-2"
+           ],
+           "componentId": "message-search-row",
+           "componentName": "container",
+           "originalElement": "div",
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "openMessageSearchResult(dataItem);"
+            }
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "message-search-repeater",
+         "componentName": "Repeater",
+         "componentProps": {
+          "data": "{{ messageSearchRows() }}",
+          "dataKey": "key",
+          "emptyStateMessage": ""
+         }
+        }
+       ],
+       "classes": [],
+       "componentId": "message-search-list",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "color": "var(--ink-gray-5)",
+        "display": "block",
+        "padding": "16px 0px",
+        "textAlign": "center"
+       },
+       "children": [],
+       "classes": [],
+       "componentId": "message-search-status",
+       "componentName": "TextBlock",
+       "componentProps": {
+        "fontSize": "text-sm",
+        "tag": "span",
+        "text": "{{ messageSearchStatus() }}"
+       },
+       "visibilityCondition": "messageSearchStatus() !== ''"
+      }
+     ],
+     "classes": [],
+     "componentId": "message-search-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "showMessageSearch"
+      },
+      "size": "xl",
+      "title": "Search messages"
      }
     }
    ],

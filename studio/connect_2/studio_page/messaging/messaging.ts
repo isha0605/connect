@@ -2563,21 +2563,56 @@ export default function setup(context) {
 		)
 	CommandContactItem.props = ["item", "active"]
 
-	const commandGroups = computed(() => {
-		if (!commandContacts.value.length) return []
-		const amPartner = context.myContext.data && context.myContext.data.partner
-		return [
+	// Rows for "Search in <this conversation>" / "Search anywhere" — same look as a contact row but with a
+	// search icon in place of the avatar. `kind` is what selectCommandItem dispatches on.
+	const CommandActionItem = (props) =>
+		h(
+			"div",
 			{
+				class:
+					"flex w-full min-w-0 items-center gap-3 rounded px-2 py-2 text-base-medium text-ink-gray-8" +
+					(props.active ? " bg-surface-gray-2" : ""),
+			},
+			[
+				h("span", { class: "lucide-search size-4 shrink-0 text-ink-gray-7" }),
+				h("span", { class: "overflow-hidden text-ellipsis whitespace-nowrap" }, props.item.title),
+			],
+		)
+	CommandActionItem.props = ["item", "active"]
+
+	function commandSearchActions() {
+		const query = commandSearchQuery.value.trim()
+		const quoted = query ? " for `" + query + "`" : ""
+		const actions = []
+		if (selectedThread.value) {
+			actions.push({
+				name: "search-current",
+				kind: "search-current",
+				title: "Search in " + (otherPartyName(currentThread()) || "this conversation") + quoted,
+			})
+		}
+		actions.push({ name: "search-all", kind: "search-all", title: "Search anywhere" + quoted })
+		return actions
+	}
+
+	const commandGroups = computed(() => {
+		const amPartner = context.myContext.data && context.myContext.data.partner
+		const groups = []
+		if (commandContacts.value.length) {
+			groups.push({
 				title: amPartner ? "Customers" : "Partners",
 				component: CommandContactItem,
 				items: commandContacts.value.map((u) => ({
 					name: u.name,
+					kind: "contact",
 					title: u.full_name ? capitalizeName(u.full_name) : memberDisplayName(u.name),
 					description: u.name,
 					image: u.user_image || "",
 				})),
-			},
-		]
+			})
+		}
+		groups.push({ title: "Search messages", component: CommandActionItem, items: commandSearchActions() })
+		return groups
 	})
 
 	async function loadCommandContacts(query) {
@@ -2603,9 +2638,142 @@ export default function setup(context) {
 	}
 	onScopeDispose(() => clearTimeout(commandSearchTimer))
 
-	// The palette closes itself on select; this starts (or resumes) the 1:1 and opens it.
-	function selectCommandContact(item) {
-		if (item) connectWithUser(item.name)
+	// The palette closes itself on select; a contact starts (or resumes) the 1:1 and opens it, a search
+	// action opens the message search dialog with what was typed.
+	function selectCommandItem(item) {
+		if (!item) return
+		if (item.kind === "contact") connectWithUser(item.name)
+		else openMessageSearch(item.kind === "search-current" ? "current" : "all", commandSearchQuery.value)
+	}
+
+	// ---- Message search ----
+	// Searches text and file names in every conversation the caller can read (or just the open one), via
+	// connect.api.messages.search_messages. Results carry a conversation label and open that conversation
+	// on click, scrolling to the message when it's in the loaded page of messages.
+	const showMessageSearch = ref(false)
+	const messageSearchQuery = ref("")
+	const messageSearchScope = ref("all")
+	const messageSearchResults = ref([])
+	const searchingMessages = ref(false)
+	// Captured when the dialog opens so "this conversation" keeps meaning the same one even if the
+	// selection changes underneath it.
+	const messageSearchConversation = ref(null)
+	let messageSearchTimer = null
+	let messageSearchToken = 0
+	const MIN_MESSAGE_SEARCH_LENGTH = 2
+
+	function openMessageSearch(scope, query) {
+		const thread = selectedThread.value
+			? { name: selectedThread.value, convType: selectedThreadType.value, label: otherPartyName(currentThread()) }
+			: null
+		messageSearchConversation.value = thread
+		messageSearchScope.value = scope === "current" && thread ? "current" : "all"
+		messageSearchQuery.value = (query || "").trim()
+		messageSearchResults.value = []
+		showMessageSearch.value = true
+		runMessageSearch()
+	}
+
+	function messageSearchScopeLabel() {
+		const conversation = messageSearchConversation.value
+		return conversation ? "In " + (conversation.label || "this conversation") : ""
+	}
+
+	function setMessageSearchScope(scope) {
+		messageSearchScope.value = scope
+		runMessageSearch()
+	}
+
+	// The dialog's search box is bound straight to messageSearchQuery; typing re-runs the search after a pause.
+	watch(messageSearchQuery, () => {
+		clearTimeout(messageSearchTimer)
+		messageSearchTimer = setTimeout(runMessageSearch, 250)
+	})
+	onScopeDispose(() => clearTimeout(messageSearchTimer))
+
+	// Escapes the message text first and only then wraps matches in <mark>, so user-typed markup can't
+	// reach the HTML component (same approach as formatMessageContent).
+	function highlightMatch(text, query) {
+		const escape = (t) => escapeHtmlAttr(t)
+		const needle = (query || "").trim().toLowerCase()
+		const source = text || ""
+		if (!needle) return escape(source)
+		const lower = source.toLowerCase()
+		let html = ""
+		let from = 0
+		for (let at = lower.indexOf(needle); at !== -1; at = lower.indexOf(needle, from)) {
+			html += escape(source.slice(from, at)) + '<mark style="background: var(--surface-amber-2); color: inherit; border-radius: 2px;">' + escape(source.slice(at, at + needle.length)) + "</mark>"
+			from = at + needle.length
+		}
+		return html + escape(source.slice(from))
+	}
+
+	function messageSearchRows() {
+		const query = messageSearchQuery.value
+		const threads = unifiedThreadList()
+		return messageSearchResults.value.map((r) => {
+			const convType = r.is_dm ? "dm" : "company"
+			const thread = threads.find((t) => t.name === r.thread && t.convType === convType)
+			const body = r.message_type === "File" ? "📎 " + (r.file_name || "Attachment") : r.content
+			return {
+				...r,
+				key: convType + ":" + r.name,
+				convType,
+				conversation: thread ? otherPartyName(thread) : "",
+				senderName: r.sender_full_name ? capitalizeName(r.sender_full_name) : memberDisplayName(r.sender),
+				when: new Date(r.creation).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+				snippet: highlightMatch(body, query),
+			}
+		})
+	}
+
+	function messageSearchStatus() {
+		if (messageSearchQuery.value.trim().length < MIN_MESSAGE_SEARCH_LENGTH) return "Type at least 2 characters to search."
+		if (searchingMessages.value) return "Searching..."
+		if (!messageSearchResults.value.length) return "No messages found."
+		return ""
+	}
+
+	async function runMessageSearch() {
+		const query = messageSearchQuery.value.trim()
+		const token = ++messageSearchToken
+		if (query.length < MIN_MESSAGE_SEARCH_LENGTH) {
+			messageSearchResults.value = []
+			searchingMessages.value = false
+			return
+		}
+		searchingMessages.value = true
+		const params = { query }
+		const conversation = messageSearchConversation.value
+		if (messageSearchScope.value === "current" && conversation) {
+			params.thread = conversation.name
+			params.is_dm = conversation.convType === "dm" ? 1 : 0
+		}
+		try {
+			const rows = await call("connect.api.messages.search_messages", params)
+			if (token === messageSearchToken) messageSearchResults.value = rows
+		} catch (e) {
+			if (token === messageSearchToken) messageSearchResults.value = []
+		} finally {
+			if (token === messageSearchToken) searchingMessages.value = false
+		}
+	}
+
+	// Opens the result's conversation and, once its messages have rendered, scrolls to the message. Only
+	// the loaded page of messages is on screen, so an older hit just opens the conversation.
+	async function openMessageSearchResult(row) {
+		const thread = unifiedThreadList().find((t) => t.name === row.thread && t.convType === row.convType)
+		showMessageSearch.value = false
+		if (!thread) return
+		if (!(selectedThread.value === thread.name && selectedThreadType.value === thread.convType)) selectThread(thread)
+		for (let attempt = 0; attempt < 20; attempt++) {
+			await new Promise((resolve) => setTimeout(resolve, 100))
+			const el = document.querySelector(`[data-message-id="${row.name}"]`)
+			if (el) {
+				el.scrollIntoView({ behavior: "smooth", block: "center" })
+				return
+			}
+		}
 	}
 
 	// Mirrors the media search box's focus treatment (see media-search-box's CSS) on the
@@ -2994,7 +3162,18 @@ export default function setup(context) {
 		commandGroups,
 		setCommandPaletteOpen,
 		setCommandSearchQuery,
-		selectCommandContact,
+		selectCommandItem,
+		showMessageSearch,
+		messageSearchQuery,
+		messageSearchScope,
+		searchingMessages,
+		messageSearchRows,
+		messageSearchStatus,
+		messageSearchScopeLabel,
+		messageSearchConversation,
+		openMessageSearch,
+		setMessageSearchScope,
+		openMessageSearchResult,
 		threadLinks,
 		threadFiles,
 		openLink,
