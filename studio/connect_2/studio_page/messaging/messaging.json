@@ -11696,28 +11696,28 @@
            "children": [
             {
              "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "display": "block",
+              "padding": "12px 12px 4px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-contacts-title",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "{{ commandContactsTitle() }}"
+             }
+            },
+            {
+             "baseStyles": {
               "display": "flex",
               "flexDirection": "column",
+              "gap": "2px",
               "width": "100%"
              },
              "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)",
-                "display": "{{ dataItem.groupTitle ? 'block' : 'none' }}",
-                "padding": "{{ dataItem.groupTitle ? '12px 12px 4px' : '0px' }}"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "command-group-title",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-sm",
-                "tag": "span",
-                "text": "{{ dataItem.groupTitle }}"
-               },
-               "visibilityCondition": "!!dataItem.groupTitle"
-              },
               {
                "baseStyles": {
                 "alignItems": "center",
@@ -11744,9 +11744,124 @@
                   "shape": "circle",
                   "size": "md",
                   "theme": "{{ avatarTheme(dataItem.title) }}"
-                 },
-                 "visibilityCondition": "dataItem.kind === 'contact'"
+                 }
                 },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "flex": "1",
+                  "minWidth": "0px",
+                  "overflow": "hidden",
+                  "textOverflow": "ellipsis",
+                  "whiteSpace": "nowrap"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-contact-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "{{ dataItem.title }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "flexShrink": "0",
+                  "maxWidth": "45%",
+                  "overflow": "hidden",
+                  "textOverflow": "ellipsis",
+                  "whiteSpace": "nowrap"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-contact-description",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "{{ dataItem.description }}"
+                 },
+                 "visibilityCondition": "!!dataItem.description"
+                }
+               ],
+               "classes": [
+                "hover:bg-surface-gray-2"
+               ],
+               "componentId": "command-contact-row",
+               "componentName": "container",
+               "originalElement": "div",
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "selectCommandItem(dataItem);"
+                }
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "command-contacts-repeater",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ commandContactRows() }}",
+              "dataKey": "name",
+              "emptyStateMessage": ""
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "command-contacts",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "commandContactRows().length > 0"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "display": "block",
+              "padding": "12px 12px 4px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-actions-title",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "Search messages"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "2px",
+              "width": "100%"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ commandActiveIndex === dataItem.index ? 'var(--surface-gray-2)' : 'transparent' }}",
+                "borderRadius": "8px",
+                "boxSizing": "border-box",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "12px",
+                "margin": "0px 6px",
+                "padding": "8px 10px"
+               },
+               "children": [
                 {
                  "baseStyles": {
                   "color": "var(--ink-gray-7)",
@@ -11760,8 +11875,7 @@
                  "componentName": "FeatherIcon",
                  "componentProps": {
                   "name": "search"
-                 },
-                 "visibilityCondition": "dataItem.kind !== 'contact'"
+                 }
                 },
                 {
                  "baseStyles": {
@@ -11774,7 +11888,7 @@
                  },
                  "children": [],
                  "classes": [],
-                 "componentId": "command-row-title",
+                 "componentId": "command-action-title",
                  "componentName": "TextBlock",
                  "componentProps": {
                   "fontSize": "text-base",
@@ -11786,14 +11900,14 @@
                  "baseStyles": {
                   "color": "var(--ink-gray-5)",
                   "flexShrink": "0",
+                  "maxWidth": "45%",
                   "overflow": "hidden",
                   "textOverflow": "ellipsis",
-                  "whiteSpace": "nowrap",
-                  "maxWidth": "45%"
+                  "whiteSpace": "nowrap"
                  },
                  "children": [],
                  "classes": [],
-                 "componentId": "command-row-description",
+                 "componentId": "command-action-description",
                  "componentName": "TextBlock",
                  "componentProps": {
                   "fontSize": "text-sm",
@@ -11806,7 +11920,7 @@
                "classes": [
                 "hover:bg-surface-gray-2"
                ],
-               "componentId": "command-row",
+               "componentId": "command-action-row",
                "componentName": "container",
                "originalElement": "div",
                "componentEvents": {
@@ -11819,19 +11933,19 @@
               }
              ],
              "classes": [],
-             "componentId": "command-row-wrap",
-             "componentName": "container",
-             "originalElement": "div"
+             "componentId": "command-actions-repeater",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ commandActionRows() }}",
+              "dataKey": "name",
+              "emptyStateMessage": ""
+             }
             }
            ],
            "classes": [],
-           "componentId": "command-repeater",
-           "componentName": "Repeater",
-           "componentProps": {
-            "data": "{{ commandRows() }}",
-            "dataKey": "name",
-            "emptyStateMessage": ""
-           }
+           "componentId": "command-actions",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],
@@ -24205,28 +24319,28 @@
            "children": [
             {
              "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "display": "block",
+              "padding": "12px 12px 4px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-contacts-title",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "{{ commandContactsTitle() }}"
+             }
+            },
+            {
+             "baseStyles": {
               "display": "flex",
               "flexDirection": "column",
+              "gap": "2px",
               "width": "100%"
              },
              "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)",
-                "display": "{{ dataItem.groupTitle ? 'block' : 'none' }}",
-                "padding": "{{ dataItem.groupTitle ? '12px 12px 4px' : '0px' }}"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "command-group-title",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-sm",
-                "tag": "span",
-                "text": "{{ dataItem.groupTitle }}"
-               },
-               "visibilityCondition": "!!dataItem.groupTitle"
-              },
               {
                "baseStyles": {
                 "alignItems": "center",
@@ -24253,9 +24367,124 @@
                   "shape": "circle",
                   "size": "md",
                   "theme": "{{ avatarTheme(dataItem.title) }}"
-                 },
-                 "visibilityCondition": "dataItem.kind === 'contact'"
+                 }
                 },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "flex": "1",
+                  "minWidth": "0px",
+                  "overflow": "hidden",
+                  "textOverflow": "ellipsis",
+                  "whiteSpace": "nowrap"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-contact-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "{{ dataItem.title }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "flexShrink": "0",
+                  "maxWidth": "45%",
+                  "overflow": "hidden",
+                  "textOverflow": "ellipsis",
+                  "whiteSpace": "nowrap"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-contact-description",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "{{ dataItem.description }}"
+                 },
+                 "visibilityCondition": "!!dataItem.description"
+                }
+               ],
+               "classes": [
+                "hover:bg-surface-gray-2"
+               ],
+               "componentId": "command-contact-row",
+               "componentName": "container",
+               "originalElement": "div",
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "selectCommandItem(dataItem);"
+                }
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "command-contacts-repeater",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ commandContactRows() }}",
+              "dataKey": "name",
+              "emptyStateMessage": ""
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "command-contacts",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "commandContactRows().length > 0"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "display": "block",
+              "padding": "12px 12px 4px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-actions-title",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "Search messages"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "2px",
+              "width": "100%"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ commandActiveIndex === dataItem.index ? 'var(--surface-gray-2)' : 'transparent' }}",
+                "borderRadius": "8px",
+                "boxSizing": "border-box",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "12px",
+                "margin": "0px 6px",
+                "padding": "8px 10px"
+               },
+               "children": [
                 {
                  "baseStyles": {
                   "color": "var(--ink-gray-7)",
@@ -24269,8 +24498,7 @@
                  "componentName": "FeatherIcon",
                  "componentProps": {
                   "name": "search"
-                 },
-                 "visibilityCondition": "dataItem.kind !== 'contact'"
+                 }
                 },
                 {
                  "baseStyles": {
@@ -24283,7 +24511,7 @@
                  },
                  "children": [],
                  "classes": [],
-                 "componentId": "command-row-title",
+                 "componentId": "command-action-title",
                  "componentName": "TextBlock",
                  "componentProps": {
                   "fontSize": "text-base",
@@ -24295,14 +24523,14 @@
                  "baseStyles": {
                   "color": "var(--ink-gray-5)",
                   "flexShrink": "0",
+                  "maxWidth": "45%",
                   "overflow": "hidden",
                   "textOverflow": "ellipsis",
-                  "whiteSpace": "nowrap",
-                  "maxWidth": "45%"
+                  "whiteSpace": "nowrap"
                  },
                  "children": [],
                  "classes": [],
-                 "componentId": "command-row-description",
+                 "componentId": "command-action-description",
                  "componentName": "TextBlock",
                  "componentProps": {
                   "fontSize": "text-sm",
@@ -24315,7 +24543,7 @@
                "classes": [
                 "hover:bg-surface-gray-2"
                ],
-               "componentId": "command-row",
+               "componentId": "command-action-row",
                "componentName": "container",
                "originalElement": "div",
                "componentEvents": {
@@ -24328,19 +24556,19 @@
               }
              ],
              "classes": [],
-             "componentId": "command-row-wrap",
-             "componentName": "container",
-             "originalElement": "div"
+             "componentId": "command-actions-repeater",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ commandActionRows() }}",
+              "dataKey": "name",
+              "emptyStateMessage": ""
+             }
             }
            ],
            "classes": [],
-           "componentId": "command-repeater",
-           "componentName": "Repeater",
-           "componentProps": {
-            "data": "{{ commandRows() }}",
-            "dataKey": "name",
-            "emptyStateMessage": ""
-           }
+           "componentId": "command-actions",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],

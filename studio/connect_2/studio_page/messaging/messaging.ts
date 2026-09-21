@@ -2642,6 +2642,20 @@ export default function setup(context) {
 		return rows
 	}
 
+	// The two lists the palette renders. Each row keeps its index in the flat commandRows() so the arrow
+	// keys highlight across both.
+	function commandContactRows() {
+		return commandRows().filter((r) => r.kind === "contact")
+	}
+
+	function commandActionRows() {
+		return commandRows().filter((r) => r.kind !== "contact")
+	}
+
+	function commandContactsTitle() {
+		return context.myContext.data && context.myContext.data.partner ? "Customers" : "Partners"
+	}
+
 	function handleCommandKeydown(event: KeyboardEvent) {
 		const rows = commandRows()
 		if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -3180,6 +3194,9 @@ export default function setup(context) {
 		commandSearchQuery,
 		commandActiveIndex,
 		commandRows,
+		commandContactRows,
+		commandActionRows,
+		commandContactsTitle,
 		shortcutModifier,
 		handleCommandKeydown,
 		selectCommandItem,
