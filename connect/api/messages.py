@@ -18,6 +18,9 @@ FORWARDABLE_MESSAGE_TYPES = ("Text", "File")
 
 MAX_EMOJI_LENGTH = 32
 
+MIN_SEARCH_LENGTH = 2
+MAX_SEARCH_RESULTS = 50
+
 
 def _get_message_preview(doctype, name):
 	"""Shared field set for a pinned-message preview — used by get_pinned_message and get_pinned_dm_message."""
@@ -277,3 +280,49 @@ def toggle_reaction(message, is_dm, emoji):
 
 	notify_reaction_changed(thread, is_dm, user)
 	return {"thread": thread, "added": not existing}
+
+
+@frappe.whitelist()
+def search_messages(query, thread=None, is_dm=0):
+	"""Text and file-name search over the conversations the caller can read, newest first. Pass `thread`
+	(and `is_dm`) to search inside one conversation, otherwise it searches every company thread and DM.
+	Visibility (thread membership, and a removed member's cut-off) comes from the doctypes' permission
+	query conditions, so the search can't surface anything the message list itself wouldn't."""
+	query = (query or "").strip()
+	if len(query) < MIN_SEARCH_LENGTH:
+		return []
+	is_dm = frappe.utils.cint(is_dm)
+	pattern = "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+
+	sources = [(False, "Connect Message", "thread"), (True, "Connect DM Message", "dm_thread")]
+	results = []
+	for source_is_dm, doctype, thread_field in sources:
+		if thread and source_is_dm != bool(is_dm):
+			continue
+		filters = {"message_type": ["in", FORWARDABLE_MESSAGE_TYPES]}
+		if thread:
+			filters[thread_field] = thread
+		rows = frappe.get_list(
+			doctype,
+			filters=filters,
+			or_filters=[["content", "like", pattern], ["file_name", "like", pattern]],
+			fields=["name", f"{thread_field} as thread", "sender", "message_type", "content", "file_name", "creation"],
+			order_by="creation desc",
+			limit_page_length=MAX_SEARCH_RESULTS,
+		)
+		for row in rows:
+			row["is_dm"] = int(source_is_dm)
+		results.extend(rows)
+
+	results.sort(key=lambda r: r.creation, reverse=True)
+	results = results[:MAX_SEARCH_RESULTS]
+
+	full_names = {
+		u.name: u.full_name
+		for u in frappe.get_all(
+			"User", filters={"name": ["in", list({r.sender for r in results})]}, fields=["name", "full_name"]
+		)
+	}
+	for row in results:
+		row["sender_full_name"] = full_names.get(row.sender)
+	return results
