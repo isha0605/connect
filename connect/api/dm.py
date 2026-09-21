@@ -4,7 +4,7 @@ from frappe.utils import now_datetime
 
 from connect.api.attachments import _attach_file_to_message, _claim_staged_attachment
 from connect.api.messages import _get_message_preview
-from connect.permissions import _dm_thread_pair, _dm_thread_pair_or_none
+from connect.permissions import _dm_thread_pair, _dm_thread_pair_or_none, _my_side
 
 
 @frappe.whitelist()
@@ -25,6 +25,67 @@ def start_dm(user):
 	doc = frappe.get_doc({"doctype": "Connect DM Thread", "user_a": user_a, "user_b": user_b})
 	doc.insert()
 	return doc.name
+
+
+MAX_CONTACT_RESULTS = 20
+
+
+def _interacted_users(user, my_side):
+	"""Emails of the people on the *other* side (partners for a customer, customers for a partner) that
+	`user` has interacted with, for the Ctrl+K palette: active other-side members of every thread `user`
+	is still in (closed threads included, the conversation happened) plus anyone on the other side they
+	have a DM with. Removed members are left out on both ends."""
+	my_threads = frappe.get_all(
+		"Connect Thread Member", filters={"user": user, "is_removed": 0}, pluck="thread"
+	)
+	emails = set()
+	if my_threads:
+		emails.update(
+			frappe.get_all(
+				"Connect Thread Member",
+				filters={"thread": ["in", my_threads], "side": ["!=", my_side], "is_removed": 0},
+				pluck="user",
+			)
+		)
+
+	dm_threads = frappe.get_all(
+		"Connect DM Thread",
+		or_filters=[["user_a", "=", user], ["user_b", "=", user]],
+		fields=["user_a", "user_b"],
+	)
+	for t in dm_threads:
+		other = t.user_b if t.user_a == user else t.user_a
+		if _my_side(other) not in (None, my_side):
+			emails.add(other)
+
+	emails.discard(user)
+	return list(emails)
+
+
+@frappe.whitelist()
+def search_contacts(query=""):
+	"""People the caller has interacted with on the other side, for the Ctrl+K palette. Matches on name or
+	email; an empty query lists the first few so the palette isn't blank when it opens."""
+	user = frappe.session.user
+	my_side = _my_side(user)
+	if not my_side:
+		return []
+
+	emails = _interacted_users(user, my_side)
+	if not emails:
+		return []
+
+	filters = {"name": ["in", emails], "enabled": 1}
+	query = (query or "").strip()
+	or_filters = [["full_name", "like", f"%{query}%"], ["name", "like", f"%{query}%"]] if query else None
+	return frappe.get_all(
+		"User",
+		filters=filters,
+		or_filters=or_filters,
+		fields=["name", "full_name", "user_image"],
+		order_by="full_name asc",
+		limit_page_length=MAX_CONTACT_RESULTS,
+	)
 
 
 @frappe.whitelist()
