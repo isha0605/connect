@@ -551,18 +551,18 @@
          "children": [
           {
            "baseStyles": {
+            "alignItems": "center",
             "borderBottom": "1px solid var(--outline-gray-2)",
             "display": "flex",
             "flexDirection": "row",
             "flexShrink": 1,
-            "height": "43px",
+            "height": "49px",
+            "justifyContent": "space-between",
             "paddingBottom": "10px",
             "paddingLeft": "12px",
             "paddingRight": "20px",
             "paddingTop": "10px",
-            "width": "100%",
-            "alignItems": "center",
-            "justifyContent": "space-between"
+            "width": "100%"
            },
            "blockName": "container",
            "children": [
@@ -603,17 +603,17 @@
              "classes": [
               "hover:text-ink-gray-8"
              ],
-             "componentId": "messages-header-search-icon",
-             "componentName": "FeatherIcon",
-             "componentProps": {
-              "name": "search"
-             },
              "componentEvents": {
               "click": {
                "action": "Run Script",
                "event": "click",
                "script": "showCommandPalette.value = true;"
               }
+             },
+             "componentId": "messages-header-search-icon",
+             "componentName": "FeatherIcon",
+             "componentProps": {
+              "name": "search"
              }
             }
            ],
@@ -631,8 +631,8 @@
             "marginBottom": "4px",
             "paddingLeft": "12px",
             "paddingRight": "12px",
-            "width": "100%",
-            "paddingTop": "12px"
+            "paddingTop": "12px",
+            "width": "100%"
            },
            "children": [
             {
@@ -954,9 +954,15 @@
            },
            "children": [
             {
-             "baseStyles": {},
              "children": [],
              "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "closeSearchPage();"
+              }
+             },
              "componentId": "search-back-btn",
              "componentName": "Button",
              "componentProps": {
@@ -965,13 +971,6 @@
               "theme": "gray",
               "tooltip": "Back to inbox",
               "variant": "ghost"
-             },
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "closeSearchPage();"
-              }
              }
             },
             {
@@ -1024,10 +1023,9 @@
              "componentSlots": {
               "prefix": {
                "parentBlockId": "message-search-input",
-               "slotId": "message-search-input:prefix",
-               "slotName": "prefix",
                "slotContent": [
                 {
+                 "attributes": {},
                  "baseStyles": {
                   "color": "var(--ink-gray-5)",
                   "flexShrink": "0",
@@ -1036,20 +1034,25 @@
                  },
                  "children": [],
                  "classes": [],
+                 "componentEvents": {},
                  "componentId": "message-search-icon",
                  "componentName": "FeatherIcon",
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "tabletStyles": {},
                  "componentProps": {
                   "name": "search"
                  }
                 }
-               ]
+               ],
+               "slotId": "message-search-input:prefix",
+               "slotName": "prefix"
               },
               "suffix": {
                "parentBlockId": "message-search-input",
-               "slotId": "message-search-input:suffix",
-               "slotName": "suffix",
                "slotContent": [
                 {
+                 "attributes": {},
                  "baseStyles": {
                   "color": "var(--ink-gray-6)",
                   "cursor": "pointer",
@@ -1059,11 +1062,6 @@
                  },
                  "children": [],
                  "classes": [],
-                 "componentId": "message-search-clear",
-                 "componentName": "FeatherIcon",
-                 "componentProps": {
-                  "name": "x"
-                 },
                  "componentEvents": {
                   "click": {
                    "action": "Run Script",
@@ -1071,9 +1069,19 @@
                    "script": "clearMessageSearchQuery();"
                   }
                  },
-                 "visibilityCondition": "!!messageSearchQuery"
+                 "componentId": "message-search-clear",
+                 "componentName": "FeatherIcon",
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "tabletStyles": {},
+                 "visibilityCondition": "!!messageSearchQuery",
+                 "componentProps": {
+                  "name": "x"
+                 }
                 }
-               ]
+               ],
+               "slotId": "message-search-input:suffix",
+               "slotName": "suffix"
               }
              }
             },
@@ -1083,7 +1091,6 @@
              },
              "children": [
               {
-               "baseStyles": {},
                "children": [],
                "classes": [],
                "componentId": "message-search-filters-btn",
@@ -1091,9 +1098,9 @@
                "componentProps": {
                 "iconLeft": "lucide-list-filter",
                 "label": "Filters",
+                "size": "md",
                 "theme": "gray",
-                "variant": "subtle",
-                "size": "md"
+                "variant": "subtle"
                }
               }
              ],
@@ -1190,8 +1197,8 @@
                 {
                  "baseStyles": {
                   "display": "flex",
-                  "flexDirection": "column",
                   "flex": "1",
+                  "flexDirection": "column",
                   "gap": "2px",
                   "minWidth": "0px"
                  },
@@ -1208,8 +1215,8 @@
                     {
                      "baseStyles": {
                       "color": "var(--ink-gray-8)",
-                      "fontWeight": "600",
-                      "flexShrink": "0"
+                      "flexShrink": "0",
+                      "fontWeight": "600"
                      },
                      "children": [],
                      "classes": [],
@@ -1261,12 +1268,12 @@
                   },
                   {
                    "baseStyles": {
+                    "WebkitBoxOrient": "vertical",
+                    "WebkitLineClamp": "3",
                     "color": "var(--ink-gray-7)",
+                    "display": "-webkit-box",
                     "overflow": "hidden",
                     "textAlign": "left",
-                    "display": "-webkit-box",
-                    "WebkitLineClamp": "3",
-                    "WebkitBoxOrient": "vertical",
                     "wordBreak": "break-word"
                    },
                    "children": [],
@@ -1289,16 +1296,16 @@
                "classes": [
                 "hover:bg-surface-gray-2"
                ],
-               "componentId": "message-search-row",
-               "componentName": "container",
-               "originalElement": "div",
                "componentEvents": {
                 "click": {
                  "action": "Run Script",
                  "event": "click",
                  "script": "openMessageSearchResult(dataItem);"
                 }
-               }
+               },
+               "componentId": "message-search-row",
+               "componentName": "container",
+               "originalElement": "div"
               }
              ],
              "classes": [],
@@ -1380,9 +1387,11 @@
           "display": "flex",
           "flexDirection": "row",
           "flexShrink": "0",
+          "height": "45px",
           "justifyContent": "space-between",
           "overflow": "hidden",
-          "padding": "10px 8px 10px 16px"
+          "paddingLeft": "11px",
+          "paddingTop": "5px"
          },
          "children": [
           {
@@ -1441,8 +1450,9 @@
             {
              "baseStyles": {
               "flexShrink": "0",
-              "height": "38px",
-              "width": "38px"
+              "height": "30px",
+              "marginRight": "0px",
+              "width": "30px"
              },
              "children": [],
              "classes": [],
@@ -1862,15 +1872,15 @@
                "children": [
                 {
                  "baseStyles": {
+                  "--tw-bg-opacity": "0.5",
+                  "backgroundColor": "{{ flashedMessage === dataItem.name ? 'var(--surface-amber-2)' : (messageMenuOpenFor === dataItem.name ? 'color-mix(in srgb, var(--surface-gray-1) 50%, transparent)' : '') }}",
                   "display": "flex",
                   "flexDirection": "row",
                   "gap": "2px",
                   "justifyContent": "{{ isMine(dataItem.sender) ? 'flex-end' : 'flex-start' }}",
-                  "width": "100%",
-                  "--tw-bg-opacity": "0.5",
                   "position": "relative",
-                  "backgroundColor": "{{ flashedMessage === dataItem.name ? 'var(--surface-amber-2)' : (messageMenuOpenFor === dataItem.name ? 'color-mix(in srgb, var(--surface-gray-1) 50%, transparent)' : '') }}",
-                  "transition": "background-color 0.8s ease"
+                  "transition": "background-color 0.8s ease",
+                  "width": "100%"
                  },
                  "children": [
                   {
@@ -2264,7 +2274,6 @@
                          }
                         },
                         {
-                         "baseStyles": {},
                          "children": [
                           {
                            "baseStyles": {
@@ -2309,7 +2318,6 @@
                        },
                        "children": [
                         {
-                         "baseStyles": {},
                          "children": [
                           {
                            "baseStyles": {
@@ -2496,11 +2504,11 @@
                             "backgroundColor": "var(--surface-base)",
                             "border": "1px solid var(--outline-gray-1)",
                             "borderRadius": "10px",
-                            "display": "block",
-                            "padding": "12px",
                             "boxSizing": "border-box",
-                            "width": "326px",
-                            "maxWidth": "100%"
+                            "display": "block",
+                            "maxWidth": "100%",
+                            "padding": "12px",
+                            "width": "326px"
                            },
                            "children": [
                             {
@@ -2536,8 +2544,8 @@
                                 {
                                  "baseStyles": {
                                   "color": "var(--ink-gray-7)",
-                                  "textAlign": "left",
-                                  "letterSpacing": "0.21px"
+                                  "letterSpacing": "0.21px",
+                                  "textAlign": "left"
                                  },
                                  "children": [],
                                  "classes": [
@@ -2579,11 +2587,11 @@
                             "backgroundColor": "var(--surface-base)",
                             "border": "1px solid var(--outline-gray-1)",
                             "borderRadius": "10px",
-                            "display": "block",
-                            "padding": "12px",
                             "boxSizing": "border-box",
-                            "width": "326px",
-                            "maxWidth": "100%"
+                            "display": "block",
+                            "maxWidth": "100%",
+                            "padding": "12px",
+                            "width": "326px"
                            },
                            "children": [
                             {
@@ -2619,8 +2627,8 @@
                                 {
                                  "baseStyles": {
                                   "color": "var(--ink-gray-7)",
-                                  "textAlign": "left",
-                                  "letterSpacing": "0.21px"
+                                  "letterSpacing": "0.21px",
+                                  "textAlign": "left"
                                  },
                                  "children": [],
                                  "classes": [
@@ -2806,14 +2814,13 @@
                            }
                           },
                           {
-                           "baseStyles": {},
                            "children": [
                             {
                              "baseStyles": {
+                              "bottom": "6px",
                               "color": "var(--ink-gray-5)",
                               "fontSize": "9px",
                               "position": "absolute",
-                              "bottom": "6px",
                               "right": "10px"
                              },
                              "children": [],
@@ -2988,11 +2995,11 @@
                             "backgroundColor": "var(--surface-base)",
                             "border": "1px solid var(--outline-gray-1)",
                             "borderRadius": "10px",
-                            "display": "block",
-                            "padding": "12px",
                             "boxSizing": "border-box",
-                            "width": "326px",
-                            "maxWidth": "100%"
+                            "display": "block",
+                            "maxWidth": "100%",
+                            "padding": "12px",
+                            "width": "326px"
                            },
                            "children": [
                             {
@@ -3029,8 +3036,8 @@
                                  "baseStyles": {
                                   "color": "var(--ink-gray-7)",
                                   "fontWeight": "500",
-                                  "textAlign": "left",
-                                  "letterSpacing": "0.21px"
+                                  "letterSpacing": "0.21px",
+                                  "textAlign": "left"
                                  },
                                  "children": [],
                                  "classes": [
@@ -3073,11 +3080,11 @@
                             "backgroundColor": "var(--surface-base)",
                             "border": "1px solid var(--outline-gray-1)",
                             "borderRadius": "10px",
-                            "display": "block",
-                            "padding": "12px",
                             "boxSizing": "border-box",
-                            "width": "326px",
-                            "maxWidth": "100%"
+                            "display": "block",
+                            "maxWidth": "100%",
+                            "padding": "12px",
+                            "width": "326px"
                            },
                            "children": [
                             {
@@ -3114,8 +3121,8 @@
                                  "baseStyles": {
                                   "color": "var(--ink-gray-7)",
                                   "fontWeight": "500",
-                                  "textAlign": "left",
-                                  "letterSpacing": "0.21px"
+                                  "letterSpacing": "0.21px",
+                                  "textAlign": "left"
                                  },
                                  "children": [],
                                  "classes": [
@@ -3302,14 +3309,13 @@
                            }
                           },
                           {
-                           "baseStyles": {},
                            "children": [
                             {
                              "baseStyles": {
+                              "bottom": "6px",
                               "color": "var(--ink-gray-5)",
                               "fontSize": "9px",
                               "position": "absolute",
-                              "bottom": "6px",
                               "right": "10px"
                              },
                              "children": [],
@@ -3390,7 +3396,6 @@
                        },
                        "children": [
                         {
-                         "baseStyles": {},
                          "children": [
                           {
                            "baseStyles": {
@@ -3403,7 +3408,6 @@
                            },
                            "children": [
                             {
-                             "baseStyles": {},
                              "children": [],
                              "classes": [],
                              "componentId": "message-reaction-emoji-mine",
@@ -3415,7 +3419,6 @@
                              }
                             },
                             {
-                             "baseStyles": {},
                              "children": [],
                              "classes": [],
                              "componentId": "message-reaction-count-mine",
@@ -3436,16 +3439,16 @@
                             "hover:bg-surface-blue-3",
                             "text-sm"
                            ],
-                           "componentId": "message-reaction-chip-mine",
-                           "componentName": "container",
-                           "originalElement": "div",
                            "componentEvents": {
                             "click": {
                              "action": "Run Script",
                              "event": "click",
                              "script": "toggleReaction(dataItem.item, dataItem.emoji);"
                             }
-                           }
+                           },
+                           "componentId": "message-reaction-chip-mine",
+                           "componentName": "container",
+                           "originalElement": "div"
                           }
                          ],
                          "classes": [],
@@ -3458,7 +3461,6 @@
                          "visibilityCondition": "dataItem.mine"
                         },
                         {
-                         "baseStyles": {},
                          "children": [
                           {
                            "baseStyles": {
@@ -3471,7 +3473,6 @@
                            },
                            "children": [
                             {
-                             "baseStyles": {},
                              "children": [],
                              "classes": [],
                              "componentId": "message-reaction-emoji",
@@ -3483,7 +3484,6 @@
                              }
                             },
                             {
-                             "baseStyles": {},
                              "children": [],
                              "classes": [],
                              "componentId": "message-reaction-count",
@@ -3504,16 +3504,16 @@
                             "hover:bg-surface-gray-3",
                             "text-sm"
                            ],
-                           "componentId": "message-reaction-chip",
-                           "componentName": "container",
-                           "originalElement": "div",
                            "componentEvents": {
                             "click": {
                              "action": "Run Script",
                              "event": "click",
                              "script": "toggleReaction(dataItem.item, dataItem.emoji);"
                             }
-                           }
+                           },
+                           "componentId": "message-reaction-chip",
+                           "componentName": "container",
+                           "originalElement": "div"
                           }
                          ],
                          "classes": [],
@@ -3563,24 +3563,31 @@
                     "boxShadow": "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
                     "display": "{{ messageMenuOpenFor === dataItem.name ? 'flex' : '' }}",
                     "gap": "2px",
+                    "left": "{{ isMine(dataItem.sender) ? '14px' : '' }}",
                     "padding": "2px",
                     "position": "absolute",
                     "right": "{{ isMine(dataItem.sender) ? '' : '14px' }}",
                     "top": "-17px",
-                    "zIndex": "10",
-                    "left": "{{ isMine(dataItem.sender) ? '14px' : '' }}"
+                    "zIndex": "10"
                    },
                    "children": [
                     {
                      "baseStyles": {
-                      "height": "32px",
-                      "width": "32px",
                       "fontSize": "18px",
+                      "height": "32px",
                       "lineHeight": "28px",
-                      "padding": "0px"
+                      "padding": "0px",
+                      "width": "32px"
                      },
                      "children": [],
                      "classes": [],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleReaction(dataItem, '\ud83d\udc4d');"
+                      }
+                     },
                      "componentId": "message-toolbar-quick-like",
                      "componentName": "Button",
                      "componentProps": {
@@ -3589,25 +3596,25 @@
                       "theme": "gray",
                       "tooltip": "Like",
                       "variant": "ghost"
-                     },
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "toggleReaction(dataItem, '\ud83d\udc4d');"
-                      }
                      }
                     },
                     {
                      "baseStyles": {
-                      "height": "32px",
-                      "width": "32px",
                       "fontSize": "18px",
+                      "height": "32px",
                       "lineHeight": "28px",
-                      "padding": "0px"
+                      "padding": "0px",
+                      "width": "32px"
                      },
                      "children": [],
                      "classes": [],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleReaction(dataItem, '\u2705');"
+                      }
+                     },
                      "componentId": "message-toolbar-quick-done",
                      "componentName": "Button",
                      "componentProps": {
@@ -3616,25 +3623,25 @@
                       "theme": "gray",
                       "tooltip": "Done",
                       "variant": "ghost"
-                     },
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "toggleReaction(dataItem, '\u2705');"
-                      }
                      }
                     },
                     {
                      "baseStyles": {
-                      "height": "32px",
-                      "width": "32px",
                       "fontSize": "18px",
+                      "height": "32px",
                       "lineHeight": "28px",
-                      "padding": "0px"
+                      "padding": "0px",
+                      "width": "32px"
                      },
                      "children": [],
                      "classes": [],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleReaction(dataItem, '\ud83d\udc40');"
+                      }
+                     },
                      "componentId": "message-toolbar-quick-seen",
                      "componentName": "Button",
                      "componentProps": {
@@ -3643,25 +3650,25 @@
                       "theme": "gray",
                       "tooltip": "Looking",
                       "variant": "ghost"
-                     },
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "toggleReaction(dataItem, '\ud83d\udc40');"
-                      }
                      }
                     },
                     {
                      "baseStyles": {
-                      "height": "32px",
-                      "width": "32px",
                       "fontSize": "18px",
+                      "height": "32px",
                       "lineHeight": "28px",
-                      "padding": "0px"
+                      "padding": "0px",
+                      "width": "32px"
                      },
                      "children": [],
                      "classes": [],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleReaction(dataItem, '\ud83c\udf89');"
+                      }
+                     },
                      "componentId": "message-toolbar-quick-party",
                      "componentName": "Button",
                      "componentProps": {
@@ -3670,17 +3677,9 @@
                       "theme": "gray",
                       "tooltip": "Celebrate",
                       "variant": "ghost"
-                     },
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "toggleReaction(dataItem, '\ud83c\udf89');"
-                      }
                      }
                     },
                     {
-                     "baseStyles": {},
                      "children": [
                       {
                        "baseStyles": {
@@ -3692,7 +3691,6 @@
                        },
                        "children": [
                         {
-                         "baseStyles": {},
                          "children": [],
                          "classes": [],
                          "componentId": "emoji-search-input",
@@ -3710,6 +3708,7 @@
                            "parentBlockId": "emoji-search-input",
                            "slotContent": [
                             {
+                             "attributes": {},
                              "baseStyles": {
                               "color": "var(--ink-gray-5)",
                               "flexShrink": "0",
@@ -3718,8 +3717,12 @@
                              },
                              "children": [],
                              "classes": [],
+                             "componentEvents": {},
                              "componentId": "emoji-search-icon",
                              "componentName": "FeatherIcon",
+                             "componentSlots": {},
+                             "mobileStyles": {},
+                             "tabletStyles": {},
                              "componentProps": {
                               "name": "search"
                              }
@@ -3734,16 +3737,14 @@
                          "baseStyles": {
                           "marginTop": "4px",
                           "maxHeight": "340px",
-                          "overflowY": "auto",
                           "overflowX": "hidden",
+                          "overflowY": "auto",
                           "scrollbarWidth": "thin"
                          },
                          "children": [
                           {
-                           "baseStyles": {},
                            "children": [
                             {
-                             "baseStyles": {},
                              "children": [
                               {
                                "baseStyles": {
@@ -3801,16 +3802,16 @@
                                  "classes": [
                                   "hover:bg-surface-gray-2"
                                  ],
-                                 "componentId": "emoji-cell",
-                                 "componentName": "container",
-                                 "originalElement": "div",
                                  "componentEvents": {
                                   "click": {
                                    "action": "Run Script",
                                    "event": "click",
                                    "script": "pickReaction(dataItem.emoji);"
                                   }
-                                 }
+                                 },
+                                 "componentId": "emoji-cell",
+                                 "componentName": "container",
+                                 "originalElement": "div"
                                 }
                                ],
                                "classes": [],
@@ -3870,6 +3871,13 @@
                       }
                      ],
                      "classes": [],
+                     "componentEvents": {
+                      "update:open": {
+                       "action": "Run Script",
+                       "event": "update:open",
+                       "script": "setReactionPicker(dataItem, eventArgs[0]);"
+                      }
+                     },
                      "componentId": "message-toolbar-react",
                      "componentName": "Popover",
                      "componentProps": {
@@ -3882,12 +3890,14 @@
                        "parentBlockId": "message-toolbar-react",
                        "slotContent": [
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "height": "32px",
                           "width": "32px"
                          },
                          "children": [],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "message-toolbar-react-btn",
                          "componentName": "Button",
                          "componentProps": {
@@ -3896,18 +3906,14 @@
                           "theme": "gray",
                           "tooltip": "Add reaction",
                           "variant": "ghost"
-                         }
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
                         }
                        ],
                        "slotId": "message-toolbar-react:trigger",
                        "slotName": "trigger"
-                      }
-                     },
-                     "componentEvents": {
-                      "update:open": {
-                       "action": "Run Script",
-                       "event": "update:open",
-                       "script": "setReactionPicker(dataItem, eventArgs[0]);"
                       }
                      }
                     },
@@ -3918,25 +3924,24 @@
                      },
                      "children": [],
                      "classes": [],
-                     "componentId": "message-toolbar-reply",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "icon": "lucide-reply",
-                      "size": "sm",
-                      "theme": "gray",
-                      "variant": "ghost",
-                      "tooltip": "Reply"
-                     },
                      "componentEvents": {
                       "click": {
                        "action": "Run Script",
                        "event": "click",
                        "script": "startReply(dataItem);"
                       }
+                     },
+                     "componentId": "message-toolbar-reply",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "icon": "lucide-reply",
+                      "size": "sm",
+                      "theme": "gray",
+                      "tooltip": "Reply",
+                      "variant": "ghost"
                      }
                     },
                     {
-                     "baseStyles": {},
                      "children": [
                       {
                        "baseStyles": {
@@ -3956,18 +3961,18 @@
                       }
                      ],
                      "classes": [],
-                     "componentId": "message-toolbar-more-menu",
-                     "componentName": "Dropdown",
-                     "componentProps": {
-                      "align": "end",
-                      "options": "{{ messageMoreOptions(dataItem) }}"
-                     },
                      "componentEvents": {
                       "update:open": {
                        "action": "Run Script",
                        "event": "update:open",
                        "script": "messageMenuOpenFor.value = eventArgs[0] ? dataItem.name : null;"
                       }
+                     },
+                     "componentId": "message-toolbar-more-menu",
+                     "componentName": "Dropdown",
+                     "componentProps": {
+                      "align": "end",
+                      "options": "{{ messageMoreOptions(dataItem) }}"
                      },
                      "visibilityCondition": "messageMoreOptions(dataItem).length > 0"
                     }
@@ -10781,7 +10786,6 @@
      }
     },
     {
-     "baseStyles": {},
      "children": [
       {
        "baseStyles": {
@@ -10800,7 +10804,6 @@
        }
       },
       {
-       "baseStyles": {},
        "children": [],
        "classes": [],
        "componentId": "forward-search-input",
@@ -10818,6 +10821,7 @@
          "parentBlockId": "forward-search-input",
          "slotContent": [
           {
+           "attributes": {},
            "baseStyles": {
             "color": "var(--ink-gray-5)",
             "flexShrink": "0",
@@ -10826,8 +10830,12 @@
            },
            "children": [],
            "classes": [],
+           "componentEvents": {},
            "componentId": "forward-search-icon",
            "componentName": "FeatherIcon",
+           "componentSlots": {},
+           "mobileStyles": {},
+           "tabletStyles": {},
            "componentProps": {
             "name": "search"
            }
@@ -10868,7 +10876,6 @@
            },
            "children": [
             {
-             "baseStyles": {},
              "children": [],
              "classes": [],
              "componentId": "forward-target-avatar",
@@ -10911,25 +10918,25 @@
              "classes": [],
              "componentId": "forward-target-check",
              "componentName": "FeatherIcon",
+             "visibilityCondition": "forwardTarget && forwardTarget.key === dataItem.key",
              "componentProps": {
               "name": "check"
-             },
-             "visibilityCondition": "forwardTarget && forwardTarget.key === dataItem.key"
+             }
             }
            ],
            "classes": [
             "hover:bg-surface-gray-2"
            ],
-           "componentId": "forward-target-row",
-           "componentName": "container",
-           "originalElement": "div",
            "componentEvents": {
             "click": {
              "action": "Run Script",
              "event": "click",
              "script": "forwardTarget.value = dataItem;"
             }
-           }
+           },
+           "componentId": "forward-target-row",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],
@@ -10975,28 +10982,33 @@
        },
        "children": [
         {
-         "baseStyles": {},
          "children": [],
          "classes": [],
-         "componentId": "forward-cancel-btn",
-         "componentName": "Button",
-         "componentProps": {
-          "label": "Cancel",
-          "theme": "gray",
-          "variant": "outline"
-         },
          "componentEvents": {
           "click": {
            "action": "Run Script",
            "event": "click",
            "script": "showForwardDialog.value = false;"
           }
+         },
+         "componentId": "forward-cancel-btn",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "Cancel",
+          "theme": "gray",
+          "variant": "outline"
          }
         },
         {
-         "baseStyles": {},
          "children": [],
          "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "forwardMessage();"
+          }
+         },
          "componentId": "forward-submit-btn",
          "componentName": "Button",
          "componentProps": {
@@ -11005,13 +11017,6 @@
           "loading": "{{ forwardingMessage }}",
           "theme": "gray",
           "variant": "solid"
-         },
-         "componentEvents": {
-          "click": {
-           "action": "Run Script",
-           "event": "click",
-           "script": "forwardMessage();"
-          }
          }
         }
        ],
@@ -11034,7 +11039,6 @@
      }
     },
     {
-     "baseStyles": {},
      "children": [
       {
        "baseStyles": {
@@ -11050,11 +11054,8 @@
          },
          "children": [
           {
-           "baseStyles": {},
            "children": [],
            "classes": [],
-           "componentId": "command-search-input",
-           "componentName": "TextInput",
            "componentEvents": {
             "keydown": {
              "action": "Run Script",
@@ -11062,6 +11063,8 @@
              "script": "handleCommandKeydown(eventArgs[0]);"
             }
            },
+           "componentId": "command-search-input",
+           "componentName": "TextInput",
            "componentProps": {
             "modelValue": {
              "$type": "variable",
@@ -11074,10 +11077,9 @@
            "componentSlots": {
             "prefix": {
              "parentBlockId": "command-search-input",
-             "slotId": "command-search-input:prefix",
-             "slotName": "prefix",
              "slotContent": [
               {
+               "attributes": {},
                "baseStyles": {
                 "color": "var(--ink-gray-5)",
                 "flexShrink": "0",
@@ -11086,13 +11088,19 @@
                },
                "children": [],
                "classes": [],
+               "componentEvents": {},
                "componentId": "command-search-icon",
                "componentName": "FeatherIcon",
+               "componentSlots": {},
+               "mobileStyles": {},
+               "tabletStyles": {},
                "componentProps": {
                 "name": "search"
                }
               }
-             ]
+             ],
+             "slotId": "command-search-input:prefix",
+             "slotName": "prefix"
             }
            }
           }
@@ -11155,7 +11163,6 @@
                },
                "children": [
                 {
-                 "baseStyles": {},
                  "children": [],
                  "classes": [],
                  "componentId": "command-company-avatar",
@@ -11191,16 +11198,16 @@
                "classes": [
                 "hover:bg-surface-gray-2"
                ],
-               "componentId": "command-company-row",
-               "componentName": "container",
-               "originalElement": "div",
                "componentEvents": {
                 "click": {
                  "action": "Run Script",
                  "event": "click",
                  "script": "selectCommandItem(dataItem);"
                 }
-               }
+               },
+               "componentId": "command-company-row",
+               "componentName": "container",
+               "originalElement": "div"
               }
              ],
              "classes": [],
@@ -11265,7 +11272,6 @@
                },
                "children": [
                 {
-                 "baseStyles": {},
                  "children": [],
                  "classes": [],
                  "componentId": "command-person-avatar",
@@ -11301,16 +11307,16 @@
                "classes": [
                 "hover:bg-surface-gray-2"
                ],
-               "componentId": "command-person-row",
-               "componentName": "container",
-               "originalElement": "div",
                "componentEvents": {
                 "click": {
                  "action": "Run Script",
                  "event": "click",
                  "script": "selectCommandItem(dataItem);"
                 }
-               }
+               },
+               "componentId": "command-person-row",
+               "componentName": "container",
+               "originalElement": "div"
               }
              ],
              "classes": [],
@@ -11412,16 +11418,16 @@
                "classes": [
                 "hover:bg-surface-gray-2"
                ],
-               "componentId": "command-action-row",
-               "componentName": "container",
-               "originalElement": "div",
                "componentEvents": {
                 "click": {
                  "action": "Run Script",
                  "event": "click",
                  "script": "selectCommandItem(dataItem);"
                 }
-               }
+               },
+               "componentId": "command-action-row",
+               "componentName": "container",
+               "originalElement": "div"
               }
              ],
              "classes": [],
@@ -11454,9 +11460,6 @@
           "gap": "16px",
           "justifyContent": "space-between",
           "padding": "8px 12px"
-         },
-         "mobileStyles": {
-          "display": "none"
          },
          "children": [
           {
@@ -11787,6 +11790,9 @@
          "classes": [],
          "componentId": "command-footer",
          "componentName": "container",
+         "mobileStyles": {
+          "display": "none"
+         },
          "originalElement": "div"
         }
        ],
@@ -11816,7 +11822,7 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-09-18 15:45:29.124256",
+ "creation": "2026-09-22 01:26:38.965288",
  "doctype": "Studio Page",
  "draft_blocks": [
   {
@@ -12370,18 +12376,18 @@
          "children": [
           {
            "baseStyles": {
+            "alignItems": "center",
             "borderBottom": "1px solid var(--outline-gray-2)",
             "display": "flex",
             "flexDirection": "row",
             "flexShrink": 1,
-            "height": "43px",
+            "height": "49px",
+            "justifyContent": "space-between",
             "paddingBottom": "10px",
             "paddingLeft": "12px",
             "paddingRight": "20px",
             "paddingTop": "10px",
-            "width": "100%",
-            "alignItems": "center",
-            "justifyContent": "space-between"
+            "width": "100%"
            },
            "blockName": "container",
            "children": [
@@ -12422,17 +12428,17 @@
              "classes": [
               "hover:text-ink-gray-8"
              ],
-             "componentId": "messages-header-search-icon",
-             "componentName": "FeatherIcon",
-             "componentProps": {
-              "name": "search"
-             },
              "componentEvents": {
               "click": {
                "action": "Run Script",
                "event": "click",
                "script": "showCommandPalette.value = true;"
               }
+             },
+             "componentId": "messages-header-search-icon",
+             "componentName": "FeatherIcon",
+             "componentProps": {
+              "name": "search"
              }
             }
            ],
@@ -12450,8 +12456,8 @@
             "marginBottom": "4px",
             "paddingLeft": "12px",
             "paddingRight": "12px",
-            "width": "100%",
-            "paddingTop": "12px"
+            "paddingTop": "12px",
+            "width": "100%"
            },
            "children": [
             {
@@ -12773,9 +12779,15 @@
            },
            "children": [
             {
-             "baseStyles": {},
              "children": [],
              "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "closeSearchPage();"
+              }
+             },
              "componentId": "search-back-btn",
              "componentName": "Button",
              "componentProps": {
@@ -12784,13 +12796,6 @@
               "theme": "gray",
               "tooltip": "Back to inbox",
               "variant": "ghost"
-             },
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "closeSearchPage();"
-              }
              }
             },
             {
@@ -12843,10 +12848,9 @@
              "componentSlots": {
               "prefix": {
                "parentBlockId": "message-search-input",
-               "slotId": "message-search-input:prefix",
-               "slotName": "prefix",
                "slotContent": [
                 {
+                 "attributes": {},
                  "baseStyles": {
                   "color": "var(--ink-gray-5)",
                   "flexShrink": "0",
@@ -12855,20 +12859,25 @@
                  },
                  "children": [],
                  "classes": [],
+                 "componentEvents": {},
                  "componentId": "message-search-icon",
                  "componentName": "FeatherIcon",
                  "componentProps": {
                   "name": "search"
-                 }
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "tabletStyles": {}
                 }
-               ]
+               ],
+               "slotId": "message-search-input:prefix",
+               "slotName": "prefix"
               },
               "suffix": {
                "parentBlockId": "message-search-input",
-               "slotId": "message-search-input:suffix",
-               "slotName": "suffix",
                "slotContent": [
                 {
+                 "attributes": {},
                  "baseStyles": {
                   "color": "var(--ink-gray-6)",
                   "cursor": "pointer",
@@ -12878,11 +12887,6 @@
                  },
                  "children": [],
                  "classes": [],
-                 "componentId": "message-search-clear",
-                 "componentName": "FeatherIcon",
-                 "componentProps": {
-                  "name": "x"
-                 },
                  "componentEvents": {
                   "click": {
                    "action": "Run Script",
@@ -12890,9 +12894,19 @@
                    "script": "clearMessageSearchQuery();"
                   }
                  },
+                 "componentId": "message-search-clear",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "name": "x"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "tabletStyles": {},
                  "visibilityCondition": "!!messageSearchQuery"
                 }
-               ]
+               ],
+               "slotId": "message-search-input:suffix",
+               "slotName": "suffix"
               }
              }
             },
@@ -12902,7 +12916,6 @@
              },
              "children": [
               {
-               "baseStyles": {},
                "children": [],
                "classes": [],
                "componentId": "message-search-filters-btn",
@@ -12910,9 +12923,9 @@
                "componentProps": {
                 "iconLeft": "lucide-list-filter",
                 "label": "Filters",
+                "size": "md",
                 "theme": "gray",
-                "variant": "subtle",
-                "size": "md"
+                "variant": "subtle"
                }
               }
              ],
@@ -13009,8 +13022,8 @@
                 {
                  "baseStyles": {
                   "display": "flex",
-                  "flexDirection": "column",
                   "flex": "1",
+                  "flexDirection": "column",
                   "gap": "2px",
                   "minWidth": "0px"
                  },
@@ -13027,8 +13040,8 @@
                     {
                      "baseStyles": {
                       "color": "var(--ink-gray-8)",
-                      "fontWeight": "600",
-                      "flexShrink": "0"
+                      "flexShrink": "0",
+                      "fontWeight": "600"
                      },
                      "children": [],
                      "classes": [],
@@ -13080,12 +13093,12 @@
                   },
                   {
                    "baseStyles": {
+                    "WebkitBoxOrient": "vertical",
+                    "WebkitLineClamp": "3",
                     "color": "var(--ink-gray-7)",
+                    "display": "-webkit-box",
                     "overflow": "hidden",
                     "textAlign": "left",
-                    "display": "-webkit-box",
-                    "WebkitLineClamp": "3",
-                    "WebkitBoxOrient": "vertical",
                     "wordBreak": "break-word"
                    },
                    "children": [],
@@ -13108,16 +13121,16 @@
                "classes": [
                 "hover:bg-surface-gray-2"
                ],
-               "componentId": "message-search-row",
-               "componentName": "container",
-               "originalElement": "div",
                "componentEvents": {
                 "click": {
                  "action": "Run Script",
                  "event": "click",
                  "script": "openMessageSearchResult(dataItem);"
                 }
-               }
+               },
+               "componentId": "message-search-row",
+               "componentName": "container",
+               "originalElement": "div"
               }
              ],
              "classes": [],
@@ -13199,9 +13212,11 @@
           "display": "flex",
           "flexDirection": "row",
           "flexShrink": "0",
+          "height": "45px",
           "justifyContent": "space-between",
           "overflow": "hidden",
-          "padding": "10px 8px 10px 16px"
+          "paddingLeft": "11px",
+          "paddingTop": "5px"
          },
          "children": [
           {
@@ -13260,8 +13275,9 @@
             {
              "baseStyles": {
               "flexShrink": "0",
-              "height": "38px",
-              "width": "38px"
+              "height": "30px",
+              "marginRight": "0px",
+              "width": "30px"
              },
              "children": [],
              "classes": [],
@@ -13681,15 +13697,15 @@
                "children": [
                 {
                  "baseStyles": {
+                  "--tw-bg-opacity": "0.5",
+                  "backgroundColor": "{{ flashedMessage === dataItem.name ? 'var(--surface-amber-2)' : (messageMenuOpenFor === dataItem.name ? 'color-mix(in srgb, var(--surface-gray-1) 50%, transparent)' : '') }}",
                   "display": "flex",
                   "flexDirection": "row",
                   "gap": "2px",
                   "justifyContent": "{{ isMine(dataItem.sender) ? 'flex-end' : 'flex-start' }}",
-                  "width": "100%",
-                  "--tw-bg-opacity": "0.5",
                   "position": "relative",
-                  "backgroundColor": "{{ flashedMessage === dataItem.name ? 'var(--surface-amber-2)' : (messageMenuOpenFor === dataItem.name ? 'color-mix(in srgb, var(--surface-gray-1) 50%, transparent)' : '') }}",
-                  "transition": "background-color 0.8s ease"
+                  "transition": "background-color 0.8s ease",
+                  "width": "100%"
                  },
                  "children": [
                   {
@@ -14083,7 +14099,6 @@
                          }
                         },
                         {
-                         "baseStyles": {},
                          "children": [
                           {
                            "baseStyles": {
@@ -14128,7 +14143,6 @@
                        },
                        "children": [
                         {
-                         "baseStyles": {},
                          "children": [
                           {
                            "baseStyles": {
@@ -14315,11 +14329,11 @@
                             "backgroundColor": "var(--surface-base)",
                             "border": "1px solid var(--outline-gray-1)",
                             "borderRadius": "10px",
-                            "display": "block",
-                            "padding": "12px",
                             "boxSizing": "border-box",
-                            "width": "326px",
-                            "maxWidth": "100%"
+                            "display": "block",
+                            "maxWidth": "100%",
+                            "padding": "12px",
+                            "width": "326px"
                            },
                            "children": [
                             {
@@ -14355,8 +14369,8 @@
                                 {
                                  "baseStyles": {
                                   "color": "var(--ink-gray-7)",
-                                  "textAlign": "left",
-                                  "letterSpacing": "0.21px"
+                                  "letterSpacing": "0.21px",
+                                  "textAlign": "left"
                                  },
                                  "children": [],
                                  "classes": [
@@ -14398,11 +14412,11 @@
                             "backgroundColor": "var(--surface-base)",
                             "border": "1px solid var(--outline-gray-1)",
                             "borderRadius": "10px",
-                            "display": "block",
-                            "padding": "12px",
                             "boxSizing": "border-box",
-                            "width": "326px",
-                            "maxWidth": "100%"
+                            "display": "block",
+                            "maxWidth": "100%",
+                            "padding": "12px",
+                            "width": "326px"
                            },
                            "children": [
                             {
@@ -14438,8 +14452,8 @@
                                 {
                                  "baseStyles": {
                                   "color": "var(--ink-gray-7)",
-                                  "textAlign": "left",
-                                  "letterSpacing": "0.21px"
+                                  "letterSpacing": "0.21px",
+                                  "textAlign": "left"
                                  },
                                  "children": [],
                                  "classes": [
@@ -14625,14 +14639,13 @@
                            }
                           },
                           {
-                           "baseStyles": {},
                            "children": [
                             {
                              "baseStyles": {
+                              "bottom": "6px",
                               "color": "var(--ink-gray-5)",
                               "fontSize": "9px",
                               "position": "absolute",
-                              "bottom": "6px",
                               "right": "10px"
                              },
                              "children": [],
@@ -14807,11 +14820,11 @@
                             "backgroundColor": "var(--surface-base)",
                             "border": "1px solid var(--outline-gray-1)",
                             "borderRadius": "10px",
-                            "display": "block",
-                            "padding": "12px",
                             "boxSizing": "border-box",
-                            "width": "326px",
-                            "maxWidth": "100%"
+                            "display": "block",
+                            "maxWidth": "100%",
+                            "padding": "12px",
+                            "width": "326px"
                            },
                            "children": [
                             {
@@ -14848,8 +14861,8 @@
                                  "baseStyles": {
                                   "color": "var(--ink-gray-7)",
                                   "fontWeight": "500",
-                                  "textAlign": "left",
-                                  "letterSpacing": "0.21px"
+                                  "letterSpacing": "0.21px",
+                                  "textAlign": "left"
                                  },
                                  "children": [],
                                  "classes": [
@@ -14892,11 +14905,11 @@
                             "backgroundColor": "var(--surface-base)",
                             "border": "1px solid var(--outline-gray-1)",
                             "borderRadius": "10px",
-                            "display": "block",
-                            "padding": "12px",
                             "boxSizing": "border-box",
-                            "width": "326px",
-                            "maxWidth": "100%"
+                            "display": "block",
+                            "maxWidth": "100%",
+                            "padding": "12px",
+                            "width": "326px"
                            },
                            "children": [
                             {
@@ -14933,8 +14946,8 @@
                                  "baseStyles": {
                                   "color": "var(--ink-gray-7)",
                                   "fontWeight": "500",
-                                  "textAlign": "left",
-                                  "letterSpacing": "0.21px"
+                                  "letterSpacing": "0.21px",
+                                  "textAlign": "left"
                                  },
                                  "children": [],
                                  "classes": [
@@ -15121,14 +15134,13 @@
                            }
                           },
                           {
-                           "baseStyles": {},
                            "children": [
                             {
                              "baseStyles": {
+                              "bottom": "6px",
                               "color": "var(--ink-gray-5)",
                               "fontSize": "9px",
                               "position": "absolute",
-                              "bottom": "6px",
                               "right": "10px"
                              },
                              "children": [],
@@ -15209,7 +15221,6 @@
                        },
                        "children": [
                         {
-                         "baseStyles": {},
                          "children": [
                           {
                            "baseStyles": {
@@ -15222,7 +15233,6 @@
                            },
                            "children": [
                             {
-                             "baseStyles": {},
                              "children": [],
                              "classes": [],
                              "componentId": "message-reaction-emoji-mine",
@@ -15234,7 +15244,6 @@
                              }
                             },
                             {
-                             "baseStyles": {},
                              "children": [],
                              "classes": [],
                              "componentId": "message-reaction-count-mine",
@@ -15255,16 +15264,16 @@
                             "hover:bg-surface-blue-3",
                             "text-sm"
                            ],
-                           "componentId": "message-reaction-chip-mine",
-                           "componentName": "container",
-                           "originalElement": "div",
                            "componentEvents": {
                             "click": {
                              "action": "Run Script",
                              "event": "click",
                              "script": "toggleReaction(dataItem.item, dataItem.emoji);"
                             }
-                           }
+                           },
+                           "componentId": "message-reaction-chip-mine",
+                           "componentName": "container",
+                           "originalElement": "div"
                           }
                          ],
                          "classes": [],
@@ -15277,7 +15286,6 @@
                          "visibilityCondition": "dataItem.mine"
                         },
                         {
-                         "baseStyles": {},
                          "children": [
                           {
                            "baseStyles": {
@@ -15290,7 +15298,6 @@
                            },
                            "children": [
                             {
-                             "baseStyles": {},
                              "children": [],
                              "classes": [],
                              "componentId": "message-reaction-emoji",
@@ -15302,7 +15309,6 @@
                              }
                             },
                             {
-                             "baseStyles": {},
                              "children": [],
                              "classes": [],
                              "componentId": "message-reaction-count",
@@ -15323,16 +15329,16 @@
                             "hover:bg-surface-gray-3",
                             "text-sm"
                            ],
-                           "componentId": "message-reaction-chip",
-                           "componentName": "container",
-                           "originalElement": "div",
                            "componentEvents": {
                             "click": {
                              "action": "Run Script",
                              "event": "click",
                              "script": "toggleReaction(dataItem.item, dataItem.emoji);"
                             }
-                           }
+                           },
+                           "componentId": "message-reaction-chip",
+                           "componentName": "container",
+                           "originalElement": "div"
                           }
                          ],
                          "classes": [],
@@ -15382,24 +15388,31 @@
                     "boxShadow": "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
                     "display": "{{ messageMenuOpenFor === dataItem.name ? 'flex' : '' }}",
                     "gap": "2px",
+                    "left": "{{ isMine(dataItem.sender) ? '14px' : '' }}",
                     "padding": "2px",
                     "position": "absolute",
                     "right": "{{ isMine(dataItem.sender) ? '' : '14px' }}",
                     "top": "-17px",
-                    "zIndex": "10",
-                    "left": "{{ isMine(dataItem.sender) ? '14px' : '' }}"
+                    "zIndex": "10"
                    },
                    "children": [
                     {
                      "baseStyles": {
-                      "height": "32px",
-                      "width": "32px",
                       "fontSize": "18px",
+                      "height": "32px",
                       "lineHeight": "28px",
-                      "padding": "0px"
+                      "padding": "0px",
+                      "width": "32px"
                      },
                      "children": [],
                      "classes": [],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleReaction(dataItem, '\ud83d\udc4d');"
+                      }
+                     },
                      "componentId": "message-toolbar-quick-like",
                      "componentName": "Button",
                      "componentProps": {
@@ -15408,25 +15421,25 @@
                       "theme": "gray",
                       "tooltip": "Like",
                       "variant": "ghost"
-                     },
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "toggleReaction(dataItem, '\ud83d\udc4d');"
-                      }
                      }
                     },
                     {
                      "baseStyles": {
-                      "height": "32px",
-                      "width": "32px",
                       "fontSize": "18px",
+                      "height": "32px",
                       "lineHeight": "28px",
-                      "padding": "0px"
+                      "padding": "0px",
+                      "width": "32px"
                      },
                      "children": [],
                      "classes": [],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleReaction(dataItem, '\u2705');"
+                      }
+                     },
                      "componentId": "message-toolbar-quick-done",
                      "componentName": "Button",
                      "componentProps": {
@@ -15435,25 +15448,25 @@
                       "theme": "gray",
                       "tooltip": "Done",
                       "variant": "ghost"
-                     },
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "toggleReaction(dataItem, '\u2705');"
-                      }
                      }
                     },
                     {
                      "baseStyles": {
-                      "height": "32px",
-                      "width": "32px",
                       "fontSize": "18px",
+                      "height": "32px",
                       "lineHeight": "28px",
-                      "padding": "0px"
+                      "padding": "0px",
+                      "width": "32px"
                      },
                      "children": [],
                      "classes": [],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleReaction(dataItem, '\ud83d\udc40');"
+                      }
+                     },
                      "componentId": "message-toolbar-quick-seen",
                      "componentName": "Button",
                      "componentProps": {
@@ -15462,25 +15475,25 @@
                       "theme": "gray",
                       "tooltip": "Looking",
                       "variant": "ghost"
-                     },
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "toggleReaction(dataItem, '\ud83d\udc40');"
-                      }
                      }
                     },
                     {
                      "baseStyles": {
-                      "height": "32px",
-                      "width": "32px",
                       "fontSize": "18px",
+                      "height": "32px",
                       "lineHeight": "28px",
-                      "padding": "0px"
+                      "padding": "0px",
+                      "width": "32px"
                      },
                      "children": [],
                      "classes": [],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleReaction(dataItem, '\ud83c\udf89');"
+                      }
+                     },
                      "componentId": "message-toolbar-quick-party",
                      "componentName": "Button",
                      "componentProps": {
@@ -15489,17 +15502,9 @@
                       "theme": "gray",
                       "tooltip": "Celebrate",
                       "variant": "ghost"
-                     },
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "toggleReaction(dataItem, '\ud83c\udf89');"
-                      }
                      }
                     },
                     {
-                     "baseStyles": {},
                      "children": [
                       {
                        "baseStyles": {
@@ -15511,7 +15516,6 @@
                        },
                        "children": [
                         {
-                         "baseStyles": {},
                          "children": [],
                          "classes": [],
                          "componentId": "emoji-search-input",
@@ -15529,6 +15533,7 @@
                            "parentBlockId": "emoji-search-input",
                            "slotContent": [
                             {
+                             "attributes": {},
                              "baseStyles": {
                               "color": "var(--ink-gray-5)",
                               "flexShrink": "0",
@@ -15537,11 +15542,15 @@
                              },
                              "children": [],
                              "classes": [],
+                             "componentEvents": {},
                              "componentId": "emoji-search-icon",
                              "componentName": "FeatherIcon",
                              "componentProps": {
                               "name": "search"
-                             }
+                             },
+                             "componentSlots": {},
+                             "mobileStyles": {},
+                             "tabletStyles": {}
                             }
                            ],
                            "slotId": "emoji-search-input:prefix",
@@ -15553,16 +15562,14 @@
                          "baseStyles": {
                           "marginTop": "4px",
                           "maxHeight": "340px",
-                          "overflowY": "auto",
                           "overflowX": "hidden",
+                          "overflowY": "auto",
                           "scrollbarWidth": "thin"
                          },
                          "children": [
                           {
-                           "baseStyles": {},
                            "children": [
                             {
-                             "baseStyles": {},
                              "children": [
                               {
                                "baseStyles": {
@@ -15620,16 +15627,16 @@
                                  "classes": [
                                   "hover:bg-surface-gray-2"
                                  ],
-                                 "componentId": "emoji-cell",
-                                 "componentName": "container",
-                                 "originalElement": "div",
                                  "componentEvents": {
                                   "click": {
                                    "action": "Run Script",
                                    "event": "click",
                                    "script": "pickReaction(dataItem.emoji);"
                                   }
-                                 }
+                                 },
+                                 "componentId": "emoji-cell",
+                                 "componentName": "container",
+                                 "originalElement": "div"
                                 }
                                ],
                                "classes": [],
@@ -15689,6 +15696,13 @@
                       }
                      ],
                      "classes": [],
+                     "componentEvents": {
+                      "update:open": {
+                       "action": "Run Script",
+                       "event": "update:open",
+                       "script": "setReactionPicker(dataItem, eventArgs[0]);"
+                      }
+                     },
                      "componentId": "message-toolbar-react",
                      "componentName": "Popover",
                      "componentProps": {
@@ -15701,12 +15715,14 @@
                        "parentBlockId": "message-toolbar-react",
                        "slotContent": [
                         {
+                         "attributes": {},
                          "baseStyles": {
                           "height": "32px",
                           "width": "32px"
                          },
                          "children": [],
                          "classes": [],
+                         "componentEvents": {},
                          "componentId": "message-toolbar-react-btn",
                          "componentName": "Button",
                          "componentProps": {
@@ -15715,18 +15731,14 @@
                           "theme": "gray",
                           "tooltip": "Add reaction",
                           "variant": "ghost"
-                         }
+                         },
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "tabletStyles": {}
                         }
                        ],
                        "slotId": "message-toolbar-react:trigger",
                        "slotName": "trigger"
-                      }
-                     },
-                     "componentEvents": {
-                      "update:open": {
-                       "action": "Run Script",
-                       "event": "update:open",
-                       "script": "setReactionPicker(dataItem, eventArgs[0]);"
                       }
                      }
                     },
@@ -15737,25 +15749,24 @@
                      },
                      "children": [],
                      "classes": [],
-                     "componentId": "message-toolbar-reply",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "icon": "lucide-reply",
-                      "size": "sm",
-                      "theme": "gray",
-                      "variant": "ghost",
-                      "tooltip": "Reply"
-                     },
                      "componentEvents": {
                       "click": {
                        "action": "Run Script",
                        "event": "click",
                        "script": "startReply(dataItem);"
                       }
+                     },
+                     "componentId": "message-toolbar-reply",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "icon": "lucide-reply",
+                      "size": "sm",
+                      "theme": "gray",
+                      "tooltip": "Reply",
+                      "variant": "ghost"
                      }
                     },
                     {
-                     "baseStyles": {},
                      "children": [
                       {
                        "baseStyles": {
@@ -15775,18 +15786,18 @@
                       }
                      ],
                      "classes": [],
-                     "componentId": "message-toolbar-more-menu",
-                     "componentName": "Dropdown",
-                     "componentProps": {
-                      "align": "end",
-                      "options": "{{ messageMoreOptions(dataItem) }}"
-                     },
                      "componentEvents": {
                       "update:open": {
                        "action": "Run Script",
                        "event": "update:open",
                        "script": "messageMenuOpenFor.value = eventArgs[0] ? dataItem.name : null;"
                       }
+                     },
+                     "componentId": "message-toolbar-more-menu",
+                     "componentName": "Dropdown",
+                     "componentProps": {
+                      "align": "end",
+                      "options": "{{ messageMoreOptions(dataItem) }}"
                      },
                      "visibilityCondition": "messageMoreOptions(dataItem).length > 0"
                     }
@@ -22600,7 +22611,6 @@
      }
     },
     {
-     "baseStyles": {},
      "children": [
       {
        "baseStyles": {
@@ -22619,7 +22629,6 @@
        }
       },
       {
-       "baseStyles": {},
        "children": [],
        "classes": [],
        "componentId": "forward-search-input",
@@ -22637,6 +22646,7 @@
          "parentBlockId": "forward-search-input",
          "slotContent": [
           {
+           "attributes": {},
            "baseStyles": {
             "color": "var(--ink-gray-5)",
             "flexShrink": "0",
@@ -22645,11 +22655,15 @@
            },
            "children": [],
            "classes": [],
+           "componentEvents": {},
            "componentId": "forward-search-icon",
            "componentName": "FeatherIcon",
            "componentProps": {
             "name": "search"
-           }
+           },
+           "componentSlots": {},
+           "mobileStyles": {},
+           "tabletStyles": {}
           }
          ],
          "slotId": "forward-search-input:prefix",
@@ -22687,7 +22701,6 @@
            },
            "children": [
             {
-             "baseStyles": {},
              "children": [],
              "classes": [],
              "componentId": "forward-target-avatar",
@@ -22730,25 +22743,25 @@
              "classes": [],
              "componentId": "forward-target-check",
              "componentName": "FeatherIcon",
+             "visibilityCondition": "forwardTarget && forwardTarget.key === dataItem.key",
              "componentProps": {
               "name": "check"
-             },
-             "visibilityCondition": "forwardTarget && forwardTarget.key === dataItem.key"
+             }
             }
            ],
            "classes": [
             "hover:bg-surface-gray-2"
            ],
-           "componentId": "forward-target-row",
-           "componentName": "container",
-           "originalElement": "div",
            "componentEvents": {
             "click": {
              "action": "Run Script",
              "event": "click",
              "script": "forwardTarget.value = dataItem;"
             }
-           }
+           },
+           "componentId": "forward-target-row",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],
@@ -22794,28 +22807,33 @@
        },
        "children": [
         {
-         "baseStyles": {},
          "children": [],
          "classes": [],
-         "componentId": "forward-cancel-btn",
-         "componentName": "Button",
-         "componentProps": {
-          "label": "Cancel",
-          "theme": "gray",
-          "variant": "outline"
-         },
          "componentEvents": {
           "click": {
            "action": "Run Script",
            "event": "click",
            "script": "showForwardDialog.value = false;"
           }
+         },
+         "componentId": "forward-cancel-btn",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "Cancel",
+          "theme": "gray",
+          "variant": "outline"
          }
         },
         {
-         "baseStyles": {},
          "children": [],
          "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "forwardMessage();"
+          }
+         },
          "componentId": "forward-submit-btn",
          "componentName": "Button",
          "componentProps": {
@@ -22824,13 +22842,6 @@
           "loading": "{{ forwardingMessage }}",
           "theme": "gray",
           "variant": "solid"
-         },
-         "componentEvents": {
-          "click": {
-           "action": "Run Script",
-           "event": "click",
-           "script": "forwardMessage();"
-          }
          }
         }
        ],
@@ -22853,7 +22864,6 @@
      }
     },
     {
-     "baseStyles": {},
      "children": [
       {
        "baseStyles": {
@@ -22869,11 +22879,8 @@
          },
          "children": [
           {
-           "baseStyles": {},
            "children": [],
            "classes": [],
-           "componentId": "command-search-input",
-           "componentName": "TextInput",
            "componentEvents": {
             "keydown": {
              "action": "Run Script",
@@ -22881,6 +22888,8 @@
              "script": "handleCommandKeydown(eventArgs[0]);"
             }
            },
+           "componentId": "command-search-input",
+           "componentName": "TextInput",
            "componentProps": {
             "modelValue": {
              "$type": "variable",
@@ -22893,10 +22902,9 @@
            "componentSlots": {
             "prefix": {
              "parentBlockId": "command-search-input",
-             "slotId": "command-search-input:prefix",
-             "slotName": "prefix",
              "slotContent": [
               {
+               "attributes": {},
                "baseStyles": {
                 "color": "var(--ink-gray-5)",
                 "flexShrink": "0",
@@ -22905,13 +22913,19 @@
                },
                "children": [],
                "classes": [],
+               "componentEvents": {},
                "componentId": "command-search-icon",
                "componentName": "FeatherIcon",
                "componentProps": {
                 "name": "search"
-               }
+               },
+               "componentSlots": {},
+               "mobileStyles": {},
+               "tabletStyles": {}
               }
-             ]
+             ],
+             "slotId": "command-search-input:prefix",
+             "slotName": "prefix"
             }
            }
           }
@@ -22974,7 +22988,6 @@
                },
                "children": [
                 {
-                 "baseStyles": {},
                  "children": [],
                  "classes": [],
                  "componentId": "command-company-avatar",
@@ -23010,16 +23023,16 @@
                "classes": [
                 "hover:bg-surface-gray-2"
                ],
-               "componentId": "command-company-row",
-               "componentName": "container",
-               "originalElement": "div",
                "componentEvents": {
                 "click": {
                  "action": "Run Script",
                  "event": "click",
                  "script": "selectCommandItem(dataItem);"
                 }
-               }
+               },
+               "componentId": "command-company-row",
+               "componentName": "container",
+               "originalElement": "div"
               }
              ],
              "classes": [],
@@ -23084,7 +23097,6 @@
                },
                "children": [
                 {
-                 "baseStyles": {},
                  "children": [],
                  "classes": [],
                  "componentId": "command-person-avatar",
@@ -23120,16 +23132,16 @@
                "classes": [
                 "hover:bg-surface-gray-2"
                ],
-               "componentId": "command-person-row",
-               "componentName": "container",
-               "originalElement": "div",
                "componentEvents": {
                 "click": {
                  "action": "Run Script",
                  "event": "click",
                  "script": "selectCommandItem(dataItem);"
                 }
-               }
+               },
+               "componentId": "command-person-row",
+               "componentName": "container",
+               "originalElement": "div"
               }
              ],
              "classes": [],
@@ -23231,16 +23243,16 @@
                "classes": [
                 "hover:bg-surface-gray-2"
                ],
-               "componentId": "command-action-row",
-               "componentName": "container",
-               "originalElement": "div",
                "componentEvents": {
                 "click": {
                  "action": "Run Script",
                  "event": "click",
                  "script": "selectCommandItem(dataItem);"
                 }
-               }
+               },
+               "componentId": "command-action-row",
+               "componentName": "container",
+               "originalElement": "div"
               }
              ],
              "classes": [],
@@ -23273,9 +23285,6 @@
           "gap": "16px",
           "justifyContent": "space-between",
           "padding": "8px 12px"
-         },
-         "mobileStyles": {
-          "display": "none"
          },
          "children": [
           {
@@ -23606,6 +23615,9 @@
          "classes": [],
          "componentId": "command-footer",
          "componentName": "container",
+         "mobileStyles": {
+          "display": "none"
+         },
          "originalElement": "div"
         }
        ],
@@ -23638,7 +23650,7 @@
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-09-18 16:00:37.150015",
+ "modified": "2026-09-22 01:36:13.711887",
  "modified_by": "Administrator",
  "name": "messaging",
  "owner": "Administrator",
