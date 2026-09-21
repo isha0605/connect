@@ -12,8 +12,8 @@ from connect.permissions import (
 	_thread_membership,
 )
 
-# Requirement cards and booking cards are one-off snapshots tied to their thread, so only plain
-# text and files can be forwarded.
+# Requirement cards are one-off snapshots tied to their thread, so only plain text and files can be
+# forwarded.
 FORWARDABLE_MESSAGE_TYPES = ("Text", "File")
 
 MAX_EMOJI_LENGTH = 32
