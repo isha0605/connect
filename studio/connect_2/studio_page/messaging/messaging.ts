@@ -1,5 +1,5 @@
-import { ref, computed, watch, onScopeDispose, nextTick } from "vue"
-import { toast, call, useFileUpload, initSocket, setConfig } from "frappe-ui"
+import { ref, computed, watch, onScopeDispose, nextTick, h } from "vue"
+import { toast, call, useFileUpload, initSocket, setConfig, Avatar } from "frappe-ui"
 import { EMOJI_GROUPS } from "./emojis"
 
 export default function setup(context) {
@@ -2535,6 +2535,79 @@ export default function setup(context) {
 		}
 	}
 
+	// ---- Command palette (Ctrl/Cmd+K) ----
+	// frappe-ui's CommandPalette opens itself on Ctrl/Cmd+K and reports it through update:show; this
+	// only feeds it results. Contacts are the people on the *other* side the caller has interacted
+	// with (a customer finds partners, a partner finds customers) — resolved server-side by
+	// connect.api.dm.search_contacts, so the same page works for both.
+	const showCommandPalette = ref(false)
+	const commandSearchQuery = ref("")
+	const commandContacts = ref([])
+	let commandSearchTimer = null
+	let commandSearchToken = 0
+
+	// Group renderer for the palette's rows: avatar + name + email, in CommandPaletteItem's styling.
+	const CommandContactItem = (props) =>
+		h(
+			"div",
+			{
+				class:
+					"flex w-full min-w-0 items-center gap-3 rounded px-2 py-2 text-base-medium text-ink-gray-8" +
+					(props.active ? " bg-surface-gray-2" : ""),
+			},
+			[
+				h(Avatar, { image: props.item.image, label: props.item.title, size: "md" }),
+				h("span", { class: "overflow-hidden text-ellipsis whitespace-nowrap" }, props.item.title),
+				h("span", { class: "ml-auto whitespace-nowrap pl-2 text-ink-gray-5" }, props.item.description),
+			],
+		)
+	CommandContactItem.props = ["item", "active"]
+
+	const commandGroups = computed(() => {
+		if (!commandContacts.value.length) return []
+		const amPartner = context.myContext.data && context.myContext.data.partner
+		return [
+			{
+				title: amPartner ? "Customers" : "Partners",
+				component: CommandContactItem,
+				items: commandContacts.value.map((u) => ({
+					name: u.name,
+					title: u.full_name ? capitalizeName(u.full_name) : memberDisplayName(u.name),
+					description: u.name,
+					image: u.user_image || "",
+				})),
+			},
+		]
+	})
+
+	async function loadCommandContacts(query) {
+		const token = ++commandSearchToken
+		try {
+			const rows = await call("connect.api.dm.search_contacts", { query })
+			// A slower earlier request must not overwrite the results of a newer keystroke.
+			if (token === commandSearchToken) commandContacts.value = rows
+		} catch (e) {
+			if (token === commandSearchToken) commandContacts.value = []
+		}
+	}
+
+	function setCommandPaletteOpen(open) {
+		showCommandPalette.value = !!open
+		if (open) loadCommandContacts(commandSearchQuery.value)
+	}
+
+	function setCommandSearchQuery(query) {
+		commandSearchQuery.value = query || ""
+		clearTimeout(commandSearchTimer)
+		commandSearchTimer = setTimeout(() => loadCommandContacts(commandSearchQuery.value), 200)
+	}
+	onScopeDispose(() => clearTimeout(commandSearchTimer))
+
+	// The palette closes itself on select; this starts (or resumes) the 1:1 and opens it.
+	function selectCommandContact(item) {
+		if (item) connectWithUser(item.name)
+	}
+
 	// Mirrors the media search box's focus treatment (see media-search-box's CSS) on the
 	// composer: the pill is a container wrapping a ghost TextInput, so there's no single
 	// element a :focus-within rule could live on — the inner input reports focus up instead.
@@ -2916,6 +2989,12 @@ export default function setup(context) {
 		unifiedThreadList,
 		currentMessages,
 		connectWithUser,
+		showCommandPalette,
+		commandSearchQuery,
+		commandGroups,
+		setCommandPaletteOpen,
+		setCommandSearchQuery,
+		selectCommandContact,
 		threadLinks,
 		threadFiles,
 		openLink,
