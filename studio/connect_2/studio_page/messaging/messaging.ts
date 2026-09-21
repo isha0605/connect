@@ -2683,7 +2683,12 @@ export default function setup(context) {
 	// open one.
 	const showSearchPage = ref(false)
 	const searchResultOpen = ref(false)
+	// The message the URL / selected result points at; flashedMessage is the row's amber highlight, which
+	// only lasts a moment after scrolling to it (see scrollToMessage).
 	const highlightedMessage = ref("")
+	const flashedMessage = ref("")
+	let flashTimer = null
+	const MESSAGE_FLASH_MS = 2500
 	const selectedSearchKey = ref("")
 	const messageSearchQuery = ref("")
 	const messageSearchTab = ref("messages")
@@ -2838,17 +2843,24 @@ export default function setup(context) {
 		await scrollToMessage(row.name)
 	}
 
-	// Waits for the conversation's messages to render (up to ~2s), then scrolls the message into view.
+	// Waits for the conversation's messages to render (up to ~2s), scrolls the message into view and flashes
+	// its row so it's easy to spot; the flash fades on its own.
 	async function scrollToMessage(name) {
 		for (let attempt = 0; attempt < 20; attempt++) {
 			await new Promise((resolve) => setTimeout(resolve, 100))
 			const el = document.querySelector(`[data-message-id="${name}"]`)
 			if (el) {
 				el.scrollIntoView({ behavior: "smooth", block: "center" })
+				flashedMessage.value = name
+				clearTimeout(flashTimer)
+				flashTimer = setTimeout(() => {
+					if (flashedMessage.value === name) flashedMessage.value = ""
+				}, MESSAGE_FLASH_MS)
 				return
 			}
 		}
 	}
+	onScopeDispose(() => clearTimeout(flashTimer))
 
 	// ---- URL state ----
 	// The open conversation, the search page and the matched message all live in the query string, so a
@@ -3344,6 +3356,7 @@ export default function setup(context) {
 		showSearchPage,
 		searchResultOpen,
 		highlightedMessage,
+		flashedMessage,
 		messageSearchQuery,
 		messageSearchTab,
 		messageSearchConversation,
