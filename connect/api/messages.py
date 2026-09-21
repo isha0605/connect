@@ -283,8 +283,9 @@ def toggle_reaction(message, is_dm, emoji):
 
 
 @frappe.whitelist()
-def search_messages(query, thread=None, is_dm=0):
-	"""Text and file-name search over the conversations the caller can read, newest first. Pass `thread`
+def search_messages(query, thread=None, is_dm=0, kind="messages"):
+	"""Search over the conversations the caller can read, newest first. `kind` picks the tab: "messages"
+	matches text, "files" matches attachment names, "links" matches text that contains a URL. Pass `thread`
 	(and `is_dm`) to search inside one conversation, otherwise it searches every company thread and DM.
 	Visibility (thread membership, and a removed member's cut-off) comes from the doctypes' permission
 	query conditions, so the search can't surface anything the message list itself wouldn't."""
@@ -294,18 +295,22 @@ def search_messages(query, thread=None, is_dm=0):
 	is_dm = frappe.utils.cint(is_dm)
 	pattern = "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
 
+	if kind == "files":
+		filters = [["message_type", "=", "File"], ["file_name", "like", pattern]]
+	elif kind == "links":
+		filters = [["message_type", "=", "Text"], ["content", "like", pattern], ["content", "like", "%http%"]]
+	else:
+		filters = [["message_type", "=", "Text"], ["content", "like", pattern]]
+
 	sources = [(False, "Connect Message", "thread"), (True, "Connect DM Message", "dm_thread")]
 	results = []
 	for source_is_dm, doctype, thread_field in sources:
 		if thread and source_is_dm != bool(is_dm):
 			continue
-		filters = {"message_type": ["in", FORWARDABLE_MESSAGE_TYPES]}
-		if thread:
-			filters[thread_field] = thread
+		scoped = filters + ([[thread_field, "=", thread]] if thread else [])
 		rows = frappe.get_list(
 			doctype,
-			filters=filters,
-			or_filters=[["content", "like", pattern], ["file_name", "like", pattern]],
+			filters=scoped,
 			fields=["name", f"{thread_field} as thread", "sender", "message_type", "content", "file_name", "creation"],
 			order_by="creation desc",
 			limit_page_length=MAX_SEARCH_RESULTS,
