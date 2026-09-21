@@ -12160,12 +12160,12 @@
              },
              "children": [],
              "classes": [],
-             "componentId": "command-contacts-title",
+             "componentId": "command-companies-title",
              "componentName": "TextBlock",
              "componentProps": {
               "fontSize": "text-sm",
               "tag": "span",
-              "text": "{{ commandContactsTitle() }}"
+              "text": "{{ commandCompaniesTitle() }}"
              }
             },
             {
@@ -12194,7 +12194,7 @@
                  "baseStyles": {},
                  "children": [],
                  "classes": [],
-                 "componentId": "command-contact-avatar",
+                 "componentId": "command-company-avatar",
                  "componentName": "Avatar",
                  "componentProps": {
                   "image": "{{ dataItem.image }}",
@@ -12215,39 +12215,19 @@
                  },
                  "children": [],
                  "classes": [],
-                 "componentId": "command-contact-title",
+                 "componentId": "command-company-title",
                  "componentName": "TextBlock",
                  "componentProps": {
                   "fontSize": "text-base",
                   "tag": "span",
                   "text": "{{ dataItem.title }}"
                  }
-                },
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-5)",
-                  "flexShrink": "0",
-                  "maxWidth": "45%",
-                  "overflow": "hidden",
-                  "textOverflow": "ellipsis",
-                  "whiteSpace": "nowrap"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "command-contact-description",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "{{ dataItem.description }}"
-                 },
-                 "visibilityCondition": "!!dataItem.description"
                 }
                ],
                "classes": [
                 "hover:bg-surface-gray-2"
                ],
-               "componentId": "command-contact-row",
+               "componentId": "command-company-row",
                "componentName": "container",
                "originalElement": "div",
                "componentEvents": {
@@ -12260,20 +12240,130 @@
               }
              ],
              "classes": [],
-             "componentId": "command-contacts-repeater",
+             "componentId": "command-companies-repeater",
              "componentName": "Repeater",
              "componentProps": {
-              "data": "{{ commandContactRows() }}",
+              "data": "{{ commandCompanyRows() }}",
               "dataKey": "name",
               "emptyStateMessage": ""
              }
             }
            ],
            "classes": [],
-           "componentId": "command-contacts",
+           "componentId": "command-companies",
            "componentName": "container",
            "originalElement": "div",
-           "visibilityCondition": "commandContactRows().length > 0"
+           "visibilityCondition": "commandCompanyRows().length > 0"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "display": "block",
+              "padding": "12px 12px 4px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-people-title",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "People"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "2px",
+              "width": "100%"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ commandActiveIndex === dataItem.index ? 'var(--surface-gray-2)' : 'transparent' }}",
+                "borderRadius": "8px",
+                "boxSizing": "border-box",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "12px",
+                "margin": "0px 6px",
+                "padding": "8px 10px"
+               },
+               "children": [
+                {
+                 "baseStyles": {},
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-person-avatar",
+                 "componentName": "Avatar",
+                 "componentProps": {
+                  "image": "{{ dataItem.image }}",
+                  "label": "{{ dataItem.title }}",
+                  "shape": "circle",
+                  "size": "md",
+                  "theme": "{{ avatarTheme(dataItem.title) }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "flex": "1",
+                  "minWidth": "0px",
+                  "overflow": "hidden",
+                  "textOverflow": "ellipsis",
+                  "whiteSpace": "nowrap"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-person-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "{{ dataItem.title }}"
+                 }
+                }
+               ],
+               "classes": [
+                "hover:bg-surface-gray-2"
+               ],
+               "componentId": "command-person-row",
+               "componentName": "container",
+               "originalElement": "div",
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "selectCommandItem(dataItem);"
+                }
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "command-people-repeater",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ commandPeopleRows() }}",
+              "dataKey": "name",
+              "emptyStateMessage": ""
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "command-people",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "commandPeopleRows().length > 0"
           },
           {
            "baseStyles": {
@@ -12353,26 +12443,6 @@
                   "tag": "span",
                   "text": "{{ dataItem.title }}"
                  }
-                },
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-5)",
-                  "flexShrink": "0",
-                  "maxWidth": "45%",
-                  "overflow": "hidden",
-                  "textOverflow": "ellipsis",
-                  "whiteSpace": "nowrap"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "command-action-description",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "{{ dataItem.description }}"
-                 },
-                 "visibilityCondition": "!!dataItem.description"
                 }
                ],
                "classes": [
@@ -24944,12 +25014,12 @@
              },
              "children": [],
              "classes": [],
-             "componentId": "command-contacts-title",
+             "componentId": "command-companies-title",
              "componentName": "TextBlock",
              "componentProps": {
               "fontSize": "text-sm",
               "tag": "span",
-              "text": "{{ commandContactsTitle() }}"
+              "text": "{{ commandCompaniesTitle() }}"
              }
             },
             {
@@ -24978,7 +25048,7 @@
                  "baseStyles": {},
                  "children": [],
                  "classes": [],
-                 "componentId": "command-contact-avatar",
+                 "componentId": "command-company-avatar",
                  "componentName": "Avatar",
                  "componentProps": {
                   "image": "{{ dataItem.image }}",
@@ -24999,39 +25069,19 @@
                  },
                  "children": [],
                  "classes": [],
-                 "componentId": "command-contact-title",
+                 "componentId": "command-company-title",
                  "componentName": "TextBlock",
                  "componentProps": {
                   "fontSize": "text-base",
                   "tag": "span",
                   "text": "{{ dataItem.title }}"
                  }
-                },
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-5)",
-                  "flexShrink": "0",
-                  "maxWidth": "45%",
-                  "overflow": "hidden",
-                  "textOverflow": "ellipsis",
-                  "whiteSpace": "nowrap"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "command-contact-description",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "{{ dataItem.description }}"
-                 },
-                 "visibilityCondition": "!!dataItem.description"
                 }
                ],
                "classes": [
                 "hover:bg-surface-gray-2"
                ],
-               "componentId": "command-contact-row",
+               "componentId": "command-company-row",
                "componentName": "container",
                "originalElement": "div",
                "componentEvents": {
@@ -25044,20 +25094,130 @@
               }
              ],
              "classes": [],
-             "componentId": "command-contacts-repeater",
+             "componentId": "command-companies-repeater",
              "componentName": "Repeater",
              "componentProps": {
-              "data": "{{ commandContactRows() }}",
+              "data": "{{ commandCompanyRows() }}",
               "dataKey": "name",
               "emptyStateMessage": ""
              }
             }
            ],
            "classes": [],
-           "componentId": "command-contacts",
+           "componentId": "command-companies",
            "componentName": "container",
            "originalElement": "div",
-           "visibilityCondition": "commandContactRows().length > 0"
+           "visibilityCondition": "commandCompanyRows().length > 0"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "display": "block",
+              "padding": "12px 12px 4px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-people-title",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "People"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "2px",
+              "width": "100%"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ commandActiveIndex === dataItem.index ? 'var(--surface-gray-2)' : 'transparent' }}",
+                "borderRadius": "8px",
+                "boxSizing": "border-box",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "12px",
+                "margin": "0px 6px",
+                "padding": "8px 10px"
+               },
+               "children": [
+                {
+                 "baseStyles": {},
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-person-avatar",
+                 "componentName": "Avatar",
+                 "componentProps": {
+                  "image": "{{ dataItem.image }}",
+                  "label": "{{ dataItem.title }}",
+                  "shape": "circle",
+                  "size": "md",
+                  "theme": "{{ avatarTheme(dataItem.title) }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "flex": "1",
+                  "minWidth": "0px",
+                  "overflow": "hidden",
+                  "textOverflow": "ellipsis",
+                  "whiteSpace": "nowrap"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-person-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "{{ dataItem.title }}"
+                 }
+                }
+               ],
+               "classes": [
+                "hover:bg-surface-gray-2"
+               ],
+               "componentId": "command-person-row",
+               "componentName": "container",
+               "originalElement": "div",
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "selectCommandItem(dataItem);"
+                }
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "command-people-repeater",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ commandPeopleRows() }}",
+              "dataKey": "name",
+              "emptyStateMessage": ""
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "command-people",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "commandPeopleRows().length > 0"
           },
           {
            "baseStyles": {
@@ -25137,26 +25297,6 @@
                   "tag": "span",
                   "text": "{{ dataItem.title }}"
                  }
-                },
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-5)",
-                  "flexShrink": "0",
-                  "maxWidth": "45%",
-                  "overflow": "hidden",
-                  "textOverflow": "ellipsis",
-                  "whiteSpace": "nowrap"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "command-action-description",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "{{ dataItem.description }}"
-                 },
-                 "visibilityCondition": "!!dataItem.description"
                 }
                ],
                "classes": [
