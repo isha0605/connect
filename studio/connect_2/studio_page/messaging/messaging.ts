@@ -1,5 +1,5 @@
-import { ref, computed, watch, onScopeDispose, nextTick, h } from "vue"
-import { toast, call, useFileUpload, initSocket, setConfig, Avatar } from "frappe-ui"
+import { ref, computed, watch, onScopeDispose, nextTick } from "vue"
+import { toast, call, useFileUpload, initSocket, setConfig } from "frappe-ui"
 import { EMOJI_GROUPS } from "./emojis"
 
 export default function setup(context) {
@@ -2536,50 +2536,54 @@ export default function setup(context) {
 	}
 
 	// ---- Command palette (Ctrl/Cmd+K) ----
-	// frappe-ui's CommandPalette opens itself on Ctrl/Cmd+K and reports it through update:show; this
-	// only feeds it results. Contacts are the people on the *other* side the caller has interacted
-	// with (a customer finds partners, a partner finds customers) — resolved server-side by
-	// connect.api.dm.search_contacts, so the same page works for both.
+	// A bare frappe-ui Dialog holding a search box and a list of rows. (frappe-ui's own CommandPalette
+	// isn't in Studio's production build list, so it can't be used in a built app.) Contacts are the
+	// people on the *other* side the caller has interacted with (a customer finds partners, a partner
+	// finds customers) — resolved server-side by connect.api.dm.search_contacts, so the same page works
+	// for both — followed by the message-search actions.
 	const showCommandPalette = ref(false)
 	const commandSearchQuery = ref("")
 	const commandContacts = ref([])
+	const commandActiveIndex = ref(0)
 	let commandSearchTimer = null
 	let commandSearchToken = 0
 
-	// Group renderer for the palette's rows: avatar + name + email, in CommandPaletteItem's styling.
-	const CommandContactItem = (props) =>
-		h(
-			"div",
-			{
-				class:
-					"flex w-full min-w-0 items-center gap-3 rounded px-2 py-2 text-base-medium text-ink-gray-8" +
-					(props.active ? " bg-surface-gray-2" : ""),
-			},
-			[
-				h(Avatar, { image: props.item.image, label: props.item.title, size: "md" }),
-				h("span", { class: "overflow-hidden text-ellipsis whitespace-nowrap" }, props.item.title),
-				h("span", { class: "ml-auto whitespace-nowrap pl-2 text-ink-gray-5" }, props.item.description),
-			],
-		)
-	CommandContactItem.props = ["item", "active"]
+	function handleCommandPaletteShortcut(event: KeyboardEvent) {
+		if (event.key.toLowerCase() !== "k" || !(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return
+		// Claim the shortcut from the browser (Chrome's Ctrl+K is "search in address bar").
+		event.preventDefault()
+		showCommandPalette.value = !showCommandPalette.value
+	}
+	window.addEventListener("keydown", handleCommandPaletteShortcut)
+	onScopeDispose(() => window.removeEventListener("keydown", handleCommandPaletteShortcut))
 
-	// Rows for "Search in <this conversation>" / "Search anywhere" — same look as a contact row but with a
-	// search icon in place of the avatar. `kind` is what selectCommandItem dispatches on.
-	const CommandActionItem = (props) =>
-		h(
-			"div",
-			{
-				class:
-					"flex w-full min-w-0 items-center gap-3 rounded px-2 py-2 text-base-medium text-ink-gray-8" +
-					(props.active ? " bg-surface-gray-2" : ""),
-			},
-			[
-				h("span", { class: "lucide-search size-4 shrink-0 text-ink-gray-7" }),
-				h("span", { class: "overflow-hidden text-ellipsis whitespace-nowrap" }, props.item.title),
-			],
-		)
-	CommandActionItem.props = ["item", "active"]
+	watch(showCommandPalette, (open) => {
+		if (!open) return
+		commandSearchQuery.value = ""
+		commandActiveIndex.value = 0
+		loadCommandContacts("")
+	})
 
+	// Typing re-queries after a pause and puts the highlight back on the first row.
+	watch(commandSearchQuery, (query) => {
+		commandActiveIndex.value = 0
+		clearTimeout(commandSearchTimer)
+		commandSearchTimer = setTimeout(() => loadCommandContacts(query), 200)
+	})
+	onScopeDispose(() => clearTimeout(commandSearchTimer))
+
+	async function loadCommandContacts(query) {
+		const token = ++commandSearchToken
+		try {
+			const rows = await call("connect.api.dm.search_contacts", { query })
+			// A slower earlier request must not overwrite the results of a newer keystroke.
+			if (token === commandSearchToken) commandContacts.value = rows
+		} catch (e) {
+			if (token === commandSearchToken) commandContacts.value = []
+		}
+	}
+
+	// "Search in <this conversation>" / "Search anywhere" rows. `kind` is what selectCommandItem dispatches on.
 	function commandSearchActions() {
 		const query = commandSearchQuery.value.trim()
 		const quoted = query ? " for `" + query + "`" : ""
@@ -2595,13 +2599,14 @@ export default function setup(context) {
 		return actions
 	}
 
-	const commandGroups = computed(() => {
+	// One flat list so the arrow keys move through contacts and actions alike; the first row of each
+	// group carries its heading.
+	function commandRows() {
 		const amPartner = context.myContext.data && context.myContext.data.partner
 		const groups = []
 		if (commandContacts.value.length) {
 			groups.push({
 				title: amPartner ? "Customers" : "Partners",
-				component: CommandContactItem,
 				items: commandContacts.value.map((u) => ({
 					name: u.name,
 					kind: "contact",
@@ -2611,39 +2616,38 @@ export default function setup(context) {
 				})),
 			})
 		}
-		groups.push({ title: "Search messages", component: CommandActionItem, items: commandSearchActions() })
-		return groups
-	})
+		groups.push({ title: "Search messages", items: commandSearchActions() })
 
-	async function loadCommandContacts(query) {
-		const token = ++commandSearchToken
-		try {
-			const rows = await call("connect.api.dm.search_contacts", { query })
-			// A slower earlier request must not overwrite the results of a newer keystroke.
-			if (token === commandSearchToken) commandContacts.value = rows
-		} catch (e) {
-			if (token === commandSearchToken) commandContacts.value = []
+		const rows = []
+		for (const group of groups) {
+			group.items.forEach((item, i) => {
+				rows.push({ ...item, groupTitle: i === 0 ? group.title : "", index: rows.length })
+			})
+		}
+		return rows
+	}
+
+	function handleCommandKeydown(event: KeyboardEvent) {
+		const rows = commandRows()
+		if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+			event.preventDefault()
+			const step = event.key === "ArrowDown" ? 1 : -1
+			commandActiveIndex.value = (commandActiveIndex.value + step + rows.length) % rows.length
+			nextTick(() => document.querySelector('[data-command-active="true"]')?.scrollIntoView({ block: "nearest" }))
+		} else if (event.key === "Enter") {
+			event.preventDefault()
+			selectCommandItem(rows[commandActiveIndex.value])
 		}
 	}
 
-	function setCommandPaletteOpen(open) {
-		showCommandPalette.value = !!open
-		if (open) loadCommandContacts(commandSearchQuery.value)
-	}
-
-	function setCommandSearchQuery(query) {
-		commandSearchQuery.value = query || ""
-		clearTimeout(commandSearchTimer)
-		commandSearchTimer = setTimeout(() => loadCommandContacts(commandSearchQuery.value), 200)
-	}
-	onScopeDispose(() => clearTimeout(commandSearchTimer))
-
-	// The palette closes itself on select; a contact starts (or resumes) the 1:1 and opens it, a search
-	// action opens the message search dialog with what was typed.
+	// Closes the palette, then a contact starts (or resumes) the 1:1 and opens it, and a search action
+	// opens the message search dialog with what was typed.
 	function selectCommandItem(item) {
 		if (!item) return
+		const query = commandSearchQuery.value
+		showCommandPalette.value = false
 		if (item.kind === "contact") connectWithUser(item.name)
-		else openMessageSearch(item.kind === "search-current" ? "current" : "all", commandSearchQuery.value)
+		else openMessageSearch(item.kind === "search-current" ? "current" : "all", query)
 	}
 
 	// ---- Message search ----
@@ -3159,9 +3163,9 @@ export default function setup(context) {
 		connectWithUser,
 		showCommandPalette,
 		commandSearchQuery,
-		commandGroups,
-		setCommandPaletteOpen,
-		setCommandSearchQuery,
+		commandActiveIndex,
+		commandRows,
+		handleCommandKeydown,
 		selectCommandItem,
 		showMessageSearch,
 		messageSearchQuery,

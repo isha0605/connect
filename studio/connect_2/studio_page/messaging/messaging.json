@@ -11612,31 +11612,277 @@
      }
     },
     {
-     "children": [],
-     "classes": [],
-     "componentEvents": {
-      "update:show": {
-       "action": "Run Script",
-       "event": "update:show",
-       "script": "setCommandPaletteOpen(eventArgs[0]);"
-      },
-      "update:searchQuery": {
-       "action": "Run Script",
-       "event": "update:searchQuery",
-       "script": "setCommandSearchQuery(eventArgs[0]);"
-      },
-      "select": {
-       "action": "Run Script",
-       "event": "select",
-       "script": "selectCommandItem(eventArgs[0]);"
+     "baseStyles": {},
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "borderBottom": "1px solid var(--outline-gray-2)",
+          "padding": "10px 12px"
+         },
+         "children": [
+          {
+           "baseStyles": {},
+           "children": [],
+           "classes": [],
+           "componentId": "command-search-input",
+           "componentName": "TextInput",
+           "componentEvents": {
+            "keydown": {
+             "action": "Run Script",
+             "event": "keydown",
+             "script": "handleCommandKeydown(eventArgs[0]);"
+            }
+           },
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "commandSearchQuery"
+            },
+            "placeholder": "Search or type a command",
+            "size": "md",
+            "variant": "ghost"
+           },
+           "componentSlots": {
+            "prefix": {
+             "parentBlockId": "command-search-input",
+             "slotId": "command-search-input:prefix",
+             "slotName": "prefix",
+             "slotContent": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "flexShrink": "0",
+                "height": "16px",
+                "width": "16px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "command-search-icon",
+               "componentName": "FeatherIcon",
+               "componentProps": {
+                "name": "search"
+               }
+              }
+             ]
+            }
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "command-search-bar",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "maxHeight": "380px",
+          "overflowY": "auto",
+          "padding": "4px 0px 8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "width": "100%"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "display": "block",
+                "padding": "12px 12px 4px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "command-group-title",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ dataItem.groupTitle }}"
+               },
+               "visibilityCondition": "!!dataItem.groupTitle"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ commandActiveIndex === dataItem.index ? 'var(--surface-gray-2)' : 'transparent' }}",
+                "borderRadius": "8px",
+                "boxSizing": "border-box",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "12px",
+                "margin": "0px 6px",
+                "padding": "8px 10px"
+               },
+               "children": [
+                {
+                 "baseStyles": {},
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-contact-avatar",
+                 "componentName": "Avatar",
+                 "componentProps": {
+                  "image": "{{ dataItem.image }}",
+                  "label": "{{ dataItem.title }}",
+                  "shape": "circle",
+                  "size": "md",
+                  "theme": "{{ avatarTheme(dataItem.title) }}"
+                 },
+                 "visibilityCondition": "dataItem.kind === 'contact'"
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-7)",
+                  "flexShrink": "0",
+                  "height": "16px",
+                  "width": "16px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-action-icon",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "name": "search"
+                 },
+                 "visibilityCondition": "dataItem.kind !== 'contact'"
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "flex": "1",
+                  "minWidth": "0px",
+                  "overflow": "hidden",
+                  "textOverflow": "ellipsis",
+                  "whiteSpace": "nowrap"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-row-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "{{ dataItem.title }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "flexShrink": "0",
+                  "overflow": "hidden",
+                  "textOverflow": "ellipsis",
+                  "whiteSpace": "nowrap",
+                  "maxWidth": "45%"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-row-description",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "{{ dataItem.description }}"
+                 },
+                 "visibilityCondition": "!!dataItem.description"
+                }
+               ],
+               "classes": [
+                "hover:bg-surface-gray-2"
+               ],
+               "componentId": "command-row",
+               "componentName": "container",
+               "originalElement": "div",
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "selectCommandItem(dataItem);"
+                }
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "command-row-wrap",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "command-repeater",
+           "componentName": "Repeater",
+           "componentProps": {
+            "data": "{{ commandRows() }}",
+            "dataKey": "name",
+            "emptyStateMessage": ""
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "command-list",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "borderTop": "1px solid var(--outline-gray-2)",
+          "padding": "8px 14px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "command-hint",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "\u2191\u2193 navigate  \u00b7  \u21b5 select  \u00b7  esc close"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "command-footer",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "command-palette-body",
+       "componentName": "container",
+       "originalElement": "div"
       }
-     },
-     "componentId": "command-palette",
-     "componentName": "CommandPalette",
+     ],
+     "classes": [],
+     "componentId": "command-palette-dialog",
+     "componentName": "Dialog",
      "componentProps": {
-      "groups": "{{ commandGroups }}",
-      "searchQuery": "{{ commandSearchQuery }}",
-      "show": "{{ showCommandPalette }}"
+      "bare": true,
+      "modelValue": {
+       "$type": "variable",
+       "name": "showCommandPalette"
+      },
+      "position": "top",
+      "size": "xl"
      }
     },
     {
@@ -23557,31 +23803,277 @@
      }
     },
     {
-     "children": [],
-     "classes": [],
-     "componentEvents": {
-      "update:show": {
-       "action": "Run Script",
-       "event": "update:show",
-       "script": "setCommandPaletteOpen(eventArgs[0]);"
-      },
-      "update:searchQuery": {
-       "action": "Run Script",
-       "event": "update:searchQuery",
-       "script": "setCommandSearchQuery(eventArgs[0]);"
-      },
-      "select": {
-       "action": "Run Script",
-       "event": "select",
-       "script": "selectCommandItem(eventArgs[0]);"
+     "baseStyles": {},
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "borderBottom": "1px solid var(--outline-gray-2)",
+          "padding": "10px 12px"
+         },
+         "children": [
+          {
+           "baseStyles": {},
+           "children": [],
+           "classes": [],
+           "componentId": "command-search-input",
+           "componentName": "TextInput",
+           "componentEvents": {
+            "keydown": {
+             "action": "Run Script",
+             "event": "keydown",
+             "script": "handleCommandKeydown(eventArgs[0]);"
+            }
+           },
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "commandSearchQuery"
+            },
+            "placeholder": "Search or type a command",
+            "size": "md",
+            "variant": "ghost"
+           },
+           "componentSlots": {
+            "prefix": {
+             "parentBlockId": "command-search-input",
+             "slotId": "command-search-input:prefix",
+             "slotName": "prefix",
+             "slotContent": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "flexShrink": "0",
+                "height": "16px",
+                "width": "16px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "command-search-icon",
+               "componentName": "FeatherIcon",
+               "componentProps": {
+                "name": "search"
+               }
+              }
+             ]
+            }
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "command-search-bar",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "maxHeight": "380px",
+          "overflowY": "auto",
+          "padding": "4px 0px 8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "width": "100%"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "display": "block",
+                "padding": "12px 12px 4px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "command-group-title",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ dataItem.groupTitle }}"
+               },
+               "visibilityCondition": "!!dataItem.groupTitle"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "{{ commandActiveIndex === dataItem.index ? 'var(--surface-gray-2)' : 'transparent' }}",
+                "borderRadius": "8px",
+                "boxSizing": "border-box",
+                "cursor": "pointer",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "12px",
+                "margin": "0px 6px",
+                "padding": "8px 10px"
+               },
+               "children": [
+                {
+                 "baseStyles": {},
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-contact-avatar",
+                 "componentName": "Avatar",
+                 "componentProps": {
+                  "image": "{{ dataItem.image }}",
+                  "label": "{{ dataItem.title }}",
+                  "shape": "circle",
+                  "size": "md",
+                  "theme": "{{ avatarTheme(dataItem.title) }}"
+                 },
+                 "visibilityCondition": "dataItem.kind === 'contact'"
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-7)",
+                  "flexShrink": "0",
+                  "height": "16px",
+                  "width": "16px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-action-icon",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "name": "search"
+                 },
+                 "visibilityCondition": "dataItem.kind !== 'contact'"
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "flex": "1",
+                  "minWidth": "0px",
+                  "overflow": "hidden",
+                  "textOverflow": "ellipsis",
+                  "whiteSpace": "nowrap"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-row-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "{{ dataItem.title }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "flexShrink": "0",
+                  "overflow": "hidden",
+                  "textOverflow": "ellipsis",
+                  "whiteSpace": "nowrap",
+                  "maxWidth": "45%"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-row-description",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "{{ dataItem.description }}"
+                 },
+                 "visibilityCondition": "!!dataItem.description"
+                }
+               ],
+               "classes": [
+                "hover:bg-surface-gray-2"
+               ],
+               "componentId": "command-row",
+               "componentName": "container",
+               "originalElement": "div",
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "selectCommandItem(dataItem);"
+                }
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "command-row-wrap",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "command-repeater",
+           "componentName": "Repeater",
+           "componentProps": {
+            "data": "{{ commandRows() }}",
+            "dataKey": "name",
+            "emptyStateMessage": ""
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "command-list",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "borderTop": "1px solid var(--outline-gray-2)",
+          "padding": "8px 14px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "command-hint",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "\u2191\u2193 navigate  \u00b7  \u21b5 select  \u00b7  esc close"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "command-footer",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "command-palette-body",
+       "componentName": "container",
+       "originalElement": "div"
       }
-     },
-     "componentId": "command-palette",
-     "componentName": "CommandPalette",
+     ],
+     "classes": [],
+     "componentId": "command-palette-dialog",
+     "componentName": "Dialog",
      "componentProps": {
-      "groups": "{{ commandGroups }}",
-      "searchQuery": "{{ commandSearchQuery }}",
-      "show": "{{ showCommandPalette }}"
+      "bare": true,
+      "modelValue": {
+       "$type": "variable",
+       "name": "showCommandPalette"
+      },
+      "position": "top",
+      "size": "xl"
      }
     },
     {
