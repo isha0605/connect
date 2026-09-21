@@ -3,7 +3,7 @@ from frappe import _
 from frappe.utils import now_datetime
 
 from connect.api.attachments import _attach_file_to_message, _claim_staged_attachment
-from connect.api.messages import _get_message_preview
+from connect.api.messages import PINNED_MESSAGE_FIELDS
 from connect.permissions import _dm_thread_pair, _dm_thread_pair_or_none
 
 
@@ -132,25 +132,26 @@ def edit_dm_message(message, content):
 
 @frappe.whitelist()
 def pin_dm_message(message):
-	"""Resolves which thread a DM belongs to; pin/unpin logic itself lives on Connect DM Thread."""
+	"""Pins a DM (either participant can, a DM can hold any number); the pin rules live on Connect DM Message."""
 	doc = frappe.get_doc("Connect DM Message", message)
-	thread_doc = frappe.get_doc("Connect DM Thread", doc.dm_thread)
-	thread_doc.pin(message, frappe.session.user)
-	return {"thread": thread_doc.name, "pinned_message": thread_doc.pinned_message}
+	doc.pin(frappe.session.user)
+	return {"thread": doc.dm_thread, "message": doc.name, "is_pinned": 1}
 
 
 @frappe.whitelist()
-def unpin_dm_message(thread):
-	thread_doc = frappe.get_doc("Connect DM Thread", thread)
-	thread_doc.unpin(frappe.session.user)
-	return {"thread": thread_doc.name, "pinned_message": None}
+def unpin_dm_message(message):
+	doc = frappe.get_doc("Connect DM Message", message)
+	doc.unpin(frappe.session.user)
+	return {"thread": doc.dm_thread, "message": doc.name, "is_pinned": 0}
 
 
 @frappe.whitelist()
-def get_pinned_dm_message(thread):
+def get_pinned_dm_messages(thread):
 	_dm_thread_pair(thread, frappe.session.user)
-
-	pinned = frappe.db.get_value("Connect DM Thread", thread, "pinned_message")
-	if not pinned:
-		return None
-	return _get_message_preview("Connect DM Message", pinned)
+	return frappe.get_list(
+		"Connect DM Message",
+		filters={"dm_thread": thread, "is_pinned": 1},
+		fields=PINNED_MESSAGE_FIELDS,
+		order_by="pinned_at desc",
+		limit_page_length=0,
+	)

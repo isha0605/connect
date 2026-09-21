@@ -22,14 +22,9 @@ MIN_SEARCH_LENGTH = 2
 MAX_SEARCH_RESULTS = 50
 
 
-def _get_message_preview(doctype, name):
-	"""Shared field set for a pinned-message preview — used by get_pinned_message and get_pinned_dm_message."""
-	return frappe.db.get_value(
-		doctype,
-		name,
-		["name", "sender", "message_type", "content", "file_name", "creation"],
-		as_dict=True,
-	)
+PINNED_MESSAGE_FIELDS = [
+	"name", "sender", "message_type", "content", "file_name", "creation", "pinned_by", "pinned_at"
+]
 
 
 @frappe.whitelist()
@@ -102,28 +97,31 @@ def edit_message(message, content):
 
 @frappe.whitelist()
 def pin_message(message):
-	"""Resolves which thread a message belongs to; pin/unpin logic itself lives on Connect Thread."""
+	"""Pins a message (a thread can hold any number); the pin rules themselves live on Connect Message."""
 	doc = frappe.get_doc("Connect Message", message)
-	thread_doc = frappe.get_doc("Connect Thread", doc.thread)
-	thread_doc.pin(message, frappe.session.user)
-	return {"thread": thread_doc.name, "pinned_message": thread_doc.pinned_message}
+	doc.pin(frappe.session.user)
+	return {"thread": doc.thread, "message": doc.name, "is_pinned": 1}
 
 
 @frappe.whitelist()
-def unpin_message(thread):
-	thread_doc = frappe.get_doc("Connect Thread", thread)
-	thread_doc.unpin(frappe.session.user)
-	return {"thread": thread_doc.name, "pinned_message": None}
+def unpin_message(message):
+	doc = frappe.get_doc("Connect Message", message)
+	doc.unpin(frappe.session.user)
+	return {"thread": doc.thread, "message": doc.name, "is_pinned": 0}
 
 
 @frappe.whitelist()
-def get_pinned_message(thread):
+def get_pinned_messages(thread):
+	"""A thread's pinned messages, most recently pinned first. Read through the message permission query
+	conditions, so a removed member only sees pins up to the moment they were removed."""
 	_check_can_read(thread, frappe.session.user)
-
-	pinned = frappe.db.get_value("Connect Thread", thread, "pinned_message")
-	if not pinned:
-		return None
-	return _get_message_preview("Connect Message", pinned)
+	return frappe.get_list(
+		"Connect Message",
+		filters={"thread": thread, "is_pinned": 1},
+		fields=PINNED_MESSAGE_FIELDS,
+		order_by="pinned_at desc",
+		limit_page_length=0,
+	)
 
 
 @frappe.whitelist()

@@ -286,36 +286,42 @@ def notify_dm_message_edited(doc):
 	frappe.publish_realtime("connect_dm_message_edited", payload, user=recipient, after_commit=True)
 
 
-def notify_dm_thread_pin_changed(thread_doc, message_doc, actor):
-	"""Live-pushes a pin/unpin change to the one other DM participant."""
-	recipient = thread_doc.user_b if thread_doc.user_a == actor else thread_doc.user_a
-	payload = {
-		"thread": thread_doc.name,
-		"pinned_message": message_doc.name if message_doc else None,
-		"sender": message_doc.sender if message_doc else None,
-		"message_type": message_doc.message_type if message_doc else None,
-		"content": message_doc.content if message_doc else None,
-		"file_name": message_doc.file_name if message_doc else None,
+def _pin_payload(thread, message_doc, is_pinned):
+	"""What a pin/unpin pushes to the other members. Clients refetch the pinned list; the message fields are
+	kept for pages that only render a single pinned banner from the event."""
+	return {
+		"thread": thread,
+		"message": message_doc.name,
+		"is_pinned": int(is_pinned),
+		"pinned_message": message_doc.name if is_pinned else None,
+		"sender": message_doc.sender if is_pinned else None,
+		"message_type": message_doc.message_type if is_pinned else None,
+		"content": message_doc.content if is_pinned else None,
+		"file_name": message_doc.file_name if is_pinned else None,
 	}
-	frappe.publish_realtime("connect_dm_thread_pin_changed", payload, user=recipient, after_commit=True)
 
 
-def notify_thread_pin_changed(thread_doc, message_doc, actor):
+def notify_dm_message_pin_changed(message_doc, actor, is_pinned):
+	"""Live-pushes a pin/unpin change to the one other DM participant."""
+	pair = frappe.db.get_value("Connect DM Thread", message_doc.dm_thread, ["user_a", "user_b"], as_dict=True)
+	if not pair:
+		return
+	recipient = pair.user_b if pair.user_a == actor else pair.user_a
+	frappe.publish_realtime(
+		"connect_dm_thread_pin_changed",
+		_pin_payload(message_doc.dm_thread, message_doc, is_pinned),
+		user=recipient,
+		after_commit=True,
+	)
+
+
+def notify_message_pin_changed(message_doc, actor, is_pinned):
 	"""Live-pushes a pin/unpin change to every other active thread member."""
 	members = frappe.get_all(
 		"Connect Thread Member",
-		filters={"thread": thread_doc.name, "is_removed": 0, "user": ["!=", actor]},
+		filters={"thread": message_doc.thread, "is_removed": 0, "user": ["!=", actor]},
 		pluck="user",
 	)
-	if not members:
-		return
-	payload = {
-		"thread": thread_doc.name,
-		"pinned_message": message_doc.name if message_doc else None,
-		"sender": message_doc.sender if message_doc else None,
-		"message_type": message_doc.message_type if message_doc else None,
-		"content": message_doc.content if message_doc else None,
-		"file_name": message_doc.file_name if message_doc else None,
-	}
+	payload = _pin_payload(message_doc.thread, message_doc, is_pinned)
 	for member in members:
 		frappe.publish_realtime("connect_thread_pin_changed", payload, user=member, after_commit=True)
