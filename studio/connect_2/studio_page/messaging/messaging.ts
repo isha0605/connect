@@ -1,5 +1,6 @@
 import { ref, computed, watch, onScopeDispose, nextTick } from "vue"
 import { toast, call, useFileUpload, initSocket, setConfig } from "frappe-ui"
+import { EMOJI_GROUPS } from "./emojis"
 
 export default function setup(context) {
 	// ---- State ----
@@ -240,6 +241,7 @@ export default function setup(context) {
 				: []
 			context.dmMessages.filters = { dm_thread: name }
 			context.dmMessages.reload()
+			loadReactions(name, "dm")
 			call("connect.api.dm.mark_dm_thread_read", { thread: name })
 				.then(() => context.myDMThreads.reload())
 				.catch(() => {})
@@ -249,6 +251,7 @@ export default function setup(context) {
 
 		context.messages.filters = { thread: name }
 		context.messages.reload()
+		loadReactions(name, "company")
 		context.threadMembers.filters = { thread: name }
 		context.threadMembers.reload()
 		context.threadAdmins.params = { thread: name }
@@ -326,6 +329,15 @@ export default function setup(context) {
 	}
 	socket.on("connect_message_edited", handleMessageEdited)
 	onScopeDispose(() => socket.off("connect_message_edited", handleMessageEdited))
+
+	// Someone else reacted/un-reacted in a conversation — refetch the chips if it's the open one.
+	function handleReactionChanged(payload) {
+		if (payload.thread === selectedThread.value && !!payload.is_dm === (selectedThreadType.value === "dm")) {
+			context.messageReactions.reload()
+		}
+	}
+	socket.on("connect_message_reaction", handleReactionChanged)
+	onScopeDispose(() => socket.off("connect_message_reaction", handleReactionChanged))
 
 	// The pin/unpin call itself already updates the acting tab's own `pinnedMessage` — this is
 	// purely for everyone else's open tabs, and carries the pinned message's fields directly in
@@ -831,14 +843,11 @@ export default function setup(context) {
 			/(^|\s)@([^\s@]+)/g,
 			(_match, prefix, name) => prefix + '<span style="font-weight: 600">@' + name + "</span>",
 		)
-		const time = item ? formatMessageTime(item) : ""
-		const timeText = item && item.is_edited ? "Edited · " + time : time
-		const timeSpan =
+		if (!item || !item.is_edited) return withMentions
+		const editedSpan =
 			'<span style="float: right; margin-left: 8px; margin-top: 6px; margin-right: -6px; font-size: 9px; ' +
-			'line-height: 12px; color: var(--ink-gray-5); white-space: nowrap;">' +
-			timeText +
-			"</span>"
-		return withMentions + timeSpan
+			'line-height: 12px; color: var(--ink-gray-5); white-space: nowrap;">Edited</span>'
+		return withMentions + editedSpan
 	}
 
 	// ---- Requirement cards ----
@@ -1455,6 +1464,218 @@ export default function setup(context) {
 				onClick: () => togglePinMessage(item),
 			},
 		]
+	}
+
+	// ---- Hover toolbar (Raven-style) ----
+	// Name of the message whose "more" menu or emoji picker is open. Both are portaled out of the row, so
+	// the row loses :hover the moment the pointer enters them — this keeps the toolbar (and row
+	// highlight) shown for that one message until the menu closes.
+	const messageMenuOpenFor = ref(null)
+
+	function messageCopyText(item) {
+		if (item.message_type === "Requirement") return requirementDetailsText(item)
+		if (item.message_type === "Text") return item.content || ""
+		return ""
+	}
+
+	async function copyMessage(item) {
+		try {
+			await navigator.clipboard.writeText(messageCopyText(item))
+			toast({ title: "Copied to clipboard", icon: "check", iconClasses: "text-green-600" })
+		} catch (e) {
+			toast({ title: "Could not copy", text: e.message, icon: "x-circle", iconClasses: "text-red-600" })
+		}
+	}
+
+	// The toolbar's "..." menu: the same four actions for everyone, plus Edit/Delete on your own
+	// messages. File clusters can't be replied to, pinned or copied, so they only get Delete (yours).
+	function messageMoreOptions(item) {
+		if (!item) return []
+		const mine = isMine(item.sender)
+		if (item.isFileCluster) {
+			return mine ? [{ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick: () => confirmDeleteCluster(item) }] : []
+		}
+		const options = [
+			{ label: "Reply", icon: "lucide-reply", onClick: () => startReply(item) },
+		]
+		if (canForwardMessage(item)) {
+			options.push({ label: "Forward", icon: "lucide-forward", onClick: () => openForwardDialog(item) })
+		}
+		if (messageCopyText(item)) options.push({ label: "Copy", icon: "lucide-copy", onClick: () => copyMessage(item) })
+		options.push({
+			label: isPinned(item) ? "Unpin" : "Pin",
+			icon: isPinned(item) ? "lucide-pin-off" : "lucide-pin",
+			onClick: () => togglePinMessage(item),
+		})
+		if (mine) {
+			if (item.message_type === "Text") {
+				options.push({ label: "Edit", icon: "lucide-pencil", onClick: () => confirmEditMessage(item) })
+			}
+			options.push({ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick: () => confirmDeleteMessage(item) })
+		}
+		return options
+	}
+
+	// ---- Reactions ----
+	// One call loads every reaction in the open conversation (connect.api.messages.get_reactions) and the
+	// chips under each message are grouped from that flat list here. File clusters can't be reacted to.
+	// The picker is a Popover holding a search box and a grid of emoji. A message's Popover can't hand the
+	// message to the grid's click handlers (they run inside two nested repeaters), so the open picker's
+	// message lives here instead.
+	const reactionPickerMessage = ref(null)
+	const emojiSearchQuery = ref("")
+
+	function setReactionPicker(item, open) {
+		reactionPickerMessage.value = open ? item : null
+		messageMenuOpenFor.value = open ? item.name : null
+		emojiSearchQuery.value = ""
+	}
+
+	// The emoji groups still matching the search box; a group with no match drops out.
+	function emojiPickerSections() {
+		const query = emojiSearchQuery.value.trim().toLowerCase()
+		return EMOJI_GROUPS.map((g) => ({
+			key: g.group,
+			group: g.group,
+			emojis: g.options
+				.filter((o) => !query || o.label.toLowerCase().includes(query))
+				.map((o) => ({ key: o.value, emoji: o.value })),
+		})).filter((g) => g.emojis.length)
+	}
+
+	function pickReaction(emoji) {
+		const item = reactionPickerMessage.value
+		if (!item) return
+		setReactionPicker(item, false)
+		toggleReaction(item, emoji)
+	}
+
+	function loadReactions(thread, convType) {
+		context.messageReactions.data = []
+		context.messageReactions.params = { thread, is_dm: convType === "dm" ? 1 : 0 }
+		context.messageReactions.reload()
+	}
+
+	// One chip per distinct emoji on a message, in the order the emojis were first used. `item` rides along
+	// on each chip because a chip's own click handler only sees the chip, not the message it belongs to.
+	function messageReactionGroups(item) {
+		const groups = new Map()
+		for (const reaction of context.messageReactions.data || []) {
+			if (reaction.message !== item.name) continue
+			let group = groups.get(reaction.emoji)
+			if (!group) {
+				group = { key: reaction.emoji, emoji: reaction.emoji, count: 0, mine: false, names: [], item }
+				groups.set(reaction.emoji, group)
+			}
+			group.count += 1
+			if (isMine(reaction.user)) {
+				group.mine = true
+				group.names.unshift("You")
+			} else {
+				group.names.push(reaction.full_name ? capitalizeName(reaction.full_name) : memberDisplayName(reaction.user))
+			}
+		}
+		return [...groups.values()].map((g) => ({ ...g, tooltip: g.names.join(", ") + " reacted with " + g.emoji }))
+	}
+
+	async function toggleReaction(item, emoji) {
+		if (!item || item.isFileCluster || !emoji) return
+		try {
+			await call("connect.api.messages.toggle_reaction", {
+				message: item.name,
+				is_dm: selectedThreadType.value === "dm" ? 1 : 0,
+				emoji,
+			})
+			context.messageReactions.reload()
+		} catch (e) {
+			toast({
+				title: "Could not add reaction",
+				text: permissionAwareErrorText(e, "You can't react in this conversation."),
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		}
+	}
+
+	// ---- Forward message ----
+	// Which conversations can receive a forward is decided server-side (see
+	// connect.api.messages.get_forward_targets: Write access, not closed, not removed). Names and
+	// avatars come from the unified inbox list the page already has, so the dialog only needs the
+	// eligible names back. Requirement/booking cards and file clusters aren't forwardable.
+	const showForwardDialog = ref(false)
+	const messageToForward = ref(null)
+	const forwardTargets = ref({ company: [], dm: [] })
+	const loadingForwardTargets = ref(false)
+	const forwardSearchQuery = ref("")
+	const forwardTarget = ref(null)
+	const forwardingMessage = ref(false)
+
+	function canForwardMessage(item) {
+		return !!item && !item.isFileCluster && (item.message_type === "Text" || item.message_type === "File")
+	}
+
+	async function openForwardDialog(item) {
+		messageToForward.value = item
+		forwardSearchQuery.value = ""
+		forwardTarget.value = null
+		forwardTargets.value = { company: [], dm: [] }
+		loadingForwardTargets.value = true
+		showForwardDialog.value = true
+		try {
+			forwardTargets.value = await call("connect.api.messages.get_forward_targets")
+		} catch (e) {
+			showForwardDialog.value = false
+			toast({
+				title: "Could not load conversations",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			loadingForwardTargets.value = false
+		}
+	}
+
+	// The eligible conversations minus the one the message is already in, filtered by the dialog's search box.
+	function forwardThreadList() {
+		const companyNames = new Set(forwardTargets.value.company)
+		const dmNames = new Set(forwardTargets.value.dm)
+		const query = forwardSearchQuery.value.trim().toLowerCase()
+		return unifiedThreadList()
+			.filter((t) => (t.convType === "dm" ? dmNames.has(t.name) : companyNames.has(t.name)))
+			.filter((t) => !(t.name === selectedThread.value && t.convType === selectedThreadType.value))
+			.filter((t) => !query || (otherPartyName(t) || "").toLowerCase().includes(query))
+			.map((t) => ({ ...t, key: t.convType + ":" + t.name }))
+	}
+
+	async function forwardMessage() {
+		const item = messageToForward.value
+		const target = forwardTarget.value
+		if (!item || !target || forwardingMessage.value) return
+		forwardingMessage.value = true
+		try {
+			await call("connect.api.messages.forward_message", {
+				message: item.name,
+				source_is_dm: selectedThreadType.value === "dm" ? 1 : 0,
+				target_thread: target.name,
+				target_is_dm: target.convType === "dm" ? 1 : 0,
+			})
+			showForwardDialog.value = false
+			messageToForward.value = null
+			forwardTarget.value = null
+			toast({ title: "Message forwarded", icon: "check", iconClasses: "text-green-600" })
+			context.myThreads.reload()
+			context.myDMThreads.reload()
+		} catch (e) {
+			toast({
+				title: "Could not forward message",
+				text: permissionAwareErrorText(e, "You can't post in that conversation."),
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			forwardingMessage.value = false
+		}
 	}
 
 	const showDeleteMessageDialog = ref(false)
@@ -2123,10 +2344,6 @@ export default function setup(context) {
 		return !!side && side !== myOwnSide()
 	}
 
-	function senderSideBadgeTheme(item) {
-		return senderSide(item) === "Customer" ? "amber" : "violet"
-	}
-
 	// messages are grouped into per-day sections (see groupedMessages) so `index` here is local
 	// to the current day's group, not the flat position in context.messages.data — the first
 	// message of a day is never grouped, everything after that is looked up by its global
@@ -2181,7 +2398,7 @@ export default function setup(context) {
 		const result = []
 		for (const item of items) {
 			const prev = result[result.length - 1]
-			const isFile = item.message_type === "File"
+			const isFile = item.message_type === "File" && !item.is_forwarded
 			if (
 				isFile &&
 				prev &&
@@ -2625,6 +2842,24 @@ export default function setup(context) {
 		addTeamMember,
 		messageActionsOptions,
 		otherMessageActionsOptions,
+		messageMenuOpenFor,
+		reactionPickerMessage,
+		emojiSearchQuery,
+		setReactionPicker,
+		emojiPickerSections,
+		pickReaction,
+		messageReactionGroups,
+		toggleReaction,
+		messageMoreOptions,
+		showForwardDialog,
+		messageToForward,
+		loadingForwardTargets,
+		forwardSearchQuery,
+		forwardTarget,
+		forwardingMessage,
+		forwardThreadList,
+		openForwardDialog,
+		forwardMessage,
 		showDeleteMessageDialog,
 		messageToDelete,
 		deletingMessage,
@@ -2660,7 +2895,6 @@ export default function setup(context) {
 		isMine,
 		senderSide,
 		showSenderSideBadge,
-		senderSideBadgeTheme,
 		isGrouped,
 		groupedMessages,
 		formatMessageTime,
