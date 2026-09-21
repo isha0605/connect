@@ -566,7 +566,8 @@ export default function setup(context) {
 	function responseTimeLabel() {
 		const p = context.partnerInfo.data
 		if (!p || !p.response_time_hours) return ""
-		return "Typically " + p.response_time_hours + "h"
+		const hours = p.response_time_hours
+		return "Typically replies in " + hours + (hours === 1 ? " hr" : " hrs")
 	}
 
 	// a trailing "@partial-name" at the very end of the draft triggers the picker — mentions
