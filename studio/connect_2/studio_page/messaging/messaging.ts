@@ -2839,15 +2839,108 @@ export default function setup(context) {
 		highlightedMessage.value = row.name
 		searchResultOpen.value = true
 		if (!(selectedThread.value === thread.name && selectedThreadType.value === thread.convType)) selectThread(thread)
+		await scrollToMessage(row.name)
+	}
+
+	// Waits for the conversation's messages to render (up to ~2s), then scrolls the message into view.
+	async function scrollToMessage(name) {
 		for (let attempt = 0; attempt < 20; attempt++) {
 			await new Promise((resolve) => setTimeout(resolve, 100))
-			const el = document.querySelector(`[data-message-id="${row.name}"]`)
+			const el = document.querySelector(`[data-message-id="${name}"]`)
 			if (el) {
 				el.scrollIntoView({ behavior: "smooth", block: "center" })
 				return
 			}
 		}
 	}
+
+	// ---- URL state ----
+	// The open conversation, the search page and the matched message all live in the query string, so a
+	// pasted link (or a reload, or Back/Forward) lands on the same view:
+	//   ?thread=<name>                  a company thread (also what notification emails link to)
+	//   ?thread=<name>&type=dm          a DM
+	//   ?search=<text>[&tab=files|links]            the search page
+	//   ?search=<text>&thread=..&message=<name>     a search result opened in the right pane
+	// Path-only changes are what make Studio reload a page, so touching just the query string is safe.
+	function urlStateParams() {
+		const params = new URLSearchParams()
+		const searching = showSearchPage.value
+		// While searching with nothing picked, the open conversation is hidden behind the placeholder, so it
+		// isn't part of the link.
+		if (selectedThread.value && (!searching || searchResultOpen.value)) {
+			params.set("thread", selectedThread.value)
+			if (selectedThreadType.value === "dm") params.set("type", "dm")
+		}
+		if (searching) {
+			params.set("search", messageSearchQuery.value.trim())
+			if (messageSearchTab.value !== "messages") params.set("tab", messageSearchTab.value)
+		}
+		if (highlightedMessage.value) params.set("message", highlightedMessage.value)
+		return params
+	}
+
+	let urlSyncedOnce = false
+	watch(
+		[selectedThread, selectedThreadType, showSearchPage, searchResultOpen, messageSearchQuery, messageSearchTab, highlightedMessage],
+		(now, before) => {
+			const query = urlStateParams().toString()
+			if (query === window.location.search.replace(/^\?/, "")) return
+			const url = window.location.pathname + (query ? "?" + query : "")
+			// The first sync (the initial auto-open) and typing/tab changes rewrite the current entry; picking
+			// a conversation or a result adds one so Back steps through them.
+			const onlyTyping = before && now.every((value, i) => i === 4 || i === 5 || value === before[i])
+			if (!urlSyncedOnce || onlyTyping) window.history.replaceState(window.history.state, "", url)
+			else window.history.pushState(window.history.state, "", url)
+			urlSyncedOnce = true
+		},
+	)
+
+	// Puts the page into whatever the URL describes. Returns false when it names a DM but the inbox
+	// hasn't loaded yet, so the caller can try again once it has.
+	function applyUrlState(params) {
+		const requested = params.get("thread")
+		const convType = params.get("type") === "dm" ? "dm" : "company"
+		const message = params.get("message") || ""
+		const searching = params.has("search")
+
+		if (requested && !(selectedThread.value === requested && selectedThreadType.value === convType)) {
+			const found = unifiedThreadList().find((t) => t.name === requested && t.convType === convType)
+			if (found) selectThread(found)
+			else if (convType === "dm") return false
+			else selectThread(requested)
+		}
+
+		if (searching) {
+			messageSearchTab.value = ["files", "links"].includes(params.get("tab")) ? params.get("tab") : "messages"
+			openMessageSearch("all", params.get("search"))
+			messageSearchQuery.value = (params.get("search") || "").trim()
+			if (requested && message) {
+				selectedSearchKey.value = convType + ":" + message
+				highlightedMessage.value = message
+				searchResultOpen.value = true
+				scrollToMessage(message)
+			}
+			return true
+		}
+
+		if (showSearchPage.value) closeSearchPage()
+		if (message) {
+			// A shared link to a message: flash the highlight, then let it go (and drop it from the URL).
+			highlightedMessage.value = message
+			scrollToMessage(message)
+			setTimeout(() => {
+				if (highlightedMessage.value === message) highlightedMessage.value = ""
+			}, 3000)
+		}
+		return true
+	}
+
+	// Back/Forward: re-apply the URL that became current.
+	function handlePopState() {
+		applyUrlState(new URLSearchParams(window.location.search))
+	}
+	window.addEventListener("popstate", handlePopState)
+	onScopeDispose(() => window.removeEventListener("popstate", handlePopState))
 
 	// Mirrors the media search box's focus treatment (see media-search-box's CSS) on the
 	// composer: the pill is a container wrapping a ghost TextInput, so there's no single
@@ -2980,6 +3073,17 @@ export default function setup(context) {
 			if (!selectedThread.value) {
 				const params = new URLSearchParams(window.location.search)
 				const requested = params.get("thread")
+				// A DM, ?search= or ?message= link is applied by applyUrlState once both inbox lists have loaded (a DM
+				// is looked up there rather than by name, and search results are labelled from it). Something is
+				// always selected afterwards, so this branch doesn't fire again on the next list reload.
+				if (params.get("type") === "dm" || params.has("search") || params.get("message")) {
+					if (!(context.myThreads?.data && context.myDMThreads?.data)) return
+					applyUrlState(params)
+					if (!selectedThread.value && list.length && (params.has("search") || window.innerWidth >= 576)) {
+						selectThread(list[0])
+					}
+					return
+				}
 				if (requested) {
 					selectThread(requested)
 					// set by start_partner_thread's is_new_thread — a brand-new Contact-Partner thread
