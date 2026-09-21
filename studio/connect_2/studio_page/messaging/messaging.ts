@@ -2779,31 +2779,11 @@ export default function setup(context) {
 		mediaSortAscending.value = !mediaSortAscending.value
 	}
 
-	// The Files/Links search box is a raw HTML block (see media-search-box in the JSON) rather
-	// than frappe-ui's TextInput — that component never exposes its actual <input> to outside
-	// styling, only a wrapper div, so there's no way to get the icon to render inside the same
-	// box as the text. A plain <input> lets a real `<style>` block own :hover/:focus directly.
-	// Since v-html renders it outside Vue's reactivity, it's wired to app state by hand: typing
-	// calls a function stashed on `window` (inline `oninput` only has access to global scope),
-	// and switching tabs reaches back into the DOM to clear/relabel it.
-	function updateMediaSearchQuery(value) {
-		mediaSearchQuery.value = value
-	}
-	if (typeof window !== "undefined") {
-		window.__connectMediaSearchInput = updateMediaSearchQuery
-	}
-
-	// a leftover query from the Files tab would otherwise silently filter out every
-	// link (and vice versa) since both tabs share one search box
+	// The Files/Links search box is a frappe-ui TextInput bound to mediaSearchQuery (see media-search-box in the
+	// JSON). A leftover query from the Files tab would otherwise silently filter out every link (and vice
+	// versa) since both tabs share one search box, so switching tabs clears it.
 	watch(mediaTab, () => {
 		mediaSearchQuery.value = ""
-		nextTick(() => {
-			const el = document.getElementById("cnct-media-search-input")
-			if (el) {
-				el.value = ""
-				el.placeholder = mediaTab.value === "Files" ? "Search files..." : "Search links..."
-			}
-		})
 	})
 
 	// Strips sentence punctuation a URL regex has no way to distinguish from part of the URL
