@@ -2679,16 +2679,22 @@ export default function setup(context) {
 		else openMessageSearch(item.kind === "search-current" ? "current" : "all", query)
 	}
 
-	// ---- Message search ----
-	// Searches text and file names in every conversation the caller can read (or just the open one), via
-	// connect.api.messages.search_messages. Results carry a conversation label and open that conversation
-	// on click, scrolling to the message when it's in the loaded page of messages.
-	const showMessageSearch = ref(false)
+	// ---- Message search page ----
+	// A Raven-style search view: while showSearchPage is on, the left pane swaps the inbox for a search box,
+	// tabs (Messages / Files / Links) and the results, and the right pane shows the chosen conversation with
+	// the matched message highlighted (or a "select a result" placeholder until one is chosen). Results come
+	// from connect.api.messages.search_messages, across every conversation the caller can read or just the
+	// open one.
+	const showSearchPage = ref(false)
+	const searchResultOpen = ref(false)
+	const highlightedMessage = ref("")
+	const selectedSearchKey = ref("")
 	const messageSearchQuery = ref("")
+	const messageSearchTab = ref("messages")
 	const messageSearchScope = ref("all")
 	const messageSearchResults = ref([])
 	const searchingMessages = ref(false)
-	// Captured when the dialog opens so "this conversation" keeps meaning the same one even if the
+	// Captured when the search opens so "this conversation" keeps meaning the same one even if the
 	// selection changes underneath it.
 	const messageSearchConversation = ref(null)
 	let messageSearchTimer = null
@@ -2701,24 +2707,49 @@ export default function setup(context) {
 			: null
 		messageSearchConversation.value = thread
 		messageSearchScope.value = scope === "current" && thread ? "current" : "all"
-		messageSearchQuery.value = (query || "").trim()
-		messageSearchResults.value = []
-		showMessageSearch.value = true
+		// Re-opening (Ctrl+G while already searching) keeps what's typed unless the palette passed something.
+		if (query || !showSearchPage.value) messageSearchQuery.value = (query || "").trim()
+		showSearchPage.value = true
+		searchResultOpen.value = false
+		highlightedMessage.value = ""
+		selectedSearchKey.value = ""
 		runMessageSearch()
+		setTimeout(() => {
+			const el = document.querySelector('[data-component-id="message-search-input"]')
+			;(el && el.tagName === "INPUT" ? el : el?.querySelector("input"))?.focus()
+		}, 60)
 	}
 
-	function messageSearchScopeLabel() {
+	// Leaves the search view but stays in whichever conversation was last opened from it.
+	function closeSearchPage() {
+		showSearchPage.value = false
+		searchResultOpen.value = false
+		highlightedMessage.value = ""
+		selectedSearchKey.value = ""
+	}
+
+	function clearMessageSearchQuery() {
+		messageSearchQuery.value = ""
+	}
+
+	// The "Filters" menu: search everywhere, or only inside the conversation that was open.
+	function messageSearchFilterOptions() {
 		const conversation = messageSearchConversation.value
-		return conversation ? "In " + (conversation.label || "this conversation") : ""
+		const scopeOption = (scope, label) => ({
+			label,
+			icon: messageSearchScope.value === scope ? "lucide-check" : undefined,
+			onClick: () => {
+				messageSearchScope.value = scope
+				runMessageSearch()
+			},
+		})
+		const options = [scopeOption("all", "All conversations")]
+		if (conversation) options.push(scopeOption("current", "In " + (conversation.label || "this conversation")))
+		return options
 	}
 
-	function setMessageSearchScope(scope) {
-		messageSearchScope.value = scope
-		runMessageSearch()
-	}
-
-	// The dialog's search box is bound straight to messageSearchQuery; typing re-runs the search after a pause.
-	watch(messageSearchQuery, () => {
+	// Typing (or switching tab) re-runs the search after a pause.
+	watch([messageSearchQuery, messageSearchTab], () => {
 		clearTimeout(messageSearchTimer)
 		messageSearchTimer = setTimeout(runMessageSearch, 250)
 	})
@@ -2735,7 +2766,11 @@ export default function setup(context) {
 		let html = ""
 		let from = 0
 		for (let at = lower.indexOf(needle); at !== -1; at = lower.indexOf(needle, from)) {
-			html += escape(source.slice(from, at)) + '<mark style="background: var(--surface-amber-2); color: inherit; border-radius: 2px;">' + escape(source.slice(at, at + needle.length)) + "</mark>"
+			html +=
+				escape(source.slice(from, at)) +
+				'<mark style="background: var(--surface-amber-2); color: inherit; border-radius: 2px;">' +
+				escape(source.slice(at, at + needle.length)) +
+				"</mark>"
 			from = at + needle.length
 		}
 		return html + escape(source.slice(from))
@@ -2748,9 +2783,11 @@ export default function setup(context) {
 			const convType = r.is_dm ? "dm" : "company"
 			const thread = threads.find((t) => t.name === r.thread && t.convType === convType)
 			const body = r.message_type === "File" ? "📎 " + (r.file_name || "Attachment") : r.content
+			const key = convType + ":" + r.name
 			return {
 				...r,
-				key: convType + ":" + r.name,
+				key,
+				selected: key === selectedSearchKey.value,
 				convType,
 				conversation: thread ? otherPartyName(thread) : "",
 				senderName: r.sender_full_name ? capitalizeName(r.sender_full_name) : memberDisplayName(r.sender),
@@ -2763,7 +2800,7 @@ export default function setup(context) {
 	function messageSearchStatus() {
 		if (messageSearchQuery.value.trim().length < MIN_MESSAGE_SEARCH_LENGTH) return "Type at least 2 characters to search."
 		if (searchingMessages.value) return "Searching..."
-		if (!messageSearchResults.value.length) return "No messages found."
+		if (!messageSearchResults.value.length) return "No results found."
 		return ""
 	}
 
@@ -2776,7 +2813,7 @@ export default function setup(context) {
 			return
 		}
 		searchingMessages.value = true
-		const params = { query }
+		const params = { query, kind: messageSearchTab.value }
 		const conversation = messageSearchConversation.value
 		if (messageSearchScope.value === "current" && conversation) {
 			params.thread = conversation.name
@@ -2792,12 +2829,15 @@ export default function setup(context) {
 		}
 	}
 
-	// Opens the result's conversation and, once its messages have rendered, scrolls to the message. Only
-	// the loaded page of messages is on screen, so an older hit just opens the conversation.
+	// Shows the result's conversation in the right pane and, once its messages have rendered, scrolls to the
+	// message (which the message row highlights via highlightedMessage). Only the loaded page of messages is
+	// on screen, so an older hit just opens the conversation.
 	async function openMessageSearchResult(row) {
 		const thread = unifiedThreadList().find((t) => t.name === row.thread && t.convType === row.convType)
-		showMessageSearch.value = false
 		if (!thread) return
+		selectedSearchKey.value = row.key
+		highlightedMessage.value = row.name
+		searchResultOpen.value = true
 		if (!(selectedThread.value === thread.name && selectedThreadType.value === thread.convType)) selectThread(thread)
 		for (let attempt = 0; attempt < 20; attempt++) {
 			await new Promise((resolve) => setTimeout(resolve, 100))
@@ -3200,16 +3240,18 @@ export default function setup(context) {
 		shortcutModifier,
 		handleCommandKeydown,
 		selectCommandItem,
-		showMessageSearch,
+		showSearchPage,
+		searchResultOpen,
+		highlightedMessage,
 		messageSearchQuery,
-		messageSearchScope,
-		searchingMessages,
+		messageSearchTab,
+		messageSearchConversation,
 		messageSearchRows,
 		messageSearchStatus,
-		messageSearchScopeLabel,
-		messageSearchConversation,
+		messageSearchFilterOptions,
 		openMessageSearch,
-		setMessageSearchScope,
+		closeSearchPage,
+		clearMessageSearchQuery,
 		openMessageSearchResult,
 		threadLinks,
 		threadFiles,
