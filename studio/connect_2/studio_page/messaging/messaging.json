@@ -11704,8 +11704,8 @@
               {
                "baseStyles": {
                 "color": "var(--ink-gray-5)",
-                "display": "block",
-                "padding": "12px 12px 4px"
+                "display": "{{ dataItem.groupTitle ? 'block' : 'none' }}",
+                "padding": "{{ dataItem.groupTitle ? '12px 12px 4px' : '0px' }}"
                },
                "children": [],
                "classes": [],
@@ -11841,23 +11841,341 @@
         },
         {
          "baseStyles": {
+          "alignItems": "center",
           "borderTop": "1px solid var(--outline-gray-2)",
-          "padding": "8px 14px"
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "16px",
+          "justifyContent": "space-between",
+          "padding": "8px 12px"
+         },
+         "mobileStyles": {
+          "display": "none"
          },
          "children": [
           {
            "baseStyles": {
-            "color": "var(--ink-gray-5)"
+            "alignItems": "center",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px"
            },
-           "children": [],
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "row",
+              "gap": "4px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "var(--surface-gray-2)",
+                "borderRadius": "6px",
+                "boxSizing": "border-box",
+                "color": "var(--ink-gray-6)",
+                "display": "flex",
+                "flexShrink": "0",
+                "height": "24px",
+                "justifyContent": "center",
+                "width": "24px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "height": "14px",
+                  "width": "14px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-key-down-icon",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "name": "arrow-down"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "command-key-down",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "var(--surface-gray-2)",
+                "borderRadius": "6px",
+                "boxSizing": "border-box",
+                "color": "var(--ink-gray-6)",
+                "display": "flex",
+                "flexShrink": "0",
+                "height": "24px",
+                "justifyContent": "center",
+                "width": "24px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "height": "14px",
+                  "width": "14px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-key-up-icon",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "name": "arrow-up"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "command-key-up",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "command-nav-keys",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)",
+              "whiteSpace": "nowrap"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-hint-navigate",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "to navigate"
+             }
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "backgroundColor": "var(--surface-gray-2)",
+              "borderRadius": "6px",
+              "boxSizing": "border-box",
+              "color": "var(--ink-gray-6)",
+              "display": "flex",
+              "flexShrink": "0",
+              "height": "24px",
+              "justifyContent": "center",
+              "width": "24px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "height": "14px",
+                "width": "14px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "command-key-enter-icon",
+               "componentName": "FeatherIcon",
+               "componentProps": {
+                "name": "corner-down-left"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "command-key-enter",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)",
+              "whiteSpace": "nowrap"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-hint-select",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "to select"
+             }
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "backgroundColor": "var(--surface-gray-2)",
+              "borderRadius": "6px",
+              "boxSizing": "border-box",
+              "color": "var(--ink-gray-6)",
+              "display": "flex",
+              "flexShrink": "0",
+              "height": "24px",
+              "justifyContent": "center",
+              "padding": "0px 6px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "fontSize": "12px",
+                "lineHeight": "16px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "command-key-esc-text",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "esc"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "command-key-esc",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)",
+              "whiteSpace": "nowrap"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-hint-close",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "to close"
+             }
+            }
+           ],
            "classes": [],
-           "componentId": "command-hint",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "\u2191\u2193 navigate  \u00b7  \u21b5 select  \u00b7  esc close"
-           }
+           "componentId": "command-hints-left",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "backgroundColor": "var(--surface-gray-2)",
+              "borderRadius": "6px",
+              "boxSizing": "border-box",
+              "color": "var(--ink-gray-6)",
+              "display": "flex",
+              "flexShrink": "0",
+              "height": "24px",
+              "justifyContent": "center",
+              "padding": "0px 6px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "fontSize": "12px",
+                "lineHeight": "16px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "command-key-g-text",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ shortcutModifier() }} G"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "command-key-g",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)",
+              "whiteSpace": "nowrap"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-hint-search",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "to search"
+             }
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "backgroundColor": "var(--surface-gray-2)",
+              "borderRadius": "6px",
+              "boxSizing": "border-box",
+              "color": "var(--ink-gray-6)",
+              "display": "flex",
+              "flexShrink": "0",
+              "height": "24px",
+              "justifyContent": "center",
+              "padding": "0px 6px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "fontSize": "12px",
+                "lineHeight": "16px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "command-key-k-text",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ shortcutModifier() }} K"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "command-key-k",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)",
+              "whiteSpace": "nowrap"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-hint-open",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "to open"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "command-hints-right",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],
@@ -23895,8 +24213,8 @@
               {
                "baseStyles": {
                 "color": "var(--ink-gray-5)",
-                "display": "block",
-                "padding": "12px 12px 4px"
+                "display": "{{ dataItem.groupTitle ? 'block' : 'none' }}",
+                "padding": "{{ dataItem.groupTitle ? '12px 12px 4px' : '0px' }}"
                },
                "children": [],
                "classes": [],
@@ -24032,23 +24350,341 @@
         },
         {
          "baseStyles": {
+          "alignItems": "center",
           "borderTop": "1px solid var(--outline-gray-2)",
-          "padding": "8px 14px"
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "16px",
+          "justifyContent": "space-between",
+          "padding": "8px 12px"
+         },
+         "mobileStyles": {
+          "display": "none"
          },
          "children": [
           {
            "baseStyles": {
-            "color": "var(--ink-gray-5)"
+            "alignItems": "center",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px"
            },
-           "children": [],
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "row",
+              "gap": "4px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "var(--surface-gray-2)",
+                "borderRadius": "6px",
+                "boxSizing": "border-box",
+                "color": "var(--ink-gray-6)",
+                "display": "flex",
+                "flexShrink": "0",
+                "height": "24px",
+                "justifyContent": "center",
+                "width": "24px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "height": "14px",
+                  "width": "14px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-key-down-icon",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "name": "arrow-down"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "command-key-down",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "var(--surface-gray-2)",
+                "borderRadius": "6px",
+                "boxSizing": "border-box",
+                "color": "var(--ink-gray-6)",
+                "display": "flex",
+                "flexShrink": "0",
+                "height": "24px",
+                "justifyContent": "center",
+                "width": "24px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "height": "14px",
+                  "width": "14px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "command-key-up-icon",
+                 "componentName": "FeatherIcon",
+                 "componentProps": {
+                  "name": "arrow-up"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "command-key-up",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "command-nav-keys",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)",
+              "whiteSpace": "nowrap"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-hint-navigate",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "to navigate"
+             }
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "backgroundColor": "var(--surface-gray-2)",
+              "borderRadius": "6px",
+              "boxSizing": "border-box",
+              "color": "var(--ink-gray-6)",
+              "display": "flex",
+              "flexShrink": "0",
+              "height": "24px",
+              "justifyContent": "center",
+              "width": "24px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "height": "14px",
+                "width": "14px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "command-key-enter-icon",
+               "componentName": "FeatherIcon",
+               "componentProps": {
+                "name": "corner-down-left"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "command-key-enter",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)",
+              "whiteSpace": "nowrap"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-hint-select",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "to select"
+             }
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "backgroundColor": "var(--surface-gray-2)",
+              "borderRadius": "6px",
+              "boxSizing": "border-box",
+              "color": "var(--ink-gray-6)",
+              "display": "flex",
+              "flexShrink": "0",
+              "height": "24px",
+              "justifyContent": "center",
+              "padding": "0px 6px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "fontSize": "12px",
+                "lineHeight": "16px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "command-key-esc-text",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "esc"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "command-key-esc",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)",
+              "whiteSpace": "nowrap"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-hint-close",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "to close"
+             }
+            }
+           ],
            "classes": [],
-           "componentId": "command-hint",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "\u2191\u2193 navigate  \u00b7  \u21b5 select  \u00b7  esc close"
-           }
+           "componentId": "command-hints-left",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "backgroundColor": "var(--surface-gray-2)",
+              "borderRadius": "6px",
+              "boxSizing": "border-box",
+              "color": "var(--ink-gray-6)",
+              "display": "flex",
+              "flexShrink": "0",
+              "height": "24px",
+              "justifyContent": "center",
+              "padding": "0px 6px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "fontSize": "12px",
+                "lineHeight": "16px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "command-key-g-text",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ shortcutModifier() }} G"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "command-key-g",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)",
+              "whiteSpace": "nowrap"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-hint-search",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "to search"
+             }
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "backgroundColor": "var(--surface-gray-2)",
+              "borderRadius": "6px",
+              "boxSizing": "border-box",
+              "color": "var(--ink-gray-6)",
+              "display": "flex",
+              "flexShrink": "0",
+              "height": "24px",
+              "justifyContent": "center",
+              "padding": "0px 6px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "fontSize": "12px",
+                "lineHeight": "16px",
+                "whiteSpace": "nowrap"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "command-key-k-text",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ shortcutModifier() }} K"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "command-key-k",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)",
+              "whiteSpace": "nowrap"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "command-hint-open",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "to open"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "command-hints-right",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],

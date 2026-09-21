@@ -2548,11 +2548,26 @@ export default function setup(context) {
 	let commandSearchTimer = null
 	let commandSearchToken = 0
 
+	// Ctrl on Windows/Linux, ⌘ on macOS — the palette accepts either, this is just what the footer shows.
+	function shortcutModifier() {
+		return /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl"
+	}
+
+	// Ctrl/Cmd+K toggles the palette; Ctrl/Cmd+G jumps straight to message search (in everything, seeded
+	// with whatever is typed in the palette). Both are claimed from the browser (Ctrl+K is Chrome's
+	// "search in address bar", Ctrl+G is "find next").
 	function handleCommandPaletteShortcut(event: KeyboardEvent) {
-		if (event.key.toLowerCase() !== "k" || !(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return
-		// Claim the shortcut from the browser (Chrome's Ctrl+K is "search in address bar").
-		event.preventDefault()
-		showCommandPalette.value = !showCommandPalette.value
+		if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return
+		const key = event.key.toLowerCase()
+		if (key === "k") {
+			event.preventDefault()
+			showCommandPalette.value = !showCommandPalette.value
+		} else if (key === "g") {
+			event.preventDefault()
+			const query = showCommandPalette.value ? commandSearchQuery.value : ""
+			showCommandPalette.value = false
+			openMessageSearch("all", query)
+		}
 	}
 	window.addEventListener("keydown", handleCommandPaletteShortcut)
 	onScopeDispose(() => window.removeEventListener("keydown", handleCommandPaletteShortcut))
@@ -3165,6 +3180,7 @@ export default function setup(context) {
 		commandSearchQuery,
 		commandActiveIndex,
 		commandRows,
+		shortcutModifier,
 		handleCommandKeydown,
 		selectCommandItem,
 		showMessageSearch,
