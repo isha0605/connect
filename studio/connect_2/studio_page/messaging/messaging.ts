@@ -83,13 +83,6 @@ export default function setup(context) {
 		return amPartner ? "" : thread.partner_logo || ""
 	}
 
-	// ---- Inbox search ----
-	// Filters the unified inbox (see unifiedThreadList) by whatever's typed into the Inbox search
-	// box (see thread-search-input in the JSON — a real frappe-ui TextInput bound to this ref via
-	// Studio's variable binding, not a raw <input>, so it gets frappe-ui's own focus/border styling
-	// for free instead of the browser's default blue outline).
-	const threadSearchQuery = ref("")
-
 	// ---- Inbox Active/Inactive tabs ----
 	// A DM thread has no `status` field at all (Connect DM Thread doesn't carry one — see
 	// get_my_dm_threads), so it's always "active"; only a company thread can be closed
@@ -109,16 +102,9 @@ export default function setup(context) {
 	}
 
 	function filteredThreadList() {
-		const query = threadSearchQuery.value.trim().toLowerCase()
-		const threads = unifiedThreadList().filter((t) =>
+		return unifiedThreadList().filter((t) =>
 			activeInboxTab.value === "active" ? isThreadActive(t) : !isThreadActive(t),
 		)
-		if (!query) return threads
-		return threads.filter((thread) => {
-			const name = (otherPartyName(thread) || "").toLowerCase()
-			const lastMessage = (thread.last_message || "").toLowerCase()
-			return name.includes(query) || lastMessage.includes(query)
-		})
 	}
 
 	function threadTitle() {
@@ -3330,7 +3316,6 @@ export default function setup(context) {
 		formatFullDateTime,
 		avatarTheme,
 		threadAvatarImage,
-		threadSearchQuery,
 		activeInboxTab,
 		activeThreadCount,
 		inactiveThreadCount,
