@@ -988,6 +988,7 @@ export default function setup(context) {
 
 	function selectProfileSettingsSection(section) {
 		profileSettingsSection.value = section
+		if (section === "workhours") populateWorkEdit()
 	}
 
 	async function saveMyProfile() {
@@ -1794,8 +1795,12 @@ export default function setup(context) {
 		}
 	}
 
-	async function sendMessage() {
+	// `silent` (the Send button's dropdown, or Ctrl/Cmd+Shift+Enter) sends without pinging anyone; with the
+	// "Always send silently" preference, that's automatic outside working hours.
+	async function sendMessage(silent = false) {
 		if (!selectedThread.value || uploadingFile.value) return
+		const sendSilently = silent === true || (afterHoursBehavior() === "Always send silently" && isOutsideWorkHours())
+		const silentFlag = sendSilently ? 1 : 0
 		if (messageToEdit.value) {
 			await saveEditedMessage()
 			return
@@ -1809,7 +1814,7 @@ export default function setup(context) {
 			draftAttachments.value = []
 			try {
 				if (content) {
-					await call("connect.api.dm.send_dm_message", { thread, content })
+					await call("connect.api.dm.send_dm_message", { thread, content, silent: silentFlag })
 				}
 				for (const a of dmReadyAttachments) {
 					await call("connect.api.dm.send_dm_message", {
@@ -1819,6 +1824,7 @@ export default function setup(context) {
 						file_name: a.file_name,
 						file_type: a.file_type,
 						file_size: a.file_size,
+						silent: silentFlag,
 					})
 				}
 				context.dmMessages.reload()
@@ -1852,7 +1858,7 @@ export default function setup(context) {
 
 		try {
 			if (content) {
-				await call("connect.api.messages.send_message", { thread, content, reply_to: replyToSend })
+				await call("connect.api.messages.send_message", { thread, content, reply_to: replyToSend, silent: silentFlag })
 			}
 			for (const a of readyAttachments) {
 				await call("connect.api.messages.send_message", {
@@ -1862,6 +1868,7 @@ export default function setup(context) {
 					file_name: a.file_name,
 					file_type: a.file_type,
 					file_size: a.file_size,
+					silent: silentFlag,
 				})
 			}
 			if (requirementToSend) {
@@ -2099,6 +2106,12 @@ export default function setup(context) {
 		if (event.key === "Escape" && messageToEdit.value) {
 			event.preventDefault()
 			cancelEditMessage()
+			return
+		}
+		// Ctrl/Cmd+Shift+Enter: send silently.
+		if (event.key === "Enter" && event.shiftKey && (event.ctrlKey || event.metaKey)) {
+			event.preventDefault()
+			sendMessage(true)
 			return
 		}
 		if (event.key === "Enter" && !event.shiftKey) {
@@ -2771,6 +2784,198 @@ export default function setup(context) {
 	// element a :focus-within rule could live on — the inner input reports focus up instead.
 	const composerFocused = ref(false)
 
+	// ---- Working hours & sending after hours ----
+	// Each person sets their own working hours and days (Settings → Working hours, stored server-side in
+	// Connect User Settings). Messaging outside them shows a banner above the composer offering to send
+	// silently — delivered like any message, but without a notification ping for the other members. Hours are
+	// compared against this browser's clock. Raven's "quiet hours", in Connect.
+	const WEEKDAYS = [
+		{ key: "monday", label: "Mon" },
+		{ key: "tuesday", label: "Tue" },
+		{ key: "wednesday", label: "Wed" },
+		{ key: "thursday", label: "Thu" },
+		{ key: "friday", label: "Fri" },
+		{ key: "saturday", label: "Sat" },
+		{ key: "sunday", label: "Sun" },
+	]
+	const AFTER_HOURS_OPTIONS = [
+		{ label: "Do nothing", value: "Do nothing" },
+		{ label: "Suggest sending silently", value: "Suggest sending silently" },
+		{ label: "Always send silently", value: "Always send silently" },
+	]
+	const workSettings = ref({
+		work_start: "09:00",
+		work_end: "18:00",
+		work_days: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+		after_hours_behavior: "Suggest sending silently",
+	})
+	const editWorkStart = ref("09:00")
+	const editWorkEnd = ref("18:00")
+	const editWorkDays = ref([])
+	const editAfterHours = ref("Suggest sending silently")
+	const savingWorkSettings = ref(false)
+	// ✕ on the banner hides it until the page is reloaded.
+	const afterHoursBannerDismissed = ref(false)
+	// Bumped every 30s so the banner appears/disappears when the clock crosses a boundary while the page is open.
+	const clockTick = ref(Date.now())
+	const clockTimer = setInterval(() => (clockTick.value = Date.now()), 30000)
+	onScopeDispose(() => clearInterval(clockTimer))
+
+	async function loadWorkSettings() {
+		try {
+			workSettings.value = await call("connect.api.account.get_my_work_settings")
+		} catch (e) {
+			// Keep the defaults: a failed load must never block messaging.
+		}
+	}
+	loadWorkSettings()
+
+	function minutesOfDay(hhmm) {
+		const [hours, minutes] = (hhmm || "00:00").split(":")
+		return Number(hours) * 60 + Number(minutes || 0)
+	}
+
+	function isOutsideWorkHours() {
+		clockTick.value // re-evaluated on every tick
+		const settings = workSettings.value
+		const now = new Date()
+		const today = WEEKDAYS[(now.getDay() + 6) % 7].key
+		if (!settings.work_days.includes(today)) return true
+		const minutes = now.getHours() * 60 + now.getMinutes()
+		return minutes < minutesOfDay(settings.work_start) || minutes >= minutesOfDay(settings.work_end)
+	}
+
+	function afterHoursBehavior() {
+		return workSettings.value.after_hours_behavior
+	}
+
+	function showAfterHoursBanner() {
+		return (
+			!!selectedThread.value &&
+			!messageToEdit.value &&
+			!afterHoursBannerDismissed.value &&
+			afterHoursBehavior() !== "Do nothing" &&
+			isOutsideWorkHours()
+		)
+	}
+
+	function afterHoursBannerText() {
+		if (afterHoursBehavior() === "Always send silently") {
+			return "It's outside working hours - your messages will be sent silently."
+		}
+		return "It's outside working hours - send silently to let people rest (" + shortcutModifier() + "⇧↵)."
+	}
+
+	function afterHoursBannerOptions() {
+		return [
+			{ label: "Working hours settings", icon: "lucide-settings", onClick: openWorkHoursSettings },
+			{ label: "Don't remind me again", icon: "lucide-bell-off", onClick: () => saveAfterHoursBehavior("Do nothing") },
+		]
+	}
+
+	// The Send button's dropdown: sending silently is always available, not just after hours.
+	function sendOptions() {
+		const nothingToSend = !draftMessage.value && !draftAttachments.value.length && !draftRequirement.value
+		return [
+			{
+				label: "Send silently",
+				icon: "lucide-bell-off",
+				disabled: nothingToSend || uploadingFile.value,
+				onClick: () => sendMessage(true),
+			},
+		]
+	}
+
+	function populateWorkEdit() {
+		const settings = workSettings.value
+		editWorkStart.value = settings.work_start
+		editWorkEnd.value = settings.work_end
+		editWorkDays.value = [...settings.work_days]
+		editAfterHours.value = settings.after_hours_behavior
+	}
+
+	function openWorkHoursSettings() {
+		openProfileSettings()
+		selectProfileSettingsSection("workhours")
+	}
+
+	function workDayRows() {
+		return WEEKDAYS.map((day) => ({ ...day, selected: editWorkDays.value.includes(day.key) }))
+	}
+
+	function toggleWorkDay(key) {
+		editWorkDays.value = editWorkDays.value.includes(key)
+			? editWorkDays.value.filter((k) => k !== key)
+			: [...editWorkDays.value, key]
+	}
+
+	// TimePicker hands back HH:mm (or HH:mm:ss); the server compares whole minutes.
+	function trimTime(value) {
+		return (value || "").slice(0, 5)
+	}
+
+	function workSettingsChanged() {
+		const saved = workSettings.value
+		return (
+			trimTime(editWorkStart.value) !== saved.work_start ||
+			trimTime(editWorkEnd.value) !== saved.work_end ||
+			editAfterHours.value !== saved.after_hours_behavior ||
+			WEEKDAYS.some((day) => editWorkDays.value.includes(day.key) !== saved.work_days.includes(day.key))
+		)
+	}
+
+	function workSettingsError() {
+		if (!editWorkDays.value.length) return "Pick at least one working day."
+		if (minutesOfDay(trimTime(editWorkStart.value)) >= minutesOfDay(trimTime(editWorkEnd.value))) {
+			return "Your work day must end after it starts."
+		}
+		return ""
+	}
+
+	async function saveWorkSettings() {
+		if (savingWorkSettings.value || !workSettingsChanged() || workSettingsError()) return
+		savingWorkSettings.value = true
+		try {
+			workSettings.value = await call("connect.api.account.update_my_work_settings", {
+				work_start: trimTime(editWorkStart.value),
+				work_end: trimTime(editWorkEnd.value),
+				work_days: editWorkDays.value,
+				after_hours_behavior: editAfterHours.value,
+			})
+			afterHoursBannerDismissed.value = false
+			toast({ title: "Working hours saved", icon: "check", iconClasses: "text-green-600" })
+		} catch (e) {
+			toast({
+				title: "Could not save working hours",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			savingWorkSettings.value = false
+		}
+	}
+
+	// Changes only the after-hours behavior (the banner's "Don't remind me again"), keeping the rest as saved.
+	async function saveAfterHoursBehavior(behavior) {
+		const saved = workSettings.value
+		try {
+			workSettings.value = await call("connect.api.account.update_my_work_settings", {
+				work_start: saved.work_start,
+				work_end: saved.work_end,
+				work_days: saved.work_days,
+				after_hours_behavior: behavior,
+			})
+		} catch (e) {
+			toast({
+				title: "Could not update your preference",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		}
+	}
+
 	// ---- Media ----
 	const mediaSearchQuery = ref("")
 	const mediaViewMode = ref("list")
@@ -3084,6 +3289,22 @@ export default function setup(context) {
 		replyPreviewText,
 		pinnedMessages,
 		hoveredPin,
+		WEEKDAYS,
+		AFTER_HOURS_OPTIONS,
+		editWorkStart,
+		editWorkEnd,
+		editAfterHours,
+		savingWorkSettings,
+		showAfterHoursBanner,
+		afterHoursBannerText,
+		afterHoursBannerOptions,
+		afterHoursBannerDismissed,
+		sendOptions,
+		workDayRows,
+		toggleWorkDay,
+		workSettingsChanged,
+		workSettingsError,
+		saveWorkSettings,
 		pinnedMessageRows,
 		openPinnedMessage,
 		unpinFromList,

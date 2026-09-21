@@ -6258,6 +6258,110 @@
         {
          "baseStyles": {
           "alignItems": "center",
+          "backgroundColor": "var(--surface-gray-2)",
+          "borderRadius": "8px",
+          "display": "flex",
+          "flexDirection": "row",
+          "flexShrink": "0",
+          "gap": "8px",
+          "margin": "0px 16px",
+          "padding": "6px 8px 6px 12px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-6)",
+            "flexShrink": "0",
+            "height": "16px",
+            "width": "16px"
+           },
+           "children": [],
+           "classes": [
+            "lucide-moon"
+           ],
+           "componentId": "after-hours-icon",
+           "componentName": "container",
+           "originalElement": "span"
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "flex": "1",
+            "minWidth": "0px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "after-hours-text",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "{{ afterHoursBannerText() }}"
+           }
+          },
+          {
+           "baseStyles": {
+            "flexShrink": "0"
+           },
+           "children": [
+            {
+             "baseStyles": {},
+             "children": [],
+             "classes": [],
+             "componentId": "after-hours-menu-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "icon": "lucide-more-vertical",
+              "size": "sm",
+              "theme": "gray",
+              "variant": "ghost"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "after-hours-menu",
+           "componentName": "Dropdown",
+           "componentProps": {
+            "align": "end",
+            "options": "{{ afterHoursBannerOptions() }}"
+           }
+          },
+          {
+           "baseStyles": {
+            "flexShrink": "0"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "after-hours-dismiss",
+           "componentName": "Button",
+           "componentProps": {
+            "icon": "lucide-x",
+            "size": "sm",
+            "theme": "gray",
+            "tooltip": "Dismiss",
+            "variant": "ghost"
+           },
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "afterHoursBannerDismissed.value = true;"
+            }
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "after-hours-banner",
+         "componentName": "container",
+         "originalElement": "div",
+         "mobileStyles": {
+          "margin": "0px 10px"
+         },
+         "visibilityCondition": "showAfterHoursBanner()"
+        },
+        {
+         "baseStyles": {
+          "alignItems": "center",
           "backgroundColor": "var(--surface-base)",
           "display": "flex",
           "flexDirection": "row",
@@ -6859,26 +6963,75 @@
                 },
                 {
                  "baseStyles": {
-                  "flexShrink": 0
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "flexShrink": "0",
+                  "gap": "1px"
                  },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "sendMessage();"
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "flexShrink": 0,
+                    "borderBottomRightRadius": "0px",
+                    "borderTopRightRadius": "0px"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "sendMessage();"
+                    }
+                   },
+                   "componentId": "send-btn",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "disabled": "{{ (!draftMessage && !draftAttachments.length && !draftRequirement) || uploadingFile }}",
+                    "iconLeft": "{{ messageToEdit ? 'lucide-check' : 'lucide-send' }}",
+                    "label": "{{ messageToEdit ? 'Save' : 'Send' }}",
+                    "theme": "gray",
+                    "variant": "solid"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "flexShrink": "0"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "borderBottomLeftRadius": "0px",
+                      "borderTopLeftRadius": "0px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "send-options-btn",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "disabled": "{{ uploadingFile }}",
+                      "icon": "lucide-chevron-down",
+                      "theme": "gray",
+                      "tooltip": "More send options",
+                      "variant": "solid"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "send-options-menu",
+                   "componentName": "Dropdown",
+                   "componentProps": {
+                    "align": "end",
+                    "options": "{{ sendOptions() }}"
+                   },
+                   "visibilityCondition": "!messageToEdit"
                   }
-                 },
-                 "componentId": "send-btn",
-                 "componentName": "Button",
-                 "componentProps": {
-                  "disabled": "{{ (!draftMessage && !draftAttachments.length && !draftRequirement) || uploadingFile }}",
-                  "iconLeft": "{{ messageToEdit ? 'lucide-check' : 'lucide-send' }}",
-                  "label": "{{ messageToEdit ? 'Save' : 'Send' }}",
-                  "theme": "gray",
-                  "variant": "solid"
-                 }
+                 ],
+                 "classes": [],
+                 "componentId": "send-split",
+                 "componentName": "container",
+                 "originalElement": "div"
                 }
                ],
                "classes": [],
@@ -7686,6 +7839,64 @@
            "componentId": "profile-settings-nav-users",
            "componentName": "container",
            "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "backgroundColor": "{{ profileSettingsSection === 'workhours' ? 'var(--surface-elevation-3)' : 'transparent' }}",
+            "borderRadius": "6px",
+            "boxShadow": "{{ profileSettingsSection === 'workhours' ? '0 1px 2px 0 rgb(0 0 0 / 0.05)' : 'none' }}",
+            "cursor": "pointer",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "height": "28px",
+            "padding": "0 8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "flexShrink": "0",
+              "height": "15px",
+              "width": "15px"
+             },
+             "children": [],
+             "classes": [
+              "lucide-clock"
+             ],
+             "componentId": "profile-settings-nav-workhours-icon",
+             "componentName": "container",
+             "originalElement": "span"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)"
+             },
+             "children": [],
+             "classes": [
+              "truncate"
+             ],
+             "componentId": "profile-settings-nav-workhours-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-base",
+              "tag": "span",
+              "text": "Working hours"
+             }
+            }
+           ],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "selectProfileSettingsSection('workhours');"
+            }
+           },
+           "componentId": "profile-settings-nav-workhours",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],
@@ -8403,6 +8614,306 @@
            "componentName": "container",
            "originalElement": "div",
            "visibilityCondition": "profileSettingsSection === 'users'"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minHeight": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "flex-start",
+              "display": "flex",
+              "flexShrink": "0",
+              "gap": "16px",
+              "justifyContent": "space-between",
+              "padding": "40px 40px 0"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "4px",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-workhours-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-lg",
+                  "tag": "h2",
+                  "text": "Working hours"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-workhours-description",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "p",
+                  "text": "Set when you're at work. Outside these hours, Connect can suggest sending your messages silently."
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "profile-settings-workhours-heading",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "profile-settings-workhours-header",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "flex": "1",
+              "minHeight": "0px",
+              "overflowY": "auto",
+              "padding": "20px 40px 40px",
+              "scrollbarColor": "var(--outline-gray-3) transparent",
+              "scrollbarWidth": "thin"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-7)",
+                "display": "block",
+                "marginBottom": "6px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "work-days-label",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "Work days"
+               }
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": "6px",
+                "marginBottom": "16px"
+               },
+               "children": [
+                {
+                 "baseStyles": {},
+                 "children": [],
+                 "classes": [],
+                 "componentId": "work-day-btn",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "label": "{{ dataItem.label }}",
+                  "size": "md",
+                  "theme": "gray",
+                  "variant": "{{ dataItem.selected ? 'solid' : 'subtle' }}"
+                 },
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "toggleWorkDay(dataItem.key);"
+                  }
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "work-days-repeater",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ workDayRows() }}",
+                "dataKey": "key",
+                "emptyStateMessage": ""
+               }
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "12px",
+                "marginBottom": "16px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flex": "1",
+                  "minWidth": "0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "work-start-picker",
+                 "componentName": "TimePicker",
+                 "componentProps": {
+                  "interval": 30,
+                  "label": "Starts",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "editWorkStart"
+                  },
+                  "size": "md",
+                  "variant": "outline"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "flex": "1",
+                  "minWidth": "0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "work-end-picker",
+                 "componentName": "TimePicker",
+                 "componentProps": {
+                  "interval": 30,
+                  "label": "Ends",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "editWorkEnd"
+                  },
+                  "size": "md",
+                  "variant": "outline"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "work-hours-row",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "marginBottom": "6px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "after-hours-select",
+               "componentName": "Select",
+               "componentProps": {
+                "label": "Messaging after hours",
+                "modelValue": {
+                 "$type": "variable",
+                 "name": "editAfterHours"
+                },
+                "size": "md",
+                "options": [
+                 {
+                  "label": "Do nothing",
+                  "value": "Do nothing"
+                 },
+                 {
+                  "label": "Suggest sending silently",
+                  "value": "Suggest sending silently"
+                 },
+                 {
+                  "label": "Always send silently",
+                  "value": "Always send silently"
+                 }
+                ]
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "display": "block"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "after-hours-help",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "p",
+                "text": "Choose what happens when you message outside your working hours. Silent messages are delivered but don't notify anyone; they'll see them when they're back."
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-red-4)",
+                "display": "block",
+                "marginTop": "12px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "work-hours-error",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ workSettingsError() }}"
+               },
+               "visibilityCondition": "workSettingsError() !== ''"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "justifyContent": "flex-end",
+                "marginTop": "20px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flexShrink": 0
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "work-hours-save-btn",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "disabled": "{{ !workSettingsChanged() || workSettingsError() !== '' }}",
+                  "iconLeft": "lucide-check",
+                  "label": "Save",
+                  "loading": "{{ savingWorkSettings }}",
+                  "loadingText": "Saving...",
+                  "theme": "gray",
+                  "variant": "solid"
+                 },
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "saveWorkSettings();"
+                  }
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "work-hours-save-row",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "profile-settings-workhours-body",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "profile-settings-workhours-section",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "profileSettingsSection === 'workhours'"
           }
          ],
          "classes": [],
@@ -19582,6 +20093,110 @@
         {
          "baseStyles": {
           "alignItems": "center",
+          "backgroundColor": "var(--surface-gray-2)",
+          "borderRadius": "8px",
+          "display": "flex",
+          "flexDirection": "row",
+          "flexShrink": "0",
+          "gap": "8px",
+          "margin": "0px 16px",
+          "padding": "6px 8px 6px 12px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-6)",
+            "flexShrink": "0",
+            "height": "16px",
+            "width": "16px"
+           },
+           "children": [],
+           "classes": [
+            "lucide-moon"
+           ],
+           "componentId": "after-hours-icon",
+           "componentName": "container",
+           "originalElement": "span"
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "flex": "1",
+            "minWidth": "0px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "after-hours-text",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "span",
+            "text": "{{ afterHoursBannerText() }}"
+           }
+          },
+          {
+           "baseStyles": {
+            "flexShrink": "0"
+           },
+           "children": [
+            {
+             "baseStyles": {},
+             "children": [],
+             "classes": [],
+             "componentId": "after-hours-menu-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "icon": "lucide-more-vertical",
+              "size": "sm",
+              "theme": "gray",
+              "variant": "ghost"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "after-hours-menu",
+           "componentName": "Dropdown",
+           "componentProps": {
+            "align": "end",
+            "options": "{{ afterHoursBannerOptions() }}"
+           }
+          },
+          {
+           "baseStyles": {
+            "flexShrink": "0"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "after-hours-dismiss",
+           "componentName": "Button",
+           "componentProps": {
+            "icon": "lucide-x",
+            "size": "sm",
+            "theme": "gray",
+            "tooltip": "Dismiss",
+            "variant": "ghost"
+           },
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "afterHoursBannerDismissed.value = true;"
+            }
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "after-hours-banner",
+         "componentName": "container",
+         "originalElement": "div",
+         "mobileStyles": {
+          "margin": "0px 10px"
+         },
+         "visibilityCondition": "showAfterHoursBanner()"
+        },
+        {
+         "baseStyles": {
+          "alignItems": "center",
           "backgroundColor": "var(--surface-base)",
           "display": "flex",
           "flexDirection": "row",
@@ -20183,26 +20798,75 @@
                 },
                 {
                  "baseStyles": {
-                  "flexShrink": 0
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "flexShrink": "0",
+                  "gap": "1px"
                  },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "sendMessage();"
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "flexShrink": 0,
+                    "borderBottomRightRadius": "0px",
+                    "borderTopRightRadius": "0px"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "sendMessage();"
+                    }
+                   },
+                   "componentId": "send-btn",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "disabled": "{{ (!draftMessage && !draftAttachments.length && !draftRequirement) || uploadingFile }}",
+                    "iconLeft": "{{ messageToEdit ? 'lucide-check' : 'lucide-send' }}",
+                    "label": "{{ messageToEdit ? 'Save' : 'Send' }}",
+                    "theme": "gray",
+                    "variant": "solid"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "flexShrink": "0"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "borderBottomLeftRadius": "0px",
+                      "borderTopLeftRadius": "0px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "send-options-btn",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "disabled": "{{ uploadingFile }}",
+                      "icon": "lucide-chevron-down",
+                      "theme": "gray",
+                      "tooltip": "More send options",
+                      "variant": "solid"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "send-options-menu",
+                   "componentName": "Dropdown",
+                   "componentProps": {
+                    "align": "end",
+                    "options": "{{ sendOptions() }}"
+                   },
+                   "visibilityCondition": "!messageToEdit"
                   }
-                 },
-                 "componentId": "send-btn",
-                 "componentName": "Button",
-                 "componentProps": {
-                  "disabled": "{{ (!draftMessage && !draftAttachments.length && !draftRequirement) || uploadingFile }}",
-                  "iconLeft": "{{ messageToEdit ? 'lucide-check' : 'lucide-send' }}",
-                  "label": "{{ messageToEdit ? 'Save' : 'Send' }}",
-                  "theme": "gray",
-                  "variant": "solid"
-                 }
+                 ],
+                 "classes": [],
+                 "componentId": "send-split",
+                 "componentName": "container",
+                 "originalElement": "div"
                 }
                ],
                "classes": [],
@@ -21010,6 +21674,64 @@
            "componentId": "profile-settings-nav-users",
            "componentName": "container",
            "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "backgroundColor": "{{ profileSettingsSection === 'workhours' ? 'var(--surface-elevation-3)' : 'transparent' }}",
+            "borderRadius": "6px",
+            "boxShadow": "{{ profileSettingsSection === 'workhours' ? '0 1px 2px 0 rgb(0 0 0 / 0.05)' : 'none' }}",
+            "cursor": "pointer",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "height": "28px",
+            "padding": "0 8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "flexShrink": "0",
+              "height": "15px",
+              "width": "15px"
+             },
+             "children": [],
+             "classes": [
+              "lucide-clock"
+             ],
+             "componentId": "profile-settings-nav-workhours-icon",
+             "componentName": "container",
+             "originalElement": "span"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)"
+             },
+             "children": [],
+             "classes": [
+              "truncate"
+             ],
+             "componentId": "profile-settings-nav-workhours-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-base",
+              "tag": "span",
+              "text": "Working hours"
+             }
+            }
+           ],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "selectProfileSettingsSection('workhours');"
+            }
+           },
+           "componentId": "profile-settings-nav-workhours",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],
@@ -21727,6 +22449,306 @@
            "componentName": "container",
            "originalElement": "div",
            "visibilityCondition": "profileSettingsSection === 'users'"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flex": "1",
+            "flexDirection": "column",
+            "minHeight": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "flex-start",
+              "display": "flex",
+              "flexShrink": "0",
+              "gap": "16px",
+              "justifyContent": "space-between",
+              "padding": "40px 40px 0"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "4px",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-workhours-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-lg",
+                  "tag": "h2",
+                  "text": "Working hours"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "profile-settings-workhours-description",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "p",
+                  "text": "Set when you're at work. Outside these hours, Connect can suggest sending your messages silently."
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "profile-settings-workhours-heading",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "profile-settings-workhours-header",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "flex": "1",
+              "minHeight": "0px",
+              "overflowY": "auto",
+              "padding": "20px 40px 40px",
+              "scrollbarColor": "var(--outline-gray-3) transparent",
+              "scrollbarWidth": "thin"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-7)",
+                "display": "block",
+                "marginBottom": "6px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "work-days-label",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "Work days"
+               }
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": "6px",
+                "marginBottom": "16px"
+               },
+               "children": [
+                {
+                 "baseStyles": {},
+                 "children": [],
+                 "classes": [],
+                 "componentId": "work-day-btn",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "label": "{{ dataItem.label }}",
+                  "size": "md",
+                  "theme": "gray",
+                  "variant": "{{ dataItem.selected ? 'solid' : 'subtle' }}"
+                 },
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "toggleWorkDay(dataItem.key);"
+                  }
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "work-days-repeater",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ workDayRows() }}",
+                "dataKey": "key",
+                "emptyStateMessage": ""
+               }
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "12px",
+                "marginBottom": "16px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flex": "1",
+                  "minWidth": "0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "work-start-picker",
+                 "componentName": "TimePicker",
+                 "componentProps": {
+                  "interval": 30,
+                  "label": "Starts",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "editWorkStart"
+                  },
+                  "size": "md",
+                  "variant": "outline"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "flex": "1",
+                  "minWidth": "0px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "work-end-picker",
+                 "componentName": "TimePicker",
+                 "componentProps": {
+                  "interval": 30,
+                  "label": "Ends",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "editWorkEnd"
+                  },
+                  "size": "md",
+                  "variant": "outline"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "work-hours-row",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "marginBottom": "6px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "after-hours-select",
+               "componentName": "Select",
+               "componentProps": {
+                "label": "Messaging after hours",
+                "modelValue": {
+                 "$type": "variable",
+                 "name": "editAfterHours"
+                },
+                "size": "md",
+                "options": [
+                 {
+                  "label": "Do nothing",
+                  "value": "Do nothing"
+                 },
+                 {
+                  "label": "Suggest sending silently",
+                  "value": "Suggest sending silently"
+                 },
+                 {
+                  "label": "Always send silently",
+                  "value": "Always send silently"
+                 }
+                ]
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "display": "block"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "after-hours-help",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "p",
+                "text": "Choose what happens when you message outside your working hours. Silent messages are delivered but don't notify anyone; they'll see them when they're back."
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-red-4)",
+                "display": "block",
+                "marginTop": "12px"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "work-hours-error",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-sm",
+                "tag": "span",
+                "text": "{{ workSettingsError() }}"
+               },
+               "visibilityCondition": "workSettingsError() !== ''"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "justifyContent": "flex-end",
+                "marginTop": "20px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "flexShrink": 0
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "work-hours-save-btn",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "disabled": "{{ !workSettingsChanged() || workSettingsError() !== '' }}",
+                  "iconLeft": "lucide-check",
+                  "label": "Save",
+                  "loading": "{{ savingWorkSettings }}",
+                  "loadingText": "Saving...",
+                  "theme": "gray",
+                  "variant": "solid"
+                 },
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "saveWorkSettings();"
+                  }
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "work-hours-save-row",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "classes": [],
+             "componentId": "profile-settings-workhours-body",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "classes": [],
+           "componentId": "profile-settings-workhours-section",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "profileSettingsSection === 'workhours'"
           }
          ],
          "classes": [],
