@@ -1269,6 +1269,10 @@ export default function setup(context) {
 	// the row loses :hover the moment the pointer enters them — this keeps the toolbar (and row
 	// highlight) shown for that one message until the menu closes.
 	const messageMenuOpenFor = ref(null)
+	// Name of the file message under the pointer. Each file card in a cluster has its own toolbar, and
+	// Tailwind's group-hover would light up every card's toolbar when the whole cluster row is hovered, so
+	// hover is tracked here instead.
+	const hoveredFile = ref("")
 
 	function messageCopyText(item) {
 		if (item.message_type === "Requirement") return requirementDetailsText(item)
@@ -1290,9 +1294,8 @@ export default function setup(context) {
 	function messageMoreOptions(item) {
 		if (!item) return []
 		const mine = isMine(item.sender)
-		if (item.isFileCluster) {
-			return mine ? [{ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick: () => confirmDeleteCluster(item) }] : []
-		}
+		// A cluster has no actions of its own: each file card carries its own toolbar (see clusterOfFile).
+		if (item.isFileCluster) return []
 		const options = [
 			{ label: "Reply", icon: "lucide-reply", onClick: () => startReply(item) },
 		]
@@ -1310,8 +1313,29 @@ export default function setup(context) {
 				options.push({ label: "Edit", icon: "lucide-pencil", onClick: () => confirmEditMessage(item) })
 			}
 			options.push({ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick: () => confirmDeleteMessage(item) })
+			// Files sent together are grouped into one cluster; deleting several at once lives here now that the
+			// cluster row has no toolbar of its own.
+			const cluster = item.message_type === "File" ? clusterOfFile(item) : null
+			if (cluster && cluster.files.length > 1) {
+				options.push({
+					label: "Delete multiple files...",
+					icon: "lucide-trash-2",
+					theme: "red",
+					onClick: () => confirmDeleteCluster(cluster),
+				})
+			}
 		}
 		return options
+	}
+
+	// The cluster (see clusterFileMessages) a file message currently belongs to, if any.
+	function clusterOfFile(file) {
+		for (const group of groupedMessages.value) {
+			for (const entry of group.items) {
+				if (entry.isFileCluster && entry.files.some((f) => f.name === file.name)) return entry
+			}
+		}
+		return null
 	}
 
 	// ---- Reactions ----
@@ -3047,6 +3071,7 @@ export default function setup(context) {
 		messageActionsOptions,
 		otherMessageActionsOptions,
 		messageMenuOpenFor,
+		hoveredFile,
 		reactionPickerMessage,
 		emojiSearchQuery,
 		setReactionPicker,
