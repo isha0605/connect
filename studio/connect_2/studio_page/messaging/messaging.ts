@@ -625,10 +625,8 @@ export default function setup(context) {
 			(_match, prefix, name) => prefix + '<span style="font-weight: 600">@' + name + "</span>",
 		)
 		if (!item || !item.is_edited) return withMentions
-		const editedSpan =
-			'<span style="float: right; margin-left: 8px; margin-top: 6px; margin-right: -6px; font-size: 9px; ' +
-			'line-height: 12px; color: var(--ink-gray-5); white-space: nowrap;">Edited</span>'
-		return withMentions + editedSpan
+		// Raven-style: a muted "(edited)" right after the text, inline, at the message's own size.
+		return withMentions + ' <span style="color: var(--ink-gray-5);">(edited)</span>'
 	}
 
 	// ---- Requirement cards ----
