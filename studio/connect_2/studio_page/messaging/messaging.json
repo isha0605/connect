@@ -1476,6 +1476,10 @@
              "children": [
               {
                "baseStyles": {
+                "alignItems": "center",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "4px",
                 "marginLeft": "-8px",
                 "position": "relative"
                },
@@ -1537,6 +1541,11 @@
                       "icon": "lucide-link",
                       "label": "Links",
                       "onClick": "() => { showMediaDialog.value = true; mediaTab.value = 'Links'; showMembersDialog.value = false; }"
+                     },
+                     {
+                      "icon": "lucide-pin",
+                      "label": "Pins",
+                      "onClick": "() => { showMediaDialog.value = true; mediaTab.value = 'Pins'; showMembersDialog.value = false; }"
                      }
                     ]
                    }
@@ -1548,6 +1557,31 @@
                  "componentId": "chat-title-trigger",
                  "componentName": "container",
                  "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "flexShrink": "0"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "showMediaDialog.value = true; mediaTab.value = 'Pins'; showMembersDialog.value = false;"
+                  }
+                 },
+                 "componentId": "chat-pinned-trigger",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "iconLeft": "lucide-pin",
+                  "label": "{{ pinnedMessages.length }}",
+                  "size": "sm",
+                  "theme": "gray",
+                  "tooltip": "Pinned messages",
+                  "variant": "ghost"
+                 },
+                 "visibilityCondition": "pinnedMessages.length > 0"
                 }
                ],
                "classes": [],
@@ -1744,103 +1778,6 @@
          "componentId": "chat-header",
          "componentName": "container",
          "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "backgroundColor": "var(--surface-amber-1)",
-          "borderBottom": "1px solid var(--outline-gray-2)",
-          "display": "flex",
-          "flexDirection": "row",
-          "gap": "8px",
-          "padding": "8px 16px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "var(--surface-amber-2)",
-            "borderRadius": "6px",
-            "display": "flex",
-            "flexShrink": "0",
-            "height": "26px",
-            "justifyContent": "center",
-            "width": "26px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-amber-7)",
-              "height": "14px",
-              "width": "14px"
-             },
-             "children": [],
-             "classes": [
-              "lucide-pin"
-             ],
-             "componentId": "pinned-banner-icon",
-             "componentName": "container",
-             "originalElement": "div"
-            }
-           ],
-           "classes": [],
-           "componentId": "pinned-banner-icon-box",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-8)",
-            "cursor": "pointer",
-            "flex": "1",
-            "minWidth": "0px",
-            "overflow": "hidden",
-            "textOverflow": "ellipsis",
-            "whiteSpace": "nowrap"
-           },
-           "children": [],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "scrollToPinnedMessage();"
-            }
-           },
-           "componentId": "pinned-banner-text",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "{{ pinnedMessageLabel() }}"
-           }
-          },
-          {
-           "children": [],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "unpinMessage();"
-            }
-           },
-           "componentId": "pinned-banner-unpin",
-           "componentName": "Button",
-           "componentProps": {
-            "icon": "lucide-x",
-            "size": "sm",
-            "theme": "gray",
-            "tooltip": "Unpin",
-            "variant": "ghost"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "pinned-message-banner",
-         "componentName": "container",
-         "originalElement": "div",
-         "visibilityCondition": "selectedThread && pinnedMessage && pinnedMessage.name"
         },
         {
          "baseStyles": {
@@ -2457,6 +2394,44 @@
                        "componentName": "container",
                        "originalElement": "div",
                        "visibilityCondition": "dataItem.is_forwarded"
+                      },
+                      {
+                       "baseStyles": {
+                        "marginBottom": "4px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentId": "message-pinned-label",
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "Pinned",
+                        "size": "md",
+                        "theme": "violet",
+                        "variant": "subtle"
+                       },
+                       "componentSlots": {
+                        "prefix": {
+                         "parentBlockId": "message-pinned-label",
+                         "slotContent": [
+                          {
+                           "baseStyles": {
+                            "height": "10px",
+                            "width": "10px"
+                           },
+                           "children": [],
+                           "classes": [
+                            "lucide-pin"
+                           ],
+                           "componentId": "message-pinned-icon",
+                           "componentName": "container",
+                           "originalElement": "span"
+                          }
+                         ],
+                         "slotId": "message-pinned-label:prefix",
+                         "slotName": "prefix"
+                        }
+                       },
+                       "visibilityCondition": "isPinned(dataItem)"
                       },
                       {
                        "baseStyles": {
@@ -4469,6 +4444,44 @@
                            "children": [
                             {
                              "baseStyles": {
+                              "marginBottom": "4px"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentId": "message-pinned-label-fi",
+                             "componentName": "Badge",
+                             "componentProps": {
+                              "label": "Pinned",
+                              "size": "md",
+                              "theme": "violet",
+                              "variant": "subtle"
+                             },
+                             "componentSlots": {
+                              "prefix": {
+                               "parentBlockId": "message-pinned-label-fi",
+                               "slotContent": [
+                                {
+                                 "baseStyles": {
+                                  "height": "10px",
+                                  "width": "10px"
+                                 },
+                                 "children": [],
+                                 "classes": [
+                                  "lucide-pin"
+                                 ],
+                                 "componentId": "message-pinned-icon-fi",
+                                 "componentName": "container",
+                                 "originalElement": "span"
+                                }
+                               ],
+                               "slotId": "message-pinned-label-fi:prefix",
+                               "slotName": "prefix"
+                              }
+                             },
+                             "visibilityCondition": "isPinned(dataItem)"
+                            },
+                            {
+                             "baseStyles": {
                               "alignItems": "center",
                               "backgroundColor": "var(--surface-gray-1)",
                               "border": "1px solid var(--outline-gray-2)",
@@ -5325,6 +5338,44 @@
                             "transition": "box-shadow 0.8s ease"
                            },
                            "children": [
+                            {
+                             "baseStyles": {
+                              "marginBottom": "4px"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentId": "message-pinned-label-fio",
+                             "componentName": "Badge",
+                             "componentProps": {
+                              "label": "Pinned",
+                              "size": "md",
+                              "theme": "violet",
+                              "variant": "subtle"
+                             },
+                             "componentSlots": {
+                              "prefix": {
+                               "parentBlockId": "message-pinned-label-fio",
+                               "slotContent": [
+                                {
+                                 "baseStyles": {
+                                  "height": "10px",
+                                  "width": "10px"
+                                 },
+                                 "children": [],
+                                 "classes": [
+                                  "lucide-pin"
+                                 ],
+                                 "componentId": "message-pinned-icon-fio",
+                                 "componentName": "container",
+                                 "originalElement": "span"
+                                }
+                               ],
+                               "slotId": "message-pinned-label-fio:prefix",
+                               "slotName": "prefix"
+                              }
+                             },
+                             "visibilityCondition": "isPinned(dataItem)"
+                            },
                             {
                              "baseStyles": {
                               "alignItems": "center",
@@ -10442,6 +10493,8 @@
           },
           {
            "baseStyles": {
+            "alignSelf": "stretch",
+            "display": "flex",
             "flexShrink": "0",
             "padding": "12px 16px 0px"
            },
@@ -10456,14 +10509,22 @@
             },
             "options": [
              {
+              "class": "grow justify-center",
               "label": "Files",
               "value": "Files"
              },
              {
+              "class": "grow justify-center",
               "label": "Links",
               "value": "Links"
+             },
+             {
+              "class": "grow justify-center",
+              "label": "Pins",
+              "value": "Pins"
              }
-            ]
+            ],
+            "size": "md"
            }
           },
           {
@@ -10514,7 +10575,8 @@
            "classes": [],
            "componentId": "media-search-toolbar",
            "componentName": "container",
-           "originalElement": "div"
+           "originalElement": "div",
+           "visibilityCondition": "mediaTab !== 'Pins'"
           },
           {
            "baseStyles": {
@@ -10873,6 +10935,208 @@
              "componentId": "thread-links-wrapper",
              "componentName": "container",
              "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "boxSizing": "border-box",
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "8px",
+              "padding": "12px 16px",
+              "width": "100%"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "8px",
+                "width": "100%"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "backgroundColor": "var(--surface-base)",
+                  "border": "1px solid var(--outline-gray-2)",
+                  "borderRadius": "10px",
+                  "boxSizing": "border-box",
+                  "cursor": "pointer",
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "4px",
+                  "padding": "12px",
+                  "width": "100%"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "gap": "8px",
+                    "marginBottom": "4px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "flexShrink": "0"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "pinned-row-avatar",
+                     "componentName": "Avatar",
+                     "componentProps": {
+                      "image": "{{ memberImage(dataItem.sender) }}",
+                      "label": "{{ dataItem.senderName }}",
+                      "shape": "circle",
+                      "size": "md",
+                      "theme": "{{ avatarTheme(dataItem.senderName) }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-8)",
+                      "flexShrink": "0",
+                      "fontWeight": "500"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "pinned-row-sender",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ dataItem.senderName }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-4)",
+                      "flex": "1",
+                      "minWidth": "0px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "pinned-row-when",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-xs",
+                      "tag": "span",
+                      "text": "{{ dataItem.when }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "flexShrink": "0",
+                      "opacity": "{{ hoveredPin === dataItem.name ? 1 : 0 }}"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "unpinFromList(dataItem);"
+                      }
+                     },
+                     "componentId": "pinned-row-unpin",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "icon": "lucide-pin-off",
+                      "size": "sm",
+                      "theme": "gray",
+                      "tooltip": "Unpin",
+                      "variant": "ghost"
+                     },
+                     "mobileStyles": {
+                      "opacity": "1"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "pinned-row-header",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "WebkitBoxOrient": "vertical",
+                    "WebkitLineClamp": "4",
+                    "color": "var(--ink-gray-8)",
+                    "display": "-webkit-box",
+                    "overflow": "hidden",
+                    "whiteSpace": "pre-wrap",
+                    "wordBreak": "break-word"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "pinned-row-snippet",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-p-base",
+                    "tag": "span",
+                    "text": "{{ dataItem.snippet }}"
+                   }
+                  }
+                 ],
+                 "classes": [
+                  "hover:bg-surface-gray-1"
+                 ],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "openPinnedMessage(dataItem);"
+                  },
+                  "mouseenter": {
+                   "action": "Run Script",
+                   "event": "mouseenter",
+                   "script": "hoveredPin.value = dataItem.name;"
+                  },
+                  "mouseleave": {
+                   "action": "Run Script",
+                   "event": "mouseleave",
+                   "script": "hoveredPin.value = '';"
+                  }
+                 },
+                 "componentId": "pinned-row",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentId": "pinned-repeater",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ pinnedMessageRows() }}",
+                "dataKey": "name",
+                "emptyStateMessage": ""
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "pinned-list",
+             "componentName": "container",
+             "originalElement": "div",
+             "visibilityCondition": "mediaTab === 'Pins'"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "display": "block",
+              "padding": "24px 12px",
+              "textAlign": "center"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "pinned-empty-text",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "No pinned messages yet."
+             },
+             "visibilityCondition": "mediaTab === 'Pins' && pinnedMessages.length === 0"
             }
            ],
            "classes": [],
@@ -14525,6 +14789,10 @@
              "children": [
               {
                "baseStyles": {
+                "alignItems": "center",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "4px",
                 "marginLeft": "-8px",
                 "position": "relative"
                },
@@ -14586,6 +14854,11 @@
                       "icon": "lucide-link",
                       "label": "Links",
                       "onClick": "() => { showMediaDialog.value = true; mediaTab.value = 'Links'; showMembersDialog.value = false; }"
+                     },
+                     {
+                      "icon": "lucide-pin",
+                      "label": "Pins",
+                      "onClick": "() => { showMediaDialog.value = true; mediaTab.value = 'Pins'; showMembersDialog.value = false; }"
                      }
                     ]
                    }
@@ -14597,6 +14870,31 @@
                  "componentId": "chat-title-trigger",
                  "componentName": "container",
                  "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "flexShrink": "0"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "showMediaDialog.value = true; mediaTab.value = 'Pins'; showMembersDialog.value = false;"
+                  }
+                 },
+                 "componentId": "chat-pinned-trigger",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "iconLeft": "lucide-pin",
+                  "label": "{{ pinnedMessages.length }}",
+                  "size": "sm",
+                  "theme": "gray",
+                  "tooltip": "Pinned messages",
+                  "variant": "ghost"
+                 },
+                 "visibilityCondition": "pinnedMessages.length > 0"
                 }
                ],
                "classes": [],
@@ -14793,103 +15091,6 @@
          "componentId": "chat-header",
          "componentName": "container",
          "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "backgroundColor": "var(--surface-amber-1)",
-          "borderBottom": "1px solid var(--outline-gray-2)",
-          "display": "flex",
-          "flexDirection": "row",
-          "gap": "8px",
-          "padding": "8px 16px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "var(--surface-amber-2)",
-            "borderRadius": "6px",
-            "display": "flex",
-            "flexShrink": "0",
-            "height": "26px",
-            "justifyContent": "center",
-            "width": "26px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-amber-7)",
-              "height": "14px",
-              "width": "14px"
-             },
-             "children": [],
-             "classes": [
-              "lucide-pin"
-             ],
-             "componentId": "pinned-banner-icon",
-             "componentName": "container",
-             "originalElement": "div"
-            }
-           ],
-           "classes": [],
-           "componentId": "pinned-banner-icon-box",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-8)",
-            "cursor": "pointer",
-            "flex": "1",
-            "minWidth": "0px",
-            "overflow": "hidden",
-            "textOverflow": "ellipsis",
-            "whiteSpace": "nowrap"
-           },
-           "children": [],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "scrollToPinnedMessage();"
-            }
-           },
-           "componentId": "pinned-banner-text",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-sm",
-            "tag": "span",
-            "text": "{{ pinnedMessageLabel() }}"
-           }
-          },
-          {
-           "children": [],
-           "classes": [],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "unpinMessage();"
-            }
-           },
-           "componentId": "pinned-banner-unpin",
-           "componentName": "Button",
-           "componentProps": {
-            "icon": "lucide-x",
-            "size": "sm",
-            "theme": "gray",
-            "tooltip": "Unpin",
-            "variant": "ghost"
-           }
-          }
-         ],
-         "classes": [],
-         "componentId": "pinned-message-banner",
-         "componentName": "container",
-         "originalElement": "div",
-         "visibilityCondition": "selectedThread && pinnedMessage && pinnedMessage.name"
         },
         {
          "baseStyles": {
@@ -15506,6 +15707,50 @@
                        "componentName": "container",
                        "originalElement": "div",
                        "visibilityCondition": "dataItem.is_forwarded"
+                      },
+                      {
+                       "baseStyles": {
+                        "marginBottom": "4px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentId": "message-pinned-label",
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "Pinned",
+                        "size": "md",
+                        "theme": "violet",
+                        "variant": "subtle"
+                       },
+                       "componentSlots": {
+                        "prefix": {
+                         "parentBlockId": "message-pinned-label",
+                         "slotContent": [
+                          {
+                           "attributes": {},
+                           "baseStyles": {
+                            "height": "10px",
+                            "width": "10px"
+                           },
+                           "children": [],
+                           "classes": [
+                            "lucide-pin"
+                           ],
+                           "componentEvents": {},
+                           "componentId": "message-pinned-icon",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "mobileStyles": {},
+                           "originalElement": "span",
+                           "tabletStyles": {}
+                          }
+                         ],
+                         "slotId": "message-pinned-label:prefix",
+                         "slotName": "prefix"
+                        }
+                       },
+                       "visibilityCondition": "isPinned(dataItem)"
                       },
                       {
                        "baseStyles": {
@@ -17518,6 +17763,50 @@
                            "children": [
                             {
                              "baseStyles": {
+                              "marginBottom": "4px"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentId": "message-pinned-label-fi",
+                             "componentName": "Badge",
+                             "componentProps": {
+                              "label": "Pinned",
+                              "size": "md",
+                              "theme": "violet",
+                              "variant": "subtle"
+                             },
+                             "componentSlots": {
+                              "prefix": {
+                               "parentBlockId": "message-pinned-label-fi",
+                               "slotContent": [
+                                {
+                                 "attributes": {},
+                                 "baseStyles": {
+                                  "height": "10px",
+                                  "width": "10px"
+                                 },
+                                 "children": [],
+                                 "classes": [
+                                  "lucide-pin"
+                                 ],
+                                 "componentEvents": {},
+                                 "componentId": "message-pinned-icon-fi",
+                                 "componentName": "container",
+                                 "componentProps": {},
+                                 "componentSlots": {},
+                                 "mobileStyles": {},
+                                 "originalElement": "span",
+                                 "tabletStyles": {}
+                                }
+                               ],
+                               "slotId": "message-pinned-label-fi:prefix",
+                               "slotName": "prefix"
+                              }
+                             },
+                             "visibilityCondition": "isPinned(dataItem)"
+                            },
+                            {
+                             "baseStyles": {
                               "alignItems": "center",
                               "backgroundColor": "var(--surface-gray-1)",
                               "border": "1px solid var(--outline-gray-2)",
@@ -18374,6 +18663,50 @@
                             "transition": "box-shadow 0.8s ease"
                            },
                            "children": [
+                            {
+                             "baseStyles": {
+                              "marginBottom": "4px"
+                             },
+                             "children": [],
+                             "classes": [],
+                             "componentId": "message-pinned-label-fio",
+                             "componentName": "Badge",
+                             "componentProps": {
+                              "label": "Pinned",
+                              "size": "md",
+                              "theme": "violet",
+                              "variant": "subtle"
+                             },
+                             "componentSlots": {
+                              "prefix": {
+                               "parentBlockId": "message-pinned-label-fio",
+                               "slotContent": [
+                                {
+                                 "attributes": {},
+                                 "baseStyles": {
+                                  "height": "10px",
+                                  "width": "10px"
+                                 },
+                                 "children": [],
+                                 "classes": [
+                                  "lucide-pin"
+                                 ],
+                                 "componentEvents": {},
+                                 "componentId": "message-pinned-icon-fio",
+                                 "componentName": "container",
+                                 "componentProps": {},
+                                 "componentSlots": {},
+                                 "mobileStyles": {},
+                                 "originalElement": "span",
+                                 "tabletStyles": {}
+                                }
+                               ],
+                               "slotId": "message-pinned-label-fio:prefix",
+                               "slotName": "prefix"
+                              }
+                             },
+                             "visibilityCondition": "isPinned(dataItem)"
+                            },
                             {
                              "baseStyles": {
                               "alignItems": "center",
@@ -23491,6 +23824,8 @@
           },
           {
            "baseStyles": {
+            "alignSelf": "stretch",
+            "display": "flex",
             "flexShrink": "0",
             "padding": "12px 16px 0px"
            },
@@ -23505,14 +23840,22 @@
             },
             "options": [
              {
+              "class": "grow justify-center",
               "label": "Files",
               "value": "Files"
              },
              {
+              "class": "grow justify-center",
               "label": "Links",
               "value": "Links"
+             },
+             {
+              "class": "grow justify-center",
+              "label": "Pins",
+              "value": "Pins"
              }
-            ]
+            ],
+            "size": "md"
            }
           },
           {
@@ -23563,7 +23906,8 @@
            "classes": [],
            "componentId": "media-search-toolbar",
            "componentName": "container",
-           "originalElement": "div"
+           "originalElement": "div",
+           "visibilityCondition": "mediaTab !== 'Pins'"
           },
           {
            "baseStyles": {
@@ -23922,6 +24266,208 @@
              "componentId": "thread-links-wrapper",
              "componentName": "container",
              "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "boxSizing": "border-box",
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "8px",
+              "padding": "12px 16px",
+              "width": "100%"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "8px",
+                "width": "100%"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "backgroundColor": "var(--surface-base)",
+                  "border": "1px solid var(--outline-gray-2)",
+                  "borderRadius": "10px",
+                  "boxSizing": "border-box",
+                  "cursor": "pointer",
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "4px",
+                  "padding": "12px",
+                  "width": "100%"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "gap": "8px",
+                    "marginBottom": "4px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "flexShrink": "0"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "pinned-row-avatar",
+                     "componentName": "Avatar",
+                     "componentProps": {
+                      "image": "{{ memberImage(dataItem.sender) }}",
+                      "label": "{{ dataItem.senderName }}",
+                      "shape": "circle",
+                      "size": "md",
+                      "theme": "{{ avatarTheme(dataItem.senderName) }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-8)",
+                      "flexShrink": "0",
+                      "fontWeight": "500"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "pinned-row-sender",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-sm",
+                      "tag": "span",
+                      "text": "{{ dataItem.senderName }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-4)",
+                      "flex": "1",
+                      "minWidth": "0px"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentId": "pinned-row-when",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-xs",
+                      "tag": "span",
+                      "text": "{{ dataItem.when }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "flexShrink": "0",
+                      "opacity": "{{ hoveredPin === dataItem.name ? 1 : 0 }}"
+                     },
+                     "children": [],
+                     "classes": [],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "unpinFromList(dataItem);"
+                      }
+                     },
+                     "componentId": "pinned-row-unpin",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "icon": "lucide-pin-off",
+                      "size": "sm",
+                      "theme": "gray",
+                      "tooltip": "Unpin",
+                      "variant": "ghost"
+                     },
+                     "mobileStyles": {
+                      "opacity": "1"
+                     }
+                    }
+                   ],
+                   "classes": [],
+                   "componentId": "pinned-row-header",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "WebkitBoxOrient": "vertical",
+                    "WebkitLineClamp": "4",
+                    "color": "var(--ink-gray-8)",
+                    "display": "-webkit-box",
+                    "overflow": "hidden",
+                    "whiteSpace": "pre-wrap",
+                    "wordBreak": "break-word"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "pinned-row-snippet",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-p-base",
+                    "tag": "span",
+                    "text": "{{ dataItem.snippet }}"
+                   }
+                  }
+                 ],
+                 "classes": [
+                  "hover:bg-surface-gray-1"
+                 ],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "openPinnedMessage(dataItem);"
+                  },
+                  "mouseenter": {
+                   "action": "Run Script",
+                   "event": "mouseenter",
+                   "script": "hoveredPin.value = dataItem.name;"
+                  },
+                  "mouseleave": {
+                   "action": "Run Script",
+                   "event": "mouseleave",
+                   "script": "hoveredPin.value = '';"
+                  }
+                 },
+                 "componentId": "pinned-row",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "classes": [],
+               "componentId": "pinned-repeater",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ pinnedMessageRows() }}",
+                "dataKey": "name",
+                "emptyStateMessage": ""
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "pinned-list",
+             "componentName": "container",
+             "originalElement": "div",
+             "visibilityCondition": "mediaTab === 'Pins'"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "display": "block",
+              "padding": "24px 12px",
+              "textAlign": "center"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "pinned-empty-text",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "No pinned messages yet."
+             },
+             "visibilityCondition": "mediaTab === 'Pins' && pinnedMessages.length === 0"
             }
            ],
            "classes": [],

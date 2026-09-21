@@ -215,7 +215,7 @@ export default function setup(context) {
 		showMembersDialog.value = false
 		showMediaDialog.value = false
 		showTemplatesDialog.value = false
-		pinnedMessage.value = null
+		pinnedMessages.value = []
 
 		if (convType === "dm") {
 			const other = typeof item === "object" ? item : null
@@ -231,7 +231,7 @@ export default function setup(context) {
 			call("connect.api.dm.mark_dm_thread_read", { thread: name })
 				.then(() => context.myDMThreads.reload())
 				.catch(() => {})
-			fetchPinnedMessage()
+			fetchPinnedMessages()
 			return
 		}
 
@@ -249,7 +249,7 @@ export default function setup(context) {
 		call("connect.api.threads.mark_thread_read", { thread: name })
 			.then(() => context.myThreads.reload())
 			.catch(() => {})
-		fetchPinnedMessage()
+		fetchPinnedMessages()
 	}
 
 	// On phone-width screens the thread list and the open conversation share one pane
@@ -305,7 +305,10 @@ export default function setup(context) {
 	// A deleted message's sender already drops it from their own view right after the delete
 	// call resolves (see deleteMessage) — this is purely for everyone else's open tabs.
 	function handleMessageDeleted(payload) {
-		if (payload.thread === selectedThread.value) context.messages.reload()
+		if (payload.thread === selectedThread.value) {
+			context.messages.reload()
+			fetchPinnedMessages()
+		}
 	}
 	socket.on("connect_message_deleted", handleMessageDeleted)
 	onScopeDispose(() => socket.off("connect_message_deleted", handleMessageDeleted))
@@ -325,20 +328,10 @@ export default function setup(context) {
 	socket.on("connect_message_reaction", handleReactionChanged)
 	onScopeDispose(() => socket.off("connect_message_reaction", handleReactionChanged))
 
-	// The pin/unpin call itself already updates the acting tab's own `pinnedMessage` — this is
-	// purely for everyone else's open tabs, and carries the pinned message's fields directly in
-	// the payload so those tabs don't need a round trip back to get_pinned_message.
+	// Someone else pinned or unpinned a message — refetch the open conversation's pins. (The acting tab
+	// refreshes its own list right after the call, see setMessagePinned.)
 	function handleThreadPinChanged(payload) {
-		if (payload.thread !== selectedThread.value) return
-		pinnedMessage.value = payload.pinned_message
-			? {
-					name: payload.pinned_message,
-					sender: payload.sender,
-					message_type: payload.message_type,
-					content: payload.content,
-					file_name: payload.file_name,
-				}
-			: null
+		if (payload.thread === selectedThread.value && selectedThreadType.value === "company") fetchPinnedMessages()
 	}
 	socket.on("connect_thread_pin_changed", handleThreadPinChanged)
 	onScopeDispose(() => socket.off("connect_thread_pin_changed", handleThreadPinChanged))
@@ -347,6 +340,7 @@ export default function setup(context) {
 	function handleDMMessageDeleted(payload) {
 		if (selectedThreadType.value === "dm" && payload.dm_thread === selectedThread.value) {
 			context.dmMessages.reload()
+			fetchPinnedMessages()
 		}
 	}
 	socket.on("connect_dm_message_deleted", handleDMMessageDeleted)
@@ -361,16 +355,7 @@ export default function setup(context) {
 	onScopeDispose(() => socket.off("connect_dm_message_edited", handleDMMessageEdited))
 
 	function handleDMThreadPinChanged(payload) {
-		if (selectedThreadType.value !== "dm" || payload.thread !== selectedThread.value) return
-		pinnedMessage.value = payload.pinned_message
-			? {
-					name: payload.pinned_message,
-					sender: payload.sender,
-					message_type: payload.message_type,
-					content: payload.content,
-					file_name: payload.file_name,
-				}
-			: null
+		if (selectedThreadType.value === "dm" && payload.thread === selectedThread.value) fetchPinnedMessages()
 	}
 	socket.on("connect_dm_thread_pin_changed", handleDMThreadPinChanged)
 	onScopeDispose(() => socket.off("connect_dm_thread_pin_changed", handleDMThreadPinChanged))
@@ -1528,6 +1513,7 @@ export default function setup(context) {
 			})
 			showDeleteMessageDialog.value = false
 			messageToDelete.value = null
+			fetchPinnedMessages()
 			if (isDM) {
 				context.dmMessages.reload()
 				context.myDMThreads.reload()
@@ -1655,46 +1641,50 @@ export default function setup(context) {
 		}
 	}
 
-	// ---- Pinning a message ----
-	// One pin at a time per thread (see connect.api.messages.pin_message) — the currently pinned
-	// message's own fields are kept here rather than re-derived from context.messages.data
-	// since the pinned message can scroll out of the loaded window (200-message limit).
-	const pinnedMessage = ref(null)
+	// ---- Pinning messages ----
+	// Any number of messages can be pinned per conversation (see connect.api.messages.pin_message). The
+	// pinned messages' own fields are kept here, most recent pin first, rather than re-derived from
+	// context.messages.data, since a pinned message can scroll out of the loaded window (200-message limit).
+	const pinnedMessages = ref([])
+	// Pin card under the pointer in the Pins tab, for its hover-only unpin button.
+	const hoveredPin = ref("")
 
-	async function fetchPinnedMessage() {
-		if (!selectedThread.value) {
-			pinnedMessage.value = null
+	async function fetchPinnedMessages() {
+		const thread = selectedThread.value
+		if (!thread) {
+			pinnedMessages.value = []
 			return
 		}
 		try {
 			const method =
-				selectedThreadType.value === "dm" ? "connect.api.dm.get_pinned_dm_message" : "connect.api.messages.get_pinned_message"
-			pinnedMessage.value = await call(method, { thread: selectedThread.value })
+				selectedThreadType.value === "dm" ? "connect.api.dm.get_pinned_dm_messages" : "connect.api.messages.get_pinned_messages"
+			const rows = await call(method, { thread })
+			// A slow response for a conversation that's no longer open must not overwrite the current one.
+			if (thread === selectedThread.value) pinnedMessages.value = rows
 		} catch (e) {
-			pinnedMessage.value = null
+			if (thread === selectedThread.value) pinnedMessages.value = []
 		}
 	}
 
 	function isPinned(item) {
-		return !!(pinnedMessage.value && item && pinnedMessage.value.name === item.name)
+		return !!item && pinnedMessages.value.some((p) => p.name === item.name)
 	}
 
-	async function togglePinMessage(item) {
-		if (!item || item.isFileCluster) return
+	async function setMessagePinned(name, pin) {
 		const isDM = selectedThreadType.value === "dm"
+		const method = isDM
+			? pin
+				? "connect.api.dm.pin_dm_message"
+				: "connect.api.dm.unpin_dm_message"
+			: pin
+				? "connect.api.messages.pin_message"
+				: "connect.api.messages.unpin_message"
 		try {
-			if (isPinned(item)) {
-				await call(isDM ? "connect.api.dm.unpin_dm_message" : "connect.api.messages.unpin_message", {
-					thread: selectedThread.value,
-				})
-				pinnedMessage.value = null
-			} else {
-				await call(isDM ? "connect.api.dm.pin_dm_message" : "connect.api.messages.pin_message", { message: item.name })
-				await fetchPinnedMessage()
-			}
+			await call(method, { message: name })
+			await fetchPinnedMessages()
 		} catch (e) {
 			toast({
-				title: "Could not update pinned message",
+				title: pin ? "Could not pin message" : "Could not unpin message",
 				text: e.messages ? e.messages[0] : e.message,
 				icon: "x-circle",
 				iconClasses: "text-red-600",
@@ -1702,40 +1692,43 @@ export default function setup(context) {
 		}
 	}
 
-	async function unpinMessage() {
-		if (!selectedThread.value || !pinnedMessage.value) return
-		try {
-			const isDM = selectedThreadType.value === "dm"
-			await call(isDM ? "connect.api.dm.unpin_dm_message" : "connect.api.messages.unpin_message", {
-				thread: selectedThread.value,
-			})
-			pinnedMessage.value = null
-		} catch (e) {
-			toast({
-				title: "Could not unpin message",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
-		}
+	function togglePinMessage(item) {
+		if (!item || item.isFileCluster) return
+		return setMessagePinned(item.name, !isPinned(item))
 	}
 
-	function pinnedMessageLabel() {
-		if (!pinnedMessage.value) return ""
-		const sender = (pinnedMessage.value.sender || "").split("@")[0]
-		let body = pinnedMessage.value.content
-		if (pinnedMessage.value.message_type === "File") {
-			body = "📎 " + (pinnedMessage.value.file_name || "Attachment")
-		} else if (pinnedMessage.value.message_type === "Requirement") {
-			body = "Requirement details"
-		}
-		return sender + ": " + body
+	// "Today" / "Yesterday" / "Sep 22" — how a pin's age is shown in the Pins tab.
+	function relativeDayLabel(value) {
+		const date = new Date(value)
+		const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(date).setHours(0, 0, 0, 0)) / 86400000)
+		if (days <= 0) return "Today"
+		if (days === 1) return "Yesterday"
+		return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 	}
 
-	function scrollToPinnedMessage() {
-		if (!pinnedMessage.value) return
-		const el = document.querySelector(`[data-message-id="${pinnedMessage.value.name}"]`)
-		if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
+	function pinnedPreviewText(message) {
+		if (message.message_type === "File") return "📎 " + (message.file_name || "Attachment")
+		if (message.message_type === "Requirement") return "Requirement details"
+		return message.content || ""
+	}
+
+	// Rows for the Pins tab of the Files / Links / Pins side panel (opened from the header's pin button).
+	function pinnedMessageRows() {
+		return pinnedMessages.value.map((p) => ({
+			...p,
+			senderName: memberDisplayName(p.sender),
+			when: relativeDayLabel(p.pinned_at || p.creation),
+			snippet: pinnedPreviewText(p),
+		}))
+	}
+
+	// Scrolls to the pinned message and flashes it (see scrollToMessage).
+	function openPinnedMessage(pin) {
+		scrollToMessage(pin.name)
+	}
+
+	function unpinFromList(pin) {
+		return setMessagePinned(pin.name, false)
 	}
 
 	// ---- Deleting a whole file cluster ----
@@ -1781,6 +1774,7 @@ export default function setup(context) {
 			}
 			showDeleteClusterDialog.value = false
 			clusterToDelete.value = null
+			fetchPinnedMessages()
 			if (isDM) {
 				context.dmMessages.reload()
 				context.myDMThreads.reload()
@@ -2892,7 +2886,7 @@ export default function setup(context) {
 	// selectThread() itself needs nothing but the name; it fetches everything else by thread.
 	// Placed here (right before return, not up near its own declaration) deliberately: with
 	// immediate:true this can fire selectThread() synchronously during setup()'s own execution,
-	// and selectThread touches refs like pinnedMessage that are declared further down the file —
+	// and selectThread touches refs like pinnedMessages that are declared further down the file —
 	// calling it any earlier hits their temporal dead zone and throws before setup() ever returns.
 	watch(
 		() => [context.myThreads?.data, context.myDMThreads?.data],
@@ -3107,12 +3101,13 @@ export default function setup(context) {
 		cancelReply,
 		getRepliedMessage,
 		replyPreviewText,
-		pinnedMessage,
+		pinnedMessages,
+		hoveredPin,
+		pinnedMessageRows,
+		openPinnedMessage,
+		unpinFromList,
 		isPinned,
 		togglePinMessage,
-		unpinMessage,
-		pinnedMessageLabel,
-		scrollToPinnedMessage,
 		showDeleteClusterDialog,
 		clusterToDelete,
 		deletingCluster,
