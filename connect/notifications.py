@@ -190,12 +190,19 @@ def notify_partner_of_new_requirement(doc, method=None):
 		f"<p><b>{label}:</b> {frappe.utils.escape_html(value)}</p>" for label, value in fields if value
 	)
 
-	frappe.sendmail(
-		recipients=[recipient],
-		subject=_("New requirement from {0}").format(customer_name),
-		message=f"<p>{frappe.utils.escape_html(customer_name)} {_('just sent a new requirement on Connect.')}</p>{details_html}",
-		now=False,
-	)
+	try:
+		frappe.sendmail(
+			recipients=[recipient],
+			subject=_("New requirement from {0}").format(customer_name),
+			message=f"<p>{frappe.utils.escape_html(customer_name)} {_('just sent a new requirement on Connect.')}</p>{details_html}",
+			# A brand-new lead notification is time-sensitive — send right after this request
+			# commits rather than waiting on the next scheduler tick to flush the email queue.
+			now=True,
+		)
+	except Exception:
+		# A missing/broken outgoing Email Account must never block the customer's message from
+		# sending — this email is a convenience alert, not the primary notification path.
+		frappe.log_error(title=f"New-requirement email failed for Connect Thread {doc.thread}")
 
 
 def notify_dm_recipient(doc, method=None):

@@ -1,7 +1,23 @@
 import { ref, computed, watch, onScopeDispose, nextTick } from "vue"
 import { toast, call, useFileUpload, initSocket, setConfig } from "frappe-ui"
+import RAW_EMOJIS from "./emojis.json"
 
 export default function setup(context) {
+	// ==============================================================================================
+	// Wired to the real Connect backend via the "resources" declared in messaging.json (myContext,
+	// myThreads, messages, threadMembers, threadAdmins, memberProfiles, partnerInfo, myShortlist) —
+	// each shows up on `context` under its resource_name. Studio merges the final template context
+	// as {...resources, ...whatever setup() returns}, so none of those names are returned below:
+	// doing so would shadow the live resource with whatever setup() last computed.
+	//
+	// This mirrors studio/connect_2/studio_page/messaging/messaging.ts (the other, already-wired
+	// chat page) wherever this page's UI has the same feature — see that file for the DM/templates/
+	// mentions/profile-settings machinery this page's UI has no hooks for, so none of it is ported.
+	// Two things this page's UI has that connect_2's doesn't (the partner logo/response-time header
+	// stats and the shortlist toggle) are wired against connect.api.partner.get_partner_preview and
+	// connect.api.customer.*_shortlist instead.
+	// ==============================================================================================
+
 	// ---- State ----
 	const selectedThread = ref("")
 	const draftMessage = ref("")
@@ -10,6 +26,12 @@ export default function setup(context) {
 	const togglingShortlist = ref(false)
 	const showMembersDialog = ref(false)
 	const showMediaDialog = ref(false)
+	// Declared here (not down by the rest of the pinning code) because selectThread(), invoked
+	// synchronously below via the immediate watcher whenever context.myThreads.data is already
+	// populated (e.g. cached from a prior load), calls fetchPinnedMessage() before setup() reaches
+	// that section — referencing a `const` declared later throws (temporal dead zone), which was
+	// silently aborting the rest of setup() and everything derived from it, including the emoji list.
+	const pinnedMessage = ref(null)
 
 	// ---- Threads (inbox list) ----
 	function threadList() {
@@ -90,9 +112,6 @@ export default function setup(context) {
 	function selectThread(item) {
 		const name = typeof item === "string" ? item : item.name
 		selectedThread.value = name
-		showMembersDialog.value = false
-		showMediaDialog.value = false
-		pinnedMessage.value = null
 
 		context.messages.filters = { thread: name }
 		context.messages.reload()
@@ -102,9 +121,14 @@ export default function setup(context) {
 		context.threadAdmins.reload()
 		context.memberProfiles.params = { thread: name }
 		context.memberProfiles.reload()
+		context.partnerInfo.params = { partner: currentThread().partner }
+		context.partnerInfo.reload()
 		call("connect.api.threads.mark_thread_read", { thread: name })
 			.then(() => context.myThreads.reload())
 			.catch(() => {})
+
+		showMembersDialog.value = false
+		showMediaDialog.value = false
 		fetchPinnedMessage()
 	}
 
@@ -121,20 +145,18 @@ export default function setup(context) {
 	)
 
 	// ---- Realtime ----
-	// A dedicated connection for this page rather than reusing Studio's own — page scripts
-	// run in a detached effect scope with no component instance, so the socket Studio
-	// provides via Vue's provide()/inject() further up the tree isn't reachable here.
-	// frappe-ui's initSocket() only computes the connection namespace from window.location in
-	// dev builds — in production it reads window.site_name, which nothing on this page sets,
-	// so it silently connects to namespace "/undefined" and the server rejects it. hostname is
-	// what the server actually expects (matches its own site-name resolution) in both cases.
+	// A dedicated connection for this page rather than reusing Studio's own — page scripts run
+	// in a detached effect scope with no component instance, so the socket Studio provides via
+	// Vue's provide()/inject() further up the tree isn't reachable here. Mirrors connect_2's
+	// wiring exactly, minus the DM-only handlers this page has no DM UI for.
 	if (!(window as any).site_name) (window as any).site_name = window.location.hostname
 	const socket = initSocket()
 
 	// Without this, useFileUpload's client-side size check has no limit to compare against and
 	// silently lets oversized files through to the raw upload, which then fails as an opaque
 	// network error instead of an upfront, readable message. Studio-rendered pages don't get a
-	// window.frappe.boot object, so the limit has to be fetched rather than read off boot data.
+	// window.frappe.boot object (unlike desk), so the limit has to be fetched rather than read
+	// off boot data.
 	call("frappe.core.api.file.get_max_file_size").then((maxFileSize) => {
 		if (maxFileSize) setConfig("maxFileSize", maxFileSize)
 	})
@@ -146,8 +168,8 @@ export default function setup(context) {
 	socket.on("connect_new_message", handleNewMessage)
 	onScopeDispose(() => socket.off("connect_new_message", handleNewMessage))
 
-	// A deleted message's sender already drops it from their own view right after the delete
-	// call resolves (see deleteMessage) — this is purely for everyone else's open tabs.
+	// A deleted/edited message's own sender already reflects the change locally right after the
+	// call resolves — these are purely for everyone else's open tabs.
 	function handleMessageDeleted(payload) {
 		if (payload.thread === selectedThread.value) context.messages.reload()
 	}
@@ -222,8 +244,9 @@ export default function setup(context) {
 		return (context.threadMembers.data || []).filter((m) => !m.is_removed)
 	}
 
+	// get_partner_preview returns a single object (not a list), unlike the mock this replaced.
 	function currentPartner() {
-		return (context.partnerInfo.data || [])[0] || null
+		return context.partnerInfo.data || null
 	}
 
 	function partnerLogo() {
@@ -259,12 +282,27 @@ export default function setup(context) {
 			} else {
 				await call("connect.api.customer.add_to_shortlist", { partner })
 			}
-			context.myShortlist.reload()
+			await context.myShortlist.reload()
 		} catch (e) {
-			toast({ title: "Could not update shortlist", text: e.messages ? e.messages[0] : e.message, icon: "x-circle", iconClasses: "text-red-600" })
+			toast({
+				title: "Could not update shortlist",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
 		} finally {
 			togglingShortlist.value = false
 		}
+	}
+
+	// No hiring flow exists yet anywhere in the app — the button just acknowledges the click.
+	function hirePartner() {
+		toast({ title: "Hire flow coming soon", icon: "check", iconClasses: "text-green-600" })
+	}
+
+	// No scheduling flow exists yet anywhere in the app — the button just acknowledges the click.
+	function bookSlot() {
+		toast({ title: "Booking flow coming soon", icon: "check", iconClasses: "text-green-600" })
 	}
 
 	function closeConversation() {
@@ -272,10 +310,16 @@ export default function setup(context) {
 		call("connect.api.threads.close_thread", { thread: selectedThread.value })
 			.then(() => {
 				context.myThreads.reload()
+				context.messages.reload()
 				toast({ title: "Conversation closed", icon: "check", iconClasses: "text-green-600" })
 			})
 			.catch((e) => {
-				toast({ title: "Could not close conversation", text: e.messages ? e.messages[0] : e.message, icon: "x-circle", iconClasses: "text-red-600" })
+				toast({
+					title: "Could not close conversation",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
 			})
 	}
 
@@ -310,7 +354,7 @@ export default function setup(context) {
 		call("connect.api.threads.add_thread_member", {
 			thread: selectedThread.value,
 			email: newMemberEmail.value,
-			side: side,
+			side,
 			permission: newMemberPermission.value,
 		})
 			.then((data) => {
@@ -318,6 +362,7 @@ export default function setup(context) {
 				newMemberEmail.value = ""
 				newMemberPermission.value = "Write"
 				context.threadMembers.reload()
+				context.memberProfiles.reload()
 				toast({
 					title: data && data.created_user ? "New account created and added" : "Member added",
 					icon: "check",
@@ -325,7 +370,12 @@ export default function setup(context) {
 				})
 			})
 			.catch((e) => {
-				toast({ title: "Could not add member", text: e.messages ? e.messages[0] : e.message, icon: "x-circle", iconClasses: "text-red-600" })
+				toast({
+					title: "Could not add member",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
 			})
 	}
 
@@ -338,7 +388,12 @@ export default function setup(context) {
 				toast({ title: "Admin transferred", icon: "check", iconClasses: "text-green-600" })
 			})
 			.catch((e) => {
-				toast({ title: "Could not transfer admin", text: e.messages ? e.messages[0] : e.message, icon: "x-circle", iconClasses: "text-red-600" })
+				toast({
+					title: "Could not transfer admin",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
 			})
 	}
 
@@ -350,7 +405,12 @@ export default function setup(context) {
 				toast({ title: "Member removed", icon: "check", iconClasses: "text-green-600" })
 			})
 			.catch((e) => {
-				toast({ title: "Could not remove member", text: e.messages ? e.messages[0] : e.message, icon: "x-circle", iconClasses: "text-red-600" })
+				toast({
+					title: "Could not remove member",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
 			})
 	}
 
@@ -363,9 +423,6 @@ export default function setup(context) {
 	}
 
 	// ---- Sender identity (hover card + avatars) ----
-	// memberProfiles is fetched once per selectThread() (see there), covering everyone who's
-	// ever been a member of the thread — including removed members, so their older messages
-	// can still resolve a name/photo on hover.
 	function memberProfile(email) {
 		const profiles = context.memberProfiles.data || []
 		return profiles.find((p) => p.name === email) || null
@@ -439,11 +496,39 @@ export default function setup(context) {
 		return hoveredSender.value === email
 	}
 
+	// ---- Requirement → Company card ----
+	// A "Requirement" message stores its snapshot as a JSON blob in `content` (see
+	// connect.api.messages.send_message), not the {company_name, industry, employee_count} shape
+	// the company-card block reads — this reshapes it into that view model at read time so the
+	// existing card renders unchanged. There's no server-side "Company" message_type; this is a
+	// display-only relabel, same trick clusterFileMessages below uses for grouping file messages.
+	function parseRequirementContent(item) {
+		try {
+			return JSON.parse((item && item.content) || "{}") || {}
+		} catch (e) {
+			return {}
+		}
+	}
+
+	function requirementToCompanyCard(item) {
+		const req = parseRequirementContent(item)
+		return {
+			...item,
+			message_type: "Company",
+			company_name: req.company_name || "",
+			industry: req.industry || "",
+			employee_count: req.company_size || "",
+		}
+	}
+
 	// ---- Messages ----
-	// The messages resource fetches creation DESC (newest-first) so the 200-row cap keeps the
-	// most recent messages — reverse here, once, back to the ascending order every reader expects.
+	// messages is a Document List resource sorted creation DESC (see messaging.json) — sorting by
+	// creation ascending here (rather than a blind .reverse()) stays correct regardless of the
+	// resource's own sort order or how ties resolve.
 	function currentMessages() {
-		return [...(context.messages.data || [])].reverse()
+		return [...(context.messages.data || [])]
+			.sort((a, b) => new Date(a.creation).getTime() - new Date(b.creation).getTime())
+			.map((item) => (item.message_type === "Requirement" ? requirementToCompanyCard(item) : item))
 	}
 
 	// consecutive files from the same sender, sent within 2 minutes of each other, are merged
@@ -508,6 +593,8 @@ export default function setup(context) {
 	function threadCreatedLabel() {
 		const t = currentThread()
 		if (!t.creation) return ""
+		const firstMessage = currentMessages()[0]
+		if (firstMessage && isMine(firstMessage.sender)) return "You started this conversation"
 		return "Thread created on " + formatOrdinalDate(new Date(t.creation))
 	}
 
@@ -567,9 +654,9 @@ export default function setup(context) {
 		draftMessage.value = ""
 	}
 
-	// The backend enforces edit/delete ownership via Frappe's own permission system, so a
-	// denied attempt surfaces as a generic PermissionError with no specific message — swap in
-	// our own wording for that one case rather than showing Frappe's raw text.
+	// The backend enforces edit/delete ownership via Frappe's own permission system
+	// (has_message_permission) — a denied attempt surfaces as a generic PermissionError with no
+	// specific message, so swap in our own wording for that one case.
 	function permissionAwareErrorText(e, deniedText) {
 		if (e.exc_type === "PermissionError") return deniedText
 		return e.messages ? e.messages[0] : e.message
@@ -614,16 +701,16 @@ export default function setup(context) {
 	}
 
 	// ---- Deleting a whole file cluster ----
-	// A cluster is a synthetic client-side grouping of several real Connect Message docs sent
-	// close together — deleting the group deletes every file message it contains.
+	// A cluster is a synthetic client-side grouping of several messages sent close together —
+	// deleting the group deletes every file message it contains.
 	async function deleteCluster(item) {
 		const files = (item && item.files) || []
 		if (!files.length) return
 		const label = files.length === 1 ? "this file" : `these ${files.length} files`
 		if (!window.confirm(`Delete ${label}?`)) return
 		try {
-			for (const f of files) {
-				await call("connect.api.messages.delete_message", { message: f.name })
+			for (const file of files) {
+				await call("connect.api.messages.delete_message", { message: file.name })
 			}
 			context.messages.reload()
 		} catch (e) {
@@ -637,10 +724,8 @@ export default function setup(context) {
 	}
 
 	// ---- Pinning a message ----
-	// One pin at a time per thread — the currently pinned message's own fields are kept here
-	// rather than re-derived from context.messages.data, since the pin can scroll out of the
-	// loaded (200-message) window.
-	const pinnedMessage = ref(null)
+	// One pin at a time per thread (see connect.api.messages.pin_message). pinnedMessage itself is
+	// declared up in State — see the comment there for why.
 
 	async function fetchPinnedMessage() {
 		if (!selectedThread.value) {
@@ -669,7 +754,12 @@ export default function setup(context) {
 				await fetchPinnedMessage()
 			}
 		} catch (e) {
-			toast({ title: "Could not update pinned message", text: e.messages ? e.messages[0] : e.message, icon: "x-circle", iconClasses: "text-red-600" })
+			toast({
+				title: "Could not update pinned message",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
 		}
 	}
 
@@ -679,14 +769,21 @@ export default function setup(context) {
 			await call("connect.api.messages.unpin_message", { thread: selectedThread.value })
 			pinnedMessage.value = null
 		} catch (e) {
-			toast({ title: "Could not unpin message", text: e.messages ? e.messages[0] : e.message, icon: "x-circle", iconClasses: "text-red-600" })
+			toast({
+				title: "Could not unpin message",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
 		}
 	}
 
 	function pinnedMessageLabel() {
 		if (!pinnedMessage.value) return ""
 		const sender = (pinnedMessage.value.sender || "").split("@")[0]
-		const body = pinnedMessage.value.message_type === "File" ? "📎 " + (pinnedMessage.value.file_name || "Attachment") : pinnedMessage.value.content
+		let body = pinnedMessage.value.content
+		if (pinnedMessage.value.message_type === "File") body = "📎 " + (pinnedMessage.value.file_name || "Attachment")
+		else if (pinnedMessage.value.message_type === "Requirement") body = "Company details"
 		return sender + ": " + body
 	}
 
@@ -743,13 +840,20 @@ export default function setup(context) {
 		input.click()
 	}
 
-	// uploaded ahead of Send so the composer can show a live progress state and a remove
+	// Uploaded ahead of Send so the composer can show a live progress state and a remove
 	// button per file — a file only becomes part of a real message once sendMessage is called.
 	// Tracked by `id` rather than object reference: draftAttachments is a Vue ref array, so
 	// items read back out of it are reactive proxies, never `===` to the raw object pushed in.
 	function uploadFile(file) {
 		const id = nextAttachmentId++
-		draftAttachments.value.push({ id, file_name: file.name, uploading: true, file_url: null, file_type: null, file_size: null })
+		draftAttachments.value.push({
+			id,
+			file_name: file.name,
+			uploading: true,
+			file_url: null,
+			file_type: null,
+			file_size: null,
+		})
 
 		const { upload } = useFileUpload()
 		upload(file, {
@@ -771,7 +875,12 @@ export default function setup(context) {
 			})
 			.catch((e) => {
 				draftAttachments.value = draftAttachments.value.filter((a) => a.id !== id)
-				toast({ title: "Could not upload file", text: e.messages ? e.messages[0] : e.message, icon: "x-circle", iconClasses: "text-red-600" })
+				toast({
+					title: "Could not upload file",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
 			})
 	}
 
@@ -779,7 +888,12 @@ export default function setup(context) {
 		draftAttachments.value = draftAttachments.value.filter((a) => a.id !== item.id)
 		if (item.file_url) {
 			call("connect.api.attachments.remove_chat_attachment", { file_url: item.file_url }).catch((e) => {
-				toast({ title: "Could not remove attachment", text: e.messages ? e.messages[0] : e.message, icon: "x-circle", iconClasses: "text-red-600" })
+				toast({
+					title: "Could not remove attachment",
+					text: e.messages ? e.messages[0] : e.message,
+					icon: "x-circle",
+					iconClasses: "text-red-600",
+				})
 			})
 		}
 	}
@@ -848,10 +962,11 @@ export default function setup(context) {
 		return Math.min(widest, maxLineWidth) + "px"
 	}
 
-	// Fetched as a blob rather than navigating straight to item.attachment: private files are
-	// served through Frappe's download route, which sets Content-Disposition to a deduped
-	// on-disk filename — that header wins over the anchor's `download` attribute in Chrome. A
-	// blob: URL has no Content-Disposition, so `download` is all that's left to decide the name.
+	// window.open(url, "_blank") flashes a new tab open-then-closed for URLs that trigger a
+	// direct download — an <a download> click saves the file in place instead. Fetched as a blob
+	// rather than navigating straight to item.attachment: private files are served through
+	// Frappe's download route, which sets Content-Disposition to the deduped on-disk filename,
+	// and that header wins over the anchor's `download` attribute in Chrome.
 	async function downloadFile(item, event) {
 		if (event) {
 			event.preventDefault()
@@ -903,6 +1018,7 @@ export default function setup(context) {
 		const thread = selectedThread.value
 		draftMessage.value = ""
 		draftAttachments.value = []
+
 		try {
 			if (content) {
 				await call("connect.api.messages.send_message", { thread, content })
@@ -921,10 +1037,16 @@ export default function setup(context) {
 			context.myThreads.reload()
 		} catch (e) {
 			// A multi-part send (text + attachments) can partially succeed before one part fails —
-			// reload so the sender's own view reflects whatever actually went through.
+			// reload so the sender's own view reflects whatever actually went through, rather than
+			// looking empty until something else triggers a refresh.
 			context.messages.reload()
 			context.myThreads.reload()
-			toast({ title: "Could not send message", text: e.messages ? e.messages[0] : e.message, icon: "x-circle", iconClasses: "text-red-600" })
+			toast({
+				title: "Could not send message",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
 		}
 	}
 
@@ -950,6 +1072,80 @@ export default function setup(context) {
 		el.style.height = el.scrollHeight + "px"
 	}
 	watch(draftMessage, () => nextTick(autoResizeComposer))
+
+	// ---- Emoji picker ----
+	// A small static grid, not a Studio/frappe-ui component — Studio's block set has no picker
+	// primitive, and emoji themselves need no library (they're just characters), so the popover
+	// is one more absolutely-positioned block (see emoji-picker in the JSON), same convention as
+	// sender-hover-card and the members/media side panels.
+	const showEmojiPicker = ref(false)
+	const emojiSearchQuery = ref("")
+
+	// The real emoji set frappe-ui itself ships (its TipTap editor's `:emoji` suggestion list) —
+	// vendored as a local JSON file (see emojis.json) rather than importing from the package,
+	// since that dataset isn't part of frappe-ui's public export surface (only the full TipTap
+	// extension is, which needs a TipTap Editor instance, not this page's plain Textarea).
+	if (!Array.isArray(RAW_EMOJIS)) {
+		console.error("emojis.json did not import as an array — got:", RAW_EMOJIS)
+	}
+	const EMOJI_LIST = (Array.isArray(RAW_EMOJIS) ? RAW_EMOJIS : []).map((e: { name: string; emoji: string }) => ({
+		char: e.emoji,
+		name: e.name,
+	}))
+
+	function emojiList() {
+		const query = emojiSearchQuery.value.trim().toLowerCase()
+		if (!query) return EMOJI_LIST
+		return EMOJI_LIST.filter((e) => e.name.includes(query))
+	}
+
+	function updateEmojiSearchQuery(value) {
+		emojiSearchQuery.value = value
+	}
+	if (typeof window !== "undefined") {
+		;(window as any).__connectEmojiSearchInput = updateEmojiSearchQuery
+	}
+
+	function toggleEmojiPicker() {
+		showEmojiPicker.value = !showEmojiPicker.value
+	}
+
+	// Inserts at the textarea's actual cursor position (falling back to appending at the end if
+	// the element isn't mounted yet) rather than always appending, so picking an emoji mid-message
+	// doesn't jump it to the end of what's already been typed.
+	function insertEmoji(char) {
+		const el = document.querySelector('[data-component-id="message-input"]') as HTMLTextAreaElement | null
+		const text = draftMessage.value || ""
+		if (el && typeof el.selectionStart === "number") {
+			const start = el.selectionStart
+			const end = el.selectionEnd ?? start
+			draftMessage.value = text.slice(0, start) + char + text.slice(end)
+			nextTick(() => {
+				el.focus()
+				const pos = start + char.length
+				el.setSelectionRange(pos, pos)
+			})
+		} else {
+			draftMessage.value = text + char
+		}
+		showEmojiPicker.value = false
+	}
+
+	// Closes the picker on any click outside it or its trigger button — everything else on this
+	// page (members/media panels) is closed by an explicit second click on its own toggle, but a
+	// picker that stays pinned open until you hunt for the same tiny button again is bad enough
+	// UX to warrant the one document-level listener on the page.
+	function handleDocumentClickForEmojiPicker(event: MouseEvent) {
+		if (!showEmojiPicker.value) return
+		const target = event.target as Node
+		const picker = document.querySelector('[data-component-id="emoji-picker"]')
+		const trigger = document.querySelector('[data-component-id="composer-emoji-btn"]')
+		if (picker && picker.contains(target)) return
+		if (trigger && trigger.contains(target)) return
+		showEmojiPicker.value = false
+	}
+	document.addEventListener("click", handleDocumentClickForEmojiPicker)
+	onScopeDispose(() => document.removeEventListener("click", handleDocumentClickForEmojiPicker))
 
 	// ---- Media panel (Files / Links) ----
 	const mediaTab = ref("Files")
@@ -1008,6 +1204,12 @@ export default function setup(context) {
 		if (item && item.href) window.open(item.href, "_blank", "noopener")
 	}
 
+	// No backend for the scheduled-call feature yet (see the top-of-file note) — this stays
+	// wired for whenever real Event-type items exist, but nothing currently produces one.
+	function openEventLink(item) {
+		if (item && item.event_url) window.open(item.event_url, "_blank", "noopener")
+	}
+
 	function formatRelativeDay(item) {
 		const d = new Date(item.creation)
 		const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
@@ -1062,6 +1264,8 @@ export default function setup(context) {
 		localTimeLabel,
 		isShortlisted,
 		toggleShortlist,
+		hirePartner,
+		bookSlot,
 		closeConversation,
 		isAnyAdmin,
 		isRowAdmin,
@@ -1101,6 +1305,11 @@ export default function setup(context) {
 		messageActionsOptions,
 		otherMessageActionsOptions,
 		uploadingFile,
+		showEmojiPicker,
+		emojiSearchQuery,
+		emojiList,
+		toggleEmojiPicker,
+		insertEmoji,
 		openFilePicker,
 		removeAttachment,
 		formatFileSize,
@@ -1121,6 +1330,7 @@ export default function setup(context) {
 		toggleMediaSort,
 		threadLinks,
 		openLink,
+		openEventLink,
 		formatRelativeDay,
 		threadFiles,
 		fileExtensionLabel,

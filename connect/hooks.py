@@ -205,6 +205,9 @@ doc_events = {
 			"connect.notifications.sync_dm_thread_last_message",
 		],
 	},
+	"Partner CRM Settings": {
+		"on_update": "connect.crm_integration.sync_reply_webhook",
+	},
 	"Connect Partner Member": {
 		"after_insert": "connect.roles.grant_company_role",
 		"on_trash": "connect.roles.revoke_company_role",
