@@ -3,7 +3,6 @@ import json
 import frappe
 
 from connect.api.attachments import _attach_file_to_message, _claim_staged_attachment, _copy_message_attachment
-from connect.notifications import notify_reaction_changed
 from connect.permissions import (
 	_check_can_read,
 	_check_can_write,
@@ -15,8 +14,6 @@ from connect.permissions import (
 # Requirement cards are one-off snapshots tied to their thread, so only plain text and files can be
 # forwarded.
 FORWARDABLE_MESSAGE_TYPES = ("Text", "File")
-
-MAX_EMOJI_LENGTH = 32
 
 MIN_SEARCH_LENGTH = 2
 MAX_SEARCH_RESULTS = 50
@@ -200,87 +197,6 @@ def forward_message(message, source_is_dm, target_thread, target_is_dm):
 		_attach_file_to_message(file_copy.name, forwarded.doctype, forwarded.name)
 
 	return forwarded.as_dict()
-
-
-@frappe.whitelist()
-def get_reactions(thread, is_dm=0):
-	"""Every reaction in a conversation, oldest first, so the client can group them per message. A
-	removed thread member only sees reactions made up to the moment they were removed."""
-	user = frappe.session.user
-	is_dm = frappe.utils.cint(is_dm)
-	filters = {"thread": thread, "is_dm": is_dm}
-
-	if is_dm:
-		_dm_thread_pair(thread, user)
-	else:
-		_check_can_read(thread, user)
-		membership = _thread_membership(thread, user)
-		if membership and membership.is_removed and membership.removed_on:
-			filters["creation"] = ["<=", membership.removed_on]
-
-	rows = frappe.get_all(
-		"Connect Message Reaction",
-		filters=filters,
-		fields=["message", "emoji", "user"],
-		order_by="creation asc",
-		limit_page_length=0,
-	)
-	full_names = {
-		u.name: u.full_name
-		for u in frappe.get_all(
-			"User", filters={"name": ["in", list({r.user for r in rows})]}, fields=["name", "full_name"]
-		)
-	}
-	for row in rows:
-		row["full_name"] = full_names.get(row.user)
-	return rows
-
-
-@frappe.whitelist()
-def toggle_reaction(message, is_dm, emoji):
-	"""Adds the caller's reaction to a message, or removes it if they already reacted with that emoji.
-	Reacting is posting, so it needs the same write access as sending a message."""
-	user = frappe.session.user
-	is_dm = frappe.utils.cint(is_dm)
-	emoji = (emoji or "").strip()
-	if not emoji or len(emoji) > MAX_EMOJI_LENGTH:
-		frappe.throw(frappe._("Pick an emoji to react with"))
-
-	thread = frappe.db.get_value(
-		"Connect DM Message" if is_dm else "Connect Message", message, "dm_thread" if is_dm else "thread"
-	)
-	if not thread:
-		frappe.throw(frappe._("Message not found"))
-
-	if is_dm:
-		_dm_thread_pair(thread, user)
-	else:
-		_check_can_write(thread, user)
-
-	# The emoji is compared here, not in the query: the database's default collation treats different
-	# emoji as equal, so filtering on it would match (and delete) the wrong reaction.
-	mine = frappe.get_all(
-		"Connect Message Reaction",
-		filters={"message": message, "is_dm": is_dm, "user": user},
-		fields=["name", "emoji"],
-	)
-	existing = next((r.name for r in mine if r.emoji == emoji), None)
-	if existing:
-		frappe.delete_doc("Connect Message Reaction", existing, ignore_permissions=True)
-	else:
-		frappe.get_doc(
-			{
-				"doctype": "Connect Message Reaction",
-				"thread": thread,
-				"message": message,
-				"is_dm": is_dm,
-				"user": user,
-				"emoji": emoji,
-			}
-		).insert(ignore_permissions=True)
-
-	notify_reaction_changed(thread, is_dm, user)
-	return {"thread": thread, "added": not existing}
 
 
 @frappe.whitelist()

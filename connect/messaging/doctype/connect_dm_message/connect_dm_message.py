@@ -75,7 +75,5 @@ class ConnectDMMessage(Document):
 			if file_name:
 				frappe.delete_doc("File", file_name)
 
-		frappe.db.delete("Connect Message Reaction", {"message": self.name, "is_dm": 1})
-
 		notify_dm_message_deleted(self)
 		resync_dm_thread_last_message_on_trash(self)

@@ -157,21 +157,6 @@ def notify_message_deleted(doc):
 		frappe.publish_realtime("connect_message_deleted", payload, user=member, after_commit=True)
 
 
-def notify_reaction_changed(thread, is_dm, actor):
-	"""Live-pushes "reactions changed" to everyone else in the conversation so their open tab reloads the chips."""
-	if is_dm:
-		pair = frappe.db.get_value("Connect DM Thread", thread, ["user_a", "user_b"], as_dict=True)
-		members = [u for u in (pair.user_a, pair.user_b) if u != actor] if pair else []
-	else:
-		members = frappe.get_all(
-			"Connect Thread Member", filters={"thread": thread, "is_removed": 0, "user": ["!=", actor]}, pluck="user"
-		)
-	for member in members:
-		frappe.publish_realtime(
-			"connect_message_reaction", {"thread": thread, "is_dm": is_dm}, user=member, after_commit=True
-		)
-
-
 def notify_message_edited(doc):
 	"""Live-pushes an edited message to every other thread member."""
 	members = _notification_targets(doc)

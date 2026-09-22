@@ -1,6 +1,5 @@
 import { ref, computed, watch, onScopeDispose, nextTick } from "vue"
 import { toast, call, useFileUpload, initSocket, setConfig } from "frappe-ui"
-import { EMOJI_GROUPS } from "./emojis"
 
 export default function setup(context) {
 	// ---- State ----
@@ -244,7 +243,6 @@ export default function setup(context) {
 			}
 			context.dmMessages.filters = { dm_thread: name }
 			context.dmMessages.reload()
-			loadReactions(name, "dm")
 			call("connect.api.dm.mark_dm_thread_read", { thread: name })
 				.then(() => context.myDMThreads.reload())
 				.catch(() => {})
@@ -254,7 +252,6 @@ export default function setup(context) {
 
 		context.messages.filters = { thread: name }
 		context.messages.reload()
-		loadReactions(name, "company")
 		context.threadMembers.filters = { thread: name }
 		context.threadMembers.reload()
 		context.threadAdmins.params = { thread: name }
@@ -339,15 +336,6 @@ export default function setup(context) {
 	}
 	socket.on("connect_message_edited", handleMessageEdited)
 	onScopeDispose(() => socket.off("connect_message_edited", handleMessageEdited))
-
-	// Someone else reacted/un-reacted in a conversation — refetch the chips if it's the open one.
-	function handleReactionChanged(payload) {
-		if (payload.thread === selectedThread.value && !!payload.is_dm === (selectedThreadType.value === "dm")) {
-			context.messageReactions.reload()
-		}
-	}
-	socket.on("connect_message_reaction", handleReactionChanged)
-	onScopeDispose(() => socket.off("connect_message_reaction", handleReactionChanged))
 
 	// Someone else pinned or unpinned a message — refetch the open conversation's pins. (The acting tab
 	// refreshes its own list right after the call, see setMessagePinned.)
@@ -1273,9 +1261,9 @@ export default function setup(context) {
 	}
 
 	// ---- Hover toolbar (Raven-style) ----
-	// Name of the message whose "more" menu or emoji picker is open. Both are portaled out of the row, so
-	// the row loses :hover the moment the pointer enters them — this keeps the toolbar (and row
-	// highlight) shown for that one message until the menu closes.
+	// Name of the message whose "more" menu is open. It's portaled out of the row, so the row loses
+	// :hover the moment the pointer enters it — this keeps the toolbar (and row highlight) shown for
+	// that one message until the menu closes.
 	const messageMenuOpenFor = ref(null)
 	// Name of the file message under the pointer. Each file card in a cluster has its own toolbar, and
 	// Tailwind's group-hover would light up every card's toolbar when the whole cluster row is hovered, so
@@ -1345,87 +1333,6 @@ export default function setup(context) {
 			}
 		}
 		return null
-	}
-
-	// ---- Reactions ----
-	// One call loads every reaction in the open conversation (connect.api.messages.get_reactions) and the
-	// chips under each message are grouped from that flat list here. File clusters can't be reacted to.
-	// The picker is a Popover holding a search box and a grid of emoji. A message's Popover can't hand the
-	// message to the grid's click handlers (they run inside two nested repeaters), so the open picker's
-	// message lives here instead.
-	const reactionPickerMessage = ref(null)
-	const emojiSearchQuery = ref("")
-
-	function setReactionPicker(item, open) {
-		reactionPickerMessage.value = open ? item : null
-		messageMenuOpenFor.value = open ? item.name : null
-		emojiSearchQuery.value = ""
-	}
-
-	// The emoji groups still matching the search box; a group with no match drops out.
-	function emojiPickerSections() {
-		const query = emojiSearchQuery.value.trim().toLowerCase()
-		return EMOJI_GROUPS.map((g) => ({
-			key: g.group,
-			group: g.group,
-			emojis: g.options
-				.filter((o) => !query || o.label.toLowerCase().includes(query))
-				.map((o) => ({ key: o.value, emoji: o.value })),
-		})).filter((g) => g.emojis.length)
-	}
-
-	function pickReaction(emoji) {
-		const item = reactionPickerMessage.value
-		if (!item) return
-		setReactionPicker(item, false)
-		toggleReaction(item, emoji)
-	}
-
-	function loadReactions(thread, convType) {
-		context.messageReactions.data = []
-		context.messageReactions.params = { thread, is_dm: convType === "dm" ? 1 : 0 }
-		context.messageReactions.reload()
-	}
-
-	// One chip per distinct emoji on a message, in the order the emojis were first used. `item` rides along
-	// on each chip because a chip's own click handler only sees the chip, not the message it belongs to.
-	function messageReactionGroups(item) {
-		const groups = new Map()
-		for (const reaction of context.messageReactions.data || []) {
-			if (reaction.message !== item.name) continue
-			let group = groups.get(reaction.emoji)
-			if (!group) {
-				group = { key: reaction.emoji, emoji: reaction.emoji, count: 0, mine: false, names: [], item }
-				groups.set(reaction.emoji, group)
-			}
-			group.count += 1
-			if (isMine(reaction.user)) {
-				group.mine = true
-				group.names.unshift("You")
-			} else {
-				group.names.push(reaction.full_name ? capitalizeName(reaction.full_name) : memberDisplayName(reaction.user))
-			}
-		}
-		return [...groups.values()].map((g) => ({ ...g, tooltip: g.names.join(", ") + " reacted with " + g.emoji }))
-	}
-
-	async function toggleReaction(item, emoji) {
-		if (!item || item.isFileCluster || !emoji) return
-		try {
-			await call("connect.api.messages.toggle_reaction", {
-				message: item.name,
-				is_dm: selectedThreadType.value === "dm" ? 1 : 0,
-				emoji,
-			})
-			context.messageReactions.reload()
-		} catch (e) {
-			toast({
-				title: "Could not add reaction",
-				text: permissionAwareErrorText(e, "You can't react in this conversation."),
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
-		}
 	}
 
 	// ---- Forward message ----
@@ -3276,13 +3183,6 @@ export default function setup(context) {
 		otherMessageActionsOptions,
 		messageMenuOpenFor,
 		hoveredFile,
-		reactionPickerMessage,
-		emojiSearchQuery,
-		setReactionPicker,
-		emojiPickerSections,
-		pickReaction,
-		messageReactionGroups,
-		toggleReaction,
 		messageMoreOptions,
 		showForwardDialog,
 		messageToForward,
