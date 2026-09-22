@@ -190,3 +190,46 @@ def get_my_context():
 		"customer": customer_membership,
 		"partner": partner_membership,
 	}
+
+
+def get_partner_hours_for_thread(thread=None, dm_thread=None):
+	"""Working hours for the partner side of one conversation — the customer-facing "are they
+	around right now" signal, as opposed to Connect User Settings' get_my_settings (everyone's own
+	personal hours). A company thread can have several partner team members; a DM has exactly one,
+	and only if the other party happens to be a partner at all. Empty `members` means there's
+	nothing to show: no partner on the thread yet, or (for a DM) the other person isn't a partner.
+	"""
+	from connect.messaging.doctype.connect_user_settings.connect_user_settings import get_settings_for_users
+
+	partner_name = None
+	partner_users = []
+
+	if thread:
+		members = frappe.get_all(
+			"Connect Thread Member",
+			filters={"thread": thread, "side": "Partner", "is_removed": 0},
+			fields=["user"],
+		)
+		partner_users = [m.user for m in members]
+		partner = frappe.db.get_value("Connect Thread", thread, "partner")
+		if partner:
+			partner_name = frappe.db.get_value("Partner", partner, "partner_name")
+	elif dm_thread:
+		user_a, user_b = frappe.db.get_value("Connect DM Thread", dm_thread, ["user_a", "user_b"])
+		other = user_b if user_a == frappe.session.user else user_a
+		partner = frappe.db.get_value("Connect Partner Member", {"user": other}, "partner")
+		if partner:
+			partner_users = [other]
+			partner_name = frappe.db.get_value("Partner", partner, "partner_name")
+
+	if not partner_users:
+		return {"partner_name": None, "members": []}
+
+	settings = get_settings_for_users(partner_users)
+	return {
+		"partner_name": partner_name,
+		"members": [
+			{"work_start": s["work_start"], "work_end": s["work_end"], "work_days": s["work_days"]}
+			for s in settings.values()
+		],
+	}

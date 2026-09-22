@@ -3,7 +3,7 @@ from frappe import _
 from frappe.utils import now_datetime
 
 from connect.api.attachments import _attach_file_to_message, _claim_staged_attachment
-from connect.api.messages import _get_message_preview
+from connect.api.messages import PINNED_MESSAGE_FIELDS
 from connect.permissions import _dm_thread_pair, _dm_thread_pair_or_none
 
 
@@ -49,6 +49,14 @@ def get_my_dm_threads():
 		p.name: p
 		for p in frappe.get_all("User", filters={"name": ["in", others]}, fields=["name", "full_name", "user_image"])
 	}
+	# A DM's other party may be a partner-side user (a customer can DM an individual partner
+	# directly, not just the company thread) — used to show that partner's response time badge
+	# in the header, same as a company thread. Most DMs are between two non-partner users, so
+	# this is usually empty; batched rather than queried per-row.
+	other_partners = {
+		m.user: m.partner
+		for m in frappe.get_all("Connect Partner Member", filters={"user": ["in", others]}, fields=["user", "partner"])
+	}
 
 	result = []
 	for t in threads:
@@ -66,9 +74,13 @@ def get_my_dm_threads():
 			"other_user": other,
 			"other_user_full_name": profile.get("full_name"),
 			"other_user_image": profile.get("user_image"),
+			"other_user_partner": other_partners.get(other),
 			"last_message": t.last_message_preview or "",
 			"last_message_at": t.last_message_at or t.creation,
 			"last_message_sender": t.last_message_sender,
+			# Same field name as get_my_threads' sender_names, for one shared client-side lookup —
+			# a DM only ever has two possible senders, and the other one's name is already fetched.
+			"last_message_sender_name": profile.get("full_name") if t.last_message_sender == other else None,
 			"unread_count": unread_count,
 		})
 	return result
@@ -86,8 +98,8 @@ def mark_dm_thread_read(thread):
 
 
 @frappe.whitelist()
-def send_dm_message(thread, content="", file_url=None, file_name=None, file_type=None, file_size=None):
-	"""Sends a DM text or file message, the DM counterpart to send_message."""
+def send_dm_message(thread, content="", file_url=None, file_name=None, file_type=None, file_size=None, silent=0):
+	"""Sends a DM text or file message, the DM counterpart to send_message (including its `silent` option)."""
 	user = frappe.session.user
 	_dm_thread_pair(thread, user)
 
@@ -107,6 +119,7 @@ def send_dm_message(thread, content="", file_url=None, file_name=None, file_type
 		doc.file_name = file_name
 		doc.file_type = file_type
 		doc.file_size = file_size
+	doc.flags.silent = frappe.utils.cint(silent)
 	doc.insert()
 
 	if file_doc_name:
@@ -132,25 +145,26 @@ def edit_dm_message(message, content):
 
 @frappe.whitelist()
 def pin_dm_message(message):
-	"""Resolves which thread a DM belongs to; pin/unpin logic itself lives on Connect DM Thread."""
+	"""Pins a DM (either participant can, a DM can hold any number); the pin rules live on Connect DM Message."""
 	doc = frappe.get_doc("Connect DM Message", message)
-	thread_doc = frappe.get_doc("Connect DM Thread", doc.dm_thread)
-	thread_doc.pin(message, frappe.session.user)
-	return {"thread": thread_doc.name, "pinned_message": thread_doc.pinned_message}
+	doc.pin(frappe.session.user)
+	return {"thread": doc.dm_thread, "message": doc.name, "is_pinned": 1}
 
 
 @frappe.whitelist()
-def unpin_dm_message(thread):
-	thread_doc = frappe.get_doc("Connect DM Thread", thread)
-	thread_doc.unpin(frappe.session.user)
-	return {"thread": thread_doc.name, "pinned_message": None}
+def unpin_dm_message(message):
+	doc = frappe.get_doc("Connect DM Message", message)
+	doc.unpin(frappe.session.user)
+	return {"thread": doc.dm_thread, "message": doc.name, "is_pinned": 0}
 
 
 @frappe.whitelist()
-def get_pinned_dm_message(thread):
+def get_pinned_dm_messages(thread):
 	_dm_thread_pair(thread, frappe.session.user)
-
-	pinned = frappe.db.get_value("Connect DM Thread", thread, "pinned_message")
-	if not pinned:
-		return None
-	return _get_message_preview("Connect DM Message", pinned)
+	return frappe.get_list(
+		"Connect DM Message",
+		filters={"dm_thread": thread, "is_pinned": 1},
+		fields=PINNED_MESSAGE_FIELDS,
+		order_by="pinned_at desc",
+		limit_page_length=0,
+	)

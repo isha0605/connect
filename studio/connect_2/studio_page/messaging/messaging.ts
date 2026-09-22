@@ -128,15 +128,16 @@ export default function setup(context) {
 		return d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 	}
 
-	// WhatsApp/Slack-style "Sender: message" preview — the sender label mirrors how a message's
-	// own sender name renders in the chat pane (email local-part, capitalized), so the thread
-	// list and the open thread agree on how someone's name is shown.
+	// WhatsApp/Slack-style "Sender: message" preview — the sender label is their real display
+	// name (last_message_sender_name, from get_my_threads/get_my_dm_threads), same as everywhere
+	// else in the chat pane. Falls back to the email local-part only for a sender with no
+	// resolvable name at all, rather than showing that in place of an actual name that exists.
 	function threadListPreview(thread) {
 		if (!thread || !thread.last_message) return "No messages yet"
 		const me = context.myContext.data && context.myContext.data.user
 		const sender = thread.last_message_sender
-		let label = sender === me ? "You" : (sender || "").split("@")[0]
-		if (label && label !== "You") label = label.charAt(0).toUpperCase() + label.slice(1)
+		let label = sender === me ? "You" : thread.last_message_sender_name || (sender || "").split("@")[0]
+		if (label && label !== "You") label = capitalizeName(label)
 		return (label ? label + ": " : "") + thread.last_message
 	}
 
@@ -215,7 +216,7 @@ export default function setup(context) {
 		showMembersDialog.value = false
 		showMediaDialog.value = false
 		showTemplatesDialog.value = false
-		pinnedMessage.value = null
+		pinnedMessages.value = []
 
 		if (convType === "dm") {
 			const other = typeof item === "object" ? item : null
@@ -225,13 +226,29 @@ export default function setup(context) {
 			context.memberProfiles.data = other
 				? [{ name: other.other_user, full_name: other.other_user_full_name, user_image: other.other_user_image }]
 				: []
+			// Only a partner-side other party has a response time to show (see other_user_partner
+			// in get_my_dm_threads) — clear stale data by hand instead of reloading with an empty
+			// partner, which get_partner_preview would reject as a missing required arg.
+			if (other && other.other_user_partner) {
+				context.partnerInfo.params = { partner: other.other_user_partner }
+				context.partnerInfo.reload()
+			} else {
+				context.partnerInfo.data = null
+			}
+			// The after-hours banner is a customer-facing "is the partner around" signal now, not a
+			// self-reminder — a partner viewing their own threads never needs it (see amPartner()
+			// gate in showAfterHoursBanner), so there's nothing worth fetching for them.
+			if (!amPartner()) {
+				context.partnerWorkHours.params = { dm_thread: name }
+				context.partnerWorkHours.reload()
+			}
 			context.dmMessages.filters = { dm_thread: name }
 			context.dmMessages.reload()
 			loadReactions(name, "dm")
 			call("connect.api.dm.mark_dm_thread_read", { thread: name })
 				.then(() => context.myDMThreads.reload())
 				.catch(() => {})
-			fetchPinnedMessage()
+			fetchPinnedMessages()
 			return
 		}
 
@@ -246,10 +263,14 @@ export default function setup(context) {
 		context.memberProfiles.reload()
 		context.partnerInfo.params = { partner: currentThread().partner }
 		context.partnerInfo.reload()
+		if (!amPartner()) {
+			context.partnerWorkHours.params = { thread: name }
+			context.partnerWorkHours.reload()
+		}
 		call("connect.api.threads.mark_thread_read", { thread: name })
 			.then(() => context.myThreads.reload())
 			.catch(() => {})
-		fetchPinnedMessage()
+		fetchPinnedMessages()
 	}
 
 	// On phone-width screens the thread list and the open conversation share one pane
@@ -305,7 +326,10 @@ export default function setup(context) {
 	// A deleted message's sender already drops it from their own view right after the delete
 	// call resolves (see deleteMessage) — this is purely for everyone else's open tabs.
 	function handleMessageDeleted(payload) {
-		if (payload.thread === selectedThread.value) context.messages.reload()
+		if (payload.thread === selectedThread.value) {
+			context.messages.reload()
+			fetchPinnedMessages()
+		}
 	}
 	socket.on("connect_message_deleted", handleMessageDeleted)
 	onScopeDispose(() => socket.off("connect_message_deleted", handleMessageDeleted))
@@ -325,20 +349,10 @@ export default function setup(context) {
 	socket.on("connect_message_reaction", handleReactionChanged)
 	onScopeDispose(() => socket.off("connect_message_reaction", handleReactionChanged))
 
-	// The pin/unpin call itself already updates the acting tab's own `pinnedMessage` — this is
-	// purely for everyone else's open tabs, and carries the pinned message's fields directly in
-	// the payload so those tabs don't need a round trip back to get_pinned_message.
+	// Someone else pinned or unpinned a message — refetch the open conversation's pins. (The acting tab
+	// refreshes its own list right after the call, see setMessagePinned.)
 	function handleThreadPinChanged(payload) {
-		if (payload.thread !== selectedThread.value) return
-		pinnedMessage.value = payload.pinned_message
-			? {
-					name: payload.pinned_message,
-					sender: payload.sender,
-					message_type: payload.message_type,
-					content: payload.content,
-					file_name: payload.file_name,
-				}
-			: null
+		if (payload.thread === selectedThread.value && selectedThreadType.value === "company") fetchPinnedMessages()
 	}
 	socket.on("connect_thread_pin_changed", handleThreadPinChanged)
 	onScopeDispose(() => socket.off("connect_thread_pin_changed", handleThreadPinChanged))
@@ -347,6 +361,7 @@ export default function setup(context) {
 	function handleDMMessageDeleted(payload) {
 		if (selectedThreadType.value === "dm" && payload.dm_thread === selectedThread.value) {
 			context.dmMessages.reload()
+			fetchPinnedMessages()
 		}
 	}
 	socket.on("connect_dm_message_deleted", handleDMMessageDeleted)
@@ -361,16 +376,7 @@ export default function setup(context) {
 	onScopeDispose(() => socket.off("connect_dm_message_edited", handleDMMessageEdited))
 
 	function handleDMThreadPinChanged(payload) {
-		if (selectedThreadType.value !== "dm" || payload.thread !== selectedThread.value) return
-		pinnedMessage.value = payload.pinned_message
-			? {
-					name: payload.pinned_message,
-					sender: payload.sender,
-					message_type: payload.message_type,
-					content: payload.content,
-					file_name: payload.file_name,
-				}
-			: null
+		if (selectedThreadType.value === "dm" && payload.thread === selectedThread.value) fetchPinnedMessages()
 	}
 	socket.on("connect_dm_thread_pin_changed", handleDMThreadPinChanged)
 	onScopeDispose(() => socket.off("connect_dm_thread_pin_changed", handleDMThreadPinChanged))
@@ -556,13 +562,33 @@ export default function setup(context) {
 		return activeMembers().length
 	}
 
+	// The overlapping avatar stack at the right of the chat header (Raven-style): the first few active
+	// members, then a "N+" bubble for the rest. Clicking it opens the members panel.
+	const HEADER_AVATAR_LIMIT = 3
+
+	function headerMemberAvatars() {
+		return activeMembers()
+			.slice(0, HEADER_AVATAR_LIMIT)
+			.map((m, index) => ({
+				key: m.user,
+				index,
+				name: memberDisplayName(m.user),
+				image: memberImage(m.user),
+			}))
+	}
+
+	function headerMemberOverflow() {
+		return Math.max(0, activeMemberCount() - HEADER_AVATAR_LIMIT)
+	}
+
 	// Chat header stats — partnerInfo is fetched on demand (see selectThread) rather than folded
 	// into get_my_threads, since that resource backs every row in the sidebar and this is only
 	// ever needed for whichever one thread is currently open.
 	function responseTimeLabel() {
 		const p = context.partnerInfo.data
 		if (!p || !p.response_time_hours) return ""
-		return "Typically " + p.response_time_hours + "h"
+		const hours = p.response_time_hours
+		return "Typically replies in " + hours + (hours === 1 ? " hr" : " hrs")
 	}
 
 	// a trailing "@partial-name" at the very end of the draft triggers the picker — mentions
@@ -625,10 +651,8 @@ export default function setup(context) {
 			(_match, prefix, name) => prefix + '<span style="font-weight: 600">@' + name + "</span>",
 		)
 		if (!item || !item.is_edited) return withMentions
-		const editedSpan =
-			'<span style="float: right; margin-left: 8px; margin-top: 6px; margin-right: -6px; font-size: 9px; ' +
-			'line-height: 12px; color: var(--ink-gray-5); white-space: nowrap;">Edited</span>'
-		return withMentions + editedSpan
+		// Raven-style: a muted "(edited)" right after the text, inline, at the message's own size.
+		return withMentions + ' <span style="color: var(--ink-gray-5);">(edited)</span>'
 	}
 
 	// ---- Requirement cards ----
@@ -985,6 +1009,7 @@ export default function setup(context) {
 
 	function selectProfileSettingsSection(section) {
 		profileSettingsSection.value = section
+		if (section === "workhours") populateWorkEdit()
 	}
 
 	async function saveMyProfile() {
@@ -1252,6 +1277,11 @@ export default function setup(context) {
 	// the row loses :hover the moment the pointer enters them — this keeps the toolbar (and row
 	// highlight) shown for that one message until the menu closes.
 	const messageMenuOpenFor = ref(null)
+	// Name of the file message under the pointer. Each file card in a cluster has its own toolbar, and
+	// Tailwind's group-hover would light up every card's toolbar when the whole cluster row is hovered, so
+	// hover is tracked here instead — except a single-file cluster has no such ambiguity, where the
+	// whole row (not just the card) sets this too, same as a text message's whole bubble does.
+	const hoveredFile = ref("")
 
 	function messageCopyText(item) {
 		if (item.message_type === "Requirement") return requirementDetailsText(item)
@@ -1273,9 +1303,8 @@ export default function setup(context) {
 	function messageMoreOptions(item) {
 		if (!item) return []
 		const mine = isMine(item.sender)
-		if (item.isFileCluster) {
-			return mine ? [{ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick: () => confirmDeleteCluster(item) }] : []
-		}
+		// A cluster has no actions of its own: each file card carries its own toolbar (see clusterOfFile).
+		if (item.isFileCluster) return []
 		const options = [
 			{ label: "Reply", icon: "lucide-reply", onClick: () => startReply(item) },
 		]
@@ -1293,8 +1322,29 @@ export default function setup(context) {
 				options.push({ label: "Edit", icon: "lucide-pencil", onClick: () => confirmEditMessage(item) })
 			}
 			options.push({ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick: () => confirmDeleteMessage(item) })
+			// Files sent together are grouped into one cluster; deleting several at once lives here now that the
+			// cluster row has no toolbar of its own.
+			const cluster = item.message_type === "File" ? clusterOfFile(item) : null
+			if (cluster && cluster.files.length > 1) {
+				options.push({
+					label: "Delete multiple files...",
+					icon: "lucide-trash-2",
+					theme: "red",
+					onClick: () => confirmDeleteCluster(cluster),
+				})
+			}
 		}
 		return options
+	}
+
+	// The cluster (see clusterFileMessages) a file message currently belongs to, if any.
+	function clusterOfFile(file) {
+		for (const group of groupedMessages.value) {
+			for (const entry of group.items) {
+				if (entry.isFileCluster && entry.files.some((f) => f.name === file.name)) return entry
+			}
+		}
+		return null
 	}
 
 	// ---- Reactions ----
@@ -1487,6 +1537,7 @@ export default function setup(context) {
 			})
 			showDeleteMessageDialog.value = false
 			messageToDelete.value = null
+			fetchPinnedMessages()
 			if (isDM) {
 				context.dmMessages.reload()
 				context.myDMThreads.reload()
@@ -1614,46 +1665,50 @@ export default function setup(context) {
 		}
 	}
 
-	// ---- Pinning a message ----
-	// One pin at a time per thread (see connect.api.messages.pin_message) — the currently pinned
-	// message's own fields are kept here rather than re-derived from context.messages.data
-	// since the pinned message can scroll out of the loaded window (200-message limit).
-	const pinnedMessage = ref(null)
+	// ---- Pinning messages ----
+	// Any number of messages can be pinned per conversation (see connect.api.messages.pin_message). The
+	// pinned messages' own fields are kept here, most recent pin first, rather than re-derived from
+	// context.messages.data, since a pinned message can scroll out of the loaded window (200-message limit).
+	const pinnedMessages = ref([])
+	// Pin card under the pointer in the Pins tab, for its hover-only unpin button.
+	const hoveredPin = ref("")
 
-	async function fetchPinnedMessage() {
-		if (!selectedThread.value) {
-			pinnedMessage.value = null
+	async function fetchPinnedMessages() {
+		const thread = selectedThread.value
+		if (!thread) {
+			pinnedMessages.value = []
 			return
 		}
 		try {
 			const method =
-				selectedThreadType.value === "dm" ? "connect.api.dm.get_pinned_dm_message" : "connect.api.messages.get_pinned_message"
-			pinnedMessage.value = await call(method, { thread: selectedThread.value })
+				selectedThreadType.value === "dm" ? "connect.api.dm.get_pinned_dm_messages" : "connect.api.messages.get_pinned_messages"
+			const rows = await call(method, { thread })
+			// A slow response for a conversation that's no longer open must not overwrite the current one.
+			if (thread === selectedThread.value) pinnedMessages.value = rows
 		} catch (e) {
-			pinnedMessage.value = null
+			if (thread === selectedThread.value) pinnedMessages.value = []
 		}
 	}
 
 	function isPinned(item) {
-		return !!(pinnedMessage.value && item && pinnedMessage.value.name === item.name)
+		return !!item && pinnedMessages.value.some((p) => p.name === item.name)
 	}
 
-	async function togglePinMessage(item) {
-		if (!item || item.isFileCluster) return
+	async function setMessagePinned(name, pin) {
 		const isDM = selectedThreadType.value === "dm"
+		const method = isDM
+			? pin
+				? "connect.api.dm.pin_dm_message"
+				: "connect.api.dm.unpin_dm_message"
+			: pin
+				? "connect.api.messages.pin_message"
+				: "connect.api.messages.unpin_message"
 		try {
-			if (isPinned(item)) {
-				await call(isDM ? "connect.api.dm.unpin_dm_message" : "connect.api.messages.unpin_message", {
-					thread: selectedThread.value,
-				})
-				pinnedMessage.value = null
-			} else {
-				await call(isDM ? "connect.api.dm.pin_dm_message" : "connect.api.messages.pin_message", { message: item.name })
-				await fetchPinnedMessage()
-			}
+			await call(method, { message: name })
+			await fetchPinnedMessages()
 		} catch (e) {
 			toast({
-				title: "Could not update pinned message",
+				title: pin ? "Could not pin message" : "Could not unpin message",
 				text: e.messages ? e.messages[0] : e.message,
 				icon: "x-circle",
 				iconClasses: "text-red-600",
@@ -1661,40 +1716,43 @@ export default function setup(context) {
 		}
 	}
 
-	async function unpinMessage() {
-		if (!selectedThread.value || !pinnedMessage.value) return
-		try {
-			const isDM = selectedThreadType.value === "dm"
-			await call(isDM ? "connect.api.dm.unpin_dm_message" : "connect.api.messages.unpin_message", {
-				thread: selectedThread.value,
-			})
-			pinnedMessage.value = null
-		} catch (e) {
-			toast({
-				title: "Could not unpin message",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
-		}
+	function togglePinMessage(item) {
+		if (!item || item.isFileCluster) return
+		return setMessagePinned(item.name, !isPinned(item))
 	}
 
-	function pinnedMessageLabel() {
-		if (!pinnedMessage.value) return ""
-		const sender = (pinnedMessage.value.sender || "").split("@")[0]
-		let body = pinnedMessage.value.content
-		if (pinnedMessage.value.message_type === "File") {
-			body = "📎 " + (pinnedMessage.value.file_name || "Attachment")
-		} else if (pinnedMessage.value.message_type === "Requirement") {
-			body = "Requirement details"
-		}
-		return sender + ": " + body
+	// "Today" / "Yesterday" / "Sep 22" — how a pin's age is shown in the Pins tab.
+	function relativeDayLabel(value) {
+		const date = new Date(value)
+		const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(date).setHours(0, 0, 0, 0)) / 86400000)
+		if (days <= 0) return "Today"
+		if (days === 1) return "Yesterday"
+		return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 	}
 
-	function scrollToPinnedMessage() {
-		if (!pinnedMessage.value) return
-		const el = document.querySelector(`[data-message-id="${pinnedMessage.value.name}"]`)
-		if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
+	function pinnedPreviewText(message) {
+		if (message.message_type === "File") return "📎 " + (message.file_name || "Attachment")
+		if (message.message_type === "Requirement") return "Requirement details"
+		return message.content || ""
+	}
+
+	// Rows for the Pins tab of the Files / Links / Pins side panel (opened from the header's pin button).
+	function pinnedMessageRows() {
+		return pinnedMessages.value.map((p) => ({
+			...p,
+			senderName: memberDisplayName(p.sender),
+			when: relativeDayLabel(p.pinned_at || p.creation),
+			snippet: pinnedPreviewText(p),
+		}))
+	}
+
+	// Scrolls to the pinned message and flashes it (see scrollToMessage).
+	function openPinnedMessage(pin) {
+		scrollToMessage(pin.name)
+	}
+
+	function unpinFromList(pin) {
+		return setMessagePinned(pin.name, false)
 	}
 
 	// ---- Deleting a whole file cluster ----
@@ -1740,6 +1798,7 @@ export default function setup(context) {
 			}
 			showDeleteClusterDialog.value = false
 			clusterToDelete.value = null
+			fetchPinnedMessages()
 			if (isDM) {
 				context.dmMessages.reload()
 				context.myDMThreads.reload()
@@ -1758,8 +1817,12 @@ export default function setup(context) {
 		}
 	}
 
-	async function sendMessage() {
+	// `silent` (the Send button's dropdown, or Ctrl/Cmd+Shift+Enter) sends without pinging anyone; with the
+	// "Always send silently" preference, that's automatic outside working hours.
+	async function sendMessage(silent = false) {
 		if (!selectedThread.value || uploadingFile.value) return
+		const sendSilently = silent === true || (afterHoursBehavior() === "Always send silently" && isOutsideWorkHours())
+		const silentFlag = sendSilently ? 1 : 0
 		if (messageToEdit.value) {
 			await saveEditedMessage()
 			return
@@ -1773,7 +1836,7 @@ export default function setup(context) {
 			draftAttachments.value = []
 			try {
 				if (content) {
-					await call("connect.api.dm.send_dm_message", { thread, content })
+					await call("connect.api.dm.send_dm_message", { thread, content, silent: silentFlag })
 				}
 				for (const a of dmReadyAttachments) {
 					await call("connect.api.dm.send_dm_message", {
@@ -1783,6 +1846,7 @@ export default function setup(context) {
 						file_name: a.file_name,
 						file_type: a.file_type,
 						file_size: a.file_size,
+						silent: silentFlag,
 					})
 				}
 				context.dmMessages.reload()
@@ -1816,7 +1880,7 @@ export default function setup(context) {
 
 		try {
 			if (content) {
-				await call("connect.api.messages.send_message", { thread, content, reply_to: replyToSend })
+				await call("connect.api.messages.send_message", { thread, content, reply_to: replyToSend, silent: silentFlag })
 			}
 			for (const a of readyAttachments) {
 				await call("connect.api.messages.send_message", {
@@ -1826,6 +1890,7 @@ export default function setup(context) {
 					file_name: a.file_name,
 					file_type: a.file_type,
 					file_size: a.file_size,
+					silent: silentFlag,
 				})
 			}
 			if (requirementToSend) {
@@ -2063,6 +2128,12 @@ export default function setup(context) {
 		if (event.key === "Escape" && messageToEdit.value) {
 			event.preventDefault()
 			cancelEditMessage()
+			return
+		}
+		// Ctrl/Cmd+Shift+Enter: send silently.
+		if (event.key === "Enter" && event.shiftKey && (event.ctrlKey || event.metaKey)) {
+			event.preventDefault()
+			sendMessage(true)
 			return
 		}
 		if (event.key === "Enter" && !event.shiftKey) {
@@ -2320,11 +2391,12 @@ export default function setup(context) {
 	// isn't in Studio's production build list, so it can't be used in a built app.) It lists the
 	// conversations the caller actually has, built from the inbox the page already loaded: company threads
 	// by the *other* company's name (a customer sees partners, a partner sees customers, never the individual
-	// members behind them) and personal DMs by person. The message-search actions follow. Nothing is
-	// highlighted until the arrow keys move onto a row.
+	// members behind them) and personal DMs by person. The message-search actions follow. The first row is
+	// highlighted as soon as the palette opens (or the query changes), same as it would be under a mouse
+	// hover, so arrow keys and Enter work immediately without an initial keypress to "arm" a selection.
 	const showCommandPalette = ref(false)
 	const commandSearchQuery = ref("")
-	const commandActiveIndex = ref(-1)
+	const commandActiveIndex = ref(0)
 	const COMMAND_ROWS_WITHOUT_QUERY = 6
 
 	// Ctrl on Windows/Linux, ⌘ on macOS — the palette accepts either, this is just what the footer shows.
@@ -2354,11 +2426,11 @@ export default function setup(context) {
 	watch(showCommandPalette, (open) => {
 		if (!open) return
 		commandSearchQuery.value = ""
-		commandActiveIndex.value = -1
+		commandActiveIndex.value = 0
 	})
 
 	watch(commandSearchQuery, () => {
-		commandActiveIndex.value = -1
+		commandActiveIndex.value = 0
 	})
 
 	// "Search in <this conversation>" / "Search anywhere" rows. `kind` is what selectCommandItem dispatches on.
@@ -2735,6 +2807,199 @@ export default function setup(context) {
 	// element a :focus-within rule could live on — the inner input reports focus up instead.
 	const composerFocused = ref(false)
 
+	// ---- Working hours & sending after hours ----
+	// Each person sets their own working hours and days (Settings → Working hours, stored server-side in
+	// Connect User Settings). Messaging outside them shows a banner above the composer offering to send
+	// silently — delivered like any message, but without a notification ping for the other members. Hours are
+	// compared against this browser's clock. Raven's "quiet hours", in Connect.
+	const WEEKDAYS = [
+		{ key: "monday", label: "Mon" },
+		{ key: "tuesday", label: "Tue" },
+		{ key: "wednesday", label: "Wed" },
+		{ key: "thursday", label: "Thu" },
+		{ key: "friday", label: "Fri" },
+		{ key: "saturday", label: "Sat" },
+		{ key: "sunday", label: "Sun" },
+	]
+	const AFTER_HOURS_OPTIONS = [
+		{ label: "Do nothing", value: "Do nothing" },
+		{ label: "Suggest sending silently", value: "Suggest sending silently" },
+		{ label: "Always send silently", value: "Always send silently" },
+	]
+	const workSettings = ref({
+		work_start: "09:00",
+		work_end: "18:00",
+		work_days: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+		after_hours_behavior: "Suggest sending silently",
+	})
+	const editWorkStart = ref("09:00")
+	const editWorkEnd = ref("18:00")
+	const editWorkDays = ref([])
+	const editAfterHours = ref("Suggest sending silently")
+	const savingWorkSettings = ref(false)
+	// ✕ on the banner hides it until the page is reloaded.
+	const afterHoursBannerDismissed = ref(false)
+	// Bumped every 30s so the banner appears/disappears when the clock crosses a boundary while the page is open.
+	const clockTick = ref(Date.now())
+	const clockTimer = setInterval(() => (clockTick.value = Date.now()), 30000)
+	onScopeDispose(() => clearInterval(clockTimer))
+
+	async function loadWorkSettings() {
+		try {
+			workSettings.value = await call("connect.api.account.get_my_work_settings")
+		} catch (e) {
+			// Keep the defaults: a failed load must never block messaging.
+		}
+	}
+	loadWorkSettings()
+
+	function minutesOfDay(hhmm) {
+		const [hours, minutes] = (hhmm || "00:00").split(":")
+		return Number(hours) * 60 + Number(minutes || 0)
+	}
+
+	// Shared by isOutsideWorkHours (the sender's own hours — still drives the personal "Always send
+	// silently" auto-behavior below, unchanged) and isPartnerOutsideHours (the banner's new
+	// customer-facing check) so the day/time math has exactly one implementation.
+	function isOutsideHoursWindow(settings) {
+		clockTick.value // re-evaluated on every tick
+		const now = new Date()
+		const today = WEEKDAYS[(now.getDay() + 6) % 7].key
+		if (!settings.work_days.includes(today)) return true
+		const minutes = now.getHours() * 60 + now.getMinutes()
+		return minutes < minutesOfDay(settings.work_start) || minutes >= minutesOfDay(settings.work_end)
+	}
+
+	function isOutsideWorkHours() {
+		return isOutsideHoursWindow(workSettings.value)
+	}
+
+	// "Outside hours" means nobody on the partner side can currently answer — every member has to
+	// be off the clock, not just one of them, so a teammate still around never gets a false flag
+	// hung on their name. See get_partner_hours_for_thread for where `members` comes from.
+	function isPartnerOutsideHours() {
+		const members = context.partnerWorkHours.data && context.partnerWorkHours.data.members
+		if (!members || !members.length) return false
+		return members.every((member) => isOutsideHoursWindow(member))
+	}
+
+	function afterHoursBehavior() {
+		return workSettings.value.after_hours_behavior
+	}
+
+	function showAfterHoursBanner() {
+		// The banner is a customer-facing "is the partner around" signal now, not a self-reminder —
+		// see get_partner_hours_for_thread. A partner has nothing to check it against (customers
+		// don't publish hours), so they never see it.
+		if (amPartner()) return false
+		return (
+			!!selectedThread.value &&
+			!messageToEdit.value &&
+			!afterHoursBannerDismissed.value &&
+			afterHoursBehavior() !== "Do nothing" &&
+			isPartnerOutsideHours()
+		)
+	}
+
+	function afterHoursBannerText() {
+		const partnerName = (context.partnerWorkHours.data && context.partnerWorkHours.data.partner_name) || "They"
+		return "It's outside " + partnerName + "'s working hours"
+	}
+
+	function afterHoursBannerOptions() {
+		// "Working hours settings" used to open the viewer's own hours — made sense when the banner
+		// was a self-reminder, but now it's about the PARTNER's hours (see get_partner_hours_for_thread),
+		// which the viewer can't set from here at all.
+		return [
+			{ label: "Don't remind me again", icon: "lucide-bell-off", onClick: () => saveAfterHoursBehavior("Do nothing") },
+		]
+	}
+
+	function populateWorkEdit() {
+		const settings = workSettings.value
+		editWorkStart.value = settings.work_start
+		editWorkEnd.value = settings.work_end
+		editWorkDays.value = [...settings.work_days]
+		editAfterHours.value = settings.after_hours_behavior
+	}
+
+	function workDayRows() {
+		return WEEKDAYS.map((day) => ({ ...day, selected: editWorkDays.value.includes(day.key) }))
+	}
+
+	function toggleWorkDay(key) {
+		editWorkDays.value = editWorkDays.value.includes(key)
+			? editWorkDays.value.filter((k) => k !== key)
+			: [...editWorkDays.value, key]
+	}
+
+	// TimePicker hands back HH:mm (or HH:mm:ss); the server compares whole minutes.
+	function trimTime(value) {
+		return (value || "").slice(0, 5)
+	}
+
+	function workSettingsChanged() {
+		const saved = workSettings.value
+		return (
+			trimTime(editWorkStart.value) !== saved.work_start ||
+			trimTime(editWorkEnd.value) !== saved.work_end ||
+			editAfterHours.value !== saved.after_hours_behavior ||
+			WEEKDAYS.some((day) => editWorkDays.value.includes(day.key) !== saved.work_days.includes(day.key))
+		)
+	}
+
+	function workSettingsError() {
+		if (!editWorkDays.value.length) return "Pick at least one working day."
+		if (minutesOfDay(trimTime(editWorkStart.value)) >= minutesOfDay(trimTime(editWorkEnd.value))) {
+			return "Your work day must end after it starts."
+		}
+		return ""
+	}
+
+	async function saveWorkSettings() {
+		if (savingWorkSettings.value || !workSettingsChanged() || workSettingsError()) return
+		savingWorkSettings.value = true
+		try {
+			workSettings.value = await call("connect.api.account.update_my_work_settings", {
+				work_start: trimTime(editWorkStart.value),
+				work_end: trimTime(editWorkEnd.value),
+				work_days: editWorkDays.value,
+				after_hours_behavior: editAfterHours.value,
+			})
+			afterHoursBannerDismissed.value = false
+			toast({ title: "Working hours saved", icon: "check", iconClasses: "text-green-600" })
+		} catch (e) {
+			toast({
+				title: "Could not save working hours",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			savingWorkSettings.value = false
+		}
+	}
+
+	// Changes only the after-hours behavior (the banner's "Don't remind me again"), keeping the rest as saved.
+	async function saveAfterHoursBehavior(behavior) {
+		const saved = workSettings.value
+		try {
+			workSettings.value = await call("connect.api.account.update_my_work_settings", {
+				work_start: saved.work_start,
+				work_end: saved.work_end,
+				work_days: saved.work_days,
+				after_hours_behavior: behavior,
+			})
+		} catch (e) {
+			toast({
+				title: "Could not update your preference",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		}
+	}
+
 	// ---- Media ----
 	const mediaSearchQuery = ref("")
 	const mediaViewMode = ref("list")
@@ -2744,31 +3009,11 @@ export default function setup(context) {
 		mediaSortAscending.value = !mediaSortAscending.value
 	}
 
-	// The Files/Links search box is a raw HTML block (see media-search-box in the JSON) rather
-	// than frappe-ui's TextInput — that component never exposes its actual <input> to outside
-	// styling, only a wrapper div, so there's no way to get the icon to render inside the same
-	// box as the text. A plain <input> lets a real `<style>` block own :hover/:focus directly.
-	// Since v-html renders it outside Vue's reactivity, it's wired to app state by hand: typing
-	// calls a function stashed on `window` (inline `oninput` only has access to global scope),
-	// and switching tabs reaches back into the DOM to clear/relabel it.
-	function updateMediaSearchQuery(value) {
-		mediaSearchQuery.value = value
-	}
-	if (typeof window !== "undefined") {
-		window.__connectMediaSearchInput = updateMediaSearchQuery
-	}
-
-	// a leftover query from the Files tab would otherwise silently filter out every
-	// link (and vice versa) since both tabs share one search box
+	// The Files/Links search box is a frappe-ui TextInput bound to mediaSearchQuery (see media-search-box in the
+	// JSON). A leftover query from the Files tab would otherwise silently filter out every link (and vice
+	// versa) since both tabs share one search box, so switching tabs clears it.
 	watch(mediaTab, () => {
 		mediaSearchQuery.value = ""
-		nextTick(() => {
-			const el = document.getElementById("cnct-media-search-input")
-			if (el) {
-				el.value = ""
-				el.placeholder = mediaTab.value === "Files" ? "Search files..." : "Search links..."
-			}
-		})
 	})
 
 	// Strips sentence punctuation a URL regex has no way to distinguish from part of the URL
@@ -2851,7 +3096,7 @@ export default function setup(context) {
 	// selectThread() itself needs nothing but the name; it fetches everything else by thread.
 	// Placed here (right before return, not up near its own declaration) deliberately: with
 	// immediate:true this can fire selectThread() synchronously during setup()'s own execution,
-	// and selectThread touches refs like pinnedMessage that are declared further down the file —
+	// and selectThread touches refs like pinnedMessages that are declared further down the file —
 	// calling it any earlier hits their temporal dead zone and throws before setup() ever returns.
 	watch(
 		() => [context.myThreads?.data, context.myDMThreads?.data],
@@ -3010,6 +3255,8 @@ export default function setup(context) {
 		activeMembers,
 		activeMemberCount,
 		responseTimeLabel,
+		headerMemberAvatars,
+		headerMemberOverflow,
 		addMember,
 		makeAdmin,
 		removeMember,
@@ -3028,6 +3275,7 @@ export default function setup(context) {
 		messageActionsOptions,
 		otherMessageActionsOptions,
 		messageMenuOpenFor,
+		hoveredFile,
 		reactionPickerMessage,
 		emojiSearchQuery,
 		setReactionPicker,
@@ -3063,12 +3311,28 @@ export default function setup(context) {
 		cancelReply,
 		getRepliedMessage,
 		replyPreviewText,
-		pinnedMessage,
+		pinnedMessages,
+		hoveredPin,
+		WEEKDAYS,
+		AFTER_HOURS_OPTIONS,
+		editWorkStart,
+		editWorkEnd,
+		editAfterHours,
+		savingWorkSettings,
+		showAfterHoursBanner,
+		afterHoursBannerText,
+		afterHoursBannerOptions,
+		afterHoursBannerDismissed,
+		workDayRows,
+		toggleWorkDay,
+		workSettingsChanged,
+		workSettingsError,
+		saveWorkSettings,
+		pinnedMessageRows,
+		openPinnedMessage,
+		unpinFromList,
 		isPinned,
 		togglePinMessage,
-		unpinMessage,
-		pinnedMessageLabel,
-		scrollToPinnedMessage,
 		showDeleteClusterDialog,
 		clusterToDelete,
 		deletingCluster,
