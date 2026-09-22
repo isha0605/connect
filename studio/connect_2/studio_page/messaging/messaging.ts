@@ -83,13 +83,6 @@ export default function setup(context) {
 		return amPartner ? "" : thread.partner_logo || ""
 	}
 
-	// ---- Inbox search ----
-	// Filters the unified inbox (see unifiedThreadList) by whatever's typed into the Inbox search
-	// box (see thread-search-input in the JSON — a real frappe-ui TextInput bound to this ref via
-	// Studio's variable binding, not a raw <input>, so it gets frappe-ui's own focus/border styling
-	// for free instead of the browser's default blue outline).
-	const threadSearchQuery = ref("")
-
 	// ---- Inbox Active/Inactive tabs ----
 	// A DM thread has no `status` field at all (Connect DM Thread doesn't carry one — see
 	// get_my_dm_threads), so it's always "active"; only a company thread can be closed
@@ -109,16 +102,9 @@ export default function setup(context) {
 	}
 
 	function filteredThreadList() {
-		const query = threadSearchQuery.value.trim().toLowerCase()
-		const threads = unifiedThreadList().filter((t) =>
+		return unifiedThreadList().filter((t) =>
 			activeInboxTab.value === "active" ? isThreadActive(t) : !isThreadActive(t),
 		)
-		if (!query) return threads
-		return threads.filter((thread) => {
-			const name = (otherPartyName(thread) || "").toLowerCase()
-			const lastMessage = (thread.last_message || "").toLowerCase()
-			return name.includes(query) || lastMessage.includes(query)
-		})
 	}
 
 	function threadTitle() {
@@ -2535,6 +2521,421 @@ export default function setup(context) {
 		}
 	}
 
+	// ---- Command palette (Ctrl/Cmd+K) ----
+	// A bare frappe-ui Dialog holding a search box and a list of rows. (frappe-ui's own CommandPalette
+	// isn't in Studio's production build list, so it can't be used in a built app.) It lists the
+	// conversations the caller actually has, built from the inbox the page already loaded: company threads
+	// by the *other* company's name (a customer sees partners, a partner sees customers, never the individual
+	// members behind them) and personal DMs by person. The message-search actions follow. Nothing is
+	// highlighted until the arrow keys move onto a row.
+	const showCommandPalette = ref(false)
+	const commandSearchQuery = ref("")
+	const commandActiveIndex = ref(-1)
+	const COMMAND_ROWS_WITHOUT_QUERY = 6
+
+	// Ctrl on Windows/Linux, ⌘ on macOS — the palette accepts either, this is just what the footer shows.
+	function shortcutModifier() {
+		return /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl"
+	}
+
+	// Ctrl/Cmd+K toggles the palette; Ctrl/Cmd+G jumps straight to message search (in everything, seeded
+	// with whatever is typed in the palette). Both are claimed from the browser (Ctrl+K is Chrome's
+	// "search in address bar", Ctrl+G is "find next").
+	function handleCommandPaletteShortcut(event: KeyboardEvent) {
+		if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return
+		const key = event.key.toLowerCase()
+		if (key === "k") {
+			event.preventDefault()
+			showCommandPalette.value = !showCommandPalette.value
+		} else if (key === "g") {
+			event.preventDefault()
+			const query = showCommandPalette.value ? commandSearchQuery.value : ""
+			showCommandPalette.value = false
+			openMessageSearch("all", query)
+		}
+	}
+	window.addEventListener("keydown", handleCommandPaletteShortcut)
+	onScopeDispose(() => window.removeEventListener("keydown", handleCommandPaletteShortcut))
+
+	watch(showCommandPalette, (open) => {
+		if (!open) return
+		commandSearchQuery.value = ""
+		commandActiveIndex.value = -1
+	})
+
+	watch(commandSearchQuery, () => {
+		commandActiveIndex.value = -1
+	})
+
+	// "Search in <this conversation>" / "Search anywhere" rows. `kind` is what selectCommandItem dispatches on.
+	function commandSearchActions() {
+		const query = commandSearchQuery.value.trim()
+		const quoted = query ? " for `" + query + "`" : ""
+		const actions = []
+		if (selectedThread.value) {
+			actions.push({
+				name: "search-current",
+				kind: "search-current",
+				title: "Search in " + (otherPartyName(currentThread()) || "this conversation") + quoted,
+			})
+		}
+		actions.push({ name: "search-all", kind: "search-all", title: "Search anywhere" + quoted })
+		return actions
+	}
+
+	// Inbox conversations of one kind matching what's typed, most recent first (unifiedThreadList's order).
+	function commandConversationRows(convType) {
+		const query = commandSearchQuery.value.trim().toLowerCase()
+		const rows = unifiedThreadList()
+			.filter((t) => t.convType === convType)
+			.map((t) => ({
+				name: convType + ":" + t.name,
+				kind: convType === "dm" ? "dm" : "thread",
+				title: otherPartyName(t) || "",
+				image: threadAvatarImage(t),
+				thread: t,
+			}))
+			.filter((r) => r.title && (!query || r.title.toLowerCase().includes(query)))
+		return query ? rows : rows.slice(0, COMMAND_ROWS_WITHOUT_QUERY)
+	}
+
+	// One flat list so the arrow keys move through every section; each row keeps its position in it.
+	function commandRows() {
+		const rows = []
+		for (const item of [
+			...commandConversationRows("company"),
+			...commandConversationRows("dm"),
+			...commandSearchActions(),
+		]) {
+			rows.push({ ...item, index: rows.length })
+		}
+		return rows
+	}
+
+	// The three lists the palette renders.
+	function commandCompanyRows() {
+		return commandRows().filter((r) => r.kind === "thread")
+	}
+
+	function commandPeopleRows() {
+		return commandRows().filter((r) => r.kind === "dm")
+	}
+
+	function commandActionRows() {
+		return commandRows().filter((r) => r.kind.startsWith("search"))
+	}
+
+	function commandCompaniesTitle() {
+		return context.myContext.data && context.myContext.data.partner ? "Customers" : "Partners"
+	}
+
+	function handleCommandKeydown(event: KeyboardEvent) {
+		const rows = commandRows()
+		if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+			event.preventDefault()
+			const current = commandActiveIndex.value
+			commandActiveIndex.value =
+				event.key === "ArrowDown" ? (current + 1) % rows.length : current <= 0 ? rows.length - 1 : current - 1
+			nextTick(() => document.querySelector('[data-command-active="true"]')?.scrollIntoView({ block: "nearest" }))
+		} else if (event.key === "Enter") {
+			event.preventDefault()
+			if (rows[commandActiveIndex.value]) selectCommandItem(rows[commandActiveIndex.value])
+			// Nothing highlighted: Enter with something typed searches everywhere for it.
+			else if (commandSearchQuery.value.trim()) openPaletteSearch("all")
+		}
+	}
+
+	function openPaletteSearch(scope) {
+		const query = commandSearchQuery.value
+		showCommandPalette.value = false
+		openMessageSearch(scope, query)
+	}
+
+	// Closes the palette, then a conversation opens in the inbox pane and a search action opens the search page.
+	function selectCommandItem(item) {
+		if (!item) return
+		if (item.kind === "search-current") return openPaletteSearch("current")
+		if (item.kind === "search-all") return openPaletteSearch("all")
+		showCommandPalette.value = false
+		closeSearchPage()
+		selectThread(item.thread)
+	}
+
+	// ---- Message search page ----
+	// A Raven-style search view: while showSearchPage is on, the left pane swaps the inbox for a search box,
+	// tabs (Messages / Files / Links) and the results, and the right pane shows the chosen conversation with
+	// the matched message highlighted (or a "select a result" placeholder until one is chosen). Results come
+	// from connect.api.messages.search_messages, across every conversation the caller can read or just the
+	// open one.
+	const showSearchPage = ref(false)
+	const searchResultOpen = ref(false)
+	// The message the URL / selected result points at; flashedMessage is the row's amber highlight, which
+	// only lasts a moment after scrolling to it (see scrollToMessage).
+	const highlightedMessage = ref("")
+	const flashedMessage = ref("")
+	let flashTimer = null
+	const MESSAGE_FLASH_MS = 2500
+	const selectedSearchKey = ref("")
+	const messageSearchQuery = ref("")
+	const messageSearchTab = ref("messages")
+	const messageSearchScope = ref("all")
+	const messageSearchResults = ref([])
+	const searchingMessages = ref(false)
+	// Captured when the search opens so "this conversation" keeps meaning the same one even if the
+	// selection changes underneath it.
+	const messageSearchConversation = ref(null)
+	let messageSearchTimer = null
+	let messageSearchToken = 0
+	const MIN_MESSAGE_SEARCH_LENGTH = 2
+
+	function openMessageSearch(scope, query) {
+		const thread = selectedThread.value
+			? { name: selectedThread.value, convType: selectedThreadType.value, label: otherPartyName(currentThread()) }
+			: null
+		messageSearchConversation.value = thread
+		messageSearchScope.value = scope === "current" && thread ? "current" : "all"
+		// Re-opening (Ctrl+G while already searching) keeps what's typed unless the palette passed something.
+		if (query || !showSearchPage.value) messageSearchQuery.value = (query || "").trim()
+		showSearchPage.value = true
+		searchResultOpen.value = false
+		highlightedMessage.value = ""
+		selectedSearchKey.value = ""
+		runMessageSearch()
+		setTimeout(() => {
+			const el = document.querySelector('[data-component-id="message-search-input"]')
+			;(el && el.tagName === "INPUT" ? el : el?.querySelector("input"))?.focus()
+		}, 60)
+	}
+
+	// Leaves the search view but stays in whichever conversation was last opened from it.
+	function closeSearchPage() {
+		showSearchPage.value = false
+		searchResultOpen.value = false
+		highlightedMessage.value = ""
+		selectedSearchKey.value = ""
+	}
+
+	function clearMessageSearchQuery() {
+		messageSearchQuery.value = ""
+	}
+
+	// The "Filters" menu: search everywhere, or only inside the conversation that was open.
+	function messageSearchFilterOptions() {
+		const conversation = messageSearchConversation.value
+		const scopeOption = (scope, label) => ({
+			label,
+			icon: messageSearchScope.value === scope ? "lucide-check" : undefined,
+			onClick: () => {
+				messageSearchScope.value = scope
+				runMessageSearch()
+			},
+		})
+		const options = [scopeOption("all", "All conversations")]
+		if (conversation) options.push(scopeOption("current", "In " + (conversation.label || "this conversation")))
+		return options
+	}
+
+	// Typing (or switching tab) re-runs the search after a pause.
+	watch([messageSearchQuery, messageSearchTab], () => {
+		clearTimeout(messageSearchTimer)
+		messageSearchTimer = setTimeout(runMessageSearch, 250)
+	})
+	onScopeDispose(() => clearTimeout(messageSearchTimer))
+
+	// Escapes the message text first and only then wraps matches in <mark>, so user-typed markup can't
+	// reach the HTML component (same approach as formatMessageContent).
+	function highlightMatch(text, query) {
+		const escape = (t) => escapeHtmlAttr(t)
+		const needle = (query || "").trim().toLowerCase()
+		const source = text || ""
+		if (!needle) return escape(source)
+		const lower = source.toLowerCase()
+		let html = ""
+		let from = 0
+		for (let at = lower.indexOf(needle); at !== -1; at = lower.indexOf(needle, from)) {
+			html +=
+				escape(source.slice(from, at)) +
+				'<mark style="background: var(--surface-amber-2); color: inherit; border-radius: 2px;">' +
+				escape(source.slice(at, at + needle.length)) +
+				"</mark>"
+			from = at + needle.length
+		}
+		return html + escape(source.slice(from))
+	}
+
+	function messageSearchRows() {
+		const query = messageSearchQuery.value
+		const threads = unifiedThreadList()
+		return messageSearchResults.value.map((r) => {
+			const convType = r.is_dm ? "dm" : "company"
+			const thread = threads.find((t) => t.name === r.thread && t.convType === convType)
+			const body = r.message_type === "File" ? "📎 " + (r.file_name || "Attachment") : r.content
+			const key = convType + ":" + r.name
+			return {
+				...r,
+				key,
+				selected: key === selectedSearchKey.value,
+				convType,
+				conversation: thread ? otherPartyName(thread) : "",
+				senderName: r.sender_full_name ? capitalizeName(r.sender_full_name) : memberDisplayName(r.sender),
+				when: new Date(r.creation).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+				snippet: highlightMatch(body, query),
+			}
+		})
+	}
+
+	function messageSearchStatus() {
+		if (messageSearchQuery.value.trim().length < MIN_MESSAGE_SEARCH_LENGTH) return "Type at least 2 characters to search."
+		if (searchingMessages.value) return "Searching..."
+		if (!messageSearchResults.value.length) return "No results found."
+		return ""
+	}
+
+	async function runMessageSearch() {
+		const query = messageSearchQuery.value.trim()
+		const token = ++messageSearchToken
+		if (query.length < MIN_MESSAGE_SEARCH_LENGTH) {
+			messageSearchResults.value = []
+			searchingMessages.value = false
+			return
+		}
+		searchingMessages.value = true
+		const params = { query, kind: messageSearchTab.value }
+		const conversation = messageSearchConversation.value
+		if (messageSearchScope.value === "current" && conversation) {
+			params.thread = conversation.name
+			params.is_dm = conversation.convType === "dm" ? 1 : 0
+		}
+		try {
+			const rows = await call("connect.api.messages.search_messages", params)
+			if (token === messageSearchToken) messageSearchResults.value = rows
+		} catch (e) {
+			if (token === messageSearchToken) messageSearchResults.value = []
+		} finally {
+			if (token === messageSearchToken) searchingMessages.value = false
+		}
+	}
+
+	// Shows the result's conversation in the right pane and, once its messages have rendered, scrolls to the
+	// message (which the message row highlights via highlightedMessage). Only the loaded page of messages is
+	// on screen, so an older hit just opens the conversation.
+	async function openMessageSearchResult(row) {
+		const thread = unifiedThreadList().find((t) => t.name === row.thread && t.convType === row.convType)
+		if (!thread) return
+		selectedSearchKey.value = row.key
+		highlightedMessage.value = row.name
+		searchResultOpen.value = true
+		if (!(selectedThread.value === thread.name && selectedThreadType.value === thread.convType)) selectThread(thread)
+		await scrollToMessage(row.name)
+	}
+
+	// Waits for the conversation's messages to render (up to ~2s), scrolls the message into view and flashes
+	// its row so it's easy to spot; the flash fades on its own.
+	async function scrollToMessage(name) {
+		for (let attempt = 0; attempt < 20; attempt++) {
+			await new Promise((resolve) => setTimeout(resolve, 100))
+			const el = document.querySelector(`[data-message-id="${name}"]`)
+			if (el) {
+				el.scrollIntoView({ behavior: "smooth", block: "center" })
+				flashedMessage.value = name
+				clearTimeout(flashTimer)
+				flashTimer = setTimeout(() => {
+					if (flashedMessage.value === name) flashedMessage.value = ""
+				}, MESSAGE_FLASH_MS)
+				return
+			}
+		}
+	}
+	onScopeDispose(() => clearTimeout(flashTimer))
+
+	// ---- URL state ----
+	// The open conversation, the search page and the matched message all live in the query string, so a
+	// pasted link (or a reload, or Back/Forward) lands on the same view:
+	//   ?thread=<name>                  a company thread (also what notification emails link to)
+	//   ?thread=<name>&type=dm          a DM
+	//   ?search=<text>[&tab=files|links]            the search page
+	//   ?search=<text>&thread=..&message=<name>     a search result opened in the right pane
+	// Path-only changes are what make Studio reload a page, so touching just the query string is safe.
+	function urlStateParams() {
+		const params = new URLSearchParams()
+		const searching = showSearchPage.value
+		// While searching with nothing picked, the open conversation is hidden behind the placeholder, so it
+		// isn't part of the link.
+		if (selectedThread.value && (!searching || searchResultOpen.value)) {
+			params.set("thread", selectedThread.value)
+			if (selectedThreadType.value === "dm") params.set("type", "dm")
+		}
+		if (searching) {
+			params.set("search", messageSearchQuery.value.trim())
+			if (messageSearchTab.value !== "messages") params.set("tab", messageSearchTab.value)
+		}
+		if (highlightedMessage.value) params.set("message", highlightedMessage.value)
+		return params
+	}
+
+	let urlSyncedOnce = false
+	watch(
+		[selectedThread, selectedThreadType, showSearchPage, searchResultOpen, messageSearchQuery, messageSearchTab, highlightedMessage],
+		(now, before) => {
+			const query = urlStateParams().toString()
+			if (query === window.location.search.replace(/^\?/, "")) return
+			const url = window.location.pathname + (query ? "?" + query : "")
+			// The first sync (the initial auto-open) and typing/tab changes rewrite the current entry; picking
+			// a conversation or a result adds one so Back steps through them.
+			const onlyTyping = before && now.every((value, i) => i === 4 || i === 5 || value === before[i])
+			if (!urlSyncedOnce || onlyTyping) window.history.replaceState(window.history.state, "", url)
+			else window.history.pushState(window.history.state, "", url)
+			urlSyncedOnce = true
+		},
+	)
+
+	// Puts the page into whatever the URL describes. Returns false when it names a DM but the inbox
+	// hasn't loaded yet, so the caller can try again once it has.
+	function applyUrlState(params) {
+		const requested = params.get("thread")
+		const convType = params.get("type") === "dm" ? "dm" : "company"
+		const message = params.get("message") || ""
+		const searching = params.has("search")
+
+		if (requested && !(selectedThread.value === requested && selectedThreadType.value === convType)) {
+			const found = unifiedThreadList().find((t) => t.name === requested && t.convType === convType)
+			if (found) selectThread(found)
+			else if (convType === "dm") return false
+			else selectThread(requested)
+		}
+
+		if (searching) {
+			messageSearchTab.value = ["files", "links"].includes(params.get("tab")) ? params.get("tab") : "messages"
+			openMessageSearch("all", params.get("search"))
+			messageSearchQuery.value = (params.get("search") || "").trim()
+			if (requested && message) {
+				selectedSearchKey.value = convType + ":" + message
+				highlightedMessage.value = message
+				searchResultOpen.value = true
+				scrollToMessage(message)
+			}
+			return true
+		}
+
+		if (showSearchPage.value) closeSearchPage()
+		if (message) {
+			// A shared link to a message: flash the highlight, then let it go (and drop it from the URL).
+			highlightedMessage.value = message
+			scrollToMessage(message)
+			setTimeout(() => {
+				if (highlightedMessage.value === message) highlightedMessage.value = ""
+			}, 3000)
+		}
+		return true
+	}
+
+	// Back/Forward: re-apply the URL that became current.
+	function handlePopState() {
+		applyUrlState(new URLSearchParams(window.location.search))
+	}
+	window.addEventListener("popstate", handlePopState)
+	onScopeDispose(() => window.removeEventListener("popstate", handlePopState))
+
 	// Mirrors the media search box's focus treatment (see media-search-box's CSS) on the
 	// composer: the pill is a container wrapping a ghost TextInput, so there's no single
 	// element a :focus-within rule could live on — the inner input reports focus up instead.
@@ -2666,6 +3067,17 @@ export default function setup(context) {
 			if (!selectedThread.value) {
 				const params = new URLSearchParams(window.location.search)
 				const requested = params.get("thread")
+				// A DM, ?search= or ?message= link is applied by applyUrlState once both inbox lists have loaded (a DM
+				// is looked up there rather than by name, and search results are labelled from it). Something is
+				// always selected afterwards, so this branch doesn't fire again on the next list reload.
+				if (params.get("type") === "dm" || params.has("search") || params.get("message")) {
+					if (!(context.myThreads?.data && context.myDMThreads?.data)) return
+					applyUrlState(params)
+					if (!selectedThread.value && list.length && (params.has("search") || window.innerWidth >= 576)) {
+						selectThread(list[0])
+					}
+					return
+				}
 				if (requested) {
 					selectThread(requested)
 					// set by start_partner_thread's is_new_thread — a brand-new Contact-Partner thread
@@ -2904,7 +3316,6 @@ export default function setup(context) {
 		formatFullDateTime,
 		avatarTheme,
 		threadAvatarImage,
-		threadSearchQuery,
 		activeInboxTab,
 		activeThreadCount,
 		inactiveThreadCount,
@@ -2916,6 +3327,31 @@ export default function setup(context) {
 		unifiedThreadList,
 		currentMessages,
 		connectWithUser,
+		showCommandPalette,
+		commandSearchQuery,
+		commandActiveIndex,
+		commandRows,
+		commandCompanyRows,
+		commandPeopleRows,
+		commandActionRows,
+		commandCompaniesTitle,
+		shortcutModifier,
+		handleCommandKeydown,
+		selectCommandItem,
+		showSearchPage,
+		searchResultOpen,
+		highlightedMessage,
+		flashedMessage,
+		messageSearchQuery,
+		messageSearchTab,
+		messageSearchConversation,
+		messageSearchRows,
+		messageSearchStatus,
+		messageSearchFilterOptions,
+		openMessageSearch,
+		closeSearchPage,
+		clearMessageSearchQuery,
+		openMessageSearchResult,
 		threadLinks,
 		threadFiles,
 		openLink,
