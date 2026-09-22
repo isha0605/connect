@@ -140,7 +140,11 @@ function visiblePoints(region, points) {
 </script>
 
 <template>
-	<svg viewBox="0 0 119 60" class="world-map-pins" preserveAspectRatio="xMidYMid slice">
+	<!-- `meet`, not `slice`: slice scales the map to COVER the panel, which crops it —
+	     on a typical viewport that lost ~21% of the dots, Australia and New Zealand
+	     included. `meet` fits the whole map inside and centres it, which is what the
+	     design shows. -->
+	<svg viewBox="0 0 119 60" class="world-map-pins" preserveAspectRatio="xMidYMid meet">
 		<image :href="IMAGE_URL" x="0" y="0" width="119" height="60" />
 
 		<g v-for="(points, region) in REGION_DOTS" :key="region">
@@ -164,7 +168,7 @@ function visiblePoints(region, points) {
 }
 
 .map-dot {
-	fill: var(--ink-gray-7, #525252);
+	fill: var(--ink-gray-5, #525252);
 	transition: r 0.15s ease, fill 0.15s ease;
 }
 
