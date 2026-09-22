@@ -1279,7 +1279,8 @@ export default function setup(context) {
 	const messageMenuOpenFor = ref(null)
 	// Name of the file message under the pointer. Each file card in a cluster has its own toolbar, and
 	// Tailwind's group-hover would light up every card's toolbar when the whole cluster row is hovered, so
-	// hover is tracked here instead.
+	// hover is tracked here instead — except a single-file cluster has no such ambiguity, where the
+	// whole row (not just the card) sets this too, same as a text message's whole bubble does.
 	const hoveredFile = ref("")
 
 	function messageCopyText(item) {
@@ -2390,11 +2391,12 @@ export default function setup(context) {
 	// isn't in Studio's production build list, so it can't be used in a built app.) It lists the
 	// conversations the caller actually has, built from the inbox the page already loaded: company threads
 	// by the *other* company's name (a customer sees partners, a partner sees customers, never the individual
-	// members behind them) and personal DMs by person. The message-search actions follow. Nothing is
-	// highlighted until the arrow keys move onto a row.
+	// members behind them) and personal DMs by person. The message-search actions follow. The first row is
+	// highlighted as soon as the palette opens (or the query changes), same as it would be under a mouse
+	// hover, so arrow keys and Enter work immediately without an initial keypress to "arm" a selection.
 	const showCommandPalette = ref(false)
 	const commandSearchQuery = ref("")
-	const commandActiveIndex = ref(-1)
+	const commandActiveIndex = ref(0)
 	const COMMAND_ROWS_WITHOUT_QUERY = 6
 
 	// Ctrl on Windows/Linux, ⌘ on macOS — the palette accepts either, this is just what the footer shows.
@@ -2424,11 +2426,11 @@ export default function setup(context) {
 	watch(showCommandPalette, (open) => {
 		if (!open) return
 		commandSearchQuery.value = ""
-		commandActiveIndex.value = -1
+		commandActiveIndex.value = 0
 	})
 
 	watch(commandSearchQuery, () => {
-		commandActiveIndex.value = -1
+		commandActiveIndex.value = 0
 	})
 
 	// "Search in <this conversation>" / "Search anywhere" rows. `kind` is what selectCommandItem dispatches on.
