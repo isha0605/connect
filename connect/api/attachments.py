@@ -60,6 +60,23 @@ def _attach_file_to_message(file_doc_name, doctype, name):
 	file_doc.save()
 
 
+def _copy_message_attachment(file_url):
+	"""Duplicates a message's File so a forwarded copy owns its own file. Sharing one File would break the
+	copy the moment the original message is deleted, because Connect Message.on_trash removes the File."""
+	file_name = frappe.db.get_value("File", {"file_url": file_url}, "name")
+	if not file_name:
+		frappe.throw(_("The original file is no longer available"))
+	source = frappe.get_doc("File", file_name)
+	copy = frappe.get_doc({
+		"doctype": "File",
+		"file_name": source.file_name,
+		"content": source.get_content(),
+		"is_private": 1,
+	})
+	copy.insert(ignore_permissions=True)
+	return copy
+
+
 @frappe.whitelist()
 def remove_chat_attachment(file_url):
 	"""Discards a staged upload before it's attached to a message; only the uploader can do this."""

@@ -40,9 +40,17 @@ class ConnectDMMessage(Document):
 	def on_trash(self):
 		"""Deletes a DM for everyone; ownership itself is enforced by has_dm_message_permission."""
 		if self.attachment:
-			file_name = frappe.db.get_value("File", {"file_url": self.attachment}, "name")
+			# Scoped to this message's own File: a forwarded copy shares the same file_url, and its File
+			# must outlive this message.
+			file_name = frappe.db.get_value(
+				"File",
+				{"file_url": self.attachment, "attached_to_doctype": "Connect DM Message", "attached_to_name": self.name},
+				"name",
+			)
 			if file_name:
 				frappe.delete_doc("File", file_name)
+
+		frappe.db.delete("Connect Message Reaction", {"message": self.name, "is_dm": 1})
 
 		notify_dm_message_deleted(self)
 		resync_dm_thread_last_message_on_trash(self)

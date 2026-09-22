@@ -141,6 +141,7 @@ def notify_thread_members(doc, method=None):
 		"file_type": doc.file_type,
 		"file_size": doc.file_size,
 		"reply_to": doc.reply_to,
+		"is_forwarded": doc.is_forwarded,
 		"creation": str(doc.creation),
 	}
 	for member in members:
@@ -155,6 +156,21 @@ def notify_message_deleted(doc):
 	payload = {"name": doc.name, "thread": doc.thread}
 	for member in members:
 		frappe.publish_realtime("connect_message_deleted", payload, user=member, after_commit=True)
+
+
+def notify_reaction_changed(thread, is_dm, actor):
+	"""Live-pushes "reactions changed" to everyone else in the conversation so their open tab reloads the chips."""
+	if is_dm:
+		pair = frappe.db.get_value("Connect DM Thread", thread, ["user_a", "user_b"], as_dict=True)
+		members = [u for u in (pair.user_a, pair.user_b) if u != actor] if pair else []
+	else:
+		members = frappe.get_all(
+			"Connect Thread Member", filters={"thread": thread, "is_removed": 0, "user": ["!=", actor]}, pluck="user"
+		)
+	for member in members:
+		frappe.publish_realtime(
+			"connect_message_reaction", {"thread": thread, "is_dm": is_dm}, user=member, after_commit=True
+		)
 
 
 def notify_message_edited(doc):
@@ -248,6 +264,7 @@ def notify_dm_recipient(doc, method=None):
 		"dm_thread": doc.dm_thread,
 		"sender": doc.sender,
 		"content": doc.content,
+		"is_forwarded": doc.is_forwarded,
 		"creation": str(doc.creation),
 	}
 	frappe.publish_realtime("connect_new_dm_message", payload, user=recipient, after_commit=True)

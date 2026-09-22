@@ -2,8 +2,21 @@ import json
 
 import frappe
 
-from connect.api.attachments import _attach_file_to_message, _claim_staged_attachment
-from connect.permissions import _check_can_read, _check_can_write
+from connect.api.attachments import _attach_file_to_message, _claim_staged_attachment, _copy_message_attachment
+from connect.notifications import notify_reaction_changed
+from connect.permissions import (
+	_check_can_read,
+	_check_can_write,
+	_dm_thread_pair,
+	_has_full_access,
+	_thread_membership,
+)
+
+# Requirement cards and booking cards are one-off snapshots tied to their thread, so only plain
+# text and files can be forwarded.
+FORWARDABLE_MESSAGE_TYPES = ("Text", "File")
+
+MAX_EMOJI_LENGTH = 32
 
 
 def _get_message_preview(doctype, name):
@@ -108,3 +121,159 @@ def get_pinned_message(thread):
 	if not pinned:
 		return None
 	return _get_message_preview("Connect Message", pinned)
+
+
+@frappe.whitelist()
+def get_forward_targets():
+	"""Lists the conversations the caller can forward a message into right now: threads where they have
+	Write access and that aren't closed, plus every DM of theirs. Display data (names, avatars) is left to
+	the client, which already has it from get_my_threads / get_my_dm_threads."""
+	user = frappe.session.user
+
+	thread_filters = {"status": ["!=", "Closed"]}
+	if not _has_full_access(user):
+		writable = frappe.get_all(
+			"Connect Thread Member",
+			filters={"user": user, "permission": "Write", "is_removed": 0},
+			pluck="thread",
+		)
+		if not writable:
+			thread_filters = None
+		else:
+			thread_filters["name"] = ["in", writable]
+	threads = frappe.get_list("Connect Thread", filters=thread_filters, pluck="name") if thread_filters else []
+
+	dm_threads = frappe.get_list(
+		"Connect DM Thread", or_filters=[["user_a", "=", user], ["user_b", "=", user]], pluck="name"
+	)
+
+	return {"company": threads, "dm": dm_threads}
+
+
+@frappe.whitelist()
+def forward_message(message, source_is_dm, target_thread, target_is_dm):
+	"""Sends a copy of a text or file message into another conversation as the caller, flagged as forwarded.
+	Reading the original is checked by Frappe's permission system; posting to the target goes through the
+	same write checks as send_message / send_dm_message."""
+	user = frappe.session.user
+	source_is_dm = frappe.utils.cint(source_is_dm)
+	target_is_dm = frappe.utils.cint(target_is_dm)
+
+	source = frappe.get_doc("Connect DM Message" if source_is_dm else "Connect Message", message)
+	source.check_permission("read")
+	if source.message_type not in FORWARDABLE_MESSAGE_TYPES:
+		frappe.throw(frappe._("Only text and file messages can be forwarded"))
+
+	source_thread = source.dm_thread if source_is_dm else source.thread
+	if source_thread == target_thread and source_is_dm == target_is_dm:
+		frappe.throw(frappe._("You can't forward a message into the conversation it's already in"))
+
+	if target_is_dm:
+		_dm_thread_pair(target_thread, user)
+	else:
+		_check_can_write(target_thread, user)
+
+	values = {
+		"doctype": "Connect DM Message" if target_is_dm else "Connect Message",
+		"dm_thread" if target_is_dm else "thread": target_thread,
+		"sender": user,
+		"message_type": source.message_type,
+		"content": source.content,
+		"is_forwarded": 1,
+	}
+	file_copy = _copy_message_attachment(source.attachment) if source.attachment else None
+	if file_copy:
+		values.update(
+			attachment=file_copy.file_url,
+			file_name=source.file_name,
+			file_type=source.file_type,
+			file_size=source.file_size,
+		)
+	forwarded = frappe.get_doc(values)
+	forwarded.insert()
+
+	if file_copy:
+		_attach_file_to_message(file_copy.name, forwarded.doctype, forwarded.name)
+
+	return forwarded.as_dict()
+
+
+@frappe.whitelist()
+def get_reactions(thread, is_dm=0):
+	"""Every reaction in a conversation, oldest first, so the client can group them per message. A
+	removed thread member only sees reactions made up to the moment they were removed."""
+	user = frappe.session.user
+	is_dm = frappe.utils.cint(is_dm)
+	filters = {"thread": thread, "is_dm": is_dm}
+
+	if is_dm:
+		_dm_thread_pair(thread, user)
+	else:
+		_check_can_read(thread, user)
+		membership = _thread_membership(thread, user)
+		if membership and membership.is_removed and membership.removed_on:
+			filters["creation"] = ["<=", membership.removed_on]
+
+	rows = frappe.get_all(
+		"Connect Message Reaction",
+		filters=filters,
+		fields=["message", "emoji", "user"],
+		order_by="creation asc",
+		limit_page_length=0,
+	)
+	full_names = {
+		u.name: u.full_name
+		for u in frappe.get_all(
+			"User", filters={"name": ["in", list({r.user for r in rows})]}, fields=["name", "full_name"]
+		)
+	}
+	for row in rows:
+		row["full_name"] = full_names.get(row.user)
+	return rows
+
+
+@frappe.whitelist()
+def toggle_reaction(message, is_dm, emoji):
+	"""Adds the caller's reaction to a message, or removes it if they already reacted with that emoji.
+	Reacting is posting, so it needs the same write access as sending a message."""
+	user = frappe.session.user
+	is_dm = frappe.utils.cint(is_dm)
+	emoji = (emoji or "").strip()
+	if not emoji or len(emoji) > MAX_EMOJI_LENGTH:
+		frappe.throw(frappe._("Pick an emoji to react with"))
+
+	thread = frappe.db.get_value(
+		"Connect DM Message" if is_dm else "Connect Message", message, "dm_thread" if is_dm else "thread"
+	)
+	if not thread:
+		frappe.throw(frappe._("Message not found"))
+
+	if is_dm:
+		_dm_thread_pair(thread, user)
+	else:
+		_check_can_write(thread, user)
+
+	# The emoji is compared here, not in the query: the database's default collation treats different
+	# emoji as equal, so filtering on it would match (and delete) the wrong reaction.
+	mine = frappe.get_all(
+		"Connect Message Reaction",
+		filters={"message": message, "is_dm": is_dm, "user": user},
+		fields=["name", "emoji"],
+	)
+	existing = next((r.name for r in mine if r.emoji == emoji), None)
+	if existing:
+		frappe.delete_doc("Connect Message Reaction", existing, ignore_permissions=True)
+	else:
+		frappe.get_doc(
+			{
+				"doctype": "Connect Message Reaction",
+				"thread": thread,
+				"message": message,
+				"is_dm": is_dm,
+				"user": user,
+				"emoji": emoji,
+			}
+		).insert(ignore_permissions=True)
+
+	notify_reaction_changed(thread, is_dm, user)
+	return {"thread": thread, "added": not existing}
