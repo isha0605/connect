@@ -219,7 +219,7 @@ def notify_partner_of_new_requirement(doc, method=None):
 	details_html = "".join(
 		f"<p><b>{label}:</b> {frappe.utils.escape_html(value)}</p>" for label, value in fields if value
 	)
-	thread_url = frappe.utils.get_url(f"/connect-2/messaging?thread={doc.thread}")
+	thread_url = frappe.utils.get_url(f"/connect/messaging?thread={doc.thread}")
 
 	try:
 		frappe.sendmail(
