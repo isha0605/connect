@@ -5,7 +5,7 @@ import frappe
 from frappe.model.document import Document
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
-from connect.partner.doctype.partner.partner import PARTNER_FIELDS, _apps_by_partner, attach_success_story_previews
+from connect.partner.doctype.partner.partner import PARTNER_FIELDS, _apps_by_partner, _decorate_directory_rows
 
 
 class Shortlist(Document):
@@ -89,5 +89,4 @@ def list_my_shortlist():
 	for p in ordered:
 		p["apps_preview"] = apps_by_partner.get(p.name, [])[:2]
 
-	attach_success_story_previews(ordered)
-	return ordered
+	return _decorate_directory_rows(ordered)

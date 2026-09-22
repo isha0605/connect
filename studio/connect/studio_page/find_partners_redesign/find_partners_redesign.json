@@ -380,7 +380,7 @@
           "display": "flex",
           "flexDirection": "column",
           "flexShrink": "0",
-          "padding": "48px 40px",
+          "padding": "141px 40px 48px 40px",
           "width": "480px"
          },
          "children": [
@@ -395,7 +395,7 @@
            "componentId": "heading-4ea44477",
            "componentName": "TextBlock",
            "componentProps": {
-            "fontSize": "text-3xl",
+            "fontSize": "text-xl",
             "tag": "h1",
             "text": "Work with certified partners with vast expertise"
            }
@@ -715,6 +715,10 @@
                    }
                   },
                   {
+                   "baseStyles": {
+                    "marginLeft": "8px",
+                    "width": "364px"
+                   },
                    "children": [],
                    "classes": [],
                    "componentId": "segment-select-input-fe017589",
@@ -853,6 +857,10 @@
                    }
                   },
                   {
+                   "baseStyles": {
+                    "marginLeft": "8px",
+                    "width": "364px"
+                   },
                    "children": [],
                    "classes": [],
                    "componentId": "segment-select-input-f2f0990f",
@@ -985,6 +993,10 @@
                    }
                   },
                   {
+                   "baseStyles": {
+                    "marginLeft": "8px",
+                    "width": "364px"
+                   },
                    "children": [],
                    "classes": [],
                    "componentId": "segment-select-input-8983add5",
@@ -1765,7 +1777,8 @@
              "children": [
               {
                "baseStyles": {
-                "backgroundColor": "var(--ink-gray-9, #171717)",
+                "backgroundColor": "{{ (!selectedIndustry) ? 'var(--surface-gray-3, #e4e4e4)' : 'var(--ink-gray-9, #171717)' }}",
+                "color": "{{ (!selectedIndustry) ? 'var(--ink-gray-4, #a6a6a6)' : 'var(--text-on-gray, #ffffff)' }}",
                 "minWidth": "110px"
                },
                "children": [],
@@ -1780,6 +1793,7 @@
                "componentId": "primary-btn-82353037",
                "componentName": "Button",
                "componentProps": {
+                "disabled": "{{ !selectedIndustry }}",
                 "label": "Continue",
                 "variant": "solid"
                }
@@ -1837,7 +1851,8 @@
              "children": [
               {
                "baseStyles": {
-                "backgroundColor": "var(--ink-gray-9, #171717)",
+                "backgroundColor": "{{ (!selectedRegions || !selectedRegions.length) ? 'var(--surface-gray-3, #e4e4e4)' : 'var(--ink-gray-9, #171717)' }}",
+                "color": "{{ (!selectedRegions || !selectedRegions.length) ? 'var(--ink-gray-4, #a6a6a6)' : 'var(--text-on-gray, #ffffff)' }}",
                 "minWidth": "110px"
                },
                "children": [],
@@ -1852,6 +1867,7 @@
                "componentId": "primary-btn-647569e5",
                "componentName": "Button",
                "componentProps": {
+                "disabled": "{{ !selectedRegions || !selectedRegions.length }}",
                 "label": "Continue",
                 "variant": "solid"
                }
@@ -1926,7 +1942,8 @@
              "children": [
               {
                "baseStyles": {
-                "backgroundColor": "var(--ink-gray-9, #171717)",
+                "backgroundColor": "{{ (!selectedImplementationType) ? 'var(--surface-gray-3, #e4e4e4)' : 'var(--ink-gray-9, #171717)' }}",
+                "color": "{{ (!selectedImplementationType) ? 'var(--ink-gray-4, #a6a6a6)' : 'var(--text-on-gray, #ffffff)' }}",
                 "minWidth": "110px"
                },
                "children": [],
@@ -1935,12 +1952,13 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const params = new URLSearchParams();\nif (selectedIndustry.value) params.set('industry', selectedIndustry.value);\nif (selectedSegment.value) params.set('category', selectedSegment.value);\nif (selectedRegions.value && selectedRegions.value.length) params.set('region', JSON.stringify(selectedRegions.value));\nwindow.location.href = '/connect/partner-directory-redesign' + (params.toString() ? ('?' + params.toString()) : '');"
+                 "script": "const params = new URLSearchParams();\nif (selectedIndustry.value) params.set('industry', selectedIndustry.value);\nif (selectedSegment.value) params.set('category', selectedSegment.value);\nif (selectedRegions.value && selectedRegions.value.length) params.set('region', JSON.stringify(selectedRegions.value));\nrouter.push('/partner-directory-redesign' + (params.toString() ? ('?' + params.toString()) : ''));"
                 }
                },
                "componentId": "primary-btn-bbe3cca0",
                "componentName": "Button",
                "componentProps": {
+                "disabled": "{{ !selectedImplementationType }}",
                 "label": "Find partners",
                 "variant": "solid"
                }
@@ -1985,298 +2003,46 @@
           "display": "flex",
           "flex": "1",
           "flexDirection": "column",
-          "padding": "48px 40px"
+          "minWidth": "0px",
+          "padding": "27px 39px 32px 45px"
          },
          "children": [
           {
            "baseStyles": {
+            "alignItems": "center",
+            "backgroundColor": "var(--surface-gray-1, #f8f8f8)",
+            "borderRadius": "12px",
+            "display": "flex",
             "flex": "1",
+            "justifyContent": "center",
             "minHeight": "0px",
             "overflow": "hidden",
+            "padding": "36px",
             "width": "100%"
-           },
-           "children": [],
-           "classes": [],
-           "componentId": "WorldMapPins-c4683845",
-           "componentName": "WorldMapPins",
-           "componentProps": {
-            "regionCounts": "{{ regionCounts.data }}",
-            "selectedRegions": {
-             "$type": "variable",
-             "name": "selectedRegions"
-            }
-           },
-           "isCustomVueComponent": true
-          },
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flexDirection": "row",
-            "justifyContent": "space-around",
-            "marginTop": "24px"
            },
            "children": [
             {
              "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "2px"
+              "height": "100%",
+              "minHeight": "0px",
+              "width": "100%"
              },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9)",
-                "fontWeight": "600"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-count-india",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-lg",
-                "tag": "span",
-                "text": "{{ (regionCounts.data && regionCounts.data.india) || 0 }}"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-region-india",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "span",
-                "text": "India"
-               }
-              }
-             ],
+             "children": [],
              "classes": [],
-             "componentId": "stat-india",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "2px"
+             "componentId": "WorldMapPins-c4683845",
+             "componentName": "WorldMapPins",
+             "componentProps": {
+              "regionCounts": "{{ regionCounts.data }}",
+              "selectedRegions": {
+               "$type": "variable",
+               "name": "selectedRegions"
+              }
              },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9)",
-                "fontWeight": "600"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-count-asia",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-lg",
-                "tag": "span",
-                "text": "{{ (regionCounts.data && regionCounts.data.asia) || 0 }}"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-region-asia",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "span",
-                "text": "Asia"
-               }
-              }
-             ],
-             "classes": [],
-             "componentId": "stat-asia",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "2px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9)",
-                "fontWeight": "600"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-count-middle-east",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-lg",
-                "tag": "span",
-                "text": "{{ (regionCounts.data && regionCounts.data.middle_east) || 0 }}"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-region-middle-east",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "span",
-                "text": "Middle East"
-               }
-              }
-             ],
-             "classes": [],
-             "componentId": "stat-middle-east",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "2px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9)",
-                "fontWeight": "600"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-count-africa",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-lg",
-                "tag": "span",
-                "text": "{{ (regionCounts.data && regionCounts.data.africa) || 0 }}"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-region-africa",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "span",
-                "text": "Africa"
-               }
-              }
-             ],
-             "classes": [],
-             "componentId": "stat-africa",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "2px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9)",
-                "fontWeight": "600"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-count-europe",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-lg",
-                "tag": "span",
-                "text": "{{ (regionCounts.data && regionCounts.data.europe) || 0 }}"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-region-europe",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "span",
-                "text": "Europe"
-               }
-              }
-             ],
-             "classes": [],
-             "componentId": "stat-europe",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "2px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9)",
-                "fontWeight": "600"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-count-americas",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-lg",
-                "tag": "span",
-                "text": "{{ (regionCounts.data && regionCounts.data.americas) || 0 }}"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-region-americas",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "span",
-                "text": "Americas"
-               }
-              }
-             ],
-             "classes": [],
-             "componentId": "stat-americas",
-             "componentName": "container",
-             "originalElement": "div"
+             "isCustomVueComponent": true
             }
            ],
            "classes": [],
-           "componentId": "stats-row-3b424ed1",
+           "componentId": "map-card",
            "componentName": "container",
            "originalElement": "div"
           }
@@ -2305,7 +2071,7 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-09-07 21:45:40.702725",
+ "creation": "2026-09-16 20:52:26.627653",
  "doctype": "Studio Page",
  "draft_blocks": [
   {
@@ -2471,9 +2237,9 @@
           "flexShrink": "0",
           "paddingBottom": "0px",
           "paddingLeft": "40px",
-          "paddingRight": "40px",
-          "paddingTop": "98px",
-          "width": "480px"
+          "paddingRight": "0px",
+          "paddingTop": "128px",
+          "width": "540px"
          },
          "children": [
           {
@@ -2487,7 +2253,7 @@
            "componentId": "heading-4ea44477",
            "componentName": "TextBlock",
            "componentProps": {
-            "fontSize": "text-3xl",
+            "fontSize": "text-2xl",
             "tag": "h1",
             "text": "Work with certified partners with vast expertise"
            }
@@ -2502,9 +2268,9 @@
            "componentId": "subheading-196cf663",
            "componentName": "TextBlock",
            "componentProps": {
-            "fontSize": "text-sm",
+            "fontSize": "text-p-base",
             "tag": "p",
-            "text": "Frappe builds innovative products and our global network of partners help businesses implement them smoothly."
+            "text": "Frappe builds innovative products and our global network of partners help businesses implement them smoothly"
            }
           },
           {
@@ -2525,7 +2291,7 @@
               {
                "baseStyles": {
                 "color": "var(--ink-gray-8)",
-                "fontWeight": "500"
+                "fontWeight": "600"
                },
                "children": [],
                "classes": [],
@@ -2579,7 +2345,10 @@
                   "display": "flex",
                   "flexDirection": "row",
                   "gap": "10px",
-                  "padding": "6px 8px"
+                  "paddingBottom": "6px",
+                  "paddingLeft": "0px",
+                  "paddingRight": "8px",
+                  "paddingTop": "6px"
                  },
                  "children": [
                   {
@@ -2667,6 +2436,13 @@
                    }
                   },
                   {
+                   "baseStyles": {
+                    "marginBottom": "0px",
+                    "marginLeft": "2px",
+                    "marginRight": "0px",
+                    "marginTop": "0px",
+                    "width": "471px"
+                   },
                    "children": [],
                    "classes": [],
                    "componentId": "segment-select-input-fa9850a3",
@@ -2719,7 +2495,10 @@
                   "display": "flex",
                   "flexDirection": "row",
                   "gap": "10px",
-                  "padding": "6px 8px"
+                  "paddingBottom": "6px",
+                  "paddingLeft": "0px",
+                  "paddingRight": "8px",
+                  "paddingTop": "6px"
                  },
                  "children": [
                   {
@@ -2807,6 +2586,13 @@
                    }
                   },
                   {
+                   "baseStyles": {
+                    "marginBottom": "0px",
+                    "marginLeft": "2px",
+                    "marginRight": "0px",
+                    "marginTop": "0px",
+                    "width": "471px"
+                   },
                    "children": [],
                    "classes": [],
                    "componentId": "segment-select-input-fe017589",
@@ -2857,7 +2643,10 @@
                   "display": "flex",
                   "flexDirection": "row",
                   "gap": "10px",
-                  "padding": "6px 8px"
+                  "paddingBottom": "6px",
+                  "paddingLeft": "0px",
+                  "paddingRight": "8px",
+                  "paddingTop": "6px"
                  },
                  "children": [
                   {
@@ -2945,6 +2734,13 @@
                    }
                   },
                   {
+                   "baseStyles": {
+                    "marginBottom": "0px",
+                    "marginLeft": "2px",
+                    "marginRight": "0px",
+                    "marginTop": "0px",
+                    "width": "471px"
+                   },
                    "children": [],
                    "classes": [],
                    "componentId": "segment-select-input-f2f0990f",
@@ -2989,7 +2785,10 @@
                   "display": "flex",
                   "flexDirection": "row",
                   "gap": "10px",
-                  "padding": "6px 8px"
+                  "paddingBottom": "6px",
+                  "paddingLeft": "0px",
+                  "paddingRight": "8px",
+                  "paddingTop": "6px"
                  },
                  "children": [
                   {
@@ -3077,6 +2876,13 @@
                    }
                   },
                   {
+                   "baseStyles": {
+                    "marginBottom": "0px",
+                    "marginLeft": "2px",
+                    "marginRight": "0px",
+                    "marginTop": "0px",
+                    "width": "471px"
+                   },
                    "children": [],
                    "classes": [],
                    "componentId": "segment-select-input-8983add5",
@@ -3857,7 +3663,8 @@
              "children": [
               {
                "baseStyles": {
-                "backgroundColor": "var(--ink-gray-9, #171717)",
+                "backgroundColor": "{{ (!selectedIndustry) ? 'var(--surface-gray-3, #e4e4e4)' : 'var(--ink-gray-9, #171717)' }}",
+                "color": "{{ (!selectedIndustry) ? 'var(--ink-gray-4, #a6a6a6)' : 'var(--text-on-gray, #ffffff)' }}",
                 "minWidth": "110px"
                },
                "children": [],
@@ -3872,6 +3679,7 @@
                "componentId": "primary-btn-82353037",
                "componentName": "Button",
                "componentProps": {
+                "disabled": "{{ !selectedIndustry }}",
                 "label": "Continue",
                 "variant": "solid"
                }
@@ -3946,7 +3754,8 @@
               },
               {
                "baseStyles": {
-                "backgroundColor": "var(--ink-gray-9, #171717)"
+                "backgroundColor": "{{ (!selectedRegions || !selectedRegions.length) ? 'var(--surface-gray-3, #e4e4e4)' : 'var(--ink-gray-9, #171717)' }}",
+                "color": "{{ (!selectedRegions || !selectedRegions.length) ? 'var(--ink-gray-4, #a6a6a6)' : 'var(--text-on-gray, #ffffff)' }}"
                },
                "children": [],
                "classes": [],
@@ -3960,6 +3769,7 @@
                "componentId": "primary-btn-647569e5",
                "componentName": "Button",
                "componentProps": {
+                "disabled": "{{ !selectedRegions || !selectedRegions.length }}",
                 "label": "Continue",
                 "variant": "solid"
                }
@@ -4034,7 +3844,8 @@
               },
               {
                "baseStyles": {
-                "backgroundColor": "var(--ink-gray-9, #171717)"
+                "backgroundColor": "{{ (!selectedImplementationType) ? 'var(--surface-gray-3, #e4e4e4)' : 'var(--ink-gray-9, #171717)' }}",
+                "color": "{{ (!selectedImplementationType) ? 'var(--ink-gray-4, #a6a6a6)' : 'var(--text-on-gray, #ffffff)' }}"
                },
                "children": [],
                "classes": [],
@@ -4042,12 +3853,13 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "const params = new URLSearchParams();\nif (selectedIndustry.value) params.set('industry', selectedIndustry.value);\nif (selectedSegment.value) params.set('category', selectedSegment.value);\nif (selectedRegions.value && selectedRegions.value.length) params.set('region', JSON.stringify(selectedRegions.value));\nwindow.location.href = '/connect/partner-directory-redesign' + (params.toString() ? ('?' + params.toString()) : '');"
+                 "script": "const params = new URLSearchParams();\nif (selectedIndustry.value) params.set('industry', selectedIndustry.value);\nif (selectedSegment.value) params.set('category', selectedSegment.value);\nif (selectedRegions.value && selectedRegions.value.length) params.set('region', JSON.stringify(selectedRegions.value));\nrouter.push('/partner-directory-redesign' + (params.toString() ? ('?' + params.toString()) : ''));"
                 }
                },
                "componentId": "primary-btn-bbe3cca0",
                "componentName": "Button",
                "componentProps": {
+                "disabled": "{{ !selectedImplementationType }}",
                 "label": "Find partners",
                 "variant": "solid"
                }
@@ -4075,299 +3887,51 @@
           "display": "flex",
           "flex": "1",
           "flexDirection": "column",
-          "padding": "48px 40px"
+          "marginBottom": "0px",
+          "marginLeft": "0px",
+          "marginRight": "0px",
+          "marginTop": "0px",
+          "minWidth": "0px",
+          "padding": "27px 39px 32px 45px"
          },
          "children": [
           {
            "baseStyles": {
+            "alignItems": "center",
+            "backgroundColor": "var(--surface-gray-1, #f8f8f8)",
+            "borderRadius": "12px",
+            "display": "flex",
             "flex": "1",
+            "justifyContent": "center",
             "minHeight": "0px",
             "overflow": "hidden",
+            "padding": "36px",
             "width": "100%"
-           },
-           "blockName": "WorldMapPins",
-           "children": [],
-           "classes": [],
-           "componentId": "WorldMapPins-c4683845",
-           "componentName": "WorldMapPins",
-           "componentProps": {
-            "regionCounts": "{{ regionCounts.data }}",
-            "selectedRegions": {
-             "$type": "variable",
-             "name": "selectedRegions"
-            }
-           },
-           "isCustomVueComponent": true
-          },
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flexDirection": "row",
-            "justifyContent": "space-around",
-            "marginTop": "24px"
            },
            "children": [
             {
              "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "2px"
+              "height": "100%",
+              "minHeight": "0px",
+              "width": "100%"
              },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9)",
-                "fontWeight": "600"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-count-india",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-lg",
-                "tag": "span",
-                "text": "{{ (regionCounts.data && regionCounts.data.india) || 0 }}"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-region-india",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "span",
-                "text": "India"
-               }
-              }
-             ],
+             "blockName": "WorldMapPins",
+             "children": [],
              "classes": [],
-             "componentId": "stat-india",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "2px"
+             "componentId": "WorldMapPins-c4683845",
+             "componentName": "WorldMapPins",
+             "componentProps": {
+              "regionCounts": "{{ regionCounts.data }}",
+              "selectedRegions": {
+               "$type": "variable",
+               "name": "selectedRegions"
+              }
              },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9)",
-                "fontWeight": "600"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-count-asia",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-lg",
-                "tag": "span",
-                "text": "{{ (regionCounts.data && regionCounts.data.asia) || 0 }}"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-region-asia",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "span",
-                "text": "Asia"
-               }
-              }
-             ],
-             "classes": [],
-             "componentId": "stat-asia",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "2px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9)",
-                "fontWeight": "600"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-count-middle-east",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-lg",
-                "tag": "span",
-                "text": "{{ (regionCounts.data && regionCounts.data.middle_east) || 0 }}"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-region-middle-east",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "span",
-                "text": "Middle East"
-               }
-              }
-             ],
-             "classes": [],
-             "componentId": "stat-middle-east",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "2px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9)",
-                "fontWeight": "600"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-count-africa",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-lg",
-                "tag": "span",
-                "text": "{{ (regionCounts.data && regionCounts.data.africa) || 0 }}"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-region-africa",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "span",
-                "text": "Africa"
-               }
-              }
-             ],
-             "classes": [],
-             "componentId": "stat-africa",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "2px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9)",
-                "fontWeight": "600"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-count-europe",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-lg",
-                "tag": "span",
-                "text": "{{ (regionCounts.data && regionCounts.data.europe) || 0 }}"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-region-europe",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "span",
-                "text": "Europe"
-               }
-              }
-             ],
-             "classes": [],
-             "componentId": "stat-europe",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "2px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9)",
-                "fontWeight": "600"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-count-americas",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-lg",
-                "tag": "span",
-                "text": "{{ (regionCounts.data && regionCounts.data.americas) || 0 }}"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)"
-               },
-               "children": [],
-               "classes": [],
-               "componentId": "stat-region-americas",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "span",
-                "text": "Americas"
-               }
-              }
-             ],
-             "classes": [],
-             "componentId": "stat-americas",
-             "componentName": "container",
-             "originalElement": "div"
+             "isCustomVueComponent": true
             }
            ],
            "classes": [],
-           "componentId": "stats-row-3b424ed1",
+           "componentId": "map-card",
            "componentName": "container",
            "originalElement": "div"
           }
@@ -4398,7 +3962,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-10 16:00:28.518810",
+ "modified": "2026-09-17 16:19:20.006480",
  "modified_by": "Administrator",
  "name": "find_partners_redesign",
  "owner": "Administrator",
@@ -4435,7 +3999,7 @@
  "studio_app": "connect",
  "variables": [
   {
-   "initial_value": "\"\"",
+   "initial_value": "\"Others\"",
    "variable_name": "selectedIndustry",
    "variable_type": "String"
   },
@@ -4445,7 +4009,7 @@
    "variable_type": "String"
   },
   {
-   "initial_value": "1",
+   "initial_value": "2",
    "variable_name": "wizardStep",
    "variable_type": "Number"
   },
