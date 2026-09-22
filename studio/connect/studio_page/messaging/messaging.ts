@@ -295,16 +295,6 @@ export default function setup(context) {
 		}
 	}
 
-	// No hiring flow exists yet anywhere in the app — the button just acknowledges the click.
-	function hirePartner() {
-		toast({ title: "Hire flow coming soon", icon: "check", iconClasses: "text-green-600" })
-	}
-
-	// No scheduling flow exists yet anywhere in the app — the button just acknowledges the click.
-	function bookSlot() {
-		toast({ title: "Booking flow coming soon", icon: "check", iconClasses: "text-green-600" })
-	}
-
 	function closeConversation() {
 		if (!window.confirm("Close this conversation?")) return
 		call("connect.api.threads.close_thread", { thread: selectedThread.value })
@@ -1264,8 +1254,6 @@ export default function setup(context) {
 		localTimeLabel,
 		isShortlisted,
 		toggleShortlist,
-		hirePartner,
-		bookSlot,
 		closeConversation,
 		isAnyAdmin,
 		isRowAdmin,

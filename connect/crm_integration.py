@@ -7,7 +7,7 @@ def queue_crm_lead_sync(doc, method=None):
 	"""Decides whether this message should create a new CRM Lead or just be added to one that already exists, without making the customer wait on the partner's CRM."""
 	if doc.flags.get("skip_crm_sync"):
 		return  # this message was itself synced in from the partner's CRM reply — don't echo it back
-	if doc.message_type in ("System", "Booking"):
+	if doc.message_type == "System":
 		return
 
 	thread = frappe.db.get_value(

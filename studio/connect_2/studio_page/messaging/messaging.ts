@@ -565,211 +565,6 @@ export default function setup(context) {
 		return "Typically " + p.response_time_hours + "h"
 	}
 
-	// No hiring flow exists yet anywhere in the app — just acknowledges the click.
-	function hirePartner() {
-		toast({ title: "Hire flow coming soon", icon: "check", iconClasses: "text-green-600" })
-	}
-
-	// ---- Book a slot ----
-	const showBookSlotDialog = ref(false)
-	const bookSlotDate = ref("")
-	const bookSlotTime = ref("")
-	const requestingSlot = ref(false)
-
-	function toDateStr(d) {
-		return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0")
-	}
-
-	function isWeekday(d) {
-		const day = d.getDay()
-		return day !== 0 && day !== 6
-	}
-
-	// Slots are open for the next 10 weekdays from today — there's no per-partner calendar
-	// config yet for a longer/shorter booking horizon, just the daily time template (see
-	// connect.api.bookings._partner_slot_template).
-	const BOOKING_WINDOW_DAYS = 10
-
-	function bookableDateSet() {
-		const dates = new Set()
-		const d = new Date()
-		d.setHours(0, 0, 0, 0)
-		while (dates.size < BOOKING_WINDOW_DAYS) {
-			if (isWeekday(d)) dates.add(toDateStr(d))
-			d.setDate(d.getDate() + 1)
-		}
-		return dates
-	}
-
-	function isBookableDate(dateStr) {
-		return bookableDateSet().has(dateStr)
-	}
-
-	function nextBookableDate() {
-		const d = new Date()
-		d.setHours(0, 0, 0, 0)
-		while (!isWeekday(d)) d.setDate(d.getDate() + 1)
-		return toDateStr(d)
-	}
-
-	function reloadBookingSlots() {
-		const t = currentThread()
-		if (!t.partner) return
-		context.bookingSlots.params = { partner: t.partner, booking_date: bookSlotDate.value }
-		context.bookingSlots.reload()
-	}
-
-	function openBookSlotDialog() {
-		bookSlotDate.value = nextBookableDate()
-		bookSlotTime.value = ""
-		showBookSlotDialog.value = true
-		reloadBookingSlots()
-	}
-
-	function closeBookSlotDialog() {
-		showBookSlotDialog.value = false
-	}
-
-	function selectBookingDate(dateStr) {
-		if (!isBookableDate(dateStr)) return
-		bookSlotDate.value = dateStr
-		bookSlotTime.value = ""
-		reloadBookingSlots()
-	}
-
-	function calendarMonthLabel() {
-		if (!bookSlotDate.value) return ""
-		return new Date(bookSlotDate.value + "T00:00:00").toLocaleDateString("en-US", { month: "long", year: "numeric" })
-	}
-
-	function selectedBookingDateHeading() {
-		if (!bookSlotDate.value) return ""
-		return new Date(bookSlotDate.value + "T00:00:00").toLocaleDateString("en-US", {
-			weekday: "long",
-			month: "long",
-			day: "numeric",
-		})
-	}
-
-	// A 6x7 grid (Sun-Sat) covering the selected date's month, padded with the tail of the
-	// previous month and the head of the next — same shape convention Requirement's Apps
-	// Repeater uses ({name} objects), just wrapped one level deeper for the week rows.
-	function calendarWeeks() {
-		if (!bookSlotDate.value) return []
-		const anchor = new Date(bookSlotDate.value + "T00:00:00")
-		const month = anchor.getMonth()
-		const gridStart = new Date(anchor.getFullYear(), month, 1)
-		gridStart.setDate(gridStart.getDate() - gridStart.getDay())
-
-		const bookable = bookableDateSet()
-		const weeks = []
-		const cursor = new Date(gridStart)
-		for (let w = 0; w < 6; w++) {
-			const days = []
-			for (let i = 0; i < 7; i++) {
-				const dateStr = toDateStr(cursor)
-				days.push({
-					dateStr,
-					dayNumber: cursor.getDate(),
-					inCurrentMonth: cursor.getMonth() === month,
-					isBookable: bookable.has(dateStr),
-					isSelected: dateStr === bookSlotDate.value,
-				})
-				cursor.setDate(cursor.getDate() + 1)
-			}
-			weeks.push({ weekIndex: w, days })
-		}
-		return weeks
-	}
-
-	function bookingSlotList() {
-		return context.bookingSlots.data || []
-	}
-
-	function selectBookingTime(slot) {
-		if (!slot || slot.spots_left <= 0) return
-		bookSlotTime.value = slot.time
-	}
-
-	function formatSlotTime(slot) {
-		if (!slot) return ""
-		return new Date("2000-01-01T" + slot.time).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-	}
-
-	function slotSpotsLabel(slot) {
-		if (!slot) return ""
-		return slot.spots_left > 0 ? "" : "Full"
-	}
-
-	function isSlotSelected(slot) {
-		return !!(slot && bookSlotTime.value === slot.time)
-	}
-
-	function myTimezoneLabel() {
-		const offsetMinutes = -new Date().getTimezoneOffset()
-		const sign = offsetMinutes >= 0 ? "+" : "-"
-		const abs = Math.abs(offsetMinutes)
-		const hours = Math.floor(abs / 60)
-		const minutes = abs % 60
-		return "GMT" + sign + hours + ":" + String(minutes).padStart(2, "0")
-	}
-
-	// Whoever the caller isn't — a customer booking sees the partner's team, and vice versa.
-	function meetingAttendees() {
-		const wantSide = amPartner() ? "Customer" : "Partner"
-		return activeMembers().filter((m) => m.side === wantSide)
-	}
-
-	function canRequestSlot() {
-		return !!bookSlotTime.value && !requestingSlot.value
-	}
-
-	async function requestSlot() {
-		if (!canRequestSlot()) return
-		requestingSlot.value = true
-		try {
-			await call("connect.api.bookings.request_slot", {
-				thread: selectedThread.value,
-				booking_date: bookSlotDate.value,
-				booking_time: bookSlotTime.value,
-			})
-			showBookSlotDialog.value = false
-			context.messages.reload()
-			toast({ title: "Slot requested", icon: "check", iconClasses: "text-green-600" })
-		} catch (e) {
-			toast({
-				title: "Could not request slot",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
-		} finally {
-			requestingSlot.value = false
-		}
-	}
-
-	// ---- Booking message card ----
-	// A Booking-type message stores its snapshot as a JSON blob in `content` (see
-	// connect.api.bookings.request_slot), same convention as Requirement messages.
-	function parseBookingContent(item) {
-		try {
-			return JSON.parse((item && item.content) || "{}") || {}
-		} catch (e) {
-			return {}
-		}
-	}
-
-	function bookingCardSubtitle(item) {
-		const b = parseBookingContent(item)
-		if (!b.date) return ""
-		const d = new Date(b.date + "T" + (b.time || "00:00:00"))
-		return (
-			d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }) +
-			", " +
-			d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-		)
-	}
-
 	// a trailing "@partial-name" at the very end of the draft triggers the picker — mentions
 	// mid-message aren't supported since Studio's TextInput doesn't expose cursor position.
 	// Derived straight from draftMessage on every call (not a watch()) so it can't fall out of
@@ -1587,7 +1382,7 @@ export default function setup(context) {
 	// Which conversations can receive a forward is decided server-side (see
 	// connect.api.messages.get_forward_targets: Write access, not closed, not removed). Names and
 	// avatars come from the unified inbox list the page already has, so the dialog only needs the
-	// eligible names back. Requirement/booking cards and file clusters aren't forwardable.
+	// eligible names back. Requirement cards and file clusters aren't forwardable.
 	const showForwardDialog = ref(false)
 	const messageToForward = ref(null)
 	const forwardTargets = ref({ company: [], dm: [] })
@@ -1776,7 +1571,6 @@ export default function setup(context) {
 		if (!message) return ""
 		if (message.message_type === "File") return message.file_name || "Attachment"
 		if (message.message_type === "Requirement") return "Requirement details"
-		if (message.message_type === "Booking") return "Booking"
 		return message.content || ""
 	}
 
@@ -3216,27 +3010,6 @@ export default function setup(context) {
 		activeMembers,
 		activeMemberCount,
 		responseTimeLabel,
-		hirePartner,
-		showBookSlotDialog,
-		bookSlotDate,
-		bookSlotTime,
-		requestingSlot,
-		openBookSlotDialog,
-		closeBookSlotDialog,
-		selectBookingDate,
-		calendarMonthLabel,
-		selectedBookingDateHeading,
-		calendarWeeks,
-		bookingSlotList,
-		selectBookingTime,
-		formatSlotTime,
-		slotSpotsLabel,
-		isSlotSelected,
-		myTimezoneLabel,
-		meetingAttendees,
-		canRequestSlot,
-		requestSlot,
-		bookingCardSubtitle,
 		addMember,
 		makeAdmin,
 		removeMember,
