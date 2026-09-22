@@ -21,6 +21,8 @@ def _message_preview_text(message):
 		text = "📎 " + (message.get("file_name") or _("Attachment"))
 	elif message.get("message_type") == "Requirement":
 		text = _("Requirement details")
+	elif message.get("message_type") == "Booking":
+		text = "📅 " + _("Scheduled an introduction call")
 	else:
 		text = message.get("content") or ""
 	return text[:140]
@@ -107,7 +109,12 @@ def notify_thread_members(doc, method=None):
 	if not members:
 		return
 
-	subject = "Shared requirement details" if doc.message_type == "Requirement" else frappe.utils.strip_html(doc.content)
+	if doc.message_type == "Requirement":
+		subject = "Shared requirement details"
+	elif doc.message_type == "Booking":
+		subject = "Scheduled an introduction call"
+	else:
+		subject = frappe.utils.strip_html(doc.content)
 	enqueue_create_notification(
 		members,
 		{
@@ -133,6 +140,7 @@ def notify_thread_members(doc, method=None):
 		"file_name": doc.file_name,
 		"file_type": doc.file_type,
 		"file_size": doc.file_size,
+		"reply_to": doc.reply_to,
 		"creation": str(doc.creation),
 	}
 	for member in members:
@@ -179,22 +187,34 @@ def notify_partner_of_new_requirement(doc, method=None):
 
 	customer_name = frappe.db.get_value("Customer", thread.customer, "customer_name") or thread.customer
 	requirement = frappe.parse_json(doc.content) if doc.content else {}
+	# Keep in sync with REQUIREMENT_FIELD_LABELS in studio/connect_2/studio_page/messaging/messaging.ts
+	# — that's the same requirement JSON blob rendered as the in-app requirement card.
 	fields = [
 		("Company", requirement.get("company_name")),
+		("Country", requirement.get("country")),
 		("Industry", requirement.get("industry")),
 		("Looking for", requirement.get("looking_for")),
 		("Company size", requirement.get("company_size")),
+		("Current setup", requirement.get("current_situation")),
 		("Timeline", requirement.get("timeline")),
+		("Delivery", requirement.get("delivery_preference")),
+		("Budget", requirement.get("budget")),
+		("Apps", ", ".join(requirement.get("apps")) if isinstance(requirement.get("apps"), list) else requirement.get("apps")),
 	]
 	details_html = "".join(
 		f"<p><b>{label}:</b> {frappe.utils.escape_html(value)}</p>" for label, value in fields if value
 	)
+	thread_url = frappe.utils.get_url(f"/connect-2/messaging?thread={doc.thread}")
 
 	try:
 		frappe.sendmail(
 			recipients=[recipient],
 			subject=_("New requirement from {0}").format(customer_name),
-			message=f"<p>{frappe.utils.escape_html(customer_name)} {_('just sent a new requirement on Connect.')}</p>{details_html}",
+			message=(
+				f"<p>{frappe.utils.escape_html(customer_name)} {_('just sent a new requirement on Connect.')}</p>"
+				f"{details_html}"
+				f"<p><a href='{thread_url}'>{_('View conversation')}</a></p>"
+			),
 			# A brand-new lead notification is time-sensitive — send right after this request
 			# commits rather than waiting on the next scheduler tick to flush the email queue.
 			now=True,

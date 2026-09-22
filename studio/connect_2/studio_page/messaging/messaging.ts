@@ -30,7 +30,6 @@ export default function setup(context) {
 	const originalRole = ref("")
 	const savingProfile = ref(false)
 	const uploadingProfileImage = ref(false)
-	const showInlineTemplates = ref(false)
 	const mediaTab = ref("Links")
 	const showAddMemberDialog = ref(false)
 	const newMemberEmail = ref("")
@@ -71,6 +70,54 @@ export default function setup(context) {
 		}
 		const amPartner = context.myContext.data && context.myContext.data.partner
 		return amPartner ? thread.customer : thread.partner
+	}
+
+	// Company threads carry the partner's uploaded logo (see get_my_threads' partner_logo) — shown
+	// only to the customer side, since a partner viewing their own customer threads has no customer
+	// logo to show and falls back to Avatar's label-initial rendering instead.
+	function threadAvatarImage(thread) {
+		if (!thread) return ""
+		if (thread.convType === "dm") return thread.other_user_image || ""
+		const amPartner = context.myContext.data && context.myContext.data.partner
+		return amPartner ? "" : thread.partner_logo || ""
+	}
+
+	// ---- Inbox search ----
+	// Filters the unified inbox (see unifiedThreadList) by whatever's typed into the Inbox search
+	// box (see thread-search-input in the JSON — a real frappe-ui TextInput bound to this ref via
+	// Studio's variable binding, not a raw <input>, so it gets frappe-ui's own focus/border styling
+	// for free instead of the browser's default blue outline).
+	const threadSearchQuery = ref("")
+
+	// ---- Inbox Active/Inactive tabs ----
+	// A DM thread has no `status` field at all (Connect DM Thread doesn't carry one — see
+	// get_my_dm_threads), so it's always "active"; only a company thread can be closed
+	// (see closeThread / Connect Thread's status: Open|Closed).
+	const activeInboxTab = ref("active")
+
+	function isThreadActive(thread) {
+		return thread.convType !== "company" || thread.status !== "Closed"
+	}
+
+	function activeThreadCount() {
+		return unifiedThreadList().filter(isThreadActive).length
+	}
+
+	function inactiveThreadCount() {
+		return unifiedThreadList().filter((t) => !isThreadActive(t)).length
+	}
+
+	function filteredThreadList() {
+		const query = threadSearchQuery.value.trim().toLowerCase()
+		const threads = unifiedThreadList().filter((t) =>
+			activeInboxTab.value === "active" ? isThreadActive(t) : !isThreadActive(t),
+		)
+		if (!query) return threads
+		return threads.filter((thread) => {
+			const name = (otherPartyName(thread) || "").toLowerCase()
+			const lastMessage = (thread.last_message || "").toLowerCase()
+			return name.includes(query) || lastMessage.includes(query)
+		})
 	}
 
 	function threadTitle() {
@@ -208,10 +255,18 @@ export default function setup(context) {
 		context.threadAdmins.reload()
 		context.memberProfiles.params = { thread: name }
 		context.memberProfiles.reload()
+		context.partnerInfo.params = { partner: currentThread().partner }
+		context.partnerInfo.reload()
 		call("connect.api.threads.mark_thread_read", { thread: name })
 			.then(() => context.myThreads.reload())
 			.catch(() => {})
 		fetchPinnedMessage()
+	}
+
+	// On phone-width screens the thread list and the open conversation share one pane
+	// (master-detail); this is what the header's back button calls to return to the list.
+	function goBackToThreadList() {
+		selectedThread.value = ""
 	}
 
 	// ---- Realtime ----
@@ -474,6 +529,10 @@ export default function setup(context) {
 	}
 
 	// ---- Admin checks ----
+	function amPartner() {
+		return !!(context.myContext.data && context.myContext.data.partner)
+	}
+
 	function isPartnerAdmin() {
 		return !!(context.myContext.data && context.myContext.data.partner && context.myContext.data.partner.is_admin)
 	}
@@ -493,6 +552,224 @@ export default function setup(context) {
 	// ---- Members ----
 	function activeMembers() {
 		return (context.threadMembers.data || []).filter((m) => !m.is_removed)
+	}
+
+	function activeMemberCount() {
+		return activeMembers().length
+	}
+
+	// Chat header stats — partnerInfo is fetched on demand (see selectThread) rather than folded
+	// into get_my_threads, since that resource backs every row in the sidebar and this is only
+	// ever needed for whichever one thread is currently open.
+	function responseTimeLabel() {
+		const p = context.partnerInfo.data
+		if (!p || !p.response_time_hours) return ""
+		return "Typically " + p.response_time_hours + "h"
+	}
+
+	// No hiring flow exists yet anywhere in the app — just acknowledges the click.
+	function hirePartner() {
+		toast({ title: "Hire flow coming soon", icon: "check", iconClasses: "text-green-600" })
+	}
+
+	// ---- Book a slot ----
+	const showBookSlotDialog = ref(false)
+	const bookSlotDate = ref("")
+	const bookSlotTime = ref("")
+	const requestingSlot = ref(false)
+
+	function toDateStr(d) {
+		return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0")
+	}
+
+	function isWeekday(d) {
+		const day = d.getDay()
+		return day !== 0 && day !== 6
+	}
+
+	// Slots are open for the next 10 weekdays from today — there's no per-partner calendar
+	// config yet for a longer/shorter booking horizon, just the daily time template (see
+	// connect.api.bookings._partner_slot_template).
+	const BOOKING_WINDOW_DAYS = 10
+
+	function bookableDateSet() {
+		const dates = new Set()
+		const d = new Date()
+		d.setHours(0, 0, 0, 0)
+		while (dates.size < BOOKING_WINDOW_DAYS) {
+			if (isWeekday(d)) dates.add(toDateStr(d))
+			d.setDate(d.getDate() + 1)
+		}
+		return dates
+	}
+
+	function isBookableDate(dateStr) {
+		return bookableDateSet().has(dateStr)
+	}
+
+	function nextBookableDate() {
+		const d = new Date()
+		d.setHours(0, 0, 0, 0)
+		while (!isWeekday(d)) d.setDate(d.getDate() + 1)
+		return toDateStr(d)
+	}
+
+	function reloadBookingSlots() {
+		const t = currentThread()
+		if (!t.partner) return
+		context.bookingSlots.params = { partner: t.partner, booking_date: bookSlotDate.value }
+		context.bookingSlots.reload()
+	}
+
+	function openBookSlotDialog() {
+		bookSlotDate.value = nextBookableDate()
+		bookSlotTime.value = ""
+		showBookSlotDialog.value = true
+		reloadBookingSlots()
+	}
+
+	function closeBookSlotDialog() {
+		showBookSlotDialog.value = false
+	}
+
+	function selectBookingDate(dateStr) {
+		if (!isBookableDate(dateStr)) return
+		bookSlotDate.value = dateStr
+		bookSlotTime.value = ""
+		reloadBookingSlots()
+	}
+
+	function calendarMonthLabel() {
+		if (!bookSlotDate.value) return ""
+		return new Date(bookSlotDate.value + "T00:00:00").toLocaleDateString("en-US", { month: "long", year: "numeric" })
+	}
+
+	function selectedBookingDateHeading() {
+		if (!bookSlotDate.value) return ""
+		return new Date(bookSlotDate.value + "T00:00:00").toLocaleDateString("en-US", {
+			weekday: "long",
+			month: "long",
+			day: "numeric",
+		})
+	}
+
+	// A 6x7 grid (Sun-Sat) covering the selected date's month, padded with the tail of the
+	// previous month and the head of the next — same shape convention Requirement's Apps
+	// Repeater uses ({name} objects), just wrapped one level deeper for the week rows.
+	function calendarWeeks() {
+		if (!bookSlotDate.value) return []
+		const anchor = new Date(bookSlotDate.value + "T00:00:00")
+		const month = anchor.getMonth()
+		const gridStart = new Date(anchor.getFullYear(), month, 1)
+		gridStart.setDate(gridStart.getDate() - gridStart.getDay())
+
+		const bookable = bookableDateSet()
+		const weeks = []
+		const cursor = new Date(gridStart)
+		for (let w = 0; w < 6; w++) {
+			const days = []
+			for (let i = 0; i < 7; i++) {
+				const dateStr = toDateStr(cursor)
+				days.push({
+					dateStr,
+					dayNumber: cursor.getDate(),
+					inCurrentMonth: cursor.getMonth() === month,
+					isBookable: bookable.has(dateStr),
+					isSelected: dateStr === bookSlotDate.value,
+				})
+				cursor.setDate(cursor.getDate() + 1)
+			}
+			weeks.push({ weekIndex: w, days })
+		}
+		return weeks
+	}
+
+	function bookingSlotList() {
+		return context.bookingSlots.data || []
+	}
+
+	function selectBookingTime(slot) {
+		if (!slot || slot.spots_left <= 0) return
+		bookSlotTime.value = slot.time
+	}
+
+	function formatSlotTime(slot) {
+		if (!slot) return ""
+		return new Date("2000-01-01T" + slot.time).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+	}
+
+	function slotSpotsLabel(slot) {
+		if (!slot) return ""
+		return slot.spots_left > 0 ? "" : "Full"
+	}
+
+	function isSlotSelected(slot) {
+		return !!(slot && bookSlotTime.value === slot.time)
+	}
+
+	function myTimezoneLabel() {
+		const offsetMinutes = -new Date().getTimezoneOffset()
+		const sign = offsetMinutes >= 0 ? "+" : "-"
+		const abs = Math.abs(offsetMinutes)
+		const hours = Math.floor(abs / 60)
+		const minutes = abs % 60
+		return "GMT" + sign + hours + ":" + String(minutes).padStart(2, "0")
+	}
+
+	// Whoever the caller isn't — a customer booking sees the partner's team, and vice versa.
+	function meetingAttendees() {
+		const wantSide = amPartner() ? "Customer" : "Partner"
+		return activeMembers().filter((m) => m.side === wantSide)
+	}
+
+	function canRequestSlot() {
+		return !!bookSlotTime.value && !requestingSlot.value
+	}
+
+	async function requestSlot() {
+		if (!canRequestSlot()) return
+		requestingSlot.value = true
+		try {
+			await call("connect.api.bookings.request_slot", {
+				thread: selectedThread.value,
+				booking_date: bookSlotDate.value,
+				booking_time: bookSlotTime.value,
+			})
+			showBookSlotDialog.value = false
+			context.messages.reload()
+			toast({ title: "Slot requested", icon: "check", iconClasses: "text-green-600" })
+		} catch (e) {
+			toast({
+				title: "Could not request slot",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			requestingSlot.value = false
+		}
+	}
+
+	// ---- Booking message card ----
+	// A Booking-type message stores its snapshot as a JSON blob in `content` (see
+	// connect.api.bookings.request_slot), same convention as Requirement messages.
+	function parseBookingContent(item) {
+		try {
+			return JSON.parse((item && item.content) || "{}") || {}
+		} catch (e) {
+			return {}
+		}
+	}
+
+	function bookingCardSubtitle(item) {
+		const b = parseBookingContent(item)
+		if (!b.date) return ""
+		const d = new Date(b.date + "T" + (b.time || "00:00:00"))
+		return (
+			d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }) +
+			", " +
+			d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+		)
 	}
 
 	// a trailing "@partial-name" at the very end of the draft triggers the picker — mentions
@@ -528,7 +805,7 @@ export default function setup(context) {
 
 	function insertTemplate(template) {
 		draftMessage.value = template.content
-		showInlineTemplates.value = false
+		showTemplatesDialog.value = false
 	}
 
 	// Neutralizes text before it's interpolated into an HTML-component string (which renders
@@ -595,6 +872,30 @@ export default function setup(context) {
 			if (key === "apps") value = Array.isArray(value) ? value.join(", ") : value
 			return [label, value]
 		}).filter(([, value]) => value)
+	}
+
+	// The requirement card renders as two stacked boxes rather than one long one — "who they
+	// are" up top, "what they need" below.
+	const REQUIREMENT_FIELD_KEYS_PRIMARY = new Set(["company_name", "country", "industry", "company_size"])
+
+	function splitRequirementFieldRows(req) {
+		const primary = []
+		const secondary = []
+		REQUIREMENT_FIELD_LABELS.forEach(([key, label]) => {
+			let value = req[key]
+			if (key === "apps") value = Array.isArray(value) ? value.join(", ") : value
+			if (!value) return
+			;(REQUIREMENT_FIELD_KEYS_PRIMARY.has(key) ? primary : secondary).push([label, value])
+		})
+		return { primary, secondary }
+	}
+
+	function requirementPrimaryRows(item) {
+		return splitRequirementFieldRows(parseRequirementContent(item)).primary
+	}
+
+	function requirementSecondaryRows(item) {
+		return splitRequirementFieldRows(parseRequirementContent(item)).secondary
 	}
 
 	// preview_title-style header for the card — same fallback order a viewer would look for.
@@ -1124,6 +1425,9 @@ export default function setup(context) {
 	function messageActionsOptions(item) {
 		if (!item || !isMine(item.sender)) return []
 		const options = []
+		if (!item.isFileCluster) {
+			options.push({ label: "Reply", icon: "lucide-reply", onClick: () => startReply(item) })
+		}
 		if (!item.isFileCluster && item.message_type === "Text") {
 			options.push({ label: "Edit", icon: "lucide-pencil", onClick: () => confirmEditMessage(item) })
 		}
@@ -1139,11 +1443,12 @@ export default function setup(context) {
 		return options
 	}
 
-	// Right-click menu for someone else's message — just Pin/Unpin, since edit/delete are
-	// sender-only (see messageActionsOptions). File clusters aren't pinnable (see togglePinMessage).
+	// Right-click menu for someone else's message — Reply + Pin/Unpin, since edit/delete are
+	// sender-only (see messageActionsOptions). File clusters aren't pinnable/replyable.
 	function otherMessageActionsOptions(item) {
 		if (!item || item.isFileCluster) return []
 		return [
+			{ label: "Reply", icon: "lucide-reply", onClick: () => startReply(item) },
 			{
 				label: isPinned(item) ? "Unpin" : "Pin",
 				icon: isPinned(item) ? "lucide-pin-off" : "lucide-pin",
@@ -1213,9 +1518,10 @@ export default function setup(context) {
 
 	function confirmEditMessage(item) {
 		if (!item || item.isFileCluster || item.message_type !== "Text" || !isMine(item.sender)) return
+		replyToMessage.value = null
 		messageToEdit.value = item
 		draftMessage.value = item.content
-		showInlineTemplates.value = false
+		showTemplatesDialog.value = false
 		nextTick(() => {
 			const el = document.querySelector('[data-component-id="message-input"]') as HTMLTextAreaElement | null
 			el?.focus()
@@ -1225,6 +1531,46 @@ export default function setup(context) {
 	function cancelEditMessage() {
 		messageToEdit.value = null
 		draftMessage.value = ""
+	}
+
+	// ---- Replying to a message ----
+	// Same staged-in-composer pattern as editing: replyToMessage gates a "Replying to X" strip
+	// above the input, and is cleared once sendMessage() consumes it — quoting happens by
+	// reference (reply_to on the new message), not by copying text into the draft.
+	const replyToMessage = ref(null)
+
+	function startReply(item) {
+		if (!item || item.isFileCluster) return
+		messageToEdit.value = null
+		replyToMessage.value = item
+		nextTick(() => {
+			const el = document.querySelector('[data-component-id="message-input"]') as HTMLTextAreaElement | null
+			el?.focus()
+		})
+	}
+
+	function cancelReply() {
+		replyToMessage.value = null
+	}
+
+	// Resolves a reply_to id against the currently loaded window of messages (the same 200-message
+	// list the thread view renders from) — the replied-to message can scroll out of that window on
+	// a very long thread, in which case the quote is skipped rather than firing an extra fetch.
+	function getRepliedMessage(replyToName) {
+		if (!replyToName) return null
+		const list = (context.messages.data || []) as any[]
+		return list.find((m) => m.name === replyToName) || null
+	}
+
+	// Takes the message being quoted directly (not a reply_to id) — the composer passes
+	// replyToMessage itself, the bubble template resolves dataItem.reply_to via
+	// getRepliedMessage() first and passes that in.
+	function replyPreviewText(message) {
+		if (!message) return ""
+		if (message.message_type === "File") return message.file_name || "Attachment"
+		if (message.message_type === "Requirement") return "Requirement details"
+		if (message.message_type === "Booking") return "Booking"
+		return message.content || ""
 	}
 
 	function closeEditMessageDialog() {
@@ -1461,13 +1807,15 @@ export default function setup(context) {
 
 		const thread = selectedThread.value
 		const requirementToSend = draftRequirement.value
+		const replyToSend = replyToMessage.value ? replyToMessage.value.name : null
 		draftMessage.value = ""
 		draftAttachments.value = []
 		draftRequirement.value = null
+		replyToMessage.value = null
 
 		try {
 			if (content) {
-				await call("connect.api.messages.send_message", { thread, content })
+				await call("connect.api.messages.send_message", { thread, content, reply_to: replyToSend })
 			}
 			for (const a of readyAttachments) {
 				await call("connect.api.messages.send_message", {
@@ -2115,7 +2463,9 @@ export default function setup(context) {
 					}
 					return
 				}
-				if (list.length) selectThread(list[0])
+				// On phone-width screens the page opens on the thread list (master-detail), so skip
+				// the auto-open-most-recent-conversation default that desktop/tablet relies on.
+				if (list.length && window.innerWidth >= 576) selectThread(list[0])
 				return
 			}
 
@@ -2142,6 +2492,9 @@ export default function setup(context) {
 		requirementSubtitle,
 		requirementAppItems,
 		parseRequirementContent,
+		requirementFieldRows,
+		requirementPrimaryRows,
+		requirementSecondaryRows,
 		copyRequirementDetails,
 		downloadRequirementDetails,
 		showProfileSettingsDialog,
@@ -2196,7 +2549,6 @@ export default function setup(context) {
 		showMembersDialog,
 		showMediaDialog,
 		showTemplatesDialog,
-		showInlineTemplates,
 		myMessageTemplates,
 		templateSearchQuery,
 		filteredMessageTemplates,
@@ -2225,12 +2577,37 @@ export default function setup(context) {
 		threadListPreview,
 		isPanelOpen,
 		selectThread,
+		goBackToThreadList,
 		closeThread,
+		amPartner,
 		isPartnerAdmin,
 		isCustomerAdmin,
 		isAnyAdmin,
 		isRowAdmin,
 		activeMembers,
+		activeMemberCount,
+		responseTimeLabel,
+		hirePartner,
+		showBookSlotDialog,
+		bookSlotDate,
+		bookSlotTime,
+		requestingSlot,
+		openBookSlotDialog,
+		closeBookSlotDialog,
+		selectBookingDate,
+		calendarMonthLabel,
+		selectedBookingDateHeading,
+		calendarWeeks,
+		bookingSlotList,
+		selectBookingTime,
+		formatSlotTime,
+		slotSpotsLabel,
+		isSlotSelected,
+		myTimezoneLabel,
+		meetingAttendees,
+		canRequestSlot,
+		requestSlot,
+		bookingCardSubtitle,
 		addMember,
 		makeAdmin,
 		removeMember,
@@ -2261,6 +2638,11 @@ export default function setup(context) {
 		closeEditMessageDialog,
 		saveEditedMessage,
 		saveEditedMessageOnEnter,
+		replyToMessage,
+		startReply,
+		cancelReply,
+		getRepliedMessage,
+		replyPreviewText,
 		pinnedMessage,
 		isPinned,
 		togglePinMessage,
@@ -2287,6 +2669,12 @@ export default function setup(context) {
 		formatDateDivider,
 		formatFullDateTime,
 		avatarTheme,
+		threadAvatarImage,
+		threadSearchQuery,
+		activeInboxTab,
+		activeThreadCount,
+		inactiveThreadCount,
+		filteredThreadList,
 		memberProfile,
 		memberDisplayName,
 		memberImage,

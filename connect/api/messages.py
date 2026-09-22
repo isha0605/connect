@@ -25,6 +25,7 @@ def send_message(
 	file_type=None,
 	file_size=None,
 	requirement_data=None,
+	reply_to=None,
 ):
 	"""Creates a chat message carrying text, a file, or a Requirement snapshot — one path for every message type."""
 	user = frappe.session.user
@@ -51,6 +52,9 @@ def send_message(
 		"sender": user,
 		"message_type": message_type,
 		"content": message_content,
+		# Only a reply to a message already in this same thread is meaningful — a stray/cross-thread
+		# reply_to would show a quote the recipient has no way to see.
+		"reply_to": reply_to if reply_to and frappe.db.exists("Connect Message", {"name": reply_to, "thread": thread}) else None,
 	})
 	if file_url:
 		message.attachment = file_url
