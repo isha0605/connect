@@ -26,7 +26,8 @@ def list_partner_reviews(partner):
 		"Partner Review",
 		filters={"partner": partner},
 		fields=[
-			"reviewer_name", "customer", "rating", "headline", "quote", "reviewed_on", "verified",
+			"reviewer_name", "customer", "customer.customer_name as customer_name",
+			"rating", "headline", "quote", "reviewed_on", "verified",
 			"business_understanding", "implementation_quality", "communication",
 			"timeliness", "support", "technical_expertise",
 		],

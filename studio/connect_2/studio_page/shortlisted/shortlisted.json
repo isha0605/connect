@@ -477,14 +477,22 @@
          "children": [
           {
            "baseStyles": {
-            "display": "{{ (myShortlistFull.data || []).filter(p => p.tier === 'Gold').length > 0 ? 'block' : 'none' }}"
+            "alignItems": "flex-start",
+            "display": "flex",
+            "flexDirection": "column",
+            "flexShrink": 1,
+            "flexWrap": "nowrap",
+            "gap": "8px",
+            "height": "fit-content",
+            "justifyContent": "flex-start",
+            "width": "100%"
            },
-           "blockName": "ListGroup",
+           "blockName": "container",
            "children": [
             {
              "children": [],
              "classes": [],
-             "componentId": "ListRows-42d27f384",
+             "componentId": "ListRows-91e783f6b-sl",
              "componentName": "ListRows",
              "componentProps": {
               "items": "{{ myShortlistFull.data || [] }}",
@@ -492,13 +500,14 @@
              },
              "componentSlots": {
               "default": {
-               "parentBlockId": "ListRows-42d27f384",
+               "parentBlockId": "ListRows-91e783f6b",
                "slotContent": [
                 {
                  "attributes": {},
                  "baseStyles": {
-                  "marginTop": "0px",
-                  "paddingTop": "0px"
+                  "flexWrap": "nowrap",
+                  "gap": "20px",
+                  "paddingBlock": "12px"
                  },
                  "children": [
                   {
@@ -510,7 +519,7 @@
                      "baseStyles": {
                       "alignItems": "center",
                       "backgroundColor": "var(--surface-base, oklch(1 0 0))",
-                      "backgroundImage": "{{ item.logo ? 'url(' + item.logo + ')' : 'none' }}",
+                      "backgroundImage": "{{ item.logo ? 'url(\"' + item.logo + '\")' : 'none' }}",
                       "backgroundPosition": "center",
                       "backgroundRepeat": "no-repeat",
                       "backgroundSize": "contain",
@@ -538,7 +547,7 @@
                        "children": [],
                        "classes": [],
                        "componentEvents": {},
-                       "componentId": "LogoView-shortlist-initial",
+                       "componentId": "LogoView-gold-sl-initial",
                        "componentName": "TextBlock",
                        "componentProps": {
                         "fontSize": "text-sm",
@@ -547,13 +556,12 @@
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
-                       "originalElement": null,
                        "tabletStyles": {}
                       }
                      ],
                      "classes": [],
                      "componentEvents": {},
-                     "componentId": "LogoView-shortlist",
+                     "componentId": "LogoView-gold-sl",
                      "componentName": "container",
                      "componentProps": {},
                      "componentSlots": {},
@@ -564,17 +572,20 @@
                    ],
                    "classes": [],
                    "componentEvents": {},
-                   "componentId": "ListCell-avatar-shortlist",
+                   "componentId": "ListCell-avatar-gold-sl",
                    "componentName": "ListCell",
                    "componentProps": {},
                    "componentSlots": {},
                    "mobileStyles": {},
-                   "originalElement": null,
                    "tabletStyles": {}
                   },
                   {
                    "attributes": {},
-                   "baseStyles": {},
+                   "baseStyles": {
+                    "gap": "0px",
+                    "gridRow": "span 1",
+                    "margin": "0px"
+                   },
                    "children": [
                     {
                      "attributes": {},
@@ -603,7 +614,7 @@
                          "children": [],
                          "classes": [],
                          "componentEvents": {},
-                         "componentId": "row-shortlist-name",
+                         "componentId": "row-gold-sl-name",
                          "componentName": "TextBlock",
                          "componentProps": {
                           "fontSize": "text-base",
@@ -612,7 +623,6 @@
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
-                         "originalElement": null,
                          "tabletStyles": {}
                         },
                         {
@@ -621,22 +631,21 @@
                          "children": [],
                          "classes": [],
                          "componentEvents": {},
-                         "componentId": "row-shortlist-tier-badge",
+                         "componentId": "row-gold-sl-tier-badge",
                          "componentName": "Badge",
                          "componentProps": {
                           "label": "{{ item.tier }}",
-                          "theme": "{{ item.tier === 'Gold' ? 'amber' : (item.tier === 'Silver' ? 'gray' : 'red') }}",
+                          "theme": "{{ item.tier === 'Gold' ? 'amber' : item.tier === 'Silver' ? 'gray' : item.tier === 'Bronze' ? 'orange' : 'gray' }}",
                           "variant": "subtle"
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
-                         "originalElement": null,
                          "tabletStyles": {}
                         }
                        ],
                        "classes": [],
                        "componentEvents": {},
-                       "componentId": "row-shortlist-name-row",
+                       "componentId": "row-gold-sl-name-row",
                        "componentName": "container",
                        "componentProps": {},
                        "componentSlots": {},
@@ -663,7 +672,7 @@
                          "children": [],
                          "classes": [],
                          "componentEvents": {},
-                         "componentId": "row-shortlist-location-icon",
+                         "componentId": "row-gold-sl-location-icon",
                          "componentName": "FeatherIcon",
                          "componentProps": {
                           "color": "var(--ink-gray-5)",
@@ -672,7 +681,6 @@
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
-                         "originalElement": null,
                          "tabletStyles": {}
                         },
                         {
@@ -683,7 +691,7 @@
                          "children": [],
                          "classes": [],
                          "componentEvents": {},
-                         "componentId": "row-shortlist-location-text",
+                         "componentId": "row-gold-sl-location-text",
                          "componentName": "TextBlock",
                          "componentProps": {
                           "fontSize": "text-xs",
@@ -692,13 +700,12 @@
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
-                         "originalElement": null,
                          "tabletStyles": {}
                         }
                        ],
                        "classes": [],
                        "componentEvents": {},
-                       "componentId": "row-shortlist-location",
+                       "componentId": "row-gold-sl-location",
                        "componentName": "container",
                        "componentProps": {},
                        "componentSlots": {},
@@ -735,7 +742,7 @@
                            "children": [],
                            "classes": [],
                            "componentEvents": {},
-                           "componentId": "row-shortlist-rate-icon",
+                           "componentId": "row-gold-sl-rate-icon",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
@@ -744,7 +751,6 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "originalElement": null,
                            "tabletStyles": {}
                           },
                           {
@@ -755,7 +761,7 @@
                            "children": [],
                            "classes": [],
                            "componentEvents": {},
-                           "componentId": "row-shortlist-rate-text",
+                           "componentId": "row-gold-sl-rate-text",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
@@ -764,13 +770,12 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "originalElement": null,
                            "tabletStyles": {}
                           }
                          ],
                          "classes": [],
                          "componentEvents": {},
-                         "componentId": "row-shortlist-rate",
+                         "componentId": "row-gold-sl-rate",
                          "componentName": "container",
                          "componentProps": {},
                          "componentSlots": {},
@@ -797,7 +802,7 @@
                            "children": [],
                            "classes": [],
                            "componentEvents": {},
-                           "componentId": "row-shortlist-rating-icon",
+                           "componentId": "row-gold-sl-rating-icon",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
@@ -806,7 +811,6 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "originalElement": null,
                            "tabletStyles": {}
                           },
                           {
@@ -817,22 +821,21 @@
                            "children": [],
                            "classes": [],
                            "componentEvents": {},
-                           "componentId": "row-shortlist-rating-text",
+                           "componentId": "row-gold-sl-rating-text",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
                             "tag": "span",
-                            "text": "{{ item.rating ? item.rating : 'No ratings yet' }}"
+                            "text": "{{ item.rating ? item.rating + ' (' + (item.review_count || 0) + ')' : 'No ratings yet' }}"
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "originalElement": null,
                            "tabletStyles": {}
                           }
                          ],
                          "classes": [],
                          "componentEvents": {},
-                         "componentId": "row-shortlist-rating",
+                         "componentId": "row-gold-sl-rating",
                          "componentName": "container",
                          "componentProps": {},
                          "componentSlots": {},
@@ -859,7 +862,7 @@
                            "children": [],
                            "classes": [],
                            "componentEvents": {},
-                           "componentId": "row-shortlist-response-icon",
+                           "componentId": "row-gold-sl-response-icon",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
@@ -868,7 +871,6 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "originalElement": null,
                            "tabletStyles": {}
                           },
                           {
@@ -879,7 +881,7 @@
                            "children": [],
                            "classes": [],
                            "componentEvents": {},
-                           "componentId": "row-shortlist-response-text",
+                           "componentId": "row-gold-sl-response-text",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
@@ -888,13 +890,12 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "originalElement": null,
                            "tabletStyles": {}
                           }
                          ],
                          "classes": [],
                          "componentEvents": {},
-                         "componentId": "row-shortlist-response",
+                         "componentId": "row-gold-sl-response",
                          "componentName": "container",
                          "componentProps": {},
                          "componentSlots": {},
@@ -905,7 +906,7 @@
                        ],
                        "classes": [],
                        "componentEvents": {},
-                       "componentId": "row-shortlist-stats-row",
+                       "componentId": "row-gold-sl-stats-row",
                        "componentName": "container",
                        "componentProps": {},
                        "componentSlots": {},
@@ -922,7 +923,7 @@
                        "children": [],
                        "classes": [],
                        "componentEvents": {},
-                       "componentId": "row-shortlist-stories",
+                       "componentId": "row-gold-sl-stories",
                        "componentName": "TextBlock",
                        "componentProps": {
                         "fontSize": "text-xs",
@@ -931,13 +932,12 @@
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
-                       "originalElement": null,
                        "tabletStyles": {}
                       }
                      ],
                      "classes": [],
                      "componentEvents": {},
-                     "componentId": "row-shortlist-details",
+                     "componentId": "row-gold-sl-details",
                      "componentName": "container",
                      "componentProps": {},
                      "componentSlots": {},
@@ -948,12 +948,11 @@
                    ],
                    "classes": [],
                    "componentEvents": {},
-                   "componentId": "ListCell-details-shortlist",
+                   "componentId": "ListCell-details-gold-sl",
                    "componentName": "ListCell",
                    "componentProps": {},
                    "componentSlots": {},
                    "mobileStyles": {},
-                   "originalElement": null,
                    "tabletStyles": {}
                   },
                   {
@@ -973,12 +972,12 @@
                        "attributes": {},
                        "baseStyles": {
                         "alignItems": "center",
-                        "color": "var(--ink-gray-8, oklch(0.205 0 0))",
+                        "color": "var(--ink-gray-8)",
                         "display": "flex",
                         "flexShrink": "0",
-                        "height": "36px",
+                        "height": "32px",
                         "justifyContent": "center",
-                        "width": "36px"
+                        "width": "32px"
                        },
                        "children": [],
                        "classes": [],
@@ -986,18 +985,18 @@
                         "click": {
                          "action": "Run Script",
                          "event": "click",
-                         "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlistFull.data || [];\nmyShortlistFull.data = previous.filter((p) => p.name !== partner);\ncall('connect.api.customer.remove_from_shortlist', { partner }).then(() => { myShortlistFull.reload(); }).catch((err) => {\n  myShortlistFull.data = previous;\n  toast({ title: 'Could not remove from shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\ncall('connect.api.customer.remove_from_shortlist', { partner }).then(() => { myShortlistFull.reload(); }).catch((err) => {\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                         }
                        },
-                       "componentId": "Button-remove-shortlist",
+                       "componentId": "Button-shortlist-gold-sl",
                        "componentName": "Button",
                        "componentProps": {
-                        "icon": "lucide-bookmark-x",
+                        "icon": "lucide-bookmark-check",
+                        "size": "md",
                         "variant": "ghost"
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
-                       "originalElement": null,
                        "tabletStyles": {}
                       },
                       {
@@ -1014,7 +1013,7 @@
                          "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.contact.start_partner_thread', { partner: item.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                         }
                        },
-                       "componentId": "Button-contact-shortlist",
+                       "componentId": "Button-contact-gold-sl",
                        "componentName": "Button",
                        "componentProps": {
                         "iconLeft": "lucide-send",
@@ -1023,13 +1022,12 @@
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
-                       "originalElement": null,
                        "tabletStyles": {}
                       }
                      ],
                      "classes": [],
                      "componentEvents": {},
-                     "componentId": "row-shortlist-actions",
+                     "componentId": "row-gold-sl-actions",
                      "componentName": "container",
                      "componentProps": {},
                      "componentSlots": {},
@@ -1040,26 +1038,24 @@
                    ],
                    "classes": [],
                    "componentEvents": {},
-                   "componentId": "ListCell-actions-shortlist",
+                   "componentId": "ListCell-actions-gold-sl",
                    "componentName": "ListCell",
                    "componentProps": {},
                    "componentSlots": {},
                    "mobileStyles": {},
-                   "originalElement": null,
                    "tabletStyles": {}
                   }
                  ],
                  "classes": [],
                  "componentEvents": {},
-                 "componentId": "ListRow-shortlist",
+                 "componentId": "ListRow-gold-sl",
                  "componentName": "ListRow",
                  "componentProps": {
-                  "to": "{{ '/partner-profile/' + item.name }}",
+                  "to": "{{ '/partner-profile-redesign/' + item.name }}",
                   "value": "{{ value }}"
                  },
                  "componentSlots": {},
                  "mobileStyles": {},
-                 "originalElement": null,
                  "tabletStyles": {}
                 }
                ],
@@ -1070,11 +1066,9 @@
             }
            ],
            "classes": [],
-           "componentId": "ListGroup-9bb6fed5b",
-           "componentName": "ListGroup",
-           "componentProps": {
-            "sticky": true
-           }
+           "componentId": "container-npica7qj3-sl",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],
@@ -1087,7 +1081,7 @@
            "auto"
           ],
           "divider": "full",
-          "rowHeight": 108
+          "rowHeight": 142
          }
         },
         {
@@ -3929,14 +3923,22 @@
          "children": [
           {
            "baseStyles": {
-            "display": "{{ (myShortlistFull.data || []).filter(p => p.tier === 'Gold').length > 0 ? 'block' : 'none' }}"
+            "alignItems": "flex-start",
+            "display": "flex",
+            "flexDirection": "column",
+            "flexShrink": 1,
+            "flexWrap": "nowrap",
+            "gap": "8px",
+            "height": "fit-content",
+            "justifyContent": "flex-start",
+            "width": "100%"
            },
-           "blockName": "ListGroup",
+           "blockName": "container",
            "children": [
             {
              "children": [],
              "classes": [],
-             "componentId": "ListRows-42d27f384",
+             "componentId": "ListRows-91e783f6b-sl",
              "componentName": "ListRows",
              "componentProps": {
               "items": "{{ myShortlistFull.data || [] }}",
@@ -3944,13 +3946,14 @@
              },
              "componentSlots": {
               "default": {
-               "parentBlockId": "ListRows-42d27f384",
+               "parentBlockId": "ListRows-91e783f6b",
                "slotContent": [
                 {
                  "attributes": {},
                  "baseStyles": {
-                  "marginTop": "0px",
-                  "paddingTop": "0px"
+                  "flexWrap": "nowrap",
+                  "gap": "20px",
+                  "paddingBlock": "12px"
                  },
                  "children": [
                   {
@@ -3962,7 +3965,7 @@
                      "baseStyles": {
                       "alignItems": "center",
                       "backgroundColor": "var(--surface-base, oklch(1 0 0))",
-                      "backgroundImage": "{{ item.logo ? 'url(' + item.logo + ')' : 'none' }}",
+                      "backgroundImage": "{{ item.logo ? 'url(\"' + item.logo + '\")' : 'none' }}",
                       "backgroundPosition": "center",
                       "backgroundRepeat": "no-repeat",
                       "backgroundSize": "contain",
@@ -3990,7 +3993,7 @@
                        "children": [],
                        "classes": [],
                        "componentEvents": {},
-                       "componentId": "LogoView-shortlist-initial",
+                       "componentId": "LogoView-gold-sl-initial",
                        "componentName": "TextBlock",
                        "componentProps": {
                         "fontSize": "text-sm",
@@ -3999,13 +4002,12 @@
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
-                       "originalElement": null,
                        "tabletStyles": {}
                       }
                      ],
                      "classes": [],
                      "componentEvents": {},
-                     "componentId": "LogoView-shortlist",
+                     "componentId": "LogoView-gold-sl",
                      "componentName": "container",
                      "componentProps": {},
                      "componentSlots": {},
@@ -4016,17 +4018,20 @@
                    ],
                    "classes": [],
                    "componentEvents": {},
-                   "componentId": "ListCell-avatar-shortlist",
+                   "componentId": "ListCell-avatar-gold-sl",
                    "componentName": "ListCell",
                    "componentProps": {},
                    "componentSlots": {},
                    "mobileStyles": {},
-                   "originalElement": null,
                    "tabletStyles": {}
                   },
                   {
                    "attributes": {},
-                   "baseStyles": {},
+                   "baseStyles": {
+                    "gap": "0px",
+                    "gridRow": "span 1",
+                    "margin": "0px"
+                   },
                    "children": [
                     {
                      "attributes": {},
@@ -4055,7 +4060,7 @@
                          "children": [],
                          "classes": [],
                          "componentEvents": {},
-                         "componentId": "row-shortlist-name",
+                         "componentId": "row-gold-sl-name",
                          "componentName": "TextBlock",
                          "componentProps": {
                           "fontSize": "text-base",
@@ -4064,7 +4069,6 @@
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
-                         "originalElement": null,
                          "tabletStyles": {}
                         },
                         {
@@ -4073,22 +4077,21 @@
                          "children": [],
                          "classes": [],
                          "componentEvents": {},
-                         "componentId": "row-shortlist-tier-badge",
+                         "componentId": "row-gold-sl-tier-badge",
                          "componentName": "Badge",
                          "componentProps": {
                           "label": "{{ item.tier }}",
-                          "theme": "{{ item.tier === 'Gold' ? 'amber' : (item.tier === 'Silver' ? 'gray' : 'red') }}",
+                          "theme": "{{ item.tier === 'Gold' ? 'amber' : item.tier === 'Silver' ? 'gray' : item.tier === 'Bronze' ? 'orange' : 'gray' }}",
                           "variant": "subtle"
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
-                         "originalElement": null,
                          "tabletStyles": {}
                         }
                        ],
                        "classes": [],
                        "componentEvents": {},
-                       "componentId": "row-shortlist-name-row",
+                       "componentId": "row-gold-sl-name-row",
                        "componentName": "container",
                        "componentProps": {},
                        "componentSlots": {},
@@ -4115,7 +4118,7 @@
                          "children": [],
                          "classes": [],
                          "componentEvents": {},
-                         "componentId": "row-shortlist-location-icon",
+                         "componentId": "row-gold-sl-location-icon",
                          "componentName": "FeatherIcon",
                          "componentProps": {
                           "color": "var(--ink-gray-5)",
@@ -4124,7 +4127,6 @@
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
-                         "originalElement": null,
                          "tabletStyles": {}
                         },
                         {
@@ -4135,7 +4137,7 @@
                          "children": [],
                          "classes": [],
                          "componentEvents": {},
-                         "componentId": "row-shortlist-location-text",
+                         "componentId": "row-gold-sl-location-text",
                          "componentName": "TextBlock",
                          "componentProps": {
                           "fontSize": "text-xs",
@@ -4144,13 +4146,12 @@
                          },
                          "componentSlots": {},
                          "mobileStyles": {},
-                         "originalElement": null,
                          "tabletStyles": {}
                         }
                        ],
                        "classes": [],
                        "componentEvents": {},
-                       "componentId": "row-shortlist-location",
+                       "componentId": "row-gold-sl-location",
                        "componentName": "container",
                        "componentProps": {},
                        "componentSlots": {},
@@ -4187,7 +4188,7 @@
                            "children": [],
                            "classes": [],
                            "componentEvents": {},
-                           "componentId": "row-shortlist-rate-icon",
+                           "componentId": "row-gold-sl-rate-icon",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
@@ -4196,7 +4197,6 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "originalElement": null,
                            "tabletStyles": {}
                           },
                           {
@@ -4207,7 +4207,7 @@
                            "children": [],
                            "classes": [],
                            "componentEvents": {},
-                           "componentId": "row-shortlist-rate-text",
+                           "componentId": "row-gold-sl-rate-text",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
@@ -4216,13 +4216,12 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "originalElement": null,
                            "tabletStyles": {}
                           }
                          ],
                          "classes": [],
                          "componentEvents": {},
-                         "componentId": "row-shortlist-rate",
+                         "componentId": "row-gold-sl-rate",
                          "componentName": "container",
                          "componentProps": {},
                          "componentSlots": {},
@@ -4249,7 +4248,7 @@
                            "children": [],
                            "classes": [],
                            "componentEvents": {},
-                           "componentId": "row-shortlist-rating-icon",
+                           "componentId": "row-gold-sl-rating-icon",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
@@ -4258,7 +4257,6 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "originalElement": null,
                            "tabletStyles": {}
                           },
                           {
@@ -4269,22 +4267,21 @@
                            "children": [],
                            "classes": [],
                            "componentEvents": {},
-                           "componentId": "row-shortlist-rating-text",
+                           "componentId": "row-gold-sl-rating-text",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
                             "tag": "span",
-                            "text": "{{ item.rating ? item.rating : 'No ratings yet' }}"
+                            "text": "{{ item.rating ? item.rating + ' (' + (item.review_count || 0) + ')' : 'No ratings yet' }}"
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "originalElement": null,
                            "tabletStyles": {}
                           }
                          ],
                          "classes": [],
                          "componentEvents": {},
-                         "componentId": "row-shortlist-rating",
+                         "componentId": "row-gold-sl-rating",
                          "componentName": "container",
                          "componentProps": {},
                          "componentSlots": {},
@@ -4311,7 +4308,7 @@
                            "children": [],
                            "classes": [],
                            "componentEvents": {},
-                           "componentId": "row-shortlist-response-icon",
+                           "componentId": "row-gold-sl-response-icon",
                            "componentName": "FeatherIcon",
                            "componentProps": {
                             "color": "var(--ink-gray-5)",
@@ -4320,7 +4317,6 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "originalElement": null,
                            "tabletStyles": {}
                           },
                           {
@@ -4331,7 +4327,7 @@
                            "children": [],
                            "classes": [],
                            "componentEvents": {},
-                           "componentId": "row-shortlist-response-text",
+                           "componentId": "row-gold-sl-response-text",
                            "componentName": "TextBlock",
                            "componentProps": {
                             "fontSize": "text-xs",
@@ -4340,13 +4336,12 @@
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
-                           "originalElement": null,
                            "tabletStyles": {}
                           }
                          ],
                          "classes": [],
                          "componentEvents": {},
-                         "componentId": "row-shortlist-response",
+                         "componentId": "row-gold-sl-response",
                          "componentName": "container",
                          "componentProps": {},
                          "componentSlots": {},
@@ -4357,7 +4352,7 @@
                        ],
                        "classes": [],
                        "componentEvents": {},
-                       "componentId": "row-shortlist-stats-row",
+                       "componentId": "row-gold-sl-stats-row",
                        "componentName": "container",
                        "componentProps": {},
                        "componentSlots": {},
@@ -4374,7 +4369,7 @@
                        "children": [],
                        "classes": [],
                        "componentEvents": {},
-                       "componentId": "row-shortlist-stories",
+                       "componentId": "row-gold-sl-stories",
                        "componentName": "TextBlock",
                        "componentProps": {
                         "fontSize": "text-xs",
@@ -4383,13 +4378,12 @@
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
-                       "originalElement": null,
                        "tabletStyles": {}
                       }
                      ],
                      "classes": [],
                      "componentEvents": {},
-                     "componentId": "row-shortlist-details",
+                     "componentId": "row-gold-sl-details",
                      "componentName": "container",
                      "componentProps": {},
                      "componentSlots": {},
@@ -4400,12 +4394,11 @@
                    ],
                    "classes": [],
                    "componentEvents": {},
-                   "componentId": "ListCell-details-shortlist",
+                   "componentId": "ListCell-details-gold-sl",
                    "componentName": "ListCell",
                    "componentProps": {},
                    "componentSlots": {},
                    "mobileStyles": {},
-                   "originalElement": null,
                    "tabletStyles": {}
                   },
                   {
@@ -4425,12 +4418,12 @@
                        "attributes": {},
                        "baseStyles": {
                         "alignItems": "center",
-                        "color": "var(--ink-gray-8, oklch(0.205 0 0))",
+                        "color": "var(--ink-gray-8)",
                         "display": "flex",
                         "flexShrink": "0",
-                        "height": "36px",
+                        "height": "32px",
                         "justifyContent": "center",
-                        "width": "36px"
+                        "width": "32px"
                        },
                        "children": [],
                        "classes": [],
@@ -4438,18 +4431,18 @@
                         "click": {
                          "action": "Run Script",
                          "event": "click",
-                         "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nconst previous = myShortlistFull.data || [];\nmyShortlistFull.data = previous.filter((p) => p.name !== partner);\ncall('connect.api.customer.remove_from_shortlist', { partner }).then(() => { myShortlistFull.reload(); }).catch((err) => {\n  myShortlistFull.data = previous;\n  toast({ title: 'Could not remove from shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                         "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\ncall('connect.api.customer.remove_from_shortlist', { partner }).then(() => { myShortlistFull.reload(); }).catch((err) => {\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                         }
                        },
-                       "componentId": "Button-remove-shortlist",
+                       "componentId": "Button-shortlist-gold-sl",
                        "componentName": "Button",
                        "componentProps": {
-                        "icon": "lucide-bookmark-x",
+                        "icon": "lucide-bookmark-check",
+                        "size": "md",
                         "variant": "ghost"
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
-                       "originalElement": null,
                        "tabletStyles": {}
                       },
                       {
@@ -4466,7 +4459,7 @@
                          "script": "if (!myContext.data || !myContext.data.customer) {\n  window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);\n  return;\n}\nif (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\ncall('connect.api.contact.start_partner_thread', { partner: item.name }).then((result) => {\n  const query = { thread: result && result.thread };\n  if (result && result.is_new_thread) query.requirement = '1';\n  router.push('/messaging-d87b?' + new URLSearchParams(query).toString());\n}).catch((err) => {\n  toast({ title: 'Could not start conversation', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                         }
                        },
-                       "componentId": "Button-contact-shortlist",
+                       "componentId": "Button-contact-gold-sl",
                        "componentName": "Button",
                        "componentProps": {
                         "iconLeft": "lucide-send",
@@ -4475,13 +4468,12 @@
                        },
                        "componentSlots": {},
                        "mobileStyles": {},
-                       "originalElement": null,
                        "tabletStyles": {}
                       }
                      ],
                      "classes": [],
                      "componentEvents": {},
-                     "componentId": "row-shortlist-actions",
+                     "componentId": "row-gold-sl-actions",
                      "componentName": "container",
                      "componentProps": {},
                      "componentSlots": {},
@@ -4492,26 +4484,24 @@
                    ],
                    "classes": [],
                    "componentEvents": {},
-                   "componentId": "ListCell-actions-shortlist",
+                   "componentId": "ListCell-actions-gold-sl",
                    "componentName": "ListCell",
                    "componentProps": {},
                    "componentSlots": {},
                    "mobileStyles": {},
-                   "originalElement": null,
                    "tabletStyles": {}
                   }
                  ],
                  "classes": [],
                  "componentEvents": {},
-                 "componentId": "ListRow-shortlist",
+                 "componentId": "ListRow-gold-sl",
                  "componentName": "ListRow",
                  "componentProps": {
-                  "to": "{{ '/partner-profile/' + item.name }}",
+                  "to": "{{ '/partner-profile-redesign/' + item.name }}",
                   "value": "{{ value }}"
                  },
                  "componentSlots": {},
                  "mobileStyles": {},
-                 "originalElement": null,
                  "tabletStyles": {}
                 }
                ],
@@ -4522,11 +4512,9 @@
             }
            ],
            "classes": [],
-           "componentId": "ListGroup-9bb6fed5b",
-           "componentName": "ListGroup",
-           "componentProps": {
-            "sticky": true
-           }
+           "componentId": "container-npica7qj3-sl",
+           "componentName": "container",
+           "originalElement": "div"
           }
          ],
          "classes": [],
@@ -4539,7 +4527,7 @@
            "auto"
           ],
           "divider": "full",
-          "rowHeight": 108
+          "rowHeight": 142
          }
         },
         {
@@ -5835,7 +5823,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-07 16:39:25.241013",
+ "modified": "2026-09-10 16:41:16.477453",
  "modified_by": "Administrator",
  "name": "shortlisted",
  "owner": "Administrator",

@@ -134,7 +134,7 @@ def _normalize_multi(value):
 
 
 PARTNER_FIELDS = [
-	"name", "partner_name", "logo", "tagline", "tier", "specialist",
+	"name", "partner_name", "logo", "logo_icon", "tagline", "tier", "specialist",
 	"rating", "industry", "country", "city", "rollouts", "hourly_rate",
 	"response_time_hours",
 ]
@@ -167,6 +167,15 @@ def _apps_by_partner(names):
 	_child_values_by_partner. Kept as its own name since "apps per partner" is looked up from
 	several places (search, wizard scoring, shortlist), not just the wizard scoring pass."""
 	return _child_values_by_partner("Partner App", "app", names, parentfield="apps")
+
+
+def _business_processes_by_partner(names):
+	"""Every Partner Business Process (Partner.business_processes) value for each partner in
+	`names` — see _child_values_by_partner. Used as the directory card's "Expertise across ..."
+	fallback line for partners with no success stories yet."""
+	return _child_values_by_partner(
+		"Partner Business Process", "business_process", names, parentfield="business_processes"
+	)
 
 
 def _partners_matching_child(child_doctype, field, operator, value, parentfield=None):
@@ -238,14 +247,20 @@ def _sqlite_rank(search_term, allowed_names):
 	ranking plus its difflib fuzzy-match fallback with connect.search.PartnerSearch, so this works
 	regardless of the site's DB backend. allowed_names is passed as a `name` filter rather than
 	baked into the index, since the structured filters (industry/region/child-table membership/etc.)
-	already narrowed it in SQL before this ever runs — see search_partners."""
+	already narrowed it in SQL before this ever runs — see search_partners.
+
+	Returns None (not []) when the search index itself is unavailable, so a caller can tell "the
+	index is down, fall back to showing everyone" apart from "the index ran and genuinely found no
+	match" — collapsing those into the same [] previously made every search silently return the
+	full unfiltered list regardless of the query, since a real zero-match query looked identical to
+	an unavailable index."""
 	if not allowed_names:
 		return []
 	from connect.search import PartnerSearch
 
 	search = PartnerSearch()
 	if not (search.is_search_enabled() and search.index_exists()):
-		return []
+		return None
 	result = search.search(search_term, filters={"name": allowed_names})
 	return [r["name"] for r in result["results"]]
 
@@ -278,6 +293,7 @@ def search_partners(
 	industry = _normalize_multi(industry)
 	country = _normalize_multi(country)
 	category = _normalize_multi(category)
+	product = _normalize_multi(product)
 
 	filters = list(BASE_PARTNER_FILTERS)
 	for value, field in [
@@ -346,13 +362,24 @@ def search_partners(
 		by_name = {c.name: c for c in candidates}
 
 		ranked_names = _sqlite_rank(search, list(by_name))
-		ordered = [by_name[n] for n in ranked_names]
-
-		# Candidates the FTS pass didn't rank at all (no match, even with spelling
-		# correction) fall through unranked rather than being dropped.
-		ordered += [c for c in candidates if c.name not in set(ranked_names)]
-
-		partners = ordered[:limit]
+		if ranked_names is None:
+			# Search index unavailable — fall back to the structured-filtered candidates
+			# unranked rather than showing nobody.
+			partners = candidates[:limit]
+		else:
+			ranked = [by_name[n] for n in ranked_names]
+			# Frappe's FTS5 layer only prefix-wildcards terms of 4+ chars (MIN_WORD_LENGTH in
+			# sqlite_search.py) — a still-being-typed query like "aur" is searched as an exact
+			# 3-letter word, which "Auriga IT" can never satisfy. Patch that gap (and any other
+			# tokenizer miss, e.g. a mid-word fragment) with a plain substring match over the
+			# same structured-filtered candidates, appended after the ranked results.
+			ranked_set = set(ranked_names)
+			term = search.lower()
+			substring_matches = [
+				c for c in candidates
+				if c.name not in ranked_set and term in (c.partner_name or "").lower()
+			]
+			partners = (ranked + substring_matches)[:limit]
 		if sort in SORT_OPTIONS:
 			field, desc = SORT_OPTIONS[sort]
 
@@ -622,11 +649,30 @@ def _decorate_directory_rows(rows):
 		row["review_count"] = review_counts.get(row.name, 0)
 
 	attach_success_story_previews(rows)
+
+	business_processes = _business_processes_by_partner(names)
+	for row in rows:
+		row["business_processes"] = business_processes.get(row.name, [])
 	return rows
 
 
+def list_partners_by_names(names):
+	"""Full directory-card rows for an explicit list of partner names, decorated the same way as
+	list_directory_partners. Used by the Shortlisted page to render partners a guest has bookmarked
+	locally (localStorage) before logging in, since no server-side Shortlist row exists for them yet."""
+	names = _normalize_multi(names)
+	if not names:
+		return []
+	filters = list(BASE_PARTNER_FILTERS) + [["Partner", "name", "in", names]]
+	rows = frappe.get_list("Partner", fields=PARTNER_FIELDS, filters=filters)
+	apps_by_partner = _apps_by_partner([r.name for r in rows])
+	for r in rows:
+		r["apps_preview"] = apps_by_partner.get(r.name, [])[:2]
+	return _decorate_directory_rows(rows)
+
+
 def list_directory_partners(
-	limit=9, search=None, tier=None, country=None, industry=None, category=None,
+	limit=9, search=None, tier=None, country=None, industry=None, category=None, product=None,
 	business_process=None, implementation_type=None, language=None,
 	min_rating=None, max_response_time=None, exclude=None,
 ):
@@ -634,12 +680,12 @@ def list_directory_partners(
 	for the Partner Directory redesign's card list and its filter row. Filtering/search/ordering is
 	delegated to search_partners — the same engine behind the Find Partners page — so both stay
 	consistent; this only adds the review_count/success-story preview fields the card list needs on
-	top, same as before this had its own filters. `country`/`category` accept either a single value
-	or a JSON array (the Region/Industry filters' multi-select). `exclude` (name not-in) is what
-	the "Proven in other industries" section uses to call this same function a second time with
-	category dropped, without repeating whoever's already shown in the main list."""
+	top, same as before this had its own filters. `country`/`category`/`product` accept either a
+	single value or a JSON array (the Region/Industry/App filters' multi-select). `exclude` (name
+	not-in) is what the "Proven in other industries" section uses to call this same function a
+	second time with category dropped, without repeating whoever's already shown in the main list."""
 	rows = search_partners(
-		search=search, tier=tier, country=country, industry=industry, category=category,
+		search=search, tier=tier, country=country, industry=industry, category=category, product=product,
 		business_process=business_process, implementation_type=implementation_type, language=language,
 		min_rating=min_rating, max_response_time=max_response_time, exclude=exclude,
 		limit=cint(limit) or 9,
