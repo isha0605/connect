@@ -78,6 +78,9 @@ def get_my_dm_threads():
 			"last_message": t.last_message_preview or "",
 			"last_message_at": t.last_message_at or t.creation,
 			"last_message_sender": t.last_message_sender,
+			# Same field name as get_my_threads' sender_names, for one shared client-side lookup —
+			# a DM only ever has two possible senders, and the other one's name is already fetched.
+			"last_message_sender_name": profile.get("full_name") if t.last_message_sender == other else None,
 			"unread_count": unread_count,
 		})
 	return result

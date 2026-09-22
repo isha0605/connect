@@ -106,6 +106,16 @@ def get_my_threads():
 			"Partner", filters={"name": ["in", [t.partner for t in threads]]}, fields=["name", "logo"]
 		)
 	}
+	# The sidebar preview ("Sender: message") needs a real display name, not the raw email — a
+	# thread's last sender can be any of its members, unlike a DM's fixed pair, so this can't be
+	# inferred client-side the way get_my_dm_threads' other_user_full_name is; resolved here instead.
+	sender_names = {
+		u.name: u.full_name
+		for u in frappe.get_all(
+			"User", filters={"name": ["in", [t.last_message_sender for t in threads if t.last_message_sender]]},
+			fields=["name", "full_name"],
+		)
+	}
 
 	result = []
 	for t in threads:
@@ -128,6 +138,7 @@ def get_my_threads():
 			"last_message": t.last_message_preview or "",
 			"last_message_at": t.last_message_at or t.creation,
 			"last_message_sender": t.last_message_sender,
+			"last_message_sender_name": sender_names.get(t.last_message_sender),
 			"unread_count": unread_count,
 		})
 

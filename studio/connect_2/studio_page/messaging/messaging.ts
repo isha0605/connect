@@ -128,15 +128,16 @@ export default function setup(context) {
 		return d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 	}
 
-	// WhatsApp/Slack-style "Sender: message" preview — the sender label mirrors how a message's
-	// own sender name renders in the chat pane (email local-part, capitalized), so the thread
-	// list and the open thread agree on how someone's name is shown.
+	// WhatsApp/Slack-style "Sender: message" preview — the sender label is their real display
+	// name (last_message_sender_name, from get_my_threads/get_my_dm_threads), same as everywhere
+	// else in the chat pane. Falls back to the email local-part only for a sender with no
+	// resolvable name at all, rather than showing that in place of an actual name that exists.
 	function threadListPreview(thread) {
 		if (!thread || !thread.last_message) return "No messages yet"
 		const me = context.myContext.data && context.myContext.data.user
 		const sender = thread.last_message_sender
-		let label = sender === me ? "You" : (sender || "").split("@")[0]
-		if (label && label !== "You") label = label.charAt(0).toUpperCase() + label.slice(1)
+		let label = sender === me ? "You" : thread.last_message_sender_name || (sender || "").split("@")[0]
+		if (label && label !== "You") label = capitalizeName(label)
 		return (label ? label + ": " : "") + thread.last_message
 	}
 
