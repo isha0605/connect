@@ -226,6 +226,22 @@ export default function setup(context) {
 			context.memberProfiles.data = other
 				? [{ name: other.other_user, full_name: other.other_user_full_name, user_image: other.other_user_image }]
 				: []
+			// Only a partner-side other party has a response time to show (see other_user_partner
+			// in get_my_dm_threads) — clear stale data by hand instead of reloading with an empty
+			// partner, which get_partner_preview would reject as a missing required arg.
+			if (other && other.other_user_partner) {
+				context.partnerInfo.params = { partner: other.other_user_partner }
+				context.partnerInfo.reload()
+			} else {
+				context.partnerInfo.data = null
+			}
+			// The after-hours banner is a customer-facing "is the partner around" signal now, not a
+			// self-reminder — a partner viewing their own threads never needs it (see amPartner()
+			// gate in showAfterHoursBanner), so there's nothing worth fetching for them.
+			if (!amPartner()) {
+				context.partnerWorkHours.params = { dm_thread: name }
+				context.partnerWorkHours.reload()
+			}
 			context.dmMessages.filters = { dm_thread: name }
 			context.dmMessages.reload()
 			loadReactions(name, "dm")
@@ -247,6 +263,10 @@ export default function setup(context) {
 		context.memberProfiles.reload()
 		context.partnerInfo.params = { partner: currentThread().partner }
 		context.partnerInfo.reload()
+		if (!amPartner()) {
+			context.partnerWorkHours.params = { thread: name }
+			context.partnerWorkHours.reload()
+		}
 		call("connect.api.threads.mark_thread_read", { thread: name })
 			.then(() => context.myThreads.reload())
 			.catch(() => {})
@@ -2836,9 +2856,11 @@ export default function setup(context) {
 		return Number(hours) * 60 + Number(minutes || 0)
 	}
 
-	function isOutsideWorkHours() {
+	// Shared by isOutsideWorkHours (the sender's own hours — still drives the personal "Always send
+	// silently" auto-behavior below, unchanged) and isPartnerOutsideHours (the banner's new
+	// customer-facing check) so the day/time math has exactly one implementation.
+	function isOutsideHoursWindow(settings) {
 		clockTick.value // re-evaluated on every tick
-		const settings = workSettings.value
 		const now = new Date()
 		const today = WEEKDAYS[(now.getDay() + 6) % 7].key
 		if (!settings.work_days.includes(today)) return true
@@ -2846,44 +2868,48 @@ export default function setup(context) {
 		return minutes < minutesOfDay(settings.work_start) || minutes >= minutesOfDay(settings.work_end)
 	}
 
+	function isOutsideWorkHours() {
+		return isOutsideHoursWindow(workSettings.value)
+	}
+
+	// "Outside hours" means nobody on the partner side can currently answer — every member has to
+	// be off the clock, not just one of them, so a teammate still around never gets a false flag
+	// hung on their name. See get_partner_hours_for_thread for where `members` comes from.
+	function isPartnerOutsideHours() {
+		const members = context.partnerWorkHours.data && context.partnerWorkHours.data.members
+		if (!members || !members.length) return false
+		return members.every((member) => isOutsideHoursWindow(member))
+	}
+
 	function afterHoursBehavior() {
 		return workSettings.value.after_hours_behavior
 	}
 
 	function showAfterHoursBanner() {
+		// The banner is a customer-facing "is the partner around" signal now, not a self-reminder —
+		// see get_partner_hours_for_thread. A partner has nothing to check it against (customers
+		// don't publish hours), so they never see it.
+		if (amPartner()) return false
 		return (
 			!!selectedThread.value &&
 			!messageToEdit.value &&
 			!afterHoursBannerDismissed.value &&
 			afterHoursBehavior() !== "Do nothing" &&
-			isOutsideWorkHours()
+			isPartnerOutsideHours()
 		)
 	}
 
 	function afterHoursBannerText() {
-		if (afterHoursBehavior() === "Always send silently") {
-			return "It's outside working hours - your messages will be sent silently."
-		}
-		return "It's outside working hours - send silently to let people rest (" + shortcutModifier() + "⇧↵)."
+		const partnerName = (context.partnerWorkHours.data && context.partnerWorkHours.data.partner_name) || "They"
+		return "It's outside " + partnerName + "'s working hours"
 	}
 
 	function afterHoursBannerOptions() {
+		// "Working hours settings" used to open the viewer's own hours — made sense when the banner
+		// was a self-reminder, but now it's about the PARTNER's hours (see get_partner_hours_for_thread),
+		// which the viewer can't set from here at all.
 		return [
-			{ label: "Working hours settings", icon: "lucide-settings", onClick: openWorkHoursSettings },
 			{ label: "Don't remind me again", icon: "lucide-bell-off", onClick: () => saveAfterHoursBehavior("Do nothing") },
-		]
-	}
-
-	// The Send button's dropdown: sending silently is always available, not just after hours.
-	function sendOptions() {
-		const nothingToSend = !draftMessage.value && !draftAttachments.value.length && !draftRequirement.value
-		return [
-			{
-				label: "Send silently",
-				icon: "lucide-bell-off",
-				disabled: nothingToSend || uploadingFile.value,
-				onClick: () => sendMessage(true),
-			},
 		]
 	}
 
@@ -2893,11 +2919,6 @@ export default function setup(context) {
 		editWorkEnd.value = settings.work_end
 		editWorkDays.value = [...settings.work_days]
 		editAfterHours.value = settings.after_hours_behavior
-	}
-
-	function openWorkHoursSettings() {
-		openProfileSettings()
-		selectProfileSettingsSection("workhours")
 	}
 
 	function workDayRows() {
@@ -3300,7 +3321,6 @@ export default function setup(context) {
 		afterHoursBannerText,
 		afterHoursBannerOptions,
 		afterHoursBannerDismissed,
-		sendOptions,
 		workDayRows,
 		toggleWorkDay,
 		workSettingsChanged,
