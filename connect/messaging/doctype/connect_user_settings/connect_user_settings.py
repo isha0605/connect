@@ -38,6 +38,23 @@ def get_my_settings():
 	return _as_dict(doc or frappe.new_doc("Connect User Settings"))
 
 
+def get_settings_for_users(users):
+	"""Working hours for several users at once, defaulted the same way get_my_settings is for anyone
+	who's never saved their own. Used to check a *thread's* partner side, not just the caller —
+	see get_partner_hours_for_thread in connect.utils, which is where partner-vs-customer, single
+	vs. several partner members, and thread-vs-DM all get resolved before this is called."""
+	users = list(dict.fromkeys(users))  # de-dup, keep order
+	docs = {
+		d.name: d
+		for d in frappe.get_all(
+			"Connect User Settings",
+			filters={"name": ["in", users]},
+			fields=["name", "work_start", "work_end", *WEEKDAYS, "after_hours_behavior"],
+		)
+	}
+	return {user: _as_dict(docs.get(user) or frappe.new_doc("Connect User Settings")) for user in users}
+
+
 def update_my_settings(work_start, work_end, work_days, after_hours_behavior):
 	"""Saves the caller's own settings. Always acts on the session user: this doctype is only reachable
 	through here, so nobody can read or change someone else's."""
