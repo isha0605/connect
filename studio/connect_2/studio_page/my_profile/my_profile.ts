@@ -307,14 +307,20 @@ export default function setup(context) {
 		{ key: "technical_expertise", color: "#a855f7" },
 	]
 
-	const FALLBACK_CHART_CONFIG = {
-		data: [],
-		xAxis: { key: "period", type: "category" },
-		yAxis: {},
-		series: [],
-	}
+	// frappe-ui/charts takes flat props rather than the old `config` object, so the rows,
+	// the series list and the per-series styling are exposed separately to the block.
+	const reviewChartY = REVIEW_DIMENSIONS.map((dim) => dim.key)
 
-	const reviewChartConfig = computed(() => {
+	const reviewChartSeriesConfig = Object.fromEntries(
+		REVIEW_DIMENSIONS.map((dim) => [dim.key, { color: dim.color, showDataPoints: true }]),
+	)
+
+	const reviewChartXAxis = computed(() => ({
+		type: "category",
+		title: reviewChartGrain.value === "year" ? "Year" : "Month",
+	}))
+
+	const reviewChartData = computed(() => {
 		try {
 			const reviews = context.myReviews.data || []
 			const buckets = {}
@@ -355,21 +361,10 @@ export default function setup(context) {
 				}
 				return row
 			})
-			return {
-				data,
-				xAxis: { key: "period", type: "category", title: reviewChartGrain.value === "year" ? "Year" : "Month" },
-				yAxis: { title: "Average Score", yMin: 0, yMax: 5 },
-				series: REVIEW_DIMENSIONS.map((dim) => ({
-					name: dim.key,
-					type: "area",
-					color: dim.color,
-					fillOpacity: 0.15,
-					showDataPoints: true,
-				})),
-			}
+			return data
 		} catch (e) {
-			console.error("reviewChartConfig failed:", e)
-			return FALLBACK_CHART_CONFIG
+			console.error("reviewChartData failed:", e)
+			return []
 		}
 	})
 
@@ -746,7 +741,10 @@ export default function setup(context) {
 		displayIndustries,
 		starRating,
 		reviewChartGrain,
-		reviewChartConfig,
+		reviewChartData,
+		reviewChartXAxis,
+		reviewChartY,
+		reviewChartSeriesConfig,
 		newStoryClientName,
 		newStoryClientLogo,
 		newStoryHeadline,
