@@ -168,12 +168,12 @@ function visiblePoints(region, points) {
 }
 
 .map-dot {
-	fill: var(--ink-gray-5, #525252);
+	fill: var(--ink-gray-5);
 	transition: r 0.15s ease, fill 0.15s ease;
 }
 
 .map-dot--selected {
-	fill: var(--ink-gray-9, #171717);
+	fill: var(--ink-gray-9);
 }
 
 @media (prefers-reduced-motion: reduce) {
