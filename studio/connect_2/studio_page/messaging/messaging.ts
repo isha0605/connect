@@ -1,5 +1,6 @@
 import { ref, computed, watch, onScopeDispose, nextTick } from "vue"
 import { toast, call, useFileUpload, initSocket, setConfig } from "frappe-ui"
+import { EMOJI_GROUPS } from "./emojis"
 
 export default function setup(context) {
 	// ---- State ----
@@ -30,7 +31,6 @@ export default function setup(context) {
 	const originalRole = ref("")
 	const savingProfile = ref(false)
 	const uploadingProfileImage = ref(false)
-	const showInlineTemplates = ref(false)
 	const mediaTab = ref("Links")
 	const showAddMemberDialog = ref(false)
 	const newMemberEmail = ref("")
@@ -73,6 +73,40 @@ export default function setup(context) {
 		return amPartner ? thread.customer : thread.partner
 	}
 
+	// Company threads carry the partner's uploaded logo (see get_my_threads' partner_logo) — shown
+	// only to the customer side, since a partner viewing their own customer threads has no customer
+	// logo to show and falls back to Avatar's label-initial rendering instead.
+	function threadAvatarImage(thread) {
+		if (!thread) return ""
+		if (thread.convType === "dm") return thread.other_user_image || ""
+		const amPartner = context.myContext.data && context.myContext.data.partner
+		return amPartner ? "" : thread.partner_logo || ""
+	}
+
+	// ---- Inbox Active/Inactive tabs ----
+	// A DM thread has no `status` field at all (Connect DM Thread doesn't carry one — see
+	// get_my_dm_threads), so it's always "active"; only a company thread can be closed
+	// (see closeThread / Connect Thread's status: Open|Closed).
+	const activeInboxTab = ref("active")
+
+	function isThreadActive(thread) {
+		return thread.convType !== "company" || thread.status !== "Closed"
+	}
+
+	function activeThreadCount() {
+		return unifiedThreadList().filter(isThreadActive).length
+	}
+
+	function inactiveThreadCount() {
+		return unifiedThreadList().filter((t) => !isThreadActive(t)).length
+	}
+
+	function filteredThreadList() {
+		return unifiedThreadList().filter((t) =>
+			activeInboxTab.value === "active" ? isThreadActive(t) : !isThreadActive(t),
+		)
+	}
+
 	function threadTitle() {
 		const t = currentThread()
 		if (!t.name) return "Select a conversation"
@@ -94,15 +128,16 @@ export default function setup(context) {
 		return d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 	}
 
-	// WhatsApp/Slack-style "Sender: message" preview — the sender label mirrors how a message's
-	// own sender name renders in the chat pane (email local-part, capitalized), so the thread
-	// list and the open thread agree on how someone's name is shown.
+	// WhatsApp/Slack-style "Sender: message" preview — the sender label is their real display
+	// name (last_message_sender_name, from get_my_threads/get_my_dm_threads), same as everywhere
+	// else in the chat pane. Falls back to the email local-part only for a sender with no
+	// resolvable name at all, rather than showing that in place of an actual name that exists.
 	function threadListPreview(thread) {
 		if (!thread || !thread.last_message) return "No messages yet"
 		const me = context.myContext.data && context.myContext.data.user
 		const sender = thread.last_message_sender
-		let label = sender === me ? "You" : (sender || "").split("@")[0]
-		if (label && label !== "You") label = label.charAt(0).toUpperCase() + label.slice(1)
+		let label = sender === me ? "You" : thread.last_message_sender_name || (sender || "").split("@")[0]
+		if (label && label !== "You") label = capitalizeName(label)
 		return (label ? label + ": " : "") + thread.last_message
 	}
 
@@ -181,7 +216,7 @@ export default function setup(context) {
 		showMembersDialog.value = false
 		showMediaDialog.value = false
 		showTemplatesDialog.value = false
-		pinnedMessage.value = null
+		pinnedMessages.value = []
 
 		if (convType === "dm") {
 			const other = typeof item === "object" ? item : null
@@ -191,27 +226,57 @@ export default function setup(context) {
 			context.memberProfiles.data = other
 				? [{ name: other.other_user, full_name: other.other_user_full_name, user_image: other.other_user_image }]
 				: []
+			// Only a partner-side other party has a response time to show (see other_user_partner
+			// in get_my_dm_threads) — clear stale data by hand instead of reloading with an empty
+			// partner, which get_partner_preview would reject as a missing required arg.
+			if (other && other.other_user_partner) {
+				context.partnerInfo.params = { partner: other.other_user_partner }
+				context.partnerInfo.reload()
+			} else {
+				context.partnerInfo.data = null
+			}
+			// The after-hours banner is a customer-facing "is the partner around" signal now, not a
+			// self-reminder — a partner viewing their own threads never needs it (see amPartner()
+			// gate in showAfterHoursBanner), so there's nothing worth fetching for them.
+			if (!amPartner()) {
+				context.partnerWorkHours.params = { dm_thread: name }
+				context.partnerWorkHours.reload()
+			}
 			context.dmMessages.filters = { dm_thread: name }
 			context.dmMessages.reload()
+			loadReactions(name, "dm")
 			call("connect.api.dm.mark_dm_thread_read", { thread: name })
 				.then(() => context.myDMThreads.reload())
 				.catch(() => {})
-			fetchPinnedMessage()
+			fetchPinnedMessages()
 			return
 		}
 
 		context.messages.filters = { thread: name }
 		context.messages.reload()
+		loadReactions(name, "company")
 		context.threadMembers.filters = { thread: name }
 		context.threadMembers.reload()
 		context.threadAdmins.params = { thread: name }
 		context.threadAdmins.reload()
 		context.memberProfiles.params = { thread: name }
 		context.memberProfiles.reload()
+		context.partnerInfo.params = { partner: currentThread().partner }
+		context.partnerInfo.reload()
+		if (!amPartner()) {
+			context.partnerWorkHours.params = { thread: name }
+			context.partnerWorkHours.reload()
+		}
 		call("connect.api.threads.mark_thread_read", { thread: name })
 			.then(() => context.myThreads.reload())
 			.catch(() => {})
-		fetchPinnedMessage()
+		fetchPinnedMessages()
+	}
+
+	// On phone-width screens the thread list and the open conversation share one pane
+	// (master-detail); this is what the header's back button calls to return to the list.
+	function goBackToThreadList() {
+		selectedThread.value = ""
 	}
 
 	// ---- Realtime ----
@@ -261,7 +326,10 @@ export default function setup(context) {
 	// A deleted message's sender already drops it from their own view right after the delete
 	// call resolves (see deleteMessage) — this is purely for everyone else's open tabs.
 	function handleMessageDeleted(payload) {
-		if (payload.thread === selectedThread.value) context.messages.reload()
+		if (payload.thread === selectedThread.value) {
+			context.messages.reload()
+			fetchPinnedMessages()
+		}
 	}
 	socket.on("connect_message_deleted", handleMessageDeleted)
 	onScopeDispose(() => socket.off("connect_message_deleted", handleMessageDeleted))
@@ -272,20 +340,19 @@ export default function setup(context) {
 	socket.on("connect_message_edited", handleMessageEdited)
 	onScopeDispose(() => socket.off("connect_message_edited", handleMessageEdited))
 
-	// The pin/unpin call itself already updates the acting tab's own `pinnedMessage` — this is
-	// purely for everyone else's open tabs, and carries the pinned message's fields directly in
-	// the payload so those tabs don't need a round trip back to get_pinned_message.
+	// Someone else reacted/un-reacted in a conversation — refetch the chips if it's the open one.
+	function handleReactionChanged(payload) {
+		if (payload.thread === selectedThread.value && !!payload.is_dm === (selectedThreadType.value === "dm")) {
+			context.messageReactions.reload()
+		}
+	}
+	socket.on("connect_message_reaction", handleReactionChanged)
+	onScopeDispose(() => socket.off("connect_message_reaction", handleReactionChanged))
+
+	// Someone else pinned or unpinned a message — refetch the open conversation's pins. (The acting tab
+	// refreshes its own list right after the call, see setMessagePinned.)
 	function handleThreadPinChanged(payload) {
-		if (payload.thread !== selectedThread.value) return
-		pinnedMessage.value = payload.pinned_message
-			? {
-					name: payload.pinned_message,
-					sender: payload.sender,
-					message_type: payload.message_type,
-					content: payload.content,
-					file_name: payload.file_name,
-				}
-			: null
+		if (payload.thread === selectedThread.value && selectedThreadType.value === "company") fetchPinnedMessages()
 	}
 	socket.on("connect_thread_pin_changed", handleThreadPinChanged)
 	onScopeDispose(() => socket.off("connect_thread_pin_changed", handleThreadPinChanged))
@@ -294,6 +361,7 @@ export default function setup(context) {
 	function handleDMMessageDeleted(payload) {
 		if (selectedThreadType.value === "dm" && payload.dm_thread === selectedThread.value) {
 			context.dmMessages.reload()
+			fetchPinnedMessages()
 		}
 	}
 	socket.on("connect_dm_message_deleted", handleDMMessageDeleted)
@@ -308,16 +376,7 @@ export default function setup(context) {
 	onScopeDispose(() => socket.off("connect_dm_message_edited", handleDMMessageEdited))
 
 	function handleDMThreadPinChanged(payload) {
-		if (selectedThreadType.value !== "dm" || payload.thread !== selectedThread.value) return
-		pinnedMessage.value = payload.pinned_message
-			? {
-					name: payload.pinned_message,
-					sender: payload.sender,
-					message_type: payload.message_type,
-					content: payload.content,
-					file_name: payload.file_name,
-				}
-			: null
+		if (selectedThreadType.value === "dm" && payload.thread === selectedThread.value) fetchPinnedMessages()
 	}
 	socket.on("connect_dm_thread_pin_changed", handleDMThreadPinChanged)
 	onScopeDispose(() => socket.off("connect_dm_thread_pin_changed", handleDMThreadPinChanged))
@@ -474,6 +533,10 @@ export default function setup(context) {
 	}
 
 	// ---- Admin checks ----
+	function amPartner() {
+		return !!(context.myContext.data && context.myContext.data.partner)
+	}
+
 	function isPartnerAdmin() {
 		return !!(context.myContext.data && context.myContext.data.partner && context.myContext.data.partner.is_admin)
 	}
@@ -493,6 +556,39 @@ export default function setup(context) {
 	// ---- Members ----
 	function activeMembers() {
 		return (context.threadMembers.data || []).filter((m) => !m.is_removed)
+	}
+
+	function activeMemberCount() {
+		return activeMembers().length
+	}
+
+	// The overlapping avatar stack at the right of the chat header (Raven-style): the first few active
+	// members, then a "N+" bubble for the rest. Clicking it opens the members panel.
+	const HEADER_AVATAR_LIMIT = 3
+
+	function headerMemberAvatars() {
+		return activeMembers()
+			.slice(0, HEADER_AVATAR_LIMIT)
+			.map((m, index) => ({
+				key: m.user,
+				index,
+				name: memberDisplayName(m.user),
+				image: memberImage(m.user),
+			}))
+	}
+
+	function headerMemberOverflow() {
+		return Math.max(0, activeMemberCount() - HEADER_AVATAR_LIMIT)
+	}
+
+	// Chat header stats — partnerInfo is fetched on demand (see selectThread) rather than folded
+	// into get_my_threads, since that resource backs every row in the sidebar and this is only
+	// ever needed for whichever one thread is currently open.
+	function responseTimeLabel() {
+		const p = context.partnerInfo.data
+		if (!p || !p.response_time_hours) return ""
+		const hours = p.response_time_hours
+		return "Typically replies in " + hours + (hours === 1 ? " hr" : " hrs")
 	}
 
 	// a trailing "@partial-name" at the very end of the draft triggers the picker — mentions
@@ -528,7 +624,7 @@ export default function setup(context) {
 
 	function insertTemplate(template) {
 		draftMessage.value = template.content
-		showInlineTemplates.value = false
+		showTemplatesDialog.value = false
 	}
 
 	// Neutralizes text before it's interpolated into an HTML-component string (which renders
@@ -554,14 +650,9 @@ export default function setup(context) {
 			/(^|\s)@([^\s@]+)/g,
 			(_match, prefix, name) => prefix + '<span style="font-weight: 600">@' + name + "</span>",
 		)
-		const time = item ? formatMessageTime(item) : ""
-		const timeText = item && item.is_edited ? "Edited · " + time : time
-		const timeSpan =
-			'<span style="float: right; margin-left: 8px; margin-top: 6px; margin-right: -6px; font-size: 9px; ' +
-			'line-height: 12px; color: var(--ink-gray-5); white-space: nowrap;">' +
-			timeText +
-			"</span>"
-		return withMentions + timeSpan
+		if (!item || !item.is_edited) return withMentions
+		// Raven-style: a muted "(edited)" right after the text, inline, at the message's own size.
+		return withMentions + ' <span style="color: var(--ink-gray-5);">(edited)</span>'
 	}
 
 	// ---- Requirement cards ----
@@ -595,6 +686,30 @@ export default function setup(context) {
 			if (key === "apps") value = Array.isArray(value) ? value.join(", ") : value
 			return [label, value]
 		}).filter(([, value]) => value)
+	}
+
+	// The requirement card renders as two stacked boxes rather than one long one — "who they
+	// are" up top, "what they need" below.
+	const REQUIREMENT_FIELD_KEYS_PRIMARY = new Set(["company_name", "country", "industry", "company_size"])
+
+	function splitRequirementFieldRows(req) {
+		const primary = []
+		const secondary = []
+		REQUIREMENT_FIELD_LABELS.forEach(([key, label]) => {
+			let value = req[key]
+			if (key === "apps") value = Array.isArray(value) ? value.join(", ") : value
+			if (!value) return
+			;(REQUIREMENT_FIELD_KEYS_PRIMARY.has(key) ? primary : secondary).push([label, value])
+		})
+		return { primary, secondary }
+	}
+
+	function requirementPrimaryRows(item) {
+		return splitRequirementFieldRows(parseRequirementContent(item)).primary
+	}
+
+	function requirementSecondaryRows(item) {
+		return splitRequirementFieldRows(parseRequirementContent(item)).secondary
 	}
 
 	// preview_title-style header for the card — same fallback order a viewer would look for.
@@ -894,6 +1009,7 @@ export default function setup(context) {
 
 	function selectProfileSettingsSection(section) {
 		profileSettingsSection.value = section
+		if (section === "workhours") populateWorkEdit()
 	}
 
 	async function saveMyProfile() {
@@ -1124,6 +1240,9 @@ export default function setup(context) {
 	function messageActionsOptions(item) {
 		if (!item || !isMine(item.sender)) return []
 		const options = []
+		if (!item.isFileCluster) {
+			options.push({ label: "Reply", icon: "lucide-reply", onClick: () => startReply(item) })
+		}
 		if (!item.isFileCluster && item.message_type === "Text") {
 			options.push({ label: "Edit", icon: "lucide-pencil", onClick: () => confirmEditMessage(item) })
 		}
@@ -1139,17 +1258,255 @@ export default function setup(context) {
 		return options
 	}
 
-	// Right-click menu for someone else's message — just Pin/Unpin, since edit/delete are
-	// sender-only (see messageActionsOptions). File clusters aren't pinnable (see togglePinMessage).
+	// Right-click menu for someone else's message — Reply + Pin/Unpin, since edit/delete are
+	// sender-only (see messageActionsOptions). File clusters aren't pinnable/replyable.
 	function otherMessageActionsOptions(item) {
 		if (!item || item.isFileCluster) return []
 		return [
+			{ label: "Reply", icon: "lucide-reply", onClick: () => startReply(item) },
 			{
 				label: isPinned(item) ? "Unpin" : "Pin",
 				icon: isPinned(item) ? "lucide-pin-off" : "lucide-pin",
 				onClick: () => togglePinMessage(item),
 			},
 		]
+	}
+
+	// ---- Hover toolbar (Raven-style) ----
+	// Name of the message whose "more" menu or emoji picker is open. Both are portaled out of the row, so
+	// the row loses :hover the moment the pointer enters them — this keeps the toolbar (and row
+	// highlight) shown for that one message until the menu closes.
+	const messageMenuOpenFor = ref(null)
+	// Name of the file message under the pointer. Each file card in a cluster has its own toolbar, and
+	// Tailwind's group-hover would light up every card's toolbar when the whole cluster row is hovered, so
+	// hover is tracked here instead — except a single-file cluster has no such ambiguity, where the
+	// whole row (not just the card) sets this too, same as a text message's whole bubble does.
+	const hoveredFile = ref("")
+
+	function messageCopyText(item) {
+		if (item.message_type === "Requirement") return requirementDetailsText(item)
+		if (item.message_type === "Text") return item.content || ""
+		return ""
+	}
+
+	async function copyMessage(item) {
+		try {
+			await navigator.clipboard.writeText(messageCopyText(item))
+			toast({ title: "Copied to clipboard", icon: "check", iconClasses: "text-green-600" })
+		} catch (e) {
+			toast({ title: "Could not copy", text: e.message, icon: "x-circle", iconClasses: "text-red-600" })
+		}
+	}
+
+	// The toolbar's "..." menu: the same four actions for everyone, plus Edit/Delete on your own
+	// messages. File clusters can't be replied to, pinned or copied, so they only get Delete (yours).
+	function messageMoreOptions(item) {
+		if (!item) return []
+		const mine = isMine(item.sender)
+		// A cluster has no actions of its own: each file card carries its own toolbar (see clusterOfFile).
+		if (item.isFileCluster) return []
+		const options = [
+			{ label: "Reply", icon: "lucide-reply", onClick: () => startReply(item) },
+		]
+		if (canForwardMessage(item)) {
+			options.push({ label: "Forward", icon: "lucide-forward", onClick: () => openForwardDialog(item) })
+		}
+		if (messageCopyText(item)) options.push({ label: "Copy", icon: "lucide-copy", onClick: () => copyMessage(item) })
+		options.push({
+			label: isPinned(item) ? "Unpin" : "Pin",
+			icon: isPinned(item) ? "lucide-pin-off" : "lucide-pin",
+			onClick: () => togglePinMessage(item),
+		})
+		if (mine) {
+			if (item.message_type === "Text") {
+				options.push({ label: "Edit", icon: "lucide-pencil", onClick: () => confirmEditMessage(item) })
+			}
+			options.push({ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick: () => confirmDeleteMessage(item) })
+			// Files sent together are grouped into one cluster; deleting several at once lives here now that the
+			// cluster row has no toolbar of its own.
+			const cluster = item.message_type === "File" ? clusterOfFile(item) : null
+			if (cluster && cluster.files.length > 1) {
+				options.push({
+					label: "Delete multiple files...",
+					icon: "lucide-trash-2",
+					theme: "red",
+					onClick: () => confirmDeleteCluster(cluster),
+				})
+			}
+		}
+		return options
+	}
+
+	// The cluster (see clusterFileMessages) a file message currently belongs to, if any.
+	function clusterOfFile(file) {
+		for (const group of groupedMessages.value) {
+			for (const entry of group.items) {
+				if (entry.isFileCluster && entry.files.some((f) => f.name === file.name)) return entry
+			}
+		}
+		return null
+	}
+
+	// ---- Reactions ----
+	// One call loads every reaction in the open conversation (connect.api.messages.get_reactions) and the
+	// chips under each message are grouped from that flat list here. File clusters can't be reacted to.
+	// The picker is a Popover holding a search box and a grid of emoji. A message's Popover can't hand the
+	// message to the grid's click handlers (they run inside two nested repeaters), so the open picker's
+	// message lives here instead.
+	const reactionPickerMessage = ref(null)
+	const emojiSearchQuery = ref("")
+
+	function setReactionPicker(item, open) {
+		reactionPickerMessage.value = open ? item : null
+		messageMenuOpenFor.value = open ? item.name : null
+		emojiSearchQuery.value = ""
+	}
+
+	// The emoji groups still matching the search box; a group with no match drops out.
+	function emojiPickerSections() {
+		const query = emojiSearchQuery.value.trim().toLowerCase()
+		return EMOJI_GROUPS.map((g) => ({
+			key: g.group,
+			group: g.group,
+			emojis: g.options
+				.filter((o) => !query || o.label.toLowerCase().includes(query))
+				.map((o) => ({ key: o.value, emoji: o.value })),
+		})).filter((g) => g.emojis.length)
+	}
+
+	function pickReaction(emoji) {
+		const item = reactionPickerMessage.value
+		if (!item) return
+		setReactionPicker(item, false)
+		toggleReaction(item, emoji)
+	}
+
+	function loadReactions(thread, convType) {
+		context.messageReactions.data = []
+		context.messageReactions.params = { thread, is_dm: convType === "dm" ? 1 : 0 }
+		context.messageReactions.reload()
+	}
+
+	// One chip per distinct emoji on a message, in the order the emojis were first used. `item` rides along
+	// on each chip because a chip's own click handler only sees the chip, not the message it belongs to.
+	function messageReactionGroups(item) {
+		const groups = new Map()
+		for (const reaction of context.messageReactions.data || []) {
+			if (reaction.message !== item.name) continue
+			let group = groups.get(reaction.emoji)
+			if (!group) {
+				group = { key: reaction.emoji, emoji: reaction.emoji, count: 0, mine: false, names: [], item }
+				groups.set(reaction.emoji, group)
+			}
+			group.count += 1
+			if (isMine(reaction.user)) {
+				group.mine = true
+				group.names.unshift("You")
+			} else {
+				group.names.push(reaction.full_name ? capitalizeName(reaction.full_name) : memberDisplayName(reaction.user))
+			}
+		}
+		return [...groups.values()].map((g) => ({ ...g, tooltip: g.names.join(", ") + " reacted with " + g.emoji }))
+	}
+
+	async function toggleReaction(item, emoji) {
+		if (!item || item.isFileCluster || !emoji) return
+		try {
+			await call("connect.api.messages.toggle_reaction", {
+				message: item.name,
+				is_dm: selectedThreadType.value === "dm" ? 1 : 0,
+				emoji,
+			})
+			context.messageReactions.reload()
+		} catch (e) {
+			toast({
+				title: "Could not add reaction",
+				text: permissionAwareErrorText(e, "You can't react in this conversation."),
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		}
+	}
+
+	// ---- Forward message ----
+	// Which conversations can receive a forward is decided server-side (see
+	// connect.api.messages.get_forward_targets: Write access, not closed, not removed). Names and
+	// avatars come from the unified inbox list the page already has, so the dialog only needs the
+	// eligible names back. Requirement cards and file clusters aren't forwardable.
+	const showForwardDialog = ref(false)
+	const messageToForward = ref(null)
+	const forwardTargets = ref({ company: [], dm: [] })
+	const loadingForwardTargets = ref(false)
+	const forwardSearchQuery = ref("")
+	const forwardTarget = ref(null)
+	const forwardingMessage = ref(false)
+
+	function canForwardMessage(item) {
+		return !!item && !item.isFileCluster && (item.message_type === "Text" || item.message_type === "File")
+	}
+
+	async function openForwardDialog(item) {
+		messageToForward.value = item
+		forwardSearchQuery.value = ""
+		forwardTarget.value = null
+		forwardTargets.value = { company: [], dm: [] }
+		loadingForwardTargets.value = true
+		showForwardDialog.value = true
+		try {
+			forwardTargets.value = await call("connect.api.messages.get_forward_targets")
+		} catch (e) {
+			showForwardDialog.value = false
+			toast({
+				title: "Could not load conversations",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			loadingForwardTargets.value = false
+		}
+	}
+
+	// The eligible conversations minus the one the message is already in, filtered by the dialog's search box.
+	function forwardThreadList() {
+		const companyNames = new Set(forwardTargets.value.company)
+		const dmNames = new Set(forwardTargets.value.dm)
+		const query = forwardSearchQuery.value.trim().toLowerCase()
+		return unifiedThreadList()
+			.filter((t) => (t.convType === "dm" ? dmNames.has(t.name) : companyNames.has(t.name)))
+			.filter((t) => !(t.name === selectedThread.value && t.convType === selectedThreadType.value))
+			.filter((t) => !query || (otherPartyName(t) || "").toLowerCase().includes(query))
+			.map((t) => ({ ...t, key: t.convType + ":" + t.name }))
+	}
+
+	async function forwardMessage() {
+		const item = messageToForward.value
+		const target = forwardTarget.value
+		if (!item || !target || forwardingMessage.value) return
+		forwardingMessage.value = true
+		try {
+			await call("connect.api.messages.forward_message", {
+				message: item.name,
+				source_is_dm: selectedThreadType.value === "dm" ? 1 : 0,
+				target_thread: target.name,
+				target_is_dm: target.convType === "dm" ? 1 : 0,
+			})
+			showForwardDialog.value = false
+			messageToForward.value = null
+			forwardTarget.value = null
+			toast({ title: "Message forwarded", icon: "check", iconClasses: "text-green-600" })
+			context.myThreads.reload()
+			context.myDMThreads.reload()
+		} catch (e) {
+			toast({
+				title: "Could not forward message",
+				text: permissionAwareErrorText(e, "You can't post in that conversation."),
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			forwardingMessage.value = false
+		}
 	}
 
 	const showDeleteMessageDialog = ref(false)
@@ -1180,6 +1537,7 @@ export default function setup(context) {
 			})
 			showDeleteMessageDialog.value = false
 			messageToDelete.value = null
+			fetchPinnedMessages()
 			if (isDM) {
 				context.dmMessages.reload()
 				context.myDMThreads.reload()
@@ -1213,9 +1571,10 @@ export default function setup(context) {
 
 	function confirmEditMessage(item) {
 		if (!item || item.isFileCluster || item.message_type !== "Text" || !isMine(item.sender)) return
+		replyToMessage.value = null
 		messageToEdit.value = item
 		draftMessage.value = item.content
-		showInlineTemplates.value = false
+		showTemplatesDialog.value = false
 		nextTick(() => {
 			const el = document.querySelector('[data-component-id="message-input"]') as HTMLTextAreaElement | null
 			el?.focus()
@@ -1225,6 +1584,45 @@ export default function setup(context) {
 	function cancelEditMessage() {
 		messageToEdit.value = null
 		draftMessage.value = ""
+	}
+
+	// ---- Replying to a message ----
+	// Same staged-in-composer pattern as editing: replyToMessage gates a "Replying to X" strip
+	// above the input, and is cleared once sendMessage() consumes it — quoting happens by
+	// reference (reply_to on the new message), not by copying text into the draft.
+	const replyToMessage = ref(null)
+
+	function startReply(item) {
+		if (!item || item.isFileCluster) return
+		messageToEdit.value = null
+		replyToMessage.value = item
+		nextTick(() => {
+			const el = document.querySelector('[data-component-id="message-input"]') as HTMLTextAreaElement | null
+			el?.focus()
+		})
+	}
+
+	function cancelReply() {
+		replyToMessage.value = null
+	}
+
+	// Resolves a reply_to id against the currently loaded window of messages (the same 200-message
+	// list the thread view renders from) — the replied-to message can scroll out of that window on
+	// a very long thread, in which case the quote is skipped rather than firing an extra fetch.
+	function getRepliedMessage(replyToName) {
+		if (!replyToName) return null
+		const list = (context.messages.data || []) as any[]
+		return list.find((m) => m.name === replyToName) || null
+	}
+
+	// Takes the message being quoted directly (not a reply_to id) — the composer passes
+	// replyToMessage itself, the bubble template resolves dataItem.reply_to via
+	// getRepliedMessage() first and passes that in.
+	function replyPreviewText(message) {
+		if (!message) return ""
+		if (message.message_type === "File") return message.file_name || "Attachment"
+		if (message.message_type === "Requirement") return "Requirement details"
+		return message.content || ""
 	}
 
 	function closeEditMessageDialog() {
@@ -1267,46 +1665,50 @@ export default function setup(context) {
 		}
 	}
 
-	// ---- Pinning a message ----
-	// One pin at a time per thread (see connect.api.messages.pin_message) — the currently pinned
-	// message's own fields are kept here rather than re-derived from context.messages.data
-	// since the pinned message can scroll out of the loaded window (200-message limit).
-	const pinnedMessage = ref(null)
+	// ---- Pinning messages ----
+	// Any number of messages can be pinned per conversation (see connect.api.messages.pin_message). The
+	// pinned messages' own fields are kept here, most recent pin first, rather than re-derived from
+	// context.messages.data, since a pinned message can scroll out of the loaded window (200-message limit).
+	const pinnedMessages = ref([])
+	// Pin card under the pointer in the Pins tab, for its hover-only unpin button.
+	const hoveredPin = ref("")
 
-	async function fetchPinnedMessage() {
-		if (!selectedThread.value) {
-			pinnedMessage.value = null
+	async function fetchPinnedMessages() {
+		const thread = selectedThread.value
+		if (!thread) {
+			pinnedMessages.value = []
 			return
 		}
 		try {
 			const method =
-				selectedThreadType.value === "dm" ? "connect.api.dm.get_pinned_dm_message" : "connect.api.messages.get_pinned_message"
-			pinnedMessage.value = await call(method, { thread: selectedThread.value })
+				selectedThreadType.value === "dm" ? "connect.api.dm.get_pinned_dm_messages" : "connect.api.messages.get_pinned_messages"
+			const rows = await call(method, { thread })
+			// A slow response for a conversation that's no longer open must not overwrite the current one.
+			if (thread === selectedThread.value) pinnedMessages.value = rows
 		} catch (e) {
-			pinnedMessage.value = null
+			if (thread === selectedThread.value) pinnedMessages.value = []
 		}
 	}
 
 	function isPinned(item) {
-		return !!(pinnedMessage.value && item && pinnedMessage.value.name === item.name)
+		return !!item && pinnedMessages.value.some((p) => p.name === item.name)
 	}
 
-	async function togglePinMessage(item) {
-		if (!item || item.isFileCluster) return
+	async function setMessagePinned(name, pin) {
 		const isDM = selectedThreadType.value === "dm"
+		const method = isDM
+			? pin
+				? "connect.api.dm.pin_dm_message"
+				: "connect.api.dm.unpin_dm_message"
+			: pin
+				? "connect.api.messages.pin_message"
+				: "connect.api.messages.unpin_message"
 		try {
-			if (isPinned(item)) {
-				await call(isDM ? "connect.api.dm.unpin_dm_message" : "connect.api.messages.unpin_message", {
-					thread: selectedThread.value,
-				})
-				pinnedMessage.value = null
-			} else {
-				await call(isDM ? "connect.api.dm.pin_dm_message" : "connect.api.messages.pin_message", { message: item.name })
-				await fetchPinnedMessage()
-			}
+			await call(method, { message: name })
+			await fetchPinnedMessages()
 		} catch (e) {
 			toast({
-				title: "Could not update pinned message",
+				title: pin ? "Could not pin message" : "Could not unpin message",
 				text: e.messages ? e.messages[0] : e.message,
 				icon: "x-circle",
 				iconClasses: "text-red-600",
@@ -1314,40 +1716,43 @@ export default function setup(context) {
 		}
 	}
 
-	async function unpinMessage() {
-		if (!selectedThread.value || !pinnedMessage.value) return
-		try {
-			const isDM = selectedThreadType.value === "dm"
-			await call(isDM ? "connect.api.dm.unpin_dm_message" : "connect.api.messages.unpin_message", {
-				thread: selectedThread.value,
-			})
-			pinnedMessage.value = null
-		} catch (e) {
-			toast({
-				title: "Could not unpin message",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
-		}
+	function togglePinMessage(item) {
+		if (!item || item.isFileCluster) return
+		return setMessagePinned(item.name, !isPinned(item))
 	}
 
-	function pinnedMessageLabel() {
-		if (!pinnedMessage.value) return ""
-		const sender = (pinnedMessage.value.sender || "").split("@")[0]
-		let body = pinnedMessage.value.content
-		if (pinnedMessage.value.message_type === "File") {
-			body = "📎 " + (pinnedMessage.value.file_name || "Attachment")
-		} else if (pinnedMessage.value.message_type === "Requirement") {
-			body = "Requirement details"
-		}
-		return sender + ": " + body
+	// "Today" / "Yesterday" / "Sep 22" — how a pin's age is shown in the Pins tab.
+	function relativeDayLabel(value) {
+		const date = new Date(value)
+		const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(date).setHours(0, 0, 0, 0)) / 86400000)
+		if (days <= 0) return "Today"
+		if (days === 1) return "Yesterday"
+		return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 	}
 
-	function scrollToPinnedMessage() {
-		if (!pinnedMessage.value) return
-		const el = document.querySelector(`[data-message-id="${pinnedMessage.value.name}"]`)
-		if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
+	function pinnedPreviewText(message) {
+		if (message.message_type === "File") return "📎 " + (message.file_name || "Attachment")
+		if (message.message_type === "Requirement") return "Requirement details"
+		return message.content || ""
+	}
+
+	// Rows for the Pins tab of the Files / Links / Pins side panel (opened from the header's pin button).
+	function pinnedMessageRows() {
+		return pinnedMessages.value.map((p) => ({
+			...p,
+			senderName: memberDisplayName(p.sender),
+			when: relativeDayLabel(p.pinned_at || p.creation),
+			snippet: pinnedPreviewText(p),
+		}))
+	}
+
+	// Scrolls to the pinned message and flashes it (see scrollToMessage).
+	function openPinnedMessage(pin) {
+		scrollToMessage(pin.name)
+	}
+
+	function unpinFromList(pin) {
+		return setMessagePinned(pin.name, false)
 	}
 
 	// ---- Deleting a whole file cluster ----
@@ -1393,6 +1798,7 @@ export default function setup(context) {
 			}
 			showDeleteClusterDialog.value = false
 			clusterToDelete.value = null
+			fetchPinnedMessages()
 			if (isDM) {
 				context.dmMessages.reload()
 				context.myDMThreads.reload()
@@ -1411,8 +1817,12 @@ export default function setup(context) {
 		}
 	}
 
-	async function sendMessage() {
+	// `silent` (the Send button's dropdown, or Ctrl/Cmd+Shift+Enter) sends without pinging anyone; with the
+	// "Always send silently" preference, that's automatic outside working hours.
+	async function sendMessage(silent = false) {
 		if (!selectedThread.value || uploadingFile.value) return
+		const sendSilently = silent === true || (afterHoursBehavior() === "Always send silently" && isOutsideWorkHours())
+		const silentFlag = sendSilently ? 1 : 0
 		if (messageToEdit.value) {
 			await saveEditedMessage()
 			return
@@ -1426,7 +1836,7 @@ export default function setup(context) {
 			draftAttachments.value = []
 			try {
 				if (content) {
-					await call("connect.api.dm.send_dm_message", { thread, content })
+					await call("connect.api.dm.send_dm_message", { thread, content, silent: silentFlag })
 				}
 				for (const a of dmReadyAttachments) {
 					await call("connect.api.dm.send_dm_message", {
@@ -1436,6 +1846,7 @@ export default function setup(context) {
 						file_name: a.file_name,
 						file_type: a.file_type,
 						file_size: a.file_size,
+						silent: silentFlag,
 					})
 				}
 				context.dmMessages.reload()
@@ -1461,13 +1872,15 @@ export default function setup(context) {
 
 		const thread = selectedThread.value
 		const requirementToSend = draftRequirement.value
+		const replyToSend = replyToMessage.value ? replyToMessage.value.name : null
 		draftMessage.value = ""
 		draftAttachments.value = []
 		draftRequirement.value = null
+		replyToMessage.value = null
 
 		try {
 			if (content) {
-				await call("connect.api.messages.send_message", { thread, content })
+				await call("connect.api.messages.send_message", { thread, content, reply_to: replyToSend, silent: silentFlag })
 			}
 			for (const a of readyAttachments) {
 				await call("connect.api.messages.send_message", {
@@ -1477,6 +1890,7 @@ export default function setup(context) {
 					file_name: a.file_name,
 					file_type: a.file_type,
 					file_size: a.file_size,
+					silent: silentFlag,
 				})
 			}
 			if (requirementToSend) {
@@ -1716,6 +2130,12 @@ export default function setup(context) {
 			cancelEditMessage()
 			return
 		}
+		// Ctrl/Cmd+Shift+Enter: send silently.
+		if (event.key === "Enter" && event.shiftKey && (event.ctrlKey || event.metaKey)) {
+			event.preventDefault()
+			sendMessage(true)
+			return
+		}
 		if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault()
 			if (isMentioning()) {
@@ -1775,10 +2195,6 @@ export default function setup(context) {
 		return !!side && side !== myOwnSide()
 	}
 
-	function senderSideBadgeTheme(item) {
-		return senderSide(item) === "Customer" ? "amber" : "violet"
-	}
-
 	// messages are grouped into per-day sections (see groupedMessages) so `index` here is local
 	// to the current day's group, not the flat position in context.messages.data — the first
 	// message of a day is never grouped, everything after that is looked up by its global
@@ -1833,7 +2249,7 @@ export default function setup(context) {
 		const result = []
 		for (const item of items) {
 			const prev = result[result.length - 1]
-			const isFile = item.message_type === "File"
+			const isFile = item.message_type === "File" && !item.is_forwarded
 			if (
 				isFile &&
 				prev &&
@@ -1970,10 +2386,619 @@ export default function setup(context) {
 		}
 	}
 
+	// ---- Command palette (Ctrl/Cmd+K) ----
+	// A bare frappe-ui Dialog holding a search box and a list of rows. (frappe-ui's own CommandPalette
+	// isn't in Studio's production build list, so it can't be used in a built app.) It lists the
+	// conversations the caller actually has, built from the inbox the page already loaded: company threads
+	// by the *other* company's name (a customer sees partners, a partner sees customers, never the individual
+	// members behind them) and personal DMs by person. The message-search actions follow. The first row is
+	// highlighted as soon as the palette opens (or the query changes), same as it would be under a mouse
+	// hover, so arrow keys and Enter work immediately without an initial keypress to "arm" a selection.
+	const showCommandPalette = ref(false)
+	const commandSearchQuery = ref("")
+	const commandActiveIndex = ref(0)
+	const COMMAND_ROWS_WITHOUT_QUERY = 6
+
+	// Ctrl on Windows/Linux, ⌘ on macOS — the palette accepts either, this is just what the footer shows.
+	function shortcutModifier() {
+		return /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl"
+	}
+
+	// Ctrl/Cmd+K toggles the palette; Ctrl/Cmd+G jumps straight to message search (in everything, seeded
+	// with whatever is typed in the palette). Both are claimed from the browser (Ctrl+K is Chrome's
+	// "search in address bar", Ctrl+G is "find next").
+	function handleCommandPaletteShortcut(event: KeyboardEvent) {
+		if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return
+		const key = event.key.toLowerCase()
+		if (key === "k") {
+			event.preventDefault()
+			showCommandPalette.value = !showCommandPalette.value
+		} else if (key === "g") {
+			event.preventDefault()
+			const query = showCommandPalette.value ? commandSearchQuery.value : ""
+			showCommandPalette.value = false
+			openMessageSearch("all", query)
+		}
+	}
+	window.addEventListener("keydown", handleCommandPaletteShortcut)
+	onScopeDispose(() => window.removeEventListener("keydown", handleCommandPaletteShortcut))
+
+	watch(showCommandPalette, (open) => {
+		if (!open) return
+		commandSearchQuery.value = ""
+		commandActiveIndex.value = 0
+	})
+
+	watch(commandSearchQuery, () => {
+		commandActiveIndex.value = 0
+	})
+
+	// "Search in <this conversation>" / "Search anywhere" rows. `kind` is what selectCommandItem dispatches on.
+	function commandSearchActions() {
+		const query = commandSearchQuery.value.trim()
+		const quoted = query ? " for `" + query + "`" : ""
+		const actions = []
+		if (selectedThread.value) {
+			actions.push({
+				name: "search-current",
+				kind: "search-current",
+				title: "Search in " + (otherPartyName(currentThread()) || "this conversation") + quoted,
+			})
+		}
+		actions.push({ name: "search-all", kind: "search-all", title: "Search anywhere" + quoted })
+		return actions
+	}
+
+	// Inbox conversations of one kind matching what's typed, most recent first (unifiedThreadList's order).
+	function commandConversationRows(convType) {
+		const query = commandSearchQuery.value.trim().toLowerCase()
+		const rows = unifiedThreadList()
+			.filter((t) => t.convType === convType)
+			.map((t) => ({
+				name: convType + ":" + t.name,
+				kind: convType === "dm" ? "dm" : "thread",
+				title: otherPartyName(t) || "",
+				image: threadAvatarImage(t),
+				thread: t,
+			}))
+			.filter((r) => r.title && (!query || r.title.toLowerCase().includes(query)))
+		return query ? rows : rows.slice(0, COMMAND_ROWS_WITHOUT_QUERY)
+	}
+
+	// One flat list so the arrow keys move through every section; each row keeps its position in it.
+	function commandRows() {
+		const rows = []
+		for (const item of [
+			...commandConversationRows("company"),
+			...commandConversationRows("dm"),
+			...commandSearchActions(),
+		]) {
+			rows.push({ ...item, index: rows.length })
+		}
+		return rows
+	}
+
+	// The three lists the palette renders.
+	function commandCompanyRows() {
+		return commandRows().filter((r) => r.kind === "thread")
+	}
+
+	function commandPeopleRows() {
+		return commandRows().filter((r) => r.kind === "dm")
+	}
+
+	function commandActionRows() {
+		return commandRows().filter((r) => r.kind.startsWith("search"))
+	}
+
+	function commandCompaniesTitle() {
+		return context.myContext.data && context.myContext.data.partner ? "Customers" : "Partners"
+	}
+
+	function handleCommandKeydown(event: KeyboardEvent) {
+		const rows = commandRows()
+		if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+			event.preventDefault()
+			const current = commandActiveIndex.value
+			commandActiveIndex.value =
+				event.key === "ArrowDown" ? (current + 1) % rows.length : current <= 0 ? rows.length - 1 : current - 1
+			nextTick(() => document.querySelector('[data-command-active="true"]')?.scrollIntoView({ block: "nearest" }))
+		} else if (event.key === "Enter") {
+			event.preventDefault()
+			if (rows[commandActiveIndex.value]) selectCommandItem(rows[commandActiveIndex.value])
+			// Nothing highlighted: Enter with something typed searches everywhere for it.
+			else if (commandSearchQuery.value.trim()) openPaletteSearch("all")
+		}
+	}
+
+	function openPaletteSearch(scope) {
+		const query = commandSearchQuery.value
+		showCommandPalette.value = false
+		openMessageSearch(scope, query)
+	}
+
+	// Closes the palette, then a conversation opens in the inbox pane and a search action opens the search page.
+	function selectCommandItem(item) {
+		if (!item) return
+		if (item.kind === "search-current") return openPaletteSearch("current")
+		if (item.kind === "search-all") return openPaletteSearch("all")
+		showCommandPalette.value = false
+		closeSearchPage()
+		selectThread(item.thread)
+	}
+
+	// ---- Message search page ----
+	// A Raven-style search view: while showSearchPage is on, the left pane swaps the inbox for a search box,
+	// tabs (Messages / Files / Links) and the results, and the right pane shows the chosen conversation with
+	// the matched message highlighted (or a "select a result" placeholder until one is chosen). Results come
+	// from connect.api.messages.search_messages, across every conversation the caller can read or just the
+	// open one.
+	const showSearchPage = ref(false)
+	const searchResultOpen = ref(false)
+	// The message the URL / selected result points at; flashedMessage is the row's amber highlight, which
+	// only lasts a moment after scrolling to it (see scrollToMessage).
+	const highlightedMessage = ref("")
+	const flashedMessage = ref("")
+	let flashTimer = null
+	const MESSAGE_FLASH_MS = 2500
+	const selectedSearchKey = ref("")
+	const messageSearchQuery = ref("")
+	const messageSearchTab = ref("messages")
+	const messageSearchScope = ref("all")
+	const messageSearchResults = ref([])
+	const searchingMessages = ref(false)
+	// Captured when the search opens so "this conversation" keeps meaning the same one even if the
+	// selection changes underneath it.
+	const messageSearchConversation = ref(null)
+	let messageSearchTimer = null
+	let messageSearchToken = 0
+	const MIN_MESSAGE_SEARCH_LENGTH = 2
+
+	function openMessageSearch(scope, query) {
+		const thread = selectedThread.value
+			? { name: selectedThread.value, convType: selectedThreadType.value, label: otherPartyName(currentThread()) }
+			: null
+		messageSearchConversation.value = thread
+		messageSearchScope.value = scope === "current" && thread ? "current" : "all"
+		// Re-opening (Ctrl+G while already searching) keeps what's typed unless the palette passed something.
+		if (query || !showSearchPage.value) messageSearchQuery.value = (query || "").trim()
+		showSearchPage.value = true
+		searchResultOpen.value = false
+		highlightedMessage.value = ""
+		selectedSearchKey.value = ""
+		runMessageSearch()
+		setTimeout(() => {
+			const el = document.querySelector('[data-component-id="message-search-input"]')
+			;(el && el.tagName === "INPUT" ? el : el?.querySelector("input"))?.focus()
+		}, 60)
+	}
+
+	// Leaves the search view but stays in whichever conversation was last opened from it.
+	function closeSearchPage() {
+		showSearchPage.value = false
+		searchResultOpen.value = false
+		highlightedMessage.value = ""
+		selectedSearchKey.value = ""
+	}
+
+	function clearMessageSearchQuery() {
+		messageSearchQuery.value = ""
+	}
+
+	// The "Filters" menu: search everywhere, or only inside the conversation that was open.
+	function messageSearchFilterOptions() {
+		const conversation = messageSearchConversation.value
+		const scopeOption = (scope, label) => ({
+			label,
+			icon: messageSearchScope.value === scope ? "lucide-check" : undefined,
+			onClick: () => {
+				messageSearchScope.value = scope
+				runMessageSearch()
+			},
+		})
+		const options = [scopeOption("all", "All conversations")]
+		if (conversation) options.push(scopeOption("current", "In " + (conversation.label || "this conversation")))
+		return options
+	}
+
+	// Typing (or switching tab) re-runs the search after a pause.
+	watch([messageSearchQuery, messageSearchTab], () => {
+		clearTimeout(messageSearchTimer)
+		messageSearchTimer = setTimeout(runMessageSearch, 250)
+	})
+	onScopeDispose(() => clearTimeout(messageSearchTimer))
+
+	// Escapes the message text first and only then wraps matches in <mark>, so user-typed markup can't
+	// reach the HTML component (same approach as formatMessageContent).
+	function highlightMatch(text, query) {
+		const escape = (t) => escapeHtmlAttr(t)
+		const needle = (query || "").trim().toLowerCase()
+		const source = text || ""
+		if (!needle) return escape(source)
+		const lower = source.toLowerCase()
+		let html = ""
+		let from = 0
+		for (let at = lower.indexOf(needle); at !== -1; at = lower.indexOf(needle, from)) {
+			html +=
+				escape(source.slice(from, at)) +
+				'<mark style="background: var(--surface-amber-2); color: inherit; border-radius: 2px;">' +
+				escape(source.slice(at, at + needle.length)) +
+				"</mark>"
+			from = at + needle.length
+		}
+		return html + escape(source.slice(from))
+	}
+
+	function messageSearchRows() {
+		const query = messageSearchQuery.value
+		const threads = unifiedThreadList()
+		return messageSearchResults.value.map((r) => {
+			const convType = r.is_dm ? "dm" : "company"
+			const thread = threads.find((t) => t.name === r.thread && t.convType === convType)
+			const body = r.message_type === "File" ? "📎 " + (r.file_name || "Attachment") : r.content
+			const key = convType + ":" + r.name
+			return {
+				...r,
+				key,
+				selected: key === selectedSearchKey.value,
+				convType,
+				conversation: thread ? otherPartyName(thread) : "",
+				senderName: r.sender_full_name ? capitalizeName(r.sender_full_name) : memberDisplayName(r.sender),
+				when: new Date(r.creation).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+				snippet: highlightMatch(body, query),
+			}
+		})
+	}
+
+	function messageSearchStatus() {
+		if (messageSearchQuery.value.trim().length < MIN_MESSAGE_SEARCH_LENGTH) return "Type at least 2 characters to search."
+		if (searchingMessages.value) return "Searching..."
+		if (!messageSearchResults.value.length) return "No results found."
+		return ""
+	}
+
+	async function runMessageSearch() {
+		const query = messageSearchQuery.value.trim()
+		const token = ++messageSearchToken
+		if (query.length < MIN_MESSAGE_SEARCH_LENGTH) {
+			messageSearchResults.value = []
+			searchingMessages.value = false
+			return
+		}
+		searchingMessages.value = true
+		const params = { query, kind: messageSearchTab.value }
+		const conversation = messageSearchConversation.value
+		if (messageSearchScope.value === "current" && conversation) {
+			params.thread = conversation.name
+			params.is_dm = conversation.convType === "dm" ? 1 : 0
+		}
+		try {
+			const rows = await call("connect.api.messages.search_messages", params)
+			if (token === messageSearchToken) messageSearchResults.value = rows
+		} catch (e) {
+			if (token === messageSearchToken) messageSearchResults.value = []
+		} finally {
+			if (token === messageSearchToken) searchingMessages.value = false
+		}
+	}
+
+	// Shows the result's conversation in the right pane and, once its messages have rendered, scrolls to the
+	// message (which the message row highlights via highlightedMessage). Only the loaded page of messages is
+	// on screen, so an older hit just opens the conversation.
+	async function openMessageSearchResult(row) {
+		const thread = unifiedThreadList().find((t) => t.name === row.thread && t.convType === row.convType)
+		if (!thread) return
+		selectedSearchKey.value = row.key
+		highlightedMessage.value = row.name
+		searchResultOpen.value = true
+		if (!(selectedThread.value === thread.name && selectedThreadType.value === thread.convType)) selectThread(thread)
+		await scrollToMessage(row.name)
+	}
+
+	// Waits for the conversation's messages to render (up to ~2s), scrolls the message into view and flashes
+	// its row so it's easy to spot; the flash fades on its own.
+	async function scrollToMessage(name) {
+		for (let attempt = 0; attempt < 20; attempt++) {
+			await new Promise((resolve) => setTimeout(resolve, 100))
+			const el = document.querySelector(`[data-message-id="${name}"]`)
+			if (el) {
+				el.scrollIntoView({ behavior: "smooth", block: "center" })
+				flashedMessage.value = name
+				clearTimeout(flashTimer)
+				flashTimer = setTimeout(() => {
+					if (flashedMessage.value === name) flashedMessage.value = ""
+				}, MESSAGE_FLASH_MS)
+				return
+			}
+		}
+	}
+	onScopeDispose(() => clearTimeout(flashTimer))
+
+	// ---- URL state ----
+	// The open conversation, the search page and the matched message all live in the query string, so a
+	// pasted link (or a reload, or Back/Forward) lands on the same view:
+	//   ?thread=<name>                  a company thread (also what notification emails link to)
+	//   ?thread=<name>&type=dm          a DM
+	//   ?search=<text>[&tab=files|links]            the search page
+	//   ?search=<text>&thread=..&message=<name>     a search result opened in the right pane
+	// Path-only changes are what make Studio reload a page, so touching just the query string is safe.
+	function urlStateParams() {
+		const params = new URLSearchParams()
+		const searching = showSearchPage.value
+		// While searching with nothing picked, the open conversation is hidden behind the placeholder, so it
+		// isn't part of the link.
+		if (selectedThread.value && (!searching || searchResultOpen.value)) {
+			params.set("thread", selectedThread.value)
+			if (selectedThreadType.value === "dm") params.set("type", "dm")
+		}
+		if (searching) {
+			params.set("search", messageSearchQuery.value.trim())
+			if (messageSearchTab.value !== "messages") params.set("tab", messageSearchTab.value)
+		}
+		if (highlightedMessage.value) params.set("message", highlightedMessage.value)
+		return params
+	}
+
+	let urlSyncedOnce = false
+	watch(
+		[selectedThread, selectedThreadType, showSearchPage, searchResultOpen, messageSearchQuery, messageSearchTab, highlightedMessage],
+		(now, before) => {
+			const query = urlStateParams().toString()
+			if (query === window.location.search.replace(/^\?/, "")) return
+			const url = window.location.pathname + (query ? "?" + query : "")
+			// The first sync (the initial auto-open) and typing/tab changes rewrite the current entry; picking
+			// a conversation or a result adds one so Back steps through them.
+			const onlyTyping = before && now.every((value, i) => i === 4 || i === 5 || value === before[i])
+			if (!urlSyncedOnce || onlyTyping) window.history.replaceState(window.history.state, "", url)
+			else window.history.pushState(window.history.state, "", url)
+			urlSyncedOnce = true
+		},
+	)
+
+	// Puts the page into whatever the URL describes. Returns false when it names a DM but the inbox
+	// hasn't loaded yet, so the caller can try again once it has.
+	function applyUrlState(params) {
+		const requested = params.get("thread")
+		const convType = params.get("type") === "dm" ? "dm" : "company"
+		const message = params.get("message") || ""
+		const searching = params.has("search")
+
+		if (requested && !(selectedThread.value === requested && selectedThreadType.value === convType)) {
+			const found = unifiedThreadList().find((t) => t.name === requested && t.convType === convType)
+			if (found) selectThread(found)
+			else if (convType === "dm") return false
+			else selectThread(requested)
+		}
+
+		if (searching) {
+			messageSearchTab.value = ["files", "links"].includes(params.get("tab")) ? params.get("tab") : "messages"
+			openMessageSearch("all", params.get("search"))
+			messageSearchQuery.value = (params.get("search") || "").trim()
+			if (requested && message) {
+				selectedSearchKey.value = convType + ":" + message
+				highlightedMessage.value = message
+				searchResultOpen.value = true
+				scrollToMessage(message)
+			}
+			return true
+		}
+
+		if (showSearchPage.value) closeSearchPage()
+		if (message) {
+			// A shared link to a message: flash the highlight, then let it go (and drop it from the URL).
+			highlightedMessage.value = message
+			scrollToMessage(message)
+			setTimeout(() => {
+				if (highlightedMessage.value === message) highlightedMessage.value = ""
+			}, 3000)
+		}
+		return true
+	}
+
+	// Back/Forward: re-apply the URL that became current.
+	function handlePopState() {
+		applyUrlState(new URLSearchParams(window.location.search))
+	}
+	window.addEventListener("popstate", handlePopState)
+	onScopeDispose(() => window.removeEventListener("popstate", handlePopState))
+
 	// Mirrors the media search box's focus treatment (see media-search-box's CSS) on the
 	// composer: the pill is a container wrapping a ghost TextInput, so there's no single
 	// element a :focus-within rule could live on — the inner input reports focus up instead.
 	const composerFocused = ref(false)
+
+	// ---- Working hours & sending after hours ----
+	// Each person sets their own working hours and days (Settings → Working hours, stored server-side in
+	// Connect User Settings). Messaging outside them shows a banner above the composer offering to send
+	// silently — delivered like any message, but without a notification ping for the other members. Hours are
+	// compared against this browser's clock. Raven's "quiet hours", in Connect.
+	const WEEKDAYS = [
+		{ key: "monday", label: "Mon" },
+		{ key: "tuesday", label: "Tue" },
+		{ key: "wednesday", label: "Wed" },
+		{ key: "thursday", label: "Thu" },
+		{ key: "friday", label: "Fri" },
+		{ key: "saturday", label: "Sat" },
+		{ key: "sunday", label: "Sun" },
+	]
+	const AFTER_HOURS_OPTIONS = [
+		{ label: "Do nothing", value: "Do nothing" },
+		{ label: "Suggest sending silently", value: "Suggest sending silently" },
+		{ label: "Always send silently", value: "Always send silently" },
+	]
+	const workSettings = ref({
+		work_start: "09:00",
+		work_end: "18:00",
+		work_days: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+		after_hours_behavior: "Suggest sending silently",
+	})
+	const editWorkStart = ref("09:00")
+	const editWorkEnd = ref("18:00")
+	const editWorkDays = ref([])
+	const editAfterHours = ref("Suggest sending silently")
+	const savingWorkSettings = ref(false)
+	// ✕ on the banner hides it until the page is reloaded.
+	const afterHoursBannerDismissed = ref(false)
+	// Bumped every 30s so the banner appears/disappears when the clock crosses a boundary while the page is open.
+	const clockTick = ref(Date.now())
+	const clockTimer = setInterval(() => (clockTick.value = Date.now()), 30000)
+	onScopeDispose(() => clearInterval(clockTimer))
+
+	async function loadWorkSettings() {
+		try {
+			workSettings.value = await call("connect.api.account.get_my_work_settings")
+		} catch (e) {
+			// Keep the defaults: a failed load must never block messaging.
+		}
+	}
+	loadWorkSettings()
+
+	function minutesOfDay(hhmm) {
+		const [hours, minutes] = (hhmm || "00:00").split(":")
+		return Number(hours) * 60 + Number(minutes || 0)
+	}
+
+	// Shared by isOutsideWorkHours (the sender's own hours — still drives the personal "Always send
+	// silently" auto-behavior below, unchanged) and isPartnerOutsideHours (the banner's new
+	// customer-facing check) so the day/time math has exactly one implementation.
+	function isOutsideHoursWindow(settings) {
+		clockTick.value // re-evaluated on every tick
+		const now = new Date()
+		const today = WEEKDAYS[(now.getDay() + 6) % 7].key
+		if (!settings.work_days.includes(today)) return true
+		const minutes = now.getHours() * 60 + now.getMinutes()
+		return minutes < minutesOfDay(settings.work_start) || minutes >= minutesOfDay(settings.work_end)
+	}
+
+	function isOutsideWorkHours() {
+		return isOutsideHoursWindow(workSettings.value)
+	}
+
+	// "Outside hours" means nobody on the partner side can currently answer — every member has to
+	// be off the clock, not just one of them, so a teammate still around never gets a false flag
+	// hung on their name. See get_partner_hours_for_thread for where `members` comes from.
+	function isPartnerOutsideHours() {
+		const members = context.partnerWorkHours.data && context.partnerWorkHours.data.members
+		if (!members || !members.length) return false
+		return members.every((member) => isOutsideHoursWindow(member))
+	}
+
+	function afterHoursBehavior() {
+		return workSettings.value.after_hours_behavior
+	}
+
+	function showAfterHoursBanner() {
+		// The banner is a customer-facing "is the partner around" signal now, not a self-reminder —
+		// see get_partner_hours_for_thread. A partner has nothing to check it against (customers
+		// don't publish hours), so they never see it.
+		if (amPartner()) return false
+		return (
+			!!selectedThread.value &&
+			!messageToEdit.value &&
+			!afterHoursBannerDismissed.value &&
+			afterHoursBehavior() !== "Do nothing" &&
+			isPartnerOutsideHours()
+		)
+	}
+
+	function afterHoursBannerText() {
+		const partnerName = (context.partnerWorkHours.data && context.partnerWorkHours.data.partner_name) || "They"
+		return "It's outside " + partnerName + "'s working hours"
+	}
+
+	function afterHoursBannerOptions() {
+		// "Working hours settings" used to open the viewer's own hours — made sense when the banner
+		// was a self-reminder, but now it's about the PARTNER's hours (see get_partner_hours_for_thread),
+		// which the viewer can't set from here at all.
+		return [
+			{ label: "Don't remind me again", icon: "lucide-bell-off", onClick: () => saveAfterHoursBehavior("Do nothing") },
+		]
+	}
+
+	function populateWorkEdit() {
+		const settings = workSettings.value
+		editWorkStart.value = settings.work_start
+		editWorkEnd.value = settings.work_end
+		editWorkDays.value = [...settings.work_days]
+		editAfterHours.value = settings.after_hours_behavior
+	}
+
+	function workDayRows() {
+		return WEEKDAYS.map((day) => ({ ...day, selected: editWorkDays.value.includes(day.key) }))
+	}
+
+	function toggleWorkDay(key) {
+		editWorkDays.value = editWorkDays.value.includes(key)
+			? editWorkDays.value.filter((k) => k !== key)
+			: [...editWorkDays.value, key]
+	}
+
+	// TimePicker hands back HH:mm (or HH:mm:ss); the server compares whole minutes.
+	function trimTime(value) {
+		return (value || "").slice(0, 5)
+	}
+
+	function workSettingsChanged() {
+		const saved = workSettings.value
+		return (
+			trimTime(editWorkStart.value) !== saved.work_start ||
+			trimTime(editWorkEnd.value) !== saved.work_end ||
+			editAfterHours.value !== saved.after_hours_behavior ||
+			WEEKDAYS.some((day) => editWorkDays.value.includes(day.key) !== saved.work_days.includes(day.key))
+		)
+	}
+
+	function workSettingsError() {
+		if (!editWorkDays.value.length) return "Pick at least one working day."
+		if (minutesOfDay(trimTime(editWorkStart.value)) >= minutesOfDay(trimTime(editWorkEnd.value))) {
+			return "Your work day must end after it starts."
+		}
+		return ""
+	}
+
+	async function saveWorkSettings() {
+		if (savingWorkSettings.value || !workSettingsChanged() || workSettingsError()) return
+		savingWorkSettings.value = true
+		try {
+			workSettings.value = await call("connect.api.account.update_my_work_settings", {
+				work_start: trimTime(editWorkStart.value),
+				work_end: trimTime(editWorkEnd.value),
+				work_days: editWorkDays.value,
+				after_hours_behavior: editAfterHours.value,
+			})
+			afterHoursBannerDismissed.value = false
+			toast({ title: "Working hours saved", icon: "check", iconClasses: "text-green-600" })
+		} catch (e) {
+			toast({
+				title: "Could not save working hours",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		} finally {
+			savingWorkSettings.value = false
+		}
+	}
+
+	// Changes only the after-hours behavior (the banner's "Don't remind me again"), keeping the rest as saved.
+	async function saveAfterHoursBehavior(behavior) {
+		const saved = workSettings.value
+		try {
+			workSettings.value = await call("connect.api.account.update_my_work_settings", {
+				work_start: saved.work_start,
+				work_end: saved.work_end,
+				work_days: saved.work_days,
+				after_hours_behavior: behavior,
+			})
+		} catch (e) {
+			toast({
+				title: "Could not update your preference",
+				text: e.messages ? e.messages[0] : e.message,
+				icon: "x-circle",
+				iconClasses: "text-red-600",
+			})
+		}
+	}
 
 	// ---- Media ----
 	const mediaSearchQuery = ref("")
@@ -1984,31 +3009,11 @@ export default function setup(context) {
 		mediaSortAscending.value = !mediaSortAscending.value
 	}
 
-	// The Files/Links search box is a raw HTML block (see media-search-box in the JSON) rather
-	// than frappe-ui's TextInput — that component never exposes its actual <input> to outside
-	// styling, only a wrapper div, so there's no way to get the icon to render inside the same
-	// box as the text. A plain <input> lets a real `<style>` block own :hover/:focus directly.
-	// Since v-html renders it outside Vue's reactivity, it's wired to app state by hand: typing
-	// calls a function stashed on `window` (inline `oninput` only has access to global scope),
-	// and switching tabs reaches back into the DOM to clear/relabel it.
-	function updateMediaSearchQuery(value) {
-		mediaSearchQuery.value = value
-	}
-	if (typeof window !== "undefined") {
-		window.__connectMediaSearchInput = updateMediaSearchQuery
-	}
-
-	// a leftover query from the Files tab would otherwise silently filter out every
-	// link (and vice versa) since both tabs share one search box
+	// The Files/Links search box is a frappe-ui TextInput bound to mediaSearchQuery (see media-search-box in the
+	// JSON). A leftover query from the Files tab would otherwise silently filter out every link (and vice
+	// versa) since both tabs share one search box, so switching tabs clears it.
 	watch(mediaTab, () => {
 		mediaSearchQuery.value = ""
-		nextTick(() => {
-			const el = document.getElementById("cnct-media-search-input")
-			if (el) {
-				el.value = ""
-				el.placeholder = mediaTab.value === "Files" ? "Search files..." : "Search links..."
-			}
-		})
 	})
 
 	// Strips sentence punctuation a URL regex has no way to distinguish from part of the URL
@@ -2091,7 +3096,7 @@ export default function setup(context) {
 	// selectThread() itself needs nothing but the name; it fetches everything else by thread.
 	// Placed here (right before return, not up near its own declaration) deliberately: with
 	// immediate:true this can fire selectThread() synchronously during setup()'s own execution,
-	// and selectThread touches refs like pinnedMessage that are declared further down the file —
+	// and selectThread touches refs like pinnedMessages that are declared further down the file —
 	// calling it any earlier hits their temporal dead zone and throws before setup() ever returns.
 	watch(
 		() => [context.myThreads?.data, context.myDMThreads?.data],
@@ -2101,6 +3106,17 @@ export default function setup(context) {
 			if (!selectedThread.value) {
 				const params = new URLSearchParams(window.location.search)
 				const requested = params.get("thread")
+				// A DM, ?search= or ?message= link is applied by applyUrlState once both inbox lists have loaded (a DM
+				// is looked up there rather than by name, and search results are labelled from it). Something is
+				// always selected afterwards, so this branch doesn't fire again on the next list reload.
+				if (params.get("type") === "dm" || params.has("search") || params.get("message")) {
+					if (!(context.myThreads?.data && context.myDMThreads?.data)) return
+					applyUrlState(params)
+					if (!selectedThread.value && list.length && (params.has("search") || window.innerWidth >= 576)) {
+						selectThread(list[0])
+					}
+					return
+				}
 				if (requested) {
 					selectThread(requested)
 					// set by start_partner_thread's is_new_thread — a brand-new Contact-Partner thread
@@ -2115,7 +3131,9 @@ export default function setup(context) {
 					}
 					return
 				}
-				if (list.length) selectThread(list[0])
+				// On phone-width screens the page opens on the thread list (master-detail), so skip
+				// the auto-open-most-recent-conversation default that desktop/tablet relies on.
+				if (list.length && window.innerWidth >= 576) selectThread(list[0])
 				return
 			}
 
@@ -2142,6 +3160,9 @@ export default function setup(context) {
 		requirementSubtitle,
 		requirementAppItems,
 		parseRequirementContent,
+		requirementFieldRows,
+		requirementPrimaryRows,
+		requirementSecondaryRows,
 		copyRequirementDetails,
 		downloadRequirementDetails,
 		showProfileSettingsDialog,
@@ -2196,7 +3217,6 @@ export default function setup(context) {
 		showMembersDialog,
 		showMediaDialog,
 		showTemplatesDialog,
-		showInlineTemplates,
 		myMessageTemplates,
 		templateSearchQuery,
 		filteredMessageTemplates,
@@ -2225,12 +3245,18 @@ export default function setup(context) {
 		threadListPreview,
 		isPanelOpen,
 		selectThread,
+		goBackToThreadList,
 		closeThread,
+		amPartner,
 		isPartnerAdmin,
 		isCustomerAdmin,
 		isAnyAdmin,
 		isRowAdmin,
 		activeMembers,
+		activeMemberCount,
+		responseTimeLabel,
+		headerMemberAvatars,
+		headerMemberOverflow,
 		addMember,
 		makeAdmin,
 		removeMember,
@@ -2248,6 +3274,25 @@ export default function setup(context) {
 		addTeamMember,
 		messageActionsOptions,
 		otherMessageActionsOptions,
+		messageMenuOpenFor,
+		hoveredFile,
+		reactionPickerMessage,
+		emojiSearchQuery,
+		setReactionPicker,
+		emojiPickerSections,
+		pickReaction,
+		messageReactionGroups,
+		toggleReaction,
+		messageMoreOptions,
+		showForwardDialog,
+		messageToForward,
+		loadingForwardTargets,
+		forwardSearchQuery,
+		forwardTarget,
+		forwardingMessage,
+		forwardThreadList,
+		openForwardDialog,
+		forwardMessage,
 		showDeleteMessageDialog,
 		messageToDelete,
 		deletingMessage,
@@ -2261,12 +3306,33 @@ export default function setup(context) {
 		closeEditMessageDialog,
 		saveEditedMessage,
 		saveEditedMessageOnEnter,
-		pinnedMessage,
+		replyToMessage,
+		startReply,
+		cancelReply,
+		getRepliedMessage,
+		replyPreviewText,
+		pinnedMessages,
+		hoveredPin,
+		WEEKDAYS,
+		AFTER_HOURS_OPTIONS,
+		editWorkStart,
+		editWorkEnd,
+		editAfterHours,
+		savingWorkSettings,
+		showAfterHoursBanner,
+		afterHoursBannerText,
+		afterHoursBannerOptions,
+		afterHoursBannerDismissed,
+		workDayRows,
+		toggleWorkDay,
+		workSettingsChanged,
+		workSettingsError,
+		saveWorkSettings,
+		pinnedMessageRows,
+		openPinnedMessage,
+		unpinFromList,
 		isPinned,
 		togglePinMessage,
-		unpinMessage,
-		pinnedMessageLabel,
-		scrollToPinnedMessage,
 		showDeleteClusterDialog,
 		clusterToDelete,
 		deletingCluster,
@@ -2278,7 +3344,6 @@ export default function setup(context) {
 		isMine,
 		senderSide,
 		showSenderSideBadge,
-		senderSideBadgeTheme,
 		isGrouped,
 		groupedMessages,
 		formatMessageTime,
@@ -2287,6 +3352,11 @@ export default function setup(context) {
 		formatDateDivider,
 		formatFullDateTime,
 		avatarTheme,
+		threadAvatarImage,
+		activeInboxTab,
+		activeThreadCount,
+		inactiveThreadCount,
+		filteredThreadList,
 		memberProfile,
 		memberDisplayName,
 		memberImage,
@@ -2294,6 +3364,31 @@ export default function setup(context) {
 		unifiedThreadList,
 		currentMessages,
 		connectWithUser,
+		showCommandPalette,
+		commandSearchQuery,
+		commandActiveIndex,
+		commandRows,
+		commandCompanyRows,
+		commandPeopleRows,
+		commandActionRows,
+		commandCompaniesTitle,
+		shortcutModifier,
+		handleCommandKeydown,
+		selectCommandItem,
+		showSearchPage,
+		searchResultOpen,
+		highlightedMessage,
+		flashedMessage,
+		messageSearchQuery,
+		messageSearchTab,
+		messageSearchConversation,
+		messageSearchRows,
+		messageSearchStatus,
+		messageSearchFilterOptions,
+		openMessageSearch,
+		closeSearchPage,
+		clearMessageSearchQuery,
+		openMessageSearchResult,
 		threadLinks,
 		threadFiles,
 		openLink,

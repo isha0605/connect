@@ -107,17 +107,23 @@ def notify_thread_members(doc, method=None):
 	if not members:
 		return
 
-	subject = "Shared requirement details" if doc.message_type == "Requirement" else frappe.utils.strip_html(doc.content)
-	enqueue_create_notification(
-		members,
-		{
-			"type": "Alert",
-			"document_type": "Connect Thread",
-			"document_name": doc.thread,
-			"subject": subject[:140],
-			"from_user": doc.sender,
-		},
-	)
+	if doc.message_type == "Requirement":
+		subject = "Shared requirement details"
+	else:
+		subject = frappe.utils.strip_html(doc.content)
+	# A silent message (sent outside the sender's working hours) is still delivered and pushed live, but
+	# doesn't ping anyone with a notification.
+	if not doc.flags.get("silent"):
+		enqueue_create_notification(
+			members,
+			{
+				"type": "Alert",
+				"document_type": "Connect Thread",
+				"document_name": doc.thread,
+				"subject": subject[:140],
+				"from_user": doc.sender,
+			},
+		)
 
 	# Live push for anyone with the thread open right now — same shape as the `messages`
 	# Document List resource in messaging.json, so the client can drop it straight into
@@ -133,6 +139,8 @@ def notify_thread_members(doc, method=None):
 		"file_name": doc.file_name,
 		"file_type": doc.file_type,
 		"file_size": doc.file_size,
+		"reply_to": doc.reply_to,
+		"is_forwarded": doc.is_forwarded,
 		"creation": str(doc.creation),
 	}
 	for member in members:
@@ -179,23 +187,42 @@ def notify_partner_of_new_requirement(doc, method=None):
 
 	customer_name = frappe.db.get_value("Customer", thread.customer, "customer_name") or thread.customer
 	requirement = frappe.parse_json(doc.content) if doc.content else {}
+	# Keep in sync with REQUIREMENT_FIELD_LABELS in studio/connect_2/studio_page/messaging/messaging.ts
+	# — that's the same requirement JSON blob rendered as the in-app requirement card.
 	fields = [
 		("Company", requirement.get("company_name")),
+		("Country", requirement.get("country")),
 		("Industry", requirement.get("industry")),
 		("Looking for", requirement.get("looking_for")),
 		("Company size", requirement.get("company_size")),
+		("Current setup", requirement.get("current_situation")),
 		("Timeline", requirement.get("timeline")),
+		("Delivery", requirement.get("delivery_preference")),
+		("Budget", requirement.get("budget")),
+		("Apps", ", ".join(requirement.get("apps")) if isinstance(requirement.get("apps"), list) else requirement.get("apps")),
 	]
 	details_html = "".join(
 		f"<p><b>{label}:</b> {frappe.utils.escape_html(value)}</p>" for label, value in fields if value
 	)
+	thread_url = frappe.utils.get_url(f"/connect/messaging?thread={doc.thread}")
 
-	frappe.sendmail(
-		recipients=[recipient],
-		subject=_("New requirement from {0}").format(customer_name),
-		message=f"<p>{frappe.utils.escape_html(customer_name)} {_('just sent a new requirement on Connect.')}</p>{details_html}",
-		now=False,
-	)
+	try:
+		frappe.sendmail(
+			recipients=[recipient],
+			subject=_("New requirement from {0}").format(customer_name),
+			message=(
+				f"<p>{frappe.utils.escape_html(customer_name)} {_('just sent a new requirement on Connect.')}</p>"
+				f"{details_html}"
+				f"<p><a href='{thread_url}'>{_('View conversation')}</a></p>"
+			),
+			# A brand-new lead notification is time-sensitive — send right after this request
+			# commits rather than waiting on the next scheduler tick to flush the email queue.
+			now=True,
+		)
+	except Exception:
+		# A missing/broken outgoing Email Account must never block the customer's message from
+		# sending — this email is a convenience alert, not the primary notification path.
+		frappe.log_error(title=f"New-requirement email failed for Connect Thread {doc.thread}")
 
 
 def notify_dm_recipient(doc, method=None):
@@ -205,22 +232,24 @@ def notify_dm_recipient(doc, method=None):
 		return
 	recipient = pair.user_b if pair.user_a == doc.sender else pair.user_a
 
-	enqueue_create_notification(
-		[recipient],
-		{
-			"type": "Alert",
-			"document_type": "Connect DM Thread",
-			"document_name": doc.dm_thread,
-			"subject": frappe.utils.strip_html(doc.content)[:140],
-			"from_user": doc.sender,
-		},
-	)
+	if not doc.flags.get("silent"):
+		enqueue_create_notification(
+			[recipient],
+			{
+				"type": "Alert",
+				"document_type": "Connect DM Thread",
+				"document_name": doc.dm_thread,
+				"subject": frappe.utils.strip_html(doc.content)[:140],
+				"from_user": doc.sender,
+			},
+		)
 
 	payload = {
 		"name": doc.name,
 		"dm_thread": doc.dm_thread,
 		"sender": doc.sender,
 		"content": doc.content,
+		"is_forwarded": doc.is_forwarded,
 		"creation": str(doc.creation),
 	}
 	frappe.publish_realtime("connect_new_dm_message", payload, user=recipient, after_commit=True)
@@ -246,36 +275,42 @@ def notify_dm_message_edited(doc):
 	frappe.publish_realtime("connect_dm_message_edited", payload, user=recipient, after_commit=True)
 
 
-def notify_dm_thread_pin_changed(thread_doc, message_doc, actor):
-	"""Live-pushes a pin/unpin change to the one other DM participant."""
-	recipient = thread_doc.user_b if thread_doc.user_a == actor else thread_doc.user_a
-	payload = {
-		"thread": thread_doc.name,
-		"pinned_message": message_doc.name if message_doc else None,
-		"sender": message_doc.sender if message_doc else None,
-		"message_type": message_doc.message_type if message_doc else None,
-		"content": message_doc.content if message_doc else None,
-		"file_name": message_doc.file_name if message_doc else None,
+def _pin_payload(thread, message_doc, is_pinned):
+	"""What a pin/unpin pushes to the other members. Clients refetch the pinned list; the message fields are
+	kept for pages that only render a single pinned banner from the event."""
+	return {
+		"thread": thread,
+		"message": message_doc.name,
+		"is_pinned": int(is_pinned),
+		"pinned_message": message_doc.name if is_pinned else None,
+		"sender": message_doc.sender if is_pinned else None,
+		"message_type": message_doc.message_type if is_pinned else None,
+		"content": message_doc.content if is_pinned else None,
+		"file_name": message_doc.file_name if is_pinned else None,
 	}
-	frappe.publish_realtime("connect_dm_thread_pin_changed", payload, user=recipient, after_commit=True)
 
 
-def notify_thread_pin_changed(thread_doc, message_doc, actor):
+def notify_dm_message_pin_changed(message_doc, actor, is_pinned):
+	"""Live-pushes a pin/unpin change to the one other DM participant."""
+	pair = frappe.db.get_value("Connect DM Thread", message_doc.dm_thread, ["user_a", "user_b"], as_dict=True)
+	if not pair:
+		return
+	recipient = pair.user_b if pair.user_a == actor else pair.user_a
+	frappe.publish_realtime(
+		"connect_dm_thread_pin_changed",
+		_pin_payload(message_doc.dm_thread, message_doc, is_pinned),
+		user=recipient,
+		after_commit=True,
+	)
+
+
+def notify_message_pin_changed(message_doc, actor, is_pinned):
 	"""Live-pushes a pin/unpin change to every other active thread member."""
 	members = frappe.get_all(
 		"Connect Thread Member",
-		filters={"thread": thread_doc.name, "is_removed": 0, "user": ["!=", actor]},
+		filters={"thread": message_doc.thread, "is_removed": 0, "user": ["!=", actor]},
 		pluck="user",
 	)
-	if not members:
-		return
-	payload = {
-		"thread": thread_doc.name,
-		"pinned_message": message_doc.name if message_doc else None,
-		"sender": message_doc.sender if message_doc else None,
-		"message_type": message_doc.message_type if message_doc else None,
-		"content": message_doc.content if message_doc else None,
-		"file_name": message_doc.file_name if message_doc else None,
-	}
+	payload = _pin_payload(message_doc.thread, message_doc, is_pinned)
 	for member in members:
 		frappe.publish_realtime("connect_thread_pin_changed", payload, user=member, after_commit=True)
