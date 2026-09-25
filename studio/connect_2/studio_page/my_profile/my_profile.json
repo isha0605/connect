@@ -126,7 +126,7 @@
          "componentProps": {
           "icon": "lucide-user",
           "label": "Profile",
-          "route": "/my-profile"
+          "to": "/my-profile"
          }
         },
         {
@@ -140,7 +140,7 @@
          "componentProps": {
           "icon": "lucide-search",
           "label": "Find partners",
-          "route": "/find-partners"
+          "to": "/find-partners"
          }
         },
         {
@@ -154,7 +154,7 @@
          "componentProps": {
           "icon": "lucide-bookmark",
           "label": "Shortlisted",
-          "route": "/shortlisted"
+          "to": "/shortlisted"
          }
         },
         {
@@ -165,7 +165,7 @@
          "componentProps": {
           "icon": "lucide-message-square",
           "label": "Chat",
-          "route": "/messaging-d87b"
+          "to": "/messaging-d87b"
          }
         },
         {
@@ -423,8 +423,10 @@
            "componentId": "FileUploader-logo",
            "componentName": "FileUploader",
            "componentProps": {
-            "private": false,
-            "uploadEndpoint": "/api/method/connect.api.partner.upload_partner_logo"
+            "uploadArgs": {
+             "private": false,
+             "upload_endpoint": "/api/method/connect.api.partner.upload_partner_logo"
+            }
            },
            "componentSlots": {
             "default": {
@@ -615,7 +617,6 @@
                "children": [
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-5)",
                   "flexShrink": "0",
                   "height": "14px",
                   "width": "14px"
@@ -623,9 +624,11 @@
                  "children": [],
                  "classes": [],
                  "componentId": "FeatherIcon-f008faed6",
-                 "componentName": "Icon",
+                 "componentName": "FeatherIcon",
                  "componentProps": {
-                  "icon": "lucide-star"
+                  "color": "var(--ink-gray-5)",
+                  "name": "star",
+                  "strokeWidth": 2
                  }
                 },
                 {
@@ -665,7 +668,6 @@
              "children": [
               {
                "baseStyles": {
-                "color": "var(--ink-gray-5)",
                 "flexShrink": "0",
                 "height": "14px",
                 "width": "14px"
@@ -673,9 +675,11 @@
                "children": [],
                "classes": [],
                "componentId": "FeatherIcon-ec063f775",
-               "componentName": "Icon",
+               "componentName": "FeatherIcon",
                "componentProps": {
-                "icon": "lucide-map-pin"
+                "color": "var(--ink-gray-5)",
+                "name": "map-pin",
+                "strokeWidth": 2
                }
               },
               {
@@ -727,7 +731,6 @@
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-5)",
                     "flexShrink": "0",
                     "height": "14px",
                     "width": "14px"
@@ -735,9 +738,11 @@
                    "children": [],
                    "classes": [],
                    "componentId": "Icon-preview-industry-label",
-                   "componentName": "Icon",
+                   "componentName": "FeatherIcon",
                    "componentProps": {
-                    "icon": "lucide-briefcase"
+                    "color": "var(--ink-gray-5)",
+                    "name": "briefcase",
+                    "strokeWidth": 2
                    }
                   },
                   {
@@ -839,7 +844,6 @@
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-5)",
                     "flexShrink": "0",
                     "height": "14px",
                     "width": "14px"
@@ -847,9 +851,11 @@
                    "children": [],
                    "classes": [],
                    "componentId": "Icon-preview-apps-label",
-                   "componentName": "Icon",
+                   "componentName": "FeatherIcon",
                    "componentProps": {
-                    "icon": "lucide-layers"
+                    "color": "var(--ink-gray-5)",
+                    "name": "layers",
+                    "strokeWidth": 2
                    }
                   },
                   {
@@ -939,7 +945,6 @@
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-5)",
                     "flexShrink": "0",
                     "height": "14px",
                     "width": "14px"
@@ -947,9 +952,11 @@
                    "children": [],
                    "classes": [],
                    "componentId": "Icon-preview-bp-label",
-                   "componentName": "Icon",
+                   "componentName": "FeatherIcon",
                    "componentProps": {
-                    "icon": "lucide-settings"
+                    "color": "var(--ink-gray-5)",
+                    "name": "settings",
+                    "strokeWidth": 2
                    }
                   },
                   {
@@ -1039,7 +1046,6 @@
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-5)",
                     "flexShrink": "0",
                     "height": "14px",
                     "width": "14px"
@@ -1047,9 +1053,11 @@
                    "children": [],
                    "classes": [],
                    "componentId": "Icon-preview-lang-label",
-                   "componentName": "Icon",
+                   "componentName": "FeatherIcon",
                    "componentProps": {
-                    "icon": "lucide-globe"
+                    "color": "var(--ink-gray-5)",
+                    "name": "globe",
+                    "strokeWidth": 2
                    }
                   },
                   {
@@ -1183,7 +1191,7 @@
                  "name": "activeTab"
                 },
                 "options": "{{ [ { label: 'About', value: 'about' }, { label: 'Success Stories (' + ((editSuccessStories || []).length) + ')', value: 'success_stories' }, { label: 'Reviews', value: 'reviews' }, { label: 'Pricing', value: 'pricing' } ] }}",
-                "variant": "subtle"
+                "type": "subtle"
                }
               },
               {
@@ -1645,8 +1653,10 @@
                      "componentId": "FileUploader-founder-photo",
                      "componentName": "FileUploader",
                      "componentProps": {
-                      "private": false,
-                      "uploadEndpoint": "/api/method/connect.api.partner.upload_partner_asset"
+                      "uploadArgs": {
+                       "private": false,
+                       "upload_endpoint": "/api/method/connect.api.partner.upload_partner_asset"
+                      }
                      },
                      "componentSlots": {
                       "default": {
@@ -1732,9 +1742,10 @@
                              "classes": [],
                              "componentEvents": {},
                              "componentId": "Icon-founder-photo-placeholder",
-                             "componentName": "Icon",
+                             "componentName": "FeatherIcon",
                              "componentProps": {
-                              "icon": "lucide-user"
+                              "name": "user",
+                              "strokeWidth": 2
                              },
                              "componentSlots": {},
                              "mobileStyles": {},
@@ -2840,9 +2851,10 @@
                            "classes": [],
                            "componentEvents": {},
                            "componentId": "Icon-apps-chip-remove",
-                           "componentName": "Icon",
+                           "componentName": "FeatherIcon",
                            "componentProps": {
-                            "icon": "lucide-x"
+                            "name": "x",
+                            "strokeWidth": 2
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
@@ -3033,9 +3045,10 @@
                            "classes": [],
                            "componentEvents": {},
                            "componentId": "Icon-migrations-chip-remove",
-                           "componentName": "Icon",
+                           "componentName": "FeatherIcon",
                            "componentProps": {
-                            "icon": "lucide-x"
+                            "name": "x",
+                            "strokeWidth": 2
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
@@ -3226,9 +3239,10 @@
                            "classes": [],
                            "componentEvents": {},
                            "componentId": "Icon-business-processes-chip-remove",
-                           "componentName": "Icon",
+                           "componentName": "FeatherIcon",
                            "componentProps": {
-                            "icon": "lucide-x"
+                            "name": "x",
+                            "strokeWidth": 2
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
@@ -3419,9 +3433,10 @@
                            "classes": [],
                            "componentEvents": {},
                            "componentId": "Icon-languages-chip-remove",
-                           "componentName": "Icon",
+                           "componentName": "FeatherIcon",
                            "componentProps": {
-                            "icon": "lucide-x"
+                            "name": "x",
+                            "strokeWidth": 2
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
@@ -3892,18 +3907,9 @@
                    "children": [],
                    "classes": [],
                    "componentId": "AxisChart-reviews",
-                   "componentName": "AreaChart",
+                   "componentName": "AxisChart",
                    "componentProps": {
-                    "data": "{{ reviewChartData }}",
-                    "seriesConfig": "{{ reviewChartSeriesConfig }}",
-                    "x": "period",
-                    "xAxis": "{{ reviewChartXAxis }}",
-                    "y": "{{ reviewChartY }}",
-                    "yAxis": {
-                     "max": 5,
-                     "min": 0,
-                     "title": "Average Score"
-                    }
+                    "config": "{{ reviewChartConfig }}"
                    },
                    "visibilityCondition": "myReviews.data && (myReviews.data || []).length"
                   },
@@ -6131,7 +6137,7 @@
          "componentProps": {
           "icon": "lucide-user",
           "label": "Profile",
-          "route": "/my-profile"
+          "to": "/my-profile"
          }
         },
         {
@@ -6145,7 +6151,7 @@
          "componentProps": {
           "icon": "lucide-search",
           "label": "Find partners",
-          "route": "/find-partners"
+          "to": "/find-partners"
          }
         },
         {
@@ -6159,7 +6165,7 @@
          "componentProps": {
           "icon": "lucide-bookmark",
           "label": "Shortlisted",
-          "route": "/shortlisted"
+          "to": "/shortlisted"
          }
         },
         {
@@ -6170,7 +6176,7 @@
          "componentProps": {
           "icon": "lucide-message-square",
           "label": "Chat",
-          "route": "/messaging-d87b"
+          "to": "/messaging-d87b"
          }
         },
         {
@@ -6428,8 +6434,10 @@
            "componentId": "FileUploader-logo",
            "componentName": "FileUploader",
            "componentProps": {
-            "private": false,
-            "uploadEndpoint": "/api/method/connect.api.partner.upload_partner_logo"
+            "uploadArgs": {
+             "private": false,
+             "upload_endpoint": "/api/method/connect.api.partner.upload_partner_logo"
+            }
            },
            "componentSlots": {
             "default": {
@@ -6620,7 +6628,6 @@
                "children": [
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-5)",
                   "flexShrink": "0",
                   "height": "14px",
                   "width": "14px"
@@ -6628,9 +6635,11 @@
                  "children": [],
                  "classes": [],
                  "componentId": "FeatherIcon-f008faed6",
-                 "componentName": "Icon",
+                 "componentName": "FeatherIcon",
                  "componentProps": {
-                  "icon": "lucide-star"
+                  "color": "var(--ink-gray-5)",
+                  "name": "star",
+                  "strokeWidth": 2
                  }
                 },
                 {
@@ -6670,7 +6679,6 @@
              "children": [
               {
                "baseStyles": {
-                "color": "var(--ink-gray-5)",
                 "flexShrink": "0",
                 "height": "14px",
                 "width": "14px"
@@ -6678,9 +6686,11 @@
                "children": [],
                "classes": [],
                "componentId": "FeatherIcon-ec063f775",
-               "componentName": "Icon",
+               "componentName": "FeatherIcon",
                "componentProps": {
-                "icon": "lucide-map-pin"
+                "color": "var(--ink-gray-5)",
+                "name": "map-pin",
+                "strokeWidth": 2
                }
               },
               {
@@ -6732,7 +6742,6 @@
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-5)",
                     "flexShrink": "0",
                     "height": "14px",
                     "width": "14px"
@@ -6740,9 +6749,11 @@
                    "children": [],
                    "classes": [],
                    "componentId": "Icon-preview-industry-label",
-                   "componentName": "Icon",
+                   "componentName": "FeatherIcon",
                    "componentProps": {
-                    "icon": "lucide-briefcase"
+                    "color": "var(--ink-gray-5)",
+                    "name": "briefcase",
+                    "strokeWidth": 2
                    }
                   },
                   {
@@ -6844,7 +6855,6 @@
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-5)",
                     "flexShrink": "0",
                     "height": "14px",
                     "width": "14px"
@@ -6852,9 +6862,11 @@
                    "children": [],
                    "classes": [],
                    "componentId": "Icon-preview-apps-label",
-                   "componentName": "Icon",
+                   "componentName": "FeatherIcon",
                    "componentProps": {
-                    "icon": "lucide-layers"
+                    "color": "var(--ink-gray-5)",
+                    "name": "layers",
+                    "strokeWidth": 2
                    }
                   },
                   {
@@ -6944,7 +6956,6 @@
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-5)",
                     "flexShrink": "0",
                     "height": "14px",
                     "width": "14px"
@@ -6952,9 +6963,11 @@
                    "children": [],
                    "classes": [],
                    "componentId": "Icon-preview-bp-label",
-                   "componentName": "Icon",
+                   "componentName": "FeatherIcon",
                    "componentProps": {
-                    "icon": "lucide-settings"
+                    "color": "var(--ink-gray-5)",
+                    "name": "settings",
+                    "strokeWidth": 2
                    }
                   },
                   {
@@ -7044,7 +7057,6 @@
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-5)",
                     "flexShrink": "0",
                     "height": "14px",
                     "width": "14px"
@@ -7052,9 +7064,11 @@
                    "children": [],
                    "classes": [],
                    "componentId": "Icon-preview-lang-label",
-                   "componentName": "Icon",
+                   "componentName": "FeatherIcon",
                    "componentProps": {
-                    "icon": "lucide-globe"
+                    "color": "var(--ink-gray-5)",
+                    "name": "globe",
+                    "strokeWidth": 2
                    }
                   },
                   {
@@ -7188,7 +7202,7 @@
                  "name": "activeTab"
                 },
                 "options": "{{ [ { label: 'About', value: 'about' }, { label: 'Success Stories (' + ((editSuccessStories || []).length) + ')', value: 'success_stories' }, { label: 'Reviews', value: 'reviews' }, { label: 'Pricing', value: 'pricing' } ] }}",
-                "variant": "subtle"
+                "type": "subtle"
                }
               },
               {
@@ -7650,8 +7664,10 @@
                      "componentId": "FileUploader-founder-photo",
                      "componentName": "FileUploader",
                      "componentProps": {
-                      "private": false,
-                      "uploadEndpoint": "/api/method/connect.api.partner.upload_partner_asset"
+                      "uploadArgs": {
+                       "private": false,
+                       "upload_endpoint": "/api/method/connect.api.partner.upload_partner_asset"
+                      }
                      },
                      "componentSlots": {
                       "default": {
@@ -7737,9 +7753,10 @@
                              "classes": [],
                              "componentEvents": {},
                              "componentId": "Icon-founder-photo-placeholder",
-                             "componentName": "Icon",
+                             "componentName": "FeatherIcon",
                              "componentProps": {
-                              "icon": "lucide-user"
+                              "name": "user",
+                              "strokeWidth": 2
                              },
                              "componentSlots": {},
                              "mobileStyles": {},
@@ -8845,9 +8862,10 @@
                            "classes": [],
                            "componentEvents": {},
                            "componentId": "Icon-apps-chip-remove",
-                           "componentName": "Icon",
+                           "componentName": "FeatherIcon",
                            "componentProps": {
-                            "icon": "lucide-x"
+                            "name": "x",
+                            "strokeWidth": 2
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
@@ -9038,9 +9056,10 @@
                            "classes": [],
                            "componentEvents": {},
                            "componentId": "Icon-migrations-chip-remove",
-                           "componentName": "Icon",
+                           "componentName": "FeatherIcon",
                            "componentProps": {
-                            "icon": "lucide-x"
+                            "name": "x",
+                            "strokeWidth": 2
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
@@ -9231,9 +9250,10 @@
                            "classes": [],
                            "componentEvents": {},
                            "componentId": "Icon-business-processes-chip-remove",
-                           "componentName": "Icon",
+                           "componentName": "FeatherIcon",
                            "componentProps": {
-                            "icon": "lucide-x"
+                            "name": "x",
+                            "strokeWidth": 2
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
@@ -9424,9 +9444,10 @@
                            "classes": [],
                            "componentEvents": {},
                            "componentId": "Icon-languages-chip-remove",
-                           "componentName": "Icon",
+                           "componentName": "FeatherIcon",
                            "componentProps": {
-                            "icon": "lucide-x"
+                            "name": "x",
+                            "strokeWidth": 2
                            },
                            "componentSlots": {},
                            "mobileStyles": {},
@@ -9897,18 +9918,9 @@
                    "children": [],
                    "classes": [],
                    "componentId": "AxisChart-reviews",
-                   "componentName": "AreaChart",
+                   "componentName": "AxisChart",
                    "componentProps": {
-                    "data": "{{ reviewChartData }}",
-                    "seriesConfig": "{{ reviewChartSeriesConfig }}",
-                    "x": "period",
-                    "xAxis": "{{ reviewChartXAxis }}",
-                    "y": "{{ reviewChartY }}",
-                    "yAxis": {
-                     "max": 5,
-                     "min": 0,
-                     "title": "Average Score"
-                    }
+                    "config": "{{ reviewChartConfig }}"
                    },
                    "visibilityCondition": "myReviews.data && (myReviews.data || []).length"
                   },

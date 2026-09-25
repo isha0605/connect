@@ -1,5 +1,6 @@
 import { ref, computed, watch, onScopeDispose, nextTick } from "vue"
-import { toast, call, useFileUpload, initSocket, setConfig } from "frappe-ui"
+import { toast, call, useFileUpload, setConfig } from "frappe-ui"
+import { io } from "socket.io-client"
 
 export default function setup(context) {
 	// ---- State ----
@@ -283,13 +284,17 @@ export default function setup(context) {
 	// connect.connect.notifications.notify_thread_members publishes this event straight to
 	// a thread's other members the instant a message is sent — the sender's own tab already
 	// reloads after sendMessage(), so this is purely for tabs that didn't send it.
-	// frappe-ui's initSocket() only computes the connection namespace from window.location in
-	// dev builds — in production it reads window.site_name, which nothing on this page sets,
-	// so it silently connects to namespace "/undefined" and the server rejects it (400 on the
-	// socket.io handshake). window.location.hostname is what the server actually expects
-	// (matches its own site-name resolution from the request's Origin header) in both cases.
-	if (!(window as any).site_name) (window as any).site_name = window.location.hostname
-	const socket = initSocket()
+	// frappe-ui 1.0.0-rc.1 dropped initSocket(), so the connection is opened here — these are
+	// the same lines it ran. It keyed the namespace off window.site_name in production builds,
+	// which nothing on this page sets, so it silently connected to "/undefined" and the server
+	// rejected the handshake with a 400. window.location.hostname is what the server actually
+	// expects (it matches its own site-name resolution from the request's Origin header), so
+	// the URL is built from that directly rather than by assigning to a global.
+	const socketPort = window.location.port ? ":9000" : ""
+	const socket = io(`${socketPort ? "http" : "https"}://${window.location.hostname}${socketPort}/${window.location.hostname}`, {
+		withCredentials: true,
+		reconnectionAttempts: 5,
+	})
 
 	// Without this, useFileUpload's client-side size check (fileSizeLimitMessage) has no
 	// limit to compare against and silently lets oversized files through to the raw upload,
