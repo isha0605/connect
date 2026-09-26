@@ -1,11 +1,62 @@
-import { ref, computed, watch, onScopeDispose, nextTick } from "vue"
+import { ref, computed, watch, onScopeDispose, nextTick, h } from "vue"
 import { toast, call, useFileUpload, setConfig } from "frappe-ui"
 import { io } from "socket.io-client"
+
+// Raven's FileTypeIcon (apps/web/src/components/common/FileIcons/FileTypeIcon.tsx, size "lg"):
+// a 28px coloured tile with a white glyph. PDF / Word / Excel / PowerPoint are Raven's own marks;
+// the rest are the Lucide icons it uses. Keyed by extension, exactly as Raven switches on it.
+const LUCIDE_FILE_GLYPHS = {
+	"file": '<path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" />',
+	"file-text": '<path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" />',
+	"film": '<rect width="18" height="18" x="3" y="3" rx="2" /><path d="M7 3v18" /><path d="M3 7.5h4" /><path d="M3 12h18" /><path d="M3 16.5h4" /><path d="M17 3v18" /><path d="M17 7.5h4" /><path d="M17 16.5h4" />',
+	"music": '<path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />',
+	"image": '<rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />',
+	"folder-archive": '<circle cx="15" cy="19" r="2" /><path d="M20.9 19.8A2 2 0 0 0 22 18V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h5.1" /><path d="M15 11v-1" /><path d="M15 17v-2" />',
+	"presentation": '<path d="M2 3h20" /><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3" /><path d="m7 21 5-5 5 5" />',
+	"code": '<path d="m16 18 6-6-6-6" /><path d="m8 6-6 6 6 6" />',
+}
+const RAVEN_FILE_GLYPHS = {
+	pdf: '<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M7 22.9c.1-.6.5-1 .9-1.4.5-.5 1.1-.8 1.8-1.2.7-.4 1.4-.7 2.1-1 .1 0 .2-.1.2-.2.6-1.2 1.2-2.4 1.7-3.6.3-.7.5-1.4.8-2.1v-.1c-.3-.7-.6-1.5-.7-2.3-.2-.8-.2-1.6-.1-2.4.1-.5.4-.9.8-1.3.1-.1.3-.1.5-.1h.8c.2 0 .4.1.5.3.3.2.5.5.7.8.2.4.2.8.3 1.2 0 1.2-.2 2.3-.4 3.4-.1.4-.2.7-.3 1.1v.1c.6 1.1 1.4 2.1 2.2 3 .1.1.1.1.3.1 1.1-.2 2.2-.2 3.2-.2.6 0 1.3.1 1.9.4.3.2.6.4.8.7.1.2.2.4.2.6v.7c0 .2-.1.4-.3.5-.2.2-.4.5-.8.5-.2 0-.5.1-.7.1-1.6.1-2.9-.4-4.2-1.3-.2-.2-.5-.4-.7-.6-.1 0-.1-.1-.2-.1-.6.1-1.2.2-1.8.4-.8.2-1.6.5-2.4.7-.1 0-.1.1-.2.1-.5.9-1.1 1.8-1.7 2.6-.5.6-1.1 1.2-1.7 1.7-.3.2-.7.4-1.1.5h-.8c-.2 0-.3 0-.5-.1-.5-.2-.9-.6-1-1.1-.1 0-.1-.2-.1-.4zm8.8-7c-.3.8-.7 1.6-1 2.4l2.4-.6c-.5-.6-1-1.3-1.4-1.8zm4.3 2.6c.6.4 1.3.7 2 .9.3.1.5 0 .7-.1.2-.1.3-.4.1-.5 0-.1-.1-.1-.2-.1-.2-.1-.5-.1-.8-.2-.6-.1-1.2-.1-1.8 0zm-9.4 2.8s-.1 0 0 0c-.6.3-1.2.7-1.7 1.1-.3.2-.5.5-.7.8v.2c.1.1.1.1.2.1.3-.2.5-.4.7-.5.6-.5 1-1.1 1.5-1.7zM15 11.2c.1 0 .1 0 0 0 .2-.6.3-1.2.3-1.7 0-.3 0-.6-.1-.9 0-.1-.1-.1-.2-.1s-.1.1-.2.1c-.2.3-.2.6-.2 1 0 .3 0 .5.1.8.2.2.2.5.3.8z" fill="currentColor" /></svg>',
+	word: '<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M26 11.4V8.8c0-.4-.3-.8-.8-.8h-7.3V6.2h-1.4c-.2 0-.3.1-.5.1-.7.1-1.4.3-2.1.4-.7.1-1.4.2-2 .4-.7.1-1.4.2-2.2.4-.8.1-1.5.2-2.2.3-.5.1-1 .2-1.4.2H6v15.9c.8.1 1.6.3 2.4.4.8.1 1.7.3 2.5.4.8.1 1.6.3 2.4.4.8.1 1.7.3 2.5.5.3.1.7.1 1 .1h.9V24c0-.1 0-.1.1-.1h7.3c.1 0 .3 0 .4-.1.2 0 .3-.1.3-.3 0-.2.1-.3.1-.5V11.4c.1.1.1.1.1 0zm-11 1.5l-.9 3.9c-.2.7-.3 1.4-.5 2.2 0 .1-.1.1-.1.1-.2.1-.4 0-.6 0h-.6c-.1 0-.1 0-.1-.1-.1-.6-.3-1.3-.4-1.9-.2-.8-.3-1.6-.5-2.4 0 .2-.1.4-.1.6l-.6 3c0 .2-.1.5-.1.7 0 .1 0 .1-.1.1-.4 0-.8-.1-1.2-.1-.1 0-.1 0-.1-.1-.3-1.6-.6-3.2-1-4.9-.1-.3-.1-.7-.2-1v-.1h1.2c.2 1.4.5 2.8.7 4.3 0-.2.1-.4.1-.6.3-1.2.5-2.5.8-3.7 0-.1 0-.1.1-.1h1c.2 0 .2 0 .3.2.3 1.4.6 2.8.9 4.3v.1c.1-.8.3-1.6.4-2.4.1-.7.3-1.5.4-2.2 0 0 0-.1.1-.1.4 0 .8 0 1.3-.1h.1c-.2 0-.3.2-.3.3zm10.3-4.1s0 .1 0 0v14.5h-7.5v-1.8h5.9v-.9H18c-.1 0-.1 0-.1-.1v-.9c0-.1 0-.1.1-.1h5.8v-.9h-5.9v-1.1h5.8v-.9h-5.9v-1h5.8c.1 0 .1 0 .1-.1v-.7c0-.1 0-.1-.1-.1H18c-.1 0-.1 0-.1-.1v-1h5.9v-.9h-5.7c-.1 0-.1 0-.1-.1v-.9c0-.1 0-.1.1-.1h5.7v-.9h-5.9v-1.2h5.8c.1 0 .1 0 .1-.1v-.7c0-.1 0-.1-.1-.1h-5.9V9c0-.1 0-.1.1-.1h7.3c.1-.2.1-.2.1-.1z" fill="currentColor" /></svg>',
+	excel: '<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M26 9.3v13.6c0 .1-.1.2-.1.3-.2.3-.5.5-.8.5h-7.7v2c-.3-.1-.7-.1-1-.2-.7-.1-1.5-.3-2.2-.4-.8-.1-1.6-.3-2.4-.4-.8-.1-1.6-.3-2.4-.4-.7-.1-1.5-.3-2.2-.4-.4-.1-.7-.1-1.1-.2V9c.1 0 .3-.1.4-.1.7-.5 1.5-.7 2.3-.8.7-.1 1.4-.3 2-.4.6-.1 1.3-.2 1.9-.4.7-.1 1.5-.3 2.2-.4.8-.1 1.5-.3 2.3-.4h.1v1.9h7.8c.4 0 .8.3.9.7v.2zm-.8-.1h-7.9v1.2H20v1.7h-2.7v.6H20v1.7h-2.7v.6H20v1.7h-2.7v.7h2.8v1.7h-2.8v.6H20v1.7h-2.7v1.2h7.9V9.2zM14.7 20.7s0-.1-.1-.1c-.7-1.4-1.5-2.8-2.2-4.2v-.2c.7-1.4 1.4-2.7 2.2-4.1V12h-.1c-.2 0-.5 0-.7.1-.3 0-.6 0-1 .1-.1 0-.1 0-.1.1-.3.6-.5 1.1-.8 1.7-.2.5-.4.9-.6 1.4-.1-.2-.1-.5-.2-.7-.3-.7-.6-1.5-.9-2.2-.1-.2-.1-.2-.3-.2-.4 0-.8.1-1.2.1h-.4v.1c.1.2.2.5.3.7l1.5 3v.1c-.6 1.2-1.3 2.4-1.9 3.6 0 .1-.1.1-.1.2h.6c.4 0 .7.1 1.1.1.1 0 .1 0 .1-.1.3-.6.6-1.2.9-1.9.1-.3.3-.6.4-.9 0-.1 0-.2.1-.3v.1c.1.2.1.4.2.5.4.8.7 1.6 1.1 2.5.1.1.1.2.3.2.5 0 1 .1 1.5.1.1.3.2.3.3.3z" fill="currentColor" /><path d="M23.9 10.4v1.7h-3.1v-1.7h3.1zm-3.1 11.2v-1.7h3.1v1.7h-3.1zm0-4.7v-1.7h3.1v1.7h-3.1zm3.1-4.1v1.7h-3.1v-1.7h3.1zm0 4.8v1.7h-3.1v-1.7h3.1z" fill="currentColor" /></svg>',
+	powerpoint: '<svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 122.88 116.03"><g><path d="M0.38,12.11L69.16,0.09L69.69,0v0.54v114.96v0.53l-0.53-0.09L0.38,104.63L0,104.57v-0.38V12.55v-0.38L0.38,12.11 L0.38,12.11z M76.29,17.01h43.79c0.77,0,1.47,0.32,1.98,0.82c0.51,0.51,0.82,1.21,0.82,1.98v76.75c0,0.78-0.32,1.5-0.84,2.01 s-1.23,0.84-2.01,0.84H76.29h-0.45v-0.45v-9.16v-0.45h0.45h33.62v-6.15H76.29h-0.45v-0.45v-7.17V75.1h0.45h33.62v-6.15H76.29h-0.45 v-0.45v-8.49v-0.88l0.71,0.51c1.32,0.94,2.79,1.68,4.36,2.18c1.52,0.48,3.14,0.74,4.82,0.74c4.38,0,8.34-1.78,11.21-4.64 c2.82-2.82,4.59-6.7,4.64-11H85.83h-0.45v-0.45V30.86c-1.56,0.03-3.06,0.29-4.47,0.74c-1.57,0.5-3.04,1.24-4.36,2.18l-0.71,0.51 v-0.88V17.46v-0.45H76.29L76.29,17.01z M99.26,32.75c-2.76-2.77-6.54-4.52-10.73-4.65v15.48h15.36 C103.79,39.35,102.04,35.53,99.26,32.75L99.26,32.75z M30.91,80.41V63.97v-0.45h0.45h6.22c2.41,0,4.56-0.35,6.45-1.05 c1.87-0.7,3.49-1.75,4.86-3.15c1.37-1.4,2.39-3.04,3.08-4.91c0.69-1.88,1.03-4,1.03-6.37c0-1.61-0.16-3.12-0.48-4.55 c-0.32-1.42-0.79-2.76-1.43-4.01c-0.63-1.25-1.4-2.36-2.29-3.32c-0.89-0.96-1.91-1.78-3.06-2.45c-2.31-1.35-4.97-2.03-7.98-2.03 H22.07v48.75H30.91L30.91,80.41z M37.76,55.2h-6.39h-0.45v-0.45V40.43v-0.45h0.45h6.51l0.01,0c0.95,0.01,1.81,0.21,2.57,0.59 c0.76,0.38,1.41,0.95,1.96,1.71h0c0.54,0.74,0.95,1.6,1.21,2.58c0.27,0.97,0.4,2.05,0.4,3.24c0,1.1-0.13,2.08-0.39,2.94h0 c-0.27,0.88-0.67,1.63-1.21,2.26c-0.54,0.63-1.21,1.11-2,1.43C39.65,55.05,38.76,55.2,37.76,55.2L37.76,55.2z" fill="currentColor" /></g></svg>',
+}
+
+function lucideSvg(name) {
+	return (
+		'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ' +
+		'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+		LUCIDE_FILE_GLYPHS[name] +
+		"</svg>"
+	)
+}
+
+// Raven's renderIcon + getBackgroundColor switches as one table. Its Tailwind colours are
+// Espresso's, so --red-500 etc. resolve to the same hex here; Word and PowerPoint are raw hex there too.
+const FILE_TYPE_TILES = [
+	{ exts: ["pdf"], bg: "var(--red-500)", glyph: RAVEN_FILE_GLYPHS.pdf },
+	{ exts: ["doc", "docx"], bg: "#1A5CBD", glyph: RAVEN_FILE_GLYPHS.word },
+	{ exts: ["xls", "xlsx", "csv"], bg: "var(--green-700)", glyph: RAVEN_FILE_GLYPHS.excel },
+	{ exts: ["ppt", "pptx"], bg: "#ED6C47", glyph: RAVEN_FILE_GLYPHS.powerpoint },
+	{ exts: ["video", "mp4", "mov", "mkv", "avi", "webm"], bg: "var(--purple-600)", glyph: lucideSvg("film") },
+	{ exts: ["audio", "mp3", "wav", "ogg", "flac"], bg: "var(--purple-600)", glyph: lucideSvg("music") },
+	{ exts: ["image", "jpg", "jpeg", "png", "gif", "webp"], bg: "var(--blue-600)", glyph: lucideSvg("image") },
+	{ exts: ["zip", "rar", "7z", "tar", "gz"], bg: "var(--yellow-600)", glyph: lucideSvg("folder-archive") },
+	{ exts: ["key"], bg: "var(--blue-600)", glyph: lucideSvg("presentation") },
+	{ exts: ["txt", "md"], bg: "var(--gray-500)", glyph: lucideSvg("file-text") },
+	{
+		exts: ["py", "js", "ts", "jsx", "tsx", "json", "html", "css", "scss", "sass", "java", "c", "cpp", "c#", "c++", "php"],
+		bg: "var(--gray-500)",
+		glyph: lucideSvg("code"),
+	},
+]
+const DEFAULT_FILE_TILE = { bg: "var(--gray-500)", glyph: lucideSvg("file") }
 
 export default function setup(context) {
 	// ---- State ----
 	const selectedThread = ref("")
 	const draftMessage = ref("")
+	let draftTimer = null
 	const draftAttachments = ref([])
 	let nextAttachmentId = 1
 	const showMembersDialog = ref(false)
@@ -147,59 +198,419 @@ export default function setup(context) {
 		return "Group created on " + formatOrdinalDate(new Date(t.creation))
 	}
 
+	// ---- CRM connection (partner admins only) ----
+	// Partner CRM Settings drives crm_integration: the first message in a thread opens a Lead on
+	// the partner's own Frappe CRM, later messages attach to it as emails, and saving credentials
+	// registers a webhook there so replies come back into the thread. The API secret is write-only
+	// -- the server never returns it, so the form reports whether one is stored and lets it be
+	// replaced, and a blank field means "keep the stored secret".
+	const crmSiteUrl = ref("")
+	const crmApiKey = ref("")
+	const crmApiSecret = ref("")
+	const crmLeadStatus = ref("")
+	const crmEnabled = ref(false)
+	const crmSecretStored = ref(false)
+	const crmWebhookConnected = ref(false)
+	const crmSaving = ref(false)
+	const crmError = ref("")
+	const crmLoaded = ref(false)
+
+	function applyCrmSettings(s) {
+		if (!s) return
+		crmSiteUrl.value = s.site_url || ""
+		crmApiKey.value = s.api_key || ""
+		crmLeadStatus.value = s.default_lead_status || ""
+		crmEnabled.value = !!s.enabled
+		crmSecretStored.value = !!s.api_secret_set
+		crmWebhookConnected.value = !!s.reply_webhook_connected
+		crmApiSecret.value = ""
+	}
+
+	function loadCrmSettings() {
+		if (crmLoaded.value) return
+		crmLoaded.value = true
+		call("connect.api.partner.get_my_crm_settings")
+			.then(applyCrmSettings)
+			// a non-partner (or a partner who isn't an admin) is refused server-side; the section is
+			// hidden for them anyway, so there is nothing to report here
+			.catch(() => {})
+	}
+
+	function crmStatusLabel() {
+		if (!crmSecretStored.value) return "Not connected"
+		if (!crmEnabled.value) return "Connected, sync paused"
+		return crmWebhookConnected.value ? "Connected, replies syncing" : "Connected"
+	}
+
+	function saveCrmSettings() {
+		crmError.value = ""
+		if (!crmSiteUrl.value || !crmApiKey.value || !crmLeadStatus.value) {
+			crmError.value = "Site URL, API key and default lead status are all required."
+			return
+		}
+		if (!crmSecretStored.value && !crmApiSecret.value) {
+			crmError.value = "An API secret is required to connect a CRM."
+			return
+		}
+		crmSaving.value = true
+		call("connect.api.partner.save_my_crm_settings", {
+				site_url: crmSiteUrl.value,
+				api_key: crmApiKey.value,
+				api_secret: crmApiSecret.value,
+				default_lead_status: crmLeadStatus.value,
+				enabled: crmEnabled.value ? 1 : 0,
+			})
+			.then((s) => {
+				applyCrmSettings(s)
+				toast.success("CRM settings saved")
+			})
+			.catch((e) => {
+				crmError.value = (e && e.message) || "Could not save CRM settings."
+			})
+			.finally(() => {
+				crmSaving.value = false
+			})
+	}
+
+	// The side panels share one slot in members-panel-body, so opening any of them has to
+	// close the rest. Setting the flags at each call site meant a new panel had to be added
+	// to every existing trigger, and missing one rendered two panels at once.
+	function openPanel(panel) {
+		showMembersDialog.value = panel === "members"
+		showMediaDialog.value = panel === "media"
+	}
+
+	// The panel header is shared by every side panel, so its title is resolved here rather
+	// than as a chain of ternaries inside a {{ }} binding.
+	function panelTitle() {
+		if (showMediaDialog.value) return "Media"
+		return "Members"
+	}
+
 	function isPanelOpen() {
-		return showMembersDialog.value || showMediaDialog.value || showTemplatesDialog.value
+		return showMembersDialog.value || showMediaDialog.value
 	}
 
 	function myMessageTemplates() {
 		return context.myTemplates.data || []
 	}
 
-	// ---- Template search + create ----
+	// ---- Templates dialog ----
+	// Modelled on Helpdesk's Saved Replies: one dialog that swaps between the list (search, scope
+	// filter, cards) and the "new template" form, instead of stacking a second dialog on top.
+	// Scopes: Personal (only me), Team (my company), Global (side-wide, managed in Desk).
+	const TEMPLATE_SCOPE_LABELS = { All: "All", Personal: "Personal", Team: "My Team", Global: "Global" }
+	const TEMPLATE_SCOPE_ICONS = { Personal: "lucide-user", Team: "lucide-users", Global: "lucide-globe" }
+
+	const templatesView = ref("list")
 	const templateSearchQuery = ref("")
-	const showCreateTemplateForm = ref(false)
+	const templateScopeFilter = ref("Personal")
 	const newTemplateTitle = ref("")
 	const newTemplateContent = ref("")
+	const newTemplateScope = ref("Personal")
+	// The template the form is editing, or null when it's creating a new one.
+	const editingTemplateName = ref(null)
 	const creatingTemplate = ref(false)
+
+	function openTemplatesDialog() {
+		clearTimeout(templateSearchTimer)
+		templatesView.value = "list"
+		templateSearchQuery.value = ""
+		showTemplatesDialog.value = true
+	}
+
+	// The search box keeps its own text; only the query the grid filters by is page state. Studio
+	// re-evaluates every {{ }} on the page whenever any returned ref changes (the chat behind the
+	// dialog included), so updating it on every keystroke made typing lag ~250ms. Pushing it
+	// after a short pause keeps typing at native speed.
+	let templateSearchTimer = null
+	function onTemplateSearchInput(event) {
+		const value = typeof event === "string" ? event : (event?.target?.value ?? "")
+		clearTimeout(templateSearchTimer)
+		templateSearchTimer = setTimeout(() => {
+			templateSearchQuery.value = value
+		}, 150)
+	}
+
+	function templateScopeLabel(scope) {
+		return TEMPLATE_SCOPE_LABELS[scope] || scope
+	}
+
+	function templatesInScope(scope) {
+		const templates = myMessageTemplates()
+		return scope === "All" ? templates : templates.filter((t) => (t.scope || "Personal") === scope)
+	}
+
+	// Each row carries its count on the right, like Helpdesk's filter ("Personal   2").
+	function templateScopeFilterOptions() {
+		return ["All", "Personal", "Team", "Global"].map((scope) => ({
+			label: templateScopeLabel(scope),
+			selected: templateScopeFilter.value === scope,
+			onClick: () => {
+				templateScopeFilter.value = scope
+			},
+			slots: {
+				suffix: () => h("span", { class: "text-sm text-ink-gray-5" }, String(templatesInScope(scope).length)),
+			},
+		}))
+	}
 
 	function filteredMessageTemplates() {
 		const query = templateSearchQuery.value.trim().toLowerCase()
-		const templates = myMessageTemplates()
+		const templates = templatesInScope(templateScopeFilter.value)
 		if (!query) return templates
 		return templates.filter(
 			(t) => (t.title || "").toLowerCase().includes(query) || (t.content || "").toLowerCase().includes(query),
 		)
 	}
 
-	function openCreateTemplateForm() {
-		showCreateTemplateForm.value = true
-		newTemplateTitle.value = ""
-		newTemplateContent.value = ""
+	function templatesEmptyMessage() {
+		if (templateSearchQuery.value.trim()) return "No templates match your search."
+		if (templateScopeFilter.value === "All") return "No templates yet."
+		return "No " + templateScopeLabel(templateScopeFilter.value).toLowerCase() + " templates yet."
 	}
 
-	function closeCreateTemplateForm() {
-		showCreateTemplateForm.value = false
+	// Global templates are side-wide, so they're created by an admin in Desk, not from here.
+	function newTemplateScopeOptions() {
+		return ["Personal", "Team"].map((scope) => ({
+			label: templateScopeLabel(scope),
+			value: scope,
+			icon: TEMPLATE_SCOPE_ICONS[scope],
+		}))
+	}
+
+	// Only the creator edits a template -- a teammate sees the team template but not the button,
+	// and Global ones are managed in Desk. update_message_template enforces the same on the server.
+	function canEditTemplate(template) {
+		return !!template && template.scope !== "Global" && isMine(template.owner)
+	}
+
+	function templateFormTitle() {
+		return editingTemplateName.value ? "Edit Template" : "New Template"
+	}
+
+	function openEditTemplate(template, event) {
+		// the card itself inserts the template into the composer on click
+		event?.stopPropagation?.()
+		if (!canEditTemplate(template)) return
+		openNewTemplate()
+		editingTemplateName.value = template.name
+		newTemplateTitle.value = template.title || ""
+		newTemplateContent.value = template.content || ""
+		newTemplateScope.value = template.scope || "Personal"
+		// the form's inputs keep their own text, so fill them once they've mounted
+		nextTick(() => {
+			setInputText(inputElement("templates-new-name-input", "input"), newTemplateTitle.value)
+			setInputText(responseTextarea(), newTemplateContent.value)
+		})
+	}
+
+	function openNewTemplate() {
+		editingTemplateName.value = null
+		clearTimeout(templateTitleTimer)
+		clearTimeout(templateContentTimer)
+		variableMenu.value = null
+		variableMenuDismissedAt = -1
 		newTemplateTitle.value = ""
 		newTemplateContent.value = ""
+		newTemplateScope.value = "Personal"
+		templatesView.value = "new"
+	}
+
+	function backToTemplateList() {
+		templatesView.value = "list"
+	}
+
+	// The Response box's example. Returned from a function because Studio would evaluate a
+	// literal {{ first_name }} written straight into the placeholder prop.
+	function templateResponsePlaceholder() {
+		return "Hi {{ first_name }},\n\nThanks for getting in touch, we'll get back to you soon.\n\nRegards,\n{{ my_full_name }}"
+	}
+
+	// ---- {{ variable }} picker in the Response box ----
+	// Typing "{{" anywhere in the text opens a list of these, like Helpdesk's saved replies. The
+	// server fills them in when the template is used (TEMPLATE_VARIABLES in
+	// connect_message_template.py, which must stay in step with this list).
+	const TEMPLATE_VARIABLES = [
+		{ key: "first_name", label: "Recipient first name" },
+		{ key: "full_name", label: "Recipient full name" },
+		{ key: "email", label: "Recipient email" },
+		{ key: "company_name", label: "Recipient company" },
+		{ key: "my_first_name", label: "Your first name" },
+		{ key: "my_full_name", label: "Your full name" },
+		{ key: "my_email", label: "Your email" },
+		{ key: "my_company_name", label: "Your company" },
+	]
+	// Set only while the caret sits just after "{{partial" -- plain typing never touches it, so it
+	// doesn't re-render the page (see "Text inputs that keep their own text").
+	const variableMenu = ref(null)
+	const variableMenuIndex = ref(0)
+	const variableMenuPosition = ref({ top: 0, left: 0 })
+	let variableMenuDismissedAt = -1
+	let templateTitleTimer = null
+	let templateContentTimer = null
+
+	function responseTextarea() {
+		return inputElement("templates-new-content-input") as HTMLTextAreaElement | null
+	}
+
+	function readVariableMatch(el) {
+		const before = el.value.slice(0, el.selectionStart ?? 0)
+		const match = /\{\{\s*(\w*)$/.exec(before)
+		if (!match) return null
+		const start = before.length - match[0].length
+		return start === variableMenuDismissedAt ? null : { start, query: match[1].toLowerCase() }
+	}
+
+	function templateVariableSuggestions() {
+		const match = variableMenu.value
+		if (!match) return []
+		return TEMPLATE_VARIABLES.filter(
+			(v) => v.key.includes(match.query) || v.label.toLowerCase().includes(match.query),
+		).map((v, index) => ({ ...v, active: index === variableMenuIndex.value }))
+	}
+
+	function isVariableMenuOpen() {
+		return templateVariableSuggestions().length > 0
+	}
+
+	// Where the caret sits inside the textarea, measured with a hidden copy of it that wraps
+	// text the same way (a textarea itself can't report caret coordinates).
+	function caretCoordinates(el, position) {
+		const style = getComputedStyle(el)
+		const mirror = document.createElement("div")
+		for (const prop of [
+			"boxSizing", "width", "fontFamily", "fontSize", "fontWeight", "fontStyle", "letterSpacing",
+			"lineHeight", "textTransform", "wordSpacing", "tabSize", "paddingTop", "paddingRight",
+			"paddingBottom", "paddingLeft", "borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth",
+		]) {
+			mirror.style[prop] = style[prop]
+		}
+		Object.assign(mirror.style, { position: "absolute", visibility: "hidden", top: "0", left: "-9999px", whiteSpace: "pre-wrap", overflowWrap: "break-word" })
+		mirror.textContent = el.value.slice(0, position)
+		const marker = document.createElement("span")
+		marker.textContent = el.value.slice(position) || "."
+		mirror.appendChild(marker)
+		document.body.appendChild(mirror)
+		const coords = { top: marker.offsetTop, left: marker.offsetLeft, lineHeight: parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.5 }
+		mirror.remove()
+		return coords
+	}
+
+	// Called on input/keyup/click in the Response box. Touches state only when the menu opens,
+	// closes or its filter changes, and then moves it under the caret.
+	function syncTemplateCaret() {
+		const el = responseTextarea()
+		if (!el) return
+		const match = readVariableMatch(el)
+		const current = variableMenu.value
+		if (!match && !current) return
+		if (match && current && match.start === current.start && match.query === current.query) return
+		variableMenuIndex.value = 0
+		if (match) {
+			const wrap = el.closest('[data-component-id="templates-new-content-field"]')
+			if (wrap) {
+				const coords = caretCoordinates(el, el.selectionStart ?? 0)
+				const elBox = el.getBoundingClientRect()
+				const wrapBox = wrap.getBoundingClientRect()
+				variableMenuPosition.value = {
+					top: elBox.top - wrapBox.top + coords.top - el.scrollTop + coords.lineHeight + 4,
+					left: Math.max(0, Math.min(elBox.left - wrapBox.left + coords.left, wrap.clientWidth - 260)),
+				}
+			}
+		}
+		variableMenu.value = match
+	}
+
+	function onTemplateTitleInput(event) {
+		const value = event?.target?.value ?? ""
+		clearTimeout(templateTitleTimer)
+		templateTitleTimer = setTimeout(() => {
+			newTemplateTitle.value = value
+		}, 150)
+	}
+
+	function onResponseInput(event) {
+		const value = event?.target?.value ?? ""
+		syncTemplateCaret()
+		clearTimeout(templateContentTimer)
+		templateContentTimer = setTimeout(() => {
+			newTemplateContent.value = value
+		}, 150)
+	}
+
+	function onResponseKeydown(event) {
+		if (!isVariableMenuOpen()) return
+		const items = templateVariableSuggestions()
+		if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+			event.preventDefault()
+			const step = event.key === "ArrowDown" ? 1 : -1
+			variableMenuIndex.value = (variableMenuIndex.value + step + items.length) % items.length
+		} else if (event.key === "Enter" || event.key === "Tab") {
+			event.preventDefault()
+			insertTemplateVariable(items[variableMenuIndex.value] || items[0])
+		} else if (event.key === "Escape") {
+			// close just the menu -- without stopPropagation the dialog would close too
+			event.preventDefault()
+			event.stopPropagation()
+			variableMenuDismissedAt = variableMenu.value?.start ?? -1
+			variableMenu.value = null
+		}
+	}
+
+	function insertTemplateVariable(variable) {
+		const el = responseTextarea()
+		const match = variableMenu.value
+		if (!el || !match || !variable) return
+		const inserted = "{{ " + variable.key + " }}"
+		// swallow a "}}" the user already typed after the caret
+		const after = el.value.slice(el.selectionStart ?? el.value.length).replace(/^\s*\}\}/, "")
+		const caret = match.start + inserted.length
+		variableMenu.value = null
+		setInputText(el, el.value.slice(0, match.start) + inserted + after, caret)
+		el.focus()
+	}
+
+	// The form as typed right now, not as of the last pause -- what Save sends.
+	function currentTemplateForm() {
+		clearTimeout(templateTitleTimer)
+		clearTimeout(templateContentTimer)
+		const title = inputElement("templates-new-name-input", "input")?.value ?? newTemplateTitle.value
+		const content = responseTextarea()?.value ?? newTemplateContent.value
+		newTemplateTitle.value = title
+		newTemplateContent.value = content
+		return { title: title.trim(), content: content.trim() }
 	}
 
 	async function saveNewTemplate() {
-		const title = newTemplateTitle.value.trim()
-		const content = newTemplateContent.value.trim()
+		const { title, content } = currentTemplateForm()
 		if (!title || !content || creatingTemplate.value) return
 		creatingTemplate.value = true
 		try {
-			await call("connect.api.message_templates.create_message_template", { title, content })
-			context.myTemplates.reload()
-			closeCreateTemplateForm()
-			toast({ title: "Template created", icon: "check", iconClasses: "text-green-600" })
+			const editing = editingTemplateName.value
+			if (editing) {
+				await call("connect.api.message_templates.update_message_template", {
+					name: editing,
+					title,
+					content,
+					scope: newTemplateScope.value,
+				})
+			} else {
+				await call("connect.api.message_templates.create_message_template", {
+					title,
+					content,
+					scope: newTemplateScope.value,
+				})
+			}
+			editingTemplateName.value = null
+			await context.myTemplates.reload()
+			// land on the filter the new template lives under, so it's visible straight away
+			templateScopeFilter.value = newTemplateScope.value
+			templateSearchQuery.value = ""
+			templatesView.value = "list"
+			toast.success(editing ? "Template updated" : "Template created")
 		} catch (e) {
-			toast({
-				title: "Could not create template",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error(editingTemplateName.value ? "Could not update template" : "Could not create template", { description: e.messages ? e.messages[0] : e.message })
 		} finally {
 			creatingTemplate.value = false
 		}
@@ -259,8 +670,8 @@ export default function setup(context) {
 		context.threadAdmins.reload()
 		context.memberProfiles.params = { thread: name }
 		context.memberProfiles.reload()
-		context.partnerInfo.params = { partner: currentThread().partner }
-		context.partnerInfo.reload()
+		// partnerInfo is loaded by the currentThread().partner watch below -- on a ?thread= deep link
+		// the inbox list hasn't arrived yet, so the partner isn't known at this point.
 		if (!amPartner()) {
 			context.partnerWorkHours.params = { thread: name }
 			context.partnerWorkHours.reload()
@@ -513,15 +924,10 @@ export default function setup(context) {
 			.then(() => {
 				context.myThreads.reload()
 				context.messages.reload()
-				toast({ title: "Thread closed", icon: "check", iconClasses: "text-green-600" })
+				toast.success("Thread closed")
 			})
 			.catch((e) => {
-				toast({
-					title: "Could not close thread",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not close thread", { description: e.messages ? e.messages[0] : e.message })
 			})
 	}
 
@@ -612,12 +1018,24 @@ export default function setup(context) {
 
 	function insertMention(member) {
 		const name = (member.user || "").split("@")[0]
-		draftMessage.value = draftMessage.value.replace(/(^|\s)@([^\s@]*)$/, (_match, prefix) => prefix + "@" + name + " ")
+		setDraft(currentDraft().replace(/(^|\s)@([^\s@]*)$/, (_match, prefix) => prefix + "@" + name + " "))
 	}
 
-	function insertTemplate(template) {
-		draftMessage.value = template.content
+	// A template with {{ variables }} is filled in on the server for the open conversation (who
+	// "first_name" is depends on it); plain text goes straight in.
+	async function insertTemplate(template) {
 		showTemplatesDialog.value = false
+		let content = template.content || ""
+		if (/\{\{|\{%/.test(content)) {
+			const conversation =
+				selectedThreadType.value === "dm" ? { dm_thread: selectedThread.value } : { thread: selectedThread.value }
+			try {
+				content = await call("connect.api.message_templates.render_message_template", { content, ...conversation })
+			} catch (e) {
+				toast.error("Could not fill in the template", { description: e.messages ? e.messages[0] : e.message })
+			}
+		}
+		setDraft(content)
 	}
 
 	// Neutralizes text before it's interpolated into an HTML-component string (which renders
@@ -742,9 +1160,9 @@ export default function setup(context) {
 	async function copyRequirementDetails(item) {
 		try {
 			await navigator.clipboard.writeText(requirementDetailsText(item))
-			toast({ title: "Copied to clipboard", icon: "check", iconClasses: "text-green-600" })
+			toast.success("Copied to clipboard")
 		} catch (e) {
-			toast({ title: "Could not copy", text: e.message, icon: "x-circle", iconClasses: "text-red-600" })
+			toast.error("Could not copy", { description: e.message })
 		}
 	}
 
@@ -908,7 +1326,7 @@ export default function setup(context) {
 			link.remove()
 			URL.revokeObjectURL(blobUrl)
 		} catch (e) {
-			toast({ title: "Could not download", text: e.message, icon: "x-circle", iconClasses: "text-red-600" })
+			toast.error("Could not download", { description: e.message })
 		}
 	}
 
@@ -1003,6 +1421,7 @@ export default function setup(context) {
 	function selectProfileSettingsSection(section) {
 		profileSettingsSection.value = section
 		if (section === "workhours") populateWorkEdit()
+		if (section === "crm") loadCrmSettings()
 	}
 
 	async function saveMyProfile() {
@@ -1019,14 +1438,9 @@ export default function setup(context) {
 			originalFullName.value = editFullName.value
 			originalPhone.value = editPhone.value
 			originalRole.value = editRole.value
-			toast({ title: "Profile updated", icon: "check", iconClasses: "text-green-600" })
+			toast.success("Profile updated")
 		} catch (e) {
-			toast({
-				title: "Could not update profile",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not update profile", { description: e.messages ? e.messages[0] : e.message })
 		} finally {
 			savingProfile.value = false
 		}
@@ -1055,15 +1469,10 @@ export default function setup(context) {
 		upload(file, { upload_endpoint: "/api/method/connect.api.account.upload_profile_image" })
 			.then(() => {
 				context.myProfile.reload()
-				toast({ title: "Photo updated", icon: "check", iconClasses: "text-green-600" })
+				toast.success("Photo updated")
 			})
 			.catch((e) => {
-				toast({
-					title: "Could not upload photo",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not upload photo", { description: e.messages ? e.messages[0] : e.message })
 			})
 			.finally(() => {
 				uploadingProfileImage.value = false
@@ -1072,7 +1481,7 @@ export default function setup(context) {
 
 	function addMember() {
 		if (!newMemberEmail.value) {
-			toast({ title: "Enter an email", icon: "x-circle", iconClasses: "text-red-600" })
+			toast.error("Enter an email")
 			return
 		}
 		const side =
@@ -1082,7 +1491,7 @@ export default function setup(context) {
 					? "Partner"
 					: null
 		if (!side) {
-			toast({ title: "Only admins can add members", icon: "x-circle", iconClasses: "text-red-600" })
+			toast.error("Only admins can add members")
 			return
 		}
 		call("connect.api.threads.add_thread_member", {
@@ -1096,19 +1505,10 @@ export default function setup(context) {
 				newMemberEmail.value = ""
 				newMemberPermission.value = "Write"
 				context.threadMembers.reload()
-				toast({
-					title: data && data.created_user ? "New account created and added" : "Member added",
-					icon: "check",
-					iconClasses: "text-green-600",
-				})
+				toast.success(data && data.created_user ? "New account created and added" : "Member added")
 			})
 			.catch((e) => {
-				toast({
-					title: "Could not add member",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not add member", { description: e.messages ? e.messages[0] : e.message })
 			})
 	}
 
@@ -1118,15 +1518,10 @@ export default function setup(context) {
 			.then(() => {
 				context.myContext.reload()
 				context.threadAdmins.reload()
-				toast({ title: "Admin transferred", icon: "check", iconClasses: "text-green-600" })
+				toast.success("Admin transferred")
 			})
 			.catch((e) => {
-				toast({
-					title: "Could not transfer admin",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not transfer admin", { description: e.messages ? e.messages[0] : e.message })
 			})
 	}
 
@@ -1135,15 +1530,10 @@ export default function setup(context) {
 		call("connect.api.threads.remove_thread_member", { thread: selectedThread.value, member: item.name })
 			.then(() => {
 				context.threadMembers.reload()
-				toast({ title: "Member removed", icon: "check", iconClasses: "text-green-600" })
+				toast.success("Member removed")
 			})
 			.catch((e) => {
-				toast({
-					title: "Could not remove member",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not remove member", { description: e.messages ? e.messages[0] : e.message })
 			})
 	}
 
@@ -1172,14 +1562,9 @@ export default function setup(context) {
 			showDisableTeamMemberDialog.value = false
 			memberToDisable.value = null
 			context.myTeam.reload()
-			toast({ title: "Team member disabled", icon: "check", iconClasses: "text-green-600" })
+			toast.success("Team member disabled")
 		} catch (e) {
-			toast({
-				title: "Could not disable team member",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not disable team member", { description: e.messages ? e.messages[0] : e.message })
 		} finally {
 			disablingTeamMember.value = false
 		}
@@ -1195,7 +1580,7 @@ export default function setup(context) {
 
 	async function addTeamMember() {
 		if (!newTeamMemberEmail.value) {
-			toast({ title: "Enter an email", icon: "x-circle", iconClasses: "text-red-600" })
+			toast.error("Enter an email")
 			return
 		}
 		addingTeamMember.value = true
@@ -1210,18 +1595,9 @@ export default function setup(context) {
 			newTeamMemberRole.value = ""
 			newTeamMemberPassword.value = ""
 			context.myTeam.reload()
-			toast({
-				title: data && data.created_user ? "New account created and added" : "Team member added",
-				icon: "check",
-				iconClasses: "text-green-600",
-			})
+			toast.success(data && data.created_user ? "New account created and added" : "Team member added")
 		} catch (e) {
-			toast({
-				title: "Could not add team member",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not add team member", { description: e.messages ? e.messages[0] : e.message })
 		} finally {
 			addingTeamMember.value = false
 		}
@@ -1285,9 +1661,9 @@ export default function setup(context) {
 	async function copyMessage(item) {
 		try {
 			await navigator.clipboard.writeText(messageCopyText(item))
-			toast({ title: "Copied to clipboard", icon: "check", iconClasses: "text-green-600" })
+			toast.success("Copied to clipboard")
 		} catch (e) {
-			toast({ title: "Could not copy", text: e.message, icon: "x-circle", iconClasses: "text-red-600" })
+			toast.error("Could not copy", { description: e.message })
 		}
 	}
 
@@ -1368,12 +1744,7 @@ export default function setup(context) {
 			forwardTargets.value = await call("connect.api.messages.get_forward_targets")
 		} catch (e) {
 			showForwardDialog.value = false
-			toast({
-				title: "Could not load conversations",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not load conversations", { description: e.messages ? e.messages[0] : e.message })
 		} finally {
 			loadingForwardTargets.value = false
 		}
@@ -1406,16 +1777,11 @@ export default function setup(context) {
 			showForwardDialog.value = false
 			messageToForward.value = null
 			forwardTarget.value = null
-			toast({ title: "Message forwarded", icon: "check", iconClasses: "text-green-600" })
+			toast.success("Message forwarded")
 			context.myThreads.reload()
 			context.myDMThreads.reload()
 		} catch (e) {
-			toast({
-				title: "Could not forward message",
-				text: permissionAwareErrorText(e, "You can't post in that conversation."),
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not forward message", { description: permissionAwareErrorText(e, "You can't post in that conversation.") })
 		} finally {
 			forwardingMessage.value = false
 		}
@@ -1457,12 +1823,7 @@ export default function setup(context) {
 				context.messages.reload()
 			}
 		} catch (e) {
-			toast({
-				title: "Could not delete message",
-				text: permissionAwareErrorText(e, "You don't have permission to delete this message"),
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not delete message", { description: permissionAwareErrorText(e, "You don't have permission to delete this message") })
 		} finally {
 			deletingMessage.value = false
 		}
@@ -1485,7 +1846,7 @@ export default function setup(context) {
 		if (!item || item.isFileCluster || item.message_type !== "Text" || !isMine(item.sender)) return
 		replyToMessage.value = null
 		messageToEdit.value = item
-		draftMessage.value = item.content
+		setDraft(item.content)
 		showTemplatesDialog.value = false
 		nextTick(() => {
 			const el = document.querySelector('[data-component-id="message-input"]') as HTMLTextAreaElement | null
@@ -1495,7 +1856,7 @@ export default function setup(context) {
 
 	function cancelEditMessage() {
 		messageToEdit.value = null
-		draftMessage.value = ""
+		setDraft("")
 	}
 
 	// ---- Replying to a message ----
@@ -1545,7 +1906,7 @@ export default function setup(context) {
 
 	async function saveEditedMessage() {
 		if (!messageToEdit.value || editingMessage.value) return
-		const content = draftMessage.value.trim()
+		const content = currentDraft().trim()
 		if (!content) return
 		editingMessage.value = true
 		try {
@@ -1555,16 +1916,11 @@ export default function setup(context) {
 				content,
 			})
 			messageToEdit.value = null
-			draftMessage.value = ""
+			setDraft("")
 			if (isDM) context.dmMessages.reload()
 			else context.messages.reload()
 		} catch (e) {
-			toast({
-				title: "Could not edit message",
-				text: permissionAwareErrorText(e, "You don't have permission to edit this message"),
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not edit message", { description: permissionAwareErrorText(e, "You don't have permission to edit this message") })
 		} finally {
 			editingMessage.value = false
 		}
@@ -1619,12 +1975,7 @@ export default function setup(context) {
 			await call(method, { message: name })
 			await fetchPinnedMessages()
 		} catch (e) {
-			toast({
-				title: pin ? "Could not pin message" : "Could not unpin message",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error(pin ? "Could not pin message" : "Could not unpin message", { description: e.messages ? e.messages[0] : e.message })
 		}
 	}
 
@@ -1633,7 +1984,7 @@ export default function setup(context) {
 		return setMessagePinned(item.name, !isPinned(item))
 	}
 
-	// "Today" / "Yesterday" / "Sep 22" — how a pin's age is shown in the Pins tab.
+	// "Today" / "Yesterday" / "Sep 22" — the `when` on every Files / Links / Pins side-panel row.
 	function relativeDayLabel(value) {
 		const date = new Date(value)
 		const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(date).setHours(0, 0, 0, 0)) / 86400000)
@@ -1646,6 +1997,17 @@ export default function setup(context) {
 		if (message.message_type === "File") return "📎 " + (message.file_name || "Attachment")
 		if (message.message_type === "Requirement") return "Requirement details"
 		return message.content || ""
+	}
+
+	// The HTML twin of pinnedPreviewText, so a pinned message reads exactly like it does in the
+	// thread -- same @mention weight, same muted "(edited)" marker. File and Requirement keep
+	// their own labels; everything else goes through formatMessageContent, which escapes the
+	// user's text before adding our own markup back.
+	function pinnedPreviewHtml(message) {
+		if (!message) return ""
+		if (message.message_type === "File") return escapeHtmlAttr("\ud83d\udcce " + (message.file_name || "Attachment"))
+		if (message.message_type === "Requirement") return escapeHtmlAttr("Requirement details")
+		return formatMessageContent(message)
 	}
 
 	// Rows for the Pins tab of the Files / Links / Pins side panel (opened from the header's pin button).
@@ -1718,12 +2080,7 @@ export default function setup(context) {
 				context.messages.reload()
 			}
 		} catch (e) {
-			toast({
-				title: "Could not delete files",
-				text: permissionAwareErrorText(e, "You don't have permission to delete one or more of these files"),
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not delete files", { description: permissionAwareErrorText(e, "You don't have permission to delete one or more of these files") })
 		} finally {
 			deletingCluster.value = false
 		}
@@ -1741,10 +2098,10 @@ export default function setup(context) {
 		}
 		if (selectedThreadType.value === "dm") {
 			const dmReadyAttachments = draftAttachments.value.filter((a) => a.file_url)
-			const content = draftMessage.value.trim()
+			const content = currentDraft().trim()
 			if (!content && !dmReadyAttachments.length) return
 			const thread = selectedThread.value
-			draftMessage.value = ""
+			setDraft("")
 			draftAttachments.value = []
 			try {
 				if (content) {
@@ -1769,23 +2126,18 @@ export default function setup(context) {
 				// through, rather than looking empty until something else triggers a refresh.
 				context.dmMessages.reload()
 				context.myDMThreads.reload()
-				toast({
-					title: "Could not send message",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not send message", { description: e.messages ? e.messages[0] : e.message })
 			}
 			return
 		}
 		const readyAttachments = draftAttachments.value.filter((a) => a.file_url)
-		const content = draftMessage.value.trim()
+		const content = currentDraft().trim()
 		if (!content && !readyAttachments.length && !draftRequirement.value) return
 
 		const thread = selectedThread.value
 		const requirementToSend = draftRequirement.value
 		const replyToSend = replyToMessage.value ? replyToMessage.value.name : null
-		draftMessage.value = ""
+		setDraft("")
 		draftAttachments.value = []
 		draftRequirement.value = null
 		replyToMessage.value = null
@@ -1815,12 +2167,7 @@ export default function setup(context) {
 			// of leaving the pane looking empty after a mid-send failure.
 			context.messages.reload()
 			context.myThreads.reload()
-			toast({
-				title: "Could not send message",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not send message", { description: e.messages ? e.messages[0] : e.message })
 		}
 	}
 
@@ -1882,12 +2229,7 @@ export default function setup(context) {
 			})
 			.catch((e) => {
 				draftAttachments.value = draftAttachments.value.filter((a) => a.id !== id)
-				toast({
-					title: "Could not upload file",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not upload file", { description: e.messages ? e.messages[0] : e.message })
 			})
 	}
 
@@ -1895,30 +2237,28 @@ export default function setup(context) {
 		draftAttachments.value = draftAttachments.value.filter((a) => a.id !== item.id)
 		if (item.file_url) {
 			call("connect.api.attachments.remove_chat_attachment", { file_url: item.file_url }).catch((e) => {
-				toast({
-					title: "Could not remove attachment",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not remove attachment", { description: e.messages ? e.messages[0] : e.message })
 			})
 		}
 	}
 
-	function formatFileSize(bytes) {
+	// `digits` is for the Files side panel, which shows "2.62 KB"; message bubbles keep whole KB.
+	function formatFileSize(bytes, digits = 0) {
 		if (!bytes && bytes !== 0) return ""
 		if (bytes < 1024) return bytes + " B"
-		if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + " KB"
-		return (bytes / (1024 * 1024)).toFixed(1) + " MB"
+		if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(digits) + " KB"
+		return (bytes / (1024 * 1024)).toFixed(digits || 1) + " MB"
 	}
 
+	// Full "lucide-" class names: Icon renders the name as a class, and the Studio build only ships CSS
+	// for lucide-* strings it finds verbatim in page JSON and scripts -- a bare or concatenated name renders blank.
 	function attachmentIcon(item) {
 		const type = (item && item.file_type) || ""
-		if (type.includes("wordprocessingml") || type === "application/msword") return "file-text"
-		if (type.includes("presentationml") || type === "application/vnd.ms-powerpoint") return "monitor"
-		if (type === "application/pdf") return "file"
-		if (type.startsWith("image/")) return "image"
-		return "file"
+		if (type.includes("wordprocessingml") || type === "application/msword") return "lucide-file-text"
+		if (type.includes("presentationml") || type === "application/vnd.ms-powerpoint") return "lucide-monitor"
+		if (type === "application/pdf") return "lucide-file"
+		if (type.startsWith("image/")) return "lucide-image"
+		return "lucide-file"
 	}
 
 	function attachmentIconBg(item) {
@@ -1937,6 +2277,18 @@ export default function setup(context) {
 		if (type === "application/pdf") return "var(--ink-red-6)"
 		if (type.startsWith("image/")) return "var(--ink-green-6)"
 		return "var(--ink-gray-6)"
+	}
+
+	// The Files side panel's icon tile, rendered through an HTML block because Raven's PDF / Office
+	// marks aren't in the Icon set. Like Raven's getFileExtension, it goes by the name, not the MIME type.
+	function fileTypeIconHtml(item) {
+		const name = ((item && item.file_name) || "").split("?")[0]
+		const ext = name.includes(".") ? name.split(".").pop().toLowerCase() : ""
+		const tile = FILE_TYPE_TILES.find((t) => t.exts.includes(ext)) || DEFAULT_FILE_TILE
+		return (
+			'<div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;' +
+			"border-radius:6px;color:#fff;background:" + tile.bg + '">' + tile.glyph + "</div>"
+		)
 	}
 
 	function isImageFile(item) {
@@ -2002,12 +2354,7 @@ export default function setup(context) {
 			link.remove()
 			URL.revokeObjectURL(blobUrl)
 		} catch (e) {
-			toast({
-				title: "Could not download file",
-				text: e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not download file", { description: e.message })
 		}
 	}
 
@@ -2073,6 +2420,72 @@ export default function setup(context) {
 	// element at all (`<slot v-else />`) — the bare `<textarea>` IS the component's single root,
 	// and that's what data-component-id ends up on. A descendant selector silently matches
 	// nothing, which is why resizing did nothing the first time this was wired up.
+	// ---- Text inputs that keep their own text ----
+	// Studio re-evaluates every {{ }} on this page whenever ANY ref returned from setup() changes,
+	// so an input bound to page state (modelValue) re-rendered the whole chat on every keystroke
+	// (~250ms of lag). The composer, template search and New-template fields instead hold their
+	// own text: we read it from the element, push it into state after a short pause, and write
+	// through setInputText. The dispatched "input" event matters -- frappe-ui's inputs keep an
+	// internal copy of their value and would reset the element to it on the next render.
+	function inputElement(componentId, tag = "textarea") {
+		const el = document.querySelector(`[data-component-id="${componentId}"]`)
+		return (el?.tagName === tag.toUpperCase() ? el : el?.querySelector(tag)) as HTMLInputElement | HTMLTextAreaElement | null
+	}
+
+	function setInputText(el, text, caret = null) {
+		if (!el) return
+		if (el.value !== text) {
+			el.value = text
+			if (caret != null) el.setSelectionRange(caret, caret)
+			el.dispatchEvent(new Event("input", { bubbles: true }))
+		} else if (caret != null) {
+			el.setSelectionRange(caret, caret)
+		}
+	}
+
+	function composerInput() {
+		return inputElement("message-input") as HTMLTextAreaElement | null
+	}
+
+	// The draft as typed right now, not as of the last pause -- what every send path reads.
+	function currentDraft() {
+		const el = composerInput()
+		if (el) {
+			clearTimeout(draftTimer)
+			if (draftMessage.value !== el.value) draftMessage.value = el.value
+		}
+		return draftMessage.value || ""
+	}
+
+	function setDraft(text) {
+		clearTimeout(draftTimer)
+		draftMessage.value = text
+		setInputText(composerInput(), text)
+		nextTick(autoResizeComposer)
+	}
+
+	function onComposerInput(event) {
+		const value = event?.target?.value ?? ""
+		autoResizeComposer()
+		clearTimeout(draftTimer)
+		// the @mention picker filters as you type, so a mention in progress can't wait for the pause
+		if (/(^|\s)@([^\s@]*)$/.test(value) || isMentioning()) {
+			draftMessage.value = value
+			return
+		}
+		draftTimer = setTimeout(() => {
+			draftMessage.value = value
+		}, 150)
+	}
+
+	// The composer only exists while a thread is open; a fresh one starts empty, so put the draft back.
+	watch(selectedThread, () =>
+		nextTick(() => {
+			const el = composerInput()
+			if (el && el.value !== draftMessage.value) setInputText(el, draftMessage.value || "")
+		}),
+	)
+
 	function autoResizeComposer() {
 		const el = document.querySelector('[data-component-id="message-input"]') as HTMLTextAreaElement | null
 		if (!el) return
@@ -2289,12 +2702,7 @@ export default function setup(context) {
 						},
 			)
 		} catch (e) {
-			toast({
-				title: "Could not start conversation",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not start conversation", { description: e.messages ? e.messages[0] : e.message })
 		}
 	}
 
@@ -2879,14 +3287,9 @@ export default function setup(context) {
 				after_hours_behavior: editAfterHours.value,
 			})
 			afterHoursBannerDismissed.value = false
-			toast({ title: "Working hours saved", icon: "check", iconClasses: "text-green-600" })
+			toast.success("Working hours saved")
 		} catch (e) {
-			toast({
-				title: "Could not save working hours",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not save working hours", { description: e.messages ? e.messages[0] : e.message })
 		} finally {
 			savingWorkSettings.value = false
 		}
@@ -2903,12 +3306,7 @@ export default function setup(context) {
 				after_hours_behavior: behavior,
 			})
 		} catch (e) {
-			toast({
-				title: "Could not update your preference",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not update your preference", { description: e.messages ? e.messages[0] : e.message })
 		}
 	}
 
@@ -2953,7 +3351,16 @@ export default function setup(context) {
 				}
 				const label = domain.replace(/^www\./, "").split(".")[0]
 				const title = label ? label.charAt(0).toUpperCase() + label.slice(1) : domain
-				return { url, href, domain, title, sender: message.sender, creation: message.creation }
+				return {
+					url,
+					href,
+					domain,
+					title,
+					sender: message.sender,
+					creation: message.creation,
+					senderName: memberDisplayName(message.sender),
+					when: relativeDayLabel(message.creation),
+				}
 			})
 			.filter(
 				(item) =>
@@ -2969,18 +3376,6 @@ export default function setup(context) {
 		if (item && item.href) window.open(item.href, "_blank", "noopener")
 	}
 
-	// mirrors formatDateDivider's ordinal-date fallback, but names the last 6 days by
-	// weekday instead — matches how the Links card list shows "Tuesday" rather than a date
-	function formatRelativeDay(item) {
-		const d = new Date(item.creation)
-		const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
-		const diffDays = Math.round((startOfDay(new Date()) - startOfDay(d)) / 86400000)
-		if (diffDays === 0) return "Today"
-		if (diffDays === 1) return "Yesterday"
-		if (diffDays > 1 && diffDays < 7) return d.toLocaleDateString("en-US", { weekday: "long" })
-		return formatOrdinalDate(d)
-	}
-
 	function threadFiles() {
 		const query = mediaSearchQuery.value.trim().toLowerCase()
 		return currentMessages()
@@ -2989,12 +3384,29 @@ export default function setup(context) {
 				const diff = new Date(b.creation).getTime() - new Date(a.creation).getTime()
 				return mediaSortAscending.value ? -diff : diff
 			})
+			.map((m) => {
+				const senderName = memberDisplayName(m.sender)
+				const when = fileSentLabel(m.creation)
+				return {
+					...m,
+					senderName,
+					when,
+					// "Maitri · 8:53 PM · 2.62 KB" -- the one meta line under the file name
+					meta: [senderName, when, formatFileSize(m.file_size, 2)].filter(Boolean).join(" \u00b7 "),
+				}
+			})
 	}
 
-	function fileExtensionLabel(item) {
-		const name = (item && item.file_name) || ""
-		const dot = name.lastIndexOf(".")
-		return dot === -1 ? "" : name.slice(dot + 1).toUpperCase()
+	// Raven's formatRelativeDate, which its Files drawer uses: "8:53 PM" today, then "Yesterday",
+	// a weekday within the week, "Sep 22" this year and "Sep 22, 2025" before that.
+	function fileSentLabel(value) {
+		const date = new Date(value)
+		const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(date).setHours(0, 0, 0, 0)) / 86400000)
+		if (days <= 0) return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+		if (days === 1) return "Yesterday"
+		if (days < 7) return date.toLocaleDateString("en-US", { weekday: "long" })
+		const sameYear = date.getFullYear() === new Date().getFullYear()
+		return date.toLocaleDateString("en-US", { month: "short", day: "numeric", ...(sameYear ? {} : { year: "numeric" }) })
 	}
 
 	// Default to the thread named in ?thread=<name> (how "Contact Partner" and the pricing
@@ -3010,6 +3422,23 @@ export default function setup(context) {
 	// immediate:true this can fire selectThread() synchronously during setup()'s own execution,
 	// and selectThread touches refs like pinnedMessages that are declared further down the file —
 	// calling it any earlier hits their temporal dead zone and throws before setup() ever returns.
+	// A company thread's partner comes from the inbox list, which can land after selectThread()
+	// (deep links select by name first). Fetching then would send partner=undefined and 404.
+	// DM threads load partnerInfo themselves in selectThread().
+	watch(
+		() => (selectedThreadType.value === "dm" ? null : currentThread().partner || null),
+		(partner) => {
+			if (selectedThreadType.value === "dm") return
+			if (!partner) {
+				context.partnerInfo.data = null
+				return
+			}
+			context.partnerInfo.params = { partner }
+			context.partnerInfo.reload()
+		},
+		{ immediate: true },
+	)
+
 	watch(
 		() => [context.myThreads?.data, context.myDMThreads?.data],
 		() => {
@@ -3066,6 +3495,7 @@ export default function setup(context) {
 	return {
 		selectedThread,
 		draftMessage,
+		onComposerInput,
 		uploadingFile,
 		draftAttachments,
 		requirementCardTitle,
@@ -3125,19 +3555,52 @@ export default function setup(context) {
 		mediaViewMode,
 		mediaSortAscending,
 		toggleMediaSort,
-		fileExtensionLabel,
 		showMembersDialog,
 		showMediaDialog,
+		openPanel,
+		crmSiteUrl,
+		crmApiKey,
+		crmApiSecret,
+		crmLeadStatus,
+		crmEnabled,
+		crmSecretStored,
+		crmSaving,
+		crmError,
+		crmStatusLabel,
+		saveCrmSettings,
+		pinnedPreviewHtml,
+		fileTypeIconHtml,
+		panelTitle,
 		showTemplatesDialog,
 		myMessageTemplates,
+		templatesView,
 		templateSearchQuery,
+		templateScopeFilter,
 		filteredMessageTemplates,
-		showCreateTemplateForm,
+		templateScopeFilterOptions,
+		templateScopeLabel,
+		templatesEmptyMessage,
+		openTemplatesDialog,
+		onTemplateSearchInput,
 		newTemplateTitle,
 		newTemplateContent,
+		newTemplateScope,
+		newTemplateScopeOptions,
 		creatingTemplate,
-		openCreateTemplateForm,
-		closeCreateTemplateForm,
+		openNewTemplate,
+		openEditTemplate,
+		canEditTemplate,
+		templateFormTitle,
+		backToTemplateList,
+		templateResponsePlaceholder,
+		variableMenuPosition,
+		templateVariableSuggestions,
+		isVariableMenuOpen,
+		syncTemplateCaret,
+		onTemplateTitleInput,
+		onResponseInput,
+		onResponseKeydown,
+		insertTemplateVariable,
 		saveNewTemplate,
 		mediaTab,
 		showAddMemberDialog,
@@ -3297,6 +3760,5 @@ export default function setup(context) {
 		threadLinks,
 		threadFiles,
 		openLink,
-		formatRelativeDay,
 	}
 }
