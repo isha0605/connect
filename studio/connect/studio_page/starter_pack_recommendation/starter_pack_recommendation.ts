@@ -1,6 +1,6 @@
 // The Starter Pack recommendation: which packs the questionnaire's answers point to
 // and why, the packs themselves (tick to add, "View details" for scope), and a basket
-// that checks out through connect.api.starter_pack. The answers arrive in the URL;
+// that hands over to the checkout page. The answers arrive in the URL;
 // the rules that read them live in @app/utils/recommendation.
 
 import { computed } from "vue"
@@ -53,21 +53,12 @@ export default function setup(context) {
 	const {
 		route,
 		router,
-		call,
-		toast,
 		catalog,
 		myContext,
-		myCustomer,
 		partnerCountries,
 		pickedPacks,
 		scopePackKey,
 		showScope,
-		showCheckout,
-		checkoutCompany,
-		checkoutPhone,
-		termsAccepted,
-		checkingOut,
-		feedbackSent,
 	} = context
 
 	const answers = answersFromQuery(route.query)
@@ -145,32 +136,15 @@ export default function setup(context) {
 		`Product warranty applies on Frappe Cloud plans above ${money(4100)} + GST a month`,
 	])
 
+	// Guests go through (mock) signup first, which carries on to checkout afterwards.
 	function startCheckout() {
+		const query = { packs: pickedPacks.value.join(",") }
 		if (isGuest.value) {
-			const back = window.location.pathname + window.location.search
-			window.location.href = `/login?redirect-to=${encodeURIComponent(back)}`
-			return
+			const next = router.resolve({ path: "/starter-pack-checkout", query }).fullPath
+			router.push({ path: "/login-signup-redesign", query: { next } })
+		} else {
+			router.push({ path: "/starter-pack-checkout", query })
 		}
-		if (!checkoutCompany.value) checkoutCompany.value = myCustomer.data?.customer_name || ""
-		showCheckout.value = true
-	}
-
-	function payNow() {
-		if (!checkoutCompany.value || !termsAccepted.value) return
-		checkingOut.value = true
-		call("connect.api.starter_pack.checkout", {
-			packs: JSON.stringify(pickedPacks.value),
-			company_name: checkoutCompany.value,
-			phone: checkoutPhone.value,
-			terms_accepted: 1,
-		})
-			.then((res) => {
-				window.location.href = res.payment_url
-			})
-			.catch((err) => {
-				checkingOut.value = false
-				toast.error((err && err.messages && err.messages.join(", ")) || "Couldn't start the payment")
-			})
 	}
 
 	function changeAnswers() {
@@ -207,7 +181,6 @@ export default function setup(context) {
 		isGuest,
 		commercialTerms,
 		startCheckout,
-		payNow,
 		changeAnswers,
 		getQuotes,
 	}

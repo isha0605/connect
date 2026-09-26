@@ -17,9 +17,9 @@ def checkout(packs, company_name, phone=None, terms_accepted=0):
 
 
 @frappe.whitelist()
-def get_order(order):
+def get_order(order=None, payment_request=None):
 	from connect.customer.doctype.starter_pack_order.starter_pack_order import get_order
-	return get_order(order)
+	return get_order(order=order, payment_request=payment_request)
 
 
 @frappe.whitelist()

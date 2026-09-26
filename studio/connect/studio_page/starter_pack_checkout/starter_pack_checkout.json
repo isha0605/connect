@@ -1,0 +1,2444 @@
+{
+ "allow_guest": 1,
+ "blocks": [
+  {
+   "baseStyles": {
+    "backgroundColor": "var(--surface-base)",
+    "display": "flex",
+    "flexDirection": "row",
+    "minHeight": "100%",
+    "width": "inherit"
+   },
+   "blockName": "body",
+   "children": [
+    {
+     "baseStyles": {
+      "backgroundColor": "var(--surface-gray-1)",
+      "borderRight": "1px solid var(--outline-gray-1)",
+      "display": "flex",
+      "flex": "1",
+      "flexDirection": "column",
+      "padding": "64px 48px"
+     },
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "margin": "0px auto",
+        "maxWidth": "380px",
+        "width": "100%"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "alignSelf": "flex-start",
+          "cursor": "pointer",
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-6)",
+            "flexShrink": "0",
+            "height": "16px",
+            "width": "16px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "back-link-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-arrow-left"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "back-link-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-base",
+            "tag": "span",
+            "text": "Frappe Technologies"
+           }
+          }
+         ],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "goBack();"
+          }
+         },
+         "componentId": "back-link",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)",
+          "marginTop": "40px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "pay-to",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-p-base",
+          "tag": "span",
+          "text": "Pay Frappe Technologies"
+         }
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-9)",
+          "fontWeight": "600",
+          "marginTop": "4px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "pay-total",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-2xl",
+          "tag": "span",
+          "text": "{{ totalLabel }}"
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "14px",
+          "marginTop": "32px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "lines",
+         "componentName": "Repeater",
+         "componentProps": {
+          "data": "{{ lines }}",
+          "dataKey": "name",
+          "emptyStateMessage": ""
+         },
+         "componentSlots": {
+          "default": {
+           "parentBlockId": "lines",
+           "slotContent": [
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "row",
+              "gap": "16px",
+              "justifyContent": "space-between"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "2px",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "line-name",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-p-base",
+                  "tag": "span",
+                  "text": "{{ dataItem.name }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "line-hours",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-p-sm",
+                  "tag": "span",
+                  "text": "{{ dataItem.hours + ' hours' }}"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "line-info",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-8)"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "line-price",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-p-base",
+                "tag": "span",
+                "text": "{{ money(dataItem.price) }}"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "line",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "slotId": "lines:default",
+           "slotName": "default"
+          }
+         }
+        },
+        {
+         "baseStyles": {
+          "borderTop": "1px solid var(--outline-gray-2)",
+          "margin": "16px 0px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "summary-divider-1",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "12px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "16px",
+            "justifyContent": "space-between"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-8)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "subtotal-row-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-p-base",
+              "tag": "span",
+              "text": "Subtotal"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-8)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "subtotal-row-value",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-p-base",
+              "tag": "span",
+              "text": "{{ subtotalLabel }}"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "subtotal-row",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "16px",
+            "justifyContent": "space-between"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-8)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "gst-row-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-p-base",
+              "tag": "span",
+              "text": "{{ gstRate + '% GST' }}"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-8)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "gst-row-value",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-p-base",
+              "tag": "span",
+              "text": "{{ gstLabel }}"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "gst-row",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "summary-amounts",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "borderTop": "1px solid var(--outline-gray-2)",
+          "margin": "16px 0px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "summary-divider-2",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "16px",
+          "justifyContent": "space-between"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "total-row-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "span",
+            "text": "Total due"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "total-row-value",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "span",
+            "text": "{{ totalLabel }}"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "total-row",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "summary-inner",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "summary-panel",
+     "componentName": "container",
+     "mobileStyles": {
+      "borderBottom": "1px solid var(--outline-gray-1)",
+      "borderRight": "none",
+      "flex": "none",
+      "padding": "24px 16px"
+     },
+     "originalElement": "div"
+    },
+    {
+     "baseStyles": {
+      "display": "flex",
+      "flex": "1",
+      "flexDirection": "column",
+      "padding": "64px 48px"
+     },
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "margin": "0px auto",
+        "maxWidth": "380px",
+        "width": "100%"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "display": "{{ view === 'pay' ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "16px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "pay-form-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "h2",
+            "text": "Your details"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "display": "{{ isGuest ? 'block' : 'none' }}"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "pay-form-guest",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "p",
+            "text": "Log in to finish paying. You'll come straight back here."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "{{ !isGuest ? 'flex' : 'none' }}",
+            "flexDirection": "column",
+            "gap": "16px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "width": "100%"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "pay-email",
+             "componentName": "TextInput",
+             "componentProps": {
+              "disabled": true,
+              "label": "Email",
+              "modelValue": "{{ userEmail }}"
+             }
+            },
+            {
+             "baseStyles": {
+              "width": "100%"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "pay-company",
+             "componentName": "TextInput",
+             "componentProps": {
+              "label": "Company name",
+              "modelValue": {
+               "$type": "variable",
+               "name": "checkoutCompany"
+              },
+              "placeholder": "The name on your invoices",
+              "required": true
+             }
+            },
+            {
+             "baseStyles": {
+              "width": "100%"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "pay-phone",
+             "componentName": "TextInput",
+             "componentProps": {
+              "label": "Phone",
+              "modelValue": {
+               "$type": "variable",
+               "name": "checkoutPhone"
+              },
+              "type": "tel"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "pay-terms",
+             "componentName": "Checkbox",
+             "componentProps": {
+              "label": "I accept the Starter Pack terms and conditions",
+              "modelValue": {
+               "$type": "variable",
+               "name": "termsAccepted"
+              }
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "pay-form-fields",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "width": "100%"
+           },
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "payNow();"
+            }
+           },
+           "componentId": "pay-button",
+           "componentName": "Button",
+           "componentProps": {
+            "disabled": "{{ !isGuest && (!checkoutCompany || !termsAccepted || paying) }}",
+            "label": "{{ isGuest ? 'Log in to pay' : 'Pay ' + totalLabel }}",
+            "loading": "{{ paying }}",
+            "size": "md",
+            "variant": "solid"
+           }
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "6px",
+            "justifyContent": "center"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "flexShrink": "0",
+              "height": "12px",
+              "width": "12px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "pay-note-icon",
+             "componentName": "Icon",
+             "componentProps": {
+              "icon": "lucide-lock"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "pay-note-text",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-p-sm",
+              "tag": "span",
+              "text": "You'll pay on Razorpay's secure page \u2014 cards, UPI or netbanking."
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "pay-note",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "pay-form",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)",
+          "display": "{{ view === 'loading' ? 'block' : 'none' }}"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "status-loading",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-p-base",
+          "tag": "span",
+          "text": "Checking your payment\u2026"
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "{{ view === 'paid' ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-green-6)",
+            "flexShrink": "0",
+            "height": "24px",
+            "marginBottom": "4px",
+            "width": "24px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-paid-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-circle-check"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-paid-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "h2",
+            "text": "Payment received"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-paid-body",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "p",
+            "text": "A receipt is on its way. Frappe will assign a partner for your industry and region and introduce you."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "marginTop": "12px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "backToPacks();"
+              }
+             },
+             "componentId": "status-paid-back",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Back to Starter Packs",
+              "variant": "subtle"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "status-paid-actions",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "status-paid",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "{{ view === 'pending' ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "flexShrink": "0",
+            "height": "24px",
+            "marginBottom": "4px",
+            "width": "24px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-pending-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-clock"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-pending-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "h2",
+            "text": "Confirming your payment"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-pending-body",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "p",
+            "text": "This usually takes a few seconds. If you've paid, it shows here as soon as Razorpay confirms it."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "marginTop": "12px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "loadOrder();"
+              }
+             },
+             "componentId": "status-pending-check",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Check again",
+              "variant": "subtle"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "status-pending-actions",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "status-pending",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "{{ view === 'failed' ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-red-6)",
+            "flexShrink": "0",
+            "height": "24px",
+            "marginBottom": "4px",
+            "width": "24px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-failed-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-circle-x"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-failed-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "h2",
+            "text": "Payment didn't go through"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-failed-body",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "p",
+            "text": "The payment link expired or was cancelled. Nothing was charged for this order."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "marginTop": "12px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "retryPayment();"
+              }
+             },
+             "componentId": "status-failed-retry",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Try again",
+              "loading": "{{ paying }}",
+              "variant": "solid"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "backToPacks();"
+              }
+             },
+             "componentId": "status-failed-back",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Back to Starter Packs",
+              "variant": "subtle"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "status-failed-actions",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "status-failed",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "{{ view === 'refunded' ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "flexShrink": "0",
+            "height": "24px",
+            "marginBottom": "4px",
+            "width": "24px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-refunded-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-rotate-ccw"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-refunded-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "h2",
+            "text": "This order was refunded"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-refunded-body",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "p",
+            "text": "The money goes back the way you paid."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "marginTop": "12px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "backToPacks();"
+              }
+             },
+             "componentId": "status-refunded-back",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Back to Starter Packs",
+              "variant": "subtle"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "status-refunded-actions",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "status-refunded",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "{{ view === 'error' ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "flexShrink": "0",
+            "height": "24px",
+            "marginBottom": "4px",
+            "width": "24px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-error-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-circle-alert"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-error-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "h2",
+            "text": "We couldn't find this payment"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-error-body",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "p",
+            "text": "Log in with the account you paid from. If it still doesn't show, contact Frappe with the time you paid."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "marginTop": "12px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "backToPacks();"
+              }
+             },
+             "componentId": "status-error-back",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Back to Starter Packs",
+              "variant": "subtle"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "status-error-actions",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "status-error",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "{{ view === 'empty' ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "flexShrink": "0",
+            "height": "24px",
+            "marginBottom": "4px",
+            "width": "24px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-empty-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-package"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-empty-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "h2",
+            "text": "Nothing to pay for yet"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-empty-body",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "p",
+            "text": "Pick a Starter Pack first, then check out."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "marginTop": "12px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "backToPacks();"
+              }
+             },
+             "componentId": "status-empty-back",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "See the Starter Packs",
+              "variant": "subtle"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "status-empty-actions",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "status-empty",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "pay-inner",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "pay-panel",
+     "componentName": "container",
+     "mobileStyles": {
+      "flex": "none",
+      "padding": "24px 16px 48px 16px"
+     },
+     "originalElement": "div"
+    }
+   ],
+   "classes": [],
+   "componentId": "root",
+   "componentName": "div",
+   "mobileStyles": {
+    "flexDirection": "column"
+   },
+   "originalElement": "body"
+  }
+ ],
+ "creation": "2026-09-26 10:44:38.029163",
+ "doctype": "Studio Page",
+ "draft_blocks": [
+  {
+   "baseStyles": {
+    "backgroundColor": "var(--surface-base)",
+    "display": "flex",
+    "flexDirection": "row",
+    "minHeight": "100%",
+    "width": "inherit"
+   },
+   "blockName": "body",
+   "children": [
+    {
+     "baseStyles": {
+      "backgroundColor": "var(--surface-gray-1)",
+      "borderRight": "1px solid var(--outline-gray-1)",
+      "display": "flex",
+      "flex": "1",
+      "flexDirection": "column",
+      "padding": "64px 48px"
+     },
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "margin": "0px auto",
+        "maxWidth": "380px",
+        "width": "100%"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "alignSelf": "flex-start",
+          "cursor": "pointer",
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-6)",
+            "flexShrink": "0",
+            "height": "16px",
+            "width": "16px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "back-link-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-arrow-left"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "back-link-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-base",
+            "tag": "span",
+            "text": "Frappe Technologies"
+           }
+          }
+         ],
+         "classes": [],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "goBack();"
+          }
+         },
+         "componentId": "back-link",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)",
+          "marginTop": "40px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "pay-to",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-p-base",
+          "tag": "span",
+          "text": "Pay Frappe Technologies"
+         }
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-9)",
+          "fontWeight": "600",
+          "marginTop": "4px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "pay-total",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-2xl",
+          "tag": "span",
+          "text": "{{ totalLabel }}"
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "14px",
+          "marginTop": "32px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "lines",
+         "componentName": "Repeater",
+         "componentProps": {
+          "data": "{{ lines }}",
+          "dataKey": "name",
+          "emptyStateMessage": ""
+         },
+         "componentSlots": {
+          "default": {
+           "parentBlockId": "lines",
+           "slotContent": [
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "row",
+              "gap": "16px",
+              "justifyContent": "space-between"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "2px",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "line-name",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-p-base",
+                  "tag": "span",
+                  "text": "{{ dataItem.name }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "line-hours",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-p-sm",
+                  "tag": "span",
+                  "text": "{{ dataItem.hours + ' hours' }}"
+                 }
+                }
+               ],
+               "classes": [],
+               "componentId": "line-info",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-8)"
+               },
+               "children": [],
+               "classes": [],
+               "componentId": "line-price",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-p-base",
+                "tag": "span",
+                "text": "{{ money(dataItem.price) }}"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "line",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "slotId": "lines:default",
+           "slotName": "default"
+          }
+         }
+        },
+        {
+         "baseStyles": {
+          "borderTop": "1px solid var(--outline-gray-2)",
+          "margin": "16px 0px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "summary-divider-1",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "12px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "16px",
+            "justifyContent": "space-between"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-8)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "subtotal-row-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-p-base",
+              "tag": "span",
+              "text": "Subtotal"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-8)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "subtotal-row-value",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-p-base",
+              "tag": "span",
+              "text": "{{ subtotalLabel }}"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "subtotal-row",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "16px",
+            "justifyContent": "space-between"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-8)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "gst-row-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-p-base",
+              "tag": "span",
+              "text": "{{ gstRate + '% GST' }}"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-8)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "gst-row-value",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-p-base",
+              "tag": "span",
+              "text": "{{ gstLabel }}"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "gst-row",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "summary-amounts",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "borderTop": "1px solid var(--outline-gray-2)",
+          "margin": "16px 0px"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "summary-divider-2",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "16px",
+          "justifyContent": "space-between"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "total-row-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "span",
+            "text": "Total due"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "total-row-value",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "span",
+            "text": "{{ totalLabel }}"
+           }
+          }
+         ],
+         "classes": [],
+         "componentId": "total-row",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "summary-inner",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "summary-panel",
+     "componentName": "container",
+     "mobileStyles": {
+      "borderBottom": "1px solid var(--outline-gray-1)",
+      "borderRight": "none",
+      "flex": "none",
+      "padding": "24px 16px"
+     },
+     "originalElement": "div"
+    },
+    {
+     "baseStyles": {
+      "display": "flex",
+      "flex": "1",
+      "flexDirection": "column",
+      "padding": "64px 48px"
+     },
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "margin": "0px auto",
+        "maxWidth": "380px",
+        "width": "100%"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "display": "{{ view === 'pay' ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "16px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "pay-form-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "h2",
+            "text": "Your details"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "display": "{{ isGuest ? 'block' : 'none' }}"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "pay-form-guest",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "p",
+            "text": "Log in to finish paying. You'll come straight back here."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "{{ !isGuest ? 'flex' : 'none' }}",
+            "flexDirection": "column",
+            "gap": "16px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "width": "100%"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "pay-email",
+             "componentName": "TextInput",
+             "componentProps": {
+              "disabled": true,
+              "label": "Email",
+              "modelValue": "{{ userEmail }}"
+             }
+            },
+            {
+             "baseStyles": {
+              "width": "100%"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "pay-company",
+             "componentName": "TextInput",
+             "componentProps": {
+              "label": "Company name",
+              "modelValue": {
+               "$type": "variable",
+               "name": "checkoutCompany"
+              },
+              "placeholder": "The name on your invoices",
+              "required": true
+             }
+            },
+            {
+             "baseStyles": {
+              "width": "100%"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "pay-phone",
+             "componentName": "TextInput",
+             "componentProps": {
+              "label": "Phone",
+              "modelValue": {
+               "$type": "variable",
+               "name": "checkoutPhone"
+              },
+              "type": "tel"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "pay-terms",
+             "componentName": "Checkbox",
+             "componentProps": {
+              "label": "I accept the Starter Pack terms and conditions",
+              "modelValue": {
+               "$type": "variable",
+               "name": "termsAccepted"
+              }
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "pay-form-fields",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "width": "100%"
+           },
+           "children": [],
+           "classes": [],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "payNow();"
+            }
+           },
+           "componentId": "pay-button",
+           "componentName": "Button",
+           "componentProps": {
+            "disabled": "{{ !isGuest && (!checkoutCompany || !termsAccepted || paying) }}",
+            "label": "{{ isGuest ? 'Log in to pay' : 'Pay ' + totalLabel }}",
+            "loading": "{{ paying }}",
+            "size": "md",
+            "variant": "solid"
+           }
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "6px",
+            "justifyContent": "center"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "flexShrink": "0",
+              "height": "12px",
+              "width": "12px"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "pay-note-icon",
+             "componentName": "Icon",
+             "componentProps": {
+              "icon": "lucide-lock"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "pay-note-text",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-p-sm",
+              "tag": "span",
+              "text": "You'll pay on Razorpay's secure page \u2014 cards, UPI or netbanking."
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "pay-note",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "pay-form",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)",
+          "display": "{{ view === 'loading' ? 'block' : 'none' }}"
+         },
+         "children": [],
+         "classes": [],
+         "componentId": "status-loading",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-p-base",
+          "tag": "span",
+          "text": "Checking your payment\u2026"
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "{{ view === 'paid' ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-green-6)",
+            "flexShrink": "0",
+            "height": "24px",
+            "marginBottom": "4px",
+            "width": "24px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-paid-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-circle-check"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-paid-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "h2",
+            "text": "Payment received"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-paid-body",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "p",
+            "text": "A receipt is on its way. Frappe will assign a partner for your industry and region and introduce you."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "marginTop": "12px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "backToPacks();"
+              }
+             },
+             "componentId": "status-paid-back",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Back to Starter Packs",
+              "variant": "subtle"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "status-paid-actions",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "status-paid",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "{{ view === 'pending' ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "flexShrink": "0",
+            "height": "24px",
+            "marginBottom": "4px",
+            "width": "24px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-pending-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-clock"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-pending-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "h2",
+            "text": "Confirming your payment"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-pending-body",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "p",
+            "text": "This usually takes a few seconds. If you've paid, it shows here as soon as Razorpay confirms it."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "marginTop": "12px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "loadOrder();"
+              }
+             },
+             "componentId": "status-pending-check",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Check again",
+              "variant": "subtle"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "status-pending-actions",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "status-pending",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "{{ view === 'failed' ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-red-6)",
+            "flexShrink": "0",
+            "height": "24px",
+            "marginBottom": "4px",
+            "width": "24px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-failed-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-circle-x"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-failed-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "h2",
+            "text": "Payment didn't go through"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-failed-body",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "p",
+            "text": "The payment link expired or was cancelled. Nothing was charged for this order."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "marginTop": "12px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "retryPayment();"
+              }
+             },
+             "componentId": "status-failed-retry",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Try again",
+              "loading": "{{ paying }}",
+              "variant": "solid"
+             }
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "backToPacks();"
+              }
+             },
+             "componentId": "status-failed-back",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Back to Starter Packs",
+              "variant": "subtle"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "status-failed-actions",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "status-failed",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "{{ view === 'refunded' ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "flexShrink": "0",
+            "height": "24px",
+            "marginBottom": "4px",
+            "width": "24px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-refunded-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-rotate-ccw"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-refunded-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "h2",
+            "text": "This order was refunded"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-refunded-body",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "p",
+            "text": "The money goes back the way you paid."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "marginTop": "12px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "backToPacks();"
+              }
+             },
+             "componentId": "status-refunded-back",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Back to Starter Packs",
+              "variant": "subtle"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "status-refunded-actions",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "status-refunded",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "{{ view === 'error' ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "flexShrink": "0",
+            "height": "24px",
+            "marginBottom": "4px",
+            "width": "24px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-error-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-circle-alert"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-error-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "h2",
+            "text": "We couldn't find this payment"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-error-body",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "p",
+            "text": "Log in with the account you paid from. If it still doesn't show, contact Frappe with the time you paid."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "marginTop": "12px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "backToPacks();"
+              }
+             },
+             "componentId": "status-error-back",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Back to Starter Packs",
+              "variant": "subtle"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "status-error-actions",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "status-error",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "{{ view === 'empty' ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "8px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "flexShrink": "0",
+            "height": "24px",
+            "marginBottom": "4px",
+            "width": "24px"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-empty-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-package"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "600"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-empty-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg",
+            "tag": "h2",
+            "text": "Nothing to pay for yet"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)"
+           },
+           "children": [],
+           "classes": [],
+           "componentId": "status-empty-body",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-p-base",
+            "tag": "p",
+            "text": "Pick a Starter Pack first, then check out."
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "8px",
+            "marginTop": "12px"
+           },
+           "children": [
+            {
+             "children": [],
+             "classes": [],
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "backToPacks();"
+              }
+             },
+             "componentId": "status-empty-back",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "See the Starter Packs",
+              "variant": "subtle"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "status-empty-actions",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "classes": [],
+         "componentId": "status-empty",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "classes": [],
+       "componentId": "pay-inner",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "classes": [],
+     "componentId": "pay-panel",
+     "componentName": "container",
+     "mobileStyles": {
+      "flex": "none",
+      "padding": "24px 16px 48px 16px"
+     },
+     "originalElement": "div"
+    }
+   ],
+   "classes": [],
+   "componentId": "root",
+   "componentName": "div",
+   "mobileStyles": {
+    "flexDirection": "column"
+   },
+   "originalElement": "body"
+  }
+ ],
+ "frappe_app": "connect",
+ "is_standard": 1,
+ "modified": "2026-09-26 10:44:38.029163",
+ "modified_by": "Administrator",
+ "name": "starter_pack_checkout",
+ "owner": "Administrator",
+ "page_name": "page-932df256",
+ "page_title": "Starter Pack Checkout",
+ "published": 1,
+ "resources": [
+  {
+   "auto": 1,
+   "method": "GET",
+   "params": "{}",
+   "resource_name": "myContext",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.account.get_my_context"
+  },
+  {
+   "auto": 1,
+   "method": "GET",
+   "params": "{}",
+   "resource_name": "myCustomer",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.customer.get_my_customer"
+  },
+  {
+   "auto": 1,
+   "method": "GET",
+   "params": "{}",
+   "resource_name": "catalog",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.starter_pack.get_catalog"
+  }
+ ],
+ "route": "/starter-pack-checkout",
+ "studio_app": "connect",
+ "variables": [
+  {
+   "initial_value": "\"\"",
+   "variable_name": "checkoutCompany",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "checkoutPhone",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "false",
+   "variable_name": "termsAccepted",
+   "variable_type": "Boolean"
+  },
+  {
+   "initial_value": "false",
+   "variable_name": "paying",
+   "variable_type": "Boolean"
+  },
+  {
+   "initial_value": "{}",
+   "variable_name": "orderData",
+   "variable_type": "Object"
+  },
+  {
+   "initial_value": "false",
+   "variable_name": "loadError",
+   "variable_type": "Boolean"
+  }
+ ]
+}

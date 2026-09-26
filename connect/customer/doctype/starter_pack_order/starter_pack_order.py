@@ -237,12 +237,25 @@ def checkout(packs, company_name, phone=None, terms_accepted=0):
 	return {"order": order.name, "amount": order.amount, "payment_url": request.order_url}
 
 
-def get_order(order):
+def get_order(order=None, payment_request=None):
 	"""An order's status for the page the gateway sends the customer back to.
 
-	Re-reads the payment status from the gateway rather than trusting the redirect,
-	which anyone can open by hand.
+	Razorpay's return URL carries the Gateway Payment Request's name (`reference_id`),
+	not the order's, so either identifies it. Re-reads the payment status from the
+	gateway rather than trusting the redirect, which anyone can open by hand.
 	"""
+	if not order and payment_request:
+		order = frappe.db.get_value("Starter Pack Order", {"payment_request": payment_request})
+		if not order:
+			# The request exists but is no longer the order's current one, or never was.
+			order = frappe.db.get_value(
+				"Gateway Payment Request",
+				{"name": payment_request, "ref_doctype": "Starter Pack Order"},
+				"ref_docname",
+			)
+	if not order:
+		frappe.throw(_("Order not found"), frappe.DoesNotExistError)
+
 	doc = get_own_order(order)
 	if doc.payment_request and doc.payment_status == "Unpaid":
 		frappe.get_doc("Gateway Payment Request", doc.payment_request).sync_status()
@@ -252,8 +265,14 @@ def get_order(order):
 		"order": doc.name,
 		"payment_status": doc.payment_status,
 		"status": doc.status,
+		"subtotal": doc.subtotal,
+		"gst_rate": doc.gst_rate,
+		"gst_amount": doc.gst_amount,
 		"amount": doc.amount,
-		"packs": [{"pack_name": r.pack_name, "price": r.price} for r in doc.packs],
+		"total_hours": doc.total_hours,
+		"packs": [
+			{"pack_name": r.pack_name, "price": r.price, "total_hours": r.total_hours} for r in doc.packs
+		],
 	}
 
 

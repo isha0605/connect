@@ -7,7 +7,12 @@ import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import today
 
-from connect.customer.doctype.starter_pack_order.starter_pack_order import PAYMENT_HOOK_FLAG, checkout, pay
+from connect.customer.doctype.starter_pack_order.starter_pack_order import (
+	PAYMENT_HOOK_FLAG,
+	checkout,
+	get_order,
+	pay,
+)
 
 RAZORPAY = "bwh_payments.bwh_payments.doctype.razorpay_gateway_settings.razorpay_gateway_settings.RazorpayGatewaySettings"
 ORDER_MODULE = "connect.customer.doctype.starter_pack_order.starter_pack_order"
@@ -226,6 +231,23 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 		self.request(order).apply_webhook_status("Paid", "evt_2")
 		order.reload()
 		self.assertEqual(order.payment_status, "Paid")
+
+	def test_the_return_page_finds_the_order_by_its_payment_request(self):
+		_, order = self.place([self.pack_a, self.pack_b])
+		self.request(order).apply_webhook_status("Paid", "evt_1")
+		result = get_order(payment_request=order.payment_request)
+		self.assertEqual(result["order"], order.name)
+		self.assertEqual(result["payment_status"], "Paid")
+		self.assertEqual((result["subtotal"], result["gst_amount"], result["amount"]), (30000, 5400, 35400))
+		self.assertEqual([p["total_hours"] for p in result["packs"]], [5, 8])
+
+	def test_the_return_page_is_only_for_the_buyer(self):
+		_, order = self.place([self.pack_a])
+		frappe.set_user("Guest")
+		try:
+			self.assertRaises(frappe.PermissionError, get_order, payment_request=order.payment_request)
+		finally:
+			frappe.set_user("Administrator")
 
 	def test_a_paid_order_cannot_be_paid_again(self):
 		_, order = self.place([self.pack_a])
