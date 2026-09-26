@@ -8,7 +8,9 @@
  "engine": "InnoDB",
  "field_order": [
   "title",
+  "scope",
   "side",
+  "team",
   "is_global",
   "content"
  ],
@@ -21,6 +23,17 @@
    "reqd": 1
   },
   {
+   "default": "Personal",
+   "description": "Who can see and use this template. Global templates are shared with everyone on the side and are managed here in Desk.",
+   "fieldname": "scope",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Scope",
+   "options": "Personal\nTeam\nGlobal",
+   "reqd": 1
+  },
+  {
    "fieldname": "side",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -29,11 +42,21 @@
    "reqd": 1
   },
   {
+   "depends_on": "eval:doc.scope=='Team'",
+   "description": "The customer or partner company a Team template is shared with. Set from the creator's company.",
+   "fieldname": "team",
+   "fieldtype": "Data",
+   "label": "Team",
+   "read_only": 1
+  },
+  {
    "default": "0",
+   "description": "Set from Scope.",
    "fieldname": "is_global",
    "fieldtype": "Check",
    "in_list_view": 1,
-   "label": "Is Global"
+   "label": "Is Global",
+   "read_only": 1
   },
   {
    "fieldname": "content",
@@ -45,7 +68,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-08-11 00:00:00.000000",
+ "modified": "2026-09-25 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Messaging",
  "name": "Connect Message Template",
