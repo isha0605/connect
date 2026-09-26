@@ -219,6 +219,27 @@ export const OUR_NEEDS = [
 
 export const EXTRA_HOUR_RATE = 2000
 
+// One line under each pack's name, from the prototype. Keyed by Starter Pack name; a pack
+// added later without one here just shows no line.
+export const PACK_PITCHES = {
+	accounts_sales_purchase_stock: "Run the business without spreadsheets.",
+	manufacturing: "Plan production against real stock.",
+	hr: "Keep people, leave and attendance in one place.",
+	payroll: "Pay people on time, off their attendance.",
+}
+
+// Icon beside each module in a pack's "Modules covered" list, by the module's name in the
+// catalog. Anything unlisted falls back to a plain box.
+export const MODULE_ICONS = {
+	Accounting: "lucide-landmark",
+	Selling: "lucide-trending-up",
+	Buying: "lucide-shopping-cart",
+	Inventory: "lucide-warehouse",
+	Manufacturing: "lucide-factory",
+	HR: "lucide-users",
+	Payroll: "lucide-wallet",
+}
+
 // The commercial terms, shared by the recommendation page (before paying) and the
 // confirmed page (after paying) so the two never say something different.
 export function commercialTerms(gstRate, money) {

@@ -1,6 +1,7 @@
 # Copyright (c) 2026, Isha and Contributors
 # See license.txt
 
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import frappe
@@ -206,6 +207,7 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 		order.reload()
 		self.assertEqual(order.payment_status, "Paid")
 		self.assertEqual(order.gateway_payment_id, "pay_test_1")
+		self.assertTrue(order.paid_on)
 
 	def test_payment_assigns_a_partner(self):
 		make_partner("_Test RR Payment Partner", starter_pack=0)
@@ -262,6 +264,24 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 		self.assertEqual(result["payment_status"], "Paid")
 		self.assertEqual((result["subtotal"], result["gst_amount"], result["amount"]), (30000, 5400, 35400))
 		self.assertEqual([p["total_hours"] for p in result["packs"]], [5, 8])
+
+	def test_the_confirmed_page_gets_the_partner_and_when_things_happened(self):
+		make_partner("_Test RR Payment Partner", starter_pack=0)
+		partner = frappe.get_doc("Partner", "_Test RR Payment Partner")
+		partner.update({"starter_pack": 1, "enabled": 1, "starter_pack_sequence": 0})
+		partner.save(ignore_permissions=True)
+
+		_, order = self.place([self.pack_a])
+		self.request(order).apply_webhook_status("Paid", "evt_1")
+		result = get_order(order.name)
+
+		order.reload()
+		self.assertEqual(result["partner"]["name"], order.partner)
+		self.assertIsInstance(result["partner"]["industries"], list)
+		self.assertEqual(result["partner"]["review_count"], 0)
+		# Sent with the site's offset, so a browser in another zone reads the right moment.
+		for field in ("created_on", "paid_on", "partner_assigned_on"):
+			self.assertIsNotNone(datetime.fromisoformat(result[field]).utcoffset(), field)
 
 	def test_the_return_page_is_only_for_the_buyer(self):
 		_, order = self.place([self.pack_a])

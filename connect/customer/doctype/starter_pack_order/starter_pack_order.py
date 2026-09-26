@@ -1,10 +1,12 @@
 # Copyright (c) 2026
 # For license information, please see license.txt
 
+from zoneinfo import ZoneInfo
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, now_datetime
+from frappe.utils import flt, get_datetime, get_system_timezone, now_datetime
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
 
@@ -37,6 +39,7 @@ class StarterPackOrder(Document):
 		if not self.is_new():
 			self.validate_packs_unchanged()
 		self.validate_payment_status_change()
+		self.set_paid_on()
 		self.validate_partner()
 		self.set_partner_assignment()
 		self.set_totals()
@@ -85,6 +88,12 @@ class StarterPackOrder(Document):
 		old = before.payment_status if before else "Unpaid"
 		if self.payment_status != old and not frappe.flags.get(PAYMENT_HOOK_FLAG):
 			frappe.throw(_("Payment status is set by the payment gateway, not by hand."))
+
+	def set_paid_on(self):
+		# When the payment first landed. Kept through a later refund: the Confirmed page's
+		# activity and support both want to know when the money came in.
+		if self.payment_status == "Paid" and not self.paid_on:
+			self.paid_on = now_datetime()
 
 	def validate_partner(self):
 		if not self.partner or not self.has_value_changed("partner"):
@@ -284,23 +293,22 @@ def get_order(order=None, payment_request=None):
 		frappe.get_doc("Gateway Payment Request", doc.payment_request).sync_status()
 		doc.reload()
 
-	partner = None
-	if doc.partner:
-		from connect.partner.doctype.partner.partner import get_partner_preview
-
-		partner = get_partner_preview(doc.partner)
-
 	return {
 		"order": doc.name,
+		"company_name": doc.company_name,
 		"payment_status": doc.payment_status,
+		"payment_request": doc.payment_request,
 		"status": doc.status,
+		"created_on": with_timezone(doc.creation),
+		"paid_on": with_timezone(doc.paid_on),
+		"partner_assigned_on": with_timezone(doc.partner_assigned_on),
 		"subtotal": doc.subtotal,
 		"gst_rate": doc.gst_rate,
 		"gst_amount": doc.gst_amount,
 		"amount": doc.amount,
 		"total_hours": doc.total_hours,
 		"kickoff_date": doc.kickoff_date,
-		"partner": partner,
+		"partner": get_assigned_partner(doc.partner) if doc.partner else None,
 		"packs": [
 			{
 				"starter_pack": r.starter_pack,
@@ -312,6 +320,30 @@ def get_order(order=None, payment_request=None):
 			for r in doc.packs
 		],
 	}
+
+
+def with_timezone(value):
+	"""A stored datetime as ISO 8601 with the site's offset. Frappe keeps datetimes in the
+	system time zone without saying so, and a browser elsewhere would read them as its own."""
+	if not value:
+		return None
+	return get_datetime(value).replace(tzinfo=ZoneInfo(get_system_timezone())).isoformat()
+
+
+def get_assigned_partner(partner):
+	"""The partner card on the Confirmed page: the directory preview, plus the review count
+	and the industries their profile shows, so both pages describe them the same way."""
+	from connect.partner.doctype.partner.partner import _compute_display_industries, get_partner_preview
+
+	preview = get_partner_preview(partner)
+	stories = frappe.get_all(
+		"Partner Success Story",
+		filters={"parent": partner, "parenttype": "Partner", "parentfield": "success_stories"},
+		fields=["category"],
+	)
+	preview["industries"] = _compute_display_industries(preview.industry, stories)
+	preview["review_count"] = frappe.db.count("Partner Review", {"partner": partner})
+	return preview
 
 
 def pay(order):
