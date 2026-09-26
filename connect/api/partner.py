@@ -191,3 +191,24 @@ def update_my_partner_profile(
 		implementation_types=implementation_types,
 		languages=languages, founder=founder, success_stories=success_stories, packs=packs, addons=addons,
 	)
+
+
+@frappe.whitelist()
+def get_my_crm_settings():
+	from connect.partner.doctype.partner_crm_settings.partner_crm_settings import get_my_settings
+
+	return get_my_settings()
+
+
+@frappe.whitelist()
+def save_my_crm_settings(site_url, api_key, default_lead_status, api_secret=None, enabled=0):
+	from connect.partner.doctype.partner_crm_settings.partner_crm_settings import save_my_settings
+
+	return save_my_settings(site_url, api_key, default_lead_status, api_secret, enabled)
+
+
+@frappe.whitelist()
+def disconnect_my_crm():
+	from connect.partner.doctype.partner_crm_settings.partner_crm_settings import disconnect_my_crm
+
+	return disconnect_my_crm()
