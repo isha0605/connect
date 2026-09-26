@@ -66,6 +66,38 @@ DIMENSION_SCORE_FIELDS = (
 
 
 class Partner(Document):
+	def validate(self):
+		self.set_starter_pack_sequence()
+
+	def set_starter_pack_sequence(self):
+		"""Every approved Starter Pack partner has a unique place in the round robin that
+		hands out paid orders (see starter_pack_order.partner_rotation). A newly approved
+		partner joins the end of the line; one taken out of the pool gives up their place,
+		so coming back later puts them at the end again."""
+		if not self.starter_pack:
+			self.starter_pack_sequence = 0
+			return
+
+		if cint(self.starter_pack_sequence) <= 0:
+			last = frappe.db.sql(
+				"select max(starter_pack_sequence) from `tabPartner` where starter_pack = 1 and name != %s",
+				self.name,
+			)[0][0]
+			self.starter_pack_sequence = cint(last) + 1
+			return
+
+		taken_by = frappe.db.get_value(
+			"Partner",
+			{"starter_pack": 1, "starter_pack_sequence": self.starter_pack_sequence, "name": ["!=", self.name]},
+			"partner_name",
+		)
+		if taken_by:
+			frappe.throw(
+				_("Starter Pack Rotation Order {0} is already {1}'s. Each partner needs their own.").format(
+					self.starter_pack_sequence, frappe.bold(taken_by)
+				)
+			)
+
 	def before_save(self):
 		self.region = COUNTRY_TO_REGION.get((self.country or "").strip().lower(), "Other")
 

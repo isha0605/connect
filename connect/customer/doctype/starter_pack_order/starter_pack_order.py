@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt
+from frappe.utils import flt, now_datetime
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
 
@@ -38,6 +38,7 @@ class StarterPackOrder(Document):
 			self.validate_packs_unchanged()
 		self.validate_payment_status_change()
 		self.validate_partner()
+		self.set_partner_assignment()
 		self.set_totals()
 
 	def snapshot_packs(self):
@@ -95,6 +96,23 @@ class StarterPackOrder(Document):
 			frappe.throw(
 				_("{0} is not an approved Starter Pack partner.").format(frappe.bold(self.partner))
 			)
+
+	def set_partner_assignment(self):
+		"""Record when and how the partner was set. Only the round robin sets
+		flags.auto_assigned (see partner_rotation); a partner set by hand in Desk is
+		recorded as such and leaves the rotation's pointer alone."""
+		if not self.has_value_changed("partner"):
+			return
+		if self.partner:
+			self.partner_assigned_on = now_datetime()
+			self.partner_auto_assigned = 1 if self.flags.auto_assigned else 0
+			if self.status == "New":
+				self.status = "Partner Assigned"
+		else:
+			self.partner_assigned_on = None
+			self.partner_auto_assigned = 0
+			if self.status == "Partner Assigned":
+				self.status = "New"
 
 	def set_totals(self):
 		# Always derived from the snapshotted rows, so the total can't drift from the lines.
@@ -182,6 +200,11 @@ def on_gateway_payment_request_update(request, method=None):
 		order.save(ignore_permissions=True)
 	finally:
 		frappe.flags[PAYMENT_HOOK_FLAG] = False
+
+	if payment_status == "Paid" and not order.partner:
+		from connect.customer.doctype.starter_pack_order.partner_rotation import assign_partner
+
+		assign_partner(order.name)  # never raises; leaves the order unassigned on failure
 
 
 def get_captured_payment_id(request):

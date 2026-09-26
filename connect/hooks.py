@@ -235,6 +235,13 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
+scheduler_events = {
+	# Paid Starter Pack orders still without a partner (e.g. paid while none was approved).
+	"hourly": [
+		"connect.customer.doctype.starter_pack_order.partner_rotation.assign_waiting_orders",
+	],
+}
+
 # scheduler_events = {
 # 	"all": [
 # 		"connect.tasks.all"
