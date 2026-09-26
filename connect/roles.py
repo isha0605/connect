@@ -4,6 +4,7 @@ CUSTOMER_ROLE = "Connect Customer"
 PARTNER_ROLE = "Connect Partner"
 CUSTOMER_GUEST_ROLE = "Connect Customer Guest"
 PARTNER_GUEST_ROLE = "Connect Partner Guest"
+REVIEWER_ROLE = "Partner Reviewer"
 
 _COMPANY_ROLE_BY_DOCTYPE = {
 	"Connect Partner Member": PARTNER_ROLE,

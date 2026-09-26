@@ -21,6 +21,10 @@ def _get_partner_admin(partner):
 	return frappe.db.get_value("Connect Partner Member", {"partner": partner, "is_admin": 1}, "user")
 
 
+def _is_partner_reviewer(user):
+	return "Partner Reviewer" in frappe.get_roles(user)
+
+
 def _my_company_membership(user):
 	"""Returns which company (and doctype/row) this user belongs to, or Nones if neither."""
 	customer_row = frappe.db.get_value(
@@ -105,6 +109,25 @@ def get_partner_crm_settings_permission_query_conditions(user, doctype=None):
 		return ""
 	user = frappe.db.escape(user)
 	return f"""`tabPartner CRM Settings`.partner in (
+		select partner from `tabConnect Partner Member` where user = {user} and is_admin = 1
+	)"""
+
+
+def has_partner_application_permission(doc, ptype="read", user=None, **kwargs):
+	"""Controllers can only deny access on top of the 'Connect Partner' role baseline, never grant it."""
+	user = user or frappe.session.user
+	if _has_full_access(user) or _is_partner_reviewer(user):
+		return True
+	if not doc.get("partner"):
+		return True
+	return _is_partner_admin(doc.partner, user)
+
+
+def get_partner_application_permission_query_conditions(user, doctype=None):
+	if _has_full_access(user) or _is_partner_reviewer(user):
+		return ""
+	user = frappe.db.escape(user)
+	return f"""`tabPartner Application`.partner in (
 		select partner from `tabConnect Partner Member` where user = {user} and is_admin = 1
 	)"""
 

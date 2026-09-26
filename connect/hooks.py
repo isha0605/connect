@@ -143,6 +143,7 @@ permission_query_conditions = {
 	"Shortlist": "connect.customer.doctype.shortlist.shortlist.get_permission_query_conditions",
 	"Requirement": "connect.customer.doctype.requirement.requirement.get_permission_query_conditions",
 	"Partner CRM Settings": "connect.permissions.get_partner_crm_settings_permission_query_conditions",
+	"Partner Application": "connect.permissions.get_partner_application_permission_query_conditions",
 }
 
 has_permission = {
@@ -157,6 +158,7 @@ has_permission = {
 	"Shortlist": "connect.customer.doctype.shortlist.shortlist.has_permission",
 	"Requirement": "connect.customer.doctype.requirement.requirement.has_permission",
 	"Partner CRM Settings": "connect.permissions.has_partner_crm_settings_permission",
+	"Partner Application": "connect.permissions.has_partner_application_permission",
 }
 
 # Search

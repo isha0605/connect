@@ -212,3 +212,72 @@ def disconnect_my_crm():
 	from connect.partner.doctype.partner_crm_settings.partner_crm_settings import disconnect_my_crm
 
 	return disconnect_my_crm()
+
+
+@frappe.whitelist()
+def get_partner_application():
+	from connect.partner.doctype.partner_application.partner_application import get_partner_application
+
+	return get_partner_application()
+
+
+@frappe.whitelist(methods=["POST"])
+def save_partner_application(details=None):
+	from connect.partner.doctype.partner_application.partner_application import save_partner_application
+
+	return save_partner_application(details=details)
+
+
+@frappe.whitelist(methods=["POST"])
+def submit_partner_application_for_approval():
+	from connect.partner.doctype.partner_application.partner_application import submit_for_approval
+
+	return submit_for_approval()
+
+
+@frappe.whitelist(methods=["POST"])
+def unregister_partner_application():
+	from connect.partner.doctype.partner_application.partner_application import unregister
+
+	return unregister()
+
+
+@frappe.whitelist()
+def get_certificate_link_status():
+	from connect.partner.doctype.partner_application.partner_application import get_certificate_link_status
+
+	return get_certificate_link_status()
+
+
+@frappe.whitelist()
+def get_mrr_status():
+	from connect.partner.doctype.partner_application.partner_application import get_mrr_status
+
+	return get_mrr_status()
+
+
+@frappe.whitelist()
+def get_countries_with_isd_codes():
+	from connect.partner.doctype.partner_application.partner_application import get_countries_with_isd_codes
+
+	return get_countries_with_isd_codes()
+
+
+@frappe.whitelist(methods=["POST"])
+def send_certificate_link_request(user_email, course):
+	from connect.partner.doctype.partner.partner import _my_partner
+	from connect.partner.doctype.certificate_link_request.certificate_link_request import create_or_resend
+
+	return create_or_resend(_my_partner(), user_email, course)
+
+
+@frappe.whitelist(methods=["POST"])
+def resend_certificate_link_request(request_name):
+	from connect.partner.doctype.partner.partner import _my_partner
+
+	partner = _my_partner()
+	doc = frappe.get_doc("Certificate Link Request", request_name)
+	if doc.partner != partner:
+		frappe.throw(frappe._("Not your request"), frappe.PermissionError)
+	doc.resend()
+	return {"ok": True}
