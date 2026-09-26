@@ -26,6 +26,7 @@ class StarterPackOrder(Document):
 		if not self.is_new():
 			self.validate_packs_unchanged()
 		self.validate_payment_status_change()
+		self.validate_partner()
 		self.set_totals()
 
 	def snapshot_packs(self):
@@ -72,6 +73,17 @@ class StarterPackOrder(Document):
 			frappe.throw(_("Payment status is set by the payment gateway, not by hand."))
 		if self.payment_status == "Refunded" and self.kickoff_date:
 			frappe.throw(_("This order can't be refunded: the implementation has already kicked off."))
+
+	def validate_partner(self):
+		if not self.partner or not self.has_value_changed("partner"):
+			return
+		if self.payment_status != "Paid":
+			frappe.throw(_("Assign a partner only after the order is paid."))
+		# Every approved partner delivers all four packs, so approval is the whole check.
+		if not frappe.db.get_value("Partner", self.partner, "starter_pack"):
+			frappe.throw(
+				_("{0} is not an approved Starter Pack partner.").format(frappe.bold(self.partner))
+			)
 
 	def set_totals(self):
 		# Always derived from the snapshotted rows, so the total can't drift from the lines.

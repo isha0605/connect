@@ -78,6 +78,43 @@ class IntegrationTestStarterPackOrder(IntegrationTestCase):
 		self.assertRaises(frappe.ValidationError, order.save, ignore_permissions=True)
 
 
+class IntegrationTestStarterPackOrderPartner(IntegrationTestCase):
+	"""Frappe assigns the partner, and only from its approved Starter Pack pool."""
+
+	def setUp(self):
+		self.pack = make_pack("_test_pack_a", 10000, 5)
+		frappe.db.set_single_value("Starter Pack Settings", "gst_rate", 18)
+		self.approved = make_partner("_Test Starter Pack Partner", starter_pack=1)
+		self.unapproved = make_partner("_Test Other Partner", starter_pack=0)
+
+	def tearDown(self):
+		frappe.flags[PAYMENT_HOOK_FLAG] = False
+
+	def paid_order(self):
+		order = make_order([self.pack])
+		frappe.flags[PAYMENT_HOOK_FLAG] = True
+		order.payment_status = "Paid"
+		order.save(ignore_permissions=True)
+		frappe.flags[PAYMENT_HOOK_FLAG] = False
+		return order
+
+	def test_no_partner_before_payment(self):
+		order = make_order([self.pack])
+		order.partner = self.approved
+		self.assertRaises(frappe.ValidationError, order.save, ignore_permissions=True)
+
+	def test_rejects_a_partner_outside_the_pool(self):
+		order = self.paid_order()
+		order.partner = self.unapproved
+		self.assertRaises(frappe.ValidationError, order.save, ignore_permissions=True)
+
+	def test_assigns_an_approved_partner_once_paid(self):
+		order = self.paid_order()
+		order.partner = self.approved
+		order.save(ignore_permissions=True)
+		self.assertEqual(order.partner, self.approved)
+
+
 def make_pack(pack_key, price, total_hours):
 	if not frappe.db.exists("Starter Pack", pack_key):
 		frappe.get_doc(
@@ -94,6 +131,16 @@ def make_pack(pack_key, price, total_hours):
 	else:
 		frappe.db.set_value("Starter Pack", pack_key, {"price": price, "total_hours": total_hours, "is_active": 1})
 	return pack_key
+
+
+def make_partner(partner_name, starter_pack):
+	if not frappe.db.exists("Partner", partner_name):
+		tier = next(t for t in frappe.get_meta("Partner").get_field("tier").options.split("\n") if t)
+		frappe.get_doc(
+			{"doctype": "Partner", "partner_name": partner_name, "tier": tier, "country": "India"}
+		).insert(ignore_permissions=True)
+	frappe.db.set_value("Partner", partner_name, "starter_pack", starter_pack)
+	return partner_name
 
 
 def make_order(packs, sent_price=None):

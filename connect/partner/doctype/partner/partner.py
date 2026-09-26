@@ -978,11 +978,13 @@ _PROFILE_SIMPLE_FIELDS = (
 	# "autoname": "field:partner_name" in partner.json), so letting partners edit it here
 	# would rename the document and break every Connect Partner Member row that references
 	# it by name. Renaming a partner is an admin-only operation done from the desk.
+	# starter_pack is excluded too: it decides who Frappe may assign paid Starter Pack
+	# orders to, so a partner must not be able to enrol themselves.
 	"tagline", "description", "country", "city", "address", "website",
 	"industry", "year_founded", "rollouts", "hourly_rate", "response_time_hours",
 	"sites_deployed", "typical_project_size", "proposal_timeline", "certified_experts",
 	"certs_erpnext", "certs_frappe_framework", "countries_served", "references_count",
-	"starter_pack", "demo_available", "logo_position_x", "logo_position_y",
+	"demo_available", "logo_position_x", "logo_position_y",
 )
 
 
@@ -1054,18 +1056,9 @@ def update_my_partner_profile(
 			for row in _parse_json_arg(success_stories, [])
 		])
 
-	if packs is not None:
-		doc.set("packs", [
-			{
-				"pack_key": row.get("pack_key"),
-				"pack_name": row.get("pack_name"),
-				"price": row.get("price"),
-				"hours": row.get("hours"),
-				"validity_days": row.get("validity_days"),
-				"includes_summary": row.get("includes_summary"),
-			}
-			for row in _parse_json_arg(packs, [])
-		])
+	# `packs` is accepted and ignored: Starter Pack prices are Frappe's (see the Starter
+	# Pack doctype), so partners no longer set their own. Kept in the signature so an
+	# older client that still sends it doesn't fail.
 
 	if addons is not None:
 		doc.set("addons", [
