@@ -622,7 +622,7 @@
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "var app = (typeof partnerApplication !== 'undefined' && partnerApplication) ? partnerApplication.data : null; var isDraft = !!(app && app.docstatus === 0 && app.status === 'Draft'); partnershipCompanyName.value = (app && app.company_name) || ''; partnershipCountry.value = (app && app.registered_country) || ''; partnershipState.value = (app && app.registered_state) || ''; partnershipEmail.value = (app && app.company_email) || ''; var contact = String((app && app.contact) || ''); partnershipIsdCountry.value = ''; partnershipIsdSearch.value = ''; if (contact.indexOf('-') > -1) { var parts = contact.split('-'); var isd = parts[0]; var match = (partnershipCountries.data || []).find(function (c) { return c.isd === isd }); if (match) { partnershipIsdCountry.value = match.name; } partnershipContact.value = parts.slice(1).join('-'); } else { partnershipContact.value = contact; } partnershipEditMode.value = isDraft; partnershipRegistered.value = false; partnershipSubmitted.value = false; partnershipSubmitError.value = ''; partnershipWizardStep.value = 'partnerships'; if (typeof partnershipCountries !== 'undefined' && partnershipCountries && !partnershipCountries.data) { partnershipCountries.reload(); } partnershipWizardOpen.value = true;"
+           "script": "if (partnerApplication && partnerApplication.data) { router.push('/partner-onboarding'); return; } var app = (typeof partnerApplication !== 'undefined' && partnerApplication) ? partnerApplication.data : null; var isDraft = !!(app && app.docstatus === 0 && app.status === 'Draft'); partnershipCompanyName.value = (app && app.company_name) || ''; partnershipCountry.value = (app && app.registered_country) || ''; partnershipState.value = (app && app.registered_state) || ''; partnershipEmail.value = (app && app.company_email) || ''; var contact = String((app && app.contact) || ''); partnershipIsdCountry.value = ''; partnershipIsdSearch.value = ''; if (contact.indexOf('-') > -1) { var parts = contact.split('-'); var isd = parts[0]; var match = (partnershipCountries.data || []).find(function (c) { return c.isd === isd }); if (match) { partnershipIsdCountry.value = match.name; } partnershipContact.value = parts.slice(1).join('-'); } else { partnershipContact.value = contact; } partnershipEditMode.value = isDraft; partnershipRegistered.value = false; partnershipSubmitted.value = false; partnershipSubmitError.value = ''; partnershipWizardStep.value = 'partnerships'; if (typeof partnershipCountries !== 'undefined' && partnershipCountries && !partnershipCountries.data) { partnershipCountries.reload(); } partnershipWizardOpen.value = true;"
           }
          },
          "componentId": "rail-partnership",
@@ -14246,7 +14246,7 @@
             "click": {
              "action": "Run Script",
              "event": "click",
-             "script": "partnershipWizardOpen.value = false;"
+             "script": "partnershipWizardOpen.value = false; router.push('/partner-onboarding');"
             }
            },
            "componentId": "pw-btn-159",

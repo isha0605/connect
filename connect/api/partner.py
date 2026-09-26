@@ -256,7 +256,9 @@ def get_mrr_status():
 	return get_mrr_status()
 
 
-@frappe.whitelist()
+# allow_guest: the pre-signup "Become a partner?" wizard (login_signup_redesign) uses this for its
+# country/ISD picker before the visitor has an account -- it's static geo data, nothing partner-specific.
+@frappe.whitelist(allow_guest=True)
 def get_countries_with_isd_codes():
 	from connect.partner.doctype.partner_application.partner_application import get_countries_with_isd_codes
 
