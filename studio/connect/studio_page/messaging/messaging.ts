@@ -952,6 +952,26 @@ export default function setup(context) {
 		return item.side === "Partner" ? isPartnerAdmin() : isCustomerAdmin()
 	}
 
+	// ---- Account menu (rail logo) ----
+	// myContext.data.user is frappe.session.user -- "Guest" for a visitor Frappe never
+	// authenticated, same test the framework itself uses (frappe.session.user == "Guest").
+	function isSignedIn() {
+		return !!(context.myContext.data && context.myContext.data.user && context.myContext.data.user !== "Guest")
+	}
+
+	function accountMenuOptions() {
+		if (!isSignedIn()) {
+			return [{ icon: "lucide-log-in", label: "Log in", onClick: () => { window.location.href = "/login" } }]
+		}
+		return [
+			{
+				icon: "lucide-log-out",
+				label: "Log out",
+				onClick: () => { call("logout").then(() => { window.location.href = "/login" }) },
+			},
+		]
+	}
+
 	// ---- Members ----
 	function activeMembers() {
 		return (context.threadMembers.data || []).filter((m) => !m.is_removed)
@@ -3627,6 +3647,8 @@ export default function setup(context) {
 		isCustomerAdmin,
 		isAnyAdmin,
 		isRowAdmin,
+		isSignedIn,
+		accountMenuOptions,
 		activeMembers,
 		activeMemberCount,
 		responseTimeLabel,
