@@ -209,6 +209,31 @@ export function answersFromQuery(query) {
 	})
 }
 
+export const OUR_NEEDS = [
+	"Keep strictly to the scope",
+	"Nominate a project champion",
+	"Have your data ready",
+	"Approve internally without delay",
+	"Make your users available for training",
+]
+
+export const EXTRA_HOUR_RATE = 2000
+
+// The commercial terms, shared by the recommendation page (before paying) and the
+// confirmed page (after paying) so the two never say something different.
+export function commercialTerms(gstRate, money) {
+	return [
+		"Payment to Frappe in full, in advance",
+		`${gstRate}% GST charged on top`,
+		`Extra hours beyond the pack: ${money(EXTRA_HOUR_RATE)} per hour, plus ${gstRate}% GST`,
+		"Scope is limited to what the pack lists. Anything else is a change request, and more hours",
+		"Validity runs from the project start date",
+		"For businesses running fewer than 50 users",
+		"Your Frappe Cloud subscription is billed separately",
+		`Product warranty applies on Frappe Cloud plans above ${money(4100)} + GST a month`,
+	]
+}
+
 // The partner directory's own filters, so the customer lands on a list they can see
 // and undo. A country with no listed partners falls back to its region, and a country
 // outside every region to no location filter at all.

@@ -261,6 +261,12 @@ def get_order(order=None, payment_request=None):
 		frappe.get_doc("Gateway Payment Request", doc.payment_request).sync_status()
 		doc.reload()
 
+	partner = None
+	if doc.partner:
+		from connect.partner.doctype.partner.partner import get_partner_preview
+
+		partner = get_partner_preview(doc.partner)
+
 	return {
 		"order": doc.name,
 		"payment_status": doc.payment_status,
@@ -270,8 +276,17 @@ def get_order(order=None, payment_request=None):
 		"gst_amount": doc.gst_amount,
 		"amount": doc.amount,
 		"total_hours": doc.total_hours,
+		"kickoff_date": doc.kickoff_date,
+		"partner": partner,
 		"packs": [
-			{"pack_name": r.pack_name, "price": r.price, "total_hours": r.total_hours} for r in doc.packs
+			{
+				"starter_pack": r.starter_pack,
+				"pack_name": r.pack_name,
+				"price": r.price,
+				"total_hours": r.total_hours,
+				"delivery_days": r.delivery_days,
+			}
+			for r in doc.packs
 		],
 	}
 

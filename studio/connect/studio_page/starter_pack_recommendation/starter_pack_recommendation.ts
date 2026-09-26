@@ -4,7 +4,14 @@
 // the rules that read them live in @app/utils/recommendation.
 
 import { computed } from "vue"
-import { answersFromQuery, answersToQuery, directoryQuery, recommend } from "@app/utils/recommendation"
+import {
+	OUR_NEEDS,
+	answersFromQuery,
+	answersToQuery,
+	commercialTerms,
+	directoryQuery,
+	recommend,
+} from "@app/utils/recommendation"
 
 const HOW_IT_WORKS = [
 	{ title: "Pay in full", body: "To Frappe, up front" },
@@ -38,16 +45,6 @@ const CUSTOM_IF = [
 	{ label: "You need custom scripting", hint: "" },
 	{ label: "You need API integrations", hint: "Biometric devices, banks and payment gateways" },
 ]
-
-const OUR_NEEDS = [
-	"Keep strictly to the scope",
-	"Nominate a project champion",
-	"Have your data ready",
-	"Approve internally without delay",
-	"Make your users available for training",
-]
-
-const EXTRA_HOUR_RATE = 2000
 
 export default function setup(context) {
 	const {
@@ -125,16 +122,7 @@ export default function setup(context) {
 	})
 	const isGuest = computed(() => !myContext.data || myContext.data.user === "Guest")
 
-	const commercialTerms = computed(() => [
-		"Payment to Frappe in full, in advance",
-		`${gstRate.value}% GST charged on top`,
-		`Extra hours beyond the pack: ${money(EXTRA_HOUR_RATE)} per hour, plus ${gstRate.value}% GST`,
-		"Scope is limited to what the pack lists. Anything else is a change request, and more hours",
-		"Validity runs from the project start date",
-		"For businesses running fewer than 50 users",
-		"Your Frappe Cloud subscription is billed separately",
-		`Product warranty applies on Frappe Cloud plans above ${money(4100)} + GST a month`,
-	])
+	const commercial = computed(() => commercialTerms(gstRate.value, money))
 
 	// Guests go through (mock) signup first, which carries on to checkout afterwards.
 	function startCheckout() {
@@ -179,7 +167,7 @@ export default function setup(context) {
 		totalLabel,
 		totalBreakdown,
 		isGuest,
-		commercialTerms,
+		commercialTerms: commercial,
 		startCheckout,
 		changeAnswers,
 		getQuotes,
