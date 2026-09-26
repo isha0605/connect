@@ -157,5 +157,8 @@ def execute():
 				pack.append("sections", {"module_name": module_name, "label": label, "content": content})
 		pack.insert(ignore_permissions=True)
 
+	# A Single's field defaults aren't stored until it's first saved, so set them here.
 	if not frappe.db.get_single_value("Starter Pack Settings", "gst_rate"):
 		frappe.db.set_single_value("Starter Pack Settings", "gst_rate", GST_RATE)
+	if not frappe.db.get_single_value("Starter Pack Settings", "currency"):
+		frappe.db.set_single_value("Starter Pack Settings", "currency", "INR")

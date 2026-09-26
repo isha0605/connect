@@ -1,11 +1,17 @@
 # Copyright (c) 2026, Isha and Contributors
 # See license.txt
 
+from unittest.mock import MagicMock, patch
+
 import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import today
 
-from connect.customer.doctype.starter_pack_order.starter_pack_order import PAYMENT_HOOK_FLAG
+from connect.customer.doctype.starter_pack_order.starter_pack_order import PAYMENT_HOOK_FLAG, checkout, pay
+
+RAZORPAY = "bwh_payments.bwh_payments.doctype.razorpay_gateway_settings.razorpay_gateway_settings.RazorpayGatewaySettings"
+ORDER_MODULE = "connect.customer.doctype.starter_pack_order.starter_pack_order"
+GPR_MODULE = "bwh_payments.bwh_payments.doctype.gateway_payment_request.gateway_payment_request"
 
 EXTRA_TEST_RECORD_DEPENDENCIES = []
 IGNORE_TEST_RECORD_DEPENDENCIES = ["Customer", "Partner", "User"]
@@ -68,15 +74,6 @@ class IntegrationTestStarterPackOrder(IntegrationTestCase):
 		order.save(ignore_permissions=True)
 		self.assertEqual(order.payment_status, "Paid")
 
-	def test_no_refund_after_kickoff(self):
-		order = make_order([self.pack_a])
-		frappe.flags[PAYMENT_HOOK_FLAG] = True
-		order.payment_status = "Paid"
-		order.kickoff_date = today()
-		order.save(ignore_permissions=True)
-		order.payment_status = "Refunded"
-		self.assertRaises(frappe.ValidationError, order.save, ignore_permissions=True)
-
 
 class IntegrationTestStarterPackOrderPartner(IntegrationTestCase):
 	"""Frappe assigns the partner, and only from its approved Starter Pack pool."""
@@ -113,6 +110,159 @@ class IntegrationTestStarterPackOrderPartner(IntegrationTestCase):
 		order.partner = self.approved
 		order.save(ignore_permissions=True)
 		self.assertEqual(order.partner, self.approved)
+
+
+class IntegrationTestStarterPackPayment(IntegrationTestCase):
+	"""Checkout and the gateway round trip, against a mocked Razorpay: no network,
+	and no keys needed. The bwh_payments code itself runs for real."""
+
+	def setUp(self):
+		self.pack_a = make_pack("_test_pack_a", 10000, 5)
+		self.pack_b = make_pack("_test_pack_b", 20000, 8)
+		frappe.db.set_single_value("Starter Pack Settings", "gst_rate", 18)
+		frappe.db.set_single_value("Starter Pack Settings", "currency", "INR")
+		if not frappe.db.exists("Payment Gateway Profile", "_Test Razorpay"):
+			frappe.get_doc(
+				{
+					"doctype": "Payment Gateway Profile",
+					"__newname": "_Test Razorpay",
+					"gateway_settings": "Razorpay Gateway Settings",
+					"enabled": 1,
+				}
+			).insert(ignore_permissions=True)
+		frappe.db.set_single_value("Starter Pack Settings", "payment_gateway", "_Test Razorpay")
+
+		# Records persist across tests within a class (the rollback is per class), and
+		# order_ref is unique, so every fake session needs its own id.
+		self.patches = [
+			patch(
+				f"{RAZORPAY}.create_session",
+				side_effect=lambda *a, **k: {
+					"session_id": f"plink_test_{frappe.generate_hash(length=12)}",
+					"redirect_url": "https://rzp.io/test",
+				},
+			),
+			patch(f"{RAZORPAY}.get_payment_status", return_value="Pending"),
+			patch(f"{ORDER_MODULE}.get_captured_payment_id", return_value="pay_test_1"),
+			# refund() logs through frappe's create_request_log, which commits. In a test
+			# that would persist everything the class created, so the log is stubbed.
+			patch(f"{GPR_MODULE}.create_request_log", return_value=MagicMock()),
+			patch("frappe.log_error"),
+		]
+		for p in self.patches:
+			p.start()
+
+	def tearDown(self):
+		for p in self.patches:
+			p.stop()
+		frappe.flags[PAYMENT_HOOK_FLAG] = False
+
+	def place(self, packs):
+		result = checkout(frappe.as_json(packs), "Test Co", phone="9999999999", terms_accepted=1)
+		return result, frappe.get_doc("Starter Pack Order", result["order"])
+
+	def request(self, order):
+		return frappe.get_doc("Gateway Payment Request", order.payment_request)
+
+	def test_checkout_charges_the_server_price(self):
+		result, order = self.place([self.pack_a, self.pack_b])
+		self.assertEqual(result["amount"], 35400)
+		self.assertEqual(result["payment_url"], "https://rzp.io/test")
+		request = self.request(order)
+		self.assertEqual(request.amount, 35400)
+		self.assertEqual(request.currency_code, "INR")
+		self.assertEqual((request.ref_doctype, request.ref_docname), ("Starter Pack Order", order.name))
+
+	def test_checkout_needs_terms_and_a_pack(self):
+		self.assertRaises(frappe.ValidationError, checkout, frappe.as_json([self.pack_a]), "Test Co")
+		self.assertRaises(frappe.ValidationError, checkout, "[]", "Test Co", terms_accepted=1)
+
+	def test_guests_cannot_check_out(self):
+		frappe.set_user("Guest")
+		try:
+			self.assertRaises(
+				frappe.PermissionError, checkout, frappe.as_json([self.pack_a]), "Test Co", terms_accepted=1
+			)
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_webhook_marks_the_order_paid(self):
+		_, order = self.place([self.pack_a])
+		self.request(order).apply_webhook_status("Paid", "evt_1")
+		order.reload()
+		self.assertEqual(order.payment_status, "Paid")
+		self.assertEqual(order.gateway_payment_id, "pay_test_1")
+
+	def test_a_replayed_webhook_changes_nothing(self):
+		_, order = self.place([self.pack_a])
+		self.assertTrue(self.request(order).apply_webhook_status("Paid", "evt_1"))
+		self.assertFalse(self.request(order).apply_webhook_status("Paid", "evt_1"))
+		order.reload()
+		self.assertEqual(order.payment_status, "Paid")
+
+	def test_an_expired_link_fails_the_order(self):
+		_, order = self.place([self.pack_a])
+		self.request(order).apply_webhook_status("Expired", "evt_1")
+		order.reload()
+		self.assertEqual(order.payment_status, "Failed")
+
+	def test_paying_again_reuses_an_open_link(self):
+		_, order = self.place([self.pack_a])
+		self.assertEqual(order.create_payment_request().name, order.payment_request)
+
+	def test_a_dead_link_can_be_retried(self):
+		_, order = self.place([self.pack_a])
+		first = order.payment_request
+		self.request(order).apply_webhook_status("Expired", "evt_1")
+		order.reload()
+		self.assertEqual(order.payment_status, "Failed")
+
+		retry = pay(order.name)
+		order.reload()
+		self.assertNotEqual(order.payment_request, first)
+		self.assertEqual(order.payment_status, "Unpaid")
+		self.assertEqual(retry["payment_url"], "https://rzp.io/test")
+
+		self.request(order).apply_webhook_status("Paid", "evt_2")
+		order.reload()
+		self.assertEqual(order.payment_status, "Paid")
+
+	def test_a_paid_order_cannot_be_paid_again(self):
+		_, order = self.place([self.pack_a])
+		self.request(order).apply_webhook_status("Paid", "evt_1")
+		self.assertRaises(frappe.ValidationError, pay, order.name)
+
+	def test_a_superseded_link_being_paid_leaves_the_order_alone(self):
+		_, order = self.place([self.pack_a])
+		old = self.request(order)
+		order.db_set("payment_request", None)
+		new = order.create_payment_request()
+		old.reload()
+		old.apply_webhook_status("Paid", "evt_old")
+		order.reload()
+		self.assertEqual(order.payment_request, new.name)
+		self.assertEqual(order.payment_status, "Unpaid")
+
+	def test_refund_before_kickoff_goes_through(self):
+		_, order = self.place([self.pack_a])
+		self.request(order).apply_webhook_status("Paid", "evt_1")
+		with patch(f"{RAZORPAY}.refund_payment", return_value={"refund_id": "rfnd_1"}) as refund:
+			self.request(order).refund()
+		refund.assert_called_once()
+		order.reload()
+		self.assertEqual(order.payment_status, "Refunded")
+
+	def test_no_refund_after_kickoff_and_razorpay_is_never_called(self):
+		_, order = self.place([self.pack_a])
+		self.request(order).apply_webhook_status("Paid", "evt_1")
+		order.reload()
+		order.kickoff_date = today()
+		order.save(ignore_permissions=True)
+		with patch(f"{RAZORPAY}.refund_payment") as refund:
+			self.assertRaises(frappe.ValidationError, self.request(order).refund)
+		refund.assert_not_called()
+		order.reload()
+		self.assertEqual(order.payment_status, "Paid")
 
 
 def make_pack(pack_key, price, total_hours):
