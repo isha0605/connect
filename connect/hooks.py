@@ -91,7 +91,7 @@ signup_form_template = "connect/templates/includes/signup_redirect.html"
 # ------------
 
 # before_install = "connect.install.before_install"
-# after_install = "connect.install.after_install"
+after_install = "connect.install.after_install"
 
 # Uninstallation
 # ------------
