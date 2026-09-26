@@ -264,11 +264,11 @@ def get_countries_with_isd_codes():
 
 
 @frappe.whitelist(methods=["POST"])
-def send_certificate_link_request(user_email, course):
+def send_certificate_link_request(user_email, certificate_type):
 	from connect.partner.doctype.partner.partner import _my_partner
 	from connect.partner.doctype.certificate_link_request.certificate_link_request import create_or_resend
 
-	return create_or_resend(_my_partner(), user_email, course)
+	return create_or_resend(_my_partner(), (user_email or "").strip(), certificate_type)
 
 
 @frappe.whitelist(methods=["POST"])
@@ -279,5 +279,7 @@ def resend_certificate_link_request(request_name):
 	doc = frappe.get_doc("Certificate Link Request", request_name)
 	if doc.partner != partner:
 		frappe.throw(frappe._("Not your request"), frappe.PermissionError)
+	if doc.status != "Pending":
+		frappe.throw(frappe._("Only pending certificate link requests can be resent. Refresh the page."))
 	doc.resend()
 	return {"ok": True}

@@ -27,11 +27,13 @@ _APPLICATION_FIELDS = (
 	"erp_implementations_range",
 	"incorporation_certificate",
 	"company_logo",
-	"monthly_revenue",
 	"agreed_to_due_diligence",
 	"agreed_to_partnership_agreement",
 )
+# monthly_revenue is deliberately not above: it gates approval (see _validate_mrr), so partners
+# can't self-report it -- a reviewer sets it in Desk, as Press computes it server-side.
 
+# Same as Press's _is_profile_complete.
 _REQUIRED_PROFILE_FIELDS = (
 	"company_name",
 	"registered_country",
@@ -39,10 +41,22 @@ _REQUIRED_PROFILE_FIELDS = (
 	"contact",
 	"address",
 	"headquarter_city",
-	"employee_range",
+	"incorporation_certificate",
+	"company_logo",
 	"agreed_to_due_diligence",
 	"agreed_to_partnership_agreement",
 )
+
+# Press's defaults (getPartnerMRRTargetAmount); Frappe School Settings.mrr_target overrides when set.
+_DEFAULT_MRR_TARGETS = {"INR": 10000, "USD": 100}
+
+
+def _mrr_currency(registered_country: str | None) -> str:
+	return "INR" if registered_country == "India" else "USD"
+
+
+def _mrr_target(currency: str) -> float:
+	return flt(frappe.db.get_single_value("Frappe School Settings", "mrr_target")) or _DEFAULT_MRR_TARGETS[currency]
 
 
 class PartnerApplication(Document):
@@ -123,8 +137,7 @@ class PartnerApplication(Document):
 			frappe.throw(_("Link at least two certificates before submitting for approval."))
 
 	def _validate_mrr(self):
-		target = flt(frappe.db.get_single_value("Frappe School Settings", "mrr_target")) or 0
-		if flt(self.monthly_revenue) < target:
+		if flt(self.monthly_revenue) < _mrr_target(_mrr_currency(self.registered_country)):
 			frappe.throw(_("Reach the minimum monthly revenue before submitting for approval."))
 
 	def _apply_approval(self):
@@ -187,7 +200,10 @@ def save_partner_application(details=None):
 
 	for fieldname in _APPLICATION_FIELDS:
 		if fieldname in details:
-			doc.set(fieldname, details[fieldname])
+			value = details[fieldname]
+			if fieldname in ("verticals_served", "existing_partnerships") and isinstance(value, list):
+				value = ", ".join(str(item).strip() for item in value if str(item).strip())
+			doc.set(fieldname, value)
 
 	if not doc.name:
 		doc.insert(ignore_permissions=True)
@@ -292,12 +308,13 @@ def get_mrr_status():
 	partner = _my_partner()
 	doc = _get_partner_application(partner)
 	current_amount = flt(doc.monthly_revenue) if doc else 0
-	target_amount = flt(frappe.db.get_single_value("Frappe School Settings", "mrr_target")) or 0
+	currency = _mrr_currency(doc.registered_country if doc else None)
+	target_amount = _mrr_target(currency)
 
 	return {
 		"current_amount": current_amount,
 		"target_amount": target_amount,
-		"currency": (doc.revenue_currency if doc else None) or frappe.db.get_default("currency"),
-		"progress": min(100, flt((current_amount / target_amount) * 100, 2)) if target_amount else 0,
-		"requirement_complete": current_amount >= target_amount if target_amount else True,
+		"currency": currency,
+		"progress": min(100, flt((current_amount / target_amount) * 100, 2)),
+		"requirement_complete": current_amount >= target_amount,
 	}
