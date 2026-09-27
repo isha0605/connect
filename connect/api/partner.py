@@ -168,7 +168,7 @@ def upload_partner_asset():
 def update_my_partner_profile(
 	partner_name=None, tagline=None, description=None, country=None, city=None,
 	address=None, website=None, industry=None, year_founded=None, rollouts=None,
-	hourly_rate=None, response_time_hours=None, sites_deployed=None,
+	hourly_rate=None, sites_deployed=None,
 	typical_project_size=None, proposal_timeline=None, certified_experts=None,
 	certs_erpnext=None, certs_frappe_framework=None, countries_served=None,
 	references_count=None, starter_pack=None, demo_available=None,
@@ -180,7 +180,7 @@ def update_my_partner_profile(
 	return update_my_partner_profile(
 		partner_name=partner_name, tagline=tagline, description=description, country=country,
 		city=city, address=address, website=website, industry=industry, year_founded=year_founded,
-		rollouts=rollouts, hourly_rate=hourly_rate, response_time_hours=response_time_hours,
+		rollouts=rollouts, hourly_rate=hourly_rate,
 		sites_deployed=sites_deployed, typical_project_size=typical_project_size,
 		proposal_timeline=proposal_timeline, certified_experts=certified_experts,
 		certs_erpnext=certs_erpnext, certs_frappe_framework=certs_frappe_framework,
