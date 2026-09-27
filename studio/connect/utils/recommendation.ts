@@ -44,7 +44,8 @@ export const EMPLOYEE_OPTIONS = [
 ]
 
 // Values are the directory's industry filter values (success-story categories), so
-// the custom path can pass the answer straight through.
+// the custom path can pass the answers straight through. Grouped the way the earlier
+// Find Partners wizard grouped them; the field shows each group under its heading.
 export const MANUFACTURING_INDUSTRIES = [
 	"Automotive Manufacturing", "Chemical Manufacturing", "Discrete Manufacturing",
 	"Electronics Manufacturing", "Food and Beverages", "Furniture Manufacturing",
@@ -52,19 +53,28 @@ export const MANUFACTURING_INDUSTRIES = [
 	"Pharmaceutical Manufacturing", "Process Manufacturing", "Steel Manufacturing",
 	"Textile Manufacturing",
 ]
-const OTHER_INDUSTRIES = [
-	"Agriculture", "Aviation Industry", "Distribution", "E-commerce", "Education",
-	"Engineering and Construction", "Fast Moving Consumer Goods", "Finance",
-	"Government", "Hospitality", "Logistics", "Nonprofit", "Professional services",
-	"Real Estate", "Rental Business", "Retail",
+const INDUSTRY_GROUPS = [
+	{ key: "manufacturing", group: "Manufacturing", industries: MANUFACTURING_INDUSTRIES },
+	{
+		key: "services",
+		group: "Services",
+		industries: [
+			"Aviation Industry", "Education", "Finance", "Government", "Hospitality", "Logistics",
+			"Nonprofit", "Professional services", "Real Estate", "Rental Business",
+		],
+	},
+	{
+		key: "trading",
+		group: "Trading and Distribution",
+		industries: ["Distribution", "E-commerce", "Fast Moving Consumer Goods", "Retail"],
+	},
+	{ key: "others", group: "Others", industries: ["Agriculture", "Engineering and Construction"] },
 ]
-export const INDUSTRY_OPTIONS = [
-	...[...MANUFACTURING_INDUSTRIES, ...OTHER_INDUSTRIES].sort().map((v) => ({ label: v, value: v })),
-	{ label: "Other manufacturing", value: "Manufacturing" },
-	{ label: "Other services", value: "Services" },
-	{ label: "Other trading", value: "Trading and Distribution" },
-	{ label: "Something else", value: "Others" },
-]
+export const INDUSTRY_OPTIONS = INDUSTRY_GROUPS.map(({ key, group, industries }) => ({
+	key,
+	group,
+	options: industries.map((v) => ({ label: v, value: v })),
+}))
 
 export const OPERATION_OPTIONS = [
 	{ value: "spreadsheets", label: "Spreadsheets, email and paper" },
@@ -134,10 +144,13 @@ const PACK_REASONS = {
 		const first = a.problems.find((p) => CORE_PACK_REASONS[p])
 		return first ? CORE_PACK_REASONS[first] : "The base the rest of ERPNext is built on"
 	},
-	manufacturing: (a) =>
-		a.industry === "Manufacturing" || MANUFACTURING_INDUSTRIES.includes(a.industry)
-			? `You're in ${a.industry.toLowerCase()}, so work orders and BOMs get planned against the stock you hold`
-			: null,
+	manufacturing: (a) => {
+		// "Manufacturing" alone is the group, as older links sent it.
+		const made = a.industries.filter((i) => i === "Manufacturing" || MANUFACTURING_INDUSTRIES.includes(i))
+		if (!made.length) return null
+		const what = made.length === 1 ? made[0].toLowerCase() : "manufacturing"
+		return `You're in ${what}, so work orders and BOMs get planned against the stock you hold`
+	},
 	hr: (a) =>
 		a.problems.includes("hr_by_hand")
 			? "Leave and attendance are kept by hand today; this puts them on one employee record"
@@ -152,7 +165,8 @@ function normalize(answers) {
 	return {
 		country: answers?.country ?? "",
 		employees: answers?.employees ?? "",
-		industry: answers?.industry ?? "",
+		// A single `industry` is what links made before this was a multi-select carry.
+		industries: answers?.industries ?? (answers?.industry ? [answers.industry] : []),
 		operations: answers?.operations ?? "",
 		systems: answers?.systems ?? [],
 		problems: answers?.problems ?? [],
@@ -188,7 +202,7 @@ export function answersToQuery(answers) {
 	const query = {
 		country: a.country,
 		employees: a.employees,
-		industry: a.industry,
+		industries: a.industries.join(","),
 		operations: a.operations,
 		systems: a.systems.join(","),
 		problems: a.problems.join(","),
@@ -202,6 +216,7 @@ export function answersFromQuery(query) {
 	return normalize({
 		country: query.country,
 		employees: query.employees,
+		industries: query.industries ? list(query.industries) : undefined,
 		industry: query.industry,
 		operations: query.operations,
 		systems: list(query.systems),
@@ -261,7 +276,7 @@ export function commercialTerms(gstRate, money) {
 export function directoryQuery(answers, countriesWithPartners = []) {
 	const a = normalize(answers)
 	const query = {}
-	if (a.industry) query.category = a.industry
+	if (a.industries.length) query.category = a.industries
 	if (countriesWithPartners.includes(a.country)) {
 		query.country = a.country
 	} else if (regionOf(a.country)) {

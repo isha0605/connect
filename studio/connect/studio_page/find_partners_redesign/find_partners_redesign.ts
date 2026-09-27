@@ -23,7 +23,7 @@ export default function setup(context) {
 		showErrors,
 		businessCountry,
 		employeeCount,
-		industry,
+		industries,
 		operations,
 		currentSystems,
 		painPoints,
@@ -35,7 +35,7 @@ export default function setup(context) {
 	if (previous) {
 		businessCountry.value = previous.country || businessCountry.value
 		employeeCount.value = previous.employees
-		industry.value = previous.industry
+		industries.value = previous.industries
 		operations.value = previous.operations
 		currentSystems.value = previous.systems
 		painPoints.value = previous.problems
@@ -45,7 +45,7 @@ export default function setup(context) {
 		return {
 			country: businessCountry.value,
 			employees: employeeCount.value,
-			industry: industry.value,
+			industries: industries.value || [],
 			operations: operations.value,
 			systems: currentSystems.value || [],
 			problems: painPoints.value || [],
@@ -76,7 +76,7 @@ export default function setup(context) {
 	}
 
 	function continueFromBusiness() {
-		if (!businessCountry.value || !employeeCount.value || !industry.value) {
+		if (!businessCountry.value || !employeeCount.value || !(industries.value || []).length) {
 			showErrors.value = true
 			return
 		}
