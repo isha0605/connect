@@ -21,6 +21,10 @@ def _get_partner_admin(partner):
 	return frappe.db.get_value("Connect Partner Member", {"partner": partner, "is_admin": 1}, "user")
 
 
+def _is_partner_reviewer(user):
+	return "Partner Reviewer" in frappe.get_roles(user)
+
+
 def _my_company_membership(user):
 	"""Returns which company (and doctype/row) this user belongs to, or Nones if neither."""
 	customer_row = frappe.db.get_value(
@@ -105,6 +109,25 @@ def get_partner_crm_settings_permission_query_conditions(user, doctype=None):
 		return ""
 	user = frappe.db.escape(user)
 	return f"""`tabPartner CRM Settings`.partner in (
+		select partner from `tabConnect Partner Member` where user = {user} and is_admin = 1
+	)"""
+
+
+def has_partner_application_permission(doc, ptype="read", user=None, **kwargs):
+	"""Controllers can only deny access on top of the 'Connect Partner' role baseline, never grant it."""
+	user = user or frappe.session.user
+	if _has_full_access(user) or _is_partner_reviewer(user):
+		return True
+	if not doc.get("partner"):
+		return True
+	return _is_partner_admin(doc.partner, user)
+
+
+def get_partner_application_permission_query_conditions(user, doctype=None):
+	if _has_full_access(user) or _is_partner_reviewer(user):
+		return ""
+	user = frappe.db.escape(user)
+	return f"""`tabPartner Application`.partner in (
 		select partner from `tabConnect Partner Member` where user = {user} and is_admin = 1
 	)"""
 
@@ -273,7 +296,8 @@ def _is_partner_member(user):
 
 
 def has_message_template_permission(doc, ptype="read", user=None, **kwargs):
-	"""Restricts global templates to read-only per side, and personal templates to owner-only."""
+	"""Restricts global templates to read-only per side, team templates to reading by the
+	creator's company, and every edit of a personal or team template to its owner."""
 	user = user or frappe.session.user
 	if _has_full_access(user):
 		return True
@@ -287,8 +311,12 @@ def has_message_template_permission(doc, ptype="read", user=None, **kwargs):
 			return _is_partner_member(user)
 		return False
 
-	# personal template: creating one is only allowed for your own side; every other
-	# operation (read/write/delete) is owner-only
+	if ptype == "read" and doc.get("scope") == "Team" and doc.get("owner") != user:
+		_doctype, company, _row = _my_company_membership(user)
+		return bool(company) and company == doc.get("team") and _my_side(user) == doc.get("side")
+
+	# personal/team template: creating one is only allowed for your own side (the controller pins
+	# a team template to the creator's company); every other operation is owner-only
 	if ptype == "create":
 		if doc.get("side") == "Customer":
 			return _is_customer_member(user)
@@ -310,6 +338,14 @@ def get_message_template_permission_query_conditions(user, doctype=None):
 	if _is_partner_member(user):
 		conditions.append(
 			"(`tabConnect Message Template`.is_global = 1 and `tabConnect Message Template`.side = 'Partner')"
+		)
+	side = _my_side(user)
+	_doctype, company, _row = _my_company_membership(user)
+	if side and company:
+		conditions.append(
+			"(`tabConnect Message Template`.scope = 'Team'"
+			f" and `tabConnect Message Template`.side = {frappe.db.escape(side)}"
+			f" and `tabConnect Message Template`.team = {frappe.db.escape(company)})"
 		)
 	return "(" + " or ".join(conditions) + ")"
 

@@ -191,3 +191,97 @@ def update_my_partner_profile(
 		implementation_types=implementation_types,
 		languages=languages, founder=founder, success_stories=success_stories, packs=packs, addons=addons,
 	)
+
+
+@frappe.whitelist()
+def get_my_crm_settings():
+	from connect.partner.doctype.partner_crm_settings.partner_crm_settings import get_my_settings
+
+	return get_my_settings()
+
+
+@frappe.whitelist()
+def save_my_crm_settings(site_url, api_key, default_lead_status, api_secret=None, enabled=0):
+	from connect.partner.doctype.partner_crm_settings.partner_crm_settings import save_my_settings
+
+	return save_my_settings(site_url, api_key, default_lead_status, api_secret, enabled)
+
+
+@frappe.whitelist()
+def disconnect_my_crm():
+	from connect.partner.doctype.partner_crm_settings.partner_crm_settings import disconnect_my_crm
+
+	return disconnect_my_crm()
+
+
+@frappe.whitelist()
+def get_partner_application():
+	from connect.partner.doctype.partner_application.partner_application import get_partner_application
+
+	return get_partner_application()
+
+
+@frappe.whitelist(methods=["POST"])
+def save_partner_application(details=None):
+	from connect.partner.doctype.partner_application.partner_application import save_partner_application
+
+	return save_partner_application(details=details)
+
+
+@frappe.whitelist(methods=["POST"])
+def submit_partner_application_for_approval():
+	from connect.partner.doctype.partner_application.partner_application import submit_for_approval
+
+	return submit_for_approval()
+
+
+@frappe.whitelist(methods=["POST"])
+def unregister_partner_application():
+	from connect.partner.doctype.partner_application.partner_application import unregister
+
+	return unregister()
+
+
+@frappe.whitelist()
+def get_certificate_link_status():
+	from connect.partner.doctype.partner_application.partner_application import get_certificate_link_status
+
+	return get_certificate_link_status()
+
+
+@frappe.whitelist()
+def get_mrr_status():
+	from connect.partner.doctype.partner_application.partner_application import get_mrr_status
+
+	return get_mrr_status()
+
+
+# allow_guest: the pre-signup "Become a partner?" wizard (login_signup_redesign) uses this for its
+# country/ISD picker before the visitor has an account -- it's static geo data, nothing partner-specific.
+@frappe.whitelist(allow_guest=True)
+def get_countries_with_isd_codes():
+	from connect.partner.doctype.partner_application.partner_application import get_countries_with_isd_codes
+
+	return get_countries_with_isd_codes()
+
+
+@frappe.whitelist(methods=["POST"])
+def send_certificate_link_request(user_email, certificate_type):
+	from connect.partner.doctype.partner.partner import _my_partner
+	from connect.partner.doctype.certificate_link_request.certificate_link_request import create_or_resend
+
+	return create_or_resend(_my_partner(), (user_email or "").strip(), certificate_type)
+
+
+@frappe.whitelist(methods=["POST"])
+def resend_certificate_link_request(request_name):
+	from connect.partner.doctype.partner.partner import _my_partner
+
+	partner = _my_partner()
+	doc = frappe.get_doc("Certificate Link Request", request_name)
+	if doc.partner != partner:
+		frappe.throw(frappe._("Not your request"), frappe.PermissionError)
+	if doc.status != "Pending":
+		frappe.throw(frappe._("Only pending certificate link requests can be resent. Refresh the page."))
+	doc.resend()
+	return {"ok": True}

@@ -193,14 +193,9 @@ export default function setup(context) {
 			await call("connect.api.message_templates.create_message_template", { title, content })
 			context.myTemplates.reload()
 			closeCreateTemplateForm()
-			toast({ title: "Template created", icon: "check", iconClasses: "text-green-600" })
+			toast.success("Template created")
 		} catch (e) {
-			toast({
-				title: "Could not create template",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not create template", { description: e.messages ? e.messages[0] : e.message })
 		} finally {
 			creatingTemplate.value = false
 		}
@@ -525,15 +520,10 @@ export default function setup(context) {
 			.then(() => {
 				context.myThreads.reload()
 				context.messages.reload()
-				toast({ title: "Thread closed", icon: "check", iconClasses: "text-green-600" })
+				toast.success("Thread closed")
 			})
 			.catch((e) => {
-				toast({
-					title: "Could not close thread",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not close thread", { description: e.messages ? e.messages[0] : e.message })
 			})
 	}
 
@@ -754,9 +744,9 @@ export default function setup(context) {
 	async function copyRequirementDetails(item) {
 		try {
 			await navigator.clipboard.writeText(requirementDetailsText(item))
-			toast({ title: "Copied to clipboard", icon: "check", iconClasses: "text-green-600" })
+			toast.success("Copied to clipboard")
 		} catch (e) {
-			toast({ title: "Could not copy", text: e.message, icon: "x-circle", iconClasses: "text-red-600" })
+			toast.error("Could not copy", { description: e.message })
 		}
 	}
 
@@ -920,7 +910,7 @@ export default function setup(context) {
 			link.remove()
 			URL.revokeObjectURL(blobUrl)
 		} catch (e) {
-			toast({ title: "Could not download", text: e.message, icon: "x-circle", iconClasses: "text-red-600" })
+			toast.error("Could not download", { description: e.message })
 		}
 	}
 
@@ -1031,14 +1021,9 @@ export default function setup(context) {
 			originalFullName.value = editFullName.value
 			originalPhone.value = editPhone.value
 			originalRole.value = editRole.value
-			toast({ title: "Profile updated", icon: "check", iconClasses: "text-green-600" })
+			toast.success("Profile updated")
 		} catch (e) {
-			toast({
-				title: "Could not update profile",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not update profile", { description: e.messages ? e.messages[0] : e.message })
 		} finally {
 			savingProfile.value = false
 		}
@@ -1067,15 +1052,10 @@ export default function setup(context) {
 		upload(file, { upload_endpoint: "/api/method/connect.api.account.upload_profile_image" })
 			.then(() => {
 				context.myProfile.reload()
-				toast({ title: "Photo updated", icon: "check", iconClasses: "text-green-600" })
+				toast.success("Photo updated")
 			})
 			.catch((e) => {
-				toast({
-					title: "Could not upload photo",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not upload photo", { description: e.messages ? e.messages[0] : e.message })
 			})
 			.finally(() => {
 				uploadingProfileImage.value = false
@@ -1084,7 +1064,7 @@ export default function setup(context) {
 
 	function addMember() {
 		if (!newMemberEmail.value) {
-			toast({ title: "Enter an email", icon: "x-circle", iconClasses: "text-red-600" })
+			toast.error("Enter an email")
 			return
 		}
 		const side =
@@ -1094,7 +1074,7 @@ export default function setup(context) {
 					? "Partner"
 					: null
 		if (!side) {
-			toast({ title: "Only admins can add members", icon: "x-circle", iconClasses: "text-red-600" })
+			toast.error("Only admins can add members")
 			return
 		}
 		call("connect.api.threads.add_thread_member", {
@@ -1108,19 +1088,10 @@ export default function setup(context) {
 				newMemberEmail.value = ""
 				newMemberPermission.value = "Write"
 				context.threadMembers.reload()
-				toast({
-					title: data && data.created_user ? "New account created and added" : "Member added",
-					icon: "check",
-					iconClasses: "text-green-600",
-				})
+				toast.success(data && data.created_user ? "New account created and added" : "Member added")
 			})
 			.catch((e) => {
-				toast({
-					title: "Could not add member",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not add member", { description: e.messages ? e.messages[0] : e.message })
 			})
 	}
 
@@ -1130,15 +1101,10 @@ export default function setup(context) {
 			.then(() => {
 				context.myContext.reload()
 				context.threadAdmins.reload()
-				toast({ title: "Admin transferred", icon: "check", iconClasses: "text-green-600" })
+				toast.success("Admin transferred")
 			})
 			.catch((e) => {
-				toast({
-					title: "Could not transfer admin",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not transfer admin", { description: e.messages ? e.messages[0] : e.message })
 			})
 	}
 
@@ -1147,15 +1113,10 @@ export default function setup(context) {
 		call("connect.api.threads.remove_thread_member", { thread: selectedThread.value, member: item.name })
 			.then(() => {
 				context.threadMembers.reload()
-				toast({ title: "Member removed", icon: "check", iconClasses: "text-green-600" })
+				toast.success("Member removed")
 			})
 			.catch((e) => {
-				toast({
-					title: "Could not remove member",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not remove member", { description: e.messages ? e.messages[0] : e.message })
 			})
 	}
 
@@ -1184,14 +1145,9 @@ export default function setup(context) {
 			showDisableTeamMemberDialog.value = false
 			memberToDisable.value = null
 			context.myTeam.reload()
-			toast({ title: "Team member disabled", icon: "check", iconClasses: "text-green-600" })
+			toast.success("Team member disabled")
 		} catch (e) {
-			toast({
-				title: "Could not disable team member",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not disable team member", { description: e.messages ? e.messages[0] : e.message })
 		} finally {
 			disablingTeamMember.value = false
 		}
@@ -1207,7 +1163,7 @@ export default function setup(context) {
 
 	async function addTeamMember() {
 		if (!newTeamMemberEmail.value) {
-			toast({ title: "Enter an email", icon: "x-circle", iconClasses: "text-red-600" })
+			toast.error("Enter an email")
 			return
 		}
 		addingTeamMember.value = true
@@ -1222,18 +1178,9 @@ export default function setup(context) {
 			newTeamMemberRole.value = ""
 			newTeamMemberPassword.value = ""
 			context.myTeam.reload()
-			toast({
-				title: data && data.created_user ? "New account created and added" : "Team member added",
-				icon: "check",
-				iconClasses: "text-green-600",
-			})
+			toast.success(data && data.created_user ? "New account created and added" : "Team member added")
 		} catch (e) {
-			toast({
-				title: "Could not add team member",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not add team member", { description: e.messages ? e.messages[0] : e.message })
 		} finally {
 			addingTeamMember.value = false
 		}
@@ -1297,9 +1244,9 @@ export default function setup(context) {
 	async function copyMessage(item) {
 		try {
 			await navigator.clipboard.writeText(messageCopyText(item))
-			toast({ title: "Copied to clipboard", icon: "check", iconClasses: "text-green-600" })
+			toast.success("Copied to clipboard")
 		} catch (e) {
-			toast({ title: "Could not copy", text: e.message, icon: "x-circle", iconClasses: "text-red-600" })
+			toast.error("Could not copy", { description: e.message })
 		}
 	}
 
@@ -1424,12 +1371,7 @@ export default function setup(context) {
 			})
 			context.messageReactions.reload()
 		} catch (e) {
-			toast({
-				title: "Could not add reaction",
-				text: permissionAwareErrorText(e, "You can't react in this conversation."),
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not add reaction", { description: permissionAwareErrorText(e, "You can't react in this conversation.") })
 		}
 	}
 
@@ -1461,12 +1403,7 @@ export default function setup(context) {
 			forwardTargets.value = await call("connect.api.messages.get_forward_targets")
 		} catch (e) {
 			showForwardDialog.value = false
-			toast({
-				title: "Could not load conversations",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not load conversations", { description: e.messages ? e.messages[0] : e.message })
 		} finally {
 			loadingForwardTargets.value = false
 		}
@@ -1499,16 +1436,11 @@ export default function setup(context) {
 			showForwardDialog.value = false
 			messageToForward.value = null
 			forwardTarget.value = null
-			toast({ title: "Message forwarded", icon: "check", iconClasses: "text-green-600" })
+			toast.success("Message forwarded")
 			context.myThreads.reload()
 			context.myDMThreads.reload()
 		} catch (e) {
-			toast({
-				title: "Could not forward message",
-				text: permissionAwareErrorText(e, "You can't post in that conversation."),
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not forward message", { description: permissionAwareErrorText(e, "You can't post in that conversation.") })
 		} finally {
 			forwardingMessage.value = false
 		}
@@ -1550,12 +1482,7 @@ export default function setup(context) {
 				context.messages.reload()
 			}
 		} catch (e) {
-			toast({
-				title: "Could not delete message",
-				text: permissionAwareErrorText(e, "You don't have permission to delete this message"),
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not delete message", { description: permissionAwareErrorText(e, "You don't have permission to delete this message") })
 		} finally {
 			deletingMessage.value = false
 		}
@@ -1652,12 +1579,7 @@ export default function setup(context) {
 			if (isDM) context.dmMessages.reload()
 			else context.messages.reload()
 		} catch (e) {
-			toast({
-				title: "Could not edit message",
-				text: permissionAwareErrorText(e, "You don't have permission to edit this message"),
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not edit message", { description: permissionAwareErrorText(e, "You don't have permission to edit this message") })
 		} finally {
 			editingMessage.value = false
 		}
@@ -1712,12 +1634,7 @@ export default function setup(context) {
 			await call(method, { message: name })
 			await fetchPinnedMessages()
 		} catch (e) {
-			toast({
-				title: pin ? "Could not pin message" : "Could not unpin message",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error(pin ? "Could not pin message" : "Could not unpin message", { description: e.messages ? e.messages[0] : e.message })
 		}
 	}
 
@@ -1811,12 +1728,7 @@ export default function setup(context) {
 				context.messages.reload()
 			}
 		} catch (e) {
-			toast({
-				title: "Could not delete files",
-				text: permissionAwareErrorText(e, "You don't have permission to delete one or more of these files"),
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not delete files", { description: permissionAwareErrorText(e, "You don't have permission to delete one or more of these files") })
 		} finally {
 			deletingCluster.value = false
 		}
@@ -1862,12 +1774,7 @@ export default function setup(context) {
 				// through, rather than looking empty until something else triggers a refresh.
 				context.dmMessages.reload()
 				context.myDMThreads.reload()
-				toast({
-					title: "Could not send message",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not send message", { description: e.messages ? e.messages[0] : e.message })
 			}
 			return
 		}
@@ -1908,12 +1815,7 @@ export default function setup(context) {
 			// of leaving the pane looking empty after a mid-send failure.
 			context.messages.reload()
 			context.myThreads.reload()
-			toast({
-				title: "Could not send message",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not send message", { description: e.messages ? e.messages[0] : e.message })
 		}
 	}
 
@@ -1975,12 +1877,7 @@ export default function setup(context) {
 			})
 			.catch((e) => {
 				draftAttachments.value = draftAttachments.value.filter((a) => a.id !== id)
-				toast({
-					title: "Could not upload file",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not upload file", { description: e.messages ? e.messages[0] : e.message })
 			})
 	}
 
@@ -1988,12 +1885,7 @@ export default function setup(context) {
 		draftAttachments.value = draftAttachments.value.filter((a) => a.id !== item.id)
 		if (item.file_url) {
 			call("connect.api.attachments.remove_chat_attachment", { file_url: item.file_url }).catch((e) => {
-				toast({
-					title: "Could not remove attachment",
-					text: e.messages ? e.messages[0] : e.message,
-					icon: "x-circle",
-					iconClasses: "text-red-600",
-				})
+				toast.error("Could not remove attachment", { description: e.messages ? e.messages[0] : e.message })
 			})
 		}
 	}
@@ -2005,13 +1897,15 @@ export default function setup(context) {
 		return (bytes / (1024 * 1024)).toFixed(1) + " MB"
 	}
 
+	// Full "lucide-" class names: Icon renders the name as a class, and the Studio build only ships CSS
+	// for lucide-* strings it finds verbatim in page JSON and scripts -- a bare or concatenated name renders blank.
 	function attachmentIcon(item) {
 		const type = (item && item.file_type) || ""
-		if (type.includes("wordprocessingml") || type === "application/msword") return "file-text"
-		if (type.includes("presentationml") || type === "application/vnd.ms-powerpoint") return "monitor"
-		if (type === "application/pdf") return "file"
-		if (type.startsWith("image/")) return "image"
-		return "file"
+		if (type.includes("wordprocessingml") || type === "application/msword") return "lucide-file-text"
+		if (type.includes("presentationml") || type === "application/vnd.ms-powerpoint") return "lucide-monitor"
+		if (type === "application/pdf") return "lucide-file"
+		if (type.startsWith("image/")) return "lucide-image"
+		return "lucide-file"
 	}
 
 	function attachmentIconBg(item) {
@@ -2095,12 +1989,7 @@ export default function setup(context) {
 			link.remove()
 			URL.revokeObjectURL(blobUrl)
 		} catch (e) {
-			toast({
-				title: "Could not download file",
-				text: e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not download file", { description: e.message })
 		}
 	}
 
@@ -2382,12 +2271,7 @@ export default function setup(context) {
 						},
 			)
 		} catch (e) {
-			toast({
-				title: "Could not start conversation",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not start conversation", { description: e.messages ? e.messages[0] : e.message })
 		}
 	}
 
@@ -2972,14 +2856,9 @@ export default function setup(context) {
 				after_hours_behavior: editAfterHours.value,
 			})
 			afterHoursBannerDismissed.value = false
-			toast({ title: "Working hours saved", icon: "check", iconClasses: "text-green-600" })
+			toast.success("Working hours saved")
 		} catch (e) {
-			toast({
-				title: "Could not save working hours",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not save working hours", { description: e.messages ? e.messages[0] : e.message })
 		} finally {
 			savingWorkSettings.value = false
 		}
@@ -2996,12 +2875,7 @@ export default function setup(context) {
 				after_hours_behavior: behavior,
 			})
 		} catch (e) {
-			toast({
-				title: "Could not update your preference",
-				text: e.messages ? e.messages[0] : e.message,
-				icon: "x-circle",
-				iconClasses: "text-red-600",
-			})
+			toast.error("Could not update your preference", { description: e.messages ? e.messages[0] : e.message })
 		}
 	}
 
