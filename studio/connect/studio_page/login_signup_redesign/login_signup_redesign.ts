@@ -1,4 +1,5 @@
 import { onScopeDispose } from "vue"
+import { saveBuyer } from "@app/utils/checkoutSession"
 
 const OTP_PREFIX = "otp-digit-"
 const STYLE_ID = "connect-otp-input-style"
@@ -12,6 +13,27 @@ function otpBoxes() {
 }
 
 export default function setup(context) {
+	const { route, router, authStep, otpOrigin, fullName, signupEmail, signupCountry, loginEmail } = context
+
+	// Sent here from Starter Pack checkout: start on "Create your account", and carry on to
+	// checkout after the (mock) code. Only an in-app path is followed, never another site.
+	const next = String(route.query.next || "")
+	const nextPath = next.startsWith("/") && !next.startsWith("//") ? next : ""
+	if (nextPath) authStep.value = "signup"
+
+	// Signup, login and the emailed code are UI only for now: nothing is created or checked
+	// on the server, and any details (or none) get through. What was typed is kept in this
+	// tab and becomes the buyer's details at checkout — see @app/utils/checkoutSession.
+	function continueAfterVerify() {
+		const signingUp = otpOrigin.value === "signup"
+		saveBuyer({
+			full_name: signingUp ? fullName.value : "",
+			email: signingUp ? signupEmail.value : loginEmail.value,
+			country: signingUp ? signupCountry.value : "",
+		})
+		if (nextPath) router.push(nextPath)
+	}
+
 	// frappe-ui's TextInput puts `class` and `style` on its wrapper div and forwards every
 	// *other* attr to the inner <input> (see attrsWithoutClassStyle in TextInput.vue). So a
 	// block's textAlign can never reach the input, and text-align isn't inherited into form
@@ -60,5 +82,5 @@ export default function setup(context) {
 		document.removeEventListener("keydown", onKeydown)
 	})
 
-	return {}
+	return { continueAfterVerify }
 }

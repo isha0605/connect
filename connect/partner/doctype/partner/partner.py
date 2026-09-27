@@ -66,6 +66,38 @@ DIMENSION_SCORE_FIELDS = (
 
 
 class Partner(Document):
+	def validate(self):
+		self.set_starter_pack_sequence()
+
+	def set_starter_pack_sequence(self):
+		"""Every approved Starter Pack partner has a unique place in the round robin that
+		hands out paid orders (see starter_pack_order.partner_rotation). A newly approved
+		partner joins the end of the line; one taken out of the pool gives up their place,
+		so coming back later puts them at the end again."""
+		if not self.starter_pack:
+			self.starter_pack_sequence = 0
+			return
+
+		if cint(self.starter_pack_sequence) <= 0:
+			last = frappe.db.sql(
+				"select max(starter_pack_sequence) from `tabPartner` where starter_pack = 1 and name != %s",
+				self.name,
+			)[0][0]
+			self.starter_pack_sequence = cint(last) + 1
+			return
+
+		taken_by = frappe.db.get_value(
+			"Partner",
+			{"starter_pack": 1, "starter_pack_sequence": self.starter_pack_sequence, "name": ["!=", self.name]},
+			"partner_name",
+		)
+		if taken_by:
+			frappe.throw(
+				_("Starter Pack Rotation Order {0} is already {1}'s. Each partner needs their own.").format(
+					self.starter_pack_sequence, frappe.bold(taken_by)
+				)
+			)
+
 	def before_save(self):
 		self.region = COUNTRY_TO_REGION.get((self.country or "").strip().lower(), "Other")
 
@@ -978,11 +1010,13 @@ _PROFILE_SIMPLE_FIELDS = (
 	# "autoname": "field:partner_name" in partner.json), so letting partners edit it here
 	# would rename the document and break every Connect Partner Member row that references
 	# it by name. Renaming a partner is an admin-only operation done from the desk.
+	# starter_pack is excluded too: it decides who Frappe may assign paid Starter Pack
+	# orders to, so a partner must not be able to enrol themselves.
 	"tagline", "description", "country", "city", "address", "website",
 	"industry", "year_founded", "rollouts", "hourly_rate",
 	"sites_deployed", "typical_project_size", "proposal_timeline", "certified_experts",
 	"certs_erpnext", "certs_frappe_framework", "countries_served", "references_count",
-	"starter_pack", "demo_available", "logo_position_x", "logo_position_y",
+	"demo_available", "logo_position_x", "logo_position_y",
 )
 
 
@@ -1054,18 +1088,9 @@ def update_my_partner_profile(
 			for row in _parse_json_arg(success_stories, [])
 		])
 
-	if packs is not None:
-		doc.set("packs", [
-			{
-				"pack_key": row.get("pack_key"),
-				"pack_name": row.get("pack_name"),
-				"price": row.get("price"),
-				"hours": row.get("hours"),
-				"validity_days": row.get("validity_days"),
-				"includes_summary": row.get("includes_summary"),
-			}
-			for row in _parse_json_arg(packs, [])
-		])
+	# `packs` is accepted and ignored: Starter Pack prices are Frappe's (see the Starter
+	# Pack doctype), so partners no longer set their own. Kept in the signature so an
+	# older client that still sends it doesn't fail.
 
 	if addons is not None:
 		doc.set("addons", [

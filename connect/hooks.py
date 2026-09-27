@@ -8,7 +8,8 @@ app_license = "mit"
 # Apps
 # ------------------
 
-# required_apps = []
+# Starter Pack Order links to its Gateway Payment Request.
+required_apps = ["bwh_payments"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -91,7 +92,7 @@ signup_form_template = "connect/templates/includes/signup_redirect.html"
 # ------------
 
 # before_install = "connect.install.before_install"
-# after_install = "connect.install.after_install"
+after_install = "connect.install.after_install"
 
 # Uninstallation
 # ------------
@@ -188,6 +189,12 @@ fixtures = [
 	},
 ]
 
+# Stops a Starter Pack Order being refunded after kickoff. It has to be a class override:
+# bwh_payments calls the gateway before it saves, and doc_events only run afterwards.
+override_doctype_class = {
+	"Gateway Payment Request": "connect.overrides.gateway_payment_request.GatewayPaymentRequest",
+}
+
 # Document Events
 # ---------------
 # Hook on document methods and events
@@ -222,12 +229,19 @@ doc_events = {
 		"after_insert": "connect.roles.grant_thread_guest_role",
 		"on_trash": "connect.roles.revoke_thread_guest_role",
 	},
+	"Gateway Payment Request": {
+		"on_update": "connect.customer.doctype.starter_pack_order.starter_pack_order.on_gateway_payment_request_update",
+	},
 }
 
 # Scheduled Tasks
 # ---------------
 
 scheduler_events = {
+	# Paid Starter Pack orders still without a partner (e.g. paid while none was approved).
+	"hourly": [
+		"connect.customer.doctype.starter_pack_order.partner_rotation.assign_waiting_orders",
+	],
 	"daily": [
 		"connect.partner.response_time.recompute_all_response_times",
 		"connect.partner.press_integration.sync_all_partner_mrrs",
