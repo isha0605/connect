@@ -1207,7 +1207,7 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-09-16 20:52:26.627653",
+ "creation": "2026-09-27 20:13:09.214973",
  "doctype": "Studio Page",
  "draft_blocks": [
   {
@@ -1374,7 +1374,7 @@
           "justifyContent": "center",
           "overflowY": "auto",
           "padding": "48px 40px",
-          "width": "480px"
+          "width": "529px"
          },
          "children": [
           {
@@ -1520,6 +1520,175 @@
            ],
            "classes": [],
            "componentId": "step1-business",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "{{ wizardStep === 3 ? 'flex' : 'none' }}",
+            "flexDirection": "column",
+            "gap": "12px",
+            "marginTop": "24px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)"
+             },
+             "children": [],
+             "classes": [],
+             "componentId": "pains-question-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-sm",
+              "tag": "span",
+              "text": "What are you trying to fix?"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "12px"
+             },
+             "children": [
+              {
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "update:modelValue": {
+                 "action": "Run Script",
+                 "event": "update:modelValue",
+                 "script": "togglePain('manual_work');"
+                }
+               },
+               "componentId": "pain-manual_work",
+               "componentName": "Checkbox",
+               "componentProps": {
+                "label": "Manual work that should be automated",
+                "modelValue": "{{ hasPain('manual_work') }}"
+               }
+              },
+              {
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "update:modelValue": {
+                 "action": "Run Script",
+                 "event": "update:modelValue",
+                 "script": "togglePain('hr_by_hand');"
+                }
+               },
+               "componentId": "pain-hr_by_hand",
+               "componentName": "Checkbox",
+               "componentProps": {
+                "label": "Payroll, leave and attendance are run by hand",
+                "modelValue": "{{ hasPain('hr_by_hand') }}"
+               }
+              },
+              {
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "update:modelValue": {
+                 "action": "Run Script",
+                 "event": "update:modelValue",
+                 "script": "togglePain('disconnected_systems');"
+                }
+               },
+               "componentId": "pain-disconnected_systems",
+               "componentName": "Checkbox",
+               "componentProps": {
+                "label": "Systems that do not talk to each other",
+                "modelValue": "{{ hasPain('disconnected_systems') }}"
+               }
+              },
+              {
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "update:modelValue": {
+                 "action": "Run Script",
+                 "event": "update:modelValue",
+                 "script": "togglePain('slow_close');"
+                }
+               },
+               "componentId": "pain-slow_close",
+               "componentName": "Checkbox",
+               "componentProps": {
+                "label": "Month-end close and reporting take too long",
+                "modelValue": "{{ hasPain('slow_close') }}"
+               }
+              },
+              {
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "update:modelValue": {
+                 "action": "Run Script",
+                 "event": "update:modelValue",
+                 "script": "togglePain('stock_visibility');"
+                }
+               },
+               "componentId": "pain-stock_visibility",
+               "componentName": "Checkbox",
+               "componentProps": {
+                "label": "No reliable view of stock and orders",
+                "modelValue": "{{ hasPain('stock_visibility') }}"
+               }
+              },
+              {
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "update:modelValue": {
+                 "action": "Run Script",
+                 "event": "update:modelValue",
+                 "script": "togglePain('tools_dont_fit');"
+                }
+               },
+               "componentId": "pain-tools_dont_fit",
+               "componentName": "Checkbox",
+               "componentProps": {
+                "label": "Our tools cannot handle how we actually work",
+                "modelValue": "{{ hasPain('tools_dont_fit') }}"
+               }
+              },
+              {
+               "children": [],
+               "classes": [],
+               "componentEvents": {
+                "update:modelValue": {
+                 "action": "Run Script",
+                 "event": "update:modelValue",
+                 "script": "togglePain('outgrowing');"
+                }
+               },
+               "componentId": "pain-outgrowing",
+               "componentName": "Checkbox",
+               "componentProps": {
+                "label": "We are outgrowing what we have",
+                "modelValue": "{{ hasPain('outgrowing') }}"
+               }
+              }
+             ],
+             "classes": [],
+             "componentId": "pains-options",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "children": [],
+             "classes": [],
+             "componentId": "pains-error",
+             "componentName": "ErrorMessage",
+             "componentProps": {
+              "message": "{{ showErrors && !painPoints.length ? 'Pick at least one' : '' }}"
+             }
+            }
+           ],
+           "classes": [],
+           "componentId": "step3-pains",
            "componentName": "container",
            "originalElement": "div"
           },
@@ -1825,175 +1994,6 @@
           },
           {
            "baseStyles": {
-            "display": "{{ wizardStep === 3 ? 'flex' : 'none' }}",
-            "flexDirection": "column",
-            "gap": "12px",
-            "marginTop": "24px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-7)"
-             },
-             "children": [],
-             "classes": [],
-             "componentId": "pains-question-label",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "What are you trying to fix?"
-             }
-            },
-            {
-             "baseStyles": {
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "12px"
-             },
-             "children": [
-              {
-               "children": [],
-               "classes": [],
-               "componentEvents": {
-                "update:modelValue": {
-                 "action": "Run Script",
-                 "event": "update:modelValue",
-                 "script": "togglePain('manual_work');"
-                }
-               },
-               "componentId": "pain-manual_work",
-               "componentName": "Checkbox",
-               "componentProps": {
-                "label": "Manual work that should be automated",
-                "modelValue": "{{ hasPain('manual_work') }}"
-               }
-              },
-              {
-               "children": [],
-               "classes": [],
-               "componentEvents": {
-                "update:modelValue": {
-                 "action": "Run Script",
-                 "event": "update:modelValue",
-                 "script": "togglePain('hr_by_hand');"
-                }
-               },
-               "componentId": "pain-hr_by_hand",
-               "componentName": "Checkbox",
-               "componentProps": {
-                "label": "Payroll, leave and attendance are run by hand",
-                "modelValue": "{{ hasPain('hr_by_hand') }}"
-               }
-              },
-              {
-               "children": [],
-               "classes": [],
-               "componentEvents": {
-                "update:modelValue": {
-                 "action": "Run Script",
-                 "event": "update:modelValue",
-                 "script": "togglePain('disconnected_systems');"
-                }
-               },
-               "componentId": "pain-disconnected_systems",
-               "componentName": "Checkbox",
-               "componentProps": {
-                "label": "Systems that do not talk to each other",
-                "modelValue": "{{ hasPain('disconnected_systems') }}"
-               }
-              },
-              {
-               "children": [],
-               "classes": [],
-               "componentEvents": {
-                "update:modelValue": {
-                 "action": "Run Script",
-                 "event": "update:modelValue",
-                 "script": "togglePain('slow_close');"
-                }
-               },
-               "componentId": "pain-slow_close",
-               "componentName": "Checkbox",
-               "componentProps": {
-                "label": "Month-end close and reporting take too long",
-                "modelValue": "{{ hasPain('slow_close') }}"
-               }
-              },
-              {
-               "children": [],
-               "classes": [],
-               "componentEvents": {
-                "update:modelValue": {
-                 "action": "Run Script",
-                 "event": "update:modelValue",
-                 "script": "togglePain('stock_visibility');"
-                }
-               },
-               "componentId": "pain-stock_visibility",
-               "componentName": "Checkbox",
-               "componentProps": {
-                "label": "No reliable view of stock and orders",
-                "modelValue": "{{ hasPain('stock_visibility') }}"
-               }
-              },
-              {
-               "children": [],
-               "classes": [],
-               "componentEvents": {
-                "update:modelValue": {
-                 "action": "Run Script",
-                 "event": "update:modelValue",
-                 "script": "togglePain('tools_dont_fit');"
-                }
-               },
-               "componentId": "pain-tools_dont_fit",
-               "componentName": "Checkbox",
-               "componentProps": {
-                "label": "Our tools cannot handle how we actually work",
-                "modelValue": "{{ hasPain('tools_dont_fit') }}"
-               }
-              },
-              {
-               "children": [],
-               "classes": [],
-               "componentEvents": {
-                "update:modelValue": {
-                 "action": "Run Script",
-                 "event": "update:modelValue",
-                 "script": "togglePain('outgrowing');"
-                }
-               },
-               "componentId": "pain-outgrowing",
-               "componentName": "Checkbox",
-               "componentProps": {
-                "label": "We are outgrowing what we have",
-                "modelValue": "{{ hasPain('outgrowing') }}"
-               }
-              }
-             ],
-             "classes": [],
-             "componentId": "pains-options",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "children": [],
-             "classes": [],
-             "componentId": "pains-error",
-             "componentName": "ErrorMessage",
-             "componentProps": {
-              "message": "{{ showErrors && !painPoints.length ? 'Pick at least one' : '' }}"
-             }
-            }
-           ],
-           "classes": [],
-           "componentId": "step3-pains",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
             "alignItems": "center",
             "display": "{{ wizardStep === 1 ? 'flex' : 'none' }}",
             "flexDirection": "row",
@@ -2205,7 +2205,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-27 14:42:31.801288",
+ "modified": "2026-09-27 14:55:12.746678",
  "modified_by": "Administrator",
  "name": "find_partners_redesign",
  "owner": "Administrator",
