@@ -4,8 +4,13 @@
 // - back from Razorpay (?reference_id=<Gateway Payment Request>): the order as the server
 //   sees it, re-read from the gateway — never the redirect's own say-so.
 // Card and UPI details are only ever entered on Razorpay's page, not here.
+//
+// No real account is needed. Paying needs the buyer to have been through the (mock) sign-in
+// screens in this tab; their name and email come from there, can be corrected here, and go
+// onto the order and its payment request. See @app/utils/checkoutSession.
 
-import { computed, watch } from "vue"
+import { computed } from "vue"
+import { orderKey, readBuyer, rememberOrderKey, saveBuyer } from "@app/utils/checkoutSession"
 
 export default function setup(context) {
 	const {
@@ -14,8 +19,8 @@ export default function setup(context) {
 		call,
 		toast,
 		catalog,
-		myContext,
-		myCustomer,
+		checkoutName,
+		checkoutEmail,
 		checkoutCompany,
 		checkoutPhone,
 		termsAccepted,
@@ -27,16 +32,16 @@ export default function setup(context) {
 	const referenceId = String(route.query.reference_id || "")
 	const packKeys = String(route.query.packs || "").split(",").filter(Boolean)
 
-	const isGuest = computed(() => !myContext.data || myContext.data.user === "Guest")
-	const userEmail = computed(() => (isGuest.value ? "" : myContext.data.user))
-
-	watch(
-		() => myCustomer.data,
-		(customer) => {
-			if (customer && !checkoutCompany.value) checkoutCompany.value = customer.customer_name
-		},
-		{ immediate: true },
-	)
+	// Not through the sign-in screens in this tab yet: go there first, and come back here.
+	const buyer = readBuyer()
+	const isGuest = computed(() => !buyer)
+	if (!referenceId && packKeys.length && !buyer) {
+		router.replace({ path: "/login-signup-redesign", query: { next: route.fullPath } })
+	}
+	if (buyer) {
+		checkoutName.value = checkoutName.value || buyer.full_name
+		checkoutEmail.value = checkoutEmail.value || buyer.email
+	}
 
 	function money(amount) {
 		return new Intl.NumberFormat("en-IN", {
@@ -77,7 +82,7 @@ export default function setup(context) {
 	function loadOrder() {
 		loadError.value = false
 		orderData.value = {}
-		call("connect.api.starter_pack.get_order", { payment_request: referenceId })
+		call("connect.api.starter_pack.get_order", { payment_request: referenceId, key: orderKey(referenceId) })
 			.then((data) => {
 				orderData.value = data
 				// A completed order gets its own page — this one's job is just to gate on status.
@@ -95,6 +100,7 @@ export default function setup(context) {
 		paying.value = true
 		promise
 			.then((res) => {
+				rememberOrderKey(res)
 				window.location.href = res.payment_url
 			})
 			.catch((err) => {
@@ -105,14 +111,17 @@ export default function setup(context) {
 
 	function payNow() {
 		if (isGuest.value) {
-			const back = window.location.pathname + window.location.search
-			window.location.href = `/login?redirect-to=${encodeURIComponent(back)}`
+			router.push({ path: "/login-signup-redesign", query: { next: route.fullPath } })
 			return
 		}
-		if (!checkoutCompany.value || !termsAccepted.value) return
+		if (!checkoutName.value || !checkoutEmail.value || !checkoutCompany.value || !termsAccepted.value) return
+		// Corrections made here stick for the rest of this tab.
+		saveBuyer({ ...buyer, full_name: checkoutName.value, email: checkoutEmail.value })
 		goToPayment(
 			call("connect.api.starter_pack.checkout", {
 				packs: JSON.stringify(packKeys),
+				buyer_name: checkoutName.value,
+				buyer_email: checkoutEmail.value,
 				company_name: checkoutCompany.value,
 				phone: checkoutPhone.value,
 				terms_accepted: 1,
@@ -121,7 +130,8 @@ export default function setup(context) {
 	}
 
 	function retryPayment() {
-		goToPayment(call("connect.api.starter_pack.pay", { order: orderData.value.order }))
+		const order = orderData.value.order
+		goToPayment(call("connect.api.starter_pack.pay", { order, key: orderKey(order) }))
 	}
 
 	function goBack() {
@@ -135,7 +145,6 @@ export default function setup(context) {
 
 	return {
 		isGuest,
-		userEmail,
 		money,
 		lines,
 		gstRate,

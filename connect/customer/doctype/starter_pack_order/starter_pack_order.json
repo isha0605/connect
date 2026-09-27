@@ -8,6 +8,8 @@
  "field_order": [
   "customer",
   "user",
+  "buyer_name",
+  "buyer_email",
   "company_name",
   "phone",
   "column_break_status",
@@ -30,7 +32,8 @@
   "amount",
   "total_hours",
   "section_break_terms",
-  "terms_accepted"
+  "terms_accepted",
+  "access_key"
  ],
  "fields": [
   {
@@ -46,6 +49,20 @@
    "fieldtype": "Link",
    "label": "User",
    "options": "User",
+   "read_only": 1
+  },
+  {
+   "description": "Who paid, as they entered it at checkout. Not an account: a guest buys without one.",
+   "fieldname": "buyer_name",
+   "fieldtype": "Data",
+   "label": "Buyer Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "buyer_email",
+   "fieldtype": "Data",
+   "label": "Buyer Email",
+   "options": "Email",
    "read_only": 1
   },
   {
@@ -192,10 +209,19 @@
    "fieldtype": "Check",
    "label": "Terms Accepted",
    "reqd": 1
+  },
+  {
+   "description": "Lets the browser that placed a guest order read it back after paying. Never shown.",
+   "fieldname": "access_key",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Access Key",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "links": [],
- "modified": "2026-09-26 19:00:00.000000",
+ "modified": "2026-09-27 21:00:00.000000",
  "modified_by": "Administrator",
  "module": "Customer",
  "name": "Starter Pack Order",

@@ -1,6 +1,7 @@
 # Copyright (c) 2026
 # For license information, please see license.txt
 
+import hmac
 from zoneinfo import ZoneInfo
 
 import frappe
@@ -30,8 +31,9 @@ GATEWAY_STATUS_MAP = {
 class StarterPackOrder(Document):
 	def before_insert(self):
 		self.user = frappe.session.user
-		if not self.customer:
+		if not self.customer and self.user != "Guest":
 			self.customer = get_customer_for_user(self.user)
+		self.access_key = frappe.generate_hash(length=32)
 		self.snapshot_packs()
 		self.gst_rate = flt(frappe.db.get_single_value("Starter Pack Settings", "gst_rate"))
 
@@ -149,7 +151,7 @@ class StarterPackOrder(Document):
 		if not settings.payment_gateway:
 			frappe.throw(_("Online payment isn't set up yet."))
 
-		user = frappe.db.get_value("User", self.user, ["email", "first_name", "last_name"], as_dict=True)
+		forenames, _sep, surname = (self.buyer_name or "").strip().partition(" ")
 		request = frappe.get_doc(
 			{
 				"doctype": "Gateway Payment Request",
@@ -159,10 +161,11 @@ class StarterPackOrder(Document):
 				"ref_doctype": self.doctype,
 				"ref_docname": self.name,
 				"customer_ref": self.customer,
-				"customer_email": user.email if user else None,
+				# Whoever checkout says is paying — sent to Razorpay as the customer.
+				"customer_email": self.buyer_email,
 				"customer_phone": self.phone,
-				"customer_forenames": user.first_name if user else None,
-				"customer_surname": user.last_name if user else None,
+				"customer_forenames": forenames or None,
+				"customer_surname": surname or None,
 			}
 		).insert(ignore_permissions=True)  # before_save opens the gateway session
 
@@ -240,14 +243,24 @@ def get_captured_payment_id(request):
 	return payment_id
 
 
-def checkout(packs, company_name, phone=None, terms_accepted=0):
+def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None, buyer_email=None):
 	"""Place an order for the given pack keys and open its payment. Returns where to
-	send the customer to pay.
+	send the customer to pay, and the order's access key.
+
+	Anyone can buy, logged in or not: sign-in is a mock today, so the buyer is whoever the
+	checkout form names. No account is made for them — their name and email are kept on the
+	order and its payment request, and the access key is what lets their browser read the
+	order back after paying.
 
 	Takes pack keys only. Prices and totals are worked out server-side from the catalog.
 	"""
-	if frappe.session.user == "Guest":
-		frappe.throw(_("Log in to check out."), frappe.PermissionError)
+	buyer_name = (buyer_name or "").strip()
+	buyer_email = (buyer_email or "").strip()
+	if not buyer_name:
+		frappe.throw(_("Enter your name."))
+	if not buyer_email:
+		frappe.throw(_("Enter your email."))
+	frappe.utils.validate_email_address(buyer_email, throw=True)
 	if not frappe.utils.cint(terms_accepted):
 		frappe.throw(_("Accept the terms to continue."))
 
@@ -258,6 +271,8 @@ def checkout(packs, company_name, phone=None, terms_accepted=0):
 	order = frappe.get_doc(
 		{
 			"doctype": "Starter Pack Order",
+			"buyer_name": buyer_name,
+			"buyer_email": buyer_email,
 			"company_name": company_name,
 			"phone": phone,
 			"terms_accepted": 1,
@@ -265,11 +280,20 @@ def checkout(packs, company_name, phone=None, terms_accepted=0):
 		}
 	).insert(ignore_permissions=True)
 
-	request = order.create_payment_request()
-	return {"order": order.name, "amount": order.amount, "payment_url": request.order_url}
+	return payment_response(order, order.create_payment_request())
 
 
-def get_order(order=None, payment_request=None):
+def payment_response(order, request):
+	return {
+		"order": order.name,
+		"key": order.access_key,
+		"payment_request": request.name,
+		"amount": order.amount,
+		"payment_url": request.order_url,
+	}
+
+
+def get_order(order=None, payment_request=None, key=None):
 	"""An order's status for the page the gateway sends the customer back to.
 
 	Razorpay's return URL carries the Gateway Payment Request's name (`reference_id`),
@@ -288,7 +312,7 @@ def get_order(order=None, payment_request=None):
 	if not order:
 		frappe.throw(_("Order not found"), frappe.DoesNotExistError)
 
-	doc = get_own_order(order)
+	doc = get_own_order(order, key)
 	if doc.payment_request and doc.payment_status == "Unpaid":
 		frappe.get_doc("Gateway Payment Request", doc.payment_request).sync_status()
 		doc.reload()
@@ -346,16 +370,22 @@ def get_assigned_partner(partner):
 	return preview
 
 
-def pay(order):
+def pay(order, key=None):
 	"""Send the customer back to pay an order they already placed — e.g. after a
 	payment link expired. Reuses an open link rather than opening a second one."""
-	doc = get_own_order(order)
-	request = doc.create_payment_request()
-	return {"order": doc.name, "amount": doc.amount, "payment_url": request.order_url}
+	doc = get_own_order(order, key)
+	return payment_response(doc, doc.create_payment_request())
 
 
-def get_own_order(order):
+def get_own_order(order, key=None):
+	"""The order, if the caller may see it: with its access key (a guest's browser holds
+	it), as the logged-in user who placed it, or as a System Manager."""
 	doc = frappe.get_doc("Starter Pack Order", order)
-	if doc.user != frappe.session.user and "System Manager" not in frappe.get_roles():
-		frappe.throw(_("Not permitted"), frappe.PermissionError)
-	return doc
+	user = frappe.session.user
+	if key and doc.access_key and hmac.compare_digest(str(key), doc.access_key):
+		return doc
+	if user != "Guest" and doc.user == user:
+		return doc
+	if "System Manager" in frappe.get_roles():
+		return doc
+	frappe.throw(_("Not permitted"), frappe.PermissionError)

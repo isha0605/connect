@@ -13,6 +13,7 @@ import {
 	directoryQuery,
 	recommend,
 } from "@app/utils/recommendation"
+import { readBuyer } from "@app/utils/checkoutSession"
 
 const HOW_IT_WORKS = [
 	{ title: "Pay in full", body: "To Frappe, up front" },
@@ -132,7 +133,9 @@ export default function setup(context) {
 	// Guests go through (mock) signup first, which carries on to checkout afterwards.
 	function startCheckout() {
 		const query = { packs: pickedPacks.value.join(",") }
-		if (isGuest.value) {
+		// Signed in means through the (mock) sign-in screens in this tab — not a Desk
+		// session, which the /dev/ preview always has.
+		if (!readBuyer()) {
 			const next = router.resolve({ path: "/starter-pack-checkout", query }).fullPath
 			router.push({ path: "/login-signup-redesign", query: { next } })
 		} else {

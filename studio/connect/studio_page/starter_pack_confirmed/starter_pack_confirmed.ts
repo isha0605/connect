@@ -4,6 +4,7 @@
 
 import { computed } from "vue"
 import { MODULE_ICONS, OUR_NEEDS, PACK_PITCHES, commercialTerms } from "@app/utils/recommendation"
+import { orderKey } from "@app/utils/checkoutSession"
 
 const ORDER_STATUS_BADGES = {
 	New: { label: "Awaiting partner", theme: "gray" },
@@ -33,7 +34,7 @@ export default function setup(context) {
 			loadError.value = true
 			return
 		}
-		call("connect.api.starter_pack.get_order", { order: orderName })
+		call("connect.api.starter_pack.get_order", { order: orderName, key: orderKey(orderName) })
 			.then((data) => {
 				// Not paid (yet, or any more): checkout is the page that shows that and offers a retry.
 				if (!PAYMENT_BADGES[data.payment_status]) {

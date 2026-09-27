@@ -457,12 +457,35 @@
              },
              "children": [],
              "classes": [],
+             "componentId": "pay-name",
+             "componentName": "TextInput",
+             "componentProps": {
+              "label": "Full name",
+              "modelValue": {
+               "$type": "variable",
+               "name": "checkoutName"
+              },
+              "placeholder": "Your full name",
+              "required": true
+             }
+            },
+            {
+             "baseStyles": {
+              "width": "100%"
+             },
+             "children": [],
+             "classes": [],
              "componentId": "pay-email",
              "componentName": "TextInput",
              "componentProps": {
-              "disabled": true,
               "label": "Email",
-              "modelValue": "{{ userEmail }}"
+              "modelValue": {
+               "$type": "variable",
+               "name": "checkoutEmail"
+              },
+              "placeholder": "name@company.com",
+              "required": true,
+              "type": "email"
              }
             },
             {
@@ -535,7 +558,7 @@
            "componentId": "pay-button",
            "componentName": "Button",
            "componentProps": {
-            "disabled": "{{ !isGuest && (!checkoutCompany || !termsAccepted || paying) }}",
+            "disabled": "{{ !isGuest && (!checkoutName || !checkoutEmail || !checkoutCompany || !termsAccepted || paying) }}",
             "label": "{{ isGuest ? 'Log in to pay' : 'Pay ' + totalLabel }}",
             "loading": "{{ paying }}",
             "size": "md",
@@ -1030,7 +1053,7 @@
            "componentProps": {
             "fontSize": "text-p-base",
             "tag": "p",
-            "text": "Log in with the account you paid from. If it still doesn't show, contact Frappe with the time you paid."
+            "text": "Open this page in the browser tab you paid from. If it still doesn't show, contact Frappe with the time you paid."
            }
           },
           {
@@ -1644,12 +1667,35 @@
              },
              "children": [],
              "classes": [],
+             "componentId": "pay-name",
+             "componentName": "TextInput",
+             "componentProps": {
+              "label": "Full name",
+              "modelValue": {
+               "$type": "variable",
+               "name": "checkoutName"
+              },
+              "placeholder": "Your full name",
+              "required": true
+             }
+            },
+            {
+             "baseStyles": {
+              "width": "100%"
+             },
+             "children": [],
+             "classes": [],
              "componentId": "pay-email",
              "componentName": "TextInput",
              "componentProps": {
-              "disabled": true,
               "label": "Email",
-              "modelValue": "{{ userEmail }}"
+              "modelValue": {
+               "$type": "variable",
+               "name": "checkoutEmail"
+              },
+              "placeholder": "name@company.com",
+              "required": true,
+              "type": "email"
              }
             },
             {
@@ -1722,7 +1768,7 @@
            "componentId": "pay-button",
            "componentName": "Button",
            "componentProps": {
-            "disabled": "{{ !isGuest && (!checkoutCompany || !termsAccepted || paying) }}",
+            "disabled": "{{ !isGuest && (!checkoutName || !checkoutEmail || !checkoutCompany || !termsAccepted || paying) }}",
             "label": "{{ isGuest ? 'Log in to pay' : 'Pay ' + totalLabel }}",
             "loading": "{{ paying }}",
             "size": "md",
@@ -2217,7 +2263,7 @@
            "componentProps": {
             "fontSize": "text-p-base",
             "tag": "p",
-            "text": "Log in with the account you paid from. If it still doesn't show, contact Frappe with the time you paid."
+            "text": "Open this page in the browser tab you paid from. If it still doesn't show, contact Frappe with the time you paid."
            }
           },
           {
@@ -2374,7 +2420,7 @@
  ],
  "frappe_app": "connect",
  "is_standard": 1,
- "modified": "2026-09-26 10:44:38.029163",
+ "modified": "2026-09-27 15:19:32.394033",
  "modified_by": "Administrator",
  "name": "starter_pack_checkout",
  "owner": "Administrator",
@@ -2410,6 +2456,16 @@
  "route": "/starter-pack-checkout",
  "studio_app": "connect",
  "variables": [
+  {
+   "initial_value": "\"\"",
+   "variable_name": "checkoutEmail",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "checkoutName",
+   "variable_type": "String"
+  },
   {
    "initial_value": "\"\"",
    "variable_name": "checkoutCompany",

@@ -173,7 +173,14 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 		frappe.flags[PAYMENT_HOOK_FLAG] = False
 
 	def place(self, packs):
-		result = checkout(frappe.as_json(packs), "Test Co", phone="9999999999", terms_accepted=1)
+		result = checkout(
+			frappe.as_json(packs),
+			"Test Co",
+			phone="9999999999",
+			terms_accepted=1,
+			buyer_name="Asha Rao",
+			buyer_email="asha@example.com",
+		)
 		return result, frappe.get_doc("Starter Pack Order", result["order"])
 
 	def request(self, order):
@@ -188,16 +195,44 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 		self.assertEqual(request.currency_code, "INR")
 		self.assertEqual((request.ref_doctype, request.ref_docname), ("Starter Pack Order", order.name))
 
-	def test_checkout_needs_terms_and_a_pack(self):
-		self.assertRaises(frappe.ValidationError, checkout, frappe.as_json([self.pack_a]), "Test Co")
-		self.assertRaises(frappe.ValidationError, checkout, "[]", "Test Co", terms_accepted=1)
+	def test_checkout_needs_terms_a_pack_and_a_buyer(self):
+		buyer = {"buyer_name": "Asha Rao", "buyer_email": "asha@example.com"}
+		self.assertRaises(frappe.ValidationError, checkout, frappe.as_json([self.pack_a]), "Test Co", **buyer)
+		self.assertRaises(frappe.ValidationError, checkout, "[]", "Test Co", terms_accepted=1, **buyer)
+		packs = frappe.as_json([self.pack_a])
+		self.assertRaises(frappe.ValidationError, checkout, packs, "Test Co", terms_accepted=1, buyer_email="a@b.co")
+		self.assertRaises(frappe.ValidationError, checkout, packs, "Test Co", terms_accepted=1, buyer_name="Asha")
+		self.assertRaises(
+			frappe.ValidationError, checkout, packs, "Test Co", terms_accepted=1, buyer_name="Asha", buyer_email="nope"
+		)
 
-	def test_guests_cannot_check_out(self):
+	def test_a_guest_can_buy_without_an_account(self):
+		users_before = frappe.db.count("User")
 		frappe.set_user("Guest")
 		try:
-			self.assertRaises(
-				frappe.PermissionError, checkout, frappe.as_json([self.pack_a]), "Test Co", terms_accepted=1
-			)
+			result, order = self.place([self.pack_a])
+		finally:
+			frappe.set_user("Administrator")
+		self.assertEqual(frappe.db.count("User"), users_before)
+		self.assertEqual((order.user, order.customer), ("Guest", None))
+		self.assertEqual((order.buyer_name, order.buyer_email, order.company_name), ("Asha Rao", "asha@example.com", "Test Co"))
+		self.assertEqual(result["key"], order.access_key)
+		# What was typed at checkout is what the payment request, and so Razorpay, gets.
+		request = self.request(order)
+		self.assertEqual(
+			(request.customer_forenames, request.customer_surname, request.customer_email, request.customer_phone),
+			("Asha", "Rao", "asha@example.com", "9999999999"),
+		)
+
+	def test_a_guest_reads_their_order_back_only_with_its_key(self):
+		frappe.set_user("Guest")
+		try:
+			result, order = self.place([self.pack_a])
+			self.assertEqual(get_order(payment_request=result["payment_request"], key=result["key"])["order"], order.name)
+			self.assertRaises(frappe.PermissionError, get_order, order.name)
+			self.assertRaises(frappe.PermissionError, get_order, order.name, key="not-the-key")
+			self.assertEqual(pay(order.name, key=result["key"])["order"], order.name)
+			self.assertRaises(frappe.PermissionError, pay, order.name)
 		finally:
 			frappe.set_user("Administrator")
 
@@ -278,7 +313,7 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 		order.reload()
 		self.assertEqual(result["partner"]["name"], order.partner)
 		self.assertIsInstance(result["partner"]["industries"], list)
-		self.assertEqual(result["partner"]["review_count"], 0)
+		self.assertEqual(result["partner"]["review_count"], frappe.db.count("Partner Review", {"partner": order.partner}))
 		# Sent with the site's offset, so a browser in another zone reads the right moment.
 		for field in ("created_on", "paid_on", "partner_assigned_on"):
 			self.assertIsNotNone(datetime.fromisoformat(result[field]).utcoffset(), field)
