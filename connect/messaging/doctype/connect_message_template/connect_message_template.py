@@ -7,8 +7,6 @@ from frappe.model.document import Document
 from jinja2 import DebugUndefined, TemplateError, TemplateSyntaxError
 from jinja2.sandbox import SandboxedEnvironment
 
-# The variables a template can use, e.g. "Hi {{ first_name }}". Kept in step with the page
-# script's TEMPLATE_VARIABLES, which offers them after "{{" in the Response box.
 TEMPLATE_VARIABLES = (
 	"first_name",
 	"full_name",
