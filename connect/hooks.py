@@ -227,6 +227,13 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
+scheduler_events = {
+	"daily": [
+		"connect.partner.response_time.recompute_all_response_times",
+		"connect.partner.press_integration.sync_all_partner_mrrs",
+	],
+}
+
 # scheduler_events = {
 # 	"all": [
 # 		"connect.tasks.all"
