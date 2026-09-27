@@ -101,8 +101,8 @@ export default function setup(context) {
 			{
 				key: "rate",
 				icon: "lucide-circle-dollar-sign",
-				// hourly_rate carries no currency; the directory's partners quote in USD.
-				text: p.hourly_rate ? `From $${Number(p.hourly_rate).toLocaleString("en-US")}/hr` : "Undisclosed",
+				// In rupees, as the partner directory shows it.
+				text: p.hourly_rate ? `From ₹${Number(p.hourly_rate).toLocaleString("en-IN")}/hr` : "Undisclosed",
 				sub: "",
 				muted: !p.hourly_rate,
 			},
