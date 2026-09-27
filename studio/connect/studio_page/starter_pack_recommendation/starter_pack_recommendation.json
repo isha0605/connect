@@ -1964,12 +1964,13 @@
        "baseStyles": {
         "display": "flex",
         "flexDirection": "column",
-        "gap": "16px"
+        "gap": "0px"
        },
        "children": [
         {
          "baseStyles": {
-          "color": "var(--ink-gray-6)"
+          "color": "var(--ink-gray-6)",
+          "marginTop": "-18px"
          },
          "children": [],
          "classes": [],
@@ -1985,7 +1986,12 @@
          "baseStyles": {
           "display": "flex",
           "flexDirection": "column",
-          "gap": "8px"
+          "flexWrap": "nowrap",
+          "gap": "0px",
+          "marginTop": "24px",
+          "maxHeight": "calc(100vh - 260px)",
+          "overflowY": "auto",
+          "paddingRight": "4px"
          },
          "children": [],
          "classes": [],
@@ -2002,27 +2008,59 @@
            "slotContent": [
             {
              "baseStyles": {
+              "borderTop": "{{ dataIndex > 0 ? '1px solid var(--outline-gray-1)' : 'none' }}",
               "display": "flex",
               "flexDirection": "column",
               "gap": "12px",
-              "paddingBottom": "20px"
+              "minWidth": "0px",
+              "paddingBottom": "{{ scopePack && dataIndex < scopePack.modules.length - 1 ? '24px' : '0px' }}",
+              "paddingTop": "{{ dataIndex > 0 ? '24px' : '0px' }}",
+              "width": "100%"
              },
              "children": [
               {
                "baseStyles": {
-                "color": "var(--ink-gray-8)",
-                "display": "{{ scopePack && scopePack.modules.length > 1 ? 'block' : 'none' }}",
-                "fontWeight": "600"
+                "alignItems": "center",
+                "display": "{{ scopePack && scopePack.modules.length > 1 ? 'flex' : 'none' }}",
+                "flexDirection": "row",
+                "gap": "8px"
                },
-               "children": [],
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "flexShrink": "0",
+                  "height": "16px",
+                  "width": "16px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "scope-module-icon",
+                 "componentName": "Icon",
+                 "componentProps": {
+                  "icon": "{{ moduleIcon(dataItem.module_name) }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "scope-module-name",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-lg",
+                  "tag": "span",
+                  "text": "{{ dataItem.module_name }}"
+                 }
+                }
+               ],
                "classes": [],
-               "componentId": "scope-module-name",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-lg",
-                "tag": "span",
-                "text": "{{ dataItem.module_name }}"
-               }
+               "componentId": "scope-module-head",
+               "componentName": "container",
+               "originalElement": "div"
               },
               {
                "baseStyles": {
@@ -2047,7 +2085,9 @@
                    "baseStyles": {
                     "display": "flex",
                     "flexDirection": "row",
-                    "gap": "24px"
+                    "gap": "24px",
+                    "minWidth": "0px",
+                    "width": "100%"
                    },
                    "children": [
                     {
@@ -2111,7 +2151,8 @@
         },
         {
          "baseStyles": {
-          "alignSelf": "flex-start"
+          "alignSelf": "flex-start",
+          "marginTop": "24px"
          },
          "children": [],
          "classes": [],
@@ -4121,12 +4162,13 @@
        "baseStyles": {
         "display": "flex",
         "flexDirection": "column",
-        "gap": "16px"
+        "gap": "0px"
        },
        "children": [
         {
          "baseStyles": {
-          "color": "var(--ink-gray-6)"
+          "color": "var(--ink-gray-6)",
+          "marginTop": "-18px"
          },
          "children": [],
          "classes": [],
@@ -4142,7 +4184,12 @@
          "baseStyles": {
           "display": "flex",
           "flexDirection": "column",
-          "gap": "8px"
+          "flexWrap": "nowrap",
+          "gap": "0px",
+          "marginTop": "24px",
+          "maxHeight": "calc(100vh - 260px)",
+          "overflowY": "auto",
+          "paddingRight": "4px"
          },
          "children": [],
          "classes": [],
@@ -4158,30 +4205,69 @@
            "parentBlockId": "scope-modules",
            "slotContent": [
             {
+             "attributes": {},
              "baseStyles": {
+              "borderTop": "{{ dataIndex > 0 ? '1px solid var(--outline-gray-1)' : 'none' }}",
               "display": "flex",
               "flexDirection": "column",
               "gap": "12px",
-              "paddingBottom": "20px"
+              "minWidth": "0px",
+              "paddingBottom": "{{ scopePack && dataIndex < scopePack.modules.length - 1 ? '24px' : '0px' }}",
+              "paddingTop": "{{ dataIndex > 0 ? '24px' : '0px' }}",
+              "width": "100%"
              },
              "children": [
               {
                "baseStyles": {
-                "color": "var(--ink-gray-8)",
-                "display": "{{ scopePack && scopePack.modules.length > 1 ? 'block' : 'none' }}",
-                "fontWeight": "600"
+                "alignItems": "center",
+                "display": "{{ scopePack && scopePack.modules.length > 1 ? 'flex' : 'none' }}",
+                "flexDirection": "row",
+                "gap": "8px"
                },
-               "children": [],
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "flexShrink": "0",
+                  "height": "16px",
+                  "width": "16px"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "scope-module-icon",
+                 "componentName": "Icon",
+                 "componentProps": {
+                  "icon": "{{ moduleIcon(dataItem.module_name) }}"
+                 }
+                },
+                {
+                 "attributes": {},
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "600"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {},
+                 "componentId": "scope-module-name",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-lg",
+                  "tag": "span",
+                  "text": "{{ dataItem.module_name }}"
+                 },
+                 "componentSlots": {},
+                 "mobileStyles": {},
+                 "tabletStyles": {}
+                }
+               ],
                "classes": [],
-               "componentId": "scope-module-name",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-lg",
-                "tag": "span",
-                "text": "{{ dataItem.module_name }}"
-               }
+               "componentId": "scope-module-head",
+               "componentName": "container",
+               "originalElement": "div"
               },
               {
+               "attributes": {},
                "baseStyles": {
                 "display": "flex",
                 "flexDirection": "column",
@@ -4189,6 +4275,7 @@
                },
                "children": [],
                "classes": [],
+               "componentEvents": {},
                "componentId": "scope-rows",
                "componentName": "Repeater",
                "componentProps": {
@@ -4201,13 +4288,17 @@
                  "parentBlockId": "scope-rows",
                  "slotContent": [
                   {
+                   "attributes": {},
                    "baseStyles": {
                     "display": "flex",
                     "flexDirection": "row",
-                    "gap": "24px"
+                    "gap": "24px",
+                    "minWidth": "0px",
+                    "width": "100%"
                    },
                    "children": [
                     {
+                     "attributes": {},
                      "baseStyles": {
                       "color": "var(--ink-gray-6)",
                       "flexShrink": "0",
@@ -4215,50 +4306,70 @@
                      },
                      "children": [],
                      "classes": [],
+                     "componentEvents": {},
                      "componentId": "scope-row-label",
                      "componentName": "TextBlock",
                      "componentProps": {
                       "fontSize": "text-p-base",
                       "tag": "span",
                       "text": "{{ dataItem.label }}"
-                     }
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
                     },
                     {
+                     "attributes": {},
                      "baseStyles": {
                       "color": "{{ dataItem.label === 'Not included' ? 'var(--ink-gray-5)' : 'var(--ink-gray-8)' }}",
                       "flex": "1"
                      },
                      "children": [],
                      "classes": [],
+                     "componentEvents": {},
                      "componentId": "scope-row-content",
                      "componentName": "TextBlock",
                      "componentProps": {
                       "fontSize": "text-p-base",
                       "tag": "span",
                       "text": "{{ dataItem.content }}"
-                     }
+                     },
+                     "componentSlots": {},
+                     "mobileStyles": {},
+                     "tabletStyles": {}
                     }
                    ],
                    "classes": [],
+                   "componentEvents": {},
                    "componentId": "scope-row",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "mobileStyles": {
                     "flexDirection": "column",
                     "gap": "2px"
                    },
-                   "originalElement": "div"
+                   "originalElement": "div",
+                   "tabletStyles": {}
                   }
                  ],
                  "slotId": "scope-rows:default",
                  "slotName": "default"
                 }
-               }
+               },
+               "mobileStyles": {},
+               "tabletStyles": {}
               }
              ],
              "classes": [],
+             "componentEvents": {},
              "componentId": "scope-module",
              "componentName": "container",
-             "originalElement": "div"
+             "componentProps": {},
+             "componentSlots": {},
+             "mobileStyles": {},
+             "originalElement": "div",
+             "tabletStyles": {}
             }
            ],
            "slotId": "scope-modules:default",
@@ -4268,7 +4379,8 @@
         },
         {
          "baseStyles": {
-          "alignSelf": "flex-start"
+          "alignSelf": "flex-start",
+          "marginTop": "24px"
          },
          "children": [],
          "classes": [],

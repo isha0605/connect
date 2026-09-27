@@ -5,6 +5,7 @@
 
 import { computed } from "vue"
 import {
+	MODULE_ICONS,
 	OUR_NEEDS,
 	answersFromQuery,
 	answersToQuery,
@@ -109,6 +110,10 @@ export default function setup(context) {
 
 	const scopePack = computed(() => packs.value.find((p) => p.pack_key === scopePackKey.value) || null)
 
+	function moduleIcon(name) {
+		return MODULE_ICONS[name] || "lucide-box"
+	}
+
 	function openScope(key) {
 		scopePackKey.value = key
 		showScope.value = true
@@ -164,6 +169,7 @@ export default function setup(context) {
 		packReasonsTitle,
 		scopePack,
 		openScope,
+		moduleIcon,
 		totalLabel,
 		totalBreakdown,
 		isGuest,
