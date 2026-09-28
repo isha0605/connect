@@ -224,6 +224,41 @@ export function answersFromQuery(query) {
 	})
 }
 
+// What every Starter Pack page says about how buying one works and what a pack covers —
+// the Starter Packs page and the recommendation page show the same lists.
+export const HOW_IT_WORKS = [
+	{ title: "Pay in full", body: "To Frappe, up front" },
+	{ title: "Frappe assigns a partner", body: "By industry and region" },
+	{ title: "Coordinate with partner", body: "Share data and processes" },
+]
+
+export const INCLUDED = [
+	"ERPNext installed on Frappe Cloud",
+	"Standard user roles",
+	"One SMTP setup",
+	"Standard module-wise dashboards",
+	"Core system configuration",
+	"One data import session",
+	"One naming series session",
+	"Opening balances",
+]
+
+// The pack exclusions that aren't already a reason to go custom (listed below them).
+export const NOT_INCLUDED = [
+	{ label: "Custom print formats", hint: "" },
+	{ label: "UAT training", hint: "" },
+	{ label: "Custom workflows", hint: "" },
+	{ label: "Complex notification automation", hint: "" },
+	{ label: "Post go-live support beyond Day 1", hint: "Covered by an AMC" },
+]
+
+export const CUSTOM_IF = [
+	{ label: "More than 50 people will use it", hint: "" },
+	{ label: "You need your data cleaned and migrated", hint: "You provide clean Excel or CSV data" },
+	{ label: "You need custom scripting", hint: "" },
+	{ label: "You need API integrations", hint: "Biometric devices, banks and payment gateways" },
+]
+
 export const OUR_NEEDS = [
 	"Keep strictly to the scope",
 	"Nominate a project champion",
