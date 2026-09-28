@@ -170,7 +170,8 @@ def notify_message_edited(doc):
 def notify_partner_of_new_requirement(doc, method=None):
 	"""after_insert on Connect Message: emails the partner's admin when a customer's first message
 	in the thread is a Requirement submission — a brand-new lead is easy to miss in the in-app
-	notification alone."""
+	notification alone.  The actual email is sent in a background job so the sender's HTTP request
+	returns immediately and the requirement card appears in chat without delay."""
 	if doc.message_type != "Requirement":
 		return
 	if frappe.db.count("Connect Message", {"thread": doc.thread}) != 1:
@@ -183,12 +184,23 @@ def notify_partner_of_new_requirement(doc, method=None):
 	admin = _get_partner_admin(thread.partner)
 	if not admin:
 		return
-	recipient = frappe.db.get_value("User", admin, "email") or admin
 
-	customer_name = frappe.db.get_value("Customer", thread.customer, "customer_name") or thread.customer
-	requirement = frappe.parse_json(doc.content) if doc.content else {}
-	# Keep in sync with REQUIREMENT_FIELD_LABELS in studio/connect_2/studio_page/messaging/messaging.ts
-	# — that's the same requirement JSON blob rendered as the in-app requirement card.
+	frappe.enqueue(
+		"connect.notifications._send_new_requirement_email",
+		queue="short",
+		thread_name=doc.thread,
+		customer=thread.customer,
+		admin=admin,
+		content=doc.content,
+		enqueue_after_commit=True,
+	)
+
+
+def _send_new_requirement_email(thread_name, customer, admin, content):
+	"""Background worker: sends the new-requirement notification email."""
+	recipient = frappe.db.get_value("User", admin, "email") or admin
+	customer_name = frappe.db.get_value("Customer", customer, "customer_name") or customer
+	requirement = frappe.parse_json(content) if content else {}
 	fields = [
 		("Company", requirement.get("company_name")),
 		("Country", requirement.get("country")),
@@ -204,7 +216,7 @@ def notify_partner_of_new_requirement(doc, method=None):
 	details_html = "".join(
 		f"<p><b>{label}:</b> {frappe.utils.escape_html(value)}</p>" for label, value in fields if value
 	)
-	thread_url = frappe.utils.get_url(f"/connect/messaging?thread={doc.thread}")
+	thread_url = frappe.utils.get_url(f"/connect/messaging?thread={thread_name}")
 
 	try:
 		frappe.sendmail(
@@ -215,14 +227,10 @@ def notify_partner_of_new_requirement(doc, method=None):
 				f"{details_html}"
 				f"<p><a href='{thread_url}'>{_('View conversation')}</a></p>"
 			),
-			# A brand-new lead notification is time-sensitive — send right after this request
-			# commits rather than waiting on the next scheduler tick to flush the email queue.
 			now=True,
 		)
 	except Exception:
-		# A missing/broken outgoing Email Account must never block the customer's message from
-		# sending — this email is a convenience alert, not the primary notification path.
-		frappe.log_error(title=f"New-requirement email failed for Connect Thread {doc.thread}")
+		frappe.log_error(title=f"New-requirement email failed for Connect Thread {thread_name}")
 
 
 def notify_dm_recipient(doc, method=None):

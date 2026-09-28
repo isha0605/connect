@@ -242,6 +242,10 @@ scheduler_events = {
 	"hourly": [
 		"connect.customer.doctype.starter_pack_order.partner_rotation.assign_waiting_orders",
 	],
+	"daily": [
+		"connect.partner.response_time.recompute_all_response_times",
+		"connect.partner.press_integration.sync_all_partner_mrrs",
+	],
 }
 
 # scheduler_events = {

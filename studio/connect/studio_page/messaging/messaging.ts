@@ -214,6 +214,13 @@ export default function setup(context) {
 	const crmSaving = ref(false)
 	const crmError = ref("")
 	const crmLoaded = ref(false)
+	// Snapshot of what's actually saved, same idea as the profile form's originalFullName etc.:
+	// the Save button stays disabled until a field drifts from this baseline. Refreshed here
+	// because applyCrmSettings already runs after both the initial load and a successful save.
+	const originalCrmSiteUrl = ref("")
+	const originalCrmApiKey = ref("")
+	const originalCrmLeadStatus = ref("")
+	const originalCrmEnabled = ref(false)
 
 	function applyCrmSettings(s) {
 		if (!s) return
@@ -224,6 +231,10 @@ export default function setup(context) {
 		crmSecretStored.value = !!s.api_secret_set
 		crmWebhookConnected.value = !!s.reply_webhook_connected
 		crmApiSecret.value = ""
+		originalCrmSiteUrl.value = crmSiteUrl.value
+		originalCrmApiKey.value = crmApiKey.value
+		originalCrmLeadStatus.value = crmLeadStatus.value
+		originalCrmEnabled.value = crmEnabled.value
 	}
 
 	function loadCrmSettings() {
@@ -240,6 +251,12 @@ export default function setup(context) {
 		if (!crmSecretStored.value) return "Not connected"
 		if (!crmEnabled.value) return "Connected, sync paused"
 		return crmWebhookConnected.value ? "Connected, replies syncing" : "Connected"
+	}
+
+	function crmStatusTheme() {
+		if (!crmSecretStored.value) return "gray"
+		if (!crmEnabled.value || !crmWebhookConnected.value) return "amber"
+		return "green"
 	}
 
 	function saveCrmSettings() {
@@ -2925,19 +2942,36 @@ export default function setup(context) {
 		messageSearchQuery.value = ""
 	}
 
-	// The "Filters" menu: search everywhere, or only inside the conversation that was open.
+	// The "Filters" menu: search everywhere, or inside any conversation the user picks.
 	function messageSearchFilterOptions() {
-		const conversation = messageSearchConversation.value
-		const scopeOption = (scope, label) => ({
-			label,
-			icon: messageSearchScope.value === scope ? "lucide-check" : undefined,
-			onClick: () => {
-				messageSearchScope.value = scope
-				runMessageSearch()
+		const isAll = messageSearchScope.value === "all"
+		const currentConv = messageSearchConversation.value
+		const threads = unifiedThreadList()
+
+		const options = [
+			{
+				label: "All conversations",
+				icon: isAll ? "lucide-check" : undefined,
+				onClick: () => {
+					messageSearchScope.value = "all"
+					runMessageSearch()
+				},
 			},
+		]
+		threads.forEach((t) => {
+			const label = otherPartyName(t) || t.name
+			const isSelected =
+				!isAll && currentConv && currentConv.name === t.name && currentConv.convType === t.convType
+			options.push({
+				label,
+				icon: isSelected ? "lucide-check" : undefined,
+				onClick: () => {
+					messageSearchScope.value = "current"
+					messageSearchConversation.value = { name: t.name, convType: t.convType, label }
+					runMessageSearch()
+				},
+			})
 		})
-		const options = [scopeOption("all", "All conversations")]
-		if (conversation) options.push(scopeOption("current", "In " + (conversation.label || "this conversation")))
 		return options
 	}
 
@@ -3584,9 +3618,14 @@ export default function setup(context) {
 		crmLeadStatus,
 		crmEnabled,
 		crmSecretStored,
+		originalCrmSiteUrl,
+		originalCrmApiKey,
+		originalCrmLeadStatus,
+		originalCrmEnabled,
 		crmSaving,
 		crmError,
 		crmStatusLabel,
+		crmStatusTheme,
 		saveCrmSettings,
 		pinnedPreviewHtml,
 		fileTypeIconHtml,
