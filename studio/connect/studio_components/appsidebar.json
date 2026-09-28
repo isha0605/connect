@@ -150,8 +150,6 @@
      {
       "attributes": {},
       "baseStyles": {
-       "backgroundColor": "var(--surface-gray-2)",
-       "borderRadius": "6px",
        "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
       },
       "children": [],
@@ -160,6 +158,7 @@
       "componentId": "SidebarItem-fpr-find-partners",
       "componentName": "SidebarItem",
       "componentProps": {
+       "active": "{{ ['/partner-directory-redesign', '/find-partners-redesign'].includes(route.path) || route.path.startsWith('/partner-profile-redesign') }}",
        "icon": "lucide-search",
        "label": "Find partners",
        "route": "/partner-directory-redesign"
@@ -186,6 +185,43 @@
       "componentSlots": {},
       "mobileStyles": {},
       "tabletStyles": {}
+     },
+     {
+      "attributes": {},
+      "baseStyles": {},
+      "children": [],
+      "classes": [],
+      "componentEvents": {},
+      "componentId": "SidebarItem-fpr-starter-packs",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "active": "{{ ['/starter-packs-redesign', '/starter-pack-recommendation', '/starter-pack-checkout', '/starter-pack-confirmed'].includes(route.path) }}",
+       "icon": "lucide-package",
+       "label": "Starter Packs",
+       "route": "/starter-packs-redesign"
+      },
+      "componentSlots": {},
+      "mobileStyles": {},
+      "tabletStyles": {},
+      "visibilityCondition": "!(myContext.data && myContext.data.partner)"
+     },
+     {
+      "attributes": {},
+      "baseStyles": {},
+      "children": [],
+      "classes": [],
+      "componentEvents": {},
+      "componentId": "SidebarItem-fpr-implementation",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "icon": "lucide-briefcase",
+       "label": "Project implementation",
+       "route": "/starter-pack-implementation"
+      },
+      "componentSlots": {},
+      "mobileStyles": {},
+      "tabletStyles": {},
+      "visibilityCondition": "!!(myContext.data && myContext.data.user && myContext.data.user !== 'Guest' && !myContext.data.partner)"
      },
      {
       "attributes": {},
@@ -318,13 +354,13 @@
  },
  "component_id": "appsidebar",
  "component_name": "AppSidebar",
- "creation": "2026-09-08 14:43:03.099866",
+ "creation": "2026-09-25 18:11:53.044810",
  "docstatus": 0,
  "doctype": "Studio Component",
  "idx": 0,
  "inputs": [],
  "is_disabled": 0,
- "modified": "2026-09-10 16:44:07.371702",
+ "modified": "2026-09-28 13:10:00.000000",
  "modified_by": "Administrator",
  "name": "appsidebar",
  "owner": "Administrator"
