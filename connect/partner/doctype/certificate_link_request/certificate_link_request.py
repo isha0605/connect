@@ -77,8 +77,7 @@ class CertificateLinkRequest(Document):
 
 
 def _get_school_client():
-	"""Returns a FrappeClient connected to school.frappe.io using the credentials stored in
-	Frappe School Settings, or throws a clear, distinct error if it isn't configured yet."""
+	"""Returns a FrappeClient connected to Frappe School using its configured credentials."""
 	from frappe.frappeclient import FrappeClient
 
 	settings = frappe.get_cached_doc("Frappe School Settings")
@@ -93,10 +92,7 @@ def _get_school_client():
 
 
 def _fetch_school_certificate(user_email: str, courses: list[str]) -> tuple[str, str | None]:
-	"""Looks up a live LMS Certificate on school.frappe.io for this email in any of `courses`
-	(newest first, like Press), and upserts a local Partner Certificate cache row for it. Returns
-	the matched course and the partner that row is already linked to, if any. Throws distinctly on
-	"not found" vs. "couldn't reach School" — a network failure must never read as a missing one."""
+	"""Verifies the certificate really exists on Frappe School before asking the holder to link it, and caches it locally."""
 	client = _get_school_client()
 
 	try:
@@ -135,9 +131,7 @@ def _fetch_school_certificate(user_email: str, courses: list[str]) -> tuple[str,
 
 
 def create_or_resend(partner: str, user_email: str, certificate_type: str) -> dict:
-	"""Verifies the certificate exists on Frappe School (live), then mirrors Press's flow: already
-	linked to this partner -> "Linked"; linked elsewhere -> error; otherwise reuse an existing
-	Pending request for the same (partner, email, course) instead of creating a duplicate."""
+	"""Reuses an existing pending link request instead of creating a duplicate, so a repeat click doesn't spam the holder."""
 	courses = CERTIFICATE_COURSES.get(certificate_type, CERTIFICATE_COURSES["frappe"])
 	course, existing_link = _fetch_school_certificate(user_email, courses)
 	if existing_link == partner:
@@ -163,8 +157,7 @@ def create_or_resend(partner: str, user_email: str, certificate_type: str) -> di
 
 
 def approve_from_key(key: str):
-	"""Called only from connect/www/certificate-approval.py's guest POST handler. Possession of
-	the emailed key is the authorization — the holder has no login session to check."""
+	"""Approves a link request from the emailed key alone, since the holder has no login session to check."""
 	name = frappe.db.get_value("Certificate Link Request", {"key": key}, "name")
 	if not name:
 		frappe.throw(_("Invalid or expired link."), frappe.DoesNotExistError)
