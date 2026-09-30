@@ -27,7 +27,10 @@ def execute():
 		frappe.db.set_value("Partner", name, "starter_pack_sequence", next_sequence, update_modified=False)
 		next_sequence += 1
 
-	if not frappe.db.sql(
-		"select 1 from `tabSingles` where doctype = 'Starter Pack Settings' and field = 'rr_last_sequence'"
-	):
+	Singles = frappe.qb.DocType("Singles")
+	if not (
+		frappe.qb.from_(Singles)
+		.select(Singles.field)
+		.where((Singles.doctype == "Starter Pack Settings") & (Singles.field == "rr_last_sequence"))
+	).run():
 		frappe.db.set_single_value("Starter Pack Settings", "rr_last_sequence", 0)

@@ -8,6 +8,7 @@ from collections import Counter
 import frappe
 from frappe import _
 from frappe.model.document import Document
+from frappe.query_builder.functions import Max
 from frappe.utils import cint, flt, now_datetime, validate_email_address
 
 from connect.partner.logo import attach_normalized_logos
@@ -79,10 +80,12 @@ class Partner(Document):
 			return
 
 		if cint(self.starter_pack_sequence) <= 0:
-			last = frappe.db.sql(
-				"select max(starter_pack_sequence) from `tabPartner` where starter_pack = 1 and name != %s",
-				self.name,
-			)[0][0]
+			Partner = frappe.qb.DocType("Partner")
+			last = (
+				frappe.qb.from_(Partner)
+				.select(Max(Partner.starter_pack_sequence))
+				.where((Partner.starter_pack == 1) & (Partner.name != self.name))
+			).run()[0][0]
 			self.starter_pack_sequence = cint(last) + 1
 			return
 

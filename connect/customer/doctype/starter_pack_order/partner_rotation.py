@@ -73,16 +73,19 @@ def lock_rotation():
 		return
 	# Never used yet, so there's no row to lock. The rotation patch creates it; this only
 	# covers a site where it hasn't run. (get_single_value can't tell a missing Int row
-	# from 0, hence the raw query.)
+	# from 0, hence reading tabSingles directly.)
 	frappe.db.set_single_value(SETTINGS, "rr_last_sequence", 0)
 	_select_pointer_row_for_update()
 
 
 def _select_pointer_row_for_update():
-	return frappe.db.sql(
-		"select value from `tabSingles` where doctype = %s and field = 'rr_last_sequence' for update",
-		SETTINGS,
-	)
+	Singles = frappe.qb.DocType("Singles")
+	return (
+		frappe.qb.from_(Singles)
+		.select(Singles.value)
+		.where((Singles.doctype == SETTINGS) & (Singles.field == "rr_last_sequence"))
+		.for_update()
+	).run()
 
 
 def assign_partner(order_name, tell_admins_if_unassigned=True):
