@@ -28,7 +28,9 @@ def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None,
 	)
 
 
-@frappe.whitelist(allow_guest=True)
+# POST only: an unpaid order is re-synced from the gateway here, which can mark it Paid
+# and assign its partner — and Frappe rolls back whatever a GET request writes.
+@frappe.whitelist(allow_guest=True, methods=["POST"])
 def get_order(order=None, payment_request=None, key=None):
 	from connect.customer.doctype.starter_pack_order.starter_pack_order import get_order
 	return get_order(order=order, payment_request=payment_request, key=key)
