@@ -36,7 +36,7 @@ class ConnectMessageTemplate(Document):
 			frappe.throw(_("The response has a template error on line {0}: {1}").format(e.lineno, e.message))
 
 	def _owner_company(self):
-		"""A Team template is always shared with its creator's own company, never one they name."""
+		"""Locks a Team template to the creator's own company so nobody can share into one they don't belong to."""
 		from connect.permissions import _my_company_membership
 
 		_doctype, company, _row = _my_company_membership(self.owner)
@@ -45,7 +45,7 @@ class ConnectMessageTemplate(Document):
 		return company
 
 	def update_personal(self, title=None, content=None, scope=None):
-		"""Edits a personal or team template; globals are edited via Desk's own save() instead, not this method."""
+		"""Edits a personal or team template, blocking globals since those are Desk-admin only."""
 		if self.is_global:
 			frappe.throw(_("Global templates can't be edited here"), frappe.PermissionError)
 		if title is not None:
@@ -57,14 +57,14 @@ class ConnectMessageTemplate(Document):
 		self.save()
 
 	def delete_personal(self):
-		"""Deletes a personal or team template; globals are deleted via Desk's own delete() instead, not this method."""
+		"""Deletes a personal or team template, blocking globals since those are Desk-admin only."""
 		if self.is_global:
 			frappe.throw(_("Global templates can't be deleted here"), frappe.PermissionError)
 		self.delete()
 
 
 def render_template(content, thread=None, dm_thread=None):
-	"""Fill a template's variables for the conversation the caller is writing in."""
+	"""Fills the template's variables from the conversation context so quick replies read naturally."""
 	context = _conversation_context(thread, dm_thread)
 	try:
 		return _jinja.from_string(content or "").render(context)
@@ -100,8 +100,7 @@ def _conversation_context(thread=None, dm_thread=None):
 
 
 def _latest_member_of_side(thread, side):
-	"""A company thread has no single recipient, so "the other person" is whoever on their side
-	wrote most recently, or their first active member if none of them has written yet."""
+	"""Picks the most recent writer on that side as the "other person" since a company thread has no single recipient."""
 	members = frappe.get_all(
 		"Connect Thread Member",
 		filters={"thread": thread, "side": side, "is_removed": 0},
