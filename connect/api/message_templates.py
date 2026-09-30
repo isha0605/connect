@@ -6,8 +6,7 @@ from connect.permissions import _my_side
 
 @frappe.whitelist()
 def get_my_message_templates():
-	"""Returns quick-reply templates visible to the caller: global defaults for their side, their
-	company's team templates and their own personal ones."""
+	"""Returns templates visible to the caller, with globals first so shared defaults appear above personal ones."""
 	return frappe.get_list(
 		"Connect Message Template",
 		fields=["name", "title", "content", "side", "is_global", "scope", "team", "owner"],
@@ -17,8 +16,7 @@ def get_my_message_templates():
 
 @frappe.whitelist()
 def create_message_template(title, content, scope="Personal"):
-	"""Creates a Personal or Team template for the caller's own side. Global templates are
-	side-wide, so they're only created by an admin in Desk."""
+	"""Creates a Personal or Team template for the caller's side, blocking Global since those are Desk-admin only."""
 	side = _my_side(frappe.session.user)
 	if not side:
 		frappe.throw(_("You are not a member of any company"))
@@ -38,7 +36,7 @@ def create_message_template(title, content, scope="Personal"):
 
 @frappe.whitelist()
 def update_message_template(name, title=None, content=None, scope=None):
-	"""Edits one of the caller's own Personal/Team templates (save() enforces owner-only)."""
+	"""Thin API entry; owner-only enforcement lives on Connect Message Template."""
 	if scope is not None and scope not in ("Personal", "Team"):
 		frappe.throw(_("Scope must be Personal or Team"))
 	doc = frappe.get_doc("Connect Message Template", name)
@@ -55,7 +53,7 @@ def delete_message_template(name):
 
 @frappe.whitelist()
 def render_message_template(content, thread=None, dm_thread=None):
-	"""Returns the template text with its {{ variables }} filled in for the given conversation."""
+	"""Returns the template filled in for the current conversation so the client can preview before sending."""
 	from connect.messaging.doctype.connect_message_template.connect_message_template import render_template
 
 	return render_template(content, thread=thread, dm_thread=dm_thread)
