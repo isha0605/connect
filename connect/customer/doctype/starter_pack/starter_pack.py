@@ -8,8 +8,6 @@ from frappe.model.document import Document
 class StarterPack(Document):
 	"""A fixed-price pack Frappe sells. Prices are Frappe's, not a partner's."""
 
-	pass
-
 
 def get_catalog():
 	"""Active packs, each with its View details sections grouped by module, plus what

@@ -62,8 +62,10 @@ def read_pointer():
 
 
 def write_pointer(partner):
-	frappe.db.set_single_value(SETTINGS, "rr_last_partner", partner.name)
-	frappe.db.set_single_value(SETTINGS, "rr_last_sequence", cint(partner.starter_pack_sequence))
+	frappe.db.set_single_value(
+		SETTINGS,
+		{"rr_last_partner": partner.name, "rr_last_sequence": cint(partner.starter_pack_sequence)},
+	)
 
 
 def lock_rotation():
@@ -157,15 +159,7 @@ def _tell_admins(order, message):
 				"subject": message,
 			},
 		)
-	frappe.get_doc(
-		{
-			"doctype": "Comment",
-			"comment_type": "Info",
-			"reference_doctype": "Starter Pack Order",
-			"reference_name": order.name,
-			"content": message,
-		}
-	).insert(ignore_permissions=True)
+	frappe.get_doc("Starter Pack Order", order.name).add_comment("Info", message)
 
 
 def assign_waiting_orders():

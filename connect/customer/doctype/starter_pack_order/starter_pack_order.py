@@ -7,9 +7,10 @@ from zoneinfo import ZoneInfo
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, get_datetime, get_system_timezone, now_datetime
+from frappe.utils import cint, flt, get_datetime, get_system_timezone, now_datetime
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
+from connect.customer.doctype.starter_pack_order.partner_rotation import assign_partner
 
 # Set around the one save that mirrors gateway status onto an order. Nothing
 # else may move payment_status: a customer, or a Desk user, marking their own
@@ -35,7 +36,7 @@ class StarterPackOrder(Document):
 			self.customer = get_customer_for_user(self.user)
 		self.access_key = frappe.generate_hash(length=32)
 		self.snapshot_packs()
-		self.gst_rate = flt(frappe.db.get_single_value("Starter Pack Settings", "gst_rate"))
+		self.gst_rate = flt(frappe.get_cached_doc("Starter Pack Settings").gst_rate)
 
 	def validate(self):
 		if not self.is_new():
@@ -52,18 +53,21 @@ class StarterPackOrder(Document):
 		Runs once, at creation. After that the rows are the record of what was sold,
 		so a later change to a pack's price never reprices an existing order.
 		"""
+		catalog = {
+			p.name: p
+			for p in frappe.get_all(
+				"Starter Pack",
+				filters={"name": ["in", [row.starter_pack for row in self.packs]]},
+				fields=["name", "pack_name", "price", "total_hours", "delivery_days", "is_active"],
+			)
+		}
 		seen = set()
 		for row in self.packs:
 			if row.starter_pack in seen:
 				frappe.throw(_("{0} is in this order twice.").format(frappe.bold(row.starter_pack)))
 			seen.add(row.starter_pack)
 
-			pack = frappe.db.get_value(
-				"Starter Pack",
-				row.starter_pack,
-				["pack_name", "price", "total_hours", "delivery_days", "is_active"],
-				as_dict=True,
-			)
+			pack = catalog.get(row.starter_pack)
 			if not pack or not pack.is_active:
 				frappe.throw(_("{0} is not available.").format(frappe.bold(row.starter_pack)))
 
@@ -128,7 +132,7 @@ class StarterPackOrder(Document):
 	def set_totals(self):
 		# Always derived from the snapshotted rows, so the total can't drift from the lines.
 		self.subtotal = sum(flt(r.price) for r in self.packs)
-		self.total_hours = sum(int(r.total_hours or 0) for r in self.packs)
+		self.total_hours = sum(cint(r.total_hours) for r in self.packs)
 		self.gst_amount = flt(self.subtotal * flt(self.gst_rate) / 100, self.precision("gst_amount"))
 		self.amount = flt(self.subtotal + self.gst_amount, self.precision("amount"))
 
@@ -147,7 +151,7 @@ class StarterPackOrder(Document):
 			if current.status == "Pending":
 				return current
 
-		settings = frappe.get_single("Starter Pack Settings")
+		settings = frappe.get_cached_doc("Starter Pack Settings")
 		if not settings.payment_gateway:
 			frappe.throw(_("Online payment isn't set up yet."))
 
@@ -170,14 +174,19 @@ class StarterPackOrder(Document):
 		).insert(ignore_permissions=True)  # before_save opens the gateway session
 
 		# A retry after a dead link: the order is payable again.
-		frappe.flags[PAYMENT_HOOK_FLAG] = True
-		try:
-			self.payment_request = request.name
-			self.payment_status = "Unpaid"
-			self.save(ignore_permissions=True)
-		finally:
-			frappe.flags[PAYMENT_HOOK_FLAG] = False
+		self.payment_request = request.name
+		self.payment_status = "Unpaid"
+		save_as_payment_hook(self)
 		return request
+
+
+def save_as_payment_hook(order):
+	"""Save an order whose payment_status the gateway moved — the one save allowed to."""
+	frappe.flags[PAYMENT_HOOK_FLAG] = True
+	try:
+		order.save(ignore_permissions=True)
+	finally:
+		frappe.flags[PAYMENT_HOOK_FLAG] = False
 
 
 def on_gateway_payment_request_update(request, method=None):
@@ -204,18 +213,12 @@ def on_gateway_payment_request_update(request, method=None):
 	if not payment_status or payment_status == order.payment_status:
 		return  # also makes a replayed webhook a no-op
 
-	frappe.flags[PAYMENT_HOOK_FLAG] = True
-	try:
-		order.payment_status = payment_status
-		if payment_status == "Paid" and not order.gateway_payment_id:
-			order.gateway_payment_id = get_captured_payment_id(request)
-		order.save(ignore_permissions=True)
-	finally:
-		frappe.flags[PAYMENT_HOOK_FLAG] = False
+	order.payment_status = payment_status
+	if payment_status == "Paid" and not order.gateway_payment_id:
+		order.gateway_payment_id = get_captured_payment_id(request)
+	save_as_payment_hook(order)
 
 	if payment_status == "Paid" and not order.partner:
-		from connect.customer.doctype.starter_pack_order.partner_rotation import assign_partner
-
 		assign_partner(order.name)  # never raises; leaves the order unassigned on failure
 
 
@@ -264,7 +267,7 @@ def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None,
 	if not frappe.utils.cint(terms_accepted):
 		frappe.throw(_("Accept the terms to continue."))
 
-	pack_keys = frappe.parse_json(packs) if isinstance(packs, str) else packs
+	pack_keys = frappe.parse_json(packs)
 	if not pack_keys:
 		frappe.throw(_("Pick at least one pack."))
 
