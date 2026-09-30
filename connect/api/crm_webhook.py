@@ -12,9 +12,7 @@ from connect.permissions import _get_partner_admin
 
 
 def _verify_signature(partner):
-	"""Confirms this request actually came from the partner's CRM, using the secret we generated
-	when registering the webhook (see crm_integration.sync_reply_webhook) — the same secret their
-	CRM signs every call with. Without this, anyone could forge a "reply" into someone else's thread."""
+	"""Confirms the request actually came from the partner's CRM, so nobody can forge a reply into someone else's thread."""
 	if not frappe.db.exists("Partner CRM Settings", partner):
 		frappe.throw(_("Unknown partner"), frappe.PermissionError)
 	secret = frappe.utils.password.get_decrypted_password(
@@ -36,9 +34,7 @@ def receive_crm_reply(
 	reference_doctype=None, reference_name=None, sent_or_received=None, content=None, name=None,
 	creation=None,
 ):
-	"""Called by the Webhook this app registers on a partner's Frappe CRM (see
-	crm_integration.sync_reply_webhook) whenever the partner sends a reply there — so the reply also
-	shows up in the Connect thread, alongside reaching the customer as a normal email."""
+	"""Called by the partner's CRM when they send a reply, so the reply also shows up in the Connect thread."""
 	# Not read from the whitelisted kwargs above: the webhook sends a JSON body, and Frappe's
 	# request parsing populates form_dict from that JSON alone, discarding the URL query string
 	# entirely — so `?partner=...` has to be read from the raw query args instead.
@@ -94,9 +90,7 @@ def _insert_reply_message(thread, admin, communication_name, message_type, conte
 
 
 def _fetch_crm_attachments(partner, settings, communication_name):
-	"""Downloads any files the partner attached to their reply and stages them as local Files, so
-	they can be attached to the Connect Message(s) created for this reply — otherwise a document
-	the partner sends back would only ever show up as its filename in the Communication's text."""
+	"""Downloads files the partner attached in their CRM so they show up as real attachments in Connect, not just filenames."""
 	import mimetypes
 
 	import requests
@@ -152,9 +146,7 @@ _QUOTE_SELECTORS = ["blockquote", ".gmail_quote", ".gmail_attr", ".yahoo_quoted"
 
 
 def extract_reply_text(html_content):
-	"""Returns just the partner's own new reply text from the full HTML email body their CRM
-	sends, with the quoted history of the prior conversation stripped out — otherwise every reply
-	would re-post the whole thread as a new Connect Message."""
+	"""Returns only the partner's new reply text, so replies don't re-post the whole quoted thread as a new message."""
 	if not html_content:
 		return ""
 
