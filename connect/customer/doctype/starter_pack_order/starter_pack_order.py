@@ -11,6 +11,7 @@ from frappe.utils import cint, flt, get_datetime, get_system_timezone, now_datet
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.customer.doctype.starter_pack_order.partner_rotation import assign_partner
+from connect.partner.doctype.partner.partner import _compute_display_industries
 
 # Set around the one save that mirrors gateway status onto an order. Nothing
 # else may move payment_status: a customer, or a Desk user, marking their own
@@ -27,6 +28,20 @@ GATEWAY_STATUS_MAP = {
 	"Partially Refunded": "Partially Refunded",
 	"Refunded": "Refunded",
 }
+
+# What the Confirmed page's partner card shows (industry feeds its industries list).
+PARTNER_CARD_FIELDS = [
+	"name",
+	"partner_name",
+	"logo",
+	"tier",
+	"city",
+	"country",
+	"hourly_rate",
+	"rating",
+	"response_time_hours",
+	"industry",
+]
 
 
 class StarterPackOrder(Document):
@@ -358,19 +373,19 @@ def with_timezone(value):
 
 
 def get_assigned_partner(partner):
-	"""The partner card on the Confirmed page: the directory preview, plus the review count
-	and the industries their profile shows, so both pages describe them the same way."""
-	from connect.partner.doctype.partner.partner import _compute_display_industries, get_partner_preview
-
-	preview = get_partner_preview(partner)
+	"""The partner card on the Confirmed page, with the industries and review count their
+	profile shows, so both pages describe them the same way."""
+	card = frappe.db.get_value("Partner", partner, PARTNER_CARD_FIELDS, as_dict=True)
+	if not card:
+		return None
 	stories = frappe.get_all(
 		"Partner Success Story",
 		filters={"parent": partner, "parenttype": "Partner", "parentfield": "success_stories"},
 		fields=["category"],
 	)
-	preview["industries"] = _compute_display_industries(preview.industry, stories)
-	preview["review_count"] = frappe.db.count("Partner Review", {"partner": partner})
-	return preview
+	card["industries"] = _compute_display_industries(card.industry, stories)
+	card["review_count"] = frappe.db.count("Partner Review", {"partner": partner})
+	return card
 
 
 def pay(order, key=None):
