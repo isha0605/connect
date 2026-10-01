@@ -55,7 +55,9 @@ def pick_next(pool, pointer):
 
 
 def read_pointer():
-	name = frappe.db.get_single_value(SETTINGS, "rr_last_partner", cache=False)
+	"""(rotation order, partner) of the last automatic pick, or None. An unlocked read for
+	looking at the rotation — assign_partner uses the pointer lock_rotation reads instead."""
+	name =frappe.db.get_single_value(SETTINGS, "rr_last_partner", cache=False)
 	if not name:
 		return None
 	return (frappe.db.get_single_value(SETTINGS, "rr_last_sequence", cache=False), name)
@@ -70,24 +72,31 @@ def write_pointer(partner):
 
 def lock_rotation():
 	"""Take the rotation's row lock until this transaction commits, so two payments landing
-	at once can't both read the same pointer and hand out the same partner."""
-	if _select_pointer_row_for_update():
-		return
-	# Never used yet, so there's no row to lock. The rotation patch creates it; this only
-	# covers a site where it hasn't run. (get_single_value can't tell a missing Int row
-	# from 0, hence reading tabSingles directly.)
-	frappe.db.set_single_value(SETTINGS, "rr_last_sequence", 0)
-	_select_pointer_row_for_update()
+	at once can't both read the same pointer and hand out the same partner. Returns the
+	pointer as read under that lock, in read_pointer's shape."""
+	pointer = _select_pointer_for_update()
+	if "rr_last_sequence" not in pointer:
+		# Never used yet, so there's no row to lock. The rotation patch creates it; this only
+		# covers a site where it hasn't run. (get_single_value can't tell a missing Int row
+		# from 0, hence reading tabSingles directly.)
+		frappe.db.set_single_value(SETTINGS, "rr_last_sequence", 0)
+		pointer = _select_pointer_for_update()
+	if not pointer.get("rr_last_partner"):
+		return None
+	return (cint(pointer["rr_last_sequence"]), pointer["rr_last_partner"])
 
 
-def _select_pointer_row_for_update():
+def _select_pointer_for_update():
+	"""Both pointer fields in one locked read, as {field: value}."""
 	Singles = frappe.qb.DocType("Singles")
-	return (
-		frappe.qb.from_(Singles)
-		.select(Singles.value)
-		.where((Singles.doctype == SETTINGS) & (Singles.field == "rr_last_sequence"))
-		.for_update()
-	).run()
+	return dict(
+		(
+			frappe.qb.from_(Singles)
+			.select(Singles.field, Singles.value)
+			.where((Singles.doctype == SETTINGS) & Singles.field.isin(["rr_last_partner", "rr_last_sequence"]))
+			.for_update()
+		).run()
+	)
 
 
 def assign_partner(order_name, tell_admins_if_unassigned=True):
@@ -100,13 +109,13 @@ def assign_partner(order_name, tell_admins_if_unassigned=True):
 	"""
 	frappe.db.savepoint(SAVEPOINT)
 	try:
-		lock_rotation()
+		pointer = lock_rotation()
 		order = frappe.get_doc("Starter Pack Order", order_name, for_update=True)
 		if order.partner or order.payment_status != "Paid":
 			# Already assigned — a replayed webhook, or someone set it by hand first.
 			return order.partner or None
 
-		partner = pick_next(get_pool(), read_pointer())
+		partner = pick_next(get_pool(), pointer)
 		if not partner:
 			if tell_admins_if_unassigned:
 				tell_admins(
