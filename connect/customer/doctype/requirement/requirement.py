@@ -146,9 +146,10 @@ def get_my_requirement():
 	}
 
 
-def get_requirement_snapshot():
-	"""Returns the caller's saved Requirement as a dict, to seed a draft Requirement card in a new thread."""
-	customer = get_customer_for_user()
+def get_requirement_snapshot(customer=None):
+	"""Returns the caller's (or the given customer's) saved Requirement as a dict, to seed a
+	Requirement card in a new thread."""
+	customer = customer or get_customer_for_user()
 	if not customer:
 		return None
 

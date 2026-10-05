@@ -169,26 +169,3 @@ def _tell_admins(order, message):
 			},
 		)
 	frappe.get_doc("Starter Pack Order", order.name).add_comment("Info", message)
-
-
-def assign_waiting_orders():
-	"""Hourly: give a partner to any paid order still without one — say it was paid while
-	nobody was approved. Admins were told once, at payment; this doesn't tell them again."""
-	for name in frappe.get_all(
-		"Starter Pack Order",
-		filters={"payment_status": "Paid", "partner": ["is", "not set"], "status": "New"},
-		order_by="creation asc",
-		pluck="name",
-	):
-		assign_partner(name, tell_admins_if_unassigned=False)
-		frappe.db.commit()
-
-
-@frappe.whitelist()
-def assign_now(order):
-	"""The Desk "Assign partner" button: run the rotation for one order now."""
-	frappe.only_for("System Manager")
-	partner = assign_partner(order, tell_admins_if_unassigned=False)
-	if not partner:
-		frappe.throw(_("No Starter Pack partner is approved and enabled to assign."))
-	return partner
