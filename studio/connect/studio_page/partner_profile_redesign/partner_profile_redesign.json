@@ -4513,7 +4513,7 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-09-28 12:45:06.860671",
+ "creation": "2026-10-05 20:47:59.303983",
  "docstatus": 0,
  "doctype": "Studio Page",
  "draft_blocks": [
@@ -4985,13 +4985,12 @@
                 "display": "flex",
                 "marginLeft": "3px"
                },
-               "children": [],
-               "classes": [],
                "componentId": "photo-0-play-icon",
                "componentName": "HTML",
                "componentProps": {
                 "html": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"white\"><path d=\"M7 4.5v15a1 1 0 0 0 1.53.85l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 7 4.5z\"/></svg>"
-               }
+               },
+               "componentSlots": {}
               }
              ],
              "componentId": "photo-0-play-overlay",
@@ -5140,19 +5139,19 @@
                   "fontSize": "16px",
                   "fontWeight": "600"
                  },
-                 "children": [],
-                 "classes": [],
                  "componentId": "photo-2-more-text",
                  "componentName": "TextBlock",
                  "componentProps": {
                   "tag": "span",
                   "text": "{{ '+' + moreCount }}"
-                 }
+                 },
+                 "componentSlots": {}
                 }
                ],
-               "classes": [],
                "componentId": "photo-2-more",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               }
              ],
@@ -5329,7 +5328,7 @@
                "componentId": "about-header-icon",
                "componentName": "Icon",
                "componentProps": {
-                "icon": "lucide-info"
+                "icon": "lucide-building-complex"
                },
                "componentSlots": {}
               },
@@ -5367,7 +5366,7 @@
                 "borderBottom": "1px solid var(--outline-gray-1, #ededed)",
                 "display": "flex",
                 "flexDirection": "column",
-                "gap": "8px",
+                "gap": "6px",
                 "paddingBottom": "12px",
                 "paddingLeft": "0px",
                 "paddingRight": "0px",
@@ -5393,7 +5392,7 @@
                    "componentProps": {
                     "fontSize": "text-xs",
                     "tag": "span",
-                    "text": "Maturity Score"
+                    "text": "Process maturity (PMM)"
                    },
                    "componentSlots": {}
                   },
@@ -5403,11 +5402,19 @@
                     "backgroundPosition": "center",
                     "backgroundRepeat": "no-repeat",
                     "backgroundSize": "contain",
+                    "cursor": "pointer",
                     "flexShrink": "0",
                     "height": "14px",
                     "marginTop": "0px",
                     "paddingTop": "2px",
                     "width": "16px"
+                   },
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "openPmmGuide();"
+                    }
                    },
                    "componentId": "field-pmm-info-icon",
                    "componentName": "container",
@@ -5424,16 +5431,110 @@
                 },
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-6, #525252)"
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "gap": "10px"
                  },
-                 "componentId": "field-pmm-value",
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "display": "{{ pmmLevel ? 'flex' : 'none' }}",
+                    "flexDirection": "row",
+                    "flexWrap": "nowrap",
+                    "gap": "3px"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "field-pmm-meter",
+                   "componentName": "Repeater",
+                   "componentProps": {
+                    "data": "{{ pmmSegments }}",
+                    "dataKey": "key",
+                    "emptyStateMessage": ""
+                   },
+                   "componentSlots": {
+                    "default": {
+                     "slotContent": [
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "{{ dataItem.filled ? 'var(--ink-gray-8)' : 'var(--surface-gray-3)' }}",
+                        "borderRadius": "3px",
+                        "height": "6px",
+                        "width": "18px"
+                       },
+                       "children": [],
+                       "classes": [],
+                       "componentId": "field-pmm-segment",
+                       "componentName": "container",
+                       "originalElement": "div"
+                      }
+                     ],
+                     "slotId": "default",
+                     "slotName": "default"
+                    }
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "{{ pmmLevel ? 'var(--ink-gray-8)' : 'var(--ink-gray-6)' }}",
+                    "fontWeight": "{{ pmmLevel ? '500' : '400' }}"
+                   },
+                   "children": [],
+                   "classes": [],
+                   "componentId": "field-pmm-value",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "{{ pmmLabel }}"
+                   }
+                  }
+                 ],
+                 "classes": [],
+                 "componentId": "field-pmm-value-row",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "lineHeight": "1.5"
+                 },
+                 "children": [],
+                 "classes": [],
+                 "componentId": "field-pmm-meaning",
                  "componentName": "TextBlock",
                  "componentProps": {
-                  "fontSize": "text-sm",
+                  "fontSize": "text-xs",
                   "tag": "span",
-                  "text": "{{ (partner.data && partner.data.pmm_level != null) ? partner.data.pmm_level : '\u2014' }}"
+                  "text": "{{ pmmMeaning }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "alignSelf": "flex-start",
+                  "color": "var(--ink-gray-6)",
+                  "cursor": "pointer",
+                  "display": "{{ (partner.data && partner.data.pmm_listing_url) ? 'inline' : 'none' }}",
+                  "textDecoration": "underline"
                  },
-                 "componentSlots": {}
+                 "children": [],
+                 "classes": [],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "openPmmListing();"
+                  }
+                 },
+                 "componentId": "field-pmm-listing",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-xs",
+                  "tag": "span",
+                  "text": "View on frappe.io"
+                 }
                 }
                ],
                "componentId": "field-pmm",
@@ -9476,16 +9577,14 @@
           "height": "22px",
           "width": "22px"
          },
-         "children": [],
-         "classes": [],
          "componentId": "gallery-lightbox-close-icon",
          "componentName": "Icon",
          "componentProps": {
           "icon": "lucide-x"
-         }
+         },
+         "componentSlots": {}
         }
        ],
-       "classes": [],
        "componentEvents": {
         "click": {
          "action": "Run Script",
@@ -9495,6 +9594,8 @@
        },
        "componentId": "gallery-lightbox-close",
        "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
        "originalElement": "div"
       },
       {
@@ -9519,16 +9620,14 @@
           "height": "28px",
           "width": "28px"
          },
-         "children": [],
-         "classes": [],
          "componentId": "gallery-lightbox-prev-icon",
          "componentName": "Icon",
          "componentProps": {
           "icon": "lucide-chevron-left"
-         }
+         },
+         "componentSlots": {}
         }
        ],
-       "classes": [],
        "componentEvents": {
         "click": {
          "action": "Run Script",
@@ -9538,6 +9637,8 @@
        },
        "componentId": "gallery-lightbox-prev",
        "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
        "mobileStyles": {
         "left": "4px"
        },
@@ -9551,13 +9652,12 @@
         "justifyContent": "center",
         "width": "min(960px, calc(100vw - 160px))"
        },
-       "children": [],
-       "classes": [],
        "componentId": "gallery-lightbox-media",
        "componentName": "HTML",
        "componentProps": {
         "html": "{{ lightboxMedia }}"
        },
+       "componentSlots": {},
        "mobileStyles": {
         "width": "calc(100vw - 32px)"
        }
@@ -9584,16 +9684,14 @@
           "height": "28px",
           "width": "28px"
          },
-         "children": [],
-         "classes": [],
          "componentId": "gallery-lightbox-next-icon",
          "componentName": "Icon",
          "componentProps": {
           "icon": "lucide-chevron-right"
-         }
+         },
+         "componentSlots": {}
         }
        ],
-       "classes": [],
        "componentEvents": {
         "click": {
          "action": "Run Script",
@@ -9603,6 +9701,8 @@
        },
        "componentId": "gallery-lightbox-next",
        "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
        "mobileStyles": {
         "right": "4px"
        },
@@ -9617,19 +9717,19 @@
         "position": "absolute",
         "transform": "translateX(-50%)"
        },
-       "children": [],
-       "classes": [],
        "componentId": "gallery-lightbox-counter",
        "componentName": "TextBlock",
        "componentProps": {
         "tag": "span",
         "text": "{{ galleryCounter }}"
-       }
+       },
+       "componentSlots": {}
       }
      ],
-     "classes": [],
      "componentId": "gallery-lightbox",
      "componentName": "container",
+     "componentProps": {},
+     "componentSlots": {},
      "originalElement": "div"
     }
    ],
@@ -9643,7 +9743,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-10-05 21:05:00.000000",
+ "modified": "2026-10-05 21:40:00.000000",
  "modified_by": "Administrator",
  "name": "partner_profile_redesign",
  "owner": "Administrator",

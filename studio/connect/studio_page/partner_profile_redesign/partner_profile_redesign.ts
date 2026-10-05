@@ -13,6 +13,17 @@ function article(word) {
 	return /^[aeiou]/i.test(word) ? "an" : "a"
 }
 
+// What each Process Maturity Model level means, as frappe.io/partners/maturity-model puts it.
+const PMM_LEVELS = {
+	1: "Not yet product certified",
+	2: "Certified, with defined processes for sales, implementation and support",
+	3: "Follows its processes and tracks their metrics on a dashboard",
+	4: "Reviews its metrics every week and fixes the gaps they show",
+	5: "Reviews its metrics every week and prevents issues before they recur",
+}
+const PMM_MAX = 5
+const PMM_GUIDE = "https://frappe.io/partners/maturity-model"
+
 // The grid shows three tiles; the third says how many more the gallery holds.
 const GALLERY_TILES = 3
 
@@ -67,6 +78,23 @@ export default function setup(context) {
 		clearTimeout(timer)
 		observer?.disconnect()
 	})
+
+	// ---- Process maturity (PMM) ----
+	// Frappe rates partners Level 1 to 5; 0 means not rated yet (frappe.io shows TBD).
+	const pmmLevel = computed(() => Math.round(Number(partner.data?.pmm_level) || 0))
+	const pmmLabel = computed(() => (pmmLevel.value ? `Level ${pmmLevel.value} of ${PMM_MAX}` : "Not rated yet"))
+	const pmmMeaning = computed(() => PMM_LEVELS[pmmLevel.value] || "Frappe hasn't assessed this partner yet.")
+	const pmmSegments = computed(() =>
+		Array.from({ length: PMM_MAX }, (_, i) => ({ key: i + 1, filled: i < pmmLevel.value })),
+	)
+
+	function openPmmGuide() {
+		window.open(PMM_GUIDE, "_blank", "noopener")
+	}
+
+	function openPmmListing() {
+		if (partner.data?.pmm_listing_url) window.open(partner.data.pmm_listing_url, "_blank", "noopener")
+	}
 
 	// ---- Gallery ----
 	// Each Partner Photo is an image, or a video with the image as its cover.
@@ -172,6 +200,12 @@ export default function setup(context) {
 	return {
 		connect,
 		origin,
+		pmmLevel,
+		pmmLabel,
+		pmmMeaning,
+		pmmSegments,
+		openPmmGuide,
+		openPmmListing,
 		galleryItems,
 		moreCount,
 		tileBackground,
