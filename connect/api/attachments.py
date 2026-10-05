@@ -7,7 +7,7 @@ from connect.permissions import _check_can_write, _dm_thread_pair
 
 
 def _stage_chat_attachment():
-	"""Shared file-upload logic behind the thread and DM attachment endpoints."""
+	"""Stages an upload as an unattached File so the composer can preview it before the message is actually sent."""
 	uploaded = frappe.request.files.get("file") if frappe.request else None
 	if not uploaded:
 		frappe.throw(_("No file was uploaded"))
@@ -32,20 +32,20 @@ def _stage_chat_attachment():
 
 @frappe.whitelist()
 def upload_chat_attachment(thread):
-	"""Stages a file upload for the composer's preview before it's attached to a sent message."""
+	"""Stages a chat file upload after checking thread write access, so uploads can't be used to probe forbidden threads."""
 	_check_can_write(thread, frappe.session.user)
 	return _stage_chat_attachment()
 
 
 @frappe.whitelist()
 def upload_dm_attachment(thread):
-	"""Stages a file upload for a DM, the DM counterpart to upload_chat_attachment."""
+	"""Stages a DM file upload after checking pair membership, mirroring upload_chat_attachment."""
 	_dm_thread_pair(thread, frappe.session.user)
 	return _stage_chat_attachment()
 
 
 def _claim_staged_attachment(file_url, user):
-	"""Resolves a staged File upload by url/owner, or throws — shared by send_message and send_dm_message."""
+	"""Verifies the caller uploaded this staged file, so nobody can attach someone else's upload to their message."""
 	file_doc_name = frappe.db.get_value("File", {"file_url": file_url, "owner": user}, "name")
 	if not file_doc_name:
 		frappe.throw(_("Attachment not found"))
@@ -53,7 +53,7 @@ def _claim_staged_attachment(file_url, user):
 
 
 def _attach_file_to_message(file_doc_name, doctype, name):
-	"""Re-parents a staged File onto the message it was sent with — shared by send_message and send_dm_message."""
+	"""Re-parents a staged File to its message so lifecycle hooks (like on_trash cleanup) work on it."""
 	file_doc = frappe.get_doc("File", file_doc_name)
 	file_doc.attached_to_doctype = doctype
 	file_doc.attached_to_name = name
@@ -61,16 +61,21 @@ def _attach_file_to_message(file_doc_name, doctype, name):
 
 
 def _copy_message_attachment(file_url):
-	"""Duplicates a message's File so a forwarded copy owns its own file. Sharing one File would break the
-	copy the moment the original message is deleted, because Connect Message.on_trash removes the File."""
+	"""Duplicates the File so a forwarded copy survives when the original message is later deleted."""
 	file_name = frappe.db.get_value("File", {"file_url": file_url}, "name")
 	if not file_name:
 		frappe.throw(_("The original file is no longer available"))
 	source = frappe.get_doc("File", file_name)
+	# Not source.get_content(): it tries several text encodings on the raw bytes and can succeed by
+	# coincidence on a small binary (an 86-byte PNG decodes cleanly as windows-1250), handing back a
+	# str that is re-encoded to UTF-8 on write — every byte above 0x7F silently expands and the copy
+	# is corrupt. Large files escape only because they almost always hit an undecodable byte.
+	with open(source.get_full_path(), "rb") as f:
+		content = f.read()
 	copy = frappe.get_doc({
 		"doctype": "File",
 		"file_name": source.file_name,
-		"content": source.get_content(),
+		"content": content,
 		"is_private": 1,
 	})
 	copy.insert(ignore_permissions=True)
@@ -79,7 +84,7 @@ def _copy_message_attachment(file_url):
 
 @frappe.whitelist()
 def remove_chat_attachment(file_url):
-	"""Discards a staged upload before it's attached to a message; only the uploader can do this."""
+	"""Discards a staged upload the uploader hasn't sent yet, so cancelling a compose doesn't leave orphan files."""
 	user = frappe.session.user
 	file_name = frappe.db.get_value(
 		"File", {"file_url": file_url, "owner": user, "attached_to_name": ["is", "not set"]}, "name"

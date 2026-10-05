@@ -71,10 +71,7 @@ class Partner(Document):
 		self.set_starter_pack_sequence()
 
 	def set_starter_pack_sequence(self):
-		"""Every approved Starter Pack partner has a unique place in the round robin that
-		hands out paid orders (see starter_pack_order.partner_rotation). A newly approved
-		partner joins the end of the line; one taken out of the pool gives up their place,
-		so coming back later puts them at the end again."""
+		"""Gives each Starter Pack partner a unique rotation slot so paid orders round-robin fairly."""
 		if not self.starter_pack:
 			self.starter_pack_sequence = 0
 			return
@@ -1106,9 +1103,7 @@ def update_my_partner_profile(
 
 
 def signup_partner(full_name, company_name, email, password, country=None):
-	"""Lets a new partner self-signup by creating their user, company, and admin membership in
-	one step — same shape as Customer's signup_customer. New partners start unverified (Bronze
-	tier, Pending Review) until manually promoted; My Profile is left for them to fill in."""
+	"""Creates the new partner's user, company and admin membership in one atomic self-signup."""
 	full_name = (full_name or "").strip()
 	company_name = (company_name or "").strip()
 	email = (email or "").strip().lower()

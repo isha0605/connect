@@ -92,11 +92,12 @@ class PartnerApplication(Document):
 
 	@frappe.whitelist()
 	def approve(self):
+		# reviewer role has write at permlevel 1, which is where status and reviewer_comments live
 		frappe.only_for(REVIEWER_ROLE)
 		self._check_pending_review()
 		self.status = "Approved"
 		self.reviewer_comments = None
-		self.save(ignore_permissions=True)
+		self.save()
 
 	@frappe.whitelist()
 	def reject(self, reason=None):
@@ -104,7 +105,7 @@ class PartnerApplication(Document):
 		self._check_pending_review()
 		self.status = "Rejected"
 		self.reviewer_comments = reason
-		self.save(ignore_permissions=True)
+		self.save()
 
 	def _check_pending_review(self):
 		if self.docstatus != 1 or self.status != "Pending Review":
@@ -189,10 +190,11 @@ def save_partner_application(details=None):
 		if fieldname in details:
 			doc.set(fieldname, details[fieldname])
 
+	# caller is the partner's own admin (from _my_partner), matching has_partner_application_permission's rule
 	if not doc.name:
-		doc.insert(ignore_permissions=True)
+		doc.insert()
 	else:
-		doc.save(ignore_permissions=True)
+		doc.save()
 
 	return doc.as_dict()
 
@@ -225,13 +227,13 @@ def unregister():
 	if not doc:
 		return
 
-	for name in frappe.get_all("Partner Certificate", filters={"partner": partner}, pluck="name"):
-		frappe.db.set_value("Partner Certificate", name, "partner", None)
-
-	for name in frappe.get_all(
-		"Certificate Link Request", filters={"partner": partner, "status": "Pending"}, pluck="name"
-	):
-		frappe.db.set_value("Certificate Link Request", name, {"status": "Cancelled", "key": None})
+	# bulk update via filter dict avoids an N+1 loop per matching row
+	frappe.db.set_value("Partner Certificate", {"partner": partner}, "partner", None)
+	frappe.db.set_value(
+		"Certificate Link Request",
+		{"partner": partner, "status": "Pending"},
+		{"status": "Cancelled", "key": None},
+	)
 
 	if doc.docstatus == 1:
 		doc.flags.ignore_permissions = True
@@ -271,8 +273,7 @@ def get_certificate_link_status():
 
 
 def get_countries_with_isd_codes():
-	"""Countries with their dialling code for the registration form's country and phone pickers —
-	the same shape Press's get_countries_with_isd_codes returns, built from Frappe's bundled geo data."""
+	"""Returns countries with dialling codes for the registration form's country and phone pickers."""
 	from frappe.geo.country_info import get_all
 
 	return sorted(

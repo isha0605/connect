@@ -11,9 +11,7 @@ class PartnerCRMSettings(Document):
 
 
 def _my_partner_as_admin():
-	"""The partner this user administers. CRM credentials are partner-wide and drive lead sync
-	for every thread the partner owns, so only a partner admin may see or change them --
-	the same rule permissions.has_partner_crm_settings_permission enforces on the doctype."""
+	"""Returns the partner this user administers, since CRM credentials are partner-wide and only admins may touch them."""
 	from connect.permissions import _my_company_membership
 
 	doctype, partner, row = _my_company_membership(frappe.session.user)
@@ -23,8 +21,7 @@ def _my_partner_as_admin():
 
 
 def get_my_settings():
-	"""Never returns api_secret. The form shows whether one is stored and lets it be replaced,
-	so the credential is never sent to the browser."""
+	"""Returns the partner's CRM settings without ever leaking api_secret back to the browser."""
 	partner = _my_partner_as_admin()
 	name = frappe.db.get_value("Partner CRM Settings", {"partner": partner})
 	if not name:
@@ -56,12 +53,7 @@ def get_my_settings():
 
 
 def save_my_settings(site_url, api_key, default_lead_status, api_secret=None, enabled=0):
-	"""Create or update this partner's CRM credentials.
-
-	`api_secret` is write-only: blank means "keep what is stored", so changing the site URL
-	doesn't require re-entering the secret. The Connect Partner role has read and write but
-	no `create`, so the first save is done with ignore_permissions -- the partner-admin check
-	above is what authorises it."""
+	"""Creates or updates the partner's CRM credentials, keeping api_secret write-only so a URL edit doesn't force re-entering it."""
 	partner = _my_partner_as_admin()
 
 	site_url = (site_url or "").strip().rstrip("/")
@@ -97,10 +89,7 @@ def save_my_settings(site_url, api_key, default_lead_status, api_secret=None, en
 
 
 def disconnect_my_crm():
-	"""Turns sync off without discarding the credentials, so it can be switched back on.
-
-	The remote Webhook is deliberately left registered -- see
-	crm_integration.sync_reply_webhook: with nothing syncing, no lead ever matches it."""
+	"""Turns sync off without deleting credentials so the partner can switch it back on later."""
 	partner = _my_partner_as_admin()
 	name = frappe.db.get_value("Partner CRM Settings", {"partner": partner})
 	if name:

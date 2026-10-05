@@ -49,10 +49,7 @@ def get_my_dm_threads():
 		p.name: p
 		for p in frappe.get_all("User", filters={"name": ["in", others]}, fields=["name", "full_name", "user_image"])
 	}
-	# A DM's other party may be a partner-side user (a customer can DM an individual partner
-	# directly, not just the company thread) — used to show that partner's response time badge
-	# in the header, same as a company thread. Most DMs are between two non-partner users, so
-	# this is usually empty; batched rather than queried per-row.
+	# batched partner lookup for the response-time badge; usually empty since most DMs are user-to-user
 	other_partners = {
 		m.user: m.partner
 		for m in frappe.get_all("Connect Partner Member", filters={"user": ["in", others]}, fields=["user", "partner"])
@@ -78,8 +75,7 @@ def get_my_dm_threads():
 			"last_message": t.last_message_preview or "",
 			"last_message_at": t.last_message_at or t.creation,
 			"last_message_sender": t.last_message_sender,
-			# Same field name as get_my_threads' sender_names, for one shared client-side lookup —
-			# a DM only ever has two possible senders, and the other one's name is already fetched.
+			# key name matches get_my_threads for a shared client-side lookup
 			"last_message_sender_name": profile.get("full_name") if t.last_message_sender == other else None,
 			"unread_count": unread_count,
 		})

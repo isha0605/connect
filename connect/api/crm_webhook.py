@@ -12,9 +12,7 @@ from connect.permissions import _get_partner_admin
 
 
 def _verify_signature(partner):
-	"""Confirms this request actually came from the partner's CRM, using the secret we generated
-	when registering the webhook (see crm_integration.sync_reply_webhook) — the same secret their
-	CRM signs every call with. Without this, anyone could forge a "reply" into someone else's thread."""
+	"""Confirms the request actually came from the partner's CRM, so nobody can forge a reply into someone else's thread."""
 	if not frappe.db.exists("Partner CRM Settings", partner):
 		frappe.throw(_("Unknown partner"), frappe.PermissionError)
 	secret = frappe.utils.password.get_decrypted_password(
@@ -36,9 +34,7 @@ def receive_crm_reply(
 	reference_doctype=None, reference_name=None, sent_or_received=None, content=None, name=None,
 	creation=None,
 ):
-	"""Called by the Webhook this app registers on a partner's Frappe CRM (see
-	crm_integration.sync_reply_webhook) whenever the partner sends a reply there — so the reply also
-	shows up in the Connect thread, alongside reaching the customer as a normal email."""
+	"""Called by the partner's CRM when they send a reply, so the reply also shows up in the Connect thread."""
 	# Not read from the whitelisted kwargs above: the webhook sends a JSON body, and Frappe's
 	# request parsing populates form_dict from that JSON alone, discarding the URL query string
 	# entirely — so `?partner=...` has to be read from the raw query args instead.
@@ -60,9 +56,17 @@ def receive_crm_reply(
 	settings = frappe.db.get_value(
 		"Partner CRM Settings", partner, ["site_url", "api_key"], as_dict=True
 	)
-	attachments = _fetch_crm_attachments(partner, settings, name) if settings else []
+	try:
+		attachments, failed_files = _fetch_crm_attachments(partner, settings, name) if settings else ([], [])
+	except Exception:
+		# A reachable-but-failing CRM (revoked key, File API denied) must not cost the partner their
+		# text reply as well: throwing here would 500 the webhook, so the CRM retries the whole
+		# delivery and — if the failure is permanent — reply sync stops dead instead of degrading.
+		frappe.log_error(title=f"CRM attachment fetch failed for Communication {name}")
+		attachments, failed_files = [], []
+
 	reply_text = extract_reply_text(content or "")
-	if not reply_text and not attachments:
+	if not reply_text and not attachments and not failed_files:
 		return  # an empty reply with no attachment — nothing worth showing in Connect
 
 	admin = _get_partner_admin(partner)
@@ -74,8 +78,24 @@ def receive_crm_reply(
 	for attachment in attachments:
 		_insert_reply_message(thread, admin, name, "File", attachment["file_name"], attachment=attachment)
 
+	if failed_files:
+		# A System line rather than silence: a reply that reads "here's the file" otherwise lands with
+		# nothing attached, and the customer has no way to tell an empty-handed partner from a lost
+		# file. Silent, because the only person who can re-send is the partner, and they are the
+		# sender — so a notification would reach the one party who can't act on it.
+		label = (
+			_("Attachment couldn't be delivered")
+			if len(failed_files) == 1
+			else _("Attachments couldn't be delivered")
+		)
+		_insert_reply_message(
+			thread, admin, name, "System", f"{label}: {', '.join(failed_files)}", silent=True
+		)
 
-def _insert_reply_message(thread, admin, communication_name, message_type, content, attachment=None):
+
+def _insert_reply_message(
+	thread, admin, communication_name, message_type, content, attachment=None, silent=False
+):
 	message = frappe.get_doc({
 		"doctype": "Connect Message",
 		"thread": thread,
@@ -90,13 +110,12 @@ def _insert_reply_message(thread, admin, communication_name, message_type, conte
 		message.file_type = attachment["file_type"]
 		message.file_size = attachment["file_size"]
 	message.flags.skip_crm_sync = True
+	message.flags.silent = silent
 	message.insert(ignore_permissions=True)
 
 
 def _fetch_crm_attachments(partner, settings, communication_name):
-	"""Downloads any files the partner attached to their reply and stages them as local Files, so
-	they can be attached to the Connect Message(s) created for this reply — otherwise a document
-	the partner sends back would only ever show up as its filename in the Communication's text."""
+	"""Downloads files the partner attached in their CRM so they show up as real attachments in Connect, not just filenames."""
 	import mimetypes
 
 	import requests
@@ -119,6 +138,7 @@ def _fetch_crm_attachments(partner, settings, communication_name):
 	)["data"]
 
 	attachments = []
+	failed_files = []
 	for f in files:
 		try:
 			response = requests.get(f"{base_url}{f['file_url']}", headers=headers)
@@ -139,8 +159,9 @@ def _fetch_crm_attachments(partner, settings, communication_name):
 			})
 		except Exception:
 			frappe.log_error(title=f"CRM attachment download failed for Communication {communication_name}")
+			failed_files.append(f["file_name"])
 
-	return attachments
+	return attachments, failed_files
 
 
 # Matches a mail client's own "On <date>, <person> wrote:" line introducing quoted history,
@@ -152,9 +173,7 @@ _QUOTE_SELECTORS = ["blockquote", ".gmail_quote", ".gmail_attr", ".yahoo_quoted"
 
 
 def extract_reply_text(html_content):
-	"""Returns just the partner's own new reply text from the full HTML email body their CRM
-	sends, with the quoted history of the prior conversation stripped out — otherwise every reply
-	would re-post the whole thread as a new Connect Message."""
+	"""Returns only the partner's new reply text, so replies don't re-post the whole quoted thread as a new message."""
 	if not html_content:
 		return ""
 

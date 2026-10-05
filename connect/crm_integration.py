@@ -4,7 +4,7 @@ WEBHOOK_SECRET_HEADER = "X-Frappe-Webhook-Signature"
 
 
 def queue_crm_lead_sync(doc, method=None):
-	"""Decides whether this message should create a new CRM Lead or just be added to one that already exists, without making the customer wait on the partner's CRM."""
+	"""Routes a new message to CRM Lead creation or reply-append in the background so the customer never waits on the partner's CRM."""
 	if doc.flags.get("skip_crm_sync"):
 		return  # this message was itself synced in from the partner's CRM reply — don't echo it back
 	if doc.message_type == "System":
@@ -142,8 +142,7 @@ def _add_frappe_crm_email(thread_doc, message, settings, lead_id=None):
 
 
 def _attach_file_to_crm_communication(message_doc, communication_name, base_url, headers):
-	"""Uploads the message's local attachment to the partner's CRM, attached to the Communication
-	just created there — otherwise the partner only sees the filename as text and can't open it."""
+	"""Uploads the message's attachment to the partner's CRM so they can actually open the file instead of just seeing its name."""
 	import requests
 
 	file_doc = frappe.get_doc("File", {"file_url": message_doc.attachment})
@@ -198,12 +197,7 @@ def _create_frappe_crm_lead(thread_doc, message, settings):
 
 
 def sync_reply_webhook(doc, method=None):
-	"""on_update on Partner CRM Settings: registers a Webhook on the partner's Frappe CRM site so a
-	reply the partner sends there is also pushed to receive_crm_reply and shown in the Connect
-	thread — in addition to reaching the customer as a normal email, since nothing masks the
-	customer's address here. Registers once and leaves it in place — disabling sync here pauses
-	queue_crm_lead_sync but doesn't tear down the remote webhook, since Frappe CRM will just stop
-	matching any lead once nothing new syncs."""
+	"""Registers a one-time Webhook on the partner's CRM so their replies also appear in the Connect thread."""
 	if doc.crm_type != "Frappe CRM" or not doc.enabled or doc.crm_reply_webhook_id:
 		return
 	if not (doc.site_url and doc.api_key):

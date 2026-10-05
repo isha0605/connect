@@ -32,17 +32,14 @@ def _as_dict(doc):
 
 
 def get_my_settings():
-	"""The caller's own working hours and after-hours behavior — the defaults if they've never saved any."""
+	"""Returns the caller's working hours, falling back to defaults so a first-time user still sees sensible values."""
 	user = frappe.session.user
 	doc = frappe.get_doc("Connect User Settings", user) if frappe.db.exists("Connect User Settings", user) else None
 	return _as_dict(doc or frappe.new_doc("Connect User Settings"))
 
 
 def get_settings_for_users(users):
-	"""Working hours for several users at once, defaulted the same way get_my_settings is for anyone
-	who's never saved their own. Used to check a *thread's* partner side, not just the caller —
-	see get_partner_hours_for_thread in connect.utils, which is where partner-vs-customer, single
-	vs. several partner members, and thread-vs-DM all get resolved before this is called."""
+	"""Batches working-hours lookup for several users so a thread's partner-side quiet-hour check is one query, not N."""
 	users = list(dict.fromkeys(users))  # de-dup, keep order
 	docs = {
 		d.name: d
@@ -56,8 +53,7 @@ def get_settings_for_users(users):
 
 
 def update_my_settings(work_start, work_end, work_days, after_hours_behavior):
-	"""Saves the caller's own settings. Always acts on the session user: this doctype is only reachable
-	through here, so nobody can read or change someone else's."""
+	"""Saves the caller's own settings, keyed to the session user so nobody can change someone else's."""
 	user = frappe.session.user
 	work_days = frappe.parse_json(work_days) if isinstance(work_days, str) else work_days
 	if after_hours_behavior not in AFTER_HOURS_BEHAVIORS:

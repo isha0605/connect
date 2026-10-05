@@ -3,8 +3,7 @@ from frappe.utils import flt
 
 
 def _get_press_client():
-	"""Returns a FrappeClient connected to Frappe Cloud (Press) using credentials stored in
-	Press Settings, or throws a clear error if not configured yet."""
+	"""Returns a FrappeClient connected to Frappe Cloud using Press Settings credentials."""
 	from frappe.frappeclient import FrappeClient
 
 	settings = frappe.get_cached_doc("Press Settings")
@@ -19,15 +18,7 @@ def _get_press_client():
 
 
 def fetch_mrr_from_press(company_email: str) -> float:
-	"""Fetches the partner's current MRR from Frappe Cloud (Press) by their company email.
-
-	Press identifies a partner team by the email of the team owner / account. The API endpoint
-	`press.api.partner.get_partner_details` returns a dict that includes `billing.monthly_revenue`
-	(the same value the Press dashboard shows as the partner's Frappe Cloud MRR).
-
-	When you have the key, verify the exact field path via:
-	    client.get_api("press.api.partner.get_partner_details", {"partner": company_email})
-	and adjust the extraction below if the shape differs."""
+	"""Fetches the partner's current MRR from Frappe Cloud so the application shows live numbers, not stale ones."""
 	client = _get_press_client()
 	try:
 		result = client.get_api("press.api.partner.get_partner_details", {"partner": company_email})
@@ -41,10 +32,8 @@ def fetch_mrr_from_press(company_email: str) -> float:
 
 
 def sync_partner_mrr(partner: str):
-	"""Fetches the latest MRR from Press for `partner` and writes it onto their active
-	Partner Application. No-ops gracefully if Press isn't configured or no application exists."""
-	settings = frappe.get_cached_doc("Press Settings")
-	if not settings.enabled:
+	"""Refreshes MRR from Press onto the partner's active application draft so their eligibility is up to date."""
+	if not frappe.db.get_single_value("Press Settings", "enabled"):
 		return
 
 	from connect.partner.doctype.partner_application.partner_application import _get_partner_application
@@ -64,13 +53,12 @@ def sync_partner_mrr(partner: str):
 
 	if flt(doc.monthly_revenue) != mrr:
 		doc.monthly_revenue = mrr
-		doc.save(ignore_permissions=True)
+		doc.save()
 
 
 def sync_all_partner_mrrs():
-	"""Daily scheduled job: refreshes MRR from Press for every partner with a Draft application."""
-	settings = frappe.get_cached_doc("Press Settings")
-	if not settings.enabled:
+	"""Nightly job that keeps every draft application's MRR fresh without waiting for a user to open the page."""
+	if not frappe.db.get_single_value("Press Settings", "enabled"):
 		return
 
 	partners = frappe.get_all(

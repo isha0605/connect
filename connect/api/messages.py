@@ -36,8 +36,7 @@ def send_message(
 	reply_to=None,
 	silent=0,
 ):
-	"""Creates a chat message carrying text, a file, or a Requirement snapshot — one path for every message type.
-	A silent message is delivered like any other but doesn't create a notification for the other members."""
+	"""Sends any message type down one path so the client only has to call one endpoint; silent skips notifying others."""
 	user = frappe.session.user
 	requirement_data = frappe.parse_json(requirement_data) if isinstance(requirement_data, str) else requirement_data
 	content = (content or "").strip()
@@ -82,13 +81,13 @@ def send_message(
 
 @frappe.whitelist()
 def delete_message(message):
-	"""Deletes a message for everyone; authorization and cleanup live in has_message_permission and Connect Message's on_trash()."""
+	"""Thin API entry; ownership and cleanup are enforced on Connect Message itself."""
 	frappe.delete_doc("Connect Message", message)
 
 
 @frappe.whitelist()
 def edit_message(message, content):
-	"""Edits your own text message in place; authorization and validation live in has_message_permission and Connect Message's validate()."""
+	"""Thin API entry; ownership and edit rules are enforced on Connect Message itself."""
 	doc = frappe.get_doc("Connect Message", message)
 	doc.content = content
 	doc.save()
@@ -97,7 +96,7 @@ def edit_message(message, content):
 
 @frappe.whitelist()
 def pin_message(message):
-	"""Pins a message (a thread can hold any number); the pin rules themselves live on Connect Message."""
+	"""Thin API entry; the pin rules and access check live on Connect Message."""
 	doc = frappe.get_doc("Connect Message", message)
 	doc.pin(frappe.session.user)
 	return {"thread": doc.thread, "message": doc.name, "is_pinned": 1}
@@ -112,8 +111,7 @@ def unpin_message(message):
 
 @frappe.whitelist()
 def get_pinned_messages(thread):
-	"""A thread's pinned messages, most recently pinned first. Read through the message permission query
-	conditions, so a removed member only sees pins up to the moment they were removed."""
+	"""Returns the thread's pins newest first, filtered by the same read query so a removed member sees only pins from their time."""
 	_check_can_read(thread, frappe.session.user)
 	return frappe.get_list(
 		"Connect Message",
@@ -126,9 +124,7 @@ def get_pinned_messages(thread):
 
 @frappe.whitelist()
 def get_forward_targets():
-	"""Lists the conversations the caller can forward a message into right now: threads where they have
-	Write access and that aren't closed, plus every DM of theirs. Display data (names, avatars) is left to
-	the client, which already has it from get_my_threads / get_my_dm_threads."""
+	"""Returns only conversations the caller can actually post into, so the forward menu never offers a dead end."""
 	user = frappe.session.user
 
 	thread_filters = {"status": ["!=", "Closed"]}
@@ -153,9 +149,7 @@ def get_forward_targets():
 
 @frappe.whitelist()
 def forward_message(message, source_is_dm, target_thread, target_is_dm):
-	"""Sends a copy of a text or file message into another conversation as the caller, flagged as forwarded.
-	Reading the original is checked by Frappe's permission system; posting to the target goes through the
-	same write checks as send_message / send_dm_message."""
+	"""Forwards a message as the caller so the target sees a real post from them, not an impersonated original sender."""
 	user = frappe.session.user
 	source_is_dm = frappe.utils.cint(source_is_dm)
 	target_is_dm = frappe.utils.cint(target_is_dm)
@@ -201,11 +195,7 @@ def forward_message(message, source_is_dm, target_thread, target_is_dm):
 
 @frappe.whitelist()
 def search_messages(query, thread=None, is_dm=0, kind="messages"):
-	"""Search over the conversations the caller can read, newest first. `kind` picks the tab: "messages"
-	matches text, "files" matches attachment names, "links" matches text that contains a URL. Pass `thread`
-	(and `is_dm`) to search inside one conversation, otherwise it searches every company thread and DM.
-	Visibility (thread membership, and a removed member's cut-off) comes from the doctypes' permission
-	query conditions, so the search can't surface anything the message list itself wouldn't."""
+	"""Searches only conversations the caller can already read, so results never leak a message they couldn't open anyway."""
 	query = (query or "").strip()
 	if len(query) < MIN_SEARCH_LENGTH:
 		return []

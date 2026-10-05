@@ -24,7 +24,7 @@ class ConnectThreadMember(Document):
 			self.removed_on = None
 
 	def make_admin(self, user):
-		"""Promotes this thread member to company admin, creating a company membership row for them if they don't have one yet."""
+		"""Transfers admin from the caller to this member, creating their company row if they don't yet have one."""
 		from connect.permissions import _is_customer_admin, _is_partner_admin
 
 		if self.is_removed:
@@ -35,47 +35,27 @@ class ConnectThreadMember(Document):
 		if self.side == "Customer":
 			company = thread_doc.customer
 			authorized = _is_customer_admin(company, user)
+			member_doctype = "Customer Team Member"
+			company_field = "customer"
 		elif self.side == "Partner":
 			company = thread_doc.partner
 			authorized = _is_partner_admin(company, user)
+			member_doctype = "Connect Partner Member"
+			company_field = "partner"
 		else:
 			frappe.throw(_("Invalid side"))
 
 		if not authorized:
 			frappe.throw(_("Only an admin of your own side can do this"), frappe.PermissionError)
 
-		if self.side == "Customer":
-			my_row = frappe.db.get_value("Customer Team Member", {"customer": company, "user": user}, "name")
-			if my_row:
-				frappe.db.set_value("Customer Team Member", my_row, "is_admin", 0)
+		# filter-dict set_value silently no-ops when no row matches, so no exists check is needed
+		frappe.db.set_value(member_doctype, {company_field: company, "user": user}, "is_admin", 0)
 
-			target_row = frappe.db.get_value(
-				"Customer Team Member", {"customer": company, "user": self.user}, "name"
-			)
-			if target_row:
-				frappe.db.set_value("Customer Team Member", target_row, "is_admin", 1)
-			else:
-				frappe.get_doc({
-					"doctype": "Customer Team Member",
-					"customer": company,
-					"user": self.user,
-					"full_name": get_fullname(self.user),
-					"is_admin": 1,
-				}).insert(ignore_permissions=True)
+		target_row = frappe.db.get_value(member_doctype, {company_field: company, "user": self.user}, "name")
+		if target_row:
+			frappe.db.set_value(member_doctype, target_row, "is_admin", 1)
 		else:
-			my_row = frappe.db.get_value("Connect Partner Member", {"partner": company, "user": user}, "name")
-			if my_row:
-				frappe.db.set_value("Connect Partner Member", my_row, "is_admin", 0)
-
-			target_row = frappe.db.get_value(
-				"Connect Partner Member", {"partner": company, "user": self.user}, "name"
-			)
-			if target_row:
-				frappe.db.set_value("Connect Partner Member", target_row, "is_admin", 1)
-			else:
-				frappe.get_doc({
-					"doctype": "Connect Partner Member",
-					"partner": company,
-					"user": self.user,
-					"is_admin": 1,
-				}).insert(ignore_permissions=True)
+			new_row = {"doctype": member_doctype, company_field: company, "user": self.user, "is_admin": 1}
+			if self.side == "Customer":
+				new_row["full_name"] = get_fullname(self.user)
+			frappe.get_doc(new_row).insert(ignore_permissions=True)

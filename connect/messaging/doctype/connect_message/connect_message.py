@@ -40,8 +40,7 @@ class ConnectMessage(Document):
 			resync_thread_last_message_on_edit(self)
 
 	def pin(self, user):
-		"""Pins this message to its conversation; a conversation can hold any number of pins. Pinning is
-		posting-level access, so it needs the same write access as sending a message."""
+		"""Pins a message using the same write access as sending one, since pinning changes what everyone sees."""
 		from connect.permissions import _check_can_write
 
 		_check_can_write(self.thread, user)

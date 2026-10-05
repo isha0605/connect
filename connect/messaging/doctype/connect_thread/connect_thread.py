@@ -10,11 +10,7 @@ from frappe.utils import now_datetime
 class ConnectThread(Document):
 	def validate(self):
 		if not self.is_new():
-			# customer/partner define which two companies' history lives in this thread —
-			# the doctype otherwise grants "write" to any partner admin (so they can close
-			# it), and without this, that same write access could reassign the thread to an
-			# unrelated customer, silently handing them another company's message history
-			# the next time that customer messages this partner.
+			# freezing customer/partner stops a partner admin's write access from silently reassigning the thread to another customer
 			prev = frappe.db.get_value("Connect Thread", self.name, ["customer", "partner"], as_dict=True)
 			if prev and (prev.customer != self.customer or prev.partner != self.partner):
 				frappe.throw(_("A thread's customer and partner can't be changed after it's created"))
@@ -71,6 +67,7 @@ class ConnectThread(Document):
 			}).insert(ignore_permissions=True)
 			created_user = True
 
+		# caller was verified as same-side admin above, which satisfies has_thread_member_permission's create rule
 		member = frappe.get_doc({
 			"doctype": "Connect Thread Member",
 			"thread": self.name,
@@ -79,7 +76,7 @@ class ConnectThread(Document):
 			"permission": permission,
 			"added_by": added_by,
 		})
-		member.insert(ignore_permissions=True)
+		member.insert()
 
 		self.post_system_message(_("{0} was added to this thread").format(email))
 
@@ -95,14 +92,14 @@ class ConnectThread(Document):
 			frappe.throw(_("Only an admin of your own side can remove members"), frappe.PermissionError)
 
 		member_doc.is_removed = 1
-		member_doc.save(ignore_permissions=True)
+		member_doc.save()
 
 		self.post_system_message(_("{0} was removed from this thread").format(member_doc.user))
 
 		return member_doc
 
 	def close(self, user):
-		"""Partner-admin-only, per spec — customer side has no close action."""
+		"""Closes the thread, restricted to a partner admin since the customer side has no close action by spec."""
 		from connect.permissions import _is_partner_admin
 
 		if not _is_partner_admin(self.partner, user):

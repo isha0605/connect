@@ -7,7 +7,7 @@ from connect.permissions import _check_can_read, _get_partner_admin
 
 @frappe.whitelist()
 def add_thread_member(thread, email, side, permission="Write"):
-	# adding member to chat
+	"""Thin API entry; the add rules and user-creation live on Connect Thread."""
 	thread_doc = frappe.get_doc("Connect Thread", thread)
 	member, created_user = thread_doc.add_member(email, side, permission, frappe.session.user)
 	return {"member": member.name, "created_user": created_user}
@@ -15,7 +15,7 @@ def add_thread_member(thread, email, side, permission="Write"):
 
 @frappe.whitelist()
 def remove_thread_member(thread, member):
-	# removing member from chat
+	"""Thin API entry; only a same-side admin may remove, enforced on Connect Thread."""
 	thread_doc = frappe.get_doc("Connect Thread", thread)
 	member_doc = thread_doc.remove_member(member, frappe.session.user)
 	return {"removed": member_doc.user}
@@ -23,7 +23,7 @@ def remove_thread_member(thread, member):
 
 @frappe.whitelist()
 def close_thread(thread):
-	# closing the chat thread
+	"""Thin API entry; the partner-admin-only rule lives on Connect Thread."""
 	thread_doc = frappe.get_doc("Connect Thread", thread)
 	thread_doc.close(frappe.session.user)
 	return {"status": thread_doc.status}
@@ -37,7 +37,7 @@ def get_requirement_snapshot():
 
 @frappe.whitelist()
 def make_thread_admin(thread, member):
-	"""Admin-transfer logic lives on Connect Thread Member's make_admin()."""
+	"""Thin API entry; admin-transfer rules live on Connect Thread Member."""
 	member_doc = frappe.get_doc("Connect Thread Member", member)
 	if member_doc.thread != thread:
 		frappe.throw(_("Member does not belong to this thread"))
@@ -106,9 +106,7 @@ def get_my_threads():
 			"Partner", filters={"name": ["in", [t.partner for t in threads]]}, fields=["name", "logo"]
 		)
 	}
-	# The sidebar preview ("Sender: message") needs a real display name, not the raw email — a
-	# thread's last sender can be any of its members, unlike a DM's fixed pair, so this can't be
-	# inferred client-side the way get_my_dm_threads' other_user_full_name is; resolved here instead.
+	# last sender can be any member (unlike a DM's fixed pair), so the sidebar preview needs a server-side name lookup
 	sender_names = {
 		u.name: u.full_name
 		for u in frappe.get_all(
