@@ -4513,7 +4513,7 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-10-05 20:47:59.303983",
+ "creation": "2026-10-05 21:03:35.463789",
  "docstatus": 0,
  "doctype": "Studio Page",
  "draft_blocks": [
@@ -4537,6 +4537,192 @@
      "componentProps": {},
      "componentSlots": {},
      "isStudioComponent": true
+    },
+    {
+     "baseStyles": {
+      "alignItems": "center",
+      "backgroundColor": "rgba(10, 10, 10, 0.88)",
+      "display": "{{ galleryOpen ? 'flex' : 'none' }}",
+      "inset": "0px",
+      "justifyContent": "center",
+      "position": "fixed",
+      "zIndex": "60"
+     },
+     "children": [
+      {
+       "baseStyles": {
+        "alignItems": "center",
+        "cursor": "pointer",
+        "display": "flex",
+        "height": "40px",
+        "justifyContent": "center",
+        "position": "absolute",
+        "right": "20px",
+        "top": "20px",
+        "width": "40px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "white",
+          "flexShrink": "0",
+          "height": "22px",
+          "width": "22px"
+         },
+         "componentId": "gallery-lightbox-close-icon",
+         "componentName": "Icon",
+         "componentProps": {
+          "icon": "lucide-x"
+         },
+         "componentSlots": {}
+        }
+       ],
+       "componentEvents": {
+        "click": {
+         "action": "Run Script",
+         "event": "click",
+         "script": "closeGallery();"
+        }
+       },
+       "componentId": "gallery-lightbox-close",
+       "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "alignItems": "center",
+        "borderRadius": "9999px",
+        "cursor": "pointer",
+        "display": "{{ galleryItems.length > 1 ? 'flex' : 'none' }}",
+        "height": "44px",
+        "justifyContent": "center",
+        "left": "24px",
+        "position": "absolute",
+        "top": "50%",
+        "transform": "translateY(-50%)",
+        "width": "44px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "white",
+          "flexShrink": "0",
+          "height": "28px",
+          "width": "28px"
+         },
+         "componentId": "gallery-lightbox-prev-icon",
+         "componentName": "Icon",
+         "componentProps": {
+          "icon": "lucide-chevron-left"
+         },
+         "componentSlots": {}
+        }
+       ],
+       "componentEvents": {
+        "click": {
+         "action": "Run Script",
+         "event": "click",
+         "script": "showPrevious();"
+        }
+       },
+       "componentId": "gallery-lightbox-prev",
+       "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
+       "mobileStyles": {
+        "left": "4px"
+       },
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "alignItems": "center",
+        "display": "flex",
+        "height": "min(540px, calc(100vh - 180px))",
+        "justifyContent": "center",
+        "width": "min(960px, calc(100vw - 160px))"
+       },
+       "componentId": "gallery-lightbox-media",
+       "componentName": "HTML",
+       "componentProps": {
+        "html": "{{ lightboxMedia }}"
+       },
+       "componentSlots": {},
+       "mobileStyles": {
+        "width": "calc(100vw - 32px)"
+       }
+      },
+      {
+       "baseStyles": {
+        "alignItems": "center",
+        "borderRadius": "9999px",
+        "cursor": "pointer",
+        "display": "{{ galleryItems.length > 1 ? 'flex' : 'none' }}",
+        "height": "44px",
+        "justifyContent": "center",
+        "position": "absolute",
+        "right": "24px",
+        "top": "50%",
+        "transform": "translateY(-50%)",
+        "width": "44px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "white",
+          "flexShrink": "0",
+          "height": "28px",
+          "width": "28px"
+         },
+         "componentId": "gallery-lightbox-next-icon",
+         "componentName": "Icon",
+         "componentProps": {
+          "icon": "lucide-chevron-right"
+         },
+         "componentSlots": {}
+        }
+       ],
+       "componentEvents": {
+        "click": {
+         "action": "Run Script",
+         "event": "click",
+         "script": "showNext();"
+        }
+       },
+       "componentId": "gallery-lightbox-next",
+       "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
+       "mobileStyles": {
+        "right": "4px"
+       },
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "bottom": "20px",
+        "color": "rgba(255, 255, 255, 0.8)",
+        "fontSize": "13px",
+        "left": "50%",
+        "position": "absolute",
+        "transform": "translateX(-50%)"
+       },
+       "componentId": "gallery-lightbox-counter",
+       "componentName": "TextBlock",
+       "componentProps": {
+        "tag": "span",
+        "text": "{{ galleryCounter }}"
+       },
+       "componentSlots": {}
+      }
+     ],
+     "componentId": "gallery-lightbox",
+     "componentName": "container",
+     "componentProps": {},
+     "componentSlots": {},
+     "originalElement": "div"
     },
     {
      "baseStyles": {
@@ -5439,102 +5625,24 @@
                  "children": [
                   {
                    "baseStyles": {
-                    "display": "{{ pmmLevel ? 'flex' : 'none' }}",
-                    "flexDirection": "row",
-                    "flexWrap": "nowrap",
-                    "gap": "3px"
-                   },
-                   "children": [],
-                   "classes": [],
-                   "componentId": "field-pmm-meter",
-                   "componentName": "Repeater",
-                   "componentProps": {
-                    "data": "{{ pmmSegments }}",
-                    "dataKey": "key",
-                    "emptyStateMessage": ""
-                   },
-                   "componentSlots": {
-                    "default": {
-                     "slotContent": [
-                      {
-                       "baseStyles": {
-                        "backgroundColor": "{{ dataItem.filled ? 'var(--ink-gray-8)' : 'var(--surface-gray-3)' }}",
-                        "borderRadius": "3px",
-                        "height": "6px",
-                        "width": "18px"
-                       },
-                       "children": [],
-                       "classes": [],
-                       "componentId": "field-pmm-segment",
-                       "componentName": "container",
-                       "originalElement": "div"
-                      }
-                     ],
-                     "slotId": "default",
-                     "slotName": "default"
-                    }
-                   }
-                  },
-                  {
-                   "baseStyles": {
                     "color": "{{ pmmLevel ? 'var(--ink-gray-8)' : 'var(--ink-gray-6)' }}",
                     "fontWeight": "{{ pmmLevel ? '500' : '400' }}"
                    },
-                   "children": [],
-                   "classes": [],
                    "componentId": "field-pmm-value",
                    "componentName": "TextBlock",
                    "componentProps": {
                     "fontSize": "text-sm",
                     "tag": "span",
                     "text": "{{ pmmLabel }}"
-                   }
+                   },
+                   "componentSlots": {}
                   }
                  ],
-                 "classes": [],
                  "componentId": "field-pmm-value-row",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-5)",
-                  "lineHeight": "1.5"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentId": "field-pmm-meaning",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-xs",
-                  "tag": "span",
-                  "text": "{{ pmmMeaning }}"
-                 }
-                },
-                {
-                 "baseStyles": {
-                  "alignSelf": "flex-start",
-                  "color": "var(--ink-gray-6)",
-                  "cursor": "pointer",
-                  "display": "{{ (partner.data && partner.data.pmm_listing_url) ? 'inline' : 'none' }}",
-                  "textDecoration": "underline"
-                 },
-                 "children": [],
-                 "classes": [],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "openPmmListing();"
-                  }
-                 },
-                 "componentId": "field-pmm-listing",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-xs",
-                  "tag": "span",
-                  "text": "View on frappe.io"
-                 }
                 }
                ],
                "componentId": "field-pmm",
@@ -9545,192 +9653,6 @@
      "componentProps": {},
      "componentSlots": {},
      "originalElement": "div"
-    },
-    {
-     "baseStyles": {
-      "alignItems": "center",
-      "backgroundColor": "rgba(10, 10, 10, 0.88)",
-      "display": "{{ galleryOpen ? 'flex' : 'none' }}",
-      "inset": "0px",
-      "justifyContent": "center",
-      "position": "fixed",
-      "zIndex": "60"
-     },
-     "children": [
-      {
-       "baseStyles": {
-        "alignItems": "center",
-        "cursor": "pointer",
-        "display": "flex",
-        "height": "40px",
-        "justifyContent": "center",
-        "position": "absolute",
-        "right": "20px",
-        "top": "20px",
-        "width": "40px"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "color": "white",
-          "flexShrink": "0",
-          "height": "22px",
-          "width": "22px"
-         },
-         "componentId": "gallery-lightbox-close-icon",
-         "componentName": "Icon",
-         "componentProps": {
-          "icon": "lucide-x"
-         },
-         "componentSlots": {}
-        }
-       ],
-       "componentEvents": {
-        "click": {
-         "action": "Run Script",
-         "event": "click",
-         "script": "closeGallery();"
-        }
-       },
-       "componentId": "gallery-lightbox-close",
-       "componentName": "container",
-       "componentProps": {},
-       "componentSlots": {},
-       "originalElement": "div"
-      },
-      {
-       "baseStyles": {
-        "alignItems": "center",
-        "borderRadius": "9999px",
-        "cursor": "pointer",
-        "display": "{{ galleryItems.length > 1 ? 'flex' : 'none' }}",
-        "height": "44px",
-        "justifyContent": "center",
-        "left": "24px",
-        "position": "absolute",
-        "top": "50%",
-        "transform": "translateY(-50%)",
-        "width": "44px"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "color": "white",
-          "flexShrink": "0",
-          "height": "28px",
-          "width": "28px"
-         },
-         "componentId": "gallery-lightbox-prev-icon",
-         "componentName": "Icon",
-         "componentProps": {
-          "icon": "lucide-chevron-left"
-         },
-         "componentSlots": {}
-        }
-       ],
-       "componentEvents": {
-        "click": {
-         "action": "Run Script",
-         "event": "click",
-         "script": "showPrevious();"
-        }
-       },
-       "componentId": "gallery-lightbox-prev",
-       "componentName": "container",
-       "componentProps": {},
-       "componentSlots": {},
-       "mobileStyles": {
-        "left": "4px"
-       },
-       "originalElement": "div"
-      },
-      {
-       "baseStyles": {
-        "alignItems": "center",
-        "display": "flex",
-        "height": "min(540px, calc(100vh - 180px))",
-        "justifyContent": "center",
-        "width": "min(960px, calc(100vw - 160px))"
-       },
-       "componentId": "gallery-lightbox-media",
-       "componentName": "HTML",
-       "componentProps": {
-        "html": "{{ lightboxMedia }}"
-       },
-       "componentSlots": {},
-       "mobileStyles": {
-        "width": "calc(100vw - 32px)"
-       }
-      },
-      {
-       "baseStyles": {
-        "alignItems": "center",
-        "borderRadius": "9999px",
-        "cursor": "pointer",
-        "display": "{{ galleryItems.length > 1 ? 'flex' : 'none' }}",
-        "height": "44px",
-        "justifyContent": "center",
-        "position": "absolute",
-        "right": "24px",
-        "top": "50%",
-        "transform": "translateY(-50%)",
-        "width": "44px"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "color": "white",
-          "flexShrink": "0",
-          "height": "28px",
-          "width": "28px"
-         },
-         "componentId": "gallery-lightbox-next-icon",
-         "componentName": "Icon",
-         "componentProps": {
-          "icon": "lucide-chevron-right"
-         },
-         "componentSlots": {}
-        }
-       ],
-       "componentEvents": {
-        "click": {
-         "action": "Run Script",
-         "event": "click",
-         "script": "showNext();"
-        }
-       },
-       "componentId": "gallery-lightbox-next",
-       "componentName": "container",
-       "componentProps": {},
-       "componentSlots": {},
-       "mobileStyles": {
-        "right": "4px"
-       },
-       "originalElement": "div"
-      },
-      {
-       "baseStyles": {
-        "bottom": "20px",
-        "color": "rgba(255, 255, 255, 0.8)",
-        "fontSize": "13px",
-        "left": "50%",
-        "position": "absolute",
-        "transform": "translateX(-50%)"
-       },
-       "componentId": "gallery-lightbox-counter",
-       "componentName": "TextBlock",
-       "componentProps": {
-        "tag": "span",
-        "text": "{{ galleryCounter }}"
-       },
-       "componentSlots": {}
-      }
-     ],
-     "componentId": "gallery-lightbox",
-     "componentName": "container",
-     "componentProps": {},
-     "componentSlots": {},
-     "originalElement": "div"
     }
    ],
    "componentId": "body",
@@ -9743,7 +9665,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-10-05 21:40:00.000000",
+ "modified": "2026-10-05 21:08:30.000995",
  "modified_by": "Administrator",
  "name": "partner_profile_redesign",
  "owner": "Administrator",
