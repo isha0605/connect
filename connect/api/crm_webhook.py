@@ -56,9 +56,17 @@ def receive_crm_reply(
 	settings = frappe.db.get_value(
 		"Partner CRM Settings", partner, ["site_url", "api_key"], as_dict=True
 	)
-	attachments = _fetch_crm_attachments(partner, settings, name) if settings else []
+	try:
+		attachments, failed_files = _fetch_crm_attachments(partner, settings, name) if settings else ([], [])
+	except Exception:
+		# A reachable-but-failing CRM (revoked key, File API denied) must not cost the partner their
+		# text reply as well: throwing here would 500 the webhook, so the CRM retries the whole
+		# delivery and — if the failure is permanent — reply sync stops dead instead of degrading.
+		frappe.log_error(title=f"CRM attachment fetch failed for Communication {name}")
+		attachments, failed_files = [], []
+
 	reply_text = extract_reply_text(content or "")
-	if not reply_text and not attachments:
+	if not reply_text and not attachments and not failed_files:
 		return  # an empty reply with no attachment — nothing worth showing in Connect
 
 	admin = _get_partner_admin(partner)
@@ -70,8 +78,24 @@ def receive_crm_reply(
 	for attachment in attachments:
 		_insert_reply_message(thread, admin, name, "File", attachment["file_name"], attachment=attachment)
 
+	if failed_files:
+		# A System line rather than silence: a reply that reads "here's the file" otherwise lands with
+		# nothing attached, and the customer has no way to tell an empty-handed partner from a lost
+		# file. Silent, because the only person who can re-send is the partner, and they are the
+		# sender — so a notification would reach the one party who can't act on it.
+		label = (
+			_("Attachment couldn't be delivered")
+			if len(failed_files) == 1
+			else _("Attachments couldn't be delivered")
+		)
+		_insert_reply_message(
+			thread, admin, name, "System", f"{label}: {', '.join(failed_files)}", silent=True
+		)
 
-def _insert_reply_message(thread, admin, communication_name, message_type, content, attachment=None):
+
+def _insert_reply_message(
+	thread, admin, communication_name, message_type, content, attachment=None, silent=False
+):
 	message = frappe.get_doc({
 		"doctype": "Connect Message",
 		"thread": thread,
@@ -86,6 +110,7 @@ def _insert_reply_message(thread, admin, communication_name, message_type, conte
 		message.file_type = attachment["file_type"]
 		message.file_size = attachment["file_size"]
 	message.flags.skip_crm_sync = True
+	message.flags.silent = silent
 	message.insert(ignore_permissions=True)
 
 
@@ -113,6 +138,7 @@ def _fetch_crm_attachments(partner, settings, communication_name):
 	)["data"]
 
 	attachments = []
+	failed_files = []
 	for f in files:
 		try:
 			response = requests.get(f"{base_url}{f['file_url']}", headers=headers)
@@ -133,8 +159,9 @@ def _fetch_crm_attachments(partner, settings, communication_name):
 			})
 		except Exception:
 			frappe.log_error(title=f"CRM attachment download failed for Communication {communication_name}")
+			failed_files.append(f["file_name"])
 
-	return attachments
+	return attachments, failed_files
 
 
 # Matches a mail client's own "On <date>, <person> wrote:" line introducing quoted history,
