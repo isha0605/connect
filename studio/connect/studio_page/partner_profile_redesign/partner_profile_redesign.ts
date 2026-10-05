@@ -1,7 +1,8 @@
 // Partner profile: a Connect button in the pinned header once the one beside the partner's
-// name has scrolled away, and the partner's story at the end of the page.
+// name has scrolled away, the photo and video gallery, and the partner's story at the end of
+// the page.
 
-import { computed, onScopeDispose } from "vue"
+import { computed, onScopeDispose, ref, watch } from "vue"
 
 const HERO_CONNECT = "contact-btn-ppr"
 const HEADER = "header-row-ppr"
@@ -10,6 +11,13 @@ const WAIT_FOR_PAGE_MS = 5000
 
 function article(word) {
 	return /^[aeiou]/i.test(word) ? "an" : "a"
+}
+
+// The grid shows three tiles; the third says how many more the gallery holds.
+const GALLERY_TILES = 3
+
+function escapeAttr(value) {
+	return String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")
 }
 
 function listOf(items, shown = 3) {
@@ -60,6 +68,69 @@ export default function setup(context) {
 		observer?.disconnect()
 	})
 
+	// ---- Gallery ----
+	// Each Partner Photo is an image, or a video with the image as its cover.
+	const galleryItems = computed(() =>
+		(partner.data?.photos || [])
+			.filter((p) => p.image || p.video)
+			.map((p) => ({ image: p.image || "", video: p.video || "" })),
+	)
+	const moreCount = computed(() => Math.max(0, galleryItems.value.length - GALLERY_TILES))
+
+	function tileBackground(index) {
+		const item = galleryItems.value[index]
+		return item?.image ? `url("${item.image}")` : "none"
+	}
+
+	function isVideo(index) {
+		return !!galleryItems.value[index]?.video
+	}
+
+	// -1 while the lightbox is closed.
+	const galleryIndex = ref(-1)
+	const galleryOpen = computed(() => galleryIndex.value >= 0)
+	const galleryCounter = computed(() => `${galleryIndex.value + 1} / ${galleryItems.value.length}`)
+
+	function openGallery(index) {
+		if (galleryItems.value[index]) galleryIndex.value = index
+	}
+
+	function closeGallery() {
+		galleryIndex.value = -1
+	}
+
+	function showPrevious() {
+		const count = galleryItems.value.length
+		galleryIndex.value = (galleryIndex.value - 1 + count) % count
+	}
+
+	function showNext() {
+		galleryIndex.value = (galleryIndex.value + 1) % galleryItems.value.length
+	}
+
+	// Rebuilt for each item, so moving on from a video stops it.
+	const lightboxMedia = computed(() => {
+		const item = galleryItems.value[galleryIndex.value]
+		if (!item) return ""
+		const fit = "max-width:100%;max-height:100%;border-radius:12px;display:block;"
+		if (item.video) {
+			const poster = item.image ? ` poster="${escapeAttr(item.image)}"` : ""
+			return `<video src="${escapeAttr(item.video)}"${poster} controls autoplay playsinline style="${fit}"></video>`
+		}
+		return `<img src="${escapeAttr(item.image)}" alt="" style="${fit}object-fit:contain;">`
+	})
+
+	function onGalleryKey(event) {
+		if (event.key === "Escape") closeGallery()
+		else if (event.key === "ArrowLeft") showPrevious()
+		else if (event.key === "ArrowRight") showNext()
+	}
+	watch(galleryOpen, (open) => {
+		if (open) window.addEventListener("keydown", onGalleryKey)
+		else window.removeEventListener("keydown", onGalleryKey)
+	})
+	onScopeDispose(() => window.removeEventListener("keydown", onGalleryKey))
+
 	// The partner's own account of how they started when they've written one, else the
 	// Description they gave Frappe, else a line made only from facts on their record —
 	// nothing about their history is made up.
@@ -98,5 +169,19 @@ export default function setup(context) {
 		return line
 	}
 
-	return { connect, origin }
+	return {
+		connect,
+		origin,
+		galleryItems,
+		moreCount,
+		tileBackground,
+		isVideo,
+		galleryOpen,
+		galleryCounter,
+		openGallery,
+		closeGallery,
+		showPrevious,
+		showNext,
+		lightboxMedia,
+	}
 }
