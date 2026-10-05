@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import hmac
+import html
 import re
 
 import frappe
@@ -50,7 +51,7 @@ def receive_crm_reply(
 	if not thread:
 		return
 
-	if frappe.db.exists("Connect Message", {"crm_source_communication": name}):
+	if frappe.db.exists("Connect Message", {"crm_source_communication": name, "message_type": ["!=", "System"]}):
 		return  # already synced — the partner's CRM retried this webhook delivery
 
 	settings = frappe.db.get_value(
@@ -88,8 +89,9 @@ def receive_crm_reply(
 			if len(failed_files) == 1
 			else _("Attachments couldn't be delivered")
 		)
+		safe_names = ", ".join(html.escape(f or "(unnamed)") for f in failed_files)
 		_insert_reply_message(
-			thread, admin, name, "System", f"{label}: {', '.join(failed_files)}", silent=True
+			thread, admin, name, "System", f"{label}: {safe_names}", silent=True
 		)
 
 
@@ -134,6 +136,7 @@ def _fetch_crm_attachments(partner, settings, communication_name):
 				[["attached_to_doctype", "=", "Communication"], ["attached_to_name", "=", communication_name]]
 			),
 			"fields": frappe.as_json(["file_name", "file_url", "file_size"]),
+			"limit_page_length": 500,
 		},
 	)["data"]
 
