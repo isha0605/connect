@@ -185,11 +185,41 @@ def get_my_context():
 	)
 	if partner_membership:
 		partner_membership["partner_name"] = frappe.db.get_value("Partner", partner_membership.partner, "partner_name")
+	signed_in = user != "Guest"
+	projects_route = get_projects_route(user, customer) if signed_in else None
 	return {
 		"user": user,
+		"full_name": frappe.db.get_value("User", user, "full_name") if signed_in else None,
 		"customer": customer_membership,
 		"partner": partner_membership,
+		# The sidebar's Projects item: shown once the buyer has something to show there.
+		"has_projects": bool(projects_route),
+		"projects_route": projects_route,
+		"unread_notifications": frappe.db.count("Notification Log", {"for_user": user, "read": 0})
+		if signed_in
+		else 0,
 	}
+
+
+def get_projects_route(user, customer=None):
+	"""Where the sidebar's Projects goes: the latest paid Starter Pack order's setup steps, else
+	Compare partners once the buyer has saved their requirements, else nowhere (no Projects)."""
+	or_filters = {"user": user}
+	if customer:
+		or_filters["customer"] = customer
+	order = frappe.get_all(
+		"Starter Pack Order",
+		filters={"payment_status": ["in", ["Paid", "Partially Refunded"]]},
+		or_filters=or_filters,
+		order_by="creation desc",
+		limit=1,
+		pluck="name",
+	)
+	if order:
+		return f"/starter-pack-implementation?order={order[0]}"
+	if customer and frappe.db.exists("Requirement", {"customer": customer}):
+		return "/compare-partners"
+	return None
 
 
 def get_partner_hours_for_thread(thread=None, dm_thread=None):

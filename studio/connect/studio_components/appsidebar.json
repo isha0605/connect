@@ -1,110 +1,68 @@
 {
  "block": {
-  "attributes": {},
-  "baseStyles": {},
   "children": [
    {
-    "attributes": {},
     "baseStyles": {
-     "display": "{{ (myContext.data && myContext.data.customer) ? 'flex' : 'none' }}"
+     "display": "{{ (myContext.data && myContext.data.user && myContext.data.user !== 'Guest') ? 'flex' : 'none' }}"
     },
     "children": [
      {
-      "attributes": {},
       "baseStyles": {
        "height": "52px",
        "marginBottom": "0px",
        "paddingRight": "0px",
        "width": "100%"
       },
-      "children": [],
-      "classes": [],
-      "componentEvents": {},
-      "componentId": "SidebarHeader-fpr-customer",
+      "componentId": "SidebarHeader-fpr-signed-in",
       "componentName": "SidebarHeader",
       "componentProps": {
+       "logo": "/assets/connect/images/connect-logo.svg",
        "menuItems": [
+        {
+         "icon": "lucide-settings",
+         "label": "Settings",
+         "onClick": "() => { window.location.href = '/connect/messaging'; }"
+        },
+        {
+         "icon": "lucide-message-square-quote",
+         "label": "Give feedback",
+         "onClick": "() => { window.open('https://frappe.io/contact', '_blank'); }"
+        },
         {
          "icon": "lucide-log-out",
          "label": "Log out",
-         "onClick": "() => { call('logout').then(() => { window.location.href = '/connect/find-partners'; }); }"
+         "onClick": "() => { call('logout').then(() => { window.location.href = '/connect/partner-directory-redesign'; }); }"
         }
        ],
        "showLogo": true,
-       "subtitle": "{{ myCustomer.data ? myCustomer.data.customer_name : '' }}",
-       "title": "Customer Portal"
+       "subtitle": "{{ (myContext.data && myContext.data.full_name) || '' }}",
+       "title": "Frappe Connect"
       },
-      "componentSlots": {},
-      "mobileStyles": {},
-      "tabletStyles": {}
+      "componentSlots": {}
      }
     ],
-    "classes": [],
-    "componentEvents": {},
     "componentId": "container-SidebarHeader-fpr-wrap-in",
     "componentName": "container",
     "componentProps": {},
     "componentSlots": {},
-    "mobileStyles": {},
-    "originalElement": "div",
-    "tabletStyles": {}
+    "originalElement": "div"
    },
    {
-    "attributes": {},
     "baseStyles": {
-     "display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+     "display": "{{ myContext.fetched && !(myContext.data && myContext.data.user && myContext.data.user !== 'Guest') ? 'flex' : 'none' }}"
     },
     "children": [
      {
-      "attributes": {},
-      "baseStyles": {},
-      "children": [],
-      "classes": [],
-      "componentEvents": {},
-      "componentId": "SidebarHeader-fpr-partner",
-      "componentName": "SidebarHeader",
-      "componentProps": {
-       "menuItems": [
-        {
-         "icon": "lucide-log-out",
-         "label": "Log out",
-         "onClick": "() => { call('logout').then(() => { window.location.href = '/login'; }); }"
-        }
-       ],
-       "showLogo": true,
-       "subtitle": "{{ myContext.data && myContext.data.partner ? myContext.data.partner.partner_name : '' }}",
-       "title": "Partner Portal"
+      "baseStyles": {
+       "height": "52px",
+       "marginBottom": "0px",
+       "paddingRight": "0px",
+       "width": "100%"
       },
-      "componentSlots": {},
-      "mobileStyles": {},
-      "tabletStyles": {}
-     }
-    ],
-    "classes": [],
-    "componentEvents": {},
-    "componentId": "container-SidebarHeader-fpr-wrap-partner",
-    "componentName": "container",
-    "componentProps": {},
-    "componentSlots": {},
-    "mobileStyles": {},
-    "originalElement": "div",
-    "tabletStyles": {}
-   },
-   {
-    "attributes": {},
-    "baseStyles": {
-     "display": "{{ myContext.fetched && !(myContext.data && (myContext.data.customer || myContext.data.partner)) ? 'flex' : 'none' }}"
-    },
-    "children": [
-     {
-      "attributes": {},
-      "baseStyles": {},
-      "children": [],
-      "classes": [],
-      "componentEvents": {},
       "componentId": "SidebarHeader-fpr-guest",
       "componentName": "SidebarHeader",
       "componentProps": {
+       "logo": "/assets/connect/images/connect-logo.svg",
        "menuItems": [
         {
          "icon": "lucide-log-in",
@@ -119,79 +77,103 @@
        ],
        "showLogo": true,
        "subtitle": "Guest",
-       "title": "Customer Portal"
+       "title": "Frappe Connect"
       },
-      "componentSlots": {},
-      "mobileStyles": {},
-      "tabletStyles": {}
+      "componentSlots": {}
      }
     ],
-    "classes": [],
-    "componentEvents": {},
     "componentId": "container-SidebarHeader-fpr-wrap-out",
     "componentName": "container",
     "componentProps": {},
     "componentSlots": {},
-    "mobileStyles": {},
-    "originalElement": "div",
-    "tabletStyles": {}
+    "originalElement": "div"
    },
    {
-    "attributes": {},
     "baseStyles": {
      "display": "flex",
-     "flex": "1",
      "flexDirection": "column",
-     "minHeight": "0px",
-     "overflowY": "auto",
+     "gap": "2px",
      "padding": "4px 8px"
     },
     "children": [
      {
-      "attributes": {},
       "baseStyles": {
-       "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
+       "display": "{{ (myContext.data && myContext.data.user && myContext.data.user !== 'Guest') ? 'flex' : 'none' }}"
       },
-      "children": [],
-      "classes": [],
-      "componentEvents": {},
-      "componentId": "SidebarItem-fpr-find-partners",
+      "componentId": "SidebarItem-fpr-messages",
       "componentName": "SidebarItem",
       "componentProps": {
-       "active": "{{ ['/partner-directory-redesign', '/find-partners-redesign'].includes(route.path) || route.path.startsWith('/partner-profile-redesign') }}",
-       "icon": "lucide-search",
-       "label": "Find partners",
-       "route": "/partner-directory-redesign"
+       "active": "{{ ['/messaging'].includes(route.path) }}",
+       "icon": "lucide-inbox",
+       "label": "Messages",
+       "route": "/messaging"
       },
-      "componentSlots": {},
-      "mobileStyles": {},
-      "tabletStyles": {}
+      "componentSlots": {}
      },
      {
-      "attributes": {},
       "baseStyles": {
-       "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
+       "display": "{{ (myContext.data && myContext.data.user && myContext.data.user !== 'Guest') ? 'flex' : 'none' }}"
       },
-      "children": [],
-      "classes": [],
-      "componentEvents": {},
-      "componentId": "SidebarItem-fpr-shortlisted",
+      "componentId": "SidebarItem-fpr-notifications",
       "componentName": "SidebarItem",
       "componentProps": {
-       "icon": "lucide-bookmark",
-       "label": "Shortlisted",
-       "route": "/shortlisted-redesign"
+       "active": "{{ false }}",
+       "icon": "lucide-bell",
+       "label": "Notifications",
+       "route": "/messaging"
       },
-      "componentSlots": {},
-      "mobileStyles": {},
-      "tabletStyles": {}
+      "componentSlots": {
+       "suffix": {
+        "slotContent": [
+         {
+          "baseStyles": {
+           "display": "{{ (myContext.data && myContext.data.unread_notifications) ? 'flex' : 'none' }}",
+           "marginRight": "8px"
+          },
+          "componentId": "SidebarItem-fpr-notifications-count",
+          "componentName": "Badge",
+          "componentProps": {
+           "label": "{{ myContext.data && myContext.data.unread_notifications > 99 ? '99+' : (myContext.data && myContext.data.unread_notifications) }}",
+           "theme": "red",
+           "variant": "subtle"
+          },
+          "componentSlots": {}
+         }
+        ],
+        "slotId": "SidebarItem-fpr-notifications:suffix"
+       }
+      }
      },
      {
-      "attributes": {},
-      "baseStyles": {},
+      "baseStyles": {
+       "display": "{{ (myContext.data && myContext.data.user && myContext.data.user !== 'Guest') ? 'block' : 'none' }}",
+       "height": "12px"
+      },
       "children": [],
-      "classes": [],
-      "componentEvents": {},
+      "componentId": "container-fpr-nav-gap",
+      "componentName": "container",
+      "componentProps": {},
+      "componentSlots": {},
+      "originalElement": "div"
+     },
+     {
+      "baseStyles": {
+       "display": "{{ (myContext.data && myContext.data.user && myContext.data.user !== 'Guest') ? 'flex' : 'none' }}"
+      },
+      "componentId": "SidebarItem-fpr-home",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "active": "{{ ['/home'].includes(route.path) }}",
+       "icon": "lucide-house",
+       "label": "Home",
+       "route": "/home"
+      },
+      "componentSlots": {}
+     },
+     {
+      "baseStyles": {
+       "display": "{{ !(myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+      },
       "componentId": "SidebarItem-fpr-starter-packs",
       "componentName": "SidebarItem",
       "componentProps": {
@@ -200,148 +182,60 @@
        "label": "Starter Packs",
        "route": "/starter-packs-redesign"
       },
-      "componentSlots": {},
-      "mobileStyles": {},
-      "tabletStyles": {},
-      "visibilityCondition": "!(myContext.data && myContext.data.partner)"
+      "componentSlots": {}
      },
      {
-      "attributes": {},
-      "baseStyles": {},
-      "children": [],
-      "classes": [],
-      "componentEvents": {},
-      "componentId": "SidebarItem-fpr-implementation",
+      "componentId": "SidebarItem-fpr-partners",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "active": "{{ ['/partner-directory-redesign', '/find-partners-redesign', '/shortlisted-redesign'].includes(route.path) || route.path.startsWith('/partner-profile-redesign') }}",
+       "icon": "lucide-building-2",
+       "label": "Partners",
+       "route": "/partner-directory-redesign"
+      },
+      "componentSlots": {}
+     },
+     {
+      "baseStyles": {
+       "display": "{{ !!(myContext.data && myContext.data.has_projects) ? 'flex' : 'none' }}"
+      },
+      "componentId": "SidebarItem-fpr-projects",
       "componentName": "SidebarItem",
       "componentProps": {
        "active": "{{ ['/starter-pack-implementation', '/compare-partners'].includes(route.path) }}",
        "icon": "lucide-briefcase",
-       "label": "Project implementation",
-       "route": "/starter-pack-implementation"
+       "label": "Projects",
+       "route": "{{ (myContext.data && myContext.data.projects_route) || '/home' }}"
       },
-      "componentSlots": {},
-      "mobileStyles": {},
-      "tabletStyles": {},
-      "visibilityCondition": "!!(myContext.data && myContext.data.user && myContext.data.user !== 'Guest' && !myContext.data.partner)"
-     },
-     {
-      "attributes": {},
-      "baseStyles": {},
-      "children": [],
-      "classes": [],
-      "componentEvents": {},
-      "componentId": "SidebarItem-fpr-chat",
-      "componentName": "SidebarItem",
-      "componentProps": {
-       "icon": "lucide-message-square",
-       "label": "Chat",
-       "route": "/messaging"
-      },
-      "componentSlots": {},
-      "mobileStyles": {},
-      "tabletStyles": {}
-     },
-     {
-      "attributes": {},
-      "baseStyles": {
-       "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
-      },
-      "children": [
-       {
-        "attributes": {},
-        "baseStyles": {},
-        "children": [],
-        "classes": [],
-        "componentEvents": {},
-        "componentId": "account-label-text-8f8af283",
-        "componentName": "TextBlock",
-        "componentProps": {
-         "tag": "span",
-         "text": "Account"
-        },
-        "componentSlots": {},
-        "mobileStyles": {},
-        "tabletStyles": {}
-       }
-      ],
-      "classes": [],
-      "componentEvents": {},
-      "componentId": "SidebarLabel-fpr-57d9602b",
-      "componentName": "SidebarLabel",
-      "componentProps": {},
-      "componentSlots": {},
-      "mobileStyles": {},
-      "tabletStyles": {}
-     },
-     {
-      "attributes": {},
-      "baseStyles": {
-       "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}"
-      },
-      "children": [],
-      "classes": [],
-      "componentEvents": {
-       "click": {
-        "action": "Run Script",
-        "event": "click",
-        "script": "// TODO: open the Settings dialog once it's built on this page (see the real find_partners.json for the reference implementation: myRequirement resource + settingsXxx variables)"
-       }
-      },
-      "componentId": "SidebarItem-fpr-settings-156e4970",
-      "componentName": "SidebarItem",
-      "componentProps": {
-       "icon": "lucide-settings",
-       "label": "Settings"
-      },
-      "componentSlots": {},
-      "mobileStyles": {},
-      "tabletStyles": {}
+      "componentSlots": {}
      }
     ],
-    "classes": [],
-    "componentEvents": {},
     "componentId": "container-fpr-nav",
     "componentName": "container",
     "componentProps": {},
     "componentSlots": {},
-    "mobileStyles": {},
-    "originalElement": "div",
-    "tabletStyles": {}
+    "originalElement": "div"
    },
    {
-    "attributes": {},
     "baseStyles": {
      "marginTop": "auto",
      "padding": "0px 8px 8px"
     },
     "children": [
      {
-      "attributes": {},
-      "baseStyles": {},
-      "children": [],
-      "classes": [],
-      "componentEvents": {},
       "componentId": "SidebarCollapseToggle-fpr",
       "componentName": "SidebarCollapseToggle",
       "componentProps": {},
-      "componentSlots": {},
-      "mobileStyles": {},
-      "tabletStyles": {}
+      "componentSlots": {}
      }
     ],
-    "classes": [],
-    "componentEvents": {},
     "componentId": "container-fpr-collapse",
     "componentName": "container",
     "componentProps": {},
     "componentSlots": {},
-    "mobileStyles": {},
-    "originalElement": "div",
-    "tabletStyles": {}
+    "originalElement": "div"
    }
   ],
-  "classes": [],
-  "componentEvents": {},
   "componentId": "Sidebar-fpr",
   "componentName": "Sidebar",
   "componentProps": {
@@ -349,9 +243,7 @@
    "collapsedWidth": "3rem",
    "width": "15rem"
   },
-  "componentSlots": {},
-  "mobileStyles": {},
-  "tabletStyles": {}
+  "componentSlots": {}
  },
  "component_id": "appsidebar",
  "component_name": "AppSidebar",
@@ -359,9 +251,8 @@
  "docstatus": 0,
  "doctype": "Studio Component",
  "idx": 0,
- "inputs": [],
  "is_disabled": 0,
- "modified": "2026-09-28 13:10:00",
+ "modified": "2026-10-05 22:10:00.000000",
  "modified_by": "Administrator",
  "name": "appsidebar",
  "owner": "Administrator"

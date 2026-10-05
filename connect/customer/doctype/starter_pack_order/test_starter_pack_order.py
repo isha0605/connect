@@ -768,6 +768,35 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		finally:
 			frappe.set_user("Administrator")
 
+	def test_the_sidebar_shows_projects_only_once_there_is_one(self):
+		from connect.utils import get_my_context
+
+		def context_as(user):
+			frappe.set_user(user)
+			try:
+				return get_my_context()
+			finally:
+				frappe.set_user("Administrator")
+
+		self.assertFalse(context_as("Guest")["has_projects"])
+
+		order = self.paid_order()
+		user, customer, _admin = self.signed_in_buyer(order)
+		# Orders from earlier tests in this class belong to the same buyer.
+		frappe.db.delete("Requirement", {"customer": customer})
+		for key in ("user", "customer"):
+			frappe.db.set_value("Starter Pack Order", {key: user if key == "user" else customer}, "payment_status", "Unpaid")
+		self.assertFalse(context_as(user)["has_projects"])
+
+		frappe.get_doc(
+			{"doctype": "Requirement", "customer": customer, "company_name": "Test Co", "country": "India",
+			 "industry": "Manufacturing"}
+		).insert(ignore_permissions=True)
+		self.assertEqual(context_as(user)["projects_route"], "/compare-partners")
+
+		order.db_set("payment_status", "Paid")
+		self.assertEqual(context_as(user)["projects_route"], f"/starter-pack-implementation?order={order.name}")
+
 	def test_the_return_page_has_the_project(self):
 		order = self.paid_order()
 		result = get_order(order.name)
