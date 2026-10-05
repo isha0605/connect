@@ -417,3 +417,53 @@ def get_own_order(order, key=None):
 	if "System Manager" in frappe.get_roles():
 		return doc
 	frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+
+def get_my_projects():
+	"""The signed-in buyer's paid Starter Pack orders, newest first, for Home's project cards.
+	Orders belong to the company, so a teammate's purchase shows up too."""
+	user = frappe.session.user
+	if user == "Guest":
+		return []
+	or_filters = {"user": user}
+	if customer := get_customer_for_user(user):
+		or_filters["customer"] = customer
+
+	orders = frappe.get_all(
+		"Starter Pack Order",
+		filters={"payment_status": ["in", ["Paid", "Partially Refunded"]]},
+		or_filters=or_filters,
+		fields=["name", "company_name", "status", "partner", "creation"],
+		order_by="creation desc",
+	)
+	if not orders:
+		return []
+
+	packs = {}
+	for row in frappe.get_all(
+		"Starter Pack Order Item",
+		filters={"parent": ["in", [o.name for o in orders]], "parenttype": "Starter Pack Order"},
+		fields=["parent", "pack_name"],
+		order_by="idx asc",
+	):
+		packs.setdefault(row.parent, []).append(row)
+	partners = {
+		p.name: p
+		for p in frappe.get_all(
+			"Partner",
+			filters={"name": ["in", list({o.partner for o in orders if o.partner})]},
+			fields=["name", "partner_name", "logo"],
+		)
+	}
+
+	return [
+		{
+			"order": o.name,
+			"title": project_title(frappe._dict(packs=packs.get(o.name, []), company_name=o.company_name)),
+			"status": o.status,
+			"is_active": o.status != "Completed",
+			"created_on": with_timezone(o.creation),
+			"partner": partners.get(o.partner),
+		}
+		for o in orders
+	]

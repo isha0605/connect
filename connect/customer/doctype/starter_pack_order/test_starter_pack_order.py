@@ -11,6 +11,7 @@ from frappe.utils import today
 from connect.customer.doctype.starter_pack_order.starter_pack_order import (
 	PAYMENT_HOOK_FLAG,
 	checkout,
+	get_my_projects,
 	get_order,
 	pay,
 )
@@ -740,6 +741,32 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		order.db_set({"user": "Guest", "customer": None})
 		post_opening_message(order.name)
 		self.assertIsNone(frappe.db.get_value("Starter Pack Order", order.name, "implementation_thread"))
+
+	def test_home_lists_the_buyers_paid_orders_as_projects(self):
+		paid = self.paid_order()
+		hand_over(paid.name)
+		user, customer, _admin = self.signed_in_buyer(paid)
+		unpaid = make_order([self.pack])
+		unpaid.db_set({"user": user, "customer": customer})
+
+		frappe.set_user(user)
+		try:
+			projects = get_my_projects()
+		finally:
+			frappe.set_user("Administrator")
+		self.assertIn(paid.name, [p["order"] for p in projects])
+		self.assertNotIn(unpaid.name, [p["order"] for p in projects])
+		project = next(p for p in projects if p["order"] == paid.name)
+		self.assertEqual(project["title"], "_test_pack_a implementation for Test Co")
+		self.assertEqual(project["partner"]["name"], self.partner)
+		self.assertTrue(project["is_active"])
+
+	def test_home_has_no_projects_for_a_guest(self):
+		frappe.set_user("Guest")
+		try:
+			self.assertEqual(get_my_projects(), [])
+		finally:
+			frappe.set_user("Administrator")
 
 	def test_the_return_page_has_the_project(self):
 		order = self.paid_order()
