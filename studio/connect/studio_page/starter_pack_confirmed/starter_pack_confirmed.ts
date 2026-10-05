@@ -1,6 +1,7 @@
-// Shown once a Starter Pack Order is paid — the checkout page redirects here. Everything
-// on it comes from the order: the partner is whoever the round robin (or an admin) assigned,
-// and the activity lists only what actually happened, with its real time.
+// A paid Starter Pack Order's summary. Checkout now sends paid orders to the implementation
+// page instead; this one stays reachable by link (?order=SPO-…) for when the round robin is back.
+// Everything on it comes from the order: the partner is whoever was assigned, and the activity
+// lists only what actually happened, with its real time.
 
 import { computed } from "vue"
 import { MODULE_ICONS, OUR_NEEDS, PACK_PITCHES, commercialTerms } from "@app/utils/recommendation"

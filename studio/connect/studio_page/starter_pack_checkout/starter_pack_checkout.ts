@@ -85,9 +85,9 @@ export default function setup(context) {
 		call("connect.api.starter_pack.get_order", { payment_request: referenceId, key: orderKey(referenceId) })
 			.then((data) => {
 				orderData.value = data
-				// A completed order gets its own page — this one's job is just to gate on status.
+				// A paid order goes on to its setup steps — this page's job is just to gate on status.
 				if (data.payment_status === "Paid") {
-					router.replace({ path: "/starter-pack-confirmed", query: { order: data.order } })
+					router.replace({ path: "/starter-pack-implementation", query: { order: data.order } })
 				}
 			})
 			.catch(() => {
