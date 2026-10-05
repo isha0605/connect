@@ -207,7 +207,7 @@
             "borderRadius": "8px",
             "boxShadow": "0px 0px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.14)",
             "boxSizing": "border-box",
-            "color": "var(--ink-gray-9)",
+            "color": "var(--ink-gray-6, oklch(0.439 0 0))",
             "cursor": "pointer",
             "display": "flex",
             "flexShrink": "0",
@@ -274,7 +274,7 @@
              "componentId": "rail-component-icon",
              "componentName": "Icon",
              "componentProps": {
-              "icon": "lucide-box"
+              "icon": "lucide-package"
              },
              "componentSlots": {}
             }
@@ -309,7 +309,7 @@
              "componentId": "rail-people-icon",
              "componentName": "Icon",
              "componentProps": {
-              "icon": "lucide-users"
+              "icon": "lucide-building-complex"
              },
              "componentSlots": {}
             }
@@ -556,7 +556,11 @@
         "display": "flex",
         "flexDirection": "row",
         "justifyContent": "space-between",
-        "padding": "16px 20px"
+        "minHeight": "48px",
+        "paddingBottom": "0px",
+        "paddingLeft": "20px",
+        "paddingRight": "14px",
+        "paddingTop": "0px"
        },
        "children": [
         {
@@ -575,7 +579,11 @@
         },
         {
          "baseStyles": {
-          "display": "{{ myContext.fetched && !(myContext.data && (myContext.data.customer || myContext.data.partner)) ? 'flex' : 'none' }}"
+          "display": "{{ myContext.fetched && !(myContext.data && (myContext.data.customer || myContext.data.partner)) ? 'flex' : 'none' }}",
+          "paddingBottom": "0px",
+          "paddingLeft": "6px",
+          "paddingRight": "6px",
+          "paddingTop": "0px"
          },
          "componentEvents": {
           "click": {
@@ -591,7 +599,8 @@
           "label": "Log in or create account",
           "theme": "gray",
           "variant": "ghost"
-         }
+         },
+         "componentSlots": {}
         }
        ],
        "componentId": "header-row",
@@ -603,31 +612,22 @@
       {
        "baseStyles": {
         "flex": "1",
-        "overflow": "auto"
+        "minHeight": "0",
+        "overflow": "auto",
+        "scrollbarColor": "transparent transparent",
+        "scrollbarWidth": "thin"
        },
-       "classes": [
-        "gs-scroll"
-       ],
-       "componentId": "scroll-body",
-       "componentName": "container",
-       "originalElement": "div",
-       "componentProps": {},
-       "componentSlots": {},
        "children": [
         {
-         "componentId": "scrollbar-style",
-         "componentName": "HTML",
-         "componentProps": {
-          "html": "<style>.gs-scroll{scrollbar-width:thin;scrollbar-color:transparent transparent}.gs-scroll:hover{scrollbar-color:rgba(0,0,0,.15) transparent}.gs-scroll::-webkit-scrollbar{width:6px;background:transparent}.gs-scroll::-webkit-scrollbar-thumb{background:transparent;border-radius:3px}.gs-scroll:hover::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15)}</style>"
-         }
-        },
-        {
          "baseStyles": {
+          "alignItems": "center",
           "display": "flex",
           "flexDirection": "column",
+          "justifyContent": "flex-start",
           "margin": "0 auto",
-          "maxWidth": "960px",
+          "maxWidth": "1120px",
           "padding": "8px 40px 96px 40px",
+          "paddingTop": "0px",
           "width": "100%"
          },
          "children": [
@@ -636,16 +636,20 @@
             "alignItems": "center",
             "display": "flex",
             "flexDirection": "column",
-            "padding": "80px 0 72px 0",
-            "textAlign": "center"
+            "maxWidth": "720px",
+            "padding": "96px 0 64px 0",
+            "textAlign": "center",
+            "width": "100%"
            },
            "children": [
             {
              "baseStyles": {
               "color": "var(--ink-gray-5)",
-              "fontSize": "52px",
-              "fontWeight": "600",
-              "lineHeight": "1.08"
+              "fontFamily": "ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif",
+              "fontSize": "44px",
+              "fontWeight": "500",
+              "letterSpacing": "-0.01em",
+              "lineHeight": "1.1"
              },
              "componentId": "hero-title-1",
              "componentName": "TextBlock",
@@ -653,14 +657,19 @@
               "tag": "span",
               "text": "Go live in weeks."
              },
-             "componentSlots": {}
+             "componentSlots": {},
+             "mobileStyles": {
+              "fontSize": "36px"
+             }
             },
             {
              "baseStyles": {
               "color": "var(--ink-gray-9)",
-              "fontSize": "52px",
-              "fontWeight": "600",
-              "lineHeight": "1.08"
+              "fontFamily": "ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif",
+              "fontSize": "44px",
+              "fontWeight": "500",
+              "letterSpacing": "-0.01em",
+              "lineHeight": "1.1"
              },
              "componentId": "hero-title-2",
              "componentName": "TextBlock",
@@ -668,19 +677,22 @@
               "tag": "span",
               "text": "Grow for years."
              },
-             "componentSlots": {}
+             "componentSlots": {},
+             "mobileStyles": {
+              "fontSize": "36px"
+             }
             },
             {
              "baseStyles": {
               "color": "var(--ink-gray-6)",
-              "lineHeight": "1.55",
+              "lineHeight": "1.625",
               "marginTop": "24px",
-              "maxWidth": "440px"
+              "maxWidth": "520px"
              },
              "componentId": "hero-subtitle",
              "componentName": "TextBlock",
              "componentProps": {
-              "fontSize": "text-base",
+              "fontSize": "text-lg",
               "tag": "p",
               "text": "Start on Frappe apps with a fixed Starter Pack, or a custom build by a certified partner."
              },
@@ -691,6 +703,9 @@
            "componentName": "container",
            "componentProps": {},
            "componentSlots": {},
+           "mobileStyles": {
+            "padding": "80px 0 48px 0"
+           },
            "originalElement": "div"
           },
           {
@@ -699,27 +714,31 @@
             "display": "flex",
             "flexDirection": "row",
             "gap": "64px",
-            "padding": "48px 0"
+            "paddingBottom": "64px",
+            "paddingLeft": "0px",
+            "paddingRight": "0px",
+            "paddingTop": "64px"
            },
            "children": [
             {
              "baseStyles": {
               "display": "flex",
-              "flex": "1",
+              "flex": "0 0 372px",
               "flexDirection": "column",
-              "maxWidth": "420px"
+              "height": "324px",
+              "minWidth": "0",
+              "width": "372px"
              },
              "children": [
               {
                "baseStyles": {
                 "color": "var(--ink-gray-5)",
-                "fontWeight": "500",
-                "marginBottom": "10px"
+                "fontWeight": "500"
                },
                "componentId": "packs-label",
                "componentName": "TextBlock",
                "componentProps": {
-                "fontSize": "text-sm",
+                "fontSize": "text-base",
                 "tag": "span",
                 "text": "Starter Packs"
                },
@@ -728,14 +747,17 @@
               {
                "baseStyles": {
                 "color": "var(--ink-gray-9)",
-                "fontSize": "28px",
                 "fontWeight": "600",
                 "lineHeight": "1.2",
-                "marginBottom": "28px"
+                "marginBottom": "40px",
+                "marginLeft": "0px",
+                "marginRight": "0px",
+                "marginTop": "8px"
                },
                "componentId": "packs-heading",
                "componentName": "TextBlock",
                "componentProps": {
+                "fontSize": "text-3xl",
                 "tag": "span",
                 "text": "Start fast. Spend less."
                },
@@ -753,12 +775,12 @@
                   "alignItems": "flex-start",
                   "display": "flex",
                   "flexDirection": "row",
-                  "gap": "14px"
+                  "gap": "16px"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-7)",
+                    "color": "var(--ink-gray-5, oklch(0.586 0 0))",
                     "flexShrink": "0",
                     "height": "20px",
                     "marginTop": "2px",
@@ -781,7 +803,7 @@
                     {
                      "baseStyles": {
                       "color": "var(--ink-gray-8)",
-                      "fontWeight": "600"
+                      "fontWeight": "500"
                      },
                      "componentId": "packs-pt-0-title",
                      "componentName": "TextBlock",
@@ -799,9 +821,9 @@
                      "componentId": "packs-pt-0-desc",
                      "componentName": "TextBlock",
                      "componentProps": {
-                      "fontSize": "text-sm",
+                      "fontSize": "text-base",
                       "tag": "p",
-                      "text": "From ₹10,000, known before you start."
+                      "text": "From \u20b910,000, known before you start."
                      },
                      "componentSlots": {}
                     }
@@ -824,12 +846,12 @@
                   "alignItems": "flex-start",
                   "display": "flex",
                   "flexDirection": "row",
-                  "gap": "14px"
+                  "gap": "16px"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-7)",
+                    "color": "var(--ink-gray-5, oklch(0.586 0 0))",
                     "flexShrink": "0",
                     "height": "20px",
                     "marginTop": "2px",
@@ -852,7 +874,7 @@
                     {
                      "baseStyles": {
                       "color": "var(--ink-gray-8)",
-                      "fontWeight": "600"
+                      "fontWeight": "500"
                      },
                      "componentId": "packs-pt-1-title",
                      "componentName": "TextBlock",
@@ -870,7 +892,7 @@
                      "componentId": "packs-pt-1-desc",
                      "componentName": "TextBlock",
                      "componentProps": {
-                      "fontSize": "text-sm",
+                      "fontSize": "text-base",
                       "tag": "p",
                       "text": "Our own team, start to finish."
                      },
@@ -895,12 +917,12 @@
                   "alignItems": "flex-start",
                   "display": "flex",
                   "flexDirection": "row",
-                  "gap": "14px"
+                  "gap": "16px"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-7)",
+                    "color": "var(--ink-gray-5, oklch(0.586 0 0))",
                     "flexShrink": "0",
                     "height": "20px",
                     "marginTop": "2px",
@@ -923,7 +945,7 @@
                     {
                      "baseStyles": {
                       "color": "var(--ink-gray-8)",
-                      "fontWeight": "600"
+                      "fontWeight": "500"
                      },
                      "componentId": "packs-pt-2-title",
                      "componentName": "TextBlock",
@@ -941,7 +963,7 @@
                      "componentId": "packs-pt-2-desc",
                      "componentName": "TextBlock",
                      "componentProps": {
-                      "fontSize": "text-sm",
+                      "fontSize": "text-base",
                       "tag": "p",
                       "text": "Defined modules, defined hours."
                      },
@@ -1001,56 +1023,56 @@
             {
              "baseStyles": {
               "alignItems": "center",
-              "backgroundColor": "var(--surface-gray-2)",
-              "border": "1px solid var(--outline-gray-1)",
-              "borderRadius": "20px",
+              "backgroundColor": "var(--surface-gray-1)",
+              "borderRadius": "var(--radius-7)",
+              "boxSizing": "border-box",
               "display": "flex",
-              "flex": "1",
+              "flex": "0 0 372px",
+              "height": "372px",
               "justifyContent": "center",
-              "minHeight": "320px",
-              "padding": "40px 32px"
+              "minWidth": "0",
+              "overflow": "hidden",
+              "position": "relative",
+              "width": "372px"
              },
              "children": [
               {
                "baseStyles": {
-                "display": "flex",
-                "flexDirection": "column"
+                "flexShrink": "0",
+                "height": "196px",
+                "position": "relative",
+                "width": "284px"
                },
                "children": [
                 {
                  "baseStyles": {
-                  "alignItems": "center",
-                  "backgroundColor": "var(--surface-base)",
-                  "border": "1px solid var(--outline-gray-2)",
-                  "borderRadius": "12px",
-                  "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "gap": "12px",
-                  "marginLeft": "0px",
-                  "marginTop": "0",
-                  "padding": "16px 18px",
-                  "position": "relative",
-                  "width": "300px"
+                  "backgroundColor": "var(--surface-elevation-1)",
+                  "border": "1px solid var(--outline-gray-1)",
+                  "borderRadius": "var(--radius-6)",
+                  "boxShadow": "var(--elevation-lg)",
+                  "boxSizing": "border-box",
+                  "left": "0",
+                  "padding": "16px",
+                  "position": "absolute",
+                  "top": "0",
+                  "transform": "translate(0px, 0px)",
+                  "width": "252px",
+                  "zIndex": "0"
                  },
                  "children": [
                   {
                    "baseStyles": {
                     "alignItems": "center",
-                    "backgroundColor": "var(--surface-gray-2)",
-                    "borderRadius": "8px",
                     "display": "flex",
-                    "flexShrink": "0",
-                    "height": "32px",
-                    "justifyContent": "center",
-                    "width": "32px"
+                    "gap": "8px"
                    },
                    "children": [
                     {
                      "baseStyles": {
-                      "color": "var(--ink-gray-8)",
-                      "height": "18px",
-                      "width": "18px"
+                      "color": "var(--ink-gray-5)",
+                      "flexShrink": "0",
+                      "height": "16px",
+                      "width": "16px"
                      },
                      "componentId": "pack-card-accounts-ic",
                      "componentName": "Icon",
@@ -1058,9 +1080,26 @@
                       "icon": "lucide-box"
                      },
                      "componentSlots": {}
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-8)",
+                      "fontWeight": "600",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "componentId": "pack-card-accounts-name",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-base",
+                      "tag": "span",
+                      "text": "Accounts, Sales, Purchase, Stock"
+                     },
+                     "componentSlots": {}
                     }
                    ],
-                   "componentId": "pack-card-accounts-icon",
+                   "componentId": "pack-card-accounts-row",
                    "componentName": "container",
                    "componentProps": {},
                    "componentSlots": {},
@@ -1068,44 +1107,22 @@
                   },
                   {
                    "baseStyles": {
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "gap": "2px"
+                    "color": "var(--ink-gray-6)",
+                    "fontSize": "13px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.015em",
+                    "lineHeight": "1.5",
+                    "marginTop": "4px",
+                    "paddingLeft": "24px"
                    },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-9)",
-                      "fontWeight": "600"
-                     },
-                     "componentId": "pack-card-accounts-name",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-sm",
-                      "tag": "span",
-                      "text": "Accounts, Sales, Purchase…"
-                     },
-                     "componentSlots": {}
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-5)"
-                     },
-                     "componentId": "pack-card-accounts-price",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-xs",
-                      "tag": "span",
-                      "text": "₹10,000 · 5 hrs"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "pack-card-accounts-body",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
+                   "componentId": "pack-card-accounts-price",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "\u20b910,000 \u00b7 5 hrs"
+                   },
+                   "componentSlots": {}
                   }
                  ],
                  "componentId": "pack-card-accounts",
@@ -1116,38 +1133,33 @@
                 },
                 {
                  "baseStyles": {
-                  "alignItems": "center",
-                  "backgroundColor": "var(--surface-base)",
-                  "border": "1px solid var(--outline-gray-2)",
-                  "borderRadius": "12px",
-                  "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "gap": "12px",
-                  "marginLeft": "28px",
-                  "marginTop": "-14px",
-                  "padding": "16px 18px",
-                  "position": "relative",
-                  "width": "300px"
+                  "backgroundColor": "var(--surface-elevation-1)",
+                  "border": "1px solid var(--outline-gray-1)",
+                  "borderRadius": "var(--radius-6)",
+                  "boxShadow": "var(--elevation-lg)",
+                  "boxSizing": "border-box",
+                  "left": "0",
+                  "padding": "16px",
+                  "position": "absolute",
+                  "top": "0",
+                  "transform": "translate(16px, 60px)",
+                  "width": "252px",
+                  "zIndex": "1"
                  },
                  "children": [
                   {
                    "baseStyles": {
                     "alignItems": "center",
-                    "backgroundColor": "var(--surface-gray-2)",
-                    "borderRadius": "8px",
                     "display": "flex",
-                    "flexShrink": "0",
-                    "height": "32px",
-                    "justifyContent": "center",
-                    "width": "32px"
+                    "gap": "8px"
                    },
                    "children": [
                     {
                      "baseStyles": {
-                      "color": "var(--ink-gray-8)",
-                      "height": "18px",
-                      "width": "18px"
+                      "color": "var(--ink-gray-5)",
+                      "flexShrink": "0",
+                      "height": "16px",
+                      "width": "16px"
                      },
                      "componentId": "pack-card-manufacturing-ic",
                      "componentName": "Icon",
@@ -1155,9 +1167,26 @@
                       "icon": "lucide-box"
                      },
                      "componentSlots": {}
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-8)",
+                      "fontWeight": "600",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "componentId": "pack-card-manufacturing-name",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-base",
+                      "tag": "span",
+                      "text": "Manufacturing"
+                     },
+                     "componentSlots": {}
                     }
                    ],
-                   "componentId": "pack-card-manufacturing-icon",
+                   "componentId": "pack-card-manufacturing-row",
                    "componentName": "container",
                    "componentProps": {},
                    "componentSlots": {},
@@ -1165,44 +1194,22 @@
                   },
                   {
                    "baseStyles": {
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "gap": "2px"
+                    "color": "var(--ink-gray-6)",
+                    "fontSize": "13px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.015em",
+                    "lineHeight": "1.5",
+                    "marginTop": "4px",
+                    "paddingLeft": "24px"
                    },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-9)",
-                      "fontWeight": "600"
-                     },
-                     "componentId": "pack-card-manufacturing-name",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-sm",
-                      "tag": "span",
-                      "text": "Manufacturing"
-                     },
-                     "componentSlots": {}
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-5)"
-                     },
-                     "componentId": "pack-card-manufacturing-price",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-xs",
-                      "tag": "span",
-                      "text": "₹10,000 · 5 hrs"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "pack-card-manufacturing-body",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
+                   "componentId": "pack-card-manufacturing-price",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "\u20b910,000 \u00b7 5 hrs"
+                   },
+                   "componentSlots": {}
                   }
                  ],
                  "componentId": "pack-card-manufacturing",
@@ -1213,38 +1220,33 @@
                 },
                 {
                  "baseStyles": {
-                  "alignItems": "center",
-                  "backgroundColor": "var(--surface-base)",
-                  "border": "1px solid var(--outline-gray-2)",
-                  "borderRadius": "12px",
-                  "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "gap": "12px",
-                  "marginLeft": "56px",
-                  "marginTop": "-14px",
-                  "padding": "16px 18px",
-                  "position": "relative",
-                  "width": "300px"
+                  "backgroundColor": "var(--surface-elevation-1)",
+                  "border": "1px solid var(--outline-gray-1)",
+                  "borderRadius": "var(--radius-6)",
+                  "boxShadow": "var(--elevation-lg)",
+                  "boxSizing": "border-box",
+                  "left": "0",
+                  "padding": "16px",
+                  "position": "absolute",
+                  "top": "0",
+                  "transform": "translate(32px, 120px)",
+                  "width": "252px",
+                  "zIndex": "2"
                  },
                  "children": [
                   {
                    "baseStyles": {
                     "alignItems": "center",
-                    "backgroundColor": "var(--surface-gray-2)",
-                    "borderRadius": "8px",
                     "display": "flex",
-                    "flexShrink": "0",
-                    "height": "32px",
-                    "justifyContent": "center",
-                    "width": "32px"
+                    "gap": "8px"
                    },
                    "children": [
                     {
                      "baseStyles": {
-                      "color": "var(--ink-gray-8)",
-                      "height": "18px",
-                      "width": "18px"
+                      "color": "var(--ink-gray-5)",
+                      "flexShrink": "0",
+                      "height": "16px",
+                      "width": "16px"
                      },
                      "componentId": "pack-card-hr-ic",
                      "componentName": "Icon",
@@ -1252,9 +1254,26 @@
                       "icon": "lucide-box"
                      },
                      "componentSlots": {}
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-8)",
+                      "fontWeight": "600",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "componentId": "pack-card-hr-name",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-base",
+                      "tag": "span",
+                      "text": "HR"
+                     },
+                     "componentSlots": {}
                     }
                    ],
-                   "componentId": "pack-card-hr-icon",
+                   "componentId": "pack-card-hr-row",
                    "componentName": "container",
                    "componentProps": {},
                    "componentSlots": {},
@@ -1262,44 +1281,22 @@
                   },
                   {
                    "baseStyles": {
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "gap": "2px"
+                    "color": "var(--ink-gray-6)",
+                    "fontSize": "13px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.015em",
+                    "lineHeight": "1.5",
+                    "marginTop": "4px",
+                    "paddingLeft": "24px"
                    },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-9)",
-                      "fontWeight": "600"
-                     },
-                     "componentId": "pack-card-hr-name",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-sm",
-                      "tag": "span",
-                      "text": "HR"
-                     },
-                     "componentSlots": {}
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-5)"
-                     },
-                     "componentId": "pack-card-hr-price",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-xs",
-                      "tag": "span",
-                      "text": "₹10,000 · 5 hrs"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "pack-card-hr-body",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
+                   "componentId": "pack-card-hr-price",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "\u20b910,000 \u00b7 5 hrs"
+                   },
+                   "componentSlots": {}
                   }
                  ],
                  "componentId": "pack-card-hr",
@@ -1335,41 +1332,67 @@
             "display": "flex",
             "flexDirection": "row",
             "gap": "64px",
-            "padding": "48px 0"
+            "paddingBottom": "64px",
+            "paddingLeft": "0px",
+            "paddingRight": "0px",
+            "paddingTop": "64px"
            },
            "children": [
             {
              "baseStyles": {
               "alignItems": "center",
-              "backgroundColor": "var(--surface-gray-2)",
-              "border": "1px solid var(--outline-gray-1)",
-              "borderRadius": "20px",
+              "backgroundColor": "var(--surface-gray-1)",
+              "borderRadius": "var(--radius-7)",
+              "boxSizing": "border-box",
               "display": "flex",
-              "flex": "1",
+              "flex": "0 0 372px",
+              "height": "372px",
               "justifyContent": "center",
-              "minHeight": "320px",
-              "padding": "32px"
+              "minWidth": "0",
+              "overflow": "hidden",
+              "position": "relative",
+              "width": "372px"
              },
              "children": [
               {
                "baseStyles": {
-                "height": "420px",
+                "flexShrink": "0",
+                "height": "372px",
                 "position": "relative",
-                "width": "420px"
+                "width": "372px"
                },
                "children": [
                 {
                  "baseStyles": {
-                  "border": "1px dashed var(--outline-gray-3)",
+                  "backgroundImage": "repeating-conic-gradient(from 0deg, #c7c7c7 0deg 0.700deg, rgba(0,0,0,0) 0.700deg 2.449deg)",
                   "borderRadius": "50%",
-                  "height": "336px",
+                  "boxSizing": "border-box",
+                  "height": "327px",
                   "left": "50%",
                   "position": "absolute",
                   "top": "50%",
                   "transform": "translate(-50%, -50%)",
-                  "width": "336px"
+                  "width": "327px"
                  },
-                 "componentId": "orbit-ring-outer",
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "backgroundColor": "var(--surface-gray-1)",
+                    "borderRadius": "50%",
+                    "height": "325px",
+                    "left": "1.0px",
+                    "position": "absolute",
+                    "top": "1.0px",
+                    "width": "325px"
+                   },
+                   "componentId": "orbit-ring-3-fill",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div"
+                  }
+                 ],
+                 "componentId": "orbit-ring-3",
                  "componentName": "container",
                  "componentProps": {},
                  "componentSlots": {},
@@ -1377,16 +1400,71 @@
                 },
                 {
                  "baseStyles": {
-                  "border": "1px dashed var(--outline-gray-3)",
+                  "backgroundImage": "repeating-conic-gradient(from 0deg, #c7c7c7 0deg 0.980deg, rgba(0,0,0,0) 0.980deg 3.429deg)",
                   "borderRadius": "50%",
-                  "height": "192px",
+                  "boxSizing": "border-box",
+                  "height": "234px",
                   "left": "50%",
                   "position": "absolute",
                   "top": "50%",
                   "transform": "translate(-50%, -50%)",
-                  "width": "192px"
+                  "width": "234px"
                  },
-                 "componentId": "orbit-ring-inner",
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "backgroundColor": "var(--surface-gray-1)",
+                    "borderRadius": "50%",
+                    "height": "232px",
+                    "left": "1.0px",
+                    "position": "absolute",
+                    "top": "1.0px",
+                    "width": "232px"
+                   },
+                   "componentId": "orbit-ring-2-fill",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div"
+                  }
+                 ],
+                 "componentId": "orbit-ring-2",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "backgroundImage": "repeating-conic-gradient(from 0deg, #c7c7c7 0deg 1.633deg, rgba(0,0,0,0) 1.633deg 5.714deg)",
+                  "borderRadius": "50%",
+                  "boxSizing": "border-box",
+                  "height": "140px",
+                  "left": "50%",
+                  "position": "absolute",
+                  "top": "50%",
+                  "transform": "translate(-50%, -50%)",
+                  "width": "140px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "backgroundColor": "var(--surface-gray-1)",
+                    "borderRadius": "50%",
+                    "height": "138px",
+                    "left": "1.0px",
+                    "position": "absolute",
+                    "top": "1.0px",
+                    "width": "138px"
+                   },
+                   "componentId": "orbit-ring-1-fill",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div"
+                  }
+                 ],
+                 "componentId": "orbit-ring-1",
                  "componentName": "container",
                  "componentProps": {},
                  "componentSlots": {},
@@ -1395,32 +1473,50 @@
                 {
                  "baseStyles": {
                   "alignItems": "center",
-                  "backgroundColor": "var(--surface-gray-9)",
-                  "borderRadius": "16px",
-                  "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
+                  "backgroundColor": "var(--surface-base)",
+                  "borderRadius": "50%",
+                  "boxShadow": "var(--elevation-lg), 0 0 10px 7px var(--surface-gray-1)",
                   "display": "flex",
-                  "height": "60px",
+                  "height": "78px",
                   "justifyContent": "center",
                   "left": "50%",
                   "position": "absolute",
                   "top": "50%",
                   "transform": "translate(-50%, -50%)",
-                  "width": "60px",
+                  "width": "78px",
                   "zIndex": "2"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--surface-base)",
-                    "height": "28px",
-                    "width": "28px"
+                    "alignItems": "center",
+                    "backgroundColor": "#2F3E9D",
+                    "borderRadius": "12px",
+                    "display": "flex",
+                    "height": "44px",
+                    "justifyContent": "center",
+                    "width": "44px"
                    },
-                   "componentId": "orbit-center-ic",
-                   "componentName": "Icon",
-                   "componentProps": {
-                    "icon": "lucide-handshake"
-                   },
-                   "componentSlots": {}
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "color": "var(--surface-base)",
+                      "height": "22px",
+                      "width": "22px"
+                     },
+                     "componentId": "orbit-center-ic",
+                     "componentName": "Icon",
+                     "componentProps": {
+                      "icon": "lucide-handshake"
+                     },
+                     "componentSlots": {}
+                    }
+                   ],
+                   "componentId": "orbit-center-box",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div"
                   }
                  ],
                  "componentId": "orbit-center",
@@ -1433,16 +1529,15 @@
                  "baseStyles": {
                   "alignItems": "center",
                   "backgroundColor": "var(--surface-base)",
-                  "border": "1px solid var(--outline-gray-2)",
                   "borderRadius": "50%",
-                  "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
+                  "boxShadow": "var(--elevation-lg), 0 0 7px 5px var(--surface-gray-1)",
                   "display": "flex",
                   "height": "44px",
                   "justifyContent": "center",
-                  "left": "220.8px",
+                  "left": "224.6px",
                   "overflow": "hidden",
                   "position": "absolute",
-                  "top": "97.8px",
+                  "top": "129.0px",
                   "width": "44px"
                  },
                  "children": [
@@ -1455,7 +1550,7 @@
                    "componentId": "orbit-node-p1-logo",
                    "componentName": "HTML",
                    "componentProps": {
-                    "html": "<img src=\"/assets/connect/images/project/greycube.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
+                    "html": "<img src=\"/assets/connect/images/project/greycube.png\" alt=\"\" style=\"width:22px;height:22px;object-fit:contain;display:block;\" />"
                    },
                    "componentSlots": {}
                   }
@@ -1470,16 +1565,15 @@
                  "baseStyles": {
                   "alignItems": "center",
                   "backgroundColor": "var(--surface-base)",
-                  "border": "1px solid var(--outline-gray-2)",
                   "borderRadius": "50%",
-                  "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
+                  "boxShadow": "var(--elevation-lg), 0 0 7px 5px var(--surface-gray-1)",
                   "display": "flex",
                   "height": "44px",
                   "justifyContent": "center",
-                  "left": "236.0px",
+                  "left": "99px",
                   "overflow": "hidden",
                   "position": "absolute",
-                  "top": "271.1px",
+                  "top": "157px",
                   "width": "44px"
                  },
                  "children": [
@@ -1492,7 +1586,7 @@
                    "componentId": "orbit-node-p2-logo",
                    "componentName": "HTML",
                    "componentProps": {
-                    "html": "<img src=\"/assets/connect/images/project/tridots-technology.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
+                    "html": "<img src=\"/assets/connect/images/project/tridots-technology.png\" alt=\"\" style=\"width:22px;height:22px;object-fit:contain;display:block;\" />"
                    },
                    "componentSlots": {}
                   }
@@ -1507,16 +1601,15 @@
                  "baseStyles": {
                   "alignItems": "center",
                   "backgroundColor": "var(--surface-base)",
-                  "border": "1px solid var(--outline-gray-2)",
                   "borderRadius": "50%",
-                  "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
+                  "boxShadow": "var(--elevation-lg), 0 0 7px 5px var(--surface-gray-1)",
                   "display": "flex",
                   "height": "44px",
                   "justifyContent": "center",
-                  "left": "92.4px",
+                  "left": "273.9px",
                   "overflow": "hidden",
                   "position": "absolute",
-                  "top": "196.4px",
+                  "top": "204.0px",
                   "width": "44px"
                  },
                  "children": [
@@ -1529,7 +1622,7 @@
                    "componentId": "orbit-node-p3-logo",
                    "componentName": "HTML",
                    "componentProps": {
-                    "html": "<img src=\"/assets/connect/images/wahni-icon.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
+                    "html": "<img src=\"/assets/connect/images/wahni-icon.png\" alt=\"\" style=\"width:22px;height:22px;object-fit:contain;display:block;\" />"
                    },
                    "componentSlots": {}
                   }
@@ -1544,16 +1637,15 @@
                  "baseStyles": {
                   "alignItems": "center",
                   "backgroundColor": "var(--surface-base)",
-                  "border": "1px solid var(--outline-gray-2)",
                   "borderRadius": "50%",
-                  "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
+                  "boxShadow": "var(--elevation-lg), 0 0 7px 5px var(--surface-gray-1)",
                   "display": "flex",
                   "height": "44px",
                   "justifyContent": "center",
-                  "left": "188.0px",
+                  "left": "74.4px",
                   "overflow": "hidden",
                   "position": "absolute",
-                  "top": "20.0px",
+                  "top": "239.2px",
                   "width": "44px"
                  },
                  "children": [
@@ -1566,7 +1658,7 @@
                    "componentId": "orbit-node-p4-logo",
                    "componentName": "HTML",
                    "componentProps": {
-                    "html": "<img src=\"/assets/connect/images/app_icons/erpnext.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
+                    "html": "<img src=\"/assets/connect/images/app_icons/erpnext.png\" alt=\"\" style=\"width:22px;height:22px;object-fit:contain;display:block;\" />"
                    },
                    "componentSlots": {}
                   }
@@ -1581,16 +1673,15 @@
                  "baseStyles": {
                   "alignItems": "center",
                   "backgroundColor": "var(--surface-base)",
-                  "border": "1px solid var(--outline-gray-2)",
                   "borderRadius": "50%",
-                  "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
+                  "boxShadow": "var(--elevation-lg), 0 0 7px 5px var(--surface-gray-1)",
                   "display": "flex",
                   "height": "44px",
                   "justifyContent": "center",
-                  "left": "347.8px",
+                  "left": "143.7px",
                   "overflow": "hidden",
                   "position": "absolute",
-                  "top": "136.1px",
+                  "top": "48.8px",
                   "width": "44px"
                  },
                  "children": [
@@ -1603,7 +1694,7 @@
                    "componentId": "orbit-node-p5-logo",
                    "componentName": "HTML",
                    "componentProps": {
-                    "html": "<img src=\"/assets/connect/images/app_icons/crm.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
+                    "html": "<img src=\"/assets/connect/images/app_icons/crm.png\" alt=\"\" style=\"width:22px;height:22px;object-fit:contain;display:block;\" />"
                    },
                    "componentSlots": {}
                   }
@@ -1618,16 +1709,15 @@
                  "baseStyles": {
                   "alignItems": "center",
                   "backgroundColor": "var(--surface-base)",
-                  "border": "1px solid var(--outline-gray-2)",
                   "borderRadius": "50%",
-                  "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
+                  "boxShadow": "var(--elevation-lg), 0 0 7px 5px var(--surface-gray-1)",
                   "display": "flex",
                   "height": "44px",
                   "justifyContent": "center",
-                  "left": "286.7px",
+                  "left": "257.8px",
                   "overflow": "hidden",
                   "position": "absolute",
-                  "top": "323.9px",
+                  "top": "297.9px",
                   "width": "44px"
                  },
                  "children": [
@@ -1640,7 +1730,7 @@
                    "componentId": "orbit-node-p6-logo",
                    "componentName": "HTML",
                    "componentProps": {
-                    "html": "<img src=\"/assets/connect/images/app_icons/frappe-hr.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
+                    "html": "<img src=\"/assets/connect/images/app_icons/frappe-hr.png\" alt=\"\" style=\"width:22px;height:22px;object-fit:contain;display:block;\" />"
                    },
                    "componentSlots": {}
                   }
@@ -1655,16 +1745,15 @@
                  "baseStyles": {
                   "alignItems": "center",
                   "backgroundColor": "var(--surface-base)",
-                  "border": "1px solid var(--outline-gray-2)",
                   "borderRadius": "50%",
-                  "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
+                  "boxShadow": "var(--elevation-lg), 0 0 7px 5px var(--surface-gray-1)",
                   "display": "flex",
                   "height": "44px",
                   "justifyContent": "center",
-                  "left": "89.3px",
+                  "left": "1.1px",
                   "overflow": "hidden",
                   "position": "absolute",
-                  "top": "323.9px",
+                  "top": "178.2px",
                   "width": "44px"
                  },
                  "children": [
@@ -1677,7 +1766,7 @@
                    "componentId": "orbit-node-p7-logo",
                    "componentName": "HTML",
                    "componentProps": {
-                    "html": "<img src=\"/assets/connect/images/app_icons/insights.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
+                    "html": "<img src=\"/assets/connect/images/app_icons/insights.png\" alt=\"\" style=\"width:22px;height:22px;object-fit:contain;display:block;\" />"
                    },
                    "componentSlots": {}
                   }
@@ -1692,16 +1781,15 @@
                  "baseStyles": {
                   "alignItems": "center",
                   "backgroundColor": "var(--surface-base)",
-                  "border": "1px solid var(--outline-gray-2)",
                   "borderRadius": "50%",
-                  "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
+                  "boxShadow": "var(--elevation-lg), 0 0 7px 5px var(--surface-gray-1)",
                   "display": "flex",
                   "height": "44px",
                   "justifyContent": "center",
-                  "left": "28.2px",
+                  "left": "233.1px",
                   "overflow": "hidden",
                   "position": "absolute",
-                  "top": "136.1px",
+                  "top": "15.8px",
                   "width": "44px"
                  },
                  "children": [
@@ -1714,7 +1802,7 @@
                    "componentId": "orbit-node-p8-logo",
                    "componentName": "HTML",
                    "componentProps": {
-                    "html": "<img src=\"/assets/connect/images/app_icons/helpdesk.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
+                    "html": "<img src=\"/assets/connect/images/app_icons/helpdesk.png\" alt=\"\" style=\"width:22px;height:22px;object-fit:contain;display:block;\" />"
                    },
                    "componentSlots": {}
                   }
@@ -1742,21 +1830,22 @@
             {
              "baseStyles": {
               "display": "flex",
-              "flex": "1",
+              "flex": "0 0 372px",
               "flexDirection": "column",
-              "maxWidth": "420px"
+              "height": "324px",
+              "minWidth": "0",
+              "width": "372px"
              },
              "children": [
               {
                "baseStyles": {
                 "color": "var(--ink-gray-5)",
-                "fontWeight": "500",
-                "marginBottom": "10px"
+                "fontWeight": "500"
                },
                "componentId": "custom-label",
                "componentName": "TextBlock",
                "componentProps": {
-                "fontSize": "text-sm",
+                "fontSize": "text-base",
                 "tag": "span",
                 "text": "Custom implementation"
                },
@@ -1765,14 +1854,17 @@
               {
                "baseStyles": {
                 "color": "var(--ink-gray-9)",
-                "fontSize": "28px",
                 "fontWeight": "600",
                 "lineHeight": "1.2",
-                "marginBottom": "28px"
+                "marginBottom": "40px",
+                "marginLeft": "0px",
+                "marginRight": "0px",
+                "marginTop": "8px"
                },
                "componentId": "custom-heading",
                "componentName": "TextBlock",
                "componentProps": {
+                "fontSize": "text-3xl",
                 "tag": "span",
                 "text": "Software that adapts to you."
                },
@@ -1790,12 +1882,12 @@
                   "alignItems": "flex-start",
                   "display": "flex",
                   "flexDirection": "row",
-                  "gap": "14px"
+                  "gap": "16px"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-7)",
+                    "color": "var(--ink-gray-5, oklch(0.586 0 0))",
                     "flexShrink": "0",
                     "height": "20px",
                     "marginTop": "2px",
@@ -1818,7 +1910,7 @@
                     {
                      "baseStyles": {
                       "color": "var(--ink-gray-8)",
-                      "fontWeight": "600"
+                      "fontWeight": "500"
                      },
                      "componentId": "custom-pt-0-title",
                      "componentName": "TextBlock",
@@ -1836,7 +1928,7 @@
                      "componentId": "custom-pt-0-desc",
                      "componentName": "TextBlock",
                      "componentProps": {
-                      "fontSize": "text-sm",
+                      "fontSize": "text-base",
                       "tag": "p",
                       "text": "On any Frappe app."
                      },
@@ -1861,12 +1953,12 @@
                   "alignItems": "flex-start",
                   "display": "flex",
                   "flexDirection": "row",
-                  "gap": "14px"
+                  "gap": "16px"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-7)",
+                    "color": "var(--ink-gray-5, oklch(0.586 0 0))",
                     "flexShrink": "0",
                     "height": "20px",
                     "marginTop": "2px",
@@ -1889,7 +1981,7 @@
                     {
                      "baseStyles": {
                       "color": "var(--ink-gray-8)",
-                      "fontWeight": "600"
+                      "fontWeight": "500"
                      },
                      "componentId": "custom-pt-1-title",
                      "componentName": "TextBlock",
@@ -1907,7 +1999,7 @@
                      "componentId": "custom-pt-1-desc",
                      "componentName": "TextBlock",
                      "componentProps": {
-                      "fontSize": "text-sm",
+                      "fontSize": "text-base",
                       "tag": "p",
                       "text": "One brief, sent to the partners that match."
                      },
@@ -1932,12 +2024,12 @@
                   "alignItems": "flex-start",
                   "display": "flex",
                   "flexDirection": "row",
-                  "gap": "14px"
+                  "gap": "16px"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-7)",
+                    "color": "var(--ink-gray-5, oklch(0.586 0 0))",
                     "flexShrink": "0",
                     "height": "20px",
                     "marginTop": "2px",
@@ -1960,7 +2052,7 @@
                     {
                      "baseStyles": {
                       "color": "var(--ink-gray-8)",
-                      "fontWeight": "600"
+                      "fontWeight": "500"
                      },
                      "componentId": "custom-pt-2-title",
                      "componentName": "TextBlock",
@@ -1978,7 +2070,7 @@
                      "componentId": "custom-pt-2-desc",
                      "componentName": "TextBlock",
                      "componentProps": {
-                      "fontSize": "text-sm",
+                      "fontSize": "text-base",
                       "tag": "p",
                       "text": "Agreed with the partner you hire."
                      },
@@ -2030,7 +2122,7 @@
                  "componentProps": {
                   "label": "View all partners",
                   "theme": "gray",
-                  "variant": "subtle"
+                  "variant": "ghost"
                  },
                  "componentSlots": {}
                 }
@@ -2060,19 +2152,26 @@
             "display": "flex",
             "flexDirection": "column",
             "gap": "40px",
-            "padding": "48px 0 0 0"
+            "marginBottom": "0px",
+            "marginLeft": "220px",
+            "marginRight": "220px",
+            "marginTop": "0px",
+            "paddingBottom": "128px",
+            "paddingLeft": "0px",
+            "paddingRight": "0px",
+            "paddingTop": "64px"
            },
            "children": [
             {
              "baseStyles": {
               "color": "var(--ink-gray-9)",
-              "fontSize": "28px",
               "fontWeight": "600",
               "lineHeight": "1.2"
              },
              "componentId": "tm-heading",
              "componentName": "TextBlock",
              "componentProps": {
+              "fontSize": "text-3xl",
               "tag": "span",
               "text": "Take it from our customers"
              },
@@ -2102,7 +2201,7 @@
                  "componentProps": {
                   "label": "A",
                   "shape": "circle",
-                  "size": "lg"
+                  "size": "2xl"
                  },
                  "componentSlots": {}
                 },
@@ -2123,8 +2222,8 @@
                    "children": [
                     {
                      "baseStyles": {
-                      "color": "var(--ink-gray-9)",
-                      "fontWeight": "600"
+                      "color": "var(--ink-gray-8, oklch(0.205 0 0))",
+                      "fontWeight": "500"
                      },
                      "componentId": "tm-ananya-name",
                      "componentName": "TextBlock",
@@ -2155,7 +2254,7 @@
                   },
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-6)"
+                    "color": "var(--ink-gray-5, oklch(0.586 0 0))"
                    },
                    "componentId": "tm-ananya-role",
                    "componentName": "TextBlock",
@@ -2191,7 +2290,7 @@
                "componentProps": {
                 "fontSize": "text-base",
                 "tag": "p",
-                "text": "“We were on spreadsheets in March and closing our books in ERPNext by May. The price was the price, and Frappe’s team handled the setup end to end.”"
+                "text": "\u201cWe were on spreadsheets in March and closing our books in ERPNext by May. The price was the price, and Frappe\u2019s team handled the setup end to end.\u201d"
                },
                "componentSlots": {}
               }
@@ -2226,7 +2325,7 @@
                  "componentProps": {
                   "label": "K",
                   "shape": "circle",
-                  "size": "lg"
+                  "size": "2xl"
                  },
                  "componentSlots": {}
                 },
@@ -2247,8 +2346,8 @@
                    "children": [
                     {
                      "baseStyles": {
-                      "color": "var(--ink-gray-9)",
-                      "fontWeight": "600"
+                      "color": "var(--ink-gray-8, oklch(0.205 0 0))",
+                      "fontWeight": "500"
                      },
                      "componentId": "tm-karan-name",
                      "componentName": "TextBlock",
@@ -2279,7 +2378,7 @@
                   },
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-6)"
+                    "color": "var(--ink-gray-5, oklch(0.586 0 0))"
                    },
                    "componentId": "tm-karan-role",
                    "componentName": "TextBlock",
@@ -2315,7 +2414,7 @@
                "componentProps": {
                 "fontSize": "text-base",
                 "tag": "p",
-                "text": "“Our dyeing process does not look like anyone else’s. Four partners quoted from one brief, and the one we hired built the job cards around how the floor actually works.”"
+                "text": "\u201cOur dyeing process does not look like anyone else\u2019s. Four partners quoted from one brief, and the one we hired built the job cards around how the floor actually works.\u201d"
                },
                "componentSlots": {}
               }
@@ -2350,7 +2449,7 @@
                  "componentProps": {
                   "label": "S",
                   "shape": "circle",
-                  "size": "lg"
+                  "size": "2xl"
                  },
                  "componentSlots": {}
                 },
@@ -2371,8 +2470,8 @@
                    "children": [
                     {
                      "baseStyles": {
-                      "color": "var(--ink-gray-9)",
-                      "fontWeight": "600"
+                      "color": "var(--ink-gray-8, oklch(0.205 0 0))",
+                      "fontWeight": "500"
                      },
                      "componentId": "tm-sara-name",
                      "componentName": "TextBlock",
@@ -2403,7 +2502,7 @@
                   },
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-6)"
+                    "color": "var(--ink-gray-5, oklch(0.586 0 0))"
                    },
                    "componentId": "tm-sara-role",
                    "componentName": "TextBlock",
@@ -2439,7 +2538,7 @@
                "componentProps": {
                 "fontSize": "text-base",
                 "tag": "p",
-                "text": "“Stock and sales across three stores, live in five weeks. We added HR later with a second pack, without starting over.”"
+                "text": "\u201cStock and sales across three stores, live in five weeks. We added HR later with a second pack, without starting over.\u201d"
                },
                "componentSlots": {}
               }
@@ -2462,9 +2561,32 @@
          "componentName": "container",
          "componentProps": {},
          "componentSlots": {},
+         "mobileStyles": {
+          "padding": "8px 20px 96px 20px"
+         },
          "originalElement": "div"
         }
-       ]
+       ],
+       "classes": [
+        "gs-scroll"
+       ],
+       "componentEvents": {
+        "mouseenter": {
+         "action": "Run Script",
+         "event": "mouseenter",
+         "script": "eventArgs[0].currentTarget.style.scrollbarColor = 'rgba(0,0,0,0.18) transparent'"
+        },
+        "mouseleave": {
+         "action": "Run Script",
+         "event": "mouseleave",
+         "script": "eventArgs[0].currentTarget.style.scrollbarColor = 'transparent transparent'"
+        }
+       },
+       "componentId": "scroll-body",
+       "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
+       "originalElement": "div"
       }
      ],
      "componentId": "content-wrapper",
@@ -2481,2482 +2603,13 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-10-05 15:03:04.956110",
+ "creation": "2026-10-05 23:24:59.663203",
  "docstatus": 0,
  "doctype": "Studio Page",
- "draft_blocks": [
-  {
-   "baseStyles": {
-    "backgroundColor": "var(--surface-gray-1)",
-    "display": "flex",
-    "flexDirection": "row",
-    "height": "100%",
-    "overflowX": "hidden",
-    "width": "inherit"
-   },
-   "blockName": "body",
-   "children": [
-    {
-     "baseStyles": {
-      "alignItems": "center",
-      "backgroundColor": "var(--surface-gray-1)",
-      "borderRight": "1px solid var(--outline-gray-1)",
-      "boxSizing": "border-box",
-      "display": "flex",
-      "flexDirection": "column",
-      "flexShrink": "0",
-      "height": "100%",
-      "padding": "8px 8px 10px",
-      "width": "50px"
-     },
-     "children": [
-      {
-       "baseStyles": {
-        "alignItems": "center",
-        "display": "flex",
-        "flexDirection": "column",
-        "gap": "14px",
-        "width": "34px"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "cursor": "pointer",
-          "display": "flex",
-          "padding": "3px"
-         },
-         "children": [
-          {
-           "children": [
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "backgroundColor": "#2F3E9D",
-              "borderRadius": "8px",
-              "display": "flex",
-              "height": "28px",
-              "justifyContent": "center",
-              "width": "28px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "white",
-                "flexShrink": "0",
-                "fontSize": "16px",
-                "height": "16px",
-                "width": "16px"
-               },
-               "componentId": "rail-logo-icon",
-               "componentName": "Icon",
-               "componentProps": {
-                "icon": "lucide-handshake"
-               },
-               "componentSlots": {}
-              }
-             ],
-             "componentId": "rail-logo-box",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            }
-           ],
-           "componentId": "rail-account-menu",
-           "componentName": "Dropdown",
-           "componentProps": {
-            "align": "start",
-            "options": "{{ (myContext.data && myContext.data.user && myContext.data.user !== 'Guest') ? [{ icon: 'lucide-log-out', label: 'Log out', onClick: () => call('logout').then(() => window.location.assign('/login')) }] : [{ icon: 'lucide-log-in', label: 'Log in', onClick: () => window.location.assign('/login') }] }}"
-           },
-           "componentSlots": {}
-          }
-         ],
-         "componentId": "rail-logo",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "display": "flex",
-          "flexDirection": "column",
-          "gap": "2px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "borderRadius": "8px",
-            "boxSizing": "border-box",
-            "color": "var(--ink-gray-6)",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexShrink": "0",
-            "height": "28px",
-            "justifyContent": "center",
-            "padding": "6px",
-            "width": "28px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "flexShrink": "0",
-              "fontSize": "16px",
-              "height": "16px",
-              "width": "16px"
-             },
-             "componentId": "rail-inbox-icon",
-             "componentName": "Icon",
-             "componentProps": {
-              "icon": "lucide-inbox"
-             },
-             "componentSlots": {},
-             "mobileStyles": {
-              "fontSize": "20px",
-              "height": "20px",
-              "width": "20px"
-             }
-            }
-           ],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "router.push('/messaging')"
-            }
-           },
-           "componentId": "rail-inbox",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "borderRadius": "8px",
-            "boxSizing": "border-box",
-            "color": "var(--ink-gray-6)",
-            "display": "flex",
-            "flexShrink": "0",
-            "height": "28px",
-            "justifyContent": "center",
-            "padding": "6px",
-            "width": "28px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "flexShrink": "0",
-              "fontSize": "16px",
-              "height": "16px",
-              "width": "16px"
-             },
-             "componentId": "rail-notifications-icon",
-             "componentName": "Icon",
-             "componentProps": {
-              "icon": "lucide-bell"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "rail-notifications",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          }
-         ],
-         "componentId": "rail-group-primary",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "display": "flex",
-          "flexDirection": "column",
-          "gap": "2px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "var(--surface-base)",
-            "borderRadius": "8px",
-            "boxShadow": "0px 0px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.14)",
-            "boxSizing": "border-box",
-            "color": "var(--ink-gray-9)",
-            "cursor": "pointer",
-            "display": "flex",
-            "flexShrink": "0",
-            "height": "28px",
-            "justifyContent": "center",
-            "padding": "6px",
-            "width": "28px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "flexShrink": "0",
-              "fontSize": "16px",
-              "height": "16px",
-              "width": "16px"
-             },
-             "componentId": "rail-home-icon",
-             "componentName": "Icon",
-             "componentProps": {
-              "icon": "lucide-house"
-             },
-             "componentSlots": {},
-             "mobileStyles": {
-              "fontSize": "20px",
-              "height": "20px",
-              "width": "20px"
-             }
-            }
-           ],
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "router.push('/starter-pack-implementation');"
-            }
-           },
-           "componentId": "rail-home",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "borderRadius": "8px",
-            "boxSizing": "border-box",
-            "color": "var(--ink-gray-6)",
-            "display": "flex",
-            "flexShrink": "0",
-            "height": "28px",
-            "justifyContent": "center",
-            "padding": "6px",
-            "width": "28px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "flexShrink": "0",
-              "fontSize": "16px",
-              "height": "16px",
-              "width": "16px"
-             },
-             "componentId": "rail-component-icon",
-             "componentName": "Icon",
-             "componentProps": {
-              "icon": "lucide-box"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "rail-component",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "borderRadius": "8px",
-            "boxSizing": "border-box",
-            "color": "var(--ink-gray-6)",
-            "display": "flex",
-            "flexShrink": "0",
-            "height": "28px",
-            "justifyContent": "center",
-            "padding": "6px",
-            "width": "28px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "flexShrink": "0",
-              "fontSize": "16px",
-              "height": "16px",
-              "width": "16px"
-             },
-             "componentId": "rail-people-icon",
-             "componentName": "Icon",
-             "componentProps": {
-              "icon": "lucide-users"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "rail-people",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "borderRadius": "8px",
-            "boxSizing": "border-box",
-            "color": "var(--ink-gray-6)",
-            "display": "none",
-            "flexShrink": "0",
-            "height": "28px",
-            "justifyContent": "center",
-            "padding": "6px",
-            "width": "28px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "flexShrink": "0",
-              "fontSize": "16px",
-              "height": "16px",
-              "width": "16px"
-             },
-             "componentId": "rail-projects-icon",
-             "componentName": "Icon",
-             "componentProps": {
-              "icon": "lucide-land-plot"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "rail-projects",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          }
-         ],
-         "componentId": "rail-group-secondary",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
-        }
-       ],
-       "componentId": "rail-content",
-       "componentName": "container",
-       "componentProps": {},
-       "componentSlots": {},
-       "originalElement": "div"
-      },
-      {
-       "baseStyles": {
-        "alignItems": "center",
-        "display": "none",
-        "flexDirection": "column",
-        "gap": "2px",
-        "marginTop": "auto"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "borderRadius": "8px",
-          "boxSizing": "border-box",
-          "color": "var(--ink-gray-6)",
-          "cursor": "pointer",
-          "display": "{{ (myContext.data && myContext.data.partner) ? 'none' : 'flex' }}",
-          "flexShrink": "0",
-          "height": "28px",
-          "justifyContent": "center",
-          "padding": "6px",
-          "width": "28px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "flexShrink": "0",
-            "fontSize": "16px",
-            "height": "16px",
-            "width": "16px"
-           },
-           "componentId": "rail-requirements-icon",
-           "componentName": "Icon",
-           "componentProps": {
-            "icon": "lucide-clipboard-list"
-           },
-           "componentSlots": {},
-           "mobileStyles": {
-            "fontSize": "20px",
-            "height": "20px",
-            "width": "20px"
-           }
-          }
-         ],
-         "componentEvents": {
-          "click": {
-           "action": "Run Script",
-           "event": "click",
-           "script": "toast({ title: 'Coming soon', icon: 'info' });"
-          }
-         },
-         "componentId": "rail-requirements",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "borderRadius": "8px",
-          "boxSizing": "border-box",
-          "color": "var(--ink-gray-6)",
-          "cursor": "pointer",
-          "display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}",
-          "flexShrink": "0",
-          "height": "28px",
-          "justifyContent": "center",
-          "padding": "6px",
-          "width": "28px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "flexShrink": "0",
-            "fontSize": "16px",
-            "height": "16px",
-            "width": "16px"
-           },
-           "componentId": "rail-partnership-icon",
-           "componentName": "Icon",
-           "componentProps": {
-            "icon": "lucide-badge-check"
-           },
-           "componentSlots": {},
-           "mobileStyles": {
-            "fontSize": "20px",
-            "height": "20px",
-            "width": "20px"
-           }
-          }
-         ],
-         "componentEvents": {
-          "click": {
-           "action": "Run Script",
-           "event": "click",
-           "script": "router.push('/partner-onboarding');"
-          }
-         },
-         "componentId": "rail-partnership",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "borderRadius": "8px",
-          "boxSizing": "border-box",
-          "color": "var(--ink-gray-6)",
-          "cursor": "pointer",
-          "display": "flex",
-          "flexShrink": "0",
-          "height": "28px",
-          "justifyContent": "center",
-          "padding": "6px",
-          "width": "28px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "flexShrink": "0",
-            "fontSize": "16px",
-            "height": "16px",
-            "width": "16px"
-           },
-           "componentId": "rail-settings-icon",
-           "componentName": "Icon",
-           "componentProps": {
-            "icon": "lucide-settings"
-           },
-           "componentSlots": {},
-           "mobileStyles": {
-            "fontSize": "20px",
-            "height": "20px",
-            "width": "20px"
-           }
-          }
-         ],
-         "componentEvents": {
-          "click": {
-           "action": "Run Script",
-           "event": "click",
-           "script": "toast({ title: 'Coming soon', icon: 'info' });"
-          }
-         },
-         "componentId": "rail-settings",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
-        }
-       ],
-       "componentId": "rail-group-footer",
-       "componentName": "container",
-       "componentProps": {},
-       "componentSlots": {},
-       "originalElement": "div"
-      }
-     ],
-     "componentId": "rail",
-     "componentName": "container",
-     "componentProps": {},
-     "componentSlots": {},
-     "mobileStyles": {
-      "display": "none"
-     },
-     "originalElement": "div"
-    },
-    {
-     "baseStyles": {
-      "backgroundColor": "var(--surface-base)",
-      "display": "flex",
-      "flex": "1",
-      "flexDirection": "column",
-      "overflow": "auto"
-     },
-     "children": [
-      {
-       "baseStyles": {
-        "alignItems": "center",
-        "backgroundColor": "var(--surface-base)",
-        "borderBottom": "1px solid var(--outline-gray-1)",
-        "display": "flex",
-        "flexDirection": "row",
-        "flexShrink": "0",
-        "height": "48px",
-        "justifyContent": "space-between",
-        "paddingBottom": "16px",
-        "paddingLeft": "16px",
-        "paddingRight": "16px",
-        "paddingTop": "16px",
-        "position": "sticky",
-        "top": "0",
-        "zIndex": "10"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "color": "var(--ink-gray-9)",
-          "fontWeight": "500"
-         },
-         "componentId": "text-header-title",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-lg",
-          "tag": "span",
-          "text": "Get started"
-         },
-         "componentSlots": {}
-        },
-        {
-         "baseStyles": {
-          "display": "{{ myContext.fetched && !(myContext.data && (myContext.data.customer || myContext.data.partner)) ? 'flex' : 'none' }}",
-          "paddingLeft": "0px",
-          "paddingRight": "0px"
-         },
-         "componentEvents": {
-          "click": {
-           "action": "Run Script",
-           "event": "click",
-           "script": "window.location.assign('/login')"
-          }
-         },
-         "componentId": "header-login-btn",
-         "componentName": "Button",
-         "componentProps": {
-          "iconRight": "lucide-arrow-right",
-          "label": "Log in or create account",
-          "theme": "gray",
-          "variant": "ghost"
-         },
-         "componentSlots": {}
-        }
-       ],
-       "componentId": "header-row",
-       "componentName": "container",
-       "componentProps": {},
-       "componentSlots": {},
-       "originalElement": "div"
-      },
-      {
-       "baseStyles": {
-        "display": "flex",
-        "flexDirection": "column",
-        "margin": "0 auto",
-        "maxWidth": "960px",
-        "padding": "8px 40px 96px 40px",
-        "width": "100%"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "display": "flex",
-          "flexDirection": "column",
-          "padding": "80px 0 72px 0",
-          "textAlign": "center"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-5)",
-            "fontSize": "52px",
-            "fontWeight": "600",
-            "lineHeight": "1.08"
-           },
-           "componentId": "hero-title-1",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "tag": "span",
-            "text": "Go live in weeks."
-           },
-           "componentSlots": {}
-          },
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-9)",
-            "fontSize": "52px",
-            "fontWeight": "600",
-            "lineHeight": "1.08"
-           },
-           "componentId": "hero-title-2",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "tag": "span",
-            "text": "Grow for years."
-           },
-           "componentSlots": {}
-          },
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-6)",
-            "lineHeight": "1.55",
-            "marginTop": "24px",
-            "maxWidth": "440px"
-           },
-           "componentId": "hero-subtitle",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-base",
-            "tag": "p",
-            "text": "Start on Frappe apps with a fixed Starter Pack, or a custom build by a certified partner."
-           },
-           "componentSlots": {}
-          }
-         ],
-         "componentId": "hero-section",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "display": "flex",
-          "flexDirection": "row",
-          "gap": "64px",
-          "padding": "48px 0"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flex": "1",
-            "flexDirection": "column",
-            "maxWidth": "420px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-5)",
-              "fontWeight": "500",
-              "marginBottom": "10px"
-             },
-             "componentId": "packs-label",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Starter Packs"
-             },
-             "componentSlots": {}
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-9)",
-              "fontSize": "28px",
-              "fontWeight": "600",
-              "lineHeight": "1.2",
-              "marginBottom": "28px"
-             },
-             "componentId": "packs-heading",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "tag": "span",
-              "text": "Start fast. Spend less."
-             },
-             "componentSlots": {}
-            },
-            {
-             "baseStyles": {
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "22px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "alignItems": "flex-start",
-                "display": "flex",
-                "flexDirection": "row",
-                "gap": "14px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-7)",
-                  "flexShrink": "0",
-                  "height": "20px",
-                  "marginTop": "2px",
-                  "width": "20px"
-                 },
-                 "componentId": "packs-pt-0-icon",
-                 "componentName": "Icon",
-                 "componentProps": {
-                  "icon": "lucide-circle-dollar-sign"
-                 },
-                 "componentSlots": {}
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "2px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8)",
-                    "fontWeight": "600"
-                   },
-                   "componentId": "packs-pt-0-title",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "One fixed price"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)"
-                   },
-                   "componentId": "packs-pt-0-desc",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-sm",
-                    "tag": "p",
-                    "text": "From ₹10,000, known before you start."
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "packs-pt-0-body",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                }
-               ],
-               "componentId": "packs-pt-0-row",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "flex-start",
-                "display": "flex",
-                "flexDirection": "row",
-                "gap": "14px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-7)",
-                  "flexShrink": "0",
-                  "height": "20px",
-                  "marginTop": "2px",
-                  "width": "20px"
-                 },
-                 "componentId": "packs-pt-1-icon",
-                 "componentName": "Icon",
-                 "componentProps": {
-                  "icon": "lucide-circle-check"
-                 },
-                 "componentSlots": {}
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "2px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8)",
-                    "fontWeight": "600"
-                   },
-                   "componentId": "packs-pt-1-title",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "Implemented by Frappe"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)"
-                   },
-                   "componentId": "packs-pt-1-desc",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-sm",
-                    "tag": "p",
-                    "text": "Our own team, start to finish."
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "packs-pt-1-body",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                }
-               ],
-               "componentId": "packs-pt-1-row",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "flex-start",
-                "display": "flex",
-                "flexDirection": "row",
-                "gap": "14px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-7)",
-                  "flexShrink": "0",
-                  "height": "20px",
-                  "marginTop": "2px",
-                  "width": "20px"
-                 },
-                 "componentId": "packs-pt-2-icon",
-                 "componentName": "Icon",
-                 "componentProps": {
-                  "icon": "lucide-clock"
-                 },
-                 "componentSlots": {}
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "2px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8)",
-                    "fontWeight": "600"
-                   },
-                   "componentId": "packs-pt-2-title",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "Live in weeks"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)"
-                   },
-                   "componentId": "packs-pt-2-desc",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-sm",
-                    "tag": "p",
-                    "text": "Defined modules, defined hours."
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "packs-pt-2-body",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                }
-               ],
-               "componentId": "packs-pt-2-row",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              }
-             ],
-             "componentId": "packs-points",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "display": "flex",
-              "marginTop": "32px"
-             },
-             "children": [
-              {
-               "componentId": "packs-cta",
-               "componentName": "Button",
-               "componentProps": {
-                "label": "View packs",
-                "theme": "gray",
-                "variant": "solid"
-               },
-               "componentSlots": {}
-              }
-             ],
-             "componentId": "packs-cta-row",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            }
-           ],
-           "componentId": "packs-left",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "var(--surface-gray-2)",
-            "border": "1px solid var(--outline-gray-1)",
-            "borderRadius": "20px",
-            "display": "flex",
-            "flex": "1",
-            "justifyContent": "center",
-            "minHeight": "320px",
-            "padding": "40px 32px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "display": "flex",
-              "flexDirection": "column"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-base)",
-                "border": "1px solid var(--outline-gray-2)",
-                "borderRadius": "12px",
-                "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                "display": "flex",
-                "flexDirection": "row",
-                "gap": "12px",
-                "marginLeft": "0px",
-                "marginTop": "0",
-                "padding": "16px 18px",
-                "position": "relative",
-                "width": "300px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "backgroundColor": "var(--surface-gray-2)",
-                  "borderRadius": "8px",
-                  "display": "flex",
-                  "flexShrink": "0",
-                  "height": "32px",
-                  "justifyContent": "center",
-                  "width": "32px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8)",
-                    "height": "18px",
-                    "width": "18px"
-                   },
-                   "componentId": "pack-card-accounts-ic",
-                   "componentName": "Icon",
-                   "componentProps": {
-                    "icon": "lucide-box"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "pack-card-accounts-icon",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "2px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-9)",
-                    "fontWeight": "600"
-                   },
-                   "componentId": "pack-card-accounts-name",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-sm",
-                    "tag": "span",
-                    "text": "Accounts, Sales, Purchase…"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-5)"
-                   },
-                   "componentId": "pack-card-accounts-price",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-xs",
-                    "tag": "span",
-                    "text": "₹10,000 · 5 hrs"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "pack-card-accounts-body",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                }
-               ],
-               "componentId": "pack-card-accounts",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-base)",
-                "border": "1px solid var(--outline-gray-2)",
-                "borderRadius": "12px",
-                "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                "display": "flex",
-                "flexDirection": "row",
-                "gap": "12px",
-                "marginLeft": "28px",
-                "marginTop": "-14px",
-                "padding": "16px 18px",
-                "position": "relative",
-                "width": "300px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "backgroundColor": "var(--surface-gray-2)",
-                  "borderRadius": "8px",
-                  "display": "flex",
-                  "flexShrink": "0",
-                  "height": "32px",
-                  "justifyContent": "center",
-                  "width": "32px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8)",
-                    "height": "18px",
-                    "width": "18px"
-                   },
-                   "componentId": "pack-card-manufacturing-ic",
-                   "componentName": "Icon",
-                   "componentProps": {
-                    "icon": "lucide-box"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "pack-card-manufacturing-icon",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "2px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-9)",
-                    "fontWeight": "600"
-                   },
-                   "componentId": "pack-card-manufacturing-name",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-sm",
-                    "tag": "span",
-                    "text": "Manufacturing"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-5)"
-                   },
-                   "componentId": "pack-card-manufacturing-price",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-xs",
-                    "tag": "span",
-                    "text": "₹10,000 · 5 hrs"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "pack-card-manufacturing-body",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                }
-               ],
-               "componentId": "pack-card-manufacturing",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-base)",
-                "border": "1px solid var(--outline-gray-2)",
-                "borderRadius": "12px",
-                "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                "display": "flex",
-                "flexDirection": "row",
-                "gap": "12px",
-                "marginLeft": "56px",
-                "marginTop": "-14px",
-                "padding": "16px 18px",
-                "position": "relative",
-                "width": "300px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "backgroundColor": "var(--surface-gray-2)",
-                  "borderRadius": "8px",
-                  "display": "flex",
-                  "flexShrink": "0",
-                  "height": "32px",
-                  "justifyContent": "center",
-                  "width": "32px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8)",
-                    "height": "18px",
-                    "width": "18px"
-                   },
-                   "componentId": "pack-card-hr-ic",
-                   "componentName": "Icon",
-                   "componentProps": {
-                    "icon": "lucide-box"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "pack-card-hr-icon",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "2px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-9)",
-                    "fontWeight": "600"
-                   },
-                   "componentId": "pack-card-hr-name",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-sm",
-                    "tag": "span",
-                    "text": "HR"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-5)"
-                   },
-                   "componentId": "pack-card-hr-price",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-xs",
-                    "tag": "span",
-                    "text": "₹10,000 · 5 hrs"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "pack-card-hr-body",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                }
-               ],
-               "componentId": "pack-card-hr",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              }
-             ],
-             "componentId": "packs-stack",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            }
-           ],
-           "componentId": "packs-right",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          }
-         ],
-         "componentId": "packs-section",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "alignItems": "center",
-          "display": "flex",
-          "flexDirection": "row",
-          "gap": "64px",
-          "padding": "48px 0"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "backgroundColor": "var(--surface-gray-2)",
-            "border": "1px solid var(--outline-gray-1)",
-            "borderRadius": "20px",
-            "display": "flex",
-            "flex": "1",
-            "justifyContent": "center",
-            "minHeight": "320px",
-            "padding": "32px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "height": "420px",
-              "position": "relative",
-              "width": "420px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "border": "1px dashed var(--outline-gray-3)",
-                "borderRadius": "50%",
-                "height": "336px",
-                "left": "50%",
-                "position": "absolute",
-                "top": "50%",
-                "transform": "translate(-50%, -50%)",
-                "width": "336px"
-               },
-               "componentId": "orbit-ring-outer",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "border": "1px dashed var(--outline-gray-3)",
-                "borderRadius": "50%",
-                "height": "192px",
-                "left": "50%",
-                "position": "absolute",
-                "top": "50%",
-                "transform": "translate(-50%, -50%)",
-                "width": "192px"
-               },
-               "componentId": "orbit-ring-inner",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-gray-9)",
-                "borderRadius": "16px",
-                "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                "display": "flex",
-                "height": "60px",
-                "justifyContent": "center",
-                "left": "50%",
-                "position": "absolute",
-                "top": "50%",
-                "transform": "translate(-50%, -50%)",
-                "width": "60px",
-                "zIndex": "2"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--surface-base)",
-                  "height": "28px",
-                  "width": "28px"
-                 },
-                 "componentId": "orbit-center-ic",
-                 "componentName": "Icon",
-                 "componentProps": {
-                  "icon": "lucide-handshake"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "orbit-center",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-base)",
-                "border": "1px solid var(--outline-gray-2)",
-                "borderRadius": "50%",
-                "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                "display": "flex",
-                "height": "44px",
-                "justifyContent": "center",
-                "left": "220.8px",
-                "overflow": "hidden",
-                "position": "absolute",
-                "top": "97.8px",
-                "width": "44px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "display": "flex",
-                  "justifyContent": "center"
-                 },
-                 "componentId": "orbit-node-p1-logo",
-                 "componentName": "HTML",
-                 "componentProps": {
-                  "html": "<img src=\"/assets/connect/images/project/greycube.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "orbit-node-p1",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-base)",
-                "border": "1px solid var(--outline-gray-2)",
-                "borderRadius": "50%",
-                "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                "display": "flex",
-                "height": "44px",
-                "justifyContent": "center",
-                "left": "236.0px",
-                "overflow": "hidden",
-                "position": "absolute",
-                "top": "271.1px",
-                "width": "44px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "display": "flex",
-                  "justifyContent": "center"
-                 },
-                 "componentId": "orbit-node-p2-logo",
-                 "componentName": "HTML",
-                 "componentProps": {
-                  "html": "<img src=\"/assets/connect/images/project/tridots-technology.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "orbit-node-p2",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-base)",
-                "border": "1px solid var(--outline-gray-2)",
-                "borderRadius": "50%",
-                "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                "display": "flex",
-                "height": "44px",
-                "justifyContent": "center",
-                "left": "92.4px",
-                "overflow": "hidden",
-                "position": "absolute",
-                "top": "196.4px",
-                "width": "44px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "display": "flex",
-                  "justifyContent": "center"
-                 },
-                 "componentId": "orbit-node-p3-logo",
-                 "componentName": "HTML",
-                 "componentProps": {
-                  "html": "<img src=\"/assets/connect/images/wahni-icon.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "orbit-node-p3",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-base)",
-                "border": "1px solid var(--outline-gray-2)",
-                "borderRadius": "50%",
-                "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                "display": "flex",
-                "height": "44px",
-                "justifyContent": "center",
-                "left": "188.0px",
-                "overflow": "hidden",
-                "position": "absolute",
-                "top": "20.0px",
-                "width": "44px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "display": "flex",
-                  "justifyContent": "center"
-                 },
-                 "componentId": "orbit-node-p4-logo",
-                 "componentName": "HTML",
-                 "componentProps": {
-                  "html": "<img src=\"/assets/connect/images/app_icons/erpnext.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "orbit-node-p4",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-base)",
-                "border": "1px solid var(--outline-gray-2)",
-                "borderRadius": "50%",
-                "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                "display": "flex",
-                "height": "44px",
-                "justifyContent": "center",
-                "left": "347.8px",
-                "overflow": "hidden",
-                "position": "absolute",
-                "top": "136.1px",
-                "width": "44px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "display": "flex",
-                  "justifyContent": "center"
-                 },
-                 "componentId": "orbit-node-p5-logo",
-                 "componentName": "HTML",
-                 "componentProps": {
-                  "html": "<img src=\"/assets/connect/images/app_icons/crm.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "orbit-node-p5",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-base)",
-                "border": "1px solid var(--outline-gray-2)",
-                "borderRadius": "50%",
-                "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                "display": "flex",
-                "height": "44px",
-                "justifyContent": "center",
-                "left": "286.7px",
-                "overflow": "hidden",
-                "position": "absolute",
-                "top": "323.9px",
-                "width": "44px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "display": "flex",
-                  "justifyContent": "center"
-                 },
-                 "componentId": "orbit-node-p6-logo",
-                 "componentName": "HTML",
-                 "componentProps": {
-                  "html": "<img src=\"/assets/connect/images/app_icons/frappe-hr.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "orbit-node-p6",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-base)",
-                "border": "1px solid var(--outline-gray-2)",
-                "borderRadius": "50%",
-                "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                "display": "flex",
-                "height": "44px",
-                "justifyContent": "center",
-                "left": "89.3px",
-                "overflow": "hidden",
-                "position": "absolute",
-                "top": "323.9px",
-                "width": "44px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "display": "flex",
-                  "justifyContent": "center"
-                 },
-                 "componentId": "orbit-node-p7-logo",
-                 "componentName": "HTML",
-                 "componentProps": {
-                  "html": "<img src=\"/assets/connect/images/app_icons/insights.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "orbit-node-p7",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "backgroundColor": "var(--surface-base)",
-                "border": "1px solid var(--outline-gray-2)",
-                "borderRadius": "50%",
-                "boxShadow": "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-                "display": "flex",
-                "height": "44px",
-                "justifyContent": "center",
-                "left": "28.2px",
-                "overflow": "hidden",
-                "position": "absolute",
-                "top": "136.1px",
-                "width": "44px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "display": "flex",
-                  "justifyContent": "center"
-                 },
-                 "componentId": "orbit-node-p8-logo",
-                 "componentName": "HTML",
-                 "componentProps": {
-                  "html": "<img src=\"/assets/connect/images/app_icons/helpdesk.png\" alt=\"\" style=\"width:26px;height:26px;object-fit:contain;display:block;\" />"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "orbit-node-p8",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              }
-             ],
-             "componentId": "orbit-canvas",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            }
-           ],
-           "componentId": "custom-left",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flex": "1",
-            "flexDirection": "column",
-            "maxWidth": "420px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-5)",
-              "fontWeight": "500",
-              "marginBottom": "10px"
-             },
-             "componentId": "custom-label",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "Custom implementation"
-             },
-             "componentSlots": {}
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-9)",
-              "fontSize": "28px",
-              "fontWeight": "600",
-              "lineHeight": "1.2",
-              "marginBottom": "28px"
-             },
-             "componentId": "custom-heading",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "tag": "span",
-              "text": "Software that adapts to you."
-             },
-             "componentSlots": {}
-            },
-            {
-             "baseStyles": {
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "22px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "alignItems": "flex-start",
-                "display": "flex",
-                "flexDirection": "row",
-                "gap": "14px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-7)",
-                  "flexShrink": "0",
-                  "height": "20px",
-                  "marginTop": "2px",
-                  "width": "20px"
-                 },
-                 "componentId": "custom-pt-0-icon",
-                 "componentName": "Icon",
-                 "componentProps": {
-                  "icon": "lucide-sparkles"
-                 },
-                 "componentSlots": {}
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "2px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8)",
-                    "fontWeight": "600"
-                   },
-                   "componentId": "custom-pt-0-title",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "Any customization"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)"
-                   },
-                   "componentId": "custom-pt-0-desc",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-sm",
-                    "tag": "p",
-                    "text": "On any Frappe app."
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "custom-pt-0-body",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                }
-               ],
-               "componentId": "custom-pt-0-row",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "flex-start",
-                "display": "flex",
-                "flexDirection": "row",
-                "gap": "14px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-7)",
-                  "flexShrink": "0",
-                  "height": "20px",
-                  "marginTop": "2px",
-                  "width": "20px"
-                 },
-                 "componentId": "custom-pt-1-icon",
-                 "componentName": "Icon",
-                 "componentProps": {
-                  "icon": "lucide-users"
-                 },
-                 "componentSlots": {}
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "2px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8)",
-                    "fontWeight": "600"
-                   },
-                   "componentId": "custom-pt-1-title",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "Quotes that fit"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)"
-                   },
-                   "componentId": "custom-pt-1-desc",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-sm",
-                    "tag": "p",
-                    "text": "One brief, sent to the partners that match."
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "custom-pt-1-body",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                }
-               ],
-               "componentId": "custom-pt-1-row",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "flex-start",
-                "display": "flex",
-                "flexDirection": "row",
-                "gap": "14px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-7)",
-                  "flexShrink": "0",
-                  "height": "20px",
-                  "marginTop": "2px",
-                  "width": "20px"
-                 },
-                 "componentId": "custom-pt-2-icon",
-                 "componentName": "Icon",
-                 "componentProps": {
-                  "icon": "lucide-milestone"
-                 },
-                 "componentSlots": {}
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "2px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8)",
-                    "fontWeight": "600"
-                   },
-                   "componentId": "custom-pt-2-title",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "Pay per milestone"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)"
-                   },
-                   "componentId": "custom-pt-2-desc",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-sm",
-                    "tag": "p",
-                    "text": "Agreed with the partner you hire."
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "custom-pt-2-body",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                }
-               ],
-               "componentId": "custom-pt-2-row",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              }
-             ],
-             "componentId": "custom-points",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "row",
-              "gap": "12px",
-              "marginTop": "32px"
-             },
-             "children": [
-              {
-               "componentId": "custom-cta-contact",
-               "componentName": "Button",
-               "componentProps": {
-                "label": "Contact partners",
-                "theme": "gray",
-                "variant": "solid"
-               },
-               "componentSlots": {}
-              },
-              {
-               "componentId": "custom-cta-all",
-               "componentName": "Button",
-               "componentProps": {
-                "label": "View all partners",
-                "theme": "gray",
-                "variant": "subtle"
-               },
-               "componentSlots": {}
-              }
-             ],
-             "componentId": "custom-cta-row",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            }
-           ],
-           "componentId": "custom-right",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          }
-         ],
-         "componentId": "custom-section",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "display": "flex",
-          "flexDirection": "column",
-          "gap": "40px",
-          "padding": "48px 0 0 0"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-9)",
-            "fontSize": "28px",
-            "fontWeight": "600",
-            "lineHeight": "1.2"
-           },
-           "componentId": "tm-heading",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "tag": "span",
-            "text": "Take it from our customers"
-           },
-           "componentSlots": {}
-          },
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flexDirection": "column",
-            "gap": "14px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "row",
-              "gap": "14px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "flexShrink": "0"
-               },
-               "componentId": "tm-ananya-avatar",
-               "componentName": "Avatar",
-               "componentProps": {
-                "label": "A",
-                "shape": "circle",
-                "size": "lg"
-               },
-               "componentSlots": {}
-              },
-              {
-               "baseStyles": {
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "3px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "gap": "8px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-9)",
-                    "fontWeight": "600"
-                   },
-                   "componentId": "tm-ananya-name",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "Ananya Rao"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "componentId": "tm-ananya-badge",
-                   "componentName": "Badge",
-                   "componentProps": {
-                    "label": "Starter Pack",
-                    "size": "sm",
-                    "theme": "gray",
-                    "variant": "subtle"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "tm-ananya-nameline",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-6)"
-                 },
-                 "componentId": "tm-ananya-role",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Finance lead, Meridian Foods"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "tm-ananya-meta",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              }
-             ],
-             "componentId": "tm-ananya-head",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-7)",
-              "lineHeight": "1.6",
-              "maxWidth": "760px"
-             },
-             "componentId": "tm-ananya-quote",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-base",
-              "tag": "p",
-              "text": "“We were on spreadsheets in March and closing our books in ERPNext by May. The price was the price, and Frappe’s team handled the setup end to end.”"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "tm-ananya",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flexDirection": "column",
-            "gap": "14px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "row",
-              "gap": "14px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "flexShrink": "0"
-               },
-               "componentId": "tm-karan-avatar",
-               "componentName": "Avatar",
-               "componentProps": {
-                "label": "K",
-                "shape": "circle",
-                "size": "lg"
-               },
-               "componentSlots": {}
-              },
-              {
-               "baseStyles": {
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "3px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "gap": "8px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-9)",
-                    "fontWeight": "600"
-                   },
-                   "componentId": "tm-karan-name",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "Karan Mehta"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "componentId": "tm-karan-badge",
-                   "componentName": "Badge",
-                   "componentProps": {
-                    "label": "Custom implementation",
-                    "size": "sm",
-                    "theme": "gray",
-                    "variant": "subtle"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "tm-karan-nameline",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-6)"
-                 },
-                 "componentId": "tm-karan-role",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Founder, Kestrel Textiles"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "tm-karan-meta",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              }
-             ],
-             "componentId": "tm-karan-head",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-7)",
-              "lineHeight": "1.6",
-              "maxWidth": "760px"
-             },
-             "componentId": "tm-karan-quote",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-base",
-              "tag": "p",
-              "text": "“Our dyeing process does not look like anyone else’s. Four partners quoted from one brief, and the one we hired built the job cards around how the floor actually works.”"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "tm-karan",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flexDirection": "column",
-            "gap": "14px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "row",
-              "gap": "14px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "flexShrink": "0"
-               },
-               "componentId": "tm-sara-avatar",
-               "componentName": "Avatar",
-               "componentProps": {
-                "label": "S",
-                "shape": "circle",
-                "size": "lg"
-               },
-               "componentSlots": {}
-              },
-              {
-               "baseStyles": {
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "3px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "gap": "8px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-9)",
-                    "fontWeight": "600"
-                   },
-                   "componentId": "tm-sara-name",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "Sara Thomas"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "componentId": "tm-sara-badge",
-                   "componentName": "Badge",
-                   "componentProps": {
-                    "label": "Starter Pack",
-                    "size": "sm",
-                    "theme": "gray",
-                    "variant": "subtle"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "tm-sara-nameline",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-6)"
-                 },
-                 "componentId": "tm-sara-role",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-sm",
-                  "tag": "span",
-                  "text": "Operations, Halcyon Retail"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "tm-sara-meta",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              }
-             ],
-             "componentId": "tm-sara-head",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-7)",
-              "lineHeight": "1.6",
-              "maxWidth": "760px"
-             },
-             "componentId": "tm-sara-quote",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-base",
-              "tag": "p",
-              "text": "“Stock and sales across three stores, live in five weeks. We added HR later with a second pack, without starting over.”"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "tm-sara",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          }
-         ],
-         "componentId": "testimonials-section",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
-        }
-       ],
-       "componentId": "main-content",
-       "componentName": "container",
-       "componentProps": {},
-       "componentSlots": {},
-       "originalElement": "div"
-      }
-     ],
-     "componentId": "content-wrapper",
-     "componentName": "container",
-     "componentProps": {},
-     "componentSlots": {},
-     "originalElement": "div"
-    }
-   ],
-   "componentId": "root",
-   "componentName": "div",
-   "componentProps": {},
-   "componentSlots": {},
-   "originalElement": "body"
-  }
- ],
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-10-05 15:10:54.399983",
+ "modified": "2026-10-05 23:27:07.418466",
  "modified_by": "Administrator",
  "name": "get_started",
  "owner": "Administrator",
