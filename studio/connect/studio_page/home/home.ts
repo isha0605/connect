@@ -164,20 +164,6 @@ export default function setup(context) {
 		window.open(url, "_blank", "noopener")
 	}
 
-	// ---- Rail: logo account menu (same as the implementation page) ----
-	function accountMenuOptions() {
-		return [
-			{
-				icon: "lucide-log-out",
-				label: "Log out",
-				onClick: () => {
-					call("logout").then(() => {
-						window.location.href = "/login"
-					})
-				},
-			},
-		]
-	}
 
 	return {
 		greeting,
@@ -200,6 +186,5 @@ export default function setup(context) {
 		posts: POSTS,
 		events: EVENTS,
 		openLink,
-		accountMenuOptions,
 	}
 }

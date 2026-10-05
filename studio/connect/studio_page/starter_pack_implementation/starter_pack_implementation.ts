@@ -126,20 +126,6 @@ export default function setup(context) {
 		toast.info("Feedback form is coming soon.")
 	}
 
-	// ---- Rail: logo account menu (same as the messaging page) ----
-	function accountMenuOptions() {
-		return [
-			{
-				icon: "lucide-log-out",
-				label: "Log out",
-				onClick: () => {
-					call("logout").then(() => {
-						window.location.href = "/login"
-					})
-				},
-			},
-		]
-	}
 
 	return {
 		order,
@@ -164,6 +150,5 @@ export default function setup(context) {
 		viewTermsDetails,
 		viewRequirements,
 		openFeedback,
-		accountMenuOptions,
 	}
 }
