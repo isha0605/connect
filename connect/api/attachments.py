@@ -66,10 +66,16 @@ def _copy_message_attachment(file_url):
 	if not file_name:
 		frappe.throw(_("The original file is no longer available"))
 	source = frappe.get_doc("File", file_name)
+	# Not source.get_content(): it tries several text encodings on the raw bytes and can succeed by
+	# coincidence on a small binary (an 86-byte PNG decodes cleanly as windows-1250), handing back a
+	# str that is re-encoded to UTF-8 on write — every byte above 0x7F silently expands and the copy
+	# is corrupt. Large files escape only because they almost always hit an undecodable byte.
+	with open(source.get_full_path(), "rb") as f:
+		content = f.read()
 	copy = frappe.get_doc({
 		"doctype": "File",
 		"file_name": source.file_name,
-		"content": source.get_content(),
+		"content": content,
 		"is_private": 1,
 	})
 	copy.insert(ignore_permissions=True)
