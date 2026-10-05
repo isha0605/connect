@@ -10,7 +10,12 @@ from frappe.model.document import Document
 from frappe.utils import cint, flt, get_datetime, get_system_timezone, now_datetime
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
-from connect.customer.doctype.starter_pack_order.partner_rotation import assign_partner
+from connect.customer.doctype.starter_pack_order.implementation import (
+	hand_over,
+	project_title,
+	timeline_days,
+)
+from connect.partner.doctype.partner.partner import _compute_display_industries
 
 # Set around the one save that mirrors gateway status onto an order. Nothing
 # else may move payment_status: a customer, or a Desk user, marking their own
@@ -27,6 +32,20 @@ GATEWAY_STATUS_MAP = {
 	"Partially Refunded": "Partially Refunded",
 	"Refunded": "Refunded",
 }
+
+# What the Confirmed page's partner card shows (industry feeds its industries list).
+PARTNER_CARD_FIELDS = [
+	"name",
+	"partner_name",
+	"logo",
+	"tier",
+	"city",
+	"country",
+	"hourly_rate",
+	"rating",
+	"response_time_hours",
+	"industry",
+]
 
 
 class StarterPackOrder(Document):
@@ -106,7 +125,10 @@ class StarterPackOrder(Document):
 			return
 		if self.payment_status != "Paid":
 			frappe.throw(_("Assign a partner only after the order is paid."))
-		# Every approved partner delivers all four packs, so approval is the whole check.
+		# Every approved partner delivers all four packs, so approval is the whole check. The
+		# Implemented By partner needs no approval: they take every order while the round robin is off.
+		if self.partner == frappe.db.get_single_value("Starter Pack Settings", "implementation_partner"):
+			return
 		if not frappe.db.get_value("Partner", self.partner, "starter_pack"):
 			frappe.throw(
 				_("{0} is not an approved Starter Pack partner.").format(frappe.bold(self.partner))
@@ -219,7 +241,7 @@ def on_gateway_payment_request_update(request, method=None):
 	save_as_payment_hook(order)
 
 	if payment_status == "Paid" and not order.partner:
-		assign_partner(order.name)  # never raises; leaves the order unassigned on failure
+		hand_over(order.name)  # never raises; leaves the order unassigned on failure
 
 
 def get_captured_payment_id(request):
@@ -323,6 +345,9 @@ def get_order(order=None, payment_request=None, key=None):
 	return {
 		"order": doc.name,
 		"company_name": doc.company_name,
+		"project_title": project_title(doc),
+		"timeline_days": timeline_days(doc),
+		"implementation_thread": doc.implementation_thread,
 		"payment_status": doc.payment_status,
 		"payment_request": doc.payment_request,
 		"status": doc.status,
@@ -358,19 +383,19 @@ def with_timezone(value):
 
 
 def get_assigned_partner(partner):
-	"""The partner card on the Confirmed page: the directory preview, plus the review count
-	and the industries their profile shows, so both pages describe them the same way."""
-	from connect.partner.doctype.partner.partner import _compute_display_industries, get_partner_preview
-
-	preview = get_partner_preview(partner)
+	"""The partner card on the Confirmed page, with the industries and review count their
+	profile shows, so both pages describe them the same way."""
+	card = frappe.db.get_value("Partner", partner, PARTNER_CARD_FIELDS, as_dict=True)
+	if not card:
+		return None
 	stories = frappe.get_all(
 		"Partner Success Story",
 		filters={"parent": partner, "parenttype": "Partner", "parentfield": "success_stories"},
 		fields=["category"],
 	)
-	preview["industries"] = _compute_display_industries(preview.industry, stories)
-	preview["review_count"] = frappe.db.count("Partner Review", {"partner": partner})
-	return preview
+	card["industries"] = _compute_display_industries(card.industry, stories)
+	card["review_count"] = frappe.db.count("Partner Review", {"partner": partner})
+	return card
 
 
 def pay(order, key=None):

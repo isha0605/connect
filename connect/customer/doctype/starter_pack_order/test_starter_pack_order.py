@@ -18,14 +18,19 @@ from connect.customer.doctype.starter_pack_order.starter_pack_order import (
 RAZORPAY = "bwh_payments.bwh_payments.doctype.razorpay_gateway_settings.razorpay_gateway_settings.RazorpayGatewaySettings"
 ORDER_MODULE = "connect.customer.doctype.starter_pack_order.starter_pack_order"
 GPR_MODULE = "bwh_payments.bwh_payments.doctype.gateway_payment_request.gateway_payment_request"
+from connect.customer.doctype.starter_pack_order.implementation import (
+	hand_over,
+	hand_over_waiting_orders,
+	post_opening_message,
+)
 from connect.customer.doctype.starter_pack_order.partner_rotation import (
 	assign_partner,
-	assign_waiting_orders,
 	pick_next,
 	read_pointer,
 )
 
 NOTIFY = "frappe.desk.doctype.notification_log.notification_log.enqueue_create_notification"
+IMPLEMENTATION_MODULE = "connect.customer.doctype.starter_pack_order.implementation"
 ROTATION_MODULE = "connect.customer.doctype.starter_pack_order.partner_rotation"
 
 EXTRA_TEST_RECORD_DEPENDENCIES = []
@@ -146,6 +151,9 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 				}
 			).insert(ignore_permissions=True)
 		frappe.db.set_single_value("Starter Pack Settings", "payment_gateway", "_Test Razorpay")
+		frappe.db.set_single_value(
+			"Starter Pack Settings", {"implementation_partner": "", "auto_assign_partners": 0}
+		)
 
 		# Records persist across tests within a class (the rollback is per class), and
 		# order_ref is unique, so every fake session needs its own id.
@@ -244,7 +252,21 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 		self.assertEqual(order.gateway_payment_id, "pay_test_1")
 		self.assertTrue(order.paid_on)
 
-	def test_payment_assigns_a_partner(self):
+	def test_payment_gives_the_order_to_the_implementation_partner(self):
+		make_partner("_Test Implementing Partner", starter_pack=0)
+		frappe.db.set_single_value("Starter Pack Settings", "implementation_partner", "_Test Implementing Partner")
+
+		_, order = self.place([self.pack_a])
+		with patch(f"{IMPLEMENTATION_MODULE}.frappe.enqueue") as enqueue:
+			self.request(order).apply_webhook_status("Paid", "evt_1")
+		order.reload()
+		self.assertEqual(order.partner, "_Test Implementing Partner")
+		self.assertFalse(order.partner_auto_assigned)
+		self.assertEqual(order.status, "Partner Assigned")
+		enqueue.assert_called_once_with(post_opening_message, order_name=order.name, enqueue_after_commit=True)
+
+	def test_payment_assigns_a_partner_by_round_robin_when_switched_on(self):
+		frappe.db.set_single_value("Starter Pack Settings", "auto_assign_partners", 1)
 		make_partner("_Test RR Payment Partner", starter_pack=0)
 		partner = frappe.get_doc("Partner", "_Test RR Payment Partner")
 		partner.update({"starter_pack": 1, "enabled": 1, "starter_pack_sequence": 0})
@@ -301,6 +323,7 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 		self.assertEqual([p["total_hours"] for p in result["packs"]], [5, 8])
 
 	def test_the_confirmed_page_gets_the_partner_and_when_things_happened(self):
+		frappe.db.set_single_value("Starter Pack Settings", "auto_assign_partners", 1)
 		make_partner("_Test RR Payment Partner", starter_pack=0)
 		partner = frappe.get_doc("Partner", "_Test RR Payment Partner")
 		partner.update({"starter_pack": 1, "enabled": 1, "starter_pack_sequence": 0})
@@ -473,6 +496,7 @@ class IntegrationTestPartnerRotation(IntegrationTestCase):
 			frappe.db.set_value("Partner", name, {"starter_pack": 0, "starter_pack_sequence": 0})
 		frappe.db.set_single_value("Starter Pack Settings", "rr_last_partner", "")
 		frappe.db.set_single_value("Starter Pack Settings", "rr_last_sequence", 0)
+		frappe.db.set_single_value("Starter Pack Settings", "auto_assign_partners", 1)
 		frappe.db.set_single_value("Starter Pack Settings", "gst_rate", 18)
 		self.pack = make_pack("_test_pack_a", 10000, 5)
 		self.notify = patch(NOTIFY).start()
@@ -567,7 +591,7 @@ class IntegrationTestPartnerRotation(IntegrationTestCase):
 
 		self.approve("_Test RR A", 1)
 		with patch("frappe.db.commit"):  # the job commits per order; not in a test
-			assign_waiting_orders()
+			hand_over_waiting_orders()
 		order.reload()
 		self.assertEqual(order.partner, "_Test RR A")
 		self.notify.assert_not_called()  # admins were already told, at payment
@@ -582,3 +606,151 @@ class IntegrationTestPartnerRotation(IntegrationTestCase):
 		self.assertIsNone(read_pointer())
 		self.log_error.assert_called()
 		self.notify.assert_called_once()
+
+
+class IntegrationTestStarterPackImplementation(IntegrationTestCase):
+	"""With the round robin off, every paid order goes to the Implemented By partner, and a
+	signed-in buyer's opening message to them is posted in their thread."""
+
+	def setUp(self):
+		for name in frappe.get_all("Partner", filters={"starter_pack": 1}, pluck="name"):
+			frappe.db.set_value("Partner", name, {"starter_pack": 0, "starter_pack_sequence": 0})
+		self.partner = make_partner("_Test Implementing Partner", starter_pack=0)
+		frappe.db.set_single_value(
+			"Starter Pack Settings",
+			{"implementation_partner": self.partner, "auto_assign_partners": 0, "gst_rate": 18},
+		)
+		self.pack = make_pack("_test_pack_a", 10000, 5)
+		self.notify = patch(NOTIFY).start()
+		self.log_error = patch("frappe.log_error").start()
+		self.enqueue = patch(f"{IMPLEMENTATION_MODULE}.frappe.enqueue").start()
+
+	def tearDown(self):
+		patch.stopall()
+		frappe.flags[PAYMENT_HOOK_FLAG] = False
+
+	def paid_order(self):
+		order = make_order([self.pack])
+		frappe.flags[PAYMENT_HOOK_FLAG] = True
+		order.payment_status = "Paid"
+		order.save(ignore_permissions=True)
+		frappe.flags[PAYMENT_HOOK_FLAG] = False
+		return order
+
+	def signed_in_buyer(self, order):
+		"""Make the order's buyer a real user on a customer company, and give the partner an admin."""
+		user = make_user("_test_sp_buyer@example.com")
+		customer = frappe.db.get_value("Customer", {"customer_name": "_Test SP Buyer Co"}) or (
+			frappe.get_doc({"doctype": "Customer", "customer_name": "_Test SP Buyer Co"})
+			.insert(ignore_permissions=True)
+			.name
+		)
+		if not frappe.db.exists("Customer Team Member", {"user": user}):
+			frappe.get_doc(
+				{"doctype": "Customer Team Member", "customer": customer, "user": user, "is_admin": 1}
+			).insert(ignore_permissions=True)
+		admin = make_user("_test_sp_partner_admin@example.com")
+		if not frappe.db.exists("Connect Partner Member", {"user": admin}):
+			frappe.get_doc(
+				{"doctype": "Connect Partner Member", "partner": self.partner, "user": admin, "is_admin": 1}
+			).insert(ignore_permissions=True)
+		order.db_set({"user": user, "customer": customer})
+		return user, customer, admin
+
+	def test_a_paid_order_goes_to_the_implementation_partner(self):
+		order = self.paid_order()
+		self.assertEqual(hand_over(order.name), self.partner)
+		order.reload()
+		self.assertEqual((order.partner, order.status), (self.partner, "Partner Assigned"))
+		self.assertFalse(order.partner_auto_assigned)
+		self.enqueue.assert_called_once()
+
+	def test_the_round_robin_takes_over_only_when_switched_on(self):
+		pool = make_partner("_Test RR A", starter_pack=0)
+		doc = frappe.get_doc("Partner", pool)
+		doc.update({"starter_pack": 1, "enabled": 1, "starter_pack_sequence": 1})
+		doc.save(ignore_permissions=True)
+
+		self.assertEqual(hand_over(self.paid_order().name), self.partner)
+		frappe.db.set_single_value("Starter Pack Settings", "auto_assign_partners", 1)
+		self.assertEqual(hand_over(self.paid_order().name), pool)
+
+	def test_without_implemented_by_the_order_waits_and_admins_are_told(self):
+		frappe.db.set_single_value("Starter Pack Settings", "implementation_partner", "")
+		order = self.paid_order()
+		self.assertIsNone(hand_over(order.name))
+		order.reload()
+		self.assertEqual((order.payment_status, order.status, order.partner), ("Paid", "New", None))
+		self.notify.assert_called_once()
+		self.enqueue.assert_not_called()
+
+		frappe.db.set_single_value("Starter Pack Settings", "implementation_partner", self.partner)
+		self.notify.reset_mock()
+		with patch("frappe.db.commit"):  # the job commits per order; not in a test
+			hand_over_waiting_orders()
+		order.reload()
+		self.assertEqual(order.partner, self.partner)
+		self.notify.assert_not_called()  # admins were already told, at payment
+
+	def test_unpaid_orders_are_not_handed_over(self):
+		self.assertIsNone(hand_over(make_order([self.pack]).name))
+
+	def test_the_buyer_opens_the_conversation_with_the_project(self):
+		order = self.paid_order()
+		hand_over(order.name)
+		user, customer, admin = self.signed_in_buyer(order)
+
+		post_opening_message(order.name)
+		order.reload()
+		thread = order.implementation_thread
+		self.assertEqual(
+			frappe.db.get_value("Connect Thread", thread, ["customer", "partner"]), (customer, self.partner)
+		)
+		self.assertEqual(
+			set(frappe.get_all("Connect Thread Member", filters={"thread": thread}, pluck="user")), {user, admin}
+		)
+
+		hello, card = frappe.get_all(
+			"Connect Message",
+			filters={"thread": thread},
+			fields=["sender", "message_type", "content"],
+			order_by="creation asc",
+		)
+		self.assertEqual((hello.sender, hello.message_type), (user, "Text"))
+		self.assertIn("_test_pack_a Starter Pack", hello.content)
+		self.assertEqual(card.message_type, "Requirement")
+		project = frappe.parse_json(card.content)
+		self.assertEqual(project["looking_for"], "_test_pack_a implementation for Test Co")
+		self.assertEqual(project["apps"], ["_test_pack_a"])
+		self.assertEqual(project["timeline"], "30 days")
+
+	def test_the_opening_message_is_posted_once(self):
+		order = self.paid_order()
+		hand_over(order.name)
+		self.signed_in_buyer(order)
+		post_opening_message(order.name)
+		thread = frappe.db.get_value("Starter Pack Order", order.name, "implementation_thread")
+		posted = frappe.db.count("Connect Message", {"thread": thread})
+		post_opening_message(order.name)  # e.g. a replayed webhook queued it twice
+		self.assertEqual(frappe.db.count("Connect Message", {"thread": thread}), posted)
+
+	def test_a_guest_buyer_gets_no_thread(self):
+		order = self.paid_order()
+		hand_over(order.name)
+		order.db_set({"user": "Guest", "customer": None})
+		post_opening_message(order.name)
+		self.assertIsNone(frappe.db.get_value("Starter Pack Order", order.name, "implementation_thread"))
+
+	def test_the_return_page_has_the_project(self):
+		order = self.paid_order()
+		result = get_order(order.name)
+		self.assertEqual(result["project_title"], "_test_pack_a implementation for Test Co")
+		self.assertEqual(result["timeline_days"], 30)
+
+
+def make_user(email):
+	if not frappe.db.exists("User", email):
+		frappe.get_doc(
+			{"doctype": "User", "email": email, "first_name": email.split("@")[0], "send_welcome_email": 0}
+		).insert(ignore_permissions=True)
+	return email

@@ -238,9 +238,9 @@ doc_events = {
 # ---------------
 
 scheduler_events = {
-	# Paid Starter Pack orders still without a partner (e.g. paid while none was approved).
+	# Paid Starter Pack orders still without a partner (e.g. paid before one was set up).
 	"hourly": [
-		"connect.customer.doctype.starter_pack_order.partner_rotation.assign_waiting_orders",
+		"connect.customer.doctype.starter_pack_order.implementation.hand_over_waiting_orders",
 	],
 	"daily": [
 		"connect.partner.response_time.recompute_all_response_times",
