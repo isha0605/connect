@@ -44,7 +44,12 @@ def sync_pmm_levels(dry_run=False):
 	"""Read every partner's PMM level from frappe.io and update the ones that changed.
 	Returns what happened, for the person running it."""
 	pages = [read_page(url) for url in listing_urls()]
-	partners = frappe.get_all("Partner", fields=["name", "country", "pmm_level", "pmm_listing_url"])
+	# Frappe consultants aren't rated on frappe.io: they're Frappe's own staff.
+	partners = frappe.get_all(
+		"Partner",
+		filters={"is_frappe_consultant": 0},
+		fields=["name", "country", "pmm_level", "pmm_listing_url"],
+	)
 	matches = match_partners(partners, pages)
 
 	report = frappe._dict(updated=[], unchanged=0, unreadable=[], not_on_frappe_io=[], not_on_connect=[])

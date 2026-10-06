@@ -1,9 +1,13 @@
 # Copyright (c) 2026
 # For license information, please see license.txt
 
-"""Round-robin assignment of paid Starter Pack Orders to approved Starter Pack partners.
+"""Round-robin assignment of paid Starter Pack Orders to Frappe consultants.
 
-The rotation is an ordered list — enabled partners with Starter Pack Partner ticked, by
+Starter Packs are delivered by Frappe's own consultants for now, each kept as a Partner of
+their own (see connect.partner.consultants), so outside partners are left out of the pool
+even if they still have Starter Pack Partner ticked.
+
+The rotation is an ordered list — enabled consultants with Starter Pack Partner ticked, by
 their Starter Pack Rotation Order, then name — plus a pointer to the last partner the
 rotation picked, kept in Starter Pack Settings. The next pick is the first partner after
 the pointer, wrapping back to the start.
@@ -11,7 +15,8 @@ the pointer, wrapping back to the start.
 The pointer records where the last pick stood in that order (its rotation order and
 name), not a link to the partner. So it keeps working when that partner is later
 disabled, taken out of the pool or deleted: the next pick is whoever now comes after
-that spot. Only automatic picks move it; setting a partner by hand in Desk doesn't.
+that spot. Only automatic picks move it; setting a partner by hand in Desk doesn't, and
+nor does a returning customer going back to the consultant they already have.
 """
 
 import frappe
@@ -35,7 +40,7 @@ def rotation_key(sequence, name):
 def get_pool():
 	partners = frappe.get_all(
 		"Partner",
-		filters={"starter_pack": 1, "enabled": 1},
+		filters={"starter_pack": 1, "enabled": 1, "is_frappe_consultant": 1},
 		fields=["name", "starter_pack_sequence"],
 	)
 	return sorted(partners, key=lambda p: rotation_key(p.starter_pack_sequence, p.name))
@@ -115,21 +120,22 @@ def assign_partner(order_name, tell_admins_if_unassigned=True):
 			# Already assigned — a replayed webhook, or someone set it by hand first.
 			return order.partner or None
 
-		partner = pick_next(get_pool(), pointer)
+		pool = get_pool()
+		returning_to = previous_partner(order, pool)
+		partner = returning_to or pick_next(pool, pointer)
 		if not partner:
 			if tell_admins_if_unassigned:
 				tell_admins(
 					order,
-					_("{0} is paid but has no partner: no Starter Pack partner is approved and enabled.").format(
-						order.name
-					),
+					_("{0} is paid but has no partner: no Frappe consultant is enabled.").format(order.name),
 				)
 			return None
 
 		order.partner = partner.name
 		order.flags.auto_assigned = True
 		order.save(ignore_permissions=True)
-		write_pointer(partner)
+		if not returning_to:
+			write_pointer(partner)
 		return partner.name
 	except Exception:
 		frappe.db.rollback(save_point=SAVEPOINT)
@@ -140,6 +146,29 @@ def assign_partner(order_name, tell_admins_if_unassigned=True):
 				_("{0} is paid but assigning its partner failed. See the Error Log.").format(order_name),
 			)
 		return None
+
+
+def previous_partner(order, pool):
+	"""The consultant a returning customer already has, if they're still in the pool, so the
+	customer stays in the one chat they know. The customer's company counts, not just the
+	buyer: a colleague's earlier order counts too."""
+	if not pool:
+		return None
+	if order.customer:
+		owner = {"customer": order.customer}
+	elif order.user and order.user != "Guest":
+		owner = {"user": order.user}
+	else:
+		return None
+	by_name = {p.name: p for p in pool}
+	earlier = frappe.get_all(
+		"Starter Pack Order",
+		filters={**owner, "name": ["!=", order.name], "partner": ["in", list(by_name)]},
+		order_by="creation desc",
+		pluck="partner",
+		limit=1,
+	)
+	return by_name[earlier[0]] if earlier else None
 
 
 def tell_admins(order, message):

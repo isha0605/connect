@@ -11,6 +11,7 @@ from frappe.model.document import Document
 from frappe.query_builder.functions import Max
 from frappe.utils import cint, flt, now_datetime, validate_email_address
 
+from connect.partner.consultants import check_listed
 from connect.partner.logo import attach_normalized_logos
 from connect.partner.story_image import queue_missing_story_images
 from connect.permissions import _my_company_membership
@@ -172,8 +173,13 @@ PARTNER_FIELDS = [
 ]
 # The "is this partner visible at all" gate — combined as AND with whatever
 # else a caller filters on. Callers that append more filters must copy this
-# (list(BASE_PARTNER_FILTERS)) rather than mutate it in place.
-BASE_PARTNER_FILTERS = [["Partner", "is_featured", "=", 1], ["Partner", "enabled", "=", 1]]
+# (list(BASE_PARTNER_FILTERS)) rather than mutate it in place. Frappe consultants
+# are never listed (connect.partner.consultants), even if someone features one.
+BASE_PARTNER_FILTERS = [
+	["Partner", "is_featured", "=", 1],
+	["Partner", "enabled", "=", 1],
+	["Partner", "is_frappe_consultant", "=", 0],
+]
 
 
 def _child_values_by_partner(child_doctype, value_field, names, parentfield=None):
@@ -650,7 +656,9 @@ def region_presence_counts():
 	Pacific to match the map's own regions). Counts the full enabled directory, not just the
 	is_featured-curated subset search_partners currently scopes to, since this is a presence
 	overview rather than a list of profiles to show."""
-	rows = frappe.get_all("Partner", fields=["country", "region"], filters={"enabled": 1})
+	rows = frappe.get_all(
+		"Partner", fields=["country", "region"], filters={"enabled": 1, "is_frappe_consultant": 0}
+	)
 
 	counts = {"india": 0, "asia": 0, "middle_east": 0, "africa": 0, "europe": 0, "americas": 0}
 	for row in rows:
@@ -814,10 +822,15 @@ def list_partner_tiers():
 	return [t for t in tier_order if t in present]
 
 
+def _listed():
+	"""BASE_PARTNER_FILTERS as a dict, for the get_all calls that take one."""
+	return {field: value for _doctype, field, _op, value in BASE_PARTNER_FILTERS}
+
+
 def list_partner_countries():
 	"""Returns distinct countries with at least one partner, for the Country filter dropdown."""
 	rows = frappe.get_all(
-		"Partner", fields=["country"], filters={"country": ["is", "set"], "is_featured": 1, "enabled": 1}, distinct=True
+		"Partner", fields=["country"], filters={"country": ["is", "set"], **_listed()}, distinct=True
 	)
 	return sorted({row.country for row in rows if row.country})
 
@@ -828,7 +841,7 @@ def list_partner_industries():
 	deliberately not the Partner.industry Select's full static option list, so a value with zero
 	partners behind it (e.g. "Nonprofit") doesn't show up as a dead-end filter."""
 	rows = frappe.get_all(
-		"Partner", fields=["industry"], filters={"industry": ["is", "set"], "is_featured": 1, "enabled": 1}, distinct=True
+		"Partner", fields=["industry"], filters={"industry": ["is", "set"], **_listed()}, distinct=True
 	)
 	return sorted({row.industry for row in rows if row.industry})
 
@@ -854,6 +867,7 @@ def get_partner_preview(partner):
 	doc = frappe.db.get_value("Partner", partner, fields, as_dict=True)
 	if not doc:
 		frappe.throw(_("Partner not found"), frappe.DoesNotExistError)
+	check_listed(partner)
 
 	doc["apps"] = _apps_by_partner([partner]).get(partner, [])
 	doc["migrations"] = frappe.get_all(
@@ -886,6 +900,7 @@ def get_partner_document(partner):
 	"""Returns the full Partner record as a plain API call, since Studio's Document resource isn't guest-accessible."""
 	if not frappe.db.exists("Partner", partner):
 		frappe.throw(_("Partner not found"), frappe.DoesNotExistError)
+	check_listed(partner)
 	doc = frappe.get_doc("Partner", partner).as_dict()
 	# computed, not stored — "founded_years_ago" would silently go stale every
 	# year if we persisted it instead of deriving it from year_founded on read

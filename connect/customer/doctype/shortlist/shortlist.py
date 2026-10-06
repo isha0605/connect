@@ -5,6 +5,7 @@ import frappe
 from frappe.model.document import Document
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
+from connect.partner.consultants import check_listed
 from connect.partner.doctype.partner.partner import PARTNER_FIELDS, _apps_by_partner, _decorate_directory_rows
 
 
@@ -50,6 +51,7 @@ def add_to_shortlist(partner):
 	customer = get_customer_for_user()
 	if not customer:
 		frappe.throw("Your account isn't linked to a customer company yet.", frappe.PermissionError)
+	check_listed(partner)
 	try:
 		frappe.get_doc({"doctype": "Shortlist", "customer": customer, "partner": partner}).insert(
 			ignore_permissions=True
