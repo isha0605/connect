@@ -12,7 +12,6 @@ from frappe.utils import cint, flt, get_datetime, get_system_timezone, now_datet
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.customer.doctype.starter_pack_order.implementation import (
 	hand_over,
-	join_thread,
 	project_title,
 	timeline_days,
 )
@@ -66,10 +65,6 @@ class StarterPackOrder(Document):
 		self.validate_partner()
 		self.set_partner_assignment()
 		self.set_totals()
-
-	def on_update(self):
-		if self.has_value_changed("partner"):
-			join_thread(self)
 
 	def snapshot_packs(self):
 		"""Price every line from the catalog, ignoring whatever the browser sent.

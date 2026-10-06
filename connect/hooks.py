@@ -70,9 +70,6 @@ signup_form_template = "connect/templates/includes/signup_redirect.html"
 # 	"Role": "home_page"
 # }
 
-# Frappe consultants work from Messaging, on the partner side of their buyers' threads.
-role_home_page = {"Frappe Consultant": "connect/messaging"}
-
 # Generators
 # ----------
 
@@ -234,10 +231,6 @@ doc_events = {
 	},
 	"Gateway Payment Request": {
 		"on_update": "connect.customer.doctype.starter_pack_order.starter_pack_order.on_gateway_payment_request_update",
-	},
-	# The Frappe Consultant role: see connect.partner.consultants.
-	"User": {
-		"on_update": "connect.partner.consultants.on_user_update",
 	},
 }
 

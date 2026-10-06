@@ -3,7 +3,6 @@ from frappe import _
 
 from connect.api.messages import send_message
 from connect.customer.doctype.customer.customer import get_customer_for_user
-from connect.partner.consultants import check_listed
 from connect.permissions import _get_partner_admin
 
 
@@ -59,8 +58,6 @@ def start_partner_thread(partner, message=None):
 	customer = get_customer_for_user(user)
 	if not customer:
 		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
-	# A consultant is reached through a Starter Pack order (implementation.post_opening_message), not Contact Partner.
-	check_listed(partner)
 
 	thread = frappe.db.get_value("Connect Thread", {"customer": customer, "partner": partner}, "name")
 	if not thread:

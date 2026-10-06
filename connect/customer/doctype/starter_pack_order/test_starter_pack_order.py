@@ -270,7 +270,7 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 		frappe.db.set_single_value("Starter Pack Settings", "auto_assign_partners", 1)
 		make_partner("_Test RR Payment Partner", starter_pack=0)
 		partner = frappe.get_doc("Partner", "_Test RR Payment Partner")
-		partner.update({"starter_pack": 1, "enabled": 1, "is_frappe_consultant": 1, "starter_pack_sequence": 0})
+		partner.update({"starter_pack": 1, "enabled": 1, "starter_pack_sequence": 0})
 		partner.save(ignore_permissions=True)
 
 		_, order = self.place([self.pack_a])
@@ -327,7 +327,7 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 		frappe.db.set_single_value("Starter Pack Settings", "auto_assign_partners", 1)
 		make_partner("_Test RR Payment Partner", starter_pack=0)
 		partner = frappe.get_doc("Partner", "_Test RR Payment Partner")
-		partner.update({"starter_pack": 1, "enabled": 1, "is_frappe_consultant": 1, "starter_pack_sequence": 0})
+		partner.update({"starter_pack": 1, "enabled": 1, "starter_pack_sequence": 0})
 		partner.save(ignore_permissions=True)
 
 		_, order = self.place([self.pack_a])
@@ -502,9 +502,6 @@ class IntegrationTestPartnerRotation(IntegrationTestCase):
 		self.pack = make_pack("_test_pack_a", 10000, 5)
 		self.notify = patch(NOTIFY).start()
 		self.log_error = patch("frappe.log_error").start()
-		# Every order here is placed by one user, who'd otherwise go back to their first
-		# consultant each time. That rule has its own tests (connect.partner.test_consultants).
-		patch(f"{ROTATION_MODULE}.previous_partner", return_value=None).start()
 
 	def tearDown(self):
 		patch.stopall()
@@ -514,7 +511,7 @@ class IntegrationTestPartnerRotation(IntegrationTestCase):
 		if not frappe.db.exists("Partner", name):
 			make_partner(name, starter_pack=0)
 		doc = frappe.get_doc("Partner", name)
-		doc.update({"starter_pack": 1, "enabled": 1, "is_frappe_consultant": 1, "starter_pack_sequence": sequence})
+		doc.update({"starter_pack": 1, "enabled": 1, "starter_pack_sequence": sequence})
 		doc.save(ignore_permissions=True)
 		return doc
 
@@ -672,7 +669,7 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 	def test_the_round_robin_takes_over_only_when_switched_on(self):
 		pool = make_partner("_Test RR A", starter_pack=0)
 		doc = frappe.get_doc("Partner", pool)
-		doc.update({"starter_pack": 1, "enabled": 1, "is_frappe_consultant": 1, "starter_pack_sequence": 1})
+		doc.update({"starter_pack": 1, "enabled": 1, "starter_pack_sequence": 1})
 		doc.save(ignore_permissions=True)
 
 		self.assertEqual(hand_over(self.paid_order().name), self.partner)

@@ -3,13 +3,9 @@
 
 """What happens to a Starter Pack Order once it's paid.
 
-With round robin switched on (Starter Pack Settings), each paid order goes to the next Frappe
-consultant (see connect.partner.consultants). With it off, or with no consultant enabled,
-it goes to the Implemented By partner. Either way, once the order has a partner, the buyer's
+Until round robin assignment is switched on (Starter Pack Settings), every paid order goes to
+one partner, the Implemented By partner. Either way, once the order has a partner, the buyer's
 opening message to them is posted in their chat thread: a hello and a card with the project.
-
-A consultant who stops hands their open orders on (reassign). The order's thread stays: the
-next consultant joins it, so the conversation carries on where it was.
 """
 
 import json
@@ -21,19 +17,11 @@ from frappe.utils import cint
 from connect.api.contact import _ensure_thread_member
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.customer.doctype.requirement.requirement import get_requirement_snapshot
-from connect.customer.doctype.starter_pack_order.partner_rotation import (
-	assign_partner,
-	get_pool,
-	lock_rotation,
-	pick_next,
-	tell_admins,
-	write_pointer,
-)
+from connect.customer.doctype.starter_pack_order.partner_rotation import assign_partner, tell_admins
 from connect.permissions import _get_partner_admin
 
 SETTINGS = "Starter Pack Settings"
 SAVEPOINT = "starter_pack_implementation_partner"
-REASSIGN_SAVEPOINT = "starter_pack_reassign"
 
 
 def hand_over(order_name, tell_admins_if_unassigned=True):
@@ -43,16 +31,10 @@ def hand_over(order_name, tell_admins_if_unassigned=True):
 	Never raises: it runs inside the payment hook, and a partner that couldn't be set must
 	never undo the record of a payment.
 	"""
-	round_robin = cint(frappe.db.get_single_value(SETTINGS, "auto_assign_partners"))
-	if round_robin and get_pool():
+	if cint(frappe.db.get_single_value(SETTINGS, "auto_assign_partners")):
 		partner = assign_partner(order_name, tell_admins_if_unassigned)
 	else:
 		partner = give_to_implementation_partner(order_name, tell_admins_if_unassigned)
-		if partner and round_robin and tell_admins_if_unassigned:
-			tell_admins(
-				frappe._dict(name=order_name),
-				_("{0} went to {1}: no Frappe consultant is enabled.").format(order_name, partner),
-			)
 
 	if partner:
 		# After commit, so a failure here can't touch the payment, and the job sees the partner.
@@ -113,64 +95,6 @@ def assign_now(order):
 	if not partner:
 		frappe.throw(_("No partner to give this order to. Set Implemented By in Starter Pack Settings."))
 	return partner
-
-
-def reassign(order_name):
-	"""Give an open order to the next consultant in turn, because its own has stopped, or to
-	the Implemented By partner if there's no one else. Returns the new partner, or None.
-	Never raises: a consultant's role being taken away must not fail on one order."""
-	frappe.db.savepoint(REASSIGN_SAVEPOINT)
-	try:
-		pointer = lock_rotation()
-		order = frappe.get_doc("Starter Pack Order", order_name, for_update=True)
-		pool = [p for p in get_pool() if p.name != order.partner]
-		partner = pick_next(pool, pointer)
-		if partner:
-			order.partner = partner.name
-			order.flags.auto_assigned = True
-			order.save(ignore_permissions=True)
-			write_pointer(partner)
-			return partner.name
-
-		fallback = frappe.db.get_single_value(SETTINGS, "implementation_partner")
-		if fallback and fallback != order.partner:
-			order.partner = fallback
-			order.save(ignore_permissions=True)
-			return fallback
-	except Exception:
-		frappe.db.rollback(save_point=REASSIGN_SAVEPOINT)
-		frappe.log_error(title=f"Could not hand {order_name} to another consultant")
-
-	tell_admins(
-		frappe._dict(name=order_name),
-		_("{0} needs a new partner: its consultant stopped and it couldn't be handed on.").format(order_name),
-	)
-	return None
-
-
-def join_thread(order):
-	"""When an order's partner changes after the buyer's thread was opened, the new partner's
-	admin joins that thread, so the conversation and its history carry on. A thread's partner
-	can't change once it's created (Connect Thread), so the thread keeps its first name."""
-	if not order.implementation_thread or not order.partner:
-		return
-	admin = _get_partner_admin(order.partner)
-	if not admin or frappe.db.exists(
-		"Connect Thread Member", {"thread": order.implementation_thread, "user": admin, "is_removed": 0}
-	):
-		return
-	member = frappe.db.get_value(
-		"Connect Thread Member", {"thread": order.implementation_thread, "user": admin}, "name"
-	)
-	if member:
-		frappe.db.set_value("Connect Thread Member", member, {"is_removed": 0, "removed_on": None})
-	else:
-		_ensure_thread_member(order.implementation_thread, admin, "Partner", frappe.session.user)
-	frappe.get_doc("Connect Thread", order.implementation_thread).post_system_message(
-		_("{0} is now looking after this project.").format(
-			frappe.db.get_value("Partner", order.partner, "partner_name") or order.partner
-		)
-	)
 
 
 def post_opening_message(order_name):
