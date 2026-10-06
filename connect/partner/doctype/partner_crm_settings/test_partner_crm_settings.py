@@ -55,20 +55,24 @@ class IntegrationTestPartnerCRMSettings(IntegrationTestCase):
 			if raises
 			else (lambda *a, **kw: (attachments or [], failed or []))
 		)
+		original_request = getattr(frappe.local, "request", None)
 		frappe.local.request = Request(
 			EnvironBuilder(path="/", query_string=f"partner={self.partner}").get_environ()
 		)
-		with (
-			patch(f"{WEBHOOK_MODULE}._verify_signature"),
-			patch(f"{WEBHOOK_MODULE}._fetch_crm_attachments", side_effect=fetch),
-		):
-			receive_crm_reply(
-				reference_doctype="CRM Lead",
-				reference_name="CRM-LEAD-TEST-0001",
-				sent_or_received="Sent",
-				content=content,
-				name=communication,
-			)
+		try:
+			with (
+				patch(f"{WEBHOOK_MODULE}._verify_signature"),
+				patch(f"{WEBHOOK_MODULE}._fetch_crm_attachments", side_effect=fetch),
+			):
+				receive_crm_reply(
+					reference_doctype="CRM Lead",
+					reference_name="CRM-LEAD-TEST-0001",
+					sent_or_received="Sent",
+					content=content,
+					name=communication,
+				)
+		finally:
+			frappe.local.request = original_request
 		return frappe.get_all(
 			"Connect Message",
 			filters={"crm_source_communication": communication},
