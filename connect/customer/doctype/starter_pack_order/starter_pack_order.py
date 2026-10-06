@@ -12,9 +12,11 @@ from frappe.utils import cint, flt, get_datetime, get_system_timezone, now_datet
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.customer.doctype.starter_pack_order.implementation import (
 	hand_over,
+	move_thread,
 	project_title,
 	timeline_days,
 )
+from connect.partner.consultants import consultant_card
 from connect.partner.doctype.partner.partner import _compute_display_industries
 
 # Set around the one save that mirrors gateway status onto an order. Nothing
@@ -64,6 +66,7 @@ class StarterPackOrder(Document):
 		self.set_paid_on()
 		self.validate_partner()
 		self.set_partner_assignment()
+		self.validate_consultant()
 		self.set_totals()
 
 	def snapshot_packs(self):
@@ -150,6 +153,22 @@ class StarterPackOrder(Document):
 			self.partner_auto_assigned = 0
 			if self.status == "Partner Assigned":
 				self.status = "New"
+
+	def validate_consultant(self):
+		"""A consultant only on an order Frappe delivers, and only one who's switched on."""
+		if not self.has_value_changed("consultant"):
+			return
+		self.consultant_assigned_on = now_datetime() if self.consultant else None
+		if not self.consultant:
+			return
+		if self.partner != frappe.db.get_single_value("Starter Pack Settings", "implementation_partner"):
+			frappe.throw(_("A Frappe consultant can only be given an order Frappe delivers."))
+		if not frappe.db.get_value("Frappe Consultant", self.consultant, "enabled"):
+			frappe.throw(_("{0} isn't an enabled Frappe consultant.").format(frappe.bold(self.consultant)))
+
+	def on_update(self):
+		if self.has_value_changed("partner") or self.has_value_changed("consultant"):
+			move_thread(self)
 
 	def set_totals(self):
 		# Always derived from the snapshotted rows, so the total can't drift from the lines.
@@ -361,6 +380,7 @@ def get_order(order=None, payment_request=None, key=None):
 		"total_hours": doc.total_hours,
 		"kickoff_date": doc.kickoff_date,
 		"partner": get_assigned_partner(doc.partner) if doc.partner else None,
+		"consultant": consultant_card(doc.consultant),
 		"packs": [
 			{
 				"starter_pack": r.starter_pack,
@@ -433,7 +453,7 @@ def get_my_projects():
 		"Starter Pack Order",
 		filters={"payment_status": ["in", ["Paid", "Partially Refunded"]]},
 		or_filters=or_filters,
-		fields=["name", "company_name", "status", "partner", "creation"],
+		fields=["name", "company_name", "status", "partner", "consultant", "creation"],
 		order_by="creation desc",
 	)
 	if not orders:
@@ -463,7 +483,19 @@ def get_my_projects():
 			"status": o.status,
 			"is_active": o.status != "Completed",
 			"created_on": with_timezone(o.creation),
-			"partner": partners.get(o.partner),
+			"partner": project_partner(partners.get(o.partner), consultant_card(o.consultant)),
 		}
 		for o in orders
 	]
+
+
+def project_partner(partner, consultant):
+	"""Who a project card shows: the consultant, when Frappe has given it one."""
+	if not consultant:
+		return partner
+	return {
+		"name": partner.name if partner else None,
+		"partner_name": consultant["label"],
+		"logo": consultant["photo"],
+		"consultant": consultant["name"],
+	}

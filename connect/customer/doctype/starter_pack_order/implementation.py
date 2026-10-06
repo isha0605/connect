@@ -4,20 +4,29 @@
 """What happens to a Starter Pack Order once it's paid.
 
 Until round robin assignment is switched on (Starter Pack Settings), every paid order goes to
-one partner, the Implemented By partner. Either way, once the order has a partner, the buyer's
-opening message to them is posted in their chat thread: a hello and a card with the project.
+one partner, the Implemented By partner: Frappe. An order Frappe delivers then gets one of its
+Frappe consultants, in turn (see connect.partner.consultants). Once the order has a partner,
+the buyer's opening message is posted in their chat thread — with Frappe, their thread with
+that consultant: a hello and a card with the project.
+
+When the order's consultant changes (one stopping, or a hand-over in Desk), its thread goes
+with it, history included (move_thread).
 """
 
 import json
 
 import frappe
 from frappe import _
-from frappe.utils import cint
+from frappe.utils import cint, now_datetime
 
 from connect.api.contact import _ensure_thread_member
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.customer.doctype.requirement.requirement import get_requirement_snapshot
-from connect.customer.doctype.starter_pack_order.partner_rotation import assign_partner, tell_admins
+from connect.customer.doctype.starter_pack_order.partner_rotation import (
+	assign_consultant,
+	assign_partner,
+	tell_admins,
+)
 from connect.permissions import _get_partner_admin
 
 SETTINGS = "Starter Pack Settings"
@@ -35,6 +44,9 @@ def hand_over(order_name, tell_admins_if_unassigned=True):
 		partner = assign_partner(order_name, tell_admins_if_unassigned)
 	else:
 		partner = give_to_implementation_partner(order_name, tell_admins_if_unassigned)
+
+	if partner and partner == frappe.db.get_single_value(SETTINGS, "implementation_partner"):
+		assign_consultant(order_name, tell_admins_if_unassigned)
 
 	if partner:
 		# After commit, so a failure here can't touch the payment, and the job sees the partner.
@@ -86,6 +98,24 @@ def hand_over_waiting_orders():
 		hand_over(name, tell_admins_if_unassigned=False)
 		frappe.db.commit()
 
+	# Frappe's orders paid while no consultant was enabled.
+	frappe_partner = frappe.db.get_single_value(SETTINGS, "implementation_partner")
+	if not frappe_partner:
+		return
+	for name in frappe.get_all(
+		"Starter Pack Order",
+		filters={
+			"payment_status": "Paid",
+			"partner": frappe_partner,
+			"consultant": ["is", "not set"],
+			"status": ["in", ["New", "Partner Assigned", "In Progress"]],
+		},
+		order_by="creation asc",
+		pluck="name",
+	):
+		assign_consultant(name, tell_admins_if_unassigned=False)
+		frappe.db.commit()
+
 
 @frappe.whitelist(methods=["POST"])
 def assign_now(order):
@@ -114,7 +144,7 @@ def post_opening_message(order_name):
 	user = order.user
 
 	try:
-		thread = get_or_open_thread(customer, order.partner, user)
+		thread = get_or_open_thread(customer, order.partner, user, order.consultant)
 		for message in opening_messages(order, customer):
 			frappe.get_doc({"doctype": "Connect Message", "thread": thread, "sender": user, **message}).insert(
 				ignore_permissions=True
@@ -125,10 +155,13 @@ def post_opening_message(order_name):
 		frappe.log_error(title=f"Could not post the opening message for {order_name}")
 
 
-def get_or_open_thread(customer, partner, user):
-	"""The customer's thread with the partner — the one Contact Partner opens — reopened if
-	it was closed, with the buyer and the partner's admin as members."""
-	thread = frappe.db.get_value("Connect Thread", {"customer": customer, "partner": partner}, "name")
+def get_or_open_thread(customer, partner, user, consultant=None):
+	"""The customer's thread with the partner — with Frappe, the one with this consultant —
+	reopened if it was closed. Its members are the buyer and, on the partner side, the
+	consultant, or the partner's admin when there's no consultant (the thread Contact Partner
+	opens)."""
+	key = {"customer": customer, "partner": partner, "consultant": consultant or ["is", "not set"]}
+	thread = frappe.db.get_value("Connect Thread", key, "name")
 	if thread:
 		if frappe.db.get_value("Connect Thread", thread, "status") == "Closed":
 			doc = frappe.get_doc("Connect Thread", thread)
@@ -136,16 +169,90 @@ def get_or_open_thread(customer, partner, user):
 			doc.save(ignore_permissions=True)
 	else:
 		thread = (
-			frappe.get_doc({"doctype": "Connect Thread", "customer": customer, "partner": partner})
+			frappe.get_doc(
+				{"doctype": "Connect Thread", "customer": customer, "partner": partner, "consultant": consultant}
+			)
 			.insert(ignore_permissions=True)
 			.name
 		)
 
 	_ensure_thread_member(thread, user, "Customer", user)
-	partner_admin = _get_partner_admin(partner)
-	if partner_admin:
-		_ensure_thread_member(thread, partner_admin, "Partner", user)
+	partner_side = consultant or _get_partner_admin(partner)
+	if partner_side:
+		ensure_partner_member(thread, partner_side, user)
 	return thread
+
+
+def ensure_partner_member(thread, member, added_by):
+	"""Add someone to a thread's partner side, or bring them back if they'd been removed."""
+	row = frappe.db.get_value("Connect Thread Member", {"thread": thread, "user": member}, ["name", "is_removed"], as_dict=True)
+	if not row:
+		_ensure_thread_member(thread, member, "Partner", added_by)
+	elif row.is_removed:
+		frappe.db.set_value("Connect Thread Member", row.name, {"is_removed": 0, "removed_on": None})
+
+
+def remove_partner_member(thread, member):
+	row = frappe.db.get_value("Connect Thread Member", {"thread": thread, "user": member, "is_removed": 0}, "name")
+	if row:
+		frappe.db.set_value("Connect Thread Member", row, {"is_removed": 1, "removed_on": now_datetime()})
+
+
+def move_thread(order):
+	"""The order's partner or consultant changed after its chat opened: take the chat along.
+
+	A new consultant at Frappe takes the thread itself, history and all; the old one leaves
+	it, and a note says who is looking after the project now. A new partner is a different
+	company, whose thread with the customer is a different one, so the order moves to that
+	(opened if need be) and the old partner's thread is left as it was."""
+	if not order.implementation_thread:
+		return
+	thread = frappe.get_doc("Connect Thread", order.implementation_thread)
+	if thread.partner != order.partner:
+		if order.partner:
+			moved = get_or_open_thread(thread.customer, order.partner, order.user, order.consultant)
+			order.db_set("implementation_thread", moved)
+			moved = frappe.get_doc("Connect Thread", moved)
+			if order.consultant:
+				post_looking_after(moved, order.consultant)
+		return
+
+	old, new = thread.consultant, order.consultant
+	if old == new:
+		return
+
+	if not old:
+		# A thread opened while Frappe had no consultant enabled: the consultant joins it.
+		if new:
+			ensure_partner_member(thread.name, new, frappe.session.user)
+			post_looking_after(thread, new)
+		return
+
+	remove_partner_member(thread.name, old)
+	if not new:
+		# No one to hand it to: Frappe's admin looks after it until someone does.
+		admin = _get_partner_admin(order.partner)
+		if admin:
+			ensure_partner_member(thread.name, admin, frappe.session.user)
+		return
+
+	existing = frappe.db.get_value(
+		"Connect Thread", {"customer": thread.customer, "partner": thread.partner, "consultant": new}, "name"
+	)
+	if existing:
+		# The customer already talks to the new consultant: carry on in that thread.
+		order.db_set("implementation_thread", existing)
+		thread = frappe.get_doc("Connect Thread", existing)
+	else:
+		thread.consultant = new
+		thread.save(ignore_permissions=True)
+	ensure_partner_member(thread.name, new, frappe.session.user)
+	post_looking_after(thread, new)
+
+
+def post_looking_after(thread, consultant):
+	name = frappe.db.get_value("Frappe Consultant", consultant, "full_name") or consultant
+	thread.post_system_message(_("{0} from Frappe is now looking after this project.").format(name))
 
 
 def opening_messages(order, customer):

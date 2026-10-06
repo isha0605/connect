@@ -1,0 +1,106 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:user",
+ "creation": "2026-10-06 12:00:00.000000",
+ "description": "A Frappe staff member who delivers Starter Packs. Made by giving a User the Frappe Consultant role; taking the role away switches them off.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "full_name",
+  "photo",
+  "column_break_status",
+  "enabled",
+  "rotation_order",
+  "section_break_suite",
+  "suite_email"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User",
+   "options": "User",
+   "read_only": 1,
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fetch_from": "user.full_name",
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Full Name",
+   "read_only": 1
+  },
+  {
+   "description": "Shown to buyers next to the consultant's name. The Frappe logo when left empty.",
+   "fieldname": "photo",
+   "fieldtype": "Attach Image",
+   "label": "Photo"
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "description": "Follows the Frappe Consultant role on the User: only enabled consultants get new orders.",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Enabled",
+   "read_only": 1
+  },
+  {
+   "description": "Their place in the turn that hands out paid Starter Pack orders. Filled in automatically (they join the end of the line) and must be unique.",
+   "fieldname": "rotation_order",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Rotation Order",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "section_break_suite",
+   "fieldtype": "Section Break",
+   "label": "Frappe Suite"
+  },
+  {
+   "description": "Their Frappe Suite account, for kickoff calls.",
+   "fieldname": "suite_email",
+   "fieldtype": "Data",
+   "label": "Suite Email",
+   "options": "Email"
+  }
+ ],
+ "image_field": "photo",
+ "in_create": 1,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-06 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Partner",
+ "name": "Frappe Consultant",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "rotation_order",
+ "sort_order": "ASC",
+ "states": [],
+ "title_field": "full_name",
+ "track_changes": 1
+}

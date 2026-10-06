@@ -15,9 +15,17 @@ class ConnectThread(Document):
 			if prev and (prev.customer != self.customer or prev.partner != self.partner):
 				frappe.throw(_("A thread's customer and partner can't be changed after it's created"))
 
+		# One thread per customer and partner, or with Frappe, one per Starter Pack consultant
+		# (see connect.partner.consultants). The consultant may change: an order handed to
+		# another consultant takes its thread along.
 		existing = frappe.db.exists(
 			"Connect Thread",
-			{"customer": self.customer, "partner": self.partner, "name": ["!=", self.name]},
+			{
+				"customer": self.customer,
+				"partner": self.partner,
+				"consultant": self.consultant or ["is", "not set"],
+				"name": ["!=", self.name],
+			},
 		)
 		if existing:
 			frappe.throw(

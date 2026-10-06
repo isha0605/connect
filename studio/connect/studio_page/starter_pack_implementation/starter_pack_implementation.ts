@@ -63,8 +63,10 @@ export default function setup(context) {
 	const projectTitle = computed(() => order.value?.project_title || "Starter Pack implementation")
 	const breadcrumbItems = computed(() => [{ label: "Projects" }, { label: projectTitle.value }])
 	const partner = computed(() => order.value?.partner || null)
-	const partnerName = computed(() => partner.value?.partner_name || "Frappe")
-	const partnerLogo = computed(() => partner.value?.logo || "")
+	// With Frappe, the buyer works with one of its consultants: "Priya Sharma · Frappe".
+	const consultant = computed(() => order.value?.consultant || null)
+	const partnerName = computed(() => consultant.value?.label || partner.value?.partner_name || "Frappe")
+	const partnerLogo = computed(() => consultant.value?.photo || partner.value?.logo || "")
 	const scopeOfWork = computed(() => (order.value?.packs || []).map((p) => p.pack_name).join(", "))
 	const cost = computed(() => money(order.value?.amount))
 	const paymentBadge = computed(() => PAYMENT_BADGES[order.value?.payment_status] || PAYMENT_BADGES.Paid)

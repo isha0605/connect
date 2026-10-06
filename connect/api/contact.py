@@ -59,7 +59,10 @@ def start_partner_thread(partner, message=None):
 	if not customer:
 		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
 
-	thread = frappe.db.get_value("Connect Thread", {"customer": customer, "partner": partner}, "name")
+	# Not a Starter Pack consultant's thread with Frappe: those come from the order.
+	thread = frappe.db.get_value(
+		"Connect Thread", {"customer": customer, "partner": partner, "consultant": ["is", "not set"]}, "name"
+	)
 	if not thread:
 		thread = frappe.get_doc({
 			"doctype": "Connect Thread",

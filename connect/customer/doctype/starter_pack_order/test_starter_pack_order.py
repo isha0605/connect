@@ -155,6 +155,7 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 		frappe.db.set_single_value(
 			"Starter Pack Settings", {"implementation_partner": "", "auto_assign_partners": 0}
 		)
+		without_site_consultants()
 
 		# Records persist across tests within a class (the rollback is per class), and
 		# order_ref is unique, so every fake session needs its own id.
@@ -264,7 +265,8 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 		self.assertEqual(order.partner, "_Test Implementing Partner")
 		self.assertFalse(order.partner_auto_assigned)
 		self.assertEqual(order.status, "Partner Assigned")
-		enqueue.assert_called_once_with(post_opening_message, order_name=order.name, enqueue_after_commit=True)
+		# Also queued: admins told there's no Frappe consultant (the site's are switched off here).
+		enqueue.assert_any_call(post_opening_message, order_name=order.name, enqueue_after_commit=True)
 
 	def test_payment_assigns_a_partner_by_round_robin_when_switched_on(self):
 		frappe.db.set_single_value("Starter Pack Settings", "auto_assign_partners", 1)
@@ -431,8 +433,8 @@ def pool_of(*partners):
 	"""(name, rotation order) pairs -> the rows get_pool returns, in its order."""
 	from connect.customer.doctype.starter_pack_order.partner_rotation import rotation_key
 
-	rows = [frappe._dict(name=name, starter_pack_sequence=seq) for name, seq in partners]
-	return sorted(rows, key=lambda p: rotation_key(p.starter_pack_sequence, p.name))
+	rows = [frappe._dict(name=name, sequence=seq) for name, seq in partners]
+	return sorted(rows, key=lambda p: rotation_key(p.sequence, p.name))
 
 
 class UnitTestPartnerRotation(IntegrationTestCase):
@@ -455,7 +457,7 @@ class UnitTestPartnerRotation(IntegrationTestCase):
 		for _ in range(3):
 			partner = pick_next(pool_of(*pool), pointer)
 			picks.append(partner.name)
-			pointer = (partner.starter_pack_sequence, partner.name)
+			pointer = (partner.sequence, partner.name)
 		self.assertEqual(picks, ["D", "E", "A"])
 
 	def test_a_partner_going_inactive_mid_cycle_is_skipped(self):
@@ -617,6 +619,7 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		for name in frappe.get_all("Partner", filters={"starter_pack": 1}, pluck="name"):
 			frappe.db.set_value("Partner", name, {"starter_pack": 0, "starter_pack_sequence": 0})
 		self.partner = make_partner("_Test Implementing Partner", starter_pack=0)
+		without_site_consultants()
 		frappe.db.set_single_value(
 			"Starter Pack Settings",
 			{"implementation_partner": self.partner, "auto_assign_partners": 0, "gst_rate": 18},
@@ -802,6 +805,12 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		result = get_order(order.name)
 		self.assertEqual(result["project_title"], "_test_pack_a implementation for Test Co")
 		self.assertEqual(result["timeline_days"], 30)
+
+
+def without_site_consultants():
+	"""The site's own Frappe consultants would take these orders; the class's rollback puts
+	them back. Consultants have their own tests (connect.partner.test_consultants)."""
+	frappe.db.set_value("Frappe Consultant", {"enabled": 1}, "enabled", 0)
 
 
 def make_user(email):

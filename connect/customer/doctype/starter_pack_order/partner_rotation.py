@@ -1,17 +1,21 @@
 # Copyright (c) 2026
 # For license information, please see license.txt
 
-"""Round-robin assignment of paid Starter Pack Orders to approved Starter Pack partners.
+"""Round-robin assignment of paid Starter Pack Orders.
 
-The rotation is an ordered list — enabled partners with Starter Pack Partner ticked, by
-their Starter Pack Rotation Order, then name — plus a pointer to the last partner the
-rotation picked, kept in Starter Pack Settings. The next pick is the first partner after
-the pointer, wrapping back to the start.
+There are two rotations, sharing this code: PARTNERS hands an order to an approved Starter
+Pack partner (off for now: Auto-assign in Starter Pack Settings), and CONSULTANTS hands an
+order Frappe delivers to one of its Frappe Consultants.
+
+A rotation is an ordered list — the enabled members of its pool, by their rotation order,
+then name — plus a pointer to the last one it picked, kept in Starter Pack Settings. The
+next pick is the first one after the pointer, wrapping back to the start.
 
 The pointer records where the last pick stood in that order (its rotation order and
 name), not a link to the partner. So it keeps working when that partner is later
 disabled, taken out of the pool or deleted: the next pick is whoever now comes after
-that spot. Only automatic picks move it; setting a partner by hand in Desk doesn't.
+that spot. Only automatic picks move it; setting a partner by hand in Desk doesn't, and
+nor does a returning customer going back to the consultant they already have.
 """
 
 import frappe
@@ -32,13 +36,33 @@ def rotation_key(sequence, name):
 	return (sequence if sequence > 0 else UNNUMBERED, name or "")
 
 
-def get_pool():
-	partners = frappe.get_all(
-		"Partner",
-		filters={"starter_pack": 1, "enabled": 1},
-		fields=["name", "starter_pack_sequence"],
+class Rotation:
+	"""Where one rotation's pool and pointer live."""
+
+	def __init__(self, doctype, filters, sequence_field, last_name_field, last_sequence_field):
+		self.doctype = doctype
+		self.filters = filters
+		self.sequence_field = sequence_field
+		self.last_name_field = last_name_field
+		self.last_sequence_field = last_sequence_field
+
+
+PARTNERS = Rotation(
+	"Partner", {"starter_pack": 1, "enabled": 1}, "starter_pack_sequence", "rr_last_partner", "rr_last_sequence"
+)
+CONSULTANTS = Rotation(
+	"Frappe Consultant", {"enabled": 1}, "rotation_order", "rr_last_consultant", "rr_last_consultant_sequence"
+)
+
+
+def get_pool(rotation=PARTNERS):
+	"""The rotation's members in turn order, as {name, sequence} rows."""
+	rows = frappe.get_all(
+		rotation.doctype,
+		filters=rotation.filters,
+		fields=["name", f"{rotation.sequence_field} as sequence"],
 	)
-	return sorted(partners, key=lambda p: rotation_key(p.starter_pack_sequence, p.name))
+	return sorted(rows, key=lambda p: rotation_key(p.sequence, p.name))
 
 
 def pick_next(pool, pointer):
@@ -49,51 +73,52 @@ def pick_next(pool, pointer):
 	if pointer:
 		last = rotation_key(*pointer)
 		for partner in pool:
-			if rotation_key(partner.starter_pack_sequence, partner.name) > last:
+			if rotation_key(partner.sequence, partner.name) > last:
 				return partner
 	return pool[0]
 
 
-def read_pointer():
-	"""(rotation order, partner) of the last automatic pick, or None. An unlocked read for
-	looking at the rotation — assign_partner uses the pointer lock_rotation reads instead."""
-	name =frappe.db.get_single_value(SETTINGS, "rr_last_partner", cache=False)
+def read_pointer(rotation=PARTNERS):
+	"""(rotation order, name) of the rotation's last automatic pick, or None. An unlocked read
+	for looking at the rotation — assigning uses the pointer lock_rotation reads instead."""
+	name = frappe.db.get_single_value(SETTINGS, rotation.last_name_field, cache=False)
 	if not name:
 		return None
-	return (frappe.db.get_single_value(SETTINGS, "rr_last_sequence", cache=False), name)
+	return (frappe.db.get_single_value(SETTINGS, rotation.last_sequence_field, cache=False), name)
 
 
-def write_pointer(partner):
+def write_pointer(picked, rotation=PARTNERS):
 	frappe.db.set_single_value(
 		SETTINGS,
-		{"rr_last_partner": partner.name, "rr_last_sequence": cint(partner.starter_pack_sequence)},
+		{rotation.last_name_field: picked.name, rotation.last_sequence_field: cint(picked.sequence)},
 	)
 
 
-def lock_rotation():
+def lock_rotation(rotation=PARTNERS):
 	"""Take the rotation's row lock until this transaction commits, so two payments landing
-	at once can't both read the same pointer and hand out the same partner. Returns the
+	at once can't both read the same pointer and hand out the same pick. Returns the
 	pointer as read under that lock, in read_pointer's shape."""
-	pointer = _select_pointer_for_update()
-	if "rr_last_sequence" not in pointer:
+	pointer = _select_pointer_for_update(rotation)
+	if rotation.last_sequence_field not in pointer:
 		# Never used yet, so there's no row to lock. The rotation patch creates it; this only
 		# covers a site where it hasn't run. (get_single_value can't tell a missing Int row
 		# from 0, hence reading tabSingles directly.)
-		frappe.db.set_single_value(SETTINGS, "rr_last_sequence", 0)
-		pointer = _select_pointer_for_update()
-	if not pointer.get("rr_last_partner"):
+		frappe.db.set_single_value(SETTINGS, rotation.last_sequence_field, 0)
+		pointer = _select_pointer_for_update(rotation)
+	if not pointer.get(rotation.last_name_field):
 		return None
-	return (cint(pointer["rr_last_sequence"]), pointer["rr_last_partner"])
+	return (cint(pointer[rotation.last_sequence_field]), pointer[rotation.last_name_field])
 
 
-def _select_pointer_for_update():
+def _select_pointer_for_update(rotation):
 	"""Both pointer fields in one locked read, as {field: value}."""
 	Singles = frappe.qb.DocType("Singles")
+	fields = [rotation.last_name_field, rotation.last_sequence_field]
 	return dict(
 		(
 			frappe.qb.from_(Singles)
 			.select(Singles.field, Singles.value)
-			.where((Singles.doctype == SETTINGS) & Singles.field.isin(["rr_last_partner", "rr_last_sequence"]))
+			.where((Singles.doctype == SETTINGS) & Singles.field.isin(fields))
 			.for_update()
 		).run()
 	)
@@ -140,6 +165,80 @@ def assign_partner(order_name, tell_admins_if_unassigned=True):
 				_("{0} is paid but assigning its partner failed. See the Error Log.").format(order_name),
 			)
 		return None
+
+
+CONSULTANT_SAVEPOINT = "starter_pack_consultant_rotation"
+
+
+def assign_consultant(order_name, tell_admins_if_unassigned=True, leaving=None):
+	"""Give a paid order Frappe delivers its Frappe Consultant: the one a returning customer
+	already has, else the next in turn. Returns the order's consultant afterwards, or None.
+
+	`leaving` is a consultant who is stopping: their orders go to someone else. Never raises,
+	for the same reason assign_partner doesn't.
+	"""
+	frappe.db.savepoint(CONSULTANT_SAVEPOINT)
+	try:
+		pointer = lock_rotation(CONSULTANTS)
+		order = frappe.get_doc("Starter Pack Order", order_name, for_update=True)
+		if order.payment_status != "Paid" or (order.consultant and order.consultant != leaving):
+			return order.consultant or None
+
+		pool = [c for c in get_pool(CONSULTANTS) if c.name != leaving]
+		returning_to = previous_consultant(order, pool)
+		consultant = returning_to or pick_next(pool, pointer)
+		if not consultant:
+			# Only worth saying once Frappe has consultants at all: before that, Frappe's
+			# admin taking the chat is simply how it works.
+			if tell_admins_if_unassigned and frappe.db.count("Frappe Consultant"):
+				tell_admins(
+					order,
+					_("{0} has no Frappe consultant: none is enabled. Its chat is with Frappe's admin.").format(
+						order.name
+					),
+				)
+			if leaving:
+				order.consultant = None
+				order.save(ignore_permissions=True)
+			return None
+
+		order.consultant = consultant.name
+		order.save(ignore_permissions=True)
+		if not returning_to:
+			write_pointer(consultant, CONSULTANTS)
+		return consultant.name
+	except Exception:
+		frappe.db.rollback(save_point=CONSULTANT_SAVEPOINT)
+		frappe.log_error(title=f"Could not give {order_name} a Frappe consultant")
+		if tell_admins_if_unassigned:
+			tell_admins(
+				frappe._dict(name=order_name),
+				_("{0} is paid but giving it a Frappe consultant failed. See the Error Log.").format(order_name),
+			)
+		return None
+
+
+def previous_consultant(order, pool):
+	"""The consultant a returning customer already has, if they're still in the pool, so the
+	customer stays in the one chat they know. The customer's company counts, not just the
+	buyer: a colleague's earlier order counts too."""
+	if not pool:
+		return None
+	if order.customer:
+		owner = {"customer": order.customer}
+	elif order.user and order.user != "Guest":
+		owner = {"user": order.user}
+	else:
+		return None
+	by_name = {c.name: c for c in pool}
+	earlier = frappe.get_all(
+		"Starter Pack Order",
+		filters={**owner, "name": ["!=", order.name], "consultant": ["in", list(by_name)]},
+		order_by="creation desc",
+		pluck="consultant",
+		limit=1,
+	)
+	return by_name[earlier[0]] if earlier else None
 
 
 def tell_admins(order, message):

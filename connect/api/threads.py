@@ -83,7 +83,7 @@ def get_my_threads():
 	threads = frappe.get_list(
 		"Connect Thread",
 		fields=[
-			"name", "customer", "partner", "status", "creation",
+			"name", "customer", "partner", "consultant", "status", "creation",
 			"last_message_at", "last_message_preview", "last_message_sender",
 		],
 		order_by="last_message_at desc, creation desc",
@@ -106,6 +106,15 @@ def get_my_threads():
 			"Partner", filters={"name": ["in", [t.partner for t in threads]]}, fields=["name", "logo"]
 		)
 	}
+	# a Starter Pack thread with Frappe is with one of its consultants: shown as "Priya Sharma · Frappe"
+	consultants = {
+		c.name: c
+		for c in frappe.get_all(
+			"Frappe Consultant",
+			filters={"name": ["in", [t.consultant for t in threads if t.consultant]]},
+			fields=["name", "full_name", "photo"],
+		)
+	} if any(t.consultant for t in threads) else {}
 	# last sender can be any member (unlike a DM's fixed pair), so the sidebar preview needs a server-side name lookup
 	sender_names = {
 		u.name: u.full_name
@@ -131,6 +140,9 @@ def get_my_threads():
 			"customer": t.customer,
 			"partner": t.partner,
 			"partner_logo": partner_logos.get(t.partner),
+			"consultant": t.consultant,
+			"consultant_name": consultants[t.consultant].full_name if t.consultant in consultants else None,
+			"consultant_photo": consultants[t.consultant].photo if t.consultant in consultants else None,
 			"status": t.status,
 			"creation": t.creation,
 			"last_message": t.last_message_preview or "",
