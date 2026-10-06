@@ -106,6 +106,13 @@ def get_my_threads():
 			"Partner", filters={"name": ["in", [t.partner for t in threads]]}, fields=["name", "logo"]
 		)
 	}
+	# the partner side sees the customer by name; a Customer's ID can be a number series (CUST-00069)
+	customer_names = {
+		c.name: c.customer_name
+		for c in frappe.get_all(
+			"Customer", filters={"name": ["in", list({t.customer for t in threads})]}, fields=["name", "customer_name"]
+		)
+	}
 	# a Starter Pack thread with Frappe is with one of its consultants: shown as "Priya Sharma · Frappe"
 	consultants = {
 		c.name: c
@@ -138,6 +145,7 @@ def get_my_threads():
 		result.append({
 			"name": t.name,
 			"customer": t.customer,
+			"customer_name": customer_names.get(t.customer),
 			"partner": t.partner,
 			"partner_logo": partner_logos.get(t.partner),
 			"consultant": t.consultant,

@@ -121,7 +121,9 @@ export default function setup(context) {
 			return capitalizeName(thread.other_user_full_name) || memberDisplayName(thread.other_user)
 		}
 		const amPartner = context.myContext.data && context.myContext.data.partner
-		return amPartner ? thread.customer : thread.partner
+		if (amPartner) return thread.customer_name || thread.customer
+		// A Starter Pack thread with Frappe is with one of its consultants (see get_my_threads).
+		return thread.consultant_name ? `${thread.consultant_name} · ${thread.partner}` : thread.partner
 	}
 
 	// Company threads carry the partner's uploaded logo (see get_my_threads' partner_logo) — shown
@@ -131,7 +133,7 @@ export default function setup(context) {
 		if (!thread) return ""
 		if (thread.convType === "dm") return thread.other_user_image || ""
 		const amPartner = context.myContext.data && context.myContext.data.partner
-		return amPartner ? "" : thread.partner_logo || ""
+		return amPartner ? "" : thread.consultant_photo || thread.partner_logo || ""
 	}
 
 	// ---- Inbox Active/Inactive tabs ----
