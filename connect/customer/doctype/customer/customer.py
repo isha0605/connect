@@ -2,9 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
-from frappe import _
 from frappe.model.document import Document
-from frappe.utils import validate_email_address
 
 
 class Customer(Document):
@@ -41,46 +39,3 @@ def get_my_customer():
 	if not customer:
 		return None
 	return frappe.db.get_value("Customer", customer, ["name", "customer_name"], as_dict=True)
-
-
-def signup_customer(full_name, company_name, email, password):
-	"""Lets a new customer self-signup by creating their user, company, and admin membership in one step."""
-	full_name = (full_name or "").strip()
-	company_name = (company_name or "").strip()
-	email = (email or "").strip().lower()
-	if not full_name or not company_name or not email or not password:
-		frappe.throw(_("Please fill in all fields"))
-	if not validate_email_address(email, throw=False):
-		frappe.throw(_("Enter a valid email address"))
-	if frappe.db.exists("User", email):
-		frappe.throw(_("An account with this email already exists. Log in instead."))
-	if frappe.db.exists("Customer", company_name):
-		frappe.throw(
-			_("{0} is already registered. Ask your team admin to add you instead.").format(company_name)
-		)
-
-	first_name, _sep, last_name = full_name.partition(" ")
-
-	user = frappe.new_doc("User")
-	user.email = email
-	user.first_name = first_name
-	user.last_name = last_name
-	user.user_type = "Website User"
-	user.send_welcome_email = 0
-	user.new_password = password
-	user.insert(ignore_permissions=True)
-
-	customer = frappe.new_doc("Customer")
-	customer.customer_name = company_name
-	customer.insert(ignore_permissions=True)
-
-	frappe.get_doc({
-		"doctype": "Customer Team Member",
-		"customer": customer.name,
-		"user": email,
-		"full_name": full_name,
-		"is_admin": 1,
-	}).insert(ignore_permissions=True)
-
-	frappe.local.login_manager.login_as(email)
-	return {"ok": True}

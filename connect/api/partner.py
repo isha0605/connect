@@ -146,12 +146,6 @@ def submit_partner_review(
 	)
 
 
-@frappe.whitelist(allow_guest=True)
-def signup_partner(full_name, company_name, email, password, country=None):
-	from connect.partner.doctype.partner.partner import signup_partner
-	return signup_partner(full_name, company_name, email, password, country=country)
-
-
 @frappe.whitelist()
 def upload_partner_logo():
 	from connect.partner.doctype.partner.partner import upload_partner_logo
