@@ -5,12 +5,12 @@
 //   sees it, re-read from the gateway — never the redirect's own say-so.
 // Card and UPI details are only ever entered on Razorpay's page, not here.
 //
-// No real account is needed. Paying needs the buyer to have been through the (mock) sign-in
-// screens in this tab; their name and email come from there, can be corrected here, and go
-// onto the order and its payment request. See @app/utils/checkoutSession.
+// Paying needs an account: someone signed out is sent to sign in (or up) first and comes back
+// here. Their name, email and company come from the account, can be corrected here, and go onto
+// the order and its payment request; the order itself takes their user and Customer.
 
-import { computed } from "vue"
-import { orderKey, readBuyer, rememberOrderKey, saveBuyer } from "@app/utils/checkoutSession"
+import { computed, watch } from "vue"
+import { orderKey, rememberOrderKey } from "@app/utils/checkoutSession"
 
 export default function setup(context) {
 	const {
@@ -18,6 +18,7 @@ export default function setup(context) {
 		router,
 		call,
 		toast,
+		myContext,
 		catalog,
 		checkoutName,
 		checkoutEmail,
@@ -32,16 +33,24 @@ export default function setup(context) {
 	const referenceId = String(route.query.reference_id || "")
 	const packKeys = String(route.query.packs || "").split(",").filter(Boolean)
 
-	// Not through the sign-in screens in this tab yet: go there first, and come back here.
-	const buyer = readBuyer()
-	const isGuest = computed(() => !buyer)
-	if (!referenceId && packKeys.length && !buyer) {
-		router.replace({ path: "/login-signup-redesign", query: { next: route.fullPath } })
-	}
-	if (buyer) {
-		checkoutName.value = checkoutName.value || buyer.full_name
-		checkoutEmail.value = checkoutEmail.value || buyer.email
-	}
+	// Signed out: sign in first, and come back here. Signed in: start from the account.
+	const isGuest = computed(() => !myContext.data || myContext.data.user === "Guest")
+	watch(
+		() => myContext.data,
+		(data) => {
+			if (!data) return
+			if (data.user === "Guest") {
+				if (!referenceId && packKeys.length) {
+					router.replace({ path: "/login-signup-redesign", query: { next: route.fullPath } })
+				}
+				return
+			}
+			checkoutName.value = checkoutName.value || data.full_name || ""
+			checkoutEmail.value = checkoutEmail.value || data.user
+			checkoutCompany.value = checkoutCompany.value || data.customer?.customer_name || ""
+		},
+		{ immediate: true },
+	)
 
 	function money(amount) {
 		return new Intl.NumberFormat("en-IN", {
@@ -115,8 +124,6 @@ export default function setup(context) {
 			return
 		}
 		if (!checkoutName.value || !checkoutEmail.value || !checkoutCompany.value || !termsAccepted.value) return
-		// Corrections made here stick for the rest of this tab.
-		saveBuyer({ ...buyer, full_name: checkoutName.value, email: checkoutEmail.value })
 		goToPayment(
 			call("connect.api.starter_pack.checkout", {
 				packs: JSON.stringify(packKeys),

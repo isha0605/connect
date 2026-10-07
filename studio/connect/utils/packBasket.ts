@@ -6,7 +6,6 @@
 
 import { computed } from "vue"
 import { MODULE_ICONS, commercialTerms } from "@app/utils/recommendation"
-import { readBuyer } from "@app/utils/checkoutSession"
 
 export function packBasket(context) {
 	const { router, catalog, myContext, pickedPacks, scopePackKey, showScope } = context
@@ -54,12 +53,10 @@ export function packBasket(context) {
 
 	const commercial = computed(() => commercialTerms(gstRate.value, money))
 
-	// Guests go through (mock) signup first, which carries on to checkout afterwards.
+	// Someone signed out signs up (or in) first, which carries on to checkout afterwards.
 	function startCheckout() {
 		const query = { packs: pickedPacks.value.join(",") }
-		// Signed in means through the (mock) sign-in screens in this tab — not a Desk
-		// session, which the /dev/ preview always has.
-		if (!readBuyer()) {
+		if (isGuest.value) {
 			const next = router.resolve({ path: "/starter-pack-checkout", query }).fullPath
 			router.push({ path: "/login-signup-redesign", query: { next } })
 		} else {

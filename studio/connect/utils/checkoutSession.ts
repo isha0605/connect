@@ -1,16 +1,10 @@
-// The Starter Pack buyer and their orders' access keys, kept in this browser tab only.
+// Starter Pack orders' access keys, kept in this browser tab only.
 //
-// Sign-in is a mock: the login and signup screens check nothing and create nothing on the
-// server. What someone types there is kept here for the rest of the tab's life (reloads
-// included, gone when the tab closes), carried into the checkout form, and only reaches
-// the server as the buyer's name and email on the order they place.
-//
-// An order placed without a real account can only be read back with the access key
-// checkout returns, so the key is kept here too — Razorpay sends the buyer back to this
-// same tab. sessionStorage can be missing or throw (private modes, blocked storage);
-// every read and write here survives that.
+// An order is read back with the access key checkout returns (its own buyer can also read it
+// signed in), so the key is kept here — Razorpay sends the buyer back to this same tab.
+// sessionStorage can be missing or throw (private modes, blocked storage); every read and
+// write here survives that.
 
-const BUYER = "connect.starterPack.buyer"
 const ORDER_KEYS = "connect.starterPack.orderKeys"
 
 function read(name) {
@@ -27,20 +21,6 @@ function write(name, value) {
 	} catch {
 		// Nothing to fall back to: without storage, the buyer is asked again.
 	}
-}
-
-// { full_name, email, country } as entered on the sign-in screens, or null if this tab
-// hasn't been through them.
-export function readBuyer() {
-	return read(BUYER)
-}
-
-export function saveBuyer(buyer) {
-	write(BUYER, {
-		full_name: String(buyer?.full_name || "").trim(),
-		email: String(buyer?.email || "").trim(),
-		country: String(buyer?.country || "").trim(),
-	})
 }
 
 // Checkout's reply: { order, payment_request, key }. The key is filed under both names,
