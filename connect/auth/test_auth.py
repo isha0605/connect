@@ -126,6 +126,17 @@ class IntegrationTestEmailCodeSignIn(IntegrationTestCase):
 		self.login_manager.login_as.assert_called_once_with(email)
 		self.assertEqual(result["user"], email)
 
+	def test_the_person_signing_up_is_recorded_as_making_their_records_not_guest(self):
+		email = new_email("owner")
+		company = f"_Test Auth Owner Co {frappe.generate_hash(length=6)}"
+		send_code(email, full_name="Meera Iyer", company_name=company, country="India")
+		verify_code(email, self.code_sent())
+		member = frappe.db.get_value("Customer Team Member", {"user": email}, "name")
+		for doctype, name in (("User", email), ("Customer", company), ("Customer Team Member", member)):
+			self.assertEqual(
+				frappe.db.get_value(doctype, name, ["owner", "modified_by"]), (email, email), doctype
+			)
+
 	def test_a_new_email_on_log_in_is_asked_for_its_profile_first(self):
 		email = new_email("login")
 		send_code(email)

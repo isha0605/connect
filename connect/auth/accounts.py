@@ -90,6 +90,8 @@ def create_account(email, profile):
 	user = create_user(email, profile["full_name"], profile.get("country"))
 	if profile.get("flow", BUYER) == BUYER:
 		create_customer(user.name, profile["full_name"], profile["company_name"], profile.get("country"))
+	# Last, since joining a customer team saves the User again (it adds the customer role).
+	made_by(user, user.name)
 	return user.name
 
 
@@ -122,7 +124,8 @@ def create_customer(user, full_name, company_name, country=None):
 	customer = frappe.get_doc(
 		{"doctype": "Customer", "customer_name": company_name.strip(), "country": country or None}
 	).insert(ignore_permissions=True)
-	frappe.get_doc(
+	made_by(customer, user)
+	member = frappe.get_doc(
 		{
 			"doctype": "Customer Team Member",
 			"customer": customer.name,
@@ -131,7 +134,14 @@ def create_customer(user, full_name, company_name, country=None):
 			"is_admin": 1,
 		}
 	).insert(ignore_permissions=True)
+	made_by(member, user)
 	return customer.name
+
+
+def made_by(doc, user):
+	"""Records the person signing up, not Guest, as who made a record: they aren't signed in
+	until their code is checked, and an insert always takes the session's user as its owner."""
+	doc.db_set({"owner": user, "modified_by": user}, update_modified=False)
 
 
 def check_company_is_free(company_name):
