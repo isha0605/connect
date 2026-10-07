@@ -8,12 +8,6 @@ import frappe
 
 
 @frappe.whitelist(allow_guest=True)
-def signup_customer(full_name, company_name, email, password):
-	from connect.customer.doctype.customer.customer import signup_customer
-	return signup_customer(full_name, company_name, email, password)
-
-
-@frappe.whitelist(allow_guest=True)
 def get_my_customer():
 	from connect.customer.doctype.customer.customer import get_my_customer
 	return get_my_customer()

@@ -31,6 +31,21 @@ SETTINGS = "Starter Pack Settings"
 OPEN_STATUSES = ["New", "Partner Assigned", "In Progress"]
 
 
+def validate_user(doc, method=None):
+	"""User validate. A consultant sees Messaging from Frappe's side, and someone on a customer
+	team would keep seeing it as a buyer (customer membership wins), so one person can't be
+	both: the role is refused until they leave that team."""
+	if doc.name in ("Administrator", "Guest") or CONSULTANT_ROLE not in {row.role for row in doc.roles}:
+		return
+	customer = frappe.db.get_value("Customer Team Member", {"user": doc.name, "is_removed": 0}, "customer")
+	if customer:
+		frappe.throw(
+			_("{0} is on the team of {1}, a customer. Remove them from it before making them a Frappe consultant.").format(
+				frappe.bold(doc.name), frappe.bold(customer)
+			)
+		)
+
+
 def on_user_update(doc, method=None):
 	"""User on_update. The work runs after commit: joining the Frappe team saves this User
 	again, and doing that inside this save would leave the Desk form out of date."""
