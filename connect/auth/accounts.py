@@ -1,7 +1,7 @@
 # Copyright (c) 2026
 # For license information, please see license.txt
 
-"""Signing in and signing up with an emailed code, as Frappe Central does (frappe/central#412).
+"""Signing in and signing up with an emailed code.
 
 Every email gets a code. A known email signs in; a new one becomes an account once its code
 is checked. Two kinds of new account:

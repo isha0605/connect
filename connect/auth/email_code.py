@@ -3,10 +3,9 @@
 
 """A one-time code that proves the holder reads one mailbox.
 
-The same rules as Frappe Central's sign-in (central/identity/email_code.py): a 6-digit code
-that lasts 10 minutes, 5 wrong tries lock it, a resend keeps the count so it can't be used
-to keep guessing, and a lock makes sure one code signs in once. One difference: only a hash
-of the code is kept in the cache, never the code itself.
+A 6-digit code that lasts 10 minutes. 5 wrong tries lock it, a resend keeps the count so it
+can't be used to keep guessing, and a lock makes sure one code signs in once. Only a hash of
+the code is kept in the cache, never the code itself.
 """
 
 import hashlib
