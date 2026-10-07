@@ -113,7 +113,7 @@ def get_my_threads():
 			"Customer", filters={"name": ["in", list({t.customer for t in threads})]}, fields=["name", "customer_name"]
 		)
 	}
-	# a Starter Pack thread with Frappe is with one of its consultants: shown as "Priya Sharma · Frappe"
+	# a Starter Pack thread with Frappe is with one of its consultants: shown by the consultant's name alone
 	consultants = {
 		c.name: c
 		for c in frappe.get_all(

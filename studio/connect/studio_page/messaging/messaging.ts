@@ -123,7 +123,7 @@ export default function setup(context) {
 		const amPartner = context.myContext.data && context.myContext.data.partner
 		if (amPartner) return thread.customer_name || thread.customer
 		// A Starter Pack thread with Frappe is with one of its consultants (see get_my_threads).
-		return thread.consultant_name ? `${thread.consultant_name} · ${thread.partner}` : thread.partner
+		return thread.consultant_name || thread.partner
 	}
 
 	// Company threads carry the partner's uploaded logo (see get_my_threads' partner_logo) — shown

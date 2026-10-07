@@ -222,10 +222,10 @@ class IntegrationTestFrappeConsultants(IntegrationTestCase):
 		buyer = self.buyer("h")
 		order = self.handed_over(buyer)
 		full_name = frappe.db.get_value("Frappe Consultant", order.consultant, "full_name")
-		self.assertEqual(get_order(order.name)["consultant"]["label"], f"{full_name} · {FRAPPE}")
+		self.assertEqual(get_order(order.name)["consultant"]["label"], full_name)
 		frappe.set_user(buyer[0])
 		project = next(p for p in get_my_projects() if p["order"] == order.name)
-		self.assertEqual(project["partner"]["partner_name"], f"{full_name} · {FRAPPE}")
+		self.assertEqual(project["partner"]["partner_name"], full_name)
 
 	# ---- Nobody enabled ----
 

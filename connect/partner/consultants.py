@@ -131,9 +131,4 @@ def consultant_card(consultant):
 		return None
 	partner = frappe.db.get_single_value(SETTINGS, "implementation_partner")
 	logo = frappe.db.get_value("Partner", partner, "logo") if partner else None
-	return {
-		"name": row.name,
-		"full_name": row.full_name,
-		"photo": row.photo or logo,
-		"label": _("{0} · {1}").format(row.full_name, partner) if partner else row.full_name,
-	}
+	return {"name": row.name, "full_name": row.full_name, "photo": row.photo or logo, "label": row.full_name}
