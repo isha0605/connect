@@ -1214,7 +1214,7 @@
                "componentName": "TextBlock",
                "componentProps": {
                 "tag": "p",
-                "text": "Choosing a partner"
+                "text": "{{ stageTitle }}"
                },
                "componentSlots": {}
               },
@@ -1229,7 +1229,7 @@
                "componentName": "TextBlock",
                "componentProps": {
                 "tag": "p",
-                "text": "Step 1 of 2"
+                "text": "{{ stageStep }}"
                },
                "componentSlots": {}
               }
@@ -1263,7 +1263,7 @@
               },
               {
                "baseStyles": {
-                "backgroundColor": "var(--surface-gray-2)",
+                "backgroundColor": "{{ isHired ? 'var(--ink-gray-8)' : 'var(--surface-gray-2)' }}",
                 "borderRadius": "2px",
                 "flex": "1",
                 "height": "4px"
@@ -1287,7 +1287,7 @@
               "border": "1px solid var(--outline-gray-2)",
               "borderRadius": "12px",
               "boxSizing": "border-box",
-              "display": "{{ hasQuotes ? 'none' : 'flex' }}",
+              "display": "{{ hasQuotes || isHired ? 'none' : 'flex' }}",
               "flexDirection": "column",
               "marginTop": "22px",
               "padding": "32px 24px",
@@ -1337,7 +1337,7 @@
             },
             {
              "baseStyles": {
-              "display": "{{ hasQuotes ? 'flex' : 'none' }}",
+              "display": "{{ hasQuotes && !isHired ? 'flex' : 'none' }}",
               "flexDirection": "column",
               "width": "100%"
              },
@@ -1786,6 +1786,270 @@
              "componentProps": {},
              "componentSlots": {},
              "originalElement": "div"
+            },
+            {
+             "componentId": "cs-hosting",
+             "componentName": "container",
+             "originalElement": "div",
+             "baseStyles": {
+              "display": "{{ isHired ? 'flex' : 'none' }}",
+              "flexDirection": "column",
+              "marginTop": "16px",
+              "width": "100%"
+             },
+             "componentProps": {},
+             "componentSlots": {},
+             "children": [
+              {
+               "componentId": "cs-task-rows",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ hostingTasks }}",
+                "dataKey": "key",
+                "emptyStateMessage": ""
+               },
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "0px",
+                "rowGap": "0px",
+                "width": "100%"
+               },
+               "componentSlots": {
+                "default": {
+                 "parentBlockId": "cs-task-rows",
+                 "slotContent": [
+                  {
+                   "componentId": "cs-task-row",
+                   "componentName": "container",
+                   "originalElement": "div",
+                   "baseStyles": {
+                    "display": "grid",
+                    "gridTemplateColumns": "16px minmax(0, 1fr) auto",
+                    "columnGap": "8px",
+                    "alignItems": "center",
+                    "padding": "20px 0px",
+                    "borderTop": "{{ dataIndex ? '1px solid var(--outline-gray-1)' : 'none' }}"
+                   },
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "children": [
+                    {
+                     "componentId": "cs-task-icon-cell",
+                     "componentName": "container",
+                     "originalElement": "div",
+                     "baseStyles": {
+                      "alignSelf": "flex-start",
+                      "display": "flex",
+                      "height": "16px"
+                     },
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "children": [
+                      {
+                       "componentId": "cs-task-icon",
+                       "componentName": "Icon",
+                       "componentProps": {
+                        "icon": "{{ dataItem.done ? 'lucide-circle-check' : 'lucide-circle-dashed' }}"
+                       },
+                       "baseStyles": {
+                        "width": "16px",
+                        "height": "16px",
+                        "color": "{{ dataItem.done ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}"
+                       },
+                       "componentSlots": {}
+                      }
+                     ]
+                    },
+                    {
+                     "componentId": "cs-task-text",
+                     "componentName": "container",
+                     "originalElement": "div",
+                     "baseStyles": {
+                      "minWidth": "0px"
+                     },
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "children": [
+                      {
+                       "componentId": "cs-task-title",
+                       "componentName": "container",
+                       "originalElement": "div",
+                       "baseStyles": {
+                        "display": "flex",
+                        "flexWrap": "wrap",
+                        "alignItems": "baseline",
+                        "columnGap": "4px"
+                       },
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "children": [
+                        {
+                         "componentId": "cs-task-label",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "tag": "span",
+                          "text": "{{ dataItem.label }}",
+                          "fontSize": "text-base"
+                         },
+                         "baseStyles": {
+                          "color": "var(--ink-gray-8)",
+                          "fontWeight": "500",
+                          "lineHeight": "1.15"
+                         },
+                         "componentSlots": {},
+                         "classes": [
+                          "font-medium"
+                         ]
+                        },
+                        {
+                         "componentId": "cs-task-optional",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "tag": "span",
+                          "text": "· Optional",
+                          "fontSize": "text-base"
+                         },
+                         "baseStyles": {
+                          "color": "var(--ink-gray-5)",
+                          "lineHeight": "1.15"
+                         },
+                         "componentSlots": {}
+                        }
+                       ]
+                      },
+                      {
+                       "componentId": "cs-task-hint",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "{{ dataItem.hint }}",
+                        "fontSize": "text-p-base"
+                       },
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "marginTop": "4px"
+                       },
+                       "componentSlots": {}
+                      }
+                     ]
+                    },
+                    {
+                     "componentId": "cs-task-action",
+                     "componentName": "container",
+                     "originalElement": "div",
+                     "baseStyles": {
+                      "display": "flex",
+                      "justifyContent": "flex-end"
+                     },
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "children": [
+                      {
+                       "componentId": "cs-task-link-wrap",
+                       "componentName": "container",
+                       "originalElement": "div",
+                       "baseStyles": {
+                        "display": "{{ !dataItem.done && dataItem.cta ? 'flex' : 'none' }}"
+                       },
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "children": [
+                        {
+                         "componentId": "cs-task-link",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "label": "{{ dataItem.cta }}",
+                          "size": "sm",
+                          "variant": "subtle",
+                          "iconRight": "lucide-chevron-right"
+                         },
+                         "baseStyles": {},
+                         "componentSlots": {},
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "actOnTask(dataItem);"
+                          }
+                         }
+                        }
+                       ]
+                      },
+                      {
+                       "componentId": "cs-task-copy-wrap",
+                       "componentName": "container",
+                       "originalElement": "div",
+                       "baseStyles": {
+                        "display": "{{ !dataItem.done && dataItem.copy ? 'flex' : 'none' }}"
+                       },
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "children": [
+                        {
+                         "componentId": "cs-task-copy",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "icon": "lucide-copy",
+                          "size": "sm",
+                          "variant": "ghost",
+                          "aria-label": "Copy referral code"
+                         },
+                         "baseStyles": {},
+                         "componentSlots": {},
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "actOnTask(dataItem);"
+                          }
+                         }
+                        }
+                       ]
+                      }
+                     ]
+                    }
+                   ]
+                  }
+                 ],
+                 "slotId": "cs-task-rows:default",
+                 "slotName": "default"
+                }
+               },
+               "children": []
+              }
+             ]
+            },
+            {
+             "componentId": "cs-complete",
+             "componentName": "container",
+             "originalElement": "div",
+             "baseStyles": {
+              "display": "{{ isHired && !isCompleted ? 'flex' : 'none' }}",
+              "marginTop": "16px"
+             },
+             "componentProps": {},
+             "componentSlots": {},
+             "children": [
+              {
+               "componentId": "cs-complete-btn",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "Mark as complete",
+                "variant": "solid",
+                "loading": "{{ completing }}"
+               },
+               "baseStyles": {},
+               "componentSlots": {},
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "markComplete();"
+                }
+               }
+              }
+             ]
             }
            ],
            "componentId": "cs-inner",
@@ -1812,6 +2076,195 @@
           "width": "350px"
          },
          "children": [
+          {
+           "componentId": "section-partner",
+           "componentName": "container",
+           "originalElement": "div",
+           "baseStyles": {
+            "borderBottom": "1px solid var(--outline-gray-1)",
+            "paddingBottom": "11px",
+            "paddingLeft": "20px",
+            "paddingRight": "20px",
+            "paddingTop": "19px",
+            "display": "{{ isHired ? 'block' : 'none' }}"
+           },
+           "componentProps": {},
+           "componentSlots": {},
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-8, oklch(0.205 0 0))",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "letterSpacing": "0.02em",
+              "lineHeight": "1.15",
+              "marginBottom": "4px",
+              "paddingBottom": "5.6px"
+             },
+             "componentId": "partner-caption",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "",
+              "tag": "p",
+              "text": "Partner"
+             },
+             "componentSlots": {}
+            },
+            {
+             "componentId": "partner-who",
+             "componentName": "container",
+             "originalElement": "div",
+             "baseStyles": {
+              "display": "flex",
+              "alignItems": "center",
+              "gap": "12px",
+              "marginTop": "11px",
+              "marginBottom": "9px"
+             },
+             "componentProps": {},
+             "componentSlots": {},
+             "children": [
+              {
+               "componentId": "partner-logo",
+               "componentName": "Avatar",
+               "componentProps": {
+                "image": "{{ hired?.logo }}",
+                "label": "{{ hired?.partner_name }}",
+                "size": "2xl",
+                "shape": "square"
+               },
+               "baseStyles": {
+                "backgroundColor": "var(--surface-base)",
+                "padding": "4px",
+                "boxSizing": "border-box",
+                "flexShrink": "0"
+               },
+               "componentSlots": {}
+              },
+              {
+               "componentId": "partner-name",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "p",
+                "text": "{{ hired?.partner_name }}",
+                "fontSize": "text-base"
+               },
+               "baseStyles": {
+                "color": "var(--ink-gray-8)",
+                "flex": "1",
+                "minWidth": "0px",
+                "overflow": "hidden",
+                "textOverflow": "ellipsis",
+                "whiteSpace": "nowrap"
+               },
+               "componentSlots": {}
+              },
+              {
+               "componentId": "partner-actions",
+               "componentName": "container",
+               "originalElement": "div",
+               "baseStyles": {
+                "display": "flex",
+                "flexShrink": "0",
+                "gap": "6px"
+               },
+               "componentProps": {},
+               "componentSlots": {},
+               "children": [
+                {
+                 "componentId": "partner-message",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "label": "Message",
+                  "size": "sm",
+                  "variant": "subtle",
+                  "iconLeft": "lucide-message-square-text"
+                 },
+                 "baseStyles": {},
+                 "componentSlots": {},
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "messagePartner();"
+                  }
+                 }
+                },
+                {
+                 "componentId": "partner-profile",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "icon": "lucide-user",
+                  "size": "xs",
+                  "variant": "subtle",
+                  "tooltip": "View profile",
+                  "aria-label": "View profile"
+                 },
+                 "baseStyles": {},
+                 "componentSlots": {},
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "viewPartnerProfile();"
+                  }
+                 }
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "componentId": "partner-cost-row",
+             "componentName": "container",
+             "originalElement": "div",
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "grid",
+              "gap": "12px",
+              "gridTemplateColumns": "101px minmax(0, 1fr)",
+              "padding": "7px 0"
+             },
+             "componentProps": {},
+             "componentSlots": {},
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "fontSize": "14px",
+                "fontWeight": "420",
+                "letterSpacing": "0.02em",
+                "lineHeight": "1.15"
+               },
+               "componentId": "partner-cost-label",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "span",
+                "text": "Cost"
+               },
+               "componentSlots": {}
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-8)",
+                "fontSize": "14px",
+                "fontWeight": "420",
+                "letterSpacing": "0.02em",
+                "lineHeight": "1.15",
+                "fontVariantNumeric": "tabular-nums"
+               },
+               "componentId": "partner-cost-value",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "span",
+                "text": "{{ hiredCost }}"
+               },
+               "componentSlots": {}
+              }
+             ]
+            }
+           ]
+          },
           {
            "baseStyles": {
             "borderBottom": "1px solid var(--outline-gray-1)",
@@ -2367,7 +2820,8 @@
              "baseStyles": {
               "alignSelf": "flex-start",
               "marginLeft": "20px",
-              "marginTop": "16px"
+              "marginTop": "16px",
+              "display": "{{ isHired ? 'none' : 'inline-flex' }}"
              },
              "componentEvents": {
               "click": {
@@ -3858,6 +4312,375 @@
       "title": "Delete this draft?"
      },
      "componentSlots": {}
+    },
+    {
+     "componentId": "hire-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "hireOpen"
+      },
+      "title": "{{ hireTitle }}",
+      "size": "lg"
+     },
+     "baseStyles": {},
+     "children": [
+      {
+       "componentId": "hire-body",
+       "componentName": "container",
+       "originalElement": "div",
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%"
+       },
+       "componentProps": {},
+       "componentSlots": {},
+       "children": [
+        {
+         "componentId": "hire-terms",
+         "componentName": "container",
+         "originalElement": "div",
+         "baseStyles": {
+          "display": "{{ hireStep === 'terms' ? 'flex' : 'none' }}",
+          "flexDirection": "column"
+         },
+         "componentProps": {},
+         "componentSlots": {},
+         "children": [
+          {
+           "componentId": "hire-facts",
+           "componentName": "container",
+           "originalElement": "div",
+           "baseStyles": {
+            "display": "grid",
+            "gridTemplateColumns": "96px minmax(0, 1fr)",
+            "rowGap": "8px"
+           },
+           "componentProps": {},
+           "componentSlots": {},
+           "children": [
+            {
+             "componentId": "hire-quote-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "p",
+              "text": "Quote",
+              "fontSize": "text-base"
+             },
+             "baseStyles": {
+              "color": "var(--ink-gray-5)"
+             },
+             "componentSlots": {}
+            },
+            {
+             "componentId": "hire-quote-value",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "p",
+              "text": "{{ quoteAmount(hireRow) }}",
+              "fontSize": "text-base"
+             },
+             "baseStyles": {
+              "color": "var(--ink-gray-8)",
+              "fontVariantNumeric": "tabular-nums"
+             },
+             "componentSlots": {}
+            },
+            {
+             "componentId": "hire-weeks-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "p",
+              "text": "Timeline",
+              "fontSize": "text-base"
+             },
+             "baseStyles": {
+              "color": "var(--ink-gray-5)"
+             },
+             "componentSlots": {}
+            },
+            {
+             "componentId": "hire-weeks-value",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "p",
+              "text": "{{ quoteTimeline(hireRow) }}",
+              "fontSize": "text-base"
+             },
+             "baseStyles": {
+              "color": "var(--ink-gray-8)"
+             },
+             "componentSlots": {}
+            }
+           ]
+          },
+          {
+           "componentId": "hire-term-list",
+           "componentName": "Repeater",
+           "componentProps": {
+            "data": "{{ hireTerms }}",
+            "dataKey": "title",
+            "emptyStateMessage": ""
+           },
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "16px",
+            "rowGap": "16px",
+            "marginTop": "24px"
+           },
+           "componentSlots": {
+            "default": {
+             "parentBlockId": "hire-term-list",
+             "slotContent": [
+              {
+               "componentId": "hire-term",
+               "componentName": "container",
+               "originalElement": "div",
+               "baseStyles": {},
+               "componentProps": {},
+               "componentSlots": {},
+               "children": [
+                {
+                 "componentId": "hire-term-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "{{ dataItem.title }}",
+                  "fontSize": "text-base"
+                 },
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontWeight": "500"
+                 },
+                 "componentSlots": {},
+                 "classes": [
+                  "font-medium"
+                 ]
+                },
+                {
+                 "componentId": "hire-term-text",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "{{ dataItem.text }}",
+                  "fontSize": "text-p-base"
+                 },
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "marginTop": "4px"
+                 },
+                 "componentSlots": {}
+                }
+               ]
+              }
+             ],
+             "slotId": "hire-term-list:default",
+             "slotName": "default"
+            }
+           },
+           "children": []
+          },
+          {
+           "componentId": "hire-agree-row",
+           "componentName": "container",
+           "originalElement": "div",
+           "componentProps": {},
+           "componentSlots": {},
+           "baseStyles": {
+            "display": "flex",
+            "alignItems": "center",
+            "gap": "8px",
+            "marginTop": "24px",
+            "cursor": "pointer"
+           },
+           "children": [
+            {
+             "componentId": "hire-agree",
+             "componentName": "Checkbox",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "hireAgreed"
+              },
+              "size": "md"
+             },
+             "baseStyles": {},
+             "componentSlots": {}
+            },
+            {
+             "componentId": "hire-agree-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "span",
+              "text": "I agree to these terms of engagement",
+              "fontSize": "text-base"
+             },
+             "baseStyles": {
+              "color": "var(--ink-gray-8)",
+              "userSelect": "none"
+             },
+             "componentSlots": {},
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "hireAgreed.value = !hireAgreed.value;"
+              }
+             }
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "componentId": "hire-why",
+         "componentName": "Repeater",
+         "componentProps": {
+          "data": "{{ hireReasons }}",
+          "dataKey": "",
+          "emptyStateMessage": ""
+         },
+         "baseStyles": {
+          "display": "{{ hireStep === 'why' ? 'flex' : 'none' }}",
+          "flexWrap": "wrap",
+          "gap": "8px"
+         },
+         "componentSlots": {
+          "default": {
+           "parentBlockId": "hire-why",
+           "slotContent": [
+            {
+             "componentId": "hire-reason",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "{{ dataItem }}",
+              "size": "sm",
+              "variant": "subtle"
+             },
+             "baseStyles": {},
+             "componentSlots": {},
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "giveHireReason(dataItem);"
+              }
+             }
+            }
+           ],
+           "slotId": "hire-why:default",
+           "slotName": "default"
+          }
+         },
+         "children": []
+        }
+       ]
+      }
+     ],
+     "componentSlots": {
+      "actions": {
+       "parentBlockId": "hire-dialog",
+       "slotContent": [
+        {
+         "componentId": "hire-actions",
+         "componentName": "container",
+         "originalElement": "div",
+         "baseStyles": {
+          "display": "flex",
+          "justifyContent": "flex-end",
+          "gap": "8px"
+         },
+         "componentProps": {},
+         "componentSlots": {},
+         "children": [
+          {
+           "componentId": "hire-actions-terms",
+           "componentName": "container",
+           "originalElement": "div",
+           "baseStyles": {
+            "display": "{{ hireStep === 'terms' ? 'flex' : 'none' }}",
+            "gap": "8px"
+           },
+           "componentProps": {},
+           "componentSlots": {},
+           "children": [
+            {
+             "componentId": "hire-cancel",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Cancel",
+              "variant": "ghost"
+             },
+             "baseStyles": {},
+             "componentSlots": {},
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "hireOpen.value = false;"
+              }
+             }
+            },
+            {
+             "componentId": "hire-confirm",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "{{ hireTitle }}",
+              "variant": "solid",
+              "disabled": "{{ !hireAgreed }}",
+              "loading": "{{ hiring }}"
+             },
+             "baseStyles": {},
+             "componentSlots": {},
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "confirmHire();"
+              }
+             }
+            }
+           ]
+          },
+          {
+           "componentId": "hire-actions-why",
+           "componentName": "container",
+           "originalElement": "div",
+           "baseStyles": {
+            "display": "{{ hireStep === 'why' ? 'flex' : 'none' }}"
+           },
+           "componentProps": {},
+           "componentSlots": {},
+           "children": [
+            {
+             "componentId": "hire-skip",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Skip",
+              "variant": "ghost"
+             },
+             "baseStyles": {},
+             "componentSlots": {},
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "giveHireReason(null);"
+              }
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "slotId": "hire-dialog:actions",
+       "slotName": "actions"
+      }
+     }
     }
    ],
    "componentId": "proj-body",

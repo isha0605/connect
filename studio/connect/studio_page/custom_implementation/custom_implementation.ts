@@ -120,8 +120,49 @@ export default function setup(context) {
 		router.push({ path: "/messaging", query: { thread: row.thread } })
 	}
 
-	function hirePartner() {
-		toast.info("Hiring is coming soon.")
+	// ---- Hire: agree to the terms, then say why this partner (or skip) ----
+	const hireOpen = ref(false)
+	const hireStep = ref("terms")
+	const hireAgreed = ref(false)
+	const hireRow = ref(null)
+	const hiring = ref(false)
+	const hireName = computed(() => hireRow.value?.partner_name || "this partner")
+	const hireTitle = computed(() => (hireStep.value === "terms" ? `Hire ${hireName.value}` : `Why ${hireName.value}?`))
+	const hireTerms = computed(() => [
+		{ title: `Pay ${hireName.value} directly`, text: "Frappe takes no fee and is not a party to the agreement." },
+		{ title: "Scope, price and timeline are as quoted", text: `Changes are agreed between you and ${hireName.value}.` },
+		{ title: "Hosting is billed through your partner", text: `Frappe Cloud bills ${hireName.value}, who bills you.` },
+		{ title: "Your site stays private", text: "Frappe can see that this project exists, not what is in your site." },
+	])
+	const hireReasons = ["Price", "Timeline", "Their profile", "How they replied"]
+
+	function hirePartner(row) {
+		hireRow.value = row
+		hireAgreed.value = false
+		hireStep.value = "terms"
+		hireOpen.value = true
+	}
+
+	function confirmHire() {
+		if (!hireAgreed.value || hiring.value || !hireRow.value) return
+		hiring.value = true
+		call("connect.api.projects.hire_partner", { quote: hireRow.value.name })
+			.then((data) => {
+				project.value = data
+				hireStep.value = "why"
+				toast.success(`${hireName.value} is your partner`)
+			})
+			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't hire this partner. Try again."))
+			.finally(() => {
+				hiring.value = false
+			})
+	}
+
+	// Skip sends no reason; either way the dialog closes on step 2.
+	function giveHireReason(reason) {
+		hireOpen.value = false
+		if (!reason || !project.value) return
+		call("connect.api.projects.set_hire_reason", { name: project.value.name, reason }).catch(() => {})
 	}
 
 	function quoteMenu(row) {
@@ -172,7 +213,8 @@ export default function setup(context) {
 
 
 	const projectTitle = computed(() => project.value?.project_name || "Project")
-	const isDraft = computed(() => project.value?.status !== "Shared")
+	// Shared, Hired and Completed are all past the draft: the brief has gone out.
+	const isDraft = computed(() => !["Shared", "Hired", "Completed"].includes(project.value?.status))
 	const breadcrumbItems = computed(() => [
 		{ label: "Projects", route: { path: "/projects" } },
 		{ label: projectTitle.value },
@@ -300,12 +342,101 @@ export default function setup(context) {
 	]
 
 	// ---- After "Share requirements": choosing a partner, step 1 of 2 ----
-	const isShared = computed(() => project.value?.status === "Shared")
+	const isShared = computed(() => !isDraft.value)
+
+	// ---- After hiring: setting up hosting, step 2 of 2 ----
+	const hired = computed(() => project.value?.hired || null)
+	const isHired = computed(() => !!hired.value)
+	const stageTitle = computed(() => (isHired.value ? "Set up hosting" : "Choosing a partner"))
+	const stageStep = computed(() => (isHired.value ? "Step 2 of 2" : "Step 1 of 2"))
+
+	const HOSTING_TASKS = [
+		{
+			key: "fc-login",
+			label: "Log in to Frappe Cloud",
+			hint: "Your site is hosted on Frappe Cloud. Create an account if you do not have one.",
+			cta: "Log in",
+			url: "https://frappecloud.com/dashboard",
+		},
+		{
+			key: "fc-code",
+			label: "Copy your partner’s referral code",
+			hint: "You enter it on Frappe Cloud in the next task.",
+			copy: true,
+		},
+		{
+			key: "fc-link",
+			label: "Link your Frappe Cloud account to your partner",
+			hint: "Your partner then manages your hosting and bills you for it.",
+			cta: "Link",
+			url: "https://frappecloud.com/dashboard/settings/partner",
+		},
+	]
+	const hostingTasks = computed(() => {
+		const done = project.value?.done_tasks || []
+		return HOSTING_TASKS.map((task) => ({ ...task, done: done.includes(task.key) }))
+	})
+
+	function completeTask(task) {
+		call("connect.api.projects.complete_task", { name: projectName, task: task.key })
+			.then((data) => {
+				project.value = data
+			})
+			.catch(() => {})
+	}
+
+	function actOnTask(task) {
+		if (task.copy) return copyReferralCode(task)
+		window.open(task.url, "_blank", "noopener")
+		completeTask(task)
+	}
+
+	function copyReferralCode(task) {
+		const code = hired.value?.referral_code
+		if (!code) return
+		navigator.clipboard
+			.writeText(code)
+			.then(() => toast.success("Referral code copied", { description: code }))
+			.catch(() =>
+				toast.info(`Your referral code is ${code}`, {
+					description: "Your browser blocked the clipboard. Copy it from here.",
+				}),
+			)
+		completeTask(task)
+	}
+
+	const isCompleted = computed(() => project.value?.status === "Completed")
+	const completing = ref(false)
+	function markComplete() {
+		if (completing.value) return
+		completing.value = true
+		call("connect.api.projects.complete_project", { name: projectName })
+			.then((data) => {
+				project.value = data
+				toast.success("Project completed")
+			})
+			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't complete the project. Try again."))
+			.finally(() => {
+				completing.value = false
+			})
+	}
+
+	// The Partner panel: who was hired, and on what quote.
+	const hiredCost = computed(() => (hired.value ? quoteAmount(hired.value) : ""))
+	function messagePartner() {
+		if (hired.value?.thread) router.push({ path: "/messaging", query: { thread: hired.value.thread } })
+	}
+	function viewPartnerProfile() {
+		if (hired.value) router.push(`/partner-profile-redesign/${encodeURIComponent(hired.value.partner)}`)
+	}
 	const sentLine = computed(() => {
 		const n = project.value?.shared_count || 0
 		return `Sent to ${n} partner${n === 1 ? "" : "s"}. Quotes arrive in Messages, usually within a few working days.`
 	})
-	const timelineLabel = computed(() => goLiveCriterion(project.value?.go_live))
+	// Once hired, the timeline is the partner's quoted one.
+	const timelineLabel = computed(() =>
+		hired.value?.timeline_weeks ? quoteTimeline(hired.value) : goLiveCriterion(project.value?.go_live),
+	)
 	const createdOn = computed(() => {
 		const at = project.value?.created_on
 		return at ? new Date(at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""
@@ -357,6 +488,16 @@ export default function setup(context) {
 		markInterested,
 		readThread,
 		hirePartner,
+		hireOpen,
+		hireRow,
+		hireStep,
+		hireAgreed,
+		hiring,
+		hireTitle,
+		hireTerms,
+		hireReasons,
+		confirmHire,
+		giveHireReason,
 		quoteMenu,
 		simulating,
 		simulateQuotes,
@@ -398,6 +539,18 @@ export default function setup(context) {
 		deleting,
 		confirmDelete,
 		isShared,
+		hired,
+		isHired,
+		stageTitle,
+		stageStep,
+		hostingTasks,
+		actOnTask,
+		isCompleted,
+		completing,
+		markComplete,
+		hiredCost,
+		messagePartner,
+		viewPartnerProfile,
 		sentLine,
 		timelineLabel,
 		createdOn,
