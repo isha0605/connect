@@ -21,6 +21,9 @@ def _message_preview_text(message):
 		text = "📎 " + (message.get("file_name") or _("Attachment"))
 	elif message.get("message_type") == "Requirement":
 		text = _("Requirement details")
+	elif message.get("message_type") == "Quote":
+		quote = frappe.parse_json(message.get("content") or "{}") or {}
+		text = _("Quoted {0}").format(frappe.utils.fmt_money(quote.get("amount") or 0, currency="INR", precision=0).replace("₹ ", "₹"))
 	else:
 		text = message.get("content") or ""
 	return text[:140]
