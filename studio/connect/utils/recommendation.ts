@@ -88,6 +88,14 @@ export const SYSTEM_OPTIONS = [
 	"Salesforce", "An in-house system", "Something else",
 ].map((v) => ({ label: v, value: v }))
 
+// "When do you need it live?" — the New project dialog's first question.
+export const GO_LIVE_OPTIONS = [
+	{ value: "within_month", label: "Within a month" },
+	{ value: "one_to_three_months", label: "In 1–3 months" },
+	{ value: "three_to_six_months", label: "In 3–6 months" },
+	{ value: "no_deadline", label: "No fixed deadline" },
+]
+
 export const PROBLEM_OPTIONS = [
 	{ value: "manual_work", label: "Manual work that should be automated" },
 	{ value: "hr_by_hand", label: "Payroll, leave and attendance are run by hand" },
@@ -124,6 +132,18 @@ const CUSTOM_TRIGGERS = [
 	{
 		test: (a) => a.problems.includes("tools_dont_fit"),
 		reason: () => "You need the software to bend to how you work, and a pack is ERPNext exactly as it ships.",
+	},
+	{
+		test: (a) => a.go_live === "no_deadline",
+		reason: () => "There's no fixed deadline, so there's room to scope it around how you work instead of a fixed pack.",
+	},
+	{
+		test: (a) => a.operations === "disconnected_systems",
+		reason: () => "Your systems don't talk to each other, so this means connecting them — and a pack connects to nothing.",
+	},
+	{
+		test: (a) => a.problems.length >= 3,
+		reason: (a) => `You're fixing ${a.problems.length} things at once — that's a project to scope, not a fixed pack.`,
 	},
 ]
 
@@ -167,6 +187,7 @@ function normalize(answers) {
 		employees: answers?.employees ?? "",
 		// A single `industry` is what links made before this was a multi-select carry.
 		industries: answers?.industries ?? (answers?.industry ? [answers.industry] : []),
+		go_live: answers?.go_live ?? "",
 		operations: answers?.operations ?? "",
 		systems: answers?.systems ?? [],
 		problems: answers?.problems ?? [],
@@ -186,7 +207,9 @@ export function recommend(answers) {
 	return {
 		verdict: "packs",
 		reasons: [
-			`You're ${labelOf(EMPLOYEE_OPTIONS, a.employees)} people with no ERP to migrate off, so a fixed scope fits without anyone scoping it first.`,
+			a.employees
+				? `You're ${labelOf(EMPLOYEE_OPTIONS, a.employees)} people with no ERP to migrate off, so a fixed scope fits without anyone scoping it first.`
+				: "You have no ERP to migrate off, so a fixed scope fits without anyone scoping it first.",
 			a.operations
 				? `Today it's ${labelOf(OPERATION_OPTIONS, a.operations).toLowerCase()} — which is what these packs replace.`
 				: null,
@@ -194,6 +217,41 @@ export function recommend(answers) {
 		packs,
 	}
 }
+
+// A saved Customer Project (connect.api.projects.get_project) as recommend() answers.
+export function answersFromProject(project) {
+	if (!project) return null
+	return normalize({
+		go_live: project.go_live,
+		operations: project.operations,
+		systems: project.systems || [],
+		problems: project.problems || [],
+	})
+}
+
+// The same go-live answers as GO_LIVE_OPTIONS, worded as the Edit criteria chips and the
+// custom page's criteria list word them.
+export const GO_LIVE_CRITERIA = [
+	{ value: "within_month", label: "As soon as possible" },
+	{ value: "one_to_three_months", label: "Live within three months" },
+	{ value: "three_to_six_months", label: "Live within six months" },
+	{ value: "no_deadline", label: "No fixed deadline" },
+]
+
+export function goLiveCriterion(value) {
+	return labelOf(GO_LIVE_CRITERIA, value) || "No fixed deadline"
+}
+
+export const CUSTOM_HOW_IT_WORKS = [
+	{ title: "Contact partners", body: "Share your requirements" },
+	{ title: "Hire a partner", body: "Whichever quote fits" },
+	{ title: "Pay per milestone", body: "Agreed with them" },
+]
+
+// The custom page's "Your budget" ranges, as the prototype words them.
+export const BUDGET_OPTIONS = [
+	"Under ₹5 lakh", "₹5 to 15 lakh", "₹15 to 40 lakh", "Over ₹40 lakh", "Not decided yet",
+].map((v) => ({ label: v, value: v }))
 
 // Answers travel in the URL, so the recommendation survives a reload and "Change my
 // answers" can hand them back to the questionnaire.
@@ -257,6 +315,15 @@ export const CUSTOM_IF = [
 	{ label: "You need your data cleaned and migrated", hint: "You provide clean Excel or CSV data" },
 	{ label: "You need custom scripting", hint: "" },
 	{ label: "You need API integrations", hint: "Biometric devices, banks and payment gateways" },
+]
+
+// The custom page's "Consider a Starter Pack if" — CUSTOM_IF turned the right way round,
+// reusing its hints, so the two lists can't disagree.
+export const STARTER_PACK_IF = [
+	{ label: "Fewer than 50 people will use it", hint: "" },
+	{ label: "Your data needs no cleaning before it is imported", hint: CUSTOM_IF[1].hint },
+	{ label: "ERPNext as it ships covers how you work", hint: "" },
+	{ label: "Nothing has to connect to another system", hint: CUSTOM_IF[3].hint },
 ]
 
 export const OUR_NEEDS = [
