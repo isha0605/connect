@@ -724,7 +724,7 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		self.assertIn("_test_pack_a Starter Pack", hello.content)
 		self.assertEqual(card.message_type, "Requirement")
 		project = frappe.parse_json(card.content)
-		self.assertEqual(project["looking_for"], "_test_pack_a implementation for Test Co")
+		self.assertEqual(project["looking_for"], "ERPNext implementation for Test Co")
 		self.assertEqual(project["apps"], ["_test_pack_a"])
 		self.assertEqual(project["timeline"], "30 days")
 
@@ -803,7 +803,7 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 	def test_the_return_page_has_the_project(self):
 		order = self.paid_order()
 		result = get_order(order.name)
-		self.assertEqual(result["project_title"], "_test_pack_a implementation for Test Co")
+		self.assertEqual(result["project_title"], "ERPNext implementation for Test Co")
 		self.assertEqual(result["timeline_days"], 30)
 
 

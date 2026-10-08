@@ -8,7 +8,7 @@ import { computed } from "vue"
 import { MODULE_ICONS, commercialTerms } from "@app/utils/recommendation"
 
 export function packBasket(context) {
-	const { router, catalog, myContext, pickedPacks, scopePackKey, showScope } = context
+	const { route, router, catalog, myContext, pickedPacks, scopePackKey, showScope } = context
 
 	const packs = computed(() => catalog.data?.packs || [])
 	const gstRate = computed(() => catalog.data?.gst_rate ?? 18)
@@ -56,6 +56,8 @@ export function packBasket(context) {
 	// Someone signed out signs up (or in) first, which carries on to checkout afterwards.
 	function startCheckout() {
 		const query = { packs: pickedPacks.value.join(",") }
+		// Picked inside one of the customer's projects: the order is bought for that project.
+		if (route?.query?.project) query.project = String(route.query.project)
 		if (isGuest.value) {
 			const next = router.resolve({ path: "/starter-pack-checkout", query }).fullPath
 			router.push({ path: "/login-signup-redesign", query: { next } })

@@ -1,6 +1,7 @@
 import { computed, ref } from "vue"
 import { toast, call } from "frappe-ui"
 import { orderKey } from "@app/utils/checkoutSession"
+import { MODULE_ICONS } from "@app/utils/recommendation"
 
 // "Set up your Starter Pack": where checkout sends the buyer once their order is paid
 // (/starter-pack-implementation?order=SPO-…). The right panel and "Pay upfront" come from
@@ -16,7 +17,11 @@ export default function setup(context) {
 	const { route, router } = context
 
 	// ---- The order ----
-	const orderName = String(route.query.order || "")
+	// Same test Studio's own isEditor() uses. The editor opens pages with no query string,
+	// so there the page shows the newest paid order instead (the editor's Desk session
+	// can read any order), rather than the "couldn't load" state.
+	const inEditor = window.location.pathname.startsWith("/studio/")
+	let orderName = String(route.query.order || "")
 	const order = ref(null)
 	const loadError = ref(false)
 
@@ -26,6 +31,27 @@ export default function setup(context) {
 	}
 
 	function load() {
+		if (!orderName && inEditor) {
+			call("frappe.client.get_list", {
+				doctype: "Starter Pack Order",
+				filters: { payment_status: ["in", Object.keys(PAYMENT_BADGES)] },
+				fields: ["name"],
+				order_by: "creation desc",
+				limit_page_length: 1,
+			})
+				.then((rows) => {
+					if (!rows?.length) {
+						loadError.value = true
+						return
+					}
+					orderName = rows[0].name
+					load()
+				})
+				.catch(() => {
+					loadError.value = true
+				})
+			return
+		}
 		if (!orderName) {
 			loadError.value = true
 			return
@@ -66,8 +92,53 @@ export default function setup(context) {
 	// With Frappe, the buyer works with one of its consultants: "Priya Sharma · Frappe".
 	const consultant = computed(() => order.value?.consultant || null)
 	const partnerName = computed(() => consultant.value?.label || partner.value?.partner_name || "Frappe")
-	const partnerLogo = computed(() => consultant.value?.photo || partner.value?.logo || "")
-	const scopeOfWork = computed(() => (order.value?.packs || []).map((p) => p.pack_name).join(", "))
+	// The consultant's photo (their initial without one), else the partner's logo; before
+	// either is assigned, Frappe's own.
+	const partnerLogo = computed(() => {
+		if (consultant.value) return consultant.value.photo || ""
+		if (partner.value) return partner.value.logo || ""
+		return order.value?.frappe_logo || ""
+	})
+	// ---- Scope of work: what each bought pack covers, from the Starter Pack catalog ----
+	const catalog = ref(null)
+	call("connect.api.starter_pack.get_catalog")
+		.then((data) => {
+			catalog.value = data
+		})
+		.catch(() => {
+			// Without the catalog the button still names the packs; the dialog just has no detail.
+		})
+
+	// The bought packs in the order's own order, each with its catalog scope.
+	const scopePacks = computed(() =>
+		(order.value?.packs || []).map((row) => {
+			const pack = (catalog.value?.packs || []).find((p) => p.pack_key === row.starter_pack)
+			return { pack_key: row.starter_pack, pack_name: row.pack_name, ...(pack || {}) }
+		}),
+	)
+	const scopeOfWork = computed(() => {
+		const n = scopePacks.value.length
+		return n === 1 ? scopePacks.value[0].pack_name : `${n} Starter Packs`
+	})
+	const scopeOpen = ref(false)
+	const scopeTab = ref("")
+	const scopeTabs = computed(() => scopePacks.value.map((p) => ({ label: p.pack_name, value: p.pack_key })))
+	const scopePack = computed(
+		() => scopePacks.value.find((p) => p.pack_key === scopeTab.value) || scopePacks.value[0] || null,
+	)
+	const scopeSubtitle = computed(() => {
+		const pack = scopePack.value
+		return pack?.total_hours ? `${pack.total_hours} hours · ${pack.delivery_days} days to deliver` : ""
+	})
+
+	function viewScope() {
+		scopeTab.value = scopePacks.value[0]?.pack_key || ""
+		scopeOpen.value = true
+	}
+
+	function moduleIcon(name) {
+		return MODULE_ICONS[name] || "lucide-box"
+	}
 	const cost = computed(() => money(order.value?.amount))
 	const paymentBadge = computed(() => PAYMENT_BADGES[order.value?.payment_status] || PAYMENT_BADGES.Paid)
 	const timeline = computed(() => (order.value?.timeline_days ? `${order.value.timeline_days} days` : ""))
@@ -128,6 +199,40 @@ export default function setup(context) {
 		toast.info("Feedback form is coming soon.")
 	}
 
+	// ---- "Your Starter Packs are booked" ----
+	// Checkout redirects here with ?booked=1 the moment the gateway confirms payment.
+	// The flag is dropped from the URL on arrival so a reload doesn't greet them twice.
+	const bookedOpen = ref(Boolean(route.query.booked))
+	if (bookedOpen.value) {
+		const query = { ...route.query }
+		delete query.booked
+		router.replace({ path: route.path, query })
+	}
+
+	function dismissBooked() {
+		bookedOpen.value = false
+	}
+
+	function downloadInvoice() {
+		toast.info("Invoices are coming soon.")
+	}
+
+	// ---- Rail: logo account menu ----
+	// Only the published page still has its own rail; the draft has the shared sidebar, which
+	// brings its own menu. Kept until that draft is published.
+	function accountMenuOptions() {
+		return [
+			{
+				icon: "lucide-log-out",
+				label: "Log out",
+				onClick: () => {
+					call("logout").then(() => {
+						window.location.href = "/login"
+					})
+				},
+			},
+		]
+	}
 
 	return {
 		order,
@@ -137,6 +242,14 @@ export default function setup(context) {
 		partnerName,
 		partnerLogo,
 		scopeOfWork,
+		scopePacks,
+		scopeOpen,
+		scopeTab,
+		scopeTabs,
+		scopePack,
+		scopeSubtitle,
+		viewScope,
+		moduleIcon,
 		cost,
 		paymentBadge,
 		timeline,
@@ -152,5 +265,9 @@ export default function setup(context) {
 		viewTermsDetails,
 		viewRequirements,
 		openFeedback,
+		accountMenuOptions,
+		bookedOpen,
+		dismissBooked,
+		downloadInvoice,
 	}
 }

@@ -287,7 +287,7 @@ def get_captured_payment_id(request):
 	return payment_id
 
 
-def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None, buyer_email=None):
+def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None, buyer_email=None, project=None):
 	"""Place an order for the given pack keys and open its payment. Returns where to
 	send the customer to pay, and the order's access key.
 
@@ -297,6 +297,8 @@ def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None,
 	order back after paying.
 
 	Takes pack keys only. Prices and totals are worked out server-side from the catalog.
+	`project` is the buyer's own Customer Project when checkout started from one: the order
+	is bought for it, so it keeps that project's name instead of becoming a new project.
 	"""
 	buyer_name = (buyer_name or "").strip()
 	buyer_email = (buyer_email or "").strip()
@@ -320,11 +322,21 @@ def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None,
 			"company_name": company_name,
 			"phone": phone,
 			"terms_accepted": 1,
+			"customer_project": own_project(project),
 			"packs": [{"starter_pack": key} for key in pack_keys],
 		}
 	).insert(ignore_permissions=True)
 
 	return payment_response(order, order.create_payment_request())
+
+
+def own_project(project):
+	"""The project, if it's the signed-in caller's own; anything else is ignored rather than
+	refused, so a stale link in the URL can't block a payment."""
+	if not project or frappe.session.user == "Guest":
+		return None
+	owner = frappe.db.get_value("Customer Project", project, "user")
+	return project if owner == frappe.session.user else None
 
 
 def payment_response(order, request):
@@ -381,6 +393,8 @@ def get_order(order=None, payment_request=None, key=None):
 		"kickoff_date": doc.kickoff_date,
 		"partner": get_assigned_partner(doc.partner) if doc.partner else None,
 		"consultant": consultant_card(doc.consultant),
+		# Frappe implements the Starter Packs until a partner is assigned
+		"frappe_logo": FRAPPE_LOGO,
 		"packs": [
 			{
 				"starter_pack": r.starter_pack,
@@ -400,6 +414,76 @@ def with_timezone(value):
 	if not value:
 		return None
 	return get_datetime(value).replace(tzinfo=ZoneInfo(get_system_timezone())).isoformat()
+
+
+def last_checkout_details(email):
+	"""Name, company and phone from the most recent order placed with this email, for
+	prefilling checkout.
+
+	Sign-in is a mock — it verifies nothing — so this trusts whatever email was typed.
+	Anyone who guesses a buyer's address therefore learns these three fields, which is
+	why it is rate limited and returns nothing else about the order. Revisit when real
+	authentication lands: the caller's session should be what identifies them.
+	"""
+	email = (email or "").strip()
+	if not email:
+		return {}
+
+	last = frappe.get_all(
+		"Starter Pack Order",
+		filters={"buyer_email": email},
+		fields=["buyer_name", "company_name", "phone"],
+		order_by="creation desc",
+		limit=1,
+	)
+	if not last:
+		return {}
+
+	return {
+		"buyer_name": last[0].buyer_name or "",
+		"company_name": last[0].company_name or "",
+		"phone": last[0].phone or "",
+	}
+
+
+FRAPPE_LOGO = "/assets/connect/images/frappe-logo.png"
+
+
+def my_orders():
+	"""The caller's paid orders, newest first — the rows the Projects page lists.
+
+	Only paid orders are projects: an unpaid one is still a checkout in progress, and
+	its page is the checkout, not the implementation steps. Guests own nothing here —
+	their orders are reachable only with the access key their browser kept.
+	"""
+	if frappe.session.user == "Guest":
+		return []
+
+	names = frappe.get_all(
+		"Starter Pack Order",
+		filters={
+			"user": frappe.session.user,
+			"payment_status": ["in", ("Paid", "Partially Refunded", "Refunded")],
+		},
+		pluck="name",
+		order_by="creation desc",
+	)
+
+	rows = []
+	for name in names:
+		doc = frappe.get_doc("Starter Pack Order", name)
+		partner = get_assigned_partner(doc.partner) if doc.partner else None
+		rows.append(
+			{
+				"order": doc.name,
+				"project_title": project_title(doc),
+				# Frappe implements the Starter Packs until a partner is assigned.
+				"partner_name": (partner or {}).get("partner_name") or "Frappe",
+				"partner_logo": (partner or {}).get("logo") or FRAPPE_LOGO,
+				"created_on": with_timezone(doc.creation),
+			}
+		)
+	return rows
 
 
 def get_assigned_partner(partner):

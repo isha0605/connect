@@ -48,6 +48,16 @@ export default function setup(context) {
 			checkoutName.value = checkoutName.value || data.full_name || ""
 			checkoutEmail.value = checkoutEmail.value || data.user
 			checkoutCompany.value = checkoutCompany.value || data.customer?.customer_name || ""
+			// The account has no phone number; their last order may. Only fills a blank.
+			if (!referenceId && !checkoutPhone.value) {
+				call("connect.api.starter_pack.last_checkout_details", { email: data.user })
+					.then((last) => {
+						checkoutPhone.value = checkoutPhone.value || last?.phone || ""
+					})
+					.catch(() => {
+						// Prefill is a convenience; the form still works empty.
+					})
+			}
 		},
 		{ immediate: true },
 	)
@@ -96,7 +106,8 @@ export default function setup(context) {
 				orderData.value = data
 				// A paid order goes on to its setup steps — this page's job is just to gate on status.
 				if (data.payment_status === "Paid") {
-					router.replace({ path: "/starter-pack-implementation", query: { order: data.order } })
+					// booked=1 is what pops the "Your Starter Packs are booked" dialog over there.
+					router.replace({ path: "/starter-pack-implementation", query: { order: data.order, booked: 1 } })
 				}
 			})
 			.catch(() => {
@@ -132,6 +143,7 @@ export default function setup(context) {
 				company_name: checkoutCompany.value,
 				phone: checkoutPhone.value,
 				terms_accepted: 1,
+				project: route.query.project ? String(route.query.project) : undefined,
 			}),
 		)
 	}

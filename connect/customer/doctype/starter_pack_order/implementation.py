@@ -283,8 +283,17 @@ def pack_names(order):
 
 
 def project_title(order):
-	"""e.g. "Accounts, Sales, Purchase, Stock implementation for Northwind"."""
-	return _("{0} implementation for {1}").format(", ".join(pack_names(order)), order.company_name)
+	"""e.g. "ERPNext implementation for Northwind".
+
+	Deliberately not a list of the packs bought: a project is named for what the customer
+	ends up with, and the pack names are already beside it everywhere this is shown (the
+	Scope of work row, and the Requirement card's `apps`)."""
+	if order.customer_project:
+		# bought for a project the customer named themselves, which keeps that name
+		name = frappe.db.get_value("Customer Project", order.customer_project, "project_name")
+		if name:
+			return name
+	return _("ERPNext implementation for {0}").format(order.company_name)
 
 
 def bought_packs(order):

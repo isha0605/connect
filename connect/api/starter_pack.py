@@ -16,7 +16,7 @@ def get_catalog():
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 @rate_limit(limit=20, seconds=60 * 60)
-def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None, buyer_email=None):
+def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None, buyer_email=None, project=None):
 	from connect.customer.doctype.starter_pack_order.starter_pack_order import checkout
 	return checkout(
 		packs,
@@ -25,6 +25,7 @@ def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None,
 		terms_accepted=terms_accepted,
 		buyer_name=buyer_name,
 		buyer_email=buyer_email,
+		project=project,
 	)
 
 
@@ -34,6 +35,21 @@ def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None,
 def get_order(order=None, payment_request=None, key=None):
 	from connect.customer.doctype.starter_pack_order.starter_pack_order import get_order
 	return get_order(order=order, payment_request=payment_request, key=key)
+
+
+# POST + rate limited: it answers questions about an email address, and sign-in is a mock,
+# so this must not be cheap to crawl.
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+@rate_limit(limit=20, seconds=60 * 60)
+def last_checkout_details(email=None):
+	from connect.customer.doctype.starter_pack_order.starter_pack_order import last_checkout_details
+	return last_checkout_details(email)
+
+
+@frappe.whitelist()
+def my_orders():
+	from connect.customer.doctype.starter_pack_order.starter_pack_order import my_orders
+	return my_orders()
 
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
