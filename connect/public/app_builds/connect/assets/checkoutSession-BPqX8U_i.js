@@ -1,0 +1,2 @@
+var e=`connect.starterPack.orderKeys`;function t(e){try{return JSON.parse(window.sessionStorage.getItem(e)||`null`)}catch(e){return null}}function n(e,t){try{window.sessionStorage.setItem(e,JSON.stringify(t))}catch(e){}}function r(r){if(!(r!=null&&r.key))return;let i=t(e)||{};r.order&&(i[r.order]=r.key),r.payment_request&&(i[r.payment_request]=r.key),n(e,i)}function i(n){return(t(e)||{})[n]||void 0}export{r as n,i as t};
+//# sourceMappingURL=checkoutSession-BPqX8U_i.js.map

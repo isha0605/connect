@@ -321,13 +321,13 @@
             "alignItems": "center",
             "display": "flex",
             "flexDirection": "row",
+            "flexShrink": "0",
             "gap": "0px",
             "marginBottom": "4px",
             "paddingLeft": "12px",
             "paddingRight": "12px",
             "paddingTop": "12px",
-            "width": "100%",
-            "flexShrink": "0"
+            "width": "100%"
            },
            "children": [
             {
@@ -449,25 +449,22 @@
           },
           {
            "baseStyles": {
-            "display": "{{ filteredThreadList().length ? 'flex' : 'none' }}",
-            "flexDirection": "column",
-            "gap": "6px",
-            "paddingTop": "8px",
-            "width": "100%",
             "--list-gap": "10px",
             "--list-row-padding-x": "8px",
+            "boxSizing": "border-box",
+            "display": "{{ filteredThreadList().length ? 'flex' : 'none' }}",
+            "flex": "1",
+            "flexDirection": "column",
+            "gap": "6px",
+            "minHeight": "0px",
+            "overflowY": "auto",
             "paddingLeft": "8px",
             "paddingRight": "8px",
-            "boxSizing": "border-box",
-            "flex": "1",
-            "minHeight": "0px",
-            "overflowY": "auto"
+            "paddingTop": "8px",
+            "width": "100%"
            },
            "children": [
             {
-             "baseStyles": {},
-             "children": [],
-             "classes": [],
              "componentId": "thread-list-rows",
              "componentName": "ListRows",
              "componentProps": {
@@ -486,7 +483,6 @@
                  },
                  "children": [
                   {
-                   "baseStyles": {},
                    "children": [
                     {
                      "componentId": "thread-item-avatar",
@@ -501,7 +497,6 @@
                      "componentSlots": {}
                     }
                    ],
-                   "classes": [],
                    "componentId": "thread-item-avatar-cell",
                    "componentName": "ListCell",
                    "componentProps": {}
@@ -624,13 +619,11 @@
                      "originalElement": "div"
                     }
                    ],
-                   "classes": [],
                    "componentId": "thread-item-content-cell",
                    "componentName": "ListCell",
                    "componentProps": {}
                   }
                  ],
-                 "classes": [],
                  "componentEvents": {
                   "click": {
                    "action": "Run Script",
@@ -657,19 +650,17 @@
            "componentId": "thread-list",
            "componentName": "List",
            "componentProps": {
-            "divider": "none",
             "active": {
              "$type": "variable",
              "name": "selectedThread"
-            }
-           },
-           "componentEvents": {}
+            },
+            "divider": "none"
+           }
           },
           {
            "baseStyles": {
             "display": "{{ filteredThreadList().length ? 'none' : 'flex' }}"
            },
-           "children": [],
            "classes": [
             "pointer-events-none",
             "w-full",
@@ -1019,7 +1010,7 @@
                      "componentProps": {
                       "fontSize": "text-sm",
                       "tag": "span",
-                      "text": "{{ dataItem.conversation ? '· ' + dataItem.conversation : '' }}"
+                      "text": "{{ dataItem.conversation ? '\u00b7 ' + dataItem.conversation : '' }}"
                      },
                      "componentSlots": {}
                     }
@@ -2017,7 +2008,7 @@
                          "componentProps": {
                           "fontSize": "text-xs",
                           "tag": "span",
-                          "text": "·"
+                          "text": "\u00b7"
                          },
                          "componentSlots": {}
                         },
@@ -3786,7 +3777,7 @@
                          "componentProps": {
                           "fontSize": "text-xs",
                           "tag": "span",
-                          "text": "·"
+                          "text": "\u00b7"
                          },
                          "componentSlots": {}
                         },
@@ -7916,7 +7907,7 @@
                    "$type": "variable",
                    "name": "crmApiSecret"
                   },
-                  "placeholder": "{{ crmSecretStored ? '••••••••••••••••' : 'API secret' }}",
+                  "placeholder": "{{ crmSecretStored ? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' : 'API secret' }}",
                   "size": "md",
                   "type": "password",
                   "variant": "subtle"
@@ -8563,7 +8554,7 @@
                "$type": "variable",
                "name": "editCompanySize"
               },
-              "placeholder": "e.g. 11–50",
+              "placeholder": "e.g. 11\u201350",
               "size": "sm",
               "variant": "outline"
              },
@@ -8765,7 +8756,7 @@
                "$type": "variable",
                "name": "editBudget"
               },
-              "placeholder": "e.g. ₹2L–₹10L",
+              "placeholder": "e.g. \u20b92L\u2013\u20b910L",
               "size": "sm",
               "variant": "outline"
              },
@@ -10376,7 +10367,7 @@
                      "componentProps": {
                       "fontSize": "text-sm",
                       "tag": "span",
-                      "text": "{{ '· ' + dataItem.when }}"
+                      "text": "{{ '\u00b7 ' + dataItem.when }}"
                      },
                      "componentSlots": {}
                     }
@@ -11045,10 +11036,10 @@
               },
               "options": [
                "",
-               "1–10",
-               "11–50",
-               "51–200",
-               "201–1000",
+               "1\u201310",
+               "11\u201350",
+               "51\u2013200",
+               "201\u20131000",
                "1000+"
               ]
              },
@@ -11279,11 +11270,11 @@
               },
               "options": [
                "",
-               "Under ₹2L",
-               "₹2L–₹10L",
-               "₹10L–₹25L",
-               "₹25L–₹50L",
-               "₹50L+",
+               "Under \u20b92L",
+               "\u20b92L\u2013\u20b910L",
+               "\u20b910L\u2013\u20b925L",
+               "\u20b925L\u2013\u20b950L",
+               "\u20b950L+",
                "Not decided"
               ]
              },
@@ -12603,7 +12594,7 @@
                      "componentProps": {
                       "fontSize": "text-p-base",
                       "tag": "p",
-                      "text": "{{ 'Minimum ' + (partnershipCountry === 'India' ? '₹10,000' : '$100') + ' MRR on Frappe Cloud' }}"
+                      "text": "{{ 'Minimum ' + (partnershipCountry === 'India' ? '\u20b910,000' : '$100') + ' MRR on Frappe Cloud' }}"
                      },
                      "componentSlots": {}
                     },
@@ -17287,13 +17278,13 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-10-08 12:03:43.878019",
+ "creation": "2026-10-08 12:31:49.076605",
  "docstatus": 0,
  "doctype": "Studio Page",
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-10-08 12:16:16.519365",
+ "modified": "2026-10-08 13:11:35.366463",
  "modified_by": "doshi.maitri.mk@gmail.com",
  "name": "messaging",
  "owner": "Administrator",
