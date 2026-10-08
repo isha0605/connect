@@ -72,8 +72,8 @@ PACKS = [
 	(
 		"manufacturing",
 		"Manufacturing",
-		20000,
-		10,
+		10000,
+		5,
 		60,
 		{
 			"Manufacturing": [
