@@ -281,6 +281,7 @@ def my_projects():
 	rows = []
 	for name in names:
 		project = project_dict(frappe.get_doc("Customer Project", name))
+		hired = project["hired"]  # once hired, the row shows the partner, like a booked pack
 		rows.append(
 			{
 				"kind": "project",
@@ -290,8 +291,9 @@ def my_projects():
 				"verdict": project["verdict"],
 				"quotes": project["quotes"],
 				"shortlisted": project["shortlisted"],
-				"partner_name": "Frappe",
-				"partner_logo": FRAPPE_LOGO,
+				"hired": bool(hired),
+				"partner_name": hired["partner_name"] if hired else "Frappe",
+				"partner_logo": hired["logo"] if hired else FRAPPE_LOGO,
 				"created_on": project["created_on"],
 			}
 		)
