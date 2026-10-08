@@ -74,7 +74,7 @@ def share_requirements(name, budget=None, description=None):
 		frappe.throw(_("Tell partners what you want built."))
 
 	doc = get_own_project(name)
-	if doc.status == "Shared":
+	if doc.status in ("Shared", "Hired", "Completed"):
 		frappe.throw(_("These requirements have already been sent."))
 	customer = get_customer_for_user(doc.user)
 	if not customer:
@@ -241,6 +241,9 @@ def project_dict(doc):
 		"description": doc.description,
 		"created_on": with_timezone(doc.creation),
 		"order": booked_order(doc.name),
+		"hired": hired_partner(doc),
+		"hire_reason": doc.hire_reason,
+		"done_tasks": frappe.parse_json(doc.done_tasks) or [],
 		**quote_counts(doc.name),
 	}
 
@@ -450,8 +453,88 @@ def set_quote_status(quote, status):
 	get_own_project(row.customer_project)  # only the project's owner decides
 	if row.status == "Awaiting":
 		frappe.throw(_("This partner hasn't quoted yet."))
+	if row.status == "Hired":
+		frappe.throw(_("You have already hired this partner."))
 	row.db_set("status", status)
 	return quote_counts(row.customer_project)
+
+
+# ---- Hiring: step 1 (choosing a partner) ends, step 2 (set up hosting) begins ----
+HIRE_REASONS = ("Price", "Timeline", "Their profile", "How they replied")
+
+# Step 2's tasks, all optional; the page knows their labels and links.
+HOSTING_TASKS = ("fc-login", "fc-code", "fc-link")
+
+
+def hire_partner(quote):
+	"""Hire the partner behind a quote: the project moves to step 2 with them as its partner."""
+	row = frappe.get_doc("Project Quote", quote)
+	doc = get_own_project(row.customer_project)
+	if doc.status != "Shared":
+		frappe.throw(_("This project already has a partner."))
+	if row.status not in ("Quoted", "Interested"):
+		frappe.throw(_("Only a partner who has quoted can be hired."))
+	row.db_set("status", "Hired")
+	doc.update({"status": "Hired", "partner": row.partner, "hired_quote": row.name, "hired_on": frappe.utils.now()})
+	doc.save(ignore_permissions=True)
+	return project_dict(doc)
+
+
+def set_hire_reason(name, reason=None):
+	"""Why they picked this partner ("Why Tridots Tech?"). Skipping leaves it blank."""
+	doc = get_own_project(name)
+	if not doc.partner:
+		frappe.throw(_("Hire a partner first."))
+	if reason and reason not in HIRE_REASONS:
+		frappe.throw(_("Pick one of the reasons."))
+	doc.db_set("hire_reason", reason or "")
+
+
+def complete_task(name, task):
+	doc = get_own_project(name)
+	if task not in HOSTING_TASKS:
+		frappe.throw(_("Unknown task."))
+	if doc.status != "Hired":
+		frappe.throw(_("Hire a partner first."))
+	done = frappe.parse_json(doc.done_tasks) or []
+	if task not in done:
+		doc.db_set("done_tasks", frappe.as_json(done + [task]))
+	return project_dict(doc)
+
+
+def complete_project(name):
+	doc = get_own_project(name)
+	if doc.status != "Hired":
+		frappe.throw(_("Only a project with a partner can be completed."))
+	doc.update({"status": "Completed", "completed_on": frappe.utils.now()})
+	doc.save(ignore_permissions=True)
+	return project_dict(doc)
+
+
+def referral_code(project, partner):
+	"""The partner's Frappe Cloud referral code for this project. Partners don't have one on
+	file yet, so it's derived the way the prototype does: stable for each project and partner."""
+	n = 7
+	for ch in f"{partner}{project}":
+		n = (n * 33 + ord(ch)) % 99999
+	return f"{partner[:3].upper()}-{n:05d}"
+
+
+def hired_partner(doc):
+	"""Who was hired and on what quote, for the Partner panel and step 2."""
+	if not doc.partner:
+		return None
+	p = frappe.db.get_value("Partner", doc.partner, ["partner_name", "logo", "logo_icon"], as_dict=True) or {}
+	quote = frappe.db.get_value("Project Quote", doc.hired_quote, ["amount", "timeline_weeks", "thread"], as_dict=True) or {}
+	return {
+		"partner": doc.partner,
+		"partner_name": p.get("partner_name") or doc.partner,
+		"logo": p.get("logo_icon") or p.get("logo"),
+		"amount": quote.get("amount"),
+		"timeline_weeks": quote.get("timeline_weeks"),
+		"thread": quote.get("thread"),
+		"referral_code": referral_code(doc.name, doc.partner),
+	}
 
 
 # ---- Demo: partners reply with quotes ----

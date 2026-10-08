@@ -73,3 +73,27 @@ def set_quote_status(quote, status):
 def simulate_quotes(name):
 	from connect.customer.doctype.customer_project.customer_project import simulate_quotes
 	return simulate_quotes(name)
+
+
+@frappe.whitelist(methods=["POST"])
+def hire_partner(quote):
+	from connect.customer.doctype.customer_project.customer_project import hire_partner
+	return hire_partner(quote)
+
+
+@frappe.whitelist(methods=["POST"])
+def set_hire_reason(name, reason=None):
+	from connect.customer.doctype.customer_project.customer_project import set_hire_reason
+	return set_hire_reason(name, reason)
+
+
+@frappe.whitelist(methods=["POST"])
+def complete_task(name, task):
+	from connect.customer.doctype.customer_project.customer_project import complete_task
+	return complete_task(name, task)
+
+
+@frappe.whitelist(methods=["POST"])
+def complete_project(name):
+	from connect.customer.doctype.customer_project.customer_project import complete_project
+	return complete_project(name)
