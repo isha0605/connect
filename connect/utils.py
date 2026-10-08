@@ -202,23 +202,25 @@ def get_my_context():
 
 
 def get_projects_route(user, customer=None):
-	"""Where the sidebar's Projects goes: the latest paid Starter Pack order's setup steps, else
-	Compare partners once the buyer has saved their requirements, else nowhere (no Projects)."""
+	"""Where the sidebar's Projects goes — the projects list — once the buyer has something
+	there: a paid Starter Pack order, a project of their own, or saved requirements. Else
+	nowhere (no Projects)."""
 	or_filters = {"user": user}
 	if customer:
 		or_filters["customer"] = customer
-	order = frappe.get_all(
+	has_order = frappe.get_all(
 		"Starter Pack Order",
 		filters={"payment_status": ["in", ["Paid", "Partially Refunded"]]},
 		or_filters=or_filters,
-		order_by="creation desc",
 		limit=1,
 		pluck="name",
 	)
-	if order:
-		return f"/starter-pack-implementation?order={order[0]}"
-	if customer and frappe.db.exists("Requirement", {"customer": customer}):
-		return "/compare-partners"
+	if (
+		has_order
+		or frappe.db.exists("Customer Project", {"user": user})
+		or (customer and frappe.db.exists("Requirement", {"customer": customer}))
+	):
+		return "/projects"
 	return None
 
 

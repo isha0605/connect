@@ -795,10 +795,12 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 			{"doctype": "Requirement", "customer": customer, "company_name": "Test Co", "country": "India",
 			 "industry": "Manufacturing"}
 		).insert(ignore_permissions=True)
-		self.assertEqual(context_as(user)["projects_route"], "/compare-partners")
+		self.assertEqual(context_as(user)["projects_route"], "/projects")
 
+		frappe.db.delete("Requirement", {"customer": customer})
+		self.assertFalse(context_as(user)["has_projects"])
 		order.db_set("payment_status", "Paid")
-		self.assertEqual(context_as(user)["projects_route"], f"/starter-pack-implementation?order={order.name}")
+		self.assertEqual(context_as(user)["projects_route"], "/projects")
 
 	def test_the_return_page_has_the_project(self):
 		order = self.paid_order()

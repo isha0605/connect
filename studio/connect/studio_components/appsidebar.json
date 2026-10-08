@@ -21,12 +21,7 @@
         {
          "icon": "lucide-settings",
          "label": "Settings",
-         "onClick": "() => { window.location.href = '/connect/messaging'; }"
-        },
-        {
-         "icon": "lucide-message-square-quote",
-         "label": "Give feedback",
-         "onClick": "() => { window.open('https://frappe.io/contact', '_blank'); }"
+         "onClick": "() => { window.dispatchEvent(new CustomEvent('connect:open-settings')); }"
         },
         {
          "icon": "lucide-log-out",
@@ -149,7 +144,6 @@
        "display": "{{ (myContext.data && myContext.data.user && myContext.data.user !== 'Guest') ? 'block' : 'none' }}",
        "height": "12px"
       },
-      "children": [],
       "componentId": "container-fpr-nav-gap",
       "componentName": "container",
       "componentProps": {},
@@ -158,15 +152,15 @@
      },
      {
       "baseStyles": {
-       "display": "{{ (myContext.data && myContext.data.user && myContext.data.user !== 'Guest') ? 'flex' : 'none' }}"
+       "display": "{{ !(myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
       },
       "componentId": "SidebarItem-fpr-home",
       "componentName": "SidebarItem",
       "componentProps": {
-       "active": "{{ ['/home'].includes(route.path) }}",
+       "active": "{{ ['/home', '/'].includes(route.path) }}",
        "icon": "lucide-house",
        "label": "Home",
-       "route": "/home"
+       "route": "{{ (myContext.data && myContext.data.user && myContext.data.user !== 'Guest') ? '/home' : '/' }}"
       },
       "componentSlots": {}
      },
@@ -185,6 +179,9 @@
       "componentSlots": {}
      },
      {
+      "baseStyles": {
+       "display": "{{ !(myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+      },
       "componentId": "SidebarItem-fpr-partners",
       "componentName": "SidebarItem",
       "componentProps": {
@@ -197,17 +194,30 @@
      },
      {
       "baseStyles": {
-       "display": "{{ !!(myContext.data && myContext.data.has_projects) ? 'flex' : 'none' }}"
+       "display": "{{ !(myContext.data && myContext.data.partner) && !!(myContext.data && myContext.data.has_projects) ? 'flex' : 'none' }}"
       },
       "componentId": "SidebarItem-fpr-projects",
       "componentName": "SidebarItem",
       "componentProps": {
-       "active": "{{ ['/starter-pack-implementation', '/compare-partners'].includes(route.path) }}",
+       "active": "{{ ['/projects', '/custom-implementation', '/starter-pack-implementation', '/compare-partners'].includes(route.path) }}",
        "icon": "lucide-briefcase",
        "label": "Projects",
-       "route": "{{ (myContext.data && myContext.data.projects_route) || '/home' }}"
+       "route": "/projects"
       },
       "componentSlots": {}
+     },
+     {
+      "baseStyles": {
+       "display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+      },
+      "componentId": "SidebarItem-fpr-partnership",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "active": "{{ ['/partner-onboarding'].includes(route.path) }}",
+       "icon": "lucide-badge-check",
+       "label": "Partnership",
+       "route": "/partner-onboarding"
+      }
      }
     ],
     "componentId": "container-fpr-nav",
@@ -234,6 +244,13 @@
     "componentProps": {},
     "componentSlots": {},
     "originalElement": "div"
+   },
+   {
+    "blockName": "ConnectSettings",
+    "componentId": "ConnectSettings-fpr",
+    "componentName": "ConnectSettings",
+    "componentProps": {},
+    "isCustomVueComponent": true
    }
   ],
   "componentId": "Sidebar-fpr",
@@ -247,12 +264,12 @@
  },
  "component_id": "appsidebar",
  "component_name": "AppSidebar",
- "creation": "2026-09-29 14:30:27.160949",
+ "creation": "2026-10-07 16:57:01.627863",
  "docstatus": 0,
  "doctype": "Studio Component",
  "idx": 0,
  "is_disabled": 0,
- "modified": "2026-10-05 22:10:00.000000",
+ "modified": "2026-10-05 22:10:00",
  "modified_by": "Administrator",
  "name": "appsidebar",
  "owner": "Administrator"
