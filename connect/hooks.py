@@ -194,6 +194,13 @@ fixtures = [
 
 # Stops a Starter Pack Order being refunded after kickoff. It has to be a class override:
 # bwh_payments calls the gateway before it saves, and doc_events only run afterwards.
+# Studio's page-script endpoint denies guests, which empties every script-backed page
+# for logged-out visitors. See connect/api/studio_scripts.py.
+override_whitelisted_methods = {
+	"studio.api.get_studio_page_scripts": "connect.api.studio_scripts.get_studio_page_scripts",
+	"studio.api.get_custom_vue_components": "connect.api.studio_scripts.get_custom_vue_components",
+}
+
 override_doctype_class = {
 	"Gateway Payment Request": "connect.overrides.gateway_payment_request.GatewayPaymentRequest",
 }
