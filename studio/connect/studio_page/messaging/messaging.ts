@@ -1,6 +1,7 @@
 import { ref, computed, watch, onScopeDispose, nextTick, h } from "vue"
 import { toast, call, useFileUpload, setConfig } from "frappe-ui"
 import { io } from "socket.io-client"
+import { installScrollFade } from "@app/utils/scrollFade"
 
 // Raven's FileTypeIcon (apps/web/src/components/common/FileIcons/FileTypeIcon.tsx, size "lg"):
 // a 28px coloured tile with a white glyph. PDF / Word / Excel / PowerPoint are Raven's own marks;
@@ -53,6 +54,8 @@ const FILE_TYPE_TILES = [
 const DEFAULT_FILE_TILE = { bg: "var(--gray-500)", glyph: lucideSvg("file") }
 
 export default function setup(context) {
+	// the thread list's thin scrollbar that fades when idle (see @app/utils/scrollFade)
+	installScrollFade()
 	// ---- State ----
 	const selectedThread = ref("")
 	const draftMessage = ref("")
@@ -1115,6 +1118,80 @@ export default function setup(context) {
 		} catch (e) {
 			return {}
 		}
+	}
+
+	// A partner's quote on a customer's brief (message_type "Quote"; content is
+	// { amount, weeks, note } — see simulate_quotes in customer_project.py).
+	function quoteAmountText(item) {
+		const amount = parseRequirementContent(item).amount || 0
+		return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(
+			amount,
+		)
+	}
+
+	function quoteWeeksText(item) {
+		const weeks = parseRequirementContent(item).weeks
+		return weeks ? `about ${weeks} week${weeks === 1 ? "" : "s"}` : ""
+	}
+
+	function quoteNoteText(item) {
+		return parseRequirementContent(item).note || ""
+	}
+
+	// ---- Requirement card (a customer's brief), as Pragati's design shows it ----
+	// Title, the start of what they need built, budget and industry; View details opens the
+	// whole brief. Share requirements cards carry "Custom implementation: <what they need>";
+	// cards from the requirement form carry the form's answers instead.
+	const BRIEF_PREFIX = "Custom implementation: "
+	const capitalize = (text) => (text ? text.charAt(0).toUpperCase() + text.slice(1) : text)
+
+	function requirementView(item) {
+		const req = parseRequirementContent(item)
+		const lookingFor = req.looking_for || ""
+		const isBrief = lookingFor.startsWith(BRIEF_PREFIX)
+		const built = req.description || (isBrief ? lookingFor.slice(BRIEF_PREFIX.length) : lookingFor)
+		const company = req.company_name || ""
+
+		// How they run today, one line per part: "Accounting software…; uses Tally. Wants fixed: …"
+		const situation = String(req.current_situation || "")
+			.split(/;\s+|\.\s+(?=[A-Z])/)
+			.map((line) => capitalize(line.trim().replace(/\.$/, "")))
+			.filter(Boolean)
+		const apps = Array.isArray(req.apps) ? req.apps : []
+		if (apps.length) situation.push(`Interested in ${apps.join(", ")}`)
+
+		// Who they want: sent with the card since Share requirements started saying it
+		// ("A partner based in India … Any tier, remote or on site."); older cards get it pieced
+		// together from their answers.
+		const lookingParts = []
+		if (req.country || req.industry) {
+			let partner = "A partner"
+			if (req.country) partner += ` based in ${req.country}`
+			if (req.industry) partner += ` who offers services for ${req.industry}`
+			lookingParts.push(partner + ".")
+		}
+		if (req.delivery_preference) lookingParts.push(`Delivery: ${req.delivery_preference}.`)
+		if (req.timeline) lookingParts.push(`Timeline: ${req.timeline}.`)
+
+		return {
+			title: req.project_name || (company ? `ERPNext implementation for ${company}` : "Requirement details"),
+			summary: built,
+			budget: req.budget || "",
+			industry: req.industry || "",
+			size: req.company_size ? `${req.company_size.replace("–", " to ")} people` : "",
+			built,
+			situation,
+			lookingFor: req.partner_brief || lookingParts.join(" "),
+		}
+	}
+
+	const requirementDetailOpen = ref(false)
+	const requirementDetailItem = ref(null)
+	const requirementDetail = computed(() => requirementView(requirementDetailItem.value))
+
+	function openRequirementDetails(item) {
+		requirementDetailItem.value = item
+		requirementDetailOpen.value = true
 	}
 
 	const REQUIREMENT_FIELD_LABELS = [
@@ -3558,6 +3635,13 @@ export default function setup(context) {
 		requirementSubtitle,
 		requirementAppItems,
 		parseRequirementContent,
+		quoteAmountText,
+		quoteWeeksText,
+		quoteNoteText,
+		requirementView,
+		requirementDetailOpen,
+		requirementDetail,
+		openRequirementDetails,
 		requirementFieldRows,
 		requirementPrimaryRows,
 		requirementSecondaryRows,
