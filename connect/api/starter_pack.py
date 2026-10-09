@@ -10,14 +10,14 @@ from frappe.rate_limiter import rate_limit
 
 @frappe.whitelist(allow_guest=True)
 def get_catalog():
-	from connect.customer.doctype.starter_pack.starter_pack import get_catalog
+	from connect.starter_packs.doctype.starter_pack.starter_pack import get_catalog
 	return get_catalog()
 
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 @rate_limit(limit=20, seconds=60 * 60)
 def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None, buyer_email=None, project=None):
-	from connect.customer.doctype.starter_pack_order.starter_pack_order import checkout
+	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import checkout
 	return checkout(
 		packs,
 		company_name,
@@ -33,7 +33,7 @@ def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None,
 # and assign its partner — and Frappe rolls back whatever a GET request writes.
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 def get_order(order=None, payment_request=None, key=None):
-	from connect.customer.doctype.starter_pack_order.starter_pack_order import get_order
+	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import get_order
 	return get_order(order=order, payment_request=payment_request, key=key)
 
 
@@ -42,24 +42,24 @@ def get_order(order=None, payment_request=None, key=None):
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 @rate_limit(limit=20, seconds=60 * 60)
 def last_checkout_details(email=None):
-	from connect.customer.doctype.starter_pack_order.starter_pack_order import last_checkout_details
+	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import last_checkout_details
 	return last_checkout_details(email)
 
 
 @frappe.whitelist()
 def my_orders():
-	from connect.customer.doctype.starter_pack_order.starter_pack_order import my_orders
+	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import my_orders
 	return my_orders()
 
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 @rate_limit(limit=20, seconds=60 * 60)
 def pay(order, key=None):
-	from connect.customer.doctype.starter_pack_order.starter_pack_order import pay
+	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import pay
 	return pay(order, key=key)
 
 
 @frappe.whitelist()
 def get_my_projects():
-	from connect.customer.doctype.starter_pack_order.starter_pack_order import get_my_projects
+	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import get_my_projects
 	return get_my_projects()

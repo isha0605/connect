@@ -8,17 +8,17 @@ from frappe.tests import IntegrationTestCase
 
 from connect.api.contact import start_partner_thread
 from connect.api.threads import get_my_threads
-from connect.customer.doctype.starter_pack_order.implementation import (
+from connect.starter_packs.doctype.starter_pack_order.implementation import (
 	hand_over,
 	hand_over_waiting_orders,
 	post_opening_message,
 )
-from connect.customer.doctype.starter_pack_order.starter_pack_order import (
+from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import (
 	PAYMENT_HOOK_FLAG,
 	get_my_projects,
 	get_order,
 )
-from connect.customer.doctype.starter_pack_order.test_starter_pack_order import make_order, make_pack, make_user
+from connect.starter_packs.doctype.starter_pack_order.test_starter_pack_order import make_order, make_pack, make_user
 from connect.partner.consultants import on_user_update, sync_consultant
 from connect.roles import CONSULTANT_ROLE, PARTNER_ROLE
 from connect.utils import get_my_context
@@ -83,7 +83,7 @@ class IntegrationTestFrappeConsultants(IntegrationTestCase):
 		self.pack = make_pack("_test_pack_a", 10000, 5)
 		self.notify = patch(NOTIFY).start()
 		patch("frappe.log_error").start()
-		patch("connect.customer.doctype.starter_pack_order.implementation.frappe.enqueue").start()
+		patch("connect.starter_packs.doctype.starter_pack_order.implementation.frappe.enqueue").start()
 		make_consultant(ONE, "Test Consultant-One")
 		make_consultant(TWO, "Test Consultant-Two")
 

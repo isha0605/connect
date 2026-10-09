@@ -10,7 +10,7 @@ from frappe.model.document import Document
 from frappe.utils import cint, flt, get_datetime, get_system_timezone, now_datetime
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
-from connect.customer.doctype.starter_pack_order.implementation import (
+from connect.starter_packs.doctype.starter_pack_order.implementation import (
 	hand_over,
 	move_thread,
 	project_title,

@@ -22,7 +22,7 @@ from frappe.utils import cint, now_datetime
 from connect.api.contact import _ensure_thread_member
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.customer.doctype.requirement.requirement import get_requirement_snapshot
-from connect.customer.doctype.starter_pack_order.partner_rotation import (
+from connect.starter_packs.doctype.starter_pack_order.partner_rotation import (
 	assign_consultant,
 	assign_partner,
 	tell_admins,

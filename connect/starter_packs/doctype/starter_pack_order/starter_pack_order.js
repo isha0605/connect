@@ -9,7 +9,7 @@ frappe.ui.form.on("Starter Pack Order", {
 		if (frm.doc.payment_status === "Paid" && !frm.doc.partner && frappe.user.has_role("System Manager")) {
 			frm.add_custom_button(__("Assign partner"), () => {
 				frappe.call({
-					method: "connect.customer.doctype.starter_pack_order.implementation.assign_now",
+					method: "connect.starter_packs.doctype.starter_pack_order.implementation.assign_now",
 					args: { order: frm.doc.name },
 					freeze: true,
 					callback: () => frm.reload_doc(),

@@ -240,7 +240,7 @@ doc_events = {
 		"on_trash": "connect.roles.revoke_thread_guest_role",
 	},
 	"Gateway Payment Request": {
-		"on_update": "connect.customer.doctype.starter_pack_order.starter_pack_order.on_gateway_payment_request_update",
+		"on_update": "connect.starter_packs.doctype.starter_pack_order.starter_pack_order.on_gateway_payment_request_update",
 	},
 	# The Frappe Consultant role: see connect.partner.consultants.
 	"User": {
@@ -255,7 +255,7 @@ doc_events = {
 scheduler_events = {
 	# Paid Starter Pack orders still without a partner (e.g. paid before one was set up).
 	"hourly": [
-		"connect.customer.doctype.starter_pack_order.implementation.hand_over_waiting_orders",
+		"connect.starter_packs.doctype.starter_pack_order.implementation.hand_over_waiting_orders",
 	],
 	"daily": [
 		"connect.partner.response_time.recompute_all_response_times",

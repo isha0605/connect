@@ -124,7 +124,7 @@ PROBLEM_LABELS = {
 def send_to_partners(doc, customer):
 	"""Sends the brief to each matching partner's admin, as the customer's own Requirement card
 	in their thread with that partner, and returns how many got it."""
-	from connect.customer.doctype.starter_pack_order.implementation import get_or_open_thread
+	from connect.starter_packs.doctype.starter_pack_order.implementation import get_or_open_thread
 	from connect.permissions import _get_partner_admin
 
 	criteria = normalize_criteria(frappe.parse_json(doc.criteria) or {})
@@ -223,7 +223,7 @@ def delete_project(name):
 
 
 def project_dict(doc):
-	from connect.customer.doctype.starter_pack_order.starter_pack_order import with_timezone
+	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import with_timezone
 
 	return {
 		"name": doc.name,
@@ -264,7 +264,7 @@ def my_projects():
 	"""The caller's draft projects, newest first, in the Projects page's row shape."""
 	if frappe.session.user == "Guest":
 		return []
-	from connect.customer.doctype.starter_pack_order.starter_pack_order import FRAPPE_LOGO
+	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import FRAPPE_LOGO
 
 	names = frappe.get_all(
 		"Customer Project", filters={"user": frappe.session.user}, pluck="name", order_by="creation desc"

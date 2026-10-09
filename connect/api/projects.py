@@ -9,7 +9,7 @@ def list_projects():
 	"""Everything on the Projects page, newest first: draft projects and paid Starter
 	Pack orders. Each row says which kind it is, since they open different pages."""
 	from connect.customer.doctype.customer_project.customer_project import my_projects
-	from connect.customer.doctype.starter_pack_order.starter_pack_order import my_orders
+	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import my_orders
 
 	orders = [{"kind": "order", **row} for row in my_orders()]
 	return sorted(my_projects() + orders, key=lambda row: row["created_on"] or "", reverse=True)

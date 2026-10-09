@@ -8,7 +8,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import today
 
-from connect.customer.doctype.starter_pack_order.starter_pack_order import (
+from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import (
 	PAYMENT_HOOK_FLAG,
 	checkout,
 	get_my_projects,
@@ -17,22 +17,22 @@ from connect.customer.doctype.starter_pack_order.starter_pack_order import (
 )
 
 RAZORPAY = "bwh_payments.bwh_payments.doctype.razorpay_gateway_settings.razorpay_gateway_settings.RazorpayGatewaySettings"
-ORDER_MODULE = "connect.customer.doctype.starter_pack_order.starter_pack_order"
+ORDER_MODULE = "connect.starter_packs.doctype.starter_pack_order.starter_pack_order"
 GPR_MODULE = "bwh_payments.bwh_payments.doctype.gateway_payment_request.gateway_payment_request"
-from connect.customer.doctype.starter_pack_order.implementation import (
+from connect.starter_packs.doctype.starter_pack_order.implementation import (
 	hand_over,
 	hand_over_waiting_orders,
 	post_opening_message,
 )
-from connect.customer.doctype.starter_pack_order.partner_rotation import (
+from connect.starter_packs.doctype.starter_pack_order.partner_rotation import (
 	assign_partner,
 	pick_next,
 	read_pointer,
 )
 
 NOTIFY = "frappe.desk.doctype.notification_log.notification_log.enqueue_create_notification"
-IMPLEMENTATION_MODULE = "connect.customer.doctype.starter_pack_order.implementation"
-ROTATION_MODULE = "connect.customer.doctype.starter_pack_order.partner_rotation"
+IMPLEMENTATION_MODULE = "connect.starter_packs.doctype.starter_pack_order.implementation"
+ROTATION_MODULE = "connect.starter_packs.doctype.starter_pack_order.partner_rotation"
 
 EXTRA_TEST_RECORD_DEPENDENCIES = []
 IGNORE_TEST_RECORD_DEPENDENCIES = ["Customer", "Partner", "User"]
@@ -431,7 +431,7 @@ def make_order(packs, sent_price=None):
 
 def pool_of(*partners):
 	"""(name, rotation order) pairs -> the rows get_pool returns, in its order."""
-	from connect.customer.doctype.starter_pack_order.partner_rotation import rotation_key
+	from connect.starter_packs.doctype.starter_pack_order.partner_rotation import rotation_key
 
 	rows = [frappe._dict(name=name, sequence=seq) for name, seq in partners]
 	return sorted(rows, key=lambda p: rotation_key(p.sequence, p.name))

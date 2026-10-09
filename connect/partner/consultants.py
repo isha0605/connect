@@ -101,7 +101,7 @@ def join_frappe_team(user):
 def leave_frappe_team(user):
 	"""Hand the consultant's open orders on, then take them out of their threads and the
 	Frappe team. Their orders, threads and messages stay for the record."""
-	from connect.customer.doctype.starter_pack_order.partner_rotation import assign_consultant
+	from connect.starter_packs.doctype.starter_pack_order.partner_rotation import assign_consultant
 
 	for order in frappe.get_all(
 		"Starter Pack Order",
