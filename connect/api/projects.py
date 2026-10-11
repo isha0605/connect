@@ -46,7 +46,7 @@ def delete_project(name):
 # only counts partners the public directory already lists.
 @frappe.whitelist(allow_guest=True)
 def partner_criteria(criteria=None):
-	from connect.customer.doctype.customer_project.customer_project import partner_criteria
+	from connect.customer.doctype.customer_project.partner_matching import partner_criteria
 	return partner_criteria(criteria)
 
 
@@ -71,7 +71,7 @@ def set_quote_status(quote, status):
 # Demo only: partners can't send quotes yet. See simulate_quotes.
 @frappe.whitelist(methods=["POST"])
 def simulate_quotes(name):
-	from connect.customer.doctype.customer_project.customer_project import simulate_quotes
+	from connect.customer.doctype.customer_project.demo_quotes import simulate_quotes
 	return simulate_quotes(name)
 
 
