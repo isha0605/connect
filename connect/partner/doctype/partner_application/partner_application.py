@@ -124,7 +124,7 @@ class PartnerApplication(Document):
 			frappe.throw(_("Link at least two certificates before submitting for approval."))
 
 	def _validate_mrr(self):
-		target = flt(frappe.db.get_single_value("Frappe School Settings", "mrr_target")) or 0
+		target = flt(frappe.db.get_single_value("Integration Settings", "mrr_target")) or 0
 		if flt(self.monthly_revenue) < target:
 			frappe.throw(_("Reach the minimum monthly revenue before submitting for approval."))
 
@@ -295,7 +295,7 @@ def get_mrr_status():
 	# Pull fresh data from Press if the integration is enabled — this way the partner
 	# sees live numbers without waiting for the nightly scheduled sync.
 	try:
-		press_enabled = frappe.db.get_single_value("Press Settings", "enabled")
+		press_enabled = frappe.db.get_single_value("Integration Settings", "press_enabled")
 		if press_enabled:
 			from connect.partner.press_integration import sync_partner_mrr
 
@@ -305,7 +305,7 @@ def get_mrr_status():
 
 	doc = _get_partner_application(partner)
 	current_amount = flt(doc.monthly_revenue) if doc else 0
-	target_amount = flt(frappe.db.get_single_value("Frappe School Settings", "mrr_target")) or 0
+	target_amount = flt(frappe.db.get_single_value("Integration Settings", "mrr_target")) or 0
 
 	return {
 		"current_amount": current_amount,

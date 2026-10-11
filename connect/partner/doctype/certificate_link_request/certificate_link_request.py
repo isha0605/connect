@@ -80,14 +80,16 @@ def _get_school_client():
 	"""Returns a FrappeClient connected to Frappe School using its configured credentials."""
 	from frappe.frappeclient import FrappeClient
 
-	settings = frappe.get_cached_doc("Frappe School Settings")
-	if not settings.enabled or not (settings.site_url and settings.api_key and settings.api_secret):
+	settings = frappe.get_cached_doc("Integration Settings")
+	if not settings.school_enabled or not (
+		settings.school_site_url and settings.school_api_key and settings.school_api_secret
+	):
 		frappe.throw(_("Certificate verification isn't configured yet. Contact an administrator."))
 
 	return FrappeClient(
-		settings.site_url,
-		api_key=settings.api_key,
-		api_secret=settings.get_password("api_secret"),
+		settings.school_site_url,
+		api_key=settings.school_api_key,
+		api_secret=settings.get_password("school_api_secret"),
 	)
 
 

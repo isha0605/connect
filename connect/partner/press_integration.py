@@ -3,17 +3,19 @@ from frappe.utils import flt
 
 
 def _get_press_client():
-	"""Returns a FrappeClient connected to Frappe Cloud using Press Settings credentials."""
+	"""Returns a FrappeClient connected to Frappe Cloud using the Press credentials in Integration Settings."""
 	from frappe.frappeclient import FrappeClient
 
-	settings = frappe.get_cached_doc("Press Settings")
-	if not settings.enabled or not (settings.site_url and settings.api_key and settings.api_secret):
+	settings = frappe.get_cached_doc("Integration Settings")
+	if not settings.press_enabled or not (
+		settings.press_site_url and settings.press_api_key and settings.press_api_secret
+	):
 		frappe.throw(frappe._("Press integration isn't configured yet. Contact an administrator."))
 
 	return FrappeClient(
-		settings.site_url,
-		api_key=settings.api_key,
-		api_secret=settings.get_password("api_secret"),
+		settings.press_site_url,
+		api_key=settings.press_api_key,
+		api_secret=settings.get_password("press_api_secret"),
 	)
 
 
@@ -33,7 +35,7 @@ def fetch_mrr_from_press(company_email: str) -> float:
 
 def sync_partner_mrr(partner: str):
 	"""Refreshes MRR from Press onto the partner's active application draft so their eligibility is up to date."""
-	if not frappe.db.get_single_value("Press Settings", "enabled"):
+	if not frappe.db.get_single_value("Integration Settings", "press_enabled"):
 		return
 
 	from connect.partner.doctype.partner_application.partner_application import _get_partner_application
@@ -58,7 +60,7 @@ def sync_partner_mrr(partner: str):
 
 def sync_all_partner_mrrs():
 	"""Nightly job that keeps every draft application's MRR fresh without waiting for a user to open the page."""
-	if not frappe.db.get_single_value("Press Settings", "enabled"):
+	if not frappe.db.get_single_value("Integration Settings", "press_enabled"):
 		return
 
 	partners = frappe.get_all(
