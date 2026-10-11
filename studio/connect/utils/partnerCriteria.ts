@@ -7,7 +7,7 @@
 // The go-live chip edits the project's own answer — it isn't a partner filter.
 
 import { computed, ref } from "vue"
-import { GO_LIVE_CRITERIA, goLiveCriterion } from "@app/utils/recommendation"
+import { GO_LIVE_OPTIONS, WORK_OPTIONS, goLiveCriterion } from "@app/utils/recommendation"
 
 const CHIP_GROUPS = ["cities", "tiers", "work"]
 
@@ -20,10 +20,11 @@ export function orList(values, suffix = "") {
 	return `${values.slice(0, -1).join(", ")} or ${values[values.length - 1]}${suffix}`
 }
 
+// One pick reads as its label; none or both means either works (work_label() in
+// customer_project/answers.py words the partner's card the same way).
 export function workCriterion(work) {
-	if (work.length === 1 && work[0] === "onsite") return "On premises"
-	if (work.length === 1 && work[0] === "remote") return "Remote"
-	return "Remote or on premises"
+	const picked = WORK_OPTIONS.filter((o) => work.length !== 1 || o.value === work[0])
+	return picked.map((o, i) => (i ? o.label.toLowerCase() : o.label)).join(" or ")
 }
 
 // The summary list, as { icon, label } rows.
@@ -108,7 +109,7 @@ export function partnerCriteria(context, { saved, goLive }) {
 	const tierChips = computed(() => facets.value.tiers.map(chip("tiers")))
 	const workChips = computed(() => facets.value.work.map(chip("work")))
 	const goLiveChips = computed(() =>
-		GO_LIVE_CRITERIA.map((o) => ({ ...o, picked: draft.value.go_live === o.value })),
+		GO_LIVE_OPTIONS.map((o) => ({ ...o, picked: draft.value.go_live === o.value })),
 	)
 
 	const partnersLeft = computed(() => {

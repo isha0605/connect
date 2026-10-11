@@ -1161,7 +1161,7 @@ export default function setup(context) {
 		if (apps.length) situation.push(`Interested in ${apps.join(", ")}`)
 
 		// Who they want: sent with the card since Share requirements started saying it
-		// ("A partner based in India … Any tier, remote or on site."); older cards get it pieced
+		// ("A partner based in India … Any tier, on premises or remote."); older cards get it pieced
 		// together from their answers.
 		const lookingParts = []
 		if (req.country || req.industry) {

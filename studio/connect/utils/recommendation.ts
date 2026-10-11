@@ -3,6 +3,10 @@
 // routes on it, and the Starter Pack recommendation page, which explains it — so the
 // two can never disagree about why someone was sent where they were.
 
+// The answers' codes and wording. The Requirement card partners get reads the same file
+// (connect/customer/doctype/customer_project/brief.py), so both sides see the same words.
+import ANSWER_OPTIONS from "./answerOptions.json"
+
 // Grouped by the directory's regions so a country with no partners can still fall
 // back to its neighbours. Names are Frappe's Country names, which is what
 // Partner.country holds — e.g. "United Arab Emirates", not "UAE".
@@ -76,12 +80,7 @@ export const INDUSTRY_OPTIONS = INDUSTRY_GROUPS.map(({ key, group, industries })
 	options: industries.map((v) => ({ label: v, value: v })),
 }))
 
-export const OPERATION_OPTIONS = [
-	{ value: "spreadsheets", label: "Spreadsheets, email and paper" },
-	{ value: "accounting_software", label: "Accounting software, everything else by hand" },
-	{ value: "disconnected_systems", label: "Several systems that do not talk to each other" },
-	{ value: "outgrown_erp", label: "An ERP that no longer fits how we work" },
-]
+export const OPERATION_OPTIONS = ANSWER_OPTIONS.operations
 
 export const SYSTEM_OPTIONS = [
 	"Tally", "Zoho", "QuickBooks", "Busy", "SAP", "Microsoft Dynamics", "Odoo",
@@ -89,22 +88,12 @@ export const SYSTEM_OPTIONS = [
 ].map((v) => ({ label: v, value: v }))
 
 // "When do you need it live?" — the New project dialog's first question.
-export const GO_LIVE_OPTIONS = [
-	{ value: "within_month", label: "Within a month" },
-	{ value: "one_to_three_months", label: "In 1–3 months" },
-	{ value: "three_to_six_months", label: "In 3–6 months" },
-	{ value: "no_deadline", label: "No fixed deadline" },
-]
+export const GO_LIVE_OPTIONS = ANSWER_OPTIONS.go_live
 
-export const PROBLEM_OPTIONS = [
-	{ value: "manual_work", label: "Manual work that should be automated" },
-	{ value: "hr_by_hand", label: "Payroll, leave and attendance are run by hand" },
-	{ value: "disconnected_systems", label: "Systems that do not talk to each other" },
-	{ value: "slow_close", label: "Month-end close and reporting take too long" },
-	{ value: "stock_visibility", label: "No reliable view of stock and orders" },
-	{ value: "tools_dont_fit", label: "Our tools cannot handle how we actually work" },
-	{ value: "outgrowing", label: "We are outgrowing what we have" },
-]
+export const PROBLEM_OPTIONS = ANSWER_OPTIONS.problems
+
+// "How do you want to work" in the Edit criteria chips.
+export const WORK_OPTIONS = ANSWER_OPTIONS.work
 
 const labelOf = (options, value) => options.find((o) => o.value === value)?.label ?? ""
 
@@ -229,17 +218,8 @@ export function answersFromProject(project) {
 	})
 }
 
-// The same go-live answers as GO_LIVE_OPTIONS, worded as the Edit criteria chips and the
-// custom page's criteria list word them.
-export const GO_LIVE_CRITERIA = [
-	{ value: "within_month", label: "As soon as possible" },
-	{ value: "one_to_three_months", label: "Live within three months" },
-	{ value: "three_to_six_months", label: "Live within six months" },
-	{ value: "no_deadline", label: "No fixed deadline" },
-]
-
 export function goLiveCriterion(value) {
-	return labelOf(GO_LIVE_CRITERIA, value) || "No fixed deadline"
+	return labelOf(GO_LIVE_OPTIONS, value) || "No fixed deadline"
 }
 
 export const CUSTOM_HOW_IT_WORKS = [
