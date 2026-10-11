@@ -21,7 +21,7 @@ from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import 
 from connect.starter_packs.doctype.starter_pack_order.test_starter_pack_order import make_order, make_pack, make_user
 from connect.partner.consultants import on_user_update, sync_consultant
 from connect.roles import CONSULTANT_ROLE, PARTNER_ROLE
-from connect.utils import get_my_context
+from connect.account import get_my_context
 
 NOTIFY = "frappe.desk.doctype.notification_log.notification_log.enqueue_create_notification"
 SETTINGS = "Starter Pack Settings"

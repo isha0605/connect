@@ -772,7 +772,7 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 			frappe.set_user("Administrator")
 
 	def test_the_sidebar_shows_projects_only_once_there_is_one(self):
-		from connect.utils import get_my_context
+		from connect.account import get_my_context
 
 		def context_as(user):
 			frappe.set_user(user)
