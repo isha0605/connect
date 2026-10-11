@@ -251,8 +251,9 @@ def has_dm_thread_permission(doc, ptype="read", user=None, **kwargs):
 	user = user or frappe.session.user
 	if _has_full_access(user):
 		return True
-	if ptype == "create" or not doc.get("user_a") or not doc.get("user_b"):
+	if not doc.get("user_a") or not doc.get("user_b"):
 		return True
+	# create included: nobody may open a DM between two other people
 	return user in (doc.user_a, doc.user_b)
 
 
@@ -267,13 +268,10 @@ def has_dm_message_permission(doc, ptype="read", user=None, **kwargs):
 	user = user or frappe.session.user
 	if _has_full_access(user):
 		return True
-	if ptype == "create":
-		return doc.get("sender") == user
-
-	thread = frappe.db.get_value("Connect DM Thread", doc.get("dm_thread"), ["user_a", "user_b"], as_dict=True)
-	if not thread or user not in (thread.user_a, thread.user_b):
+	# create included: the raw resource API must not post into someone else's DM
+	if not _dm_thread_pair_or_none(doc.get("dm_thread"), user):
 		return False
-	if ptype in ("write", "delete"):
+	if ptype in ("create", "write", "delete"):
 		return doc.get("sender") == user
 	return True
 
