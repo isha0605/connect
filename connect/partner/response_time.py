@@ -1,160 +1,112 @@
-"""Computes a partner's median business-hours response time from actual message data.
-
-Response time = the business-hours gap between a customer's last message and the partner's
-first reply, measured across every company thread the partner has participated in over the
-last 90 days.  Off-clock hours (outside the replying partner member's configured work
-schedule) are subtracted, so a message landing at 11 PM doesn't penalise the partner for
-sleeping.  All times are treated as IST (Asia/Kolkata) for now.
-
-Called by a daily scheduled job (see hooks.py → recompute_all_response_times).
-"""
+from datetime import datetime, timedelta
+from itertools import groupby
+from statistics import median
 
 import frappe
-from datetime import datetime, timedelta
+from frappe.utils import add_days, get_time, now_datetime
 
-WEEKDAY_NAMES = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+from connect.messaging.doctype.connect_user_settings.connect_user_settings import WEEKDAYS, get_settings_for_users
+
 ROLLING_WINDOW_DAYS = 90
 MIN_SAMPLES = 3
 
-
-def _minutes_from_hhmm(hhmm):
-    parts = (hhmm or "00:00").split(":")
-    return int(parts[0]) * 60 + int(parts[1] if len(parts) > 1 else 0)
-
-
-def _business_minutes_between(start_dt, end_dt, work_start, work_end, work_days):
-    """Count minutes between two datetimes that fall inside the given work window.
-
-    Walks day-by-day, clipping each day's work window to [start_dt, end_dt].  A message
-    arriving after hours naturally gets zero credit for that day, and the counter only
-    starts once the next working day's window opens — no explicit "adjust to next morning"
-    step needed.
-    """
-    if start_dt >= end_dt:
-        return 0
-
-    ws_min = _minutes_from_hhmm(work_start)
-    we_min = _minutes_from_hhmm(work_end)
-    if ws_min >= we_min:
-        return 0
-
-    total = 0
-    current_date = start_dt.date()
-    end_date = end_dt.date()
-
-    while current_date <= end_date:
-        day_name = WEEKDAY_NAMES[current_date.weekday()]
-        if day_name in work_days:
-            day_start = datetime.combine(current_date, datetime.min.time()).replace(
-                hour=ws_min // 60, minute=ws_min % 60,
-            )
-            day_end = datetime.combine(current_date, datetime.min.time()).replace(
-                hour=we_min // 60, minute=we_min % 60,
-            )
-            window_start = max(day_start, start_dt)
-            window_end = min(day_end, end_dt)
-            if window_start < window_end:
-                total += (window_end - window_start).total_seconds() / 60
-
-        current_date += timedelta(days=1)
-
-    return total
-
-
-def _default_work_settings():
-    return {
-        "work_start": "09:00",
-        "work_end": "18:00",
-        "work_days": ["monday", "tuesday", "wednesday", "thursday", "friday"],
-    }
-
-
-def _collect_response_samples(threads, thread_sides, work_settings, cutoff):
-    """Walk messages in each thread and collect business-minutes samples for every
-    customer→partner reply transition."""
-    samples = []
-
-    for thread_name in threads:
-        sides_map = thread_sides.get(thread_name, {})
-        messages = frappe.get_all(
-            "Connect Message",
-            filters={"thread": thread_name, "creation": [">=", cutoff]},
-            fields=["sender", "creation"],
-            order_by="creation asc",
-        )
-
-        last_customer_time = None
-        last_side = None
-
-        for msg in messages:
-            sender_side = sides_map.get(msg.sender)
-            if not sender_side:
-                continue
-
-            msg_time = frappe.utils.get_datetime(msg.creation)
-
-            if sender_side == "Customer":
-                last_customer_time = msg_time
-                last_side = "Customer"
-            elif sender_side == "Partner" and last_side == "Customer" and last_customer_time:
-                replier_ws = work_settings.get(msg.sender) or _default_work_settings()
-                biz_min = _business_minutes_between(
-                    last_customer_time, msg_time,
-                    replier_ws["work_start"], replier_ws["work_end"], replier_ws["work_days"],
-                )
-                samples.append(biz_min)
-                last_side = "Partner"
-                last_customer_time = None
-
-    return samples
-
-
-def aggregate_samples(samples):
-    """Turn raw business-minutes samples into the hours number for the badge, or None."""
-    if len(samples) < MIN_SAMPLES:
-        return None
-    from statistics import median
-    median_minutes = median(samples)
-    return max(1, round(median_minutes / 60))
-
-
-def compute_response_time(partner):
-    """Compute the response time (in hours) for a partner from their message history.
-    Returns an int or None if insufficient data."""
-    threads = frappe.get_all("Connect Thread", filters={"partner": partner}, pluck="name")
-    if not threads:
-        return None
-
-    members = frappe.get_all(
-        "Connect Thread Member",
-        filters={"thread": ["in", threads]},
-        fields=["user", "thread", "side"],
-    )
-    thread_sides = {}
-    for m in members:
-        thread_sides.setdefault(m.thread, {})[m.user] = m.side
-
-    partner_users = list({m.user for m in members if m.side == "Partner"})
-    if not partner_users:
-        return None
-
-    from connect.messaging.doctype.connect_user_settings.connect_user_settings import get_settings_for_users
-    work_settings = get_settings_for_users(partner_users)
-
-    cutoff = datetime.now() - timedelta(days=ROLLING_WINDOW_DAYS)
-    samples = _collect_response_samples(threads, thread_sides, work_settings, cutoff)
-
-    return aggregate_samples(samples)
+# Automated notices are posted under a member's name but aren't anyone replying.
+SKIPPED_MESSAGE_TYPES = ("System",)
 
 
 def recompute_all_response_times():
-    """Scheduled job entry point — recomputes response_time_hours for every partner."""
-    partners = frappe.get_all("Partner", pluck="name")
-    for partner in partners:
-        try:
-            hours = compute_response_time(partner)
-            if hours is not None:
-                frappe.db.set_value("Partner", partner, "response_time_hours", hours, update_modified=False)
-        except Exception:
-            frappe.log_error(f"Response time computation failed for partner {partner}")
-    frappe.db.commit()
+	"""Daily job: stores each partner's median business-hours reply time on Partner.response_time_hours.
+	Partners without enough recent replies keep their value, which they can also set on their profile."""
+	current = dict(frappe.get_all("Partner", fields=["name", "response_time_hours"], as_list=True))
+	for partner, hours in compute_all_response_times().items():
+		if hours is not None and hours != current.get(partner):
+			frappe.db.set_value("Partner", partner, "response_time_hours", hours, update_modified=False)
+
+
+def compute_all_response_times() -> dict[str, int | None]:
+	"""Each partner's response time in hours over the rolling window, from every thread they're in.
+	A sample is the business minutes from a customer's last message to the partner's next reply,
+	counted in the replying member's own working hours."""
+	messages = _get_recent_messages(add_days(now_datetime(), -ROLLING_WINDOW_DAYS))
+	sides = _get_member_sides({message.thread for message in messages})
+	schedules = get_settings_for_users([user for (thread, user), side in sides.items() if side == "Partner"])
+
+	samples = {}
+	for (partner, thread), thread_messages in groupby(messages, key=lambda m: (m.partner, m.thread)):
+		turns = [(sides.get((thread, m.sender)), m.sender, m.creation) for m in thread_messages]
+		for asked_at, replier, replied_at in get_replies(turns):
+			minutes = get_business_minutes(asked_at, replied_at, schedules[replier])
+			samples.setdefault(partner, []).append(minutes)
+
+	return {partner: aggregate_samples(partner_samples) for partner, partner_samples in samples.items()}
+
+
+def get_replies(turns: list[tuple[str | None, str, datetime]]) -> list[tuple[datetime, str, datetime]]:
+	"""(asked_at, replier, replied_at) for each partner reply that follows a customer message, from a
+	thread's (side, sender, sent_at) turns in time order. Senders with no side are skipped."""
+	replies = []
+	asked_at = None
+	for side, sender, sent_at in turns:
+		if side == "Customer":
+			asked_at = sent_at
+		elif side == "Partner" and asked_at:
+			replies.append((asked_at, sender, sent_at))
+			asked_at = None
+	return replies
+
+
+def get_business_minutes(start: datetime, end: datetime, schedule: dict) -> float:
+	"""Minutes between `start` and `end` that fall inside the schedule's working hours. Each day's
+	work window is clipped to the range, so time after hours or on days off adds nothing."""
+	work_start = get_time(schedule["work_start"])
+	work_end = get_time(schedule["work_end"])
+
+	total_seconds = 0.0
+	day = start.date()
+	while day <= end.date():
+		if WEEKDAYS[day.weekday()] in schedule["work_days"]:
+			window_start = max(datetime.combine(day, work_start), start)
+			window_end = min(datetime.combine(day, work_end), end)
+			total_seconds += max((window_end - window_start).total_seconds(), 0)
+		day += timedelta(days=1)
+	return total_seconds / 60
+
+
+def aggregate_samples(samples: list[float]) -> int | None:
+	"""Turn business-minutes samples into the whole hours the badge shows, or None with too few."""
+	if len(samples) < MIN_SAMPLES:
+		return None
+	return max(1, round(median(samples) / 60))
+
+
+def _get_recent_messages(cutoff: datetime) -> list[dict]:
+	"""Messages in partner threads since `cutoff`, grouped by partner and thread, oldest first."""
+	Message = frappe.qb.DocType("Connect Message")
+	Thread = frappe.qb.DocType("Connect Thread")
+	return (
+		frappe.qb.from_(Message)
+		.join(Thread)
+		.on(Thread.name == Message.thread)
+		.select(Thread.partner, Message.thread, Message.sender, Message.creation)
+		.where(Thread.partner.isnotnull())
+		.where(Message.creation >= cutoff)
+		.where(Message.message_type.notin(SKIPPED_MESSAGE_TYPES))
+		.orderby(Thread.partner)
+		.orderby(Message.thread)
+		.orderby(Message.creation)
+		.run(as_dict=True)
+	)
+
+
+def _get_member_sides(threads: set[str]) -> dict[tuple[str, str], str]:
+	"""Which side each member sent from, keyed by (thread, user). Removed members are kept, since
+	their past messages still count. Read separately rather than joined, because a re-added
+	member has two rows and a join would count their messages twice."""
+	if not threads:
+		return {}
+	members = frappe.get_all(
+		"Connect Thread Member",
+		filters={"thread": ["in", list(threads)], "side": ["is", "set"]},
+		fields=["thread", "user", "side"],
+	)
+	return {(member.thread, member.user): member.side for member in members}
