@@ -2,7 +2,7 @@
 # See license.txt
 
 import base64
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import frappe
 from frappe.tests import IntegrationTestCase
@@ -13,6 +13,7 @@ from connect.api.attachments import _copy_message_attachment
 from connect.api.crm_webhook import receive_crm_reply
 
 WEBHOOK_MODULE = "connect.api.crm_webhook"
+REPLY_MODULE = "connect.crm_reply"
 
 # Small enough to decode cleanly as windows-1250, which is exactly what used to corrupt it.
 TINY_PNG = base64.b64decode(
@@ -48,8 +49,11 @@ class IntegrationTestPartnerCRMSettings(IntegrationTestCase):
 		# already synced — so last test's messages have to go before the next one runs.
 		drop_test_messages()
 
-	def _deliver(self, communication, content="", attachments=None, failed=None, raises=False):
-		"""Drives the webhook the way the partner's CRM does, without a live CRM to fetch from."""
+	def _deliver(self, communication, content="", attachments=None, failed=None, raises=False, enqueue=None):
+		"""Drives the webhook the way the partner's CRM does, without a live CRM to fetch from.
+
+		The attachment job runs inline unless `enqueue` stands in for the queue.
+		"""
 		fetch = (
 			(lambda *a, **kw: (_ for _ in ()).throw(Exception("CRM unreachable")))
 			if raises
@@ -62,7 +66,8 @@ class IntegrationTestPartnerCRMSettings(IntegrationTestCase):
 		try:
 			with (
 				patch(f"{WEBHOOK_MODULE}._verify_signature"),
-				patch(f"{WEBHOOK_MODULE}._fetch_crm_attachments", side_effect=fetch),
+				patch(f"{REPLY_MODULE}._fetch_crm_attachments", side_effect=fetch),
+				patch("frappe.enqueue", side_effect=enqueue or run_job_now),
 			):
 				receive_crm_reply(
 					reference_doctype="CRM Lead",
@@ -99,6 +104,31 @@ class IntegrationTestPartnerCRMSettings(IntegrationTestCase):
 	def test_a_reply_with_nothing_in_it_is_not_posted(self):
 		self.assertEqual(self._deliver("_test_comm_4", content=""), [])
 
+	def test_a_lost_attachment_is_named_as_written(self):
+		# The thread shows System lines as plain text, so an escaped name would read "Q&amp;A.pdf".
+		rows = self._deliver("_test_comm_5", failed=["Q&A.pdf"])
+		self.assertEqual(rows[0].content, "Attachment couldn't be delivered: Q&A.pdf")
+
+	def test_a_redelivered_failure_is_not_posted_twice(self):
+		self._deliver("_test_comm_6", failed=["deck.pptx"])
+		rows = self._deliver("_test_comm_6", failed=["deck.pptx"])
+		self.assertEqual([r.message_type for r in rows], ["System"])
+
+	def test_the_text_reply_does_not_wait_for_attachments(self):
+		queued = MagicMock()
+		rows = self._deliver("_test_comm_7", content="<p>Files to follow.</p>", enqueue=queued)
+		self.assertEqual([r.message_type for r in rows], ["Text"])
+		self.assertEqual(queued.call_args.kwargs["job_id"], "crm-reply-attachments::_test_comm_7")
+
+	def test_a_reply_with_no_partner_admin_is_logged(self):
+		with (
+			patch(f"{REPLY_MODULE}._get_partner_admin", return_value=None),
+			patch(f"{REPLY_MODULE}.frappe.log_error") as log_error,
+		):
+			rows = self._deliver("_test_comm_8", content="<p>Hello?</p>")
+		self.assertEqual(rows, [])
+		log_error.assert_called_once()
+
 	def test_forwarding_preserves_a_small_binary_byte_for_byte(self):
 		# File.get_content() text-decodes bytes that happen to be decodable, which silently grew an
 		# 86-byte PNG to 103 bytes of UTF-8 on every forward.
@@ -114,6 +144,12 @@ class IntegrationTestPartnerCRMSettings(IntegrationTestCase):
 
 		with open(copy.get_full_path(), "rb") as f:
 			self.assertEqual(f.read(), TINY_PNG)
+
+
+def run_job_now(method, **kwargs):
+	for option in ("queue", "job_id", "deduplicate", "enqueue_after_commit"):
+		kwargs.pop(option, None)
+	method(**kwargs)
 
 
 def make_partner():
