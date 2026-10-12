@@ -2,6 +2,7 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime
 
+from connect.messaging.doctype.connect_thread_member.connect_thread_member import get_unread_counts
 from connect.permissions import _check_can_read, _get_partner_admin
 
 
@@ -92,14 +93,7 @@ def get_my_threads():
 	if not threads:
 		return []
 
-	memberships = {
-		m.thread: m
-		for m in frappe.get_all(
-			"Connect Thread Member",
-			filters={"thread": ["in", [t.name for t in threads]], "user": user},
-			fields=["thread", "last_read_at", "is_removed", "removed_on"],
-		)
-	}
+	unread_counts = get_unread_counts([t.name for t in threads], user)
 	partner_logos = {
 		p.name: p.logo
 		for p in frappe.get_all(
@@ -133,15 +127,6 @@ def get_my_threads():
 
 	result = []
 	for t in threads:
-		membership = memberships.get(t.name, {})
-
-		message_filters = [["thread", "=", t.name], ["sender", "!=", user]]
-		if membership.get("is_removed") and membership.get("removed_on"):
-			message_filters.append(["creation", "<=", membership["removed_on"]])
-		if membership.get("last_read_at"):
-			message_filters.append(["creation", ">", membership["last_read_at"]])
-		unread_count = frappe.db.count("Connect Message", filters=message_filters)
-
 		result.append({
 			"name": t.name,
 			"customer": t.customer,
@@ -157,7 +142,7 @@ def get_my_threads():
 			"last_message_at": t.last_message_at or t.creation,
 			"last_message_sender": t.last_message_sender,
 			"last_message_sender_name": sender_names.get(t.last_message_sender),
-			"unread_count": unread_count,
+			"unread_count": unread_counts.get(t.name, 0),
 		})
 
 	return result

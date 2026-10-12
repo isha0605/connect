@@ -4,6 +4,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
+from frappe.query_builder.functions import Count
 from frappe.utils import get_fullname, now_datetime
 
 
@@ -59,3 +60,43 @@ class ConnectThreadMember(Document):
 			if self.side == "Customer":
 				new_row["full_name"] = get_fullname(self.user)
 			frappe.get_doc(new_row).insert(ignore_permissions=True)
+
+
+def get_unread_counts(threads: list[str], user: str) -> dict[str, int]:
+	"""Counts messages from others since the user last read each thread, in one query.
+
+	A removed member's count stops at removal, matching the frozen view they keep.
+	"""
+	memberships = _get_memberships_by_thread(threads, user)
+	message = frappe.qb.DocType("Connect Message")
+
+	unread_window = None
+	for thread in threads:
+		condition = message.thread == thread
+		membership = memberships.get(thread)
+		if membership and membership.last_read_at:
+			condition &= message.creation > membership.last_read_at
+		if membership and membership.is_removed and membership.removed_on:
+			condition &= message.creation <= membership.removed_on
+		unread_window = condition if unread_window is None else unread_window | condition
+
+	counts = (
+		frappe.qb.from_(message)
+		.select(message.thread, Count("*"))
+		.where(message.sender != user)
+		.where(unread_window)
+		.groupby(message.thread)
+	).run()
+	return dict(counts)
+
+
+
+def _get_memberships_by_thread(threads: list[str], user: str) -> dict:
+	rows = frappe.get_all(
+		"Connect Thread Member",
+		filters={"thread": ["in", threads], "user": user},
+		fields=["thread", "last_read_at", "is_removed", "removed_on"],
+		# a re-added user also has their old removed row; sorting it first lets the active row win
+		order_by="is_removed desc",
+	)
+	return {row.thread: row for row in rows}
