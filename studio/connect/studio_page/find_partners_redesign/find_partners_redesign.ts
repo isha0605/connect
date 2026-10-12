@@ -170,7 +170,7 @@ export default function setup(context) {
 		} catch {
 			kept = null
 		}
-		if (!kept) return
+		if (!kept) return false
 		businessCountry.value = kept.country || businessCountry.value
 		employeeCount.value = kept.employees || ""
 		industries.value = kept.industries || []
@@ -179,6 +179,7 @@ export default function setup(context) {
 		partnerRegions.value = kept.regions || []
 		briefBudget.value = kept.budget || ""
 		briefDescription.value = kept.description || ""
+		return true
 	}
 
 	// The partners' own industry list is coarser than the one asked here.
@@ -313,10 +314,9 @@ export default function setup(context) {
 	}
 
 	// Back from signing up: their answers again, on the brief, with the dialog open.
-	if (contactMode && route.query.details) {
-		restoreBrief()
+	// ?details stays in the URL: changing the route remounts the page, which would undo this.
+	if (contactMode && route.query.details && restoreBrief()) {
 		wizardStep.value = 3
-		router.replace({ path: route.path, query: { intent: "contact" } })
 		watch(
 			() => myContext?.data,
 			(data) => {
