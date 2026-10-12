@@ -17,10 +17,14 @@ import json
 
 import frappe
 from frappe import _
-from frappe.utils import cint, now_datetime
+from frappe.utils import cint
 
-from connect.api.contact import _ensure_thread_member
 from connect.customer.doctype.customer.customer import get_customer_for_user
+from connect.messaging.doctype.connect_thread.connect_thread import (
+	ensure_partner_member,
+	get_or_open_thread,
+	remove_partner_member,
+)
 from connect.customer.doctype.requirement.requirement import get_requirement_snapshot
 from connect.starter_packs.doctype.starter_pack_order.partner_rotation import (
 	assign_consultant,
@@ -153,49 +157,6 @@ def post_opening_message(order_name):
 	except Exception:
 		frappe.db.rollback()
 		frappe.log_error(title=f"Could not post the opening message for {order_name}")
-
-
-def get_or_open_thread(customer, partner, user, consultant=None):
-	"""The customer's thread with the partner — with Frappe, the one with this consultant —
-	reopened if it was closed. Its members are the buyer and, on the partner side, the
-	consultant, or the partner's admin when there's no consultant (the thread Contact Partner
-	opens)."""
-	key = {"customer": customer, "partner": partner, "consultant": consultant or ["is", "not set"]}
-	thread = frappe.db.get_value("Connect Thread", key, "name")
-	if thread:
-		if frappe.db.get_value("Connect Thread", thread, "status") == "Closed":
-			doc = frappe.get_doc("Connect Thread", thread)
-			doc.status = "Open"
-			doc.save(ignore_permissions=True)
-	else:
-		thread = (
-			frappe.get_doc(
-				{"doctype": "Connect Thread", "customer": customer, "partner": partner, "consultant": consultant}
-			)
-			.insert(ignore_permissions=True)
-			.name
-		)
-
-	_ensure_thread_member(thread, user, "Customer", user)
-	partner_side = consultant or _get_partner_admin(partner)
-	if partner_side:
-		ensure_partner_member(thread, partner_side, user)
-	return thread
-
-
-def ensure_partner_member(thread, member, added_by):
-	"""Add someone to a thread's partner side, or bring them back if they'd been removed."""
-	row = frappe.db.get_value("Connect Thread Member", {"thread": thread, "user": member}, ["name", "is_removed"], as_dict=True)
-	if not row:
-		_ensure_thread_member(thread, member, "Partner", added_by)
-	elif row.is_removed:
-		frappe.db.set_value("Connect Thread Member", row.name, {"is_removed": 0, "removed_on": None})
-
-
-def remove_partner_member(thread, member):
-	row = frappe.db.get_value("Connect Thread Member", {"thread": thread, "user": member, "is_removed": 0}, "name")
-	if row:
-		frappe.db.set_value("Connect Thread Member", row, {"is_removed": 1, "removed_on": now_datetime()})
 
 
 def move_thread(order):

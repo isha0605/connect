@@ -10,7 +10,7 @@ from connect.customer.doctype.customer_project.partner_matching import get_partn
 def send_to_partners(doc, customer: str) -> int:
 	"""Sends the brief to each matching partner's admin, as the customer's own Requirement card
 	in their thread with that partner, and returns how many got it."""
-	from connect.starter_packs.doctype.starter_pack_order.implementation import get_or_open_thread
+	from connect.messaging.doctype.connect_thread.connect_thread import get_or_open_thread
 
 	card = frappe.as_json(requirement_card(doc, customer))
 	partners = _partners_to_brief(normalize_criteria(frappe.parse_json(doc.criteria) or {}))

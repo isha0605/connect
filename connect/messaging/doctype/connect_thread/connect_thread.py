@@ -6,6 +6,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import now_datetime
 
+from connect.permissions import _get_partner_admin
+
 
 class ConnectThread(Document):
 	def validate(self):
@@ -121,3 +123,81 @@ class ConnectThread(Document):
 		self.save()
 
 		self.post_system_message(_("Thread closed by {0}").format(user))
+
+
+def open_contact_thread(customer: str, partner: str, user: str) -> str:
+	"""The customer's Contact Partner thread with the partner, created if missing, with the
+	user and the partner's admin as members."""
+	# Not a Starter Pack consultant's thread with Frappe: those come from the order.
+	thread = frappe.db.get_value(
+		"Connect Thread", {"customer": customer, "partner": partner, "consultant": ["is", "not set"]}, "name"
+	)
+	if not thread:
+		thread = frappe.get_doc({
+			"doctype": "Connect Thread",
+			"customer": customer,
+			"partner": partner,
+		}).insert().name
+
+	ensure_thread_member(thread, user, "Customer", user)
+
+	partner_admin = _get_partner_admin(partner)
+	if partner_admin:
+		ensure_thread_member(thread, partner_admin, "Partner", user)
+	return thread
+
+
+def get_or_open_thread(customer: str, partner: str, user: str, consultant: str | None = None) -> str:
+	"""The customer's thread with the partner — with Frappe, the one with this consultant —
+	reopened if it was closed. Its members are the buyer and, on the partner side, the
+	consultant, or the partner's admin when there's no consultant (the thread Contact Partner
+	opens)."""
+	key = {"customer": customer, "partner": partner, "consultant": consultant or ["is", "not set"]}
+	thread = frappe.db.get_value("Connect Thread", key, "name")
+	if thread:
+		if frappe.db.get_value("Connect Thread", thread, "status") == "Closed":
+			doc = frappe.get_doc("Connect Thread", thread)
+			doc.status = "Open"
+			doc.save(ignore_permissions=True)
+	else:
+		thread = (
+			frappe.get_doc(
+				{"doctype": "Connect Thread", "customer": customer, "partner": partner, "consultant": consultant}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
+
+	ensure_thread_member(thread, user, "Customer", user)
+	partner_side = consultant or _get_partner_admin(partner)
+	if partner_side:
+		ensure_partner_member(thread, partner_side, user)
+	return thread
+
+
+def ensure_thread_member(thread: str, user: str, side: str, added_by: str) -> None:
+	"""Idempotent: only creates a membership row if this user doesn't already have one."""
+	if not frappe.db.exists("Connect Thread Member", {"thread": thread, "user": user}):
+		frappe.get_doc({
+			"doctype": "Connect Thread Member",
+			"thread": thread,
+			"user": user,
+			"side": side,
+			"permission": "Write",
+			"added_by": added_by,
+		}).insert(ignore_permissions=True)
+
+
+def ensure_partner_member(thread: str, member: str, added_by: str) -> None:
+	"""Add someone to a thread's partner side, or bring them back if they'd been removed."""
+	row = frappe.db.get_value("Connect Thread Member", {"thread": thread, "user": member}, ["name", "is_removed"], as_dict=True)
+	if not row:
+		ensure_thread_member(thread, member, "Partner", added_by)
+	elif row.is_removed:
+		frappe.db.set_value("Connect Thread Member", row.name, {"is_removed": 0, "removed_on": None})
+
+
+def remove_partner_member(thread: str, member: str) -> None:
+	row = frappe.db.get_value("Connect Thread Member", {"thread": thread, "user": member, "is_removed": 0}, "name")
+	if row:
+		frappe.db.set_value("Connect Thread Member", row, {"is_removed": 1, "removed_on": now_datetime()})

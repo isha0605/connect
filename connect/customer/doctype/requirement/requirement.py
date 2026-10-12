@@ -168,3 +168,33 @@ def get_requirement_snapshot(customer=None):
 		"delivery_preference": req.delivery_preference,
 		"budget": req.budget,
 	}
+
+
+def format_requirement_message(customer: str, note: str | None = None) -> str | None:
+	"""Turns the customer's saved Requirement into a readable message body, with an optional note appended."""
+	lines = []
+	req = _latest_requirement_for_customer(customer)
+	if req:
+		lines.append(_("New inquiry from {0} — here's what they're looking for:").format(req.company_name or customer))
+		if req.industry:
+			lines.append(_("Industry: {0}").format(req.industry))
+		if req.looking_for:
+			lines.append(_("Looking for: {0}").format(req.looking_for))
+		if req.apps:
+			lines.append(_("Apps: {0}").format(", ".join(req.apps)))
+		if req.company_size:
+			lines.append(_("Company size: {0}").format(req.company_size))
+		if req.timeline:
+			lines.append(_("Timeline: {0}").format(req.timeline))
+		if req.budget:
+			lines.append(_("Budget: {0}").format(req.budget))
+		if req.delivery_preference:
+			lines.append(_("Delivery preference: {0}").format(req.delivery_preference))
+
+	note = (note or "").strip()
+	if note:
+		if lines:
+			lines.append("")
+		lines.append(note)
+
+	return "\n".join(lines) if lines else None
