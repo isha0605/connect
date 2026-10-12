@@ -1,8 +1,7 @@
 import frappe
 from frappe import _
-from frappe.utils import now_datetime
 
-from connect.messaging.doctype.connect_thread_member.connect_thread_member import get_unread_counts
+from connect.messaging.doctype.connect_thread_member.connect_thread_member import get_unread_counts, mark_read
 from connect.permissions import _check_can_read, _get_partner_admin
 
 
@@ -150,10 +149,5 @@ def get_my_threads():
 
 @frappe.whitelist()
 def mark_thread_read(thread):
-	"""Clears the caller's unread badge by bumping their own last-read time; silently does nothing if their membership is stale."""
-	frappe.db.set_value(
-		"Connect Thread Member",
-		{"thread": thread, "user": frappe.session.user, "is_removed": 0},
-		"last_read_at",
-		now_datetime(),
-	)
+	"""Thin API entry; the read-state rules live on Connect Thread Member."""
+	mark_read(thread, frappe.session.user)

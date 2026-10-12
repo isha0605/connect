@@ -91,6 +91,15 @@ def get_unread_counts(threads: list[str], user: str) -> dict[str, int]:
 
 
 
+def mark_read(thread: str, user: str) -> None:
+	"""Clears the user's unread badge; does nothing if they are no longer an active member."""
+	frappe.db.set_value(
+		"Connect Thread Member",
+		{"thread": thread, "user": user, "is_removed": 0},
+		"last_read_at",
+		now_datetime(),
+	)
+
 def _get_memberships_by_thread(threads: list[str], user: str) -> dict:
 	rows = frappe.get_all(
 		"Connect Thread Member",

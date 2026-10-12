@@ -6,7 +6,7 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from connect.messaging.doctype.connect_thread_member.connect_thread_member import get_unread_counts
+from connect.messaging.doctype.connect_thread_member.connect_thread_member import get_unread_counts, mark_read
 from connect.starter_packs.doctype.starter_pack_order.test_starter_pack_order import make_user
 
 READER = "_test_unread_reader@example.com"
@@ -50,6 +50,20 @@ class IntegrationTestConnectThreadMember(IntegrationTestCase):
 		post(self.thread, OTHER)
 
 		self.assertEqual(get_unread_counts([self.thread], READER), {self.thread: 1})
+
+	def test_reading_clears_the_badge(self):
+		add_member(self.thread, READER)
+		post(self.thread, OTHER)
+		mark_read(self.thread, READER)
+
+		self.assertEqual(get_unread_counts([self.thread], READER), {})
+
+	def test_reading_leaves_a_removed_membership_frozen(self):
+		member = add_member(self.thread, READER)
+		remove(member, removed_on=post(self.thread, OTHER))
+		mark_read(self.thread, READER)
+
+		self.assertIsNone(frappe.db.get_value("Connect Thread Member", member.name, "last_read_at"))
 
 
 def make_thread(customer_name):
