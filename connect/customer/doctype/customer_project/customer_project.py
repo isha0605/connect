@@ -26,6 +26,9 @@ PAID = ("Paid", "Partially Refunded", "Refunded")
 QUOTE_STATUSES = ("Quoted", "Interested", "Not Interested")
 OPEN_QUOTE_STATUSES = ("Quoted", "Interested")
 
+# The quote statuses a hire request moves through, which only hiring.py sets.
+HIRE_QUOTE_STATUSES = ("Hire Requested", "Hire Declined", "Hired")
+
 # Step 2's tasks after hiring, all optional; the page knows their labels and links.
 HOSTING_TASKS = ("fc-login", "fc-code", "fc-link")
 
@@ -43,8 +46,9 @@ class CustomerProject(Document):
 		self._stamp_status_change()
 
 	def _stamp_status_change(self):
+		# Only the first time: a declined or withdrawn hire puts the project back to Shared.
 		field = STATUS_TIMESTAMPS.get(self.status)
-		if field and self.has_value_changed("status"):
+		if field and self.has_value_changed("status") and not self.get(field):
 			self.set(field, frappe.utils.now_datetime())
 
 
@@ -102,7 +106,7 @@ def share_requirements(name: str, budget=None, description=None) -> dict:
 		frappe.throw(_("Tell partners what you want built."))
 
 	doc = get_own_project(name)
-	if doc.status in ("Shared", "Hired", "Completed"):
+	if doc.status in ("Shared", "Hiring", "Hired", "Completed"):
 		frappe.throw(_("These requirements have already been sent."))
 	customer = get_customer_for_user(doc.user)
 	if not customer:
@@ -179,6 +183,7 @@ def project_dict(doc: CustomerProject) -> dict:
 		"created_on": with_timezone(doc.creation),
 		"order": booked_order(doc.name),
 		"hired": hired_partner(doc),
+		"declined_hire": declined_hire(doc),
 		"hire_reason": doc.hire_reason,
 		"done_tasks": frappe.parse_json(doc.done_tasks) or [],
 		**quote_counts(doc.name),
@@ -232,24 +237,10 @@ def set_quote_status(quote: str, status: str) -> dict:
 	get_own_project(row.customer_project)  # only the project's owner decides
 	if row.status == "Awaiting":
 		frappe.throw(_("This partner hasn't quoted yet."))
-	if row.status == "Hired":
-		frappe.throw(_("You have already hired this partner."))
+	if row.status in HIRE_QUOTE_STATUSES:
+		frappe.throw(_("You have already asked this partner to take the project on."))
 	row.db_set("status", status)
 	return quote_counts(row.customer_project)
-
-
-def hire_partner(quote: str) -> dict:
-	"""Hire the partner behind a quote: the project moves to step 2 with them as its partner."""
-	row = frappe.get_doc("Project Quote", quote)
-	doc = get_own_project(row.customer_project)
-	if doc.status != "Shared":
-		frappe.throw(_("This project already has a partner."))
-	if row.status not in OPEN_QUOTE_STATUSES:
-		frappe.throw(_("Only a partner who has quoted can be hired."))
-	row.db_set("status", "Hired")
-	doc.update({"status": "Hired", "partner": row.partner, "hired_quote": row.name})
-	doc.save(ignore_permissions=True)
-	return project_dict(doc)
 
 
 def set_hire_reason(name: str, reason=None):
@@ -284,9 +275,15 @@ def complete_project(name: str) -> dict:
 
 
 def hired_partner(doc: CustomerProject) -> dict | None:
-	"""Who was hired and on what quote, for the Partner panel and step 2."""
+	"""Who was hired and on what quote, for the Partner panel and step 2. `confirmed` is false
+	while the partner has yet to accept. The Frappe Cloud setup link comes once Frappe Cloud
+	has made it, and goes once the customer has answered it."""
 	if not doc.partner:
 		return None
+	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import with_timezone
+
+	confirmed = doc.status in ("Hired", "Completed")
+	waiting_for_customer = confirmed and doc.cloud_link_status == "Requested"
 	Partner = frappe.qb.DocType("Partner")
 	Quote = frappe.qb.DocType("Project Quote")
 	rows = (
@@ -305,8 +302,37 @@ def hired_partner(doc: CustomerProject) -> dict | None:
 		"amount": row.amount,
 		"timeline_weeks": row.timeline_weeks,
 		"thread": row.thread,
+		"confirmed": confirmed,
+		"requested_on": with_timezone(doc.hire_requested_on),
 		"referral_code": referral_code(doc.name, doc.partner),
+		"cloud_link_status": doc.cloud_link_status if confirmed else None,
+		# The page reads it by this name.
+		"central_setup_url": doc.cloud_setup_url if waiting_for_customer else None,
 	}
+
+
+def declined_hire(doc: CustomerProject) -> dict | None:
+	"""The partner who last declined this project, and why, for step 2's notice while the
+	customer picks someone else."""
+	if doc.status != "Shared":
+		return None
+	Quote = frappe.qb.DocType("Project Quote")
+	Partner = frappe.qb.DocType("Partner")
+	rows = (
+		frappe.qb.from_(Quote)
+		.left_join(Partner)
+		.on(Partner.name == Quote.partner)
+		.select(Quote.partner, Partner.partner_name, Quote.decline_reason, Quote.responded_on)
+		.where(Quote.customer_project == doc.name)
+		.where(Quote.status == "Hire Declined")
+		.orderby(Quote.responded_on, order=Order.desc)
+		.limit(1)
+		.run(as_dict=True)
+	)
+	if not rows:
+		return None
+	row = rows[0]
+	return {"partner_name": row.partner_name or row.partner, "reason": row.decline_reason}
 
 
 def referral_code(project: str, partner: str) -> str:

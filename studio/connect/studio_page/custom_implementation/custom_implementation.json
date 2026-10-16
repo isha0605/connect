@@ -17,9 +17,10 @@
       "display": "flex"
      },
      "blockName": "AppSidebar",
-     "classes": [],
      "componentId": "appsidebar-ci",
      "componentName": "appsidebar",
+     "componentProps": {},
+     "componentSlots": {},
      "isStudioComponent": true
     },
     {
@@ -68,9 +69,9 @@
         "flexDirection": "column",
         "minHeight": "0px",
         "overflowY": "{{ inEditor ? 'visible' : 'auto' }}",
-        "width": "100%",
         "scrollbarColor": "var(--outline-gray-3) transparent",
-        "scrollbarWidth": "thin"
+        "scrollbarWidth": "thin",
+        "width": "100%"
        },
        "children": [
         {
@@ -1160,7 +1161,6 @@
          "originalElement": "div"
         }
        ],
-       "classes": [],
        "componentId": "ci-scroll",
        "componentName": "container",
        "componentProps": {},
@@ -1289,7 +1289,7 @@
               "border": "1px solid var(--outline-gray-2)",
               "borderRadius": "12px",
               "boxSizing": "border-box",
-              "display": "{{ hasQuotes || isHired ? 'none' : 'flex' }}",
+              "display": "{{ hasQuotes || isHired || isAwaitingPartner ? 'none' : 'flex' }}",
               "flexDirection": "column",
               "marginTop": "22px",
               "padding": "32px 24px",
@@ -1339,7 +1339,170 @@
             },
             {
              "baseStyles": {
-              "display": "{{ hasQuotes && !isHired ? 'flex' : 'none' }}",
+              "alignItems": "center",
+              "border": "1px solid var(--outline-gray-2)",
+              "borderRadius": "12px",
+              "boxSizing": "border-box",
+              "display": "{{ isAwaitingPartner ? 'flex' : 'none' }}",
+              "flexDirection": "column",
+              "marginTop": "22px",
+              "padding": "32px 24px",
+              "textAlign": "center",
+              "width": "100%"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-6)",
+                "marginBottom": "8px"
+               },
+               "componentId": "cs-awaiting-icon",
+               "componentName": "Icon",
+               "componentProps": {
+                "icon": "lucide-hourglass",
+                "size": "20"
+               },
+               "componentSlots": {}
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-9)",
+                "fontSize": "14px",
+                "fontWeight": "500",
+                "letterSpacing": "0.12px",
+                "lineHeight": "20.6px"
+               },
+               "componentId": "cs-awaiting-title",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "p",
+                "text": "{{ 'Hire request sent to ' + (hired ? hired.partner_name : 'your partner') }}"
+               },
+               "componentSlots": {}
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-6)",
+                "fontSize": "14px",
+                "letterSpacing": "0px",
+                "lineHeight": "20.6px",
+                "marginTop": "2px",
+                "maxWidth": "380px"
+               },
+               "componentId": "cs-awaiting-text",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "p",
+                "text": "{{ awaitingLine }}"
+               },
+               "componentSlots": {}
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "gap": "8px",
+                "marginTop": "16px"
+               },
+               "children": [
+                {
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "messagePartner();"
+                  }
+                 },
+                 "componentId": "cs-awaiting-message",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "iconLeft": "lucide-message-square",
+                  "label": "Open conversation",
+                  "variant": "subtle"
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "cancelHireRequest();"
+                  }
+                 },
+                 "componentId": "cs-awaiting-cancel",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "label": "Cancel request",
+                  "loading": "{{ cancelling }}",
+                  "variant": "ghost"
+                 },
+                 "componentSlots": {}
+                }
+               ],
+               "componentId": "cs-awaiting-actions",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
+              }
+             ],
+             "componentId": "cs-awaiting",
+             "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "alignItems": "flex-start",
+              "backgroundColor": "var(--surface-amber-1)",
+              "borderRadius": "10px",
+              "boxSizing": "border-box",
+              "display": "{{ declinedHire && !isHired && !isAwaitingPartner ? 'flex' : 'none' }}",
+              "gap": "8px",
+              "marginTop": "22px",
+              "padding": "12px 14px",
+              "width": "100%"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-amber-3)",
+                "flexShrink": "0",
+                "marginTop": "2px"
+               },
+               "componentId": "cs-declined-icon",
+               "componentName": "Icon",
+               "componentProps": {
+                "icon": "lucide-circle-alert",
+                "size": "16"
+               },
+               "componentSlots": {}
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-8)",
+                "fontSize": "14px",
+                "lineHeight": "20.6px"
+               },
+               "componentId": "cs-declined-text",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "p",
+                "text": "{{ declinedLine }}"
+               },
+               "componentSlots": {}
+              }
+             ],
+             "componentId": "cs-declined",
+             "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "{{ hasQuotes && !isHired && !isAwaitingPartner ? 'flex' : 'none' }}",
               "flexDirection": "column",
               "width": "100%"
              },
@@ -1499,9 +1662,9 @@
                  "baseStyles": {
                   "display": "flex",
                   "flexDirection": "column",
-                  "width": "100%",
                   "gap": "0px",
-                  "rowGap": "0px"
+                  "rowGap": "0px",
+                  "width": "100%"
                  },
                  "componentId": "cs-quote-rows",
                  "componentName": "Repeater",
@@ -1790,268 +1953,168 @@
              "originalElement": "div"
             },
             {
-             "componentId": "cs-hosting",
-             "componentName": "container",
-             "originalElement": "div",
              "baseStyles": {
               "display": "{{ isHired ? 'flex' : 'none' }}",
               "flexDirection": "column",
               "marginTop": "16px",
               "width": "100%"
              },
-             "componentProps": {},
-             "componentSlots": {},
              "children": [
               {
-               "componentId": "cs-task-rows",
-               "componentName": "Repeater",
-               "componentProps": {
-                "data": "{{ hostingTasks }}",
-                "dataKey": "key",
-                "emptyStateMessage": ""
-               },
                "baseStyles": {
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "0px",
-                "rowGap": "0px",
-                "width": "100%"
+                "alignItems": "center",
+                "columnGap": "8px",
+                "display": "grid",
+                "gridTemplateColumns": "16px minmax(0, 1fr) auto",
+                "padding": "20px 0px"
                },
-               "componentSlots": {
-                "default": {
-                 "parentBlockId": "cs-task-rows",
-                 "slotContent": [
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignSelf": "flex-start",
+                  "display": "flex",
+                  "height": "16px"
+                 },
+                 "children": [
                   {
-                   "componentId": "cs-task-row",
-                   "componentName": "container",
-                   "originalElement": "div",
                    "baseStyles": {
-                    "display": "grid",
-                    "gridTemplateColumns": "16px minmax(0, 1fr) auto",
-                    "columnGap": "8px",
-                    "alignItems": "center",
-                    "padding": "20px 0px",
-                    "borderTop": "{{ dataIndex ? '1px solid var(--outline-gray-1)' : 'none' }}"
+                    "color": "var(--ink-gray-5)",
+                    "height": "16px",
+                    "width": "16px"
                    },
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "children": [
-                    {
-                     "componentId": "cs-task-icon-cell",
-                     "componentName": "container",
-                     "originalElement": "div",
-                     "baseStyles": {
-                      "alignSelf": "flex-start",
-                      "display": "flex",
-                      "height": "16px"
-                     },
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "children": [
-                      {
-                       "componentId": "cs-task-icon",
-                       "componentName": "Icon",
-                       "componentProps": {
-                        "icon": "{{ dataItem.done ? 'lucide-circle-check' : 'lucide-circle-dashed' }}"
-                       },
-                       "baseStyles": {
-                        "width": "16px",
-                        "height": "16px",
-                        "color": "{{ dataItem.done ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}"
-                       },
-                       "componentSlots": {}
-                      }
-                     ]
-                    },
-                    {
-                     "componentId": "cs-task-text",
-                     "componentName": "container",
-                     "originalElement": "div",
-                     "baseStyles": {
-                      "minWidth": "0px"
-                     },
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "children": [
-                      {
-                       "componentId": "cs-task-title",
-                       "componentName": "container",
-                       "originalElement": "div",
-                       "baseStyles": {
-                        "display": "flex",
-                        "flexWrap": "wrap",
-                        "alignItems": "baseline",
-                        "columnGap": "4px"
-                       },
-                       "componentProps": {},
-                       "componentSlots": {},
-                       "children": [
-                        {
-                         "componentId": "cs-task-label",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "tag": "span",
-                          "text": "{{ dataItem.label }}",
-                          "fontSize": "text-base"
-                         },
-                         "baseStyles": {
-                          "color": "var(--ink-gray-8)",
-                          "fontWeight": "500",
-                          "lineHeight": "1.15"
-                         },
-                         "componentSlots": {},
-                         "classes": [
-                          "font-medium"
-                         ]
-                        },
-                        {
-                         "componentId": "cs-task-optional",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "tag": "span",
-                          "text": "· Optional",
-                          "fontSize": "text-base"
-                         },
-                         "baseStyles": {
-                          "color": "var(--ink-gray-5)",
-                          "lineHeight": "1.15"
-                         },
-                         "componentSlots": {}
-                        }
-                       ]
-                      },
-                      {
-                       "componentId": "cs-task-hint",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "p",
-                        "text": "{{ dataItem.hint }}",
-                        "fontSize": "text-p-base"
-                       },
-                       "baseStyles": {
-                        "color": "var(--ink-gray-6)",
-                        "marginTop": "4px"
-                       },
-                       "componentSlots": {}
-                      }
-                     ]
-                    },
-                    {
-                     "componentId": "cs-task-action",
-                     "componentName": "container",
-                     "originalElement": "div",
-                     "baseStyles": {
-                      "display": "flex",
-                      "justifyContent": "flex-end"
-                     },
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "children": [
-                      {
-                       "componentId": "cs-task-link-wrap",
-                       "componentName": "container",
-                       "originalElement": "div",
-                       "baseStyles": {
-                        "display": "{{ !dataItem.done && dataItem.cta ? 'flex' : 'none' }}"
-                       },
-                       "componentProps": {},
-                       "componentSlots": {},
-                       "children": [
-                        {
-                         "componentId": "cs-task-link",
-                         "componentName": "Button",
-                         "componentProps": {
-                          "label": "{{ dataItem.cta }}",
-                          "size": "sm",
-                          "variant": "subtle",
-                          "iconRight": "lucide-chevron-right"
-                         },
-                         "baseStyles": {},
-                         "componentSlots": {},
-                         "componentEvents": {
-                          "click": {
-                           "action": "Run Script",
-                           "event": "click",
-                           "script": "actOnTask(dataItem);"
-                          }
-                         }
-                        }
-                       ]
-                      },
-                      {
-                       "componentId": "cs-task-copy-wrap",
-                       "componentName": "container",
-                       "originalElement": "div",
-                       "baseStyles": {
-                        "display": "{{ !dataItem.done && dataItem.copy ? 'flex' : 'none' }}"
-                       },
-                       "componentProps": {},
-                       "componentSlots": {},
-                       "children": [
-                        {
-                         "componentId": "cs-task-copy",
-                         "componentName": "Button",
-                         "componentProps": {
-                          "icon": "lucide-copy",
-                          "size": "sm",
-                          "variant": "ghost",
-                          "aria-label": "Copy referral code"
-                         },
-                         "baseStyles": {},
-                         "componentSlots": {},
-                         "componentEvents": {
-                          "click": {
-                           "action": "Run Script",
-                           "event": "click",
-                           "script": "actOnTask(dataItem);"
-                          }
-                         }
-                        }
-                       ]
-                      }
-                     ]
-                    }
-                   ]
+                   "componentId": "cs-central-icon",
+                   "componentName": "Icon",
+                   "componentProps": {
+                    "icon": "lucide-cloud"
+                   },
+                   "componentSlots": {}
                   }
                  ],
-                 "slotId": "cs-task-rows:default",
-                 "slotName": "default"
+                 "componentId": "cs-central-icon-cell",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "minWidth": "0px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)",
+                    "fontWeight": "500",
+                    "lineHeight": "1.15"
+                   },
+                   "classes": [
+                    "font-medium"
+                   ],
+                   "componentId": "cs-central-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-base",
+                    "tag": "span",
+                    "text": "Set up hosting on Frappe Cloud"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)",
+                    "marginTop": "4px"
+                   },
+                   "componentId": "cs-central-hint",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-p-base",
+                    "tag": "p",
+                    "text": "{{ !hired ? '' : hired.central_setup_url ? 'Sign in or create your account, then add ' + hired.partner_name + ' as your partner.' : hired.cloud_link_status === 'Active' ? hired.partner_name + ' is your partner on Frappe Cloud.' : hired.cloud_link_status === 'Waiting for Partner' ? hired.partner_name + ' isn\\'t on Frappe Cloud yet. We\\'ll let you know when you can set up hosting.' : ['Declined', 'Expired', 'Ended'].includes(hired.cloud_link_status) ? 'The hosting link with ' + hired.partner_name + ' ended. Message them to set it up again.' : 'Connecting ' + hired.partner_name + ' to Frappe Cloud. This takes a few minutes.' }}"
+                   },
+                   "componentSlots": {}
+                  }
+                 ],
+                 "componentId": "cs-central-text",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "display": "flex",
+                  "justifyContent": "flex-end"
+                 },
+                 "children": [
+                  {
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "setupOnCentral();"
+                    }
+                   },
+                   "componentId": "cs-central-setup",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "disabled": "{{ !(hired && hired.central_setup_url) }}",
+                    "iconRight": "lucide-external-link",
+                    "label": "Set up on Frappe Cloud",
+                    "size": "sm",
+                    "variant": "solid"
+                   },
+                   "componentSlots": {}
+                  }
+                 ],
+                 "componentId": "cs-central-action",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "originalElement": "div"
                 }
-               },
-               "children": []
+               ],
+               "componentId": "cs-central-row",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
               }
-             ]
+             ],
+             "componentId": "cs-hosting",
+             "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
+             "originalElement": "div"
             },
             {
-             "componentId": "cs-complete",
-             "componentName": "container",
-             "originalElement": "div",
              "baseStyles": {
               "display": "{{ isHired && !isCompleted ? 'flex' : 'none' }}",
               "marginTop": "16px"
              },
-             "componentProps": {},
-             "componentSlots": {},
              "children": [
               {
-               "componentId": "cs-complete-btn",
-               "componentName": "Button",
-               "componentProps": {
-                "label": "Mark as complete",
-                "variant": "solid",
-                "loading": "{{ completing }}"
-               },
-               "baseStyles": {},
-               "componentSlots": {},
                "componentEvents": {
                 "click": {
                  "action": "Run Script",
                  "event": "click",
                  "script": "markComplete();"
                 }
-               }
+               },
+               "componentId": "cs-complete-btn",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "Mark as complete",
+                "loading": "{{ completing }}",
+                "variant": "subtle"
+               },
+               "componentSlots": {}
               }
-             ]
+             ],
+             "componentId": "cs-complete",
+             "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
+             "originalElement": "div"
             }
            ],
            "componentId": "cs-inner",
@@ -2075,25 +2138,20 @@
           "flexShrink": "0",
           "marginRight": "0px",
           "overflowY": "{{ inEditor ? 'visible' : 'auto' }}",
-          "width": "350px",
           "scrollbarColor": "var(--outline-gray-3) transparent",
-          "scrollbarWidth": "thin"
+          "scrollbarWidth": "thin",
+          "width": "350px"
          },
          "children": [
           {
-           "componentId": "section-partner",
-           "componentName": "container",
-           "originalElement": "div",
            "baseStyles": {
             "borderBottom": "1px solid var(--outline-gray-1)",
+            "display": "{{ isHired ? 'block' : 'none' }}",
             "paddingBottom": "11px",
             "paddingLeft": "20px",
             "paddingRight": "20px",
-            "paddingTop": "19px",
-            "display": "{{ isHired ? 'block' : 'none' }}"
+            "paddingTop": "19px"
            },
-           "componentProps": {},
-           "componentSlots": {},
            "children": [
             {
              "baseStyles": {
@@ -2115,44 +2173,32 @@
              "componentSlots": {}
             },
             {
-             "componentId": "partner-who",
-             "componentName": "container",
-             "originalElement": "div",
              "baseStyles": {
-              "display": "flex",
               "alignItems": "center",
+              "display": "flex",
               "gap": "12px",
-              "marginTop": "11px",
-              "marginBottom": "9px"
+              "marginBottom": "9px",
+              "marginTop": "11px"
              },
-             "componentProps": {},
-             "componentSlots": {},
              "children": [
               {
+               "baseStyles": {
+                "backgroundColor": "var(--surface-base)",
+                "boxSizing": "border-box",
+                "flexShrink": "0",
+                "padding": "4px"
+               },
                "componentId": "partner-logo",
                "componentName": "Avatar",
                "componentProps": {
                 "image": "{{ hired?.logo }}",
                 "label": "{{ hired?.partner_name }}",
-                "size": "2xl",
-                "shape": "square"
-               },
-               "baseStyles": {
-                "backgroundColor": "var(--surface-base)",
-                "padding": "4px",
-                "boxSizing": "border-box",
-                "flexShrink": "0"
+                "shape": "square",
+                "size": "2xl"
                },
                "componentSlots": {}
               },
               {
-               "componentId": "partner-name",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "tag": "p",
-                "text": "{{ hired?.partner_name }}",
-                "fontSize": "text-base"
-               },
                "baseStyles": {
                 "color": "var(--ink-gray-8)",
                 "flex": "1",
@@ -2161,67 +2207,74 @@
                 "textOverflow": "ellipsis",
                 "whiteSpace": "nowrap"
                },
+               "componentId": "partner-name",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-base",
+                "tag": "p",
+                "text": "{{ hired?.partner_name }}"
+               },
                "componentSlots": {}
               },
               {
-               "componentId": "partner-actions",
-               "componentName": "container",
-               "originalElement": "div",
                "baseStyles": {
                 "display": "flex",
                 "flexShrink": "0",
                 "gap": "6px"
                },
-               "componentProps": {},
-               "componentSlots": {},
                "children": [
                 {
-                 "componentId": "partner-message",
-                 "componentName": "Button",
-                 "componentProps": {
-                  "label": "Message",
-                  "size": "sm",
-                  "variant": "subtle",
-                  "iconLeft": "lucide-message-square-text"
-                 },
-                 "baseStyles": {},
-                 "componentSlots": {},
                  "componentEvents": {
                   "click": {
                    "action": "Run Script",
                    "event": "click",
                    "script": "messagePartner();"
                   }
-                 }
-                },
-                {
-                 "componentId": "partner-profile",
+                 },
+                 "componentId": "partner-message",
                  "componentName": "Button",
                  "componentProps": {
-                  "icon": "lucide-user",
-                  "size": "xs",
-                  "variant": "subtle",
-                  "tooltip": "View profile",
-                  "aria-label": "View profile"
+                  "iconLeft": "lucide-message-square-text",
+                  "label": "Message",
+                  "size": "sm",
+                  "variant": "subtle"
                  },
-                 "baseStyles": {},
-                 "componentSlots": {},
+                 "componentSlots": {}
+                },
+                {
                  "componentEvents": {
                   "click": {
                    "action": "Run Script",
                    "event": "click",
                    "script": "viewPartnerProfile();"
                   }
-                 }
+                 },
+                 "componentId": "partner-profile",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "aria-label": "View profile",
+                  "icon": "lucide-user",
+                  "size": "xs",
+                  "tooltip": "View profile",
+                  "variant": "subtle"
+                 },
+                 "componentSlots": {}
                 }
-               ]
+               ],
+               "componentId": "partner-actions",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
               }
-             ]
+             ],
+             "componentId": "partner-who",
+             "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
+             "originalElement": "div"
             },
             {
-             "componentId": "partner-cost-row",
-             "componentName": "container",
-             "originalElement": "div",
              "baseStyles": {
               "alignItems": "center",
               "display": "grid",
@@ -2229,8 +2282,6 @@
               "gridTemplateColumns": "101px minmax(0, 1fr)",
               "padding": "7px 0"
              },
-             "componentProps": {},
-             "componentSlots": {},
              "children": [
               {
                "baseStyles": {
@@ -2252,10 +2303,10 @@
                "baseStyles": {
                 "color": "var(--ink-gray-8)",
                 "fontSize": "14px",
+                "fontVariantNumeric": "tabular-nums",
                 "fontWeight": "420",
                 "letterSpacing": "0.02em",
-                "lineHeight": "1.15",
-                "fontVariantNumeric": "tabular-nums"
+                "lineHeight": "1.15"
                },
                "componentId": "partner-cost-value",
                "componentName": "TextBlock",
@@ -2265,9 +2316,19 @@
                },
                "componentSlots": {}
               }
-             ]
+             ],
+             "componentId": "partner-cost-row",
+             "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
+             "originalElement": "div"
             }
-           ]
+           ],
+           "componentId": "section-partner",
+           "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
+           "originalElement": "div"
           },
           {
            "baseStyles": {
@@ -2823,9 +2884,9 @@
             {
              "baseStyles": {
               "alignSelf": "flex-start",
+              "display": "{{ isHired ? 'none' : 'inline-flex' }}",
               "marginLeft": "20px",
-              "marginTop": "16px",
-              "display": "{{ isHired ? 'none' : 'inline-flex' }}"
+              "marginTop": "16px"
              },
              "componentEvents": {
               "click": {
@@ -2881,8 +2942,8 @@
         "boxSizing": "border-box",
         "display": "flex",
         "flexDirection": "column",
-        "width": "100%",
-        "marginTop": "-12px"
+        "marginTop": "-12px",
+        "width": "100%"
        },
        "children": [
         {
@@ -4319,109 +4380,95 @@
      "componentSlots": {}
     },
     {
-     "componentId": "hire-dialog",
-     "componentName": "Dialog",
-     "componentProps": {
-      "modelValue": {
-       "$type": "variable",
-       "name": "hireOpen"
-      },
-      "title": "{{ hireTitle }}",
-      "size": "lg"
-     },
-     "baseStyles": {},
      "children": [
       {
-       "componentId": "hire-body",
-       "componentName": "container",
-       "originalElement": "div",
        "baseStyles": {
         "display": "flex",
         "flexDirection": "column",
         "width": "100%"
        },
-       "componentProps": {},
-       "componentSlots": {},
        "children": [
         {
-         "componentId": "hire-terms",
-         "componentName": "container",
-         "originalElement": "div",
          "baseStyles": {
           "display": "{{ hireStep === 'terms' ? 'flex' : 'none' }}",
           "flexDirection": "column"
          },
-         "componentProps": {},
-         "componentSlots": {},
          "children": [
           {
-           "componentId": "hire-facts",
-           "componentName": "container",
-           "originalElement": "div",
            "baseStyles": {
             "display": "grid",
             "gridTemplateColumns": "96px minmax(0, 1fr)",
             "rowGap": "8px"
            },
-           "componentProps": {},
-           "componentSlots": {},
            "children": [
             {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)"
+             },
              "componentId": "hire-quote-label",
              "componentName": "TextBlock",
              "componentProps": {
+              "fontSize": "text-base",
               "tag": "p",
-              "text": "Quote",
-              "fontSize": "text-base"
-             },
-             "baseStyles": {
-              "color": "var(--ink-gray-5)"
+              "text": "Quote"
              },
              "componentSlots": {}
             },
             {
-             "componentId": "hire-quote-value",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "tag": "p",
-              "text": "{{ quoteAmount(hireRow) }}",
-              "fontSize": "text-base"
-             },
              "baseStyles": {
               "color": "var(--ink-gray-8)",
               "fontVariantNumeric": "tabular-nums"
              },
+             "componentId": "hire-quote-value",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-base",
+              "tag": "p",
+              "text": "{{ quoteAmount(hireRow) }}"
+             },
              "componentSlots": {}
             },
             {
-             "componentId": "hire-weeks-label",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "tag": "p",
-              "text": "Timeline",
-              "fontSize": "text-base"
-             },
              "baseStyles": {
               "color": "var(--ink-gray-5)"
              },
+             "componentId": "hire-weeks-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-base",
+              "tag": "p",
+              "text": "Timeline"
+             },
              "componentSlots": {}
             },
             {
-             "componentId": "hire-weeks-value",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "tag": "p",
-              "text": "{{ quoteTimeline(hireRow) }}",
-              "fontSize": "text-base"
-             },
              "baseStyles": {
               "color": "var(--ink-gray-8)"
              },
+             "componentId": "hire-weeks-value",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-base",
+              "tag": "p",
+              "text": "{{ quoteTimeline(hireRow) }}"
+             },
              "componentSlots": {}
             }
-           ]
+           ],
+           "componentId": "hire-facts",
+           "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
+           "originalElement": "div"
           },
           {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "16px",
+            "marginTop": "24px",
+            "rowGap": "16px"
+           },
            "componentId": "hire-term-list",
            "componentName": "Repeater",
            "componentProps": {
@@ -4429,77 +4476,63 @@
             "dataKey": "title",
             "emptyStateMessage": ""
            },
-           "baseStyles": {
-            "display": "flex",
-            "flexDirection": "column",
-            "gap": "16px",
-            "rowGap": "16px",
-            "marginTop": "24px"
-           },
            "componentSlots": {
             "default": {
              "parentBlockId": "hire-term-list",
              "slotContent": [
               {
-               "componentId": "hire-term",
-               "componentName": "container",
-               "originalElement": "div",
-               "baseStyles": {},
-               "componentProps": {},
-               "componentSlots": {},
                "children": [
                 {
-                 "componentId": "hire-term-title",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "tag": "p",
-                  "text": "{{ dataItem.title }}",
-                  "fontSize": "text-base"
-                 },
                  "baseStyles": {
                   "color": "var(--ink-gray-8)",
                   "fontWeight": "500"
                  },
-                 "componentSlots": {},
                  "classes": [
                   "font-medium"
-                 ]
-                },
-                {
-                 "componentId": "hire-term-text",
+                 ],
+                 "componentId": "hire-term-title",
                  "componentName": "TextBlock",
                  "componentProps": {
+                  "fontSize": "text-base",
                   "tag": "p",
-                  "text": "{{ dataItem.text }}",
-                  "fontSize": "text-p-base"
+                  "text": "{{ dataItem.title }}"
                  },
+                 "componentSlots": {}
+                },
+                {
                  "baseStyles": {
                   "color": "var(--ink-gray-6)",
                   "marginTop": "4px"
                  },
+                 "componentId": "hire-term-text",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-p-base",
+                  "tag": "p",
+                  "text": "{{ dataItem.text }}"
+                 },
                  "componentSlots": {}
                 }
-               ]
+               ],
+               "componentId": "hire-term",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
               }
              ],
              "slotId": "hire-term-list:default",
              "slotName": "default"
             }
-           },
-           "children": []
+           }
           },
           {
-           "componentId": "hire-agree-row",
-           "componentName": "container",
-           "originalElement": "div",
-           "componentProps": {},
-           "componentSlots": {},
            "baseStyles": {
-            "display": "flex",
             "alignItems": "center",
+            "cursor": "pointer",
+            "display": "flex",
             "gap": "8px",
-            "marginTop": "24px",
-            "cursor": "pointer"
+            "marginTop": "24px"
            },
            "children": [
             {
@@ -4512,35 +4545,49 @@
               },
               "size": "md"
              },
-             "baseStyles": {},
              "componentSlots": {}
             },
             {
-             "componentId": "hire-agree-label",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "tag": "span",
-              "text": "I agree to these terms of engagement",
-              "fontSize": "text-base"
-             },
              "baseStyles": {
               "color": "var(--ink-gray-8)",
               "userSelect": "none"
              },
-             "componentSlots": {},
              "componentEvents": {
               "click": {
                "action": "Run Script",
                "event": "click",
                "script": "hireAgreed.value = !hireAgreed.value;"
               }
-             }
+             },
+             "componentId": "hire-agree-label",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-base",
+              "tag": "span",
+              "text": "I agree to these terms of engagement"
+             },
+             "componentSlots": {}
             }
-           ]
+           ],
+           "componentId": "hire-agree-row",
+           "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
+           "originalElement": "div"
           }
-         ]
+         ],
+         "componentId": "hire-terms",
+         "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
+         "originalElement": "div"
         },
         {
+         "baseStyles": {
+          "display": "{{ hireStep === 'why' ? 'flex' : 'none' }}",
+          "flexWrap": "wrap",
+          "gap": "8px"
+         },
          "componentId": "hire-why",
          "componentName": "Repeater",
          "componentProps": {
@@ -4548,16 +4595,18 @@
           "dataKey": "",
           "emptyStateMessage": ""
          },
-         "baseStyles": {
-          "display": "{{ hireStep === 'why' ? 'flex' : 'none' }}",
-          "flexWrap": "wrap",
-          "gap": "8px"
-         },
          "componentSlots": {
           "default": {
            "parentBlockId": "hire-why",
            "slotContent": [
             {
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "giveHireReason(dataItem);"
+              }
+             },
              "componentId": "hire-reason",
              "componentName": "Button",
              "componentProps": {
@@ -4565,121 +4614,124 @@
               "size": "sm",
               "variant": "subtle"
              },
-             "baseStyles": {},
-             "componentSlots": {},
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "giveHireReason(dataItem);"
-              }
-             }
+             "componentSlots": {}
             }
            ],
            "slotId": "hire-why:default",
            "slotName": "default"
           }
-         },
-         "children": []
+         }
         }
-       ]
+       ],
+       "componentId": "hire-body",
+       "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
+       "originalElement": "div"
       }
      ],
+     "componentId": "hire-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "hireOpen"
+      },
+      "size": "lg",
+      "title": "{{ hireTitle }}"
+     },
      "componentSlots": {
       "actions": {
        "parentBlockId": "hire-dialog",
        "slotContent": [
         {
-         "componentId": "hire-actions",
-         "componentName": "container",
-         "originalElement": "div",
          "baseStyles": {
           "display": "flex",
-          "justifyContent": "flex-end",
-          "gap": "8px"
+          "gap": "8px",
+          "justifyContent": "flex-end"
          },
-         "componentProps": {},
-         "componentSlots": {},
          "children": [
           {
-           "componentId": "hire-actions-terms",
-           "componentName": "container",
-           "originalElement": "div",
            "baseStyles": {
             "display": "{{ hireStep === 'terms' ? 'flex' : 'none' }}",
             "gap": "8px"
            },
-           "componentProps": {},
-           "componentSlots": {},
            "children": [
             {
-             "componentId": "hire-cancel",
-             "componentName": "Button",
-             "componentProps": {
-              "label": "Cancel",
-              "variant": "ghost"
-             },
-             "baseStyles": {},
-             "componentSlots": {},
              "componentEvents": {
               "click": {
                "action": "Run Script",
                "event": "click",
                "script": "hireOpen.value = false;"
               }
-             }
-            },
-            {
-             "componentId": "hire-confirm",
+             },
+             "componentId": "hire-cancel",
              "componentName": "Button",
              "componentProps": {
-              "label": "{{ hireTitle }}",
-              "variant": "solid",
-              "disabled": "{{ !hireAgreed }}",
-              "loading": "{{ hiring }}"
+              "label": "Cancel",
+              "variant": "ghost"
              },
-             "baseStyles": {},
-             "componentSlots": {},
+             "componentSlots": {}
+            },
+            {
              "componentEvents": {
               "click": {
                "action": "Run Script",
                "event": "click",
                "script": "confirmHire();"
               }
-             }
+             },
+             "componentId": "hire-confirm",
+             "componentName": "Button",
+             "componentProps": {
+              "disabled": "{{ !hireAgreed }}",
+              "label": "{{ hireTitle }}",
+              "loading": "{{ hiring }}",
+              "variant": "solid"
+             },
+             "componentSlots": {}
             }
-           ]
+           ],
+           "componentId": "hire-actions-terms",
+           "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
+           "originalElement": "div"
           },
           {
-           "componentId": "hire-actions-why",
-           "componentName": "container",
-           "originalElement": "div",
            "baseStyles": {
             "display": "{{ hireStep === 'why' ? 'flex' : 'none' }}"
            },
-           "componentProps": {},
-           "componentSlots": {},
            "children": [
             {
-             "componentId": "hire-skip",
-             "componentName": "Button",
-             "componentProps": {
-              "label": "Skip",
-              "variant": "ghost"
-             },
-             "baseStyles": {},
-             "componentSlots": {},
              "componentEvents": {
               "click": {
                "action": "Run Script",
                "event": "click",
                "script": "giveHireReason(null);"
               }
-             }
+             },
+             "componentId": "hire-skip",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Skip",
+              "variant": "ghost"
+             },
+             "componentSlots": {}
             }
-           ]
+           ],
+           "componentId": "hire-actions-why",
+           "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
+           "originalElement": "div"
           }
-         ]
+         ],
+         "componentId": "hire-actions",
+         "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
+         "originalElement": "div"
         }
        ],
        "slotId": "hire-dialog:actions",
@@ -4695,29 +4747,31 @@
    "originalElement": "div"
   }
  ],
- "creation": "2026-10-07 13:09:56.325762",
+ "creation": "2026-10-13 21:03:53.181632",
  "docstatus": 0,
  "doctype": "Studio Page",
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-10-07 14:12:24.200793",
- "modified_by": "maitri@frappe.io",
+ "modified": "2026-10-16 14:23:29.124994",
+ "modified_by": "Administrator",
  "name": "custom_implementation",
  "owner": "Administrator",
  "page_name": "page-c5a7e1d2",
  "page_title": "Custom Implementation",
  "published": 1,
- "route": "/custom-implementation",
- "studio_app": "connect",
  "resources": [
   {
    "auto": 1,
+   "fetch_document_using_filters": 0,
+   "limit": 0,
    "method": "GET",
    "params": "{}",
    "resource_name": "myContext",
    "resource_type": "API Resource",
    "url": "/api/method/connect.api.account.get_my_context"
   }
- ]
+ ],
+ "route": "/custom-implementation",
+ "studio_app": "connect"
 }

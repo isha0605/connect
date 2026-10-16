@@ -21,6 +21,9 @@ def _message_preview_text(message):
 		text = "📎 " + (message.get("file_name") or _("Attachment"))
 	elif message.get("message_type") == "Requirement":
 		text = _("Requirement details")
+	elif message.get("message_type") == "Hire Request":
+		request = frappe.parse_json(message.get("content") or "{}") or {}
+		text = _("Hire request: {0}").format(request.get("project_name") or _("a project"))
 	elif message.get("message_type") == "Quote":
 		quote = frappe.parse_json(message.get("content") or "{}") or {}
 		text = _("Quoted {0}").format(frappe.utils.fmt_money(quote.get("amount") or 0, currency="INR", precision=0).replace("₹ ", "₹"))
@@ -112,6 +115,9 @@ def notify_thread_members(doc, method=None):
 
 	if doc.message_type == "Requirement":
 		subject = "Shared requirement details"
+	elif doc.message_type in ("Quote", "Hire Request"):
+		# Their content is a JSON snapshot, so the bell shows the sidebar's preview of it.
+		subject = _message_preview_text(doc.as_dict())
 	else:
 		subject = frappe.utils.strip_html(doc.content)
 	# A silent message (sent outside the sender's working hours) is still delivered and pushed live, but

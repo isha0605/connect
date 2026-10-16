@@ -28,7 +28,11 @@
   "hired_quote",
   "hire_reason",
   "column_break_hiring",
+  "hire_requested_on",
   "hired_on",
+  "cloud_link_status",
+  "cloud_setup_url",
+  "cloud_link_error",
   "done_tasks",
   "completed_on"
  ],
@@ -44,7 +48,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Draft\nShared\nHired\nCompleted",
+   "options": "Draft\nShared\nHiring\nHired\nCompleted",
    "default": "Draft",
    "in_list_view": 1
   },
@@ -167,6 +171,13 @@
    "fieldtype": "Column Break"
   },
   {
+   "description": "When the customer asked the partner to take the project on. The partner has a week to answer.",
+   "fieldname": "hire_requested_on",
+   "fieldtype": "Datetime",
+   "label": "Hire Requested On",
+   "read_only": 1
+  },
+  {
    "fieldname": "hired_on",
    "fieldtype": "Datetime",
    "label": "Hired On",
@@ -183,11 +194,36 @@
    "fieldtype": "Datetime",
    "label": "Completed On",
    "read_only": 1
+  },
+  {
+   "fieldname": "cloud_link_status",
+   "fieldtype": "Select",
+   "label": "Frappe Cloud Link",
+   "options": "\nPending\nWaiting for Partner\nRequested\nActive\nDeclined\nExpired\nEnded",
+   "read_only": 1,
+   "no_copy": 1,
+   "description": "Pending while Connect asks Frappe Cloud to link the hired partner with the customer. Waiting for Partner until the partner registers there. Requested until the customer accepts on Frappe Cloud."
+  },
+  {
+   "fieldname": "cloud_setup_url",
+   "fieldtype": "Data",
+   "label": "Frappe Cloud Setup URL",
+   "read_only": 1,
+   "no_copy": 1,
+   "description": "The customer's one-time link to accept the partner on Frappe Cloud. It works only for the customer's email."
+  },
+  {
+   "fieldname": "cloud_link_error",
+   "fieldtype": "Small Text",
+   "label": "Frappe Cloud Link Error",
+   "read_only": 1,
+   "no_copy": 1,
+   "description": "Why the last request to Frappe Cloud failed. Connect tries again every hour."
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-06 22:00:00.000000",
+ "modified": "2026-10-15 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Customer",
  "name": "Customer Project",

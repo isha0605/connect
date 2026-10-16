@@ -77,8 +77,27 @@ def simulate_quotes(name):
 
 @frappe.whitelist(methods=["POST"])
 def hire_partner(quote):
-	from connect.customer.doctype.customer_project.customer_project import hire_partner
+	from connect.customer.doctype.customer_project.hiring import hire_partner
 	return hire_partner(quote)
+
+
+@frappe.whitelist(methods=["POST"])
+def cancel_hire_request(name):
+	from connect.customer.doctype.customer_project.hiring import cancel_hire_request
+	return cancel_hire_request(name)
+
+
+@frappe.whitelist()
+def hire_request_statuses(thread):
+	from connect.customer.doctype.customer_project.hiring import hire_request_statuses
+	return hire_request_statuses(thread)
+
+
+# The partner's side: their admin answers the request from the card in the thread.
+@frappe.whitelist(methods=["POST"])
+def respond_to_hire(quote, accept, reason=None):
+	from connect.customer.doctype.customer_project.hiring import respond_to_hire
+	return respond_to_hire(quote, accept, reason)
 
 
 @frappe.whitelist(methods=["POST"])

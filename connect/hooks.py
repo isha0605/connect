@@ -253,11 +253,18 @@ doc_events = {
 # ---------------
 
 scheduler_events = {
+	"cron": {
+		# What customers answered on Frappe Cloud about the partner they hired.
+		"*/10 * * * *": ["connect.partner.cloud_integration.sync_cloud_links"],
+	},
 	# Paid Starter Pack orders still without a partner (e.g. paid before one was set up).
 	"hourly": [
 		"connect.starter_packs.doctype.starter_pack_order.implementation.hand_over_waiting_orders",
+		# Hired projects whose partner link Frappe Cloud hasn't created yet.
+		"connect.partner.cloud_integration.retry_cloud_links",
 	],
 	"daily": [
+		"connect.customer.doctype.customer_project.hiring.expire_hire_requests",
 		"connect.partner.response_time.recompute_all_response_times",
 		"connect.partner.press_integration.sync_all_partner_mrrs",
 	],

@@ -43,7 +43,6 @@
        },
        "children": [
         {
-         "baseStyles": {},
          "children": [
           {
            "baseStyles": {
@@ -290,7 +289,6 @@
                  "parentBlockId": "thread-list-rows",
                  "slotContent": [
                   {
-                   "baseStyles": {},
                    "children": [
                     {
                      "baseStyles": {
@@ -826,7 +824,7 @@
                        "componentProps": {
                         "fontSize": "text-sm",
                         "tag": "span",
-                        "text": "{{ dataItem.conversation ? '· ' + dataItem.conversation : '' }}"
+                        "text": "{{ dataItem.conversation ? '\u00b7 ' + dataItem.conversation : '' }}"
                        },
                        "componentSlots": {}
                       }
@@ -1830,7 +1828,7 @@
                          "componentProps": {
                           "fontSize": "text-xs",
                           "tag": "span",
-                          "text": "·"
+                          "text": "\u00b7"
                          },
                          "componentSlots": {}
                         },
@@ -2092,7 +2090,7 @@
                           "maxWidth": "85vw"
                          },
                          "originalElement": "div",
-                         "visibilityCondition": "dataItem.message_type !== 'File' && dataItem.message_type !== 'Requirement' && dataItem.message_type !== 'Quote'"
+                         "visibilityCondition": "dataItem.message_type !== 'File' && dataItem.message_type !== 'Requirement' && dataItem.message_type !== 'Quote' && dataItem.message_type !== 'Hire Request'"
                         },
                         {
                          "baseStyles": {
@@ -2353,6 +2351,115 @@
                          },
                          "originalElement": "div",
                          "visibilityCondition": "dataItem.message_type === 'Quote'"
+                        },
+                        {
+                         "baseStyles": {
+                          "backgroundColor": "var(--surface-base)",
+                          "border": "1px solid var(--outline-gray-1)",
+                          "borderRadius": "10px",
+                          "boxSizing": "border-box",
+                          "display": "flex",
+                          "flexDirection": "column",
+                          "gap": "10px",
+                          "maxWidth": "100%",
+                          "padding": "14px 16px",
+                          "width": "480px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "gap": "6px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "height": "14px",
+                              "width": "14px"
+                             },
+                             "componentId": "message-hire-icon",
+                             "componentName": "Icon",
+                             "componentProps": {
+                              "icon": "lucide-handshake"
+                             },
+                             "componentSlots": {}
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "fontWeight": "500"
+                             },
+                             "componentId": "message-hire-kicker",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-sm",
+                              "tag": "span",
+                              "text": "Hire request"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "message-hire-label",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-9, oklch(0.168 0 0))",
+                            "fontWeight": "600",
+                            "lineHeight": "26px"
+                           },
+                           "componentId": "message-hire-title",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-lg",
+                            "tag": "span",
+                            "text": "{{ hireRequestTitle(dataItem) }}"
+                           },
+                           "componentSlots": {}
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-6)",
+                            "lineHeight": "20px"
+                           },
+                           "componentId": "message-hire-terms",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-base",
+                            "tag": "span",
+                            "text": "{{ hireRequestTerms(dataItem) }}"
+                           },
+                           "componentSlots": {}
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-7)",
+                            "lineHeight": "20px"
+                           },
+                           "componentId": "message-hire-status",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-sm",
+                            "tag": "span",
+                            "text": "{{ hireRequestStatusText(dataItem) }}"
+                           },
+                           "componentSlots": {}
+                          }
+                         ],
+                         "componentId": "message-hire-card",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {
+                          "width": "calc(100vw - 80px)"
+                         },
+                         "originalElement": "div",
+                         "visibilityCondition": "dataItem.message_type === 'Hire Request'"
                         },
                         {
                          "baseStyles": {
@@ -2639,7 +2746,7 @@
                           "maxWidth": "85vw"
                          },
                          "originalElement": "div",
-                         "visibilityCondition": "dataItem.message_type !== 'File' && dataItem.message_type !== 'Requirement' && dataItem.message_type !== 'Quote'"
+                         "visibilityCondition": "dataItem.message_type !== 'File' && dataItem.message_type !== 'Requirement' && dataItem.message_type !== 'Quote' && dataItem.message_type !== 'Hire Request'"
                         },
                         {
                          "baseStyles": {
@@ -2900,6 +3007,164 @@
                          },
                          "originalElement": "div",
                          "visibilityCondition": "dataItem.message_type === 'Quote'"
+                        },
+                        {
+                         "baseStyles": {
+                          "backgroundColor": "var(--surface-base)",
+                          "border": "1px solid var(--outline-gray-1)",
+                          "borderRadius": "10px",
+                          "boxSizing": "border-box",
+                          "display": "flex",
+                          "flexDirection": "column",
+                          "gap": "10px",
+                          "maxWidth": "100%",
+                          "padding": "14px 16px",
+                          "width": "480px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "gap": "6px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "height": "14px",
+                              "width": "14px"
+                             },
+                             "componentId": "message-hire-icon-o",
+                             "componentName": "Icon",
+                             "componentProps": {
+                              "icon": "lucide-handshake"
+                             },
+                             "componentSlots": {}
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "fontWeight": "500"
+                             },
+                             "componentId": "message-hire-kicker-o",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-sm",
+                              "tag": "span",
+                              "text": "Hire request"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "message-hire-label-o",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-9, oklch(0.168 0 0))",
+                            "fontWeight": "600",
+                            "lineHeight": "26px"
+                           },
+                           "componentId": "message-hire-title-o",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-lg",
+                            "tag": "span",
+                            "text": "{{ hireRequestTitle(dataItem) }}"
+                           },
+                           "componentSlots": {}
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-6)",
+                            "lineHeight": "20px"
+                           },
+                           "componentId": "message-hire-terms-o",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-base",
+                            "tag": "span",
+                            "text": "{{ hireRequestTerms(dataItem) }}"
+                           },
+                           "componentSlots": {}
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-7)",
+                            "lineHeight": "20px"
+                           },
+                           "componentId": "message-hire-status-o",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-sm",
+                            "tag": "span",
+                            "text": "{{ hireRequestStatusText(dataItem) }}"
+                           },
+                           "componentSlots": {}
+                          },
+                          {
+                           "baseStyles": {
+                            "display": "flex",
+                            "gap": "8px",
+                            "marginTop": "4px"
+                           },
+                           "children": [
+                            {
+                             "componentEvents": {
+                              "click": {
+                               "action": "Run Script",
+                               "event": "click",
+                               "script": "acceptHire(dataItem);"
+                              }
+                             },
+                             "componentId": "message-hire-accept-o",
+                             "componentName": "Button",
+                             "componentProps": {
+                              "label": "Accept",
+                              "loading": "{{ answeringHire }}",
+                              "variant": "solid"
+                             },
+                             "componentSlots": {}
+                            },
+                            {
+                             "componentEvents": {
+                              "click": {
+                               "action": "Run Script",
+                               "event": "click",
+                               "script": "openDeclineHire(dataItem);"
+                              }
+                             },
+                             "componentId": "message-hire-decline-o",
+                             "componentName": "Button",
+                             "componentProps": {
+                              "disabled": "{{ answeringHire }}",
+                              "label": "Decline",
+                              "variant": "subtle"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "message-hire-actions-o",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div",
+                           "visibilityCondition": "canAnswerHire(dataItem)"
+                          }
+                         ],
+                         "componentId": "message-hire-card-o",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {
+                          "width": "calc(100vw - 80px)"
+                         },
+                         "originalElement": "div",
+                         "visibilityCondition": "dataItem.message_type === 'Hire Request'"
                         },
                         {
                          "baseStyles": {
@@ -3599,7 +3864,7 @@
                          "componentProps": {
                           "fontSize": "text-xs",
                           "tag": "span",
-                          "text": "·"
+                          "text": "\u00b7"
                          },
                          "componentSlots": {}
                         },
@@ -7729,7 +7994,7 @@
                    "$type": "variable",
                    "name": "crmApiSecret"
                   },
-                  "placeholder": "{{ crmSecretStored ? '••••••••••••••••' : 'API secret' }}",
+                  "placeholder": "{{ crmSecretStored ? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' : 'API secret' }}",
                   "size": "md",
                   "type": "password",
                   "variant": "subtle"
@@ -8376,7 +8641,7 @@
                "$type": "variable",
                "name": "editCompanySize"
               },
-              "placeholder": "e.g. 11–50",
+              "placeholder": "e.g. 11\u201350",
               "size": "sm",
               "variant": "outline"
              },
@@ -8578,7 +8843,7 @@
                "$type": "variable",
                "name": "editBudget"
               },
-              "placeholder": "e.g. ₹2L–₹10L",
+              "placeholder": "e.g. \u20b92L\u2013\u20b910L",
               "size": "sm",
               "variant": "outline"
              },
@@ -10189,7 +10454,7 @@
                      "componentProps": {
                       "fontSize": "text-sm",
                       "tag": "span",
-                      "text": "{{ '· ' + dataItem.when }}"
+                      "text": "{{ '\u00b7 ' + dataItem.when }}"
                      },
                      "componentSlots": {}
                     }
@@ -10858,10 +11123,10 @@
               },
               "options": [
                "",
-               "1–10",
-               "11–50",
-               "51–200",
-               "201–1000",
+               "1\u201310",
+               "11\u201350",
+               "51\u2013200",
+               "201\u20131000",
                "1000+"
               ]
              },
@@ -11092,11 +11357,11 @@
               },
               "options": [
                "",
-               "Under ₹2L",
-               "₹2L–₹10L",
-               "₹10L–₹25L",
-               "₹25L–₹50L",
-               "₹50L+",
+               "Under \u20b92L",
+               "\u20b92L\u2013\u20b910L",
+               "\u20b910L\u2013\u20b925L",
+               "\u20b925L\u2013\u20b950L",
+               "\u20b950L+",
                "Not decided"
               ]
              },
@@ -12416,7 +12681,7 @@
                      "componentProps": {
                       "fontSize": "text-p-base",
                       "tag": "p",
-                      "text": "{{ 'Minimum ' + (partnershipCountry === 'India' ? '₹10,000' : '$100') + ' MRR on Frappe Cloud' }}"
+                      "text": "{{ 'Minimum ' + (partnershipCountry === 'India' ? '\u20b910,000' : '$100') + ' MRR on Frappe Cloud' }}"
                      },
                      "componentSlots": {}
                     },
@@ -17091,6 +17356,113 @@
       "title": "{{ requirementDetail.title }}"
      },
      "componentSlots": {}
+    },
+    {
+     "blockName": "Decline Hire Dialog",
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "14px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)"
+         },
+         "componentId": "decline-hire-description",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-sm",
+          "tag": "span",
+          "text": "The customer sees your reason, and can hire another partner."
+         },
+         "componentSlots": {}
+        },
+        {
+         "componentId": "decline-hire-reason",
+         "componentName": "Textarea",
+         "componentProps": {
+          "label": "Reason",
+          "modelValue": {
+           "$type": "variable",
+           "name": "declineHireReason"
+          },
+          "placeholder": "For example: we're fully booked until March.",
+          "rows": 3
+         },
+         "componentSlots": {}
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "8px",
+          "justifyContent": "flex-end"
+         },
+         "children": [
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "showDeclineHireDialog.value = false;"
+            }
+           },
+           "componentId": "decline-hire-cancel-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "theme": "gray",
+            "variant": "outline"
+           },
+           "componentSlots": {}
+          },
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "declineHire();"
+            }
+           },
+           "componentId": "decline-hire-confirm-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Decline",
+            "loading": "{{ answeringHire }}",
+            "theme": "red",
+            "variant": "solid"
+           },
+           "componentSlots": {}
+          }
+         ],
+         "componentId": "decline-hire-actions",
+         "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
+         "originalElement": "div"
+        }
+       ],
+       "componentId": "decline-hire-body",
+       "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
+       "originalElement": "div"
+      }
+     ],
+     "componentId": "decline-hire-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "showDeclineHireDialog"
+      },
+      "size": "sm",
+      "title": "Decline this hire?"
+     },
+     "componentSlots": {}
     }
    ],
    "componentId": "root",
@@ -17100,14 +17472,14 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-10-08 12:31:49.076605",
+ "creation": "2026-10-08 16:46:28.584081",
  "docstatus": 0,
  "doctype": "Studio Page",
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-10-08 13:52:31.150730",
- "modified_by": "doshi.maitri.mk@gmail.com",
+ "modified": "2026-10-16 14:23:29.506942",
+ "modified_by": "Administrator",
  "name": "messaging",
  "owner": "Administrator",
  "page_name": "messaging",

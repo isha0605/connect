@@ -130,6 +130,7 @@ export default function setup(context) {
 		{ title: `Pay ${hireName.value} directly`, text: "Frappe takes no fee and is not a party to the agreement." },
 		{ title: "Scope, price and timeline are as quoted", text: `Changes are agreed between you and ${hireName.value}.` },
 		{ title: "Hosting is billed through your partner", text: `Frappe Cloud bills ${hireName.value}, who bills you.` },
+		{ title: `${hireName.value} confirms the hire`, text: "They have 7 days to accept. Until then you can cancel the request." },
 		{ title: "Your site stays private", text: "Frappe can see that this project exists, not what is in your site." },
 	])
 	const hireReasons = ["Price", "Timeline", "Their profile", "How they replied"]
@@ -148,7 +149,7 @@ export default function setup(context) {
 			.then((data) => {
 				project.value = data
 				hireStep.value = "why"
-				toast.success(`${hireName.value} is your partner`)
+				toast.success(`Hire request sent to ${hireName.value}`)
 			})
 			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't hire this partner. Try again."))
 			.finally(() => {
@@ -211,8 +212,8 @@ export default function setup(context) {
 
 
 	const projectTitle = computed(() => project.value?.project_name || "Project")
-	// Shared, Hired and Completed are all past the draft: the brief has gone out.
-	const isDraft = computed(() => !["Shared", "Hired", "Completed"].includes(project.value?.status))
+	// Shared, Hiring, Hired and Completed are all past the draft: the brief has gone out.
+	const isDraft = computed(() => !["Shared", "Hiring", "Hired", "Completed"].includes(project.value?.status))
 	const breadcrumbItems = computed(() => [
 		{ label: "Projects", route: { path: "/projects" } },
 		{ label: projectTitle.value },
@@ -342,11 +343,43 @@ export default function setup(context) {
 	// ---- After "Share requirements": choosing a partner, step 1 of 2 ----
 	const isShared = computed(() => !isDraft.value)
 
-	// ---- After hiring: setting up hosting, step 2 of 2 ----
+	// ---- Hiring: the partner has 7 days to accept the request ----
+	// `hired` is set from the request on; `isHired` only once the partner accepts.
 	const hired = computed(() => project.value?.hired || null)
-	const isHired = computed(() => !!hired.value)
-	const stageTitle = computed(() => (isHired.value ? "Set up hosting" : "Choosing a partner"))
+	const isAwaitingPartner = computed(() => project.value?.status === "Hiring")
+	const isHired = computed(() => !!hired.value?.confirmed)
+	const declinedHire = computed(() => project.value?.declined_hire || null)
+	const stageTitle = computed(() => {
+		if (isHired.value) return "Set up hosting"
+		if (isAwaitingPartner.value) return `Waiting for ${hired.value?.partner_name || "your partner"}`
+		return "Choosing a partner"
+	})
 	const stageStep = computed(() => (isHired.value ? "Step 2 of 2" : "Step 1 of 2"))
+	const awaitingLine = computed(() => {
+		const name = hired.value?.partner_name || "Your partner"
+		return `${name} has 7 days to accept or decline your hire request. You'll get a notification either way.`
+	})
+	const declinedLine = computed(() => {
+		if (!declinedHire.value) return ""
+		const reason = (declinedHire.value.reason || "").trim().replace(/[.!]+$/, "")
+		return `${declinedHire.value.partner_name} declined: ${reason}. Pick another partner from your quotes.`
+	})
+
+	const cancelling = ref(false)
+	function cancelHireRequest() {
+		if (cancelling.value) return
+		cancelling.value = true
+		call("connect.api.projects.cancel_hire_request", { name: projectName })
+			.then((data) => {
+				project.value = data
+				loadQuotes()
+				toast.success(`Hire request to ${data.partner_name} cancelled`)
+			})
+			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't cancel the request. Try again."))
+			.finally(() => {
+				cancelling.value = false
+			})
+	}
 
 	const HOSTING_TASKS = [
 		{
@@ -401,6 +434,13 @@ export default function setup(context) {
 				}),
 			)
 		completeTask(task)
+	}
+
+	// Opens the customer's one-time Frappe Cloud link, where they accept the partner. It
+	// works only for their own email.
+	function setupOnCentral() {
+		const url = hired.value?.central_setup_url
+		if (url) window.open(url, "_blank", "noopener")
 	}
 
 	const isCompleted = computed(() => project.value?.status === "Completed")
@@ -539,10 +579,17 @@ export default function setup(context) {
 		isShared,
 		hired,
 		isHired,
+		isAwaitingPartner,
+		awaitingLine,
+		declinedHire,
+		declinedLine,
+		cancelling,
+		cancelHireRequest,
 		stageTitle,
 		stageStep,
 		hostingTasks,
 		actOnTask,
+		setupOnCentral,
 		isCompleted,
 		completing,
 		markComplete,

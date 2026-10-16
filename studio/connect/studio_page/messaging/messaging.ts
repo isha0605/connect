@@ -742,7 +742,11 @@ export default function setup(context) {
 	socket.on("disconnect", (reason) => console.warn("[connect realtime] disconnected:", reason))
 	function handleNewMessage(payload) {
 		console.log("[connect realtime] connect_new_message received:", payload, "selectedThread:", selectedThread.value)
-		if (payload.thread === selectedThread.value) context.messages.reload()
+		if (payload.thread === selectedThread.value) {
+			context.messages.reload()
+			// An answer to a hire request arrives as a message, so its card's status may have moved.
+			loadHireRequestStatuses()
+		}
 		context.myThreads.reload()
 	}
 	socket.on("connect_new_message", handleNewMessage)
@@ -1136,6 +1140,94 @@ export default function setup(context) {
 
 	function quoteNoteText(item) {
 		return parseRequirementContent(item).note || ""
+	}
+
+	// ---- Hire Request card: a customer asking the partner to take the project on ----
+	// message_type "Hire Request"; content is { quote, project, project_name, amount, weeks }
+	// (see hiring.py). The snapshot doesn't change, so the card reads where the request stands
+	// from hireRequestStatuses (by message name), which reloads with the thread and on every
+	// new message in it.
+	const hireRequestStatuses = ref({})
+	function loadHireRequestStatuses() {
+		hireRequestStatuses.value = {}
+		if (selectedThreadType.value !== "company" || !selectedThread.value) return
+		const thread = selectedThread.value
+		call("connect.api.projects.hire_request_statuses", { thread })
+			.then((data) => {
+				if (thread === selectedThread.value) hireRequestStatuses.value = data || {}
+			})
+			.catch(() => {})
+	}
+	watch([selectedThread, selectedThreadType], loadHireRequestStatuses, { immediate: true })
+
+	function hireRequestState(item) {
+		return hireRequestStatuses.value[item.name] || null
+	}
+
+	function hireRequestTitle(item) {
+		return parseRequirementContent(item).project_name || "Hire request"
+	}
+
+	function hireRequestTerms(item) {
+		return [quoteAmountText(item), quoteWeeksText(item)].filter(Boolean).join(" · ")
+	}
+
+	// A request the customer cancelled, or that expired, has its quote back at Quoted or
+	// Interested, and an older card for a quote asked again comes back as Withdrawn.
+	function hireRequestStatusText(item) {
+		const state = hireRequestState(item)
+		if (!state) return ""
+		if (state.status === "Hire Requested") return "Waiting for the partner to accept"
+		if (state.status === "Hired") return "Accepted"
+		if (state.status === "Hire Declined") return `Declined: ${state.decline_reason || ""}`
+		return "Withdrawn"
+	}
+
+	function canAnswerHire(item) {
+		return !!hireRequestState(item)?.can_answer
+	}
+
+	const answeringHire = ref(false)
+	function respondToHire(quote, accept, reason) {
+		answeringHire.value = true
+		return call("connect.api.projects.respond_to_hire", { quote, accept: accept ? 1 : 0, reason })
+			.then(() => {
+				toast.success(accept ? "Hire accepted" : "Hire declined")
+				loadHireRequestStatuses()
+				return true
+			})
+			.catch((error) => {
+				toast.error(error?.messages?.[0] || "Couldn't answer the hire request. Try again.")
+				return false
+			})
+			.finally(() => {
+				answeringHire.value = false
+			})
+	}
+
+	function acceptHire(item) {
+		if (!answeringHire.value) respondToHire(parseRequirementContent(item).quote, true)
+	}
+
+	const showDeclineHireDialog = ref(false)
+	const declineHireReason = ref("")
+	const declineHireQuote = ref("")
+	function openDeclineHire(item) {
+		declineHireQuote.value = parseRequirementContent(item).quote
+		declineHireReason.value = ""
+		showDeclineHireDialog.value = true
+	}
+
+	function declineHire() {
+		const reason = declineHireReason.value.trim()
+		if (!reason) {
+			toast.error("Tell the customer why you're declining.")
+			return
+		}
+		if (answeringHire.value) return
+		respondToHire(declineHireQuote.value, false, reason).then((done) => {
+			if (done) showDeclineHireDialog.value = false
+		})
 	}
 
 	// ---- Requirement card (a customer's brief), as Pragati's design shows it ----
@@ -3809,6 +3901,16 @@ export default function setup(context) {
 		openForwardDialog,
 		forwardMessage,
 		showDeleteMessageDialog,
+		hireRequestTitle,
+		hireRequestTerms,
+		hireRequestStatusText,
+		canAnswerHire,
+		answeringHire,
+		acceptHire,
+		openDeclineHire,
+		showDeclineHireDialog,
+		declineHireReason,
+		declineHire,
 		messageToDelete,
 		deletingMessage,
 		deleteMessage,
