@@ -57,6 +57,7 @@ class PartnerApplication(Document):
 	def before_submit(self):
 		self._validate_profile_complete()
 		self._validate_certificate_count()
+		self._validate_cloud_account()
 		self._validate_mrr()
 		self.status = "Pending Review"
 		self.submitted_on = now_datetime()
@@ -122,6 +123,14 @@ class PartnerApplication(Document):
 		linked_count = frappe.db.count("Partner Certificate", {"partner": self.partner})
 		if linked_count < 2:
 			frappe.throw(_("Link at least two certificates before submitting for approval."))
+
+	def _validate_cloud_account(self):
+		# Customers add a partner on Frappe Cloud, so a listed partner must have its team there.
+		from connect.partner.cloud_integration import is_cloud_enabled
+
+		registered = frappe.db.get_value("Partner", self.partner, "cloud_registration") == "Completed"
+		if is_cloud_enabled() and not registered:
+			frappe.throw(_("Connect your Frappe Cloud account before submitting for approval."))
 
 	def _validate_mrr(self):
 		target = flt(frappe.db.get_single_value("Integration Settings", "mrr_target")) or 0

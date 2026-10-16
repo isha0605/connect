@@ -244,6 +244,20 @@ def get_certificate_link_status():
 
 
 @frappe.whitelist()
+def get_cloud_account_status():
+	from connect.partner.cloud_integration import get_cloud_account_status
+
+	return get_cloud_account_status()
+
+
+@frappe.whitelist(methods=["POST"])
+def connect_cloud_account():
+	from connect.partner.cloud_integration import connect_cloud_account
+
+	return connect_cloud_account()
+
+
+@frappe.whitelist()
 def get_mrr_status():
 	from connect.partner.doctype.partner_application.partner_application import get_mrr_status
 

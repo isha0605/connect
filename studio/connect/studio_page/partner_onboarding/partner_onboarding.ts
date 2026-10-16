@@ -11,7 +11,7 @@ const REGISTRATION_STASH_KEY = "connect_partner_registration"
 
 const API = "connect.api.partner"
 
-const STEP_ORDER = ["step-register", "step-profile", "step-certificates", "step-mrr"]
+const STEP_ORDER = ["step-register", "step-profile", "step-certificates", "step-cloud", "step-mrr"]
 
 const COURSE_LABELS = {
 	"frappe-developer-certification": "Framework certification",
@@ -123,6 +123,8 @@ export default function setup(context) {
 	// ---- Application + status ----
 	const certificateStatus = ref({ ...EMPTY_CERTIFICATE_STATUS })
 	const mrrStatus = ref({ current_amount: 0, target_amount: 100, currency: "USD", progress: 0, requirement_complete: false })
+	// Customers add their partner on Frappe Cloud, so a partner needs its team there to be listed.
+	const cloudStatus = ref({ enabled: false, completed: false })
 
 	function app() {
 		return context.partnerApplication.data || null
@@ -196,6 +198,12 @@ export default function setup(context) {
 		})
 	}
 
+	function loadCloudStatus() {
+		return call(`${API}.get_cloud_account_status`).then((status) => {
+			cloudStatus.value = status
+		})
+	}
+
 	// get_partner_application throws for anyone not on a partner's roster, so it isn't an auto
 	// resource: it loads once myContext confirms a partner, and never fires for customers.
 	watch(
@@ -210,7 +218,7 @@ export default function setup(context) {
 	watch(
 		() => context.partnerApplication.data,
 		(doc) => {
-			if (doc && doc.name) Promise.all([loadCertificateStatus(), loadMRRStatus()])
+			if (doc && doc.name) Promise.all([loadCertificateStatus(), loadCloudStatus(), loadMRRStatus()])
 			else certificateStatus.value = { ...EMPTY_CERTIFICATE_STATUS }
 		},
 		{ immediate: true },
@@ -226,6 +234,7 @@ export default function setup(context) {
 			"step-register": isRegistrationComplete(),
 			"step-profile": isProfileComplete(),
 			"step-certificates": !!certificateStatus.value.requirement_complete,
+			"step-cloud": isCloudReady(),
 			"step-mrr": !!mrrStatus.value.requirement_complete,
 		}
 		return done[key] ? "completed" : "pending"
@@ -283,6 +292,36 @@ export default function setup(context) {
 		return `${Math.min(100, Math.max(0, mrrStatus.value.progress || 0))}%`
 	}
 
+	// ---- Frappe Cloud account ----
+	// Off when Connect isn't linked to Frappe Cloud; the step then neither shows nor blocks.
+	function isCloudStepShown() {
+		return !!cloudStatus.value.enabled
+	}
+
+	function isCloudReady() {
+		return !cloudStatus.value.enabled || !!cloudStatus.value.completed
+	}
+
+	// Frappe Cloud signs the admin in, lets them pick or create the team, and sends them back here.
+	const connectingCloud = ref(false)
+	function connectCloud() {
+		if (connectingCloud.value) return
+		connectingCloud.value = true
+		call(`${API}.connect_cloud_account`)
+			.then((result) => {
+				if (result && result.url) {
+					window.location.href = result.url
+					return
+				}
+				cloudStatus.value = { enabled: true, completed: true }
+				connectingCloud.value = false
+			})
+			.catch((error) => {
+				toast.error(error?.messages?.[0] || "Couldn't reach Frappe Cloud. Try again.")
+				connectingCloud.value = false
+			})
+	}
+
 	// ---- Submit for approval / primary action ----
 	const submitting = ref(false)
 
@@ -303,6 +342,7 @@ export default function setup(context) {
 			canEditDraft() &&
 			isProfileComplete() &&
 			!!certificateStatus.value.requirement_complete &&
+			isCloudReady() &&
 			!!mrrStatus.value.requirement_complete
 		)
 	}
@@ -823,6 +863,10 @@ export default function setup(context) {
 		mrrTargetLabel,
 		mrrSummary,
 		mrrProgressWidth,
+		isCloudStepShown,
+		isCloudReady,
+		connectingCloud,
+		connectCloud,
 		submitting,
 		isRejected,
 		reviewerComments,

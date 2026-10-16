@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, escape_html, get_url, now_datetime
 
-from connect.permissions import _get_partner_admin
+from connect.permissions import _get_partner_admin, _is_partner_admin
 
 # Frappe Cloud's registration link stays open this long (its Invitation Expiry). A new link
 # replaces the old one, so the partner's admin is emailed again only after the old one closes.
@@ -13,6 +13,9 @@ RETRY_STATUSES = ("Pending", "Waiting for Partner")
 
 # The link states the customer or Frappe Cloud can still change.
 SYNCED_STATUSES = ("Requested", "Active")
+
+# Where the partner's admin comes back to after picking their Frappe Cloud team.
+ONBOARDING_PATH = "/connect/partner-onboarding"
 
 
 def is_cloud_enabled() -> bool:
@@ -139,7 +142,8 @@ def _record_link_status(project: str, status: str) -> None:
 
 def _ensure_registration(client, partner: str) -> bool:
 	"""Whether Frappe Cloud already knows the partner's team. If not, asks the partner's admin to
-	pick it, at most once per registration link."""
+	pick it, at most once per registration link. Partners listed before onboarding asked for
+	Frappe Cloud get here on their first hire."""
 	row = frappe.db.get_value(
 		"Partner", partner, ["partner_name", "cloud_registration", "cloud_registration_sent_on"], as_dict=True
 	)
@@ -155,19 +159,71 @@ def _ensure_registration(client, partner: str) -> bool:
 		frappe.throw(_("{0} has no admin to register on Frappe Cloud.").format(row.partner_name))
 
 	email = frappe.db.get_value("User", admin, "email") or admin
+	url = _request_registration(client, partner, email)
+	if url:
+		_send_registration_email(email, row.partner_name, url)
+	return not url
+
+
+def _request_registration(client, partner: str, email: str, return_url: str | None = None) -> str | None:
+	"""Asks Frappe Cloud for the link where `email` picks the partner's team. None when Frappe
+	Cloud already knows the team."""
 	result = client.post_api(
 		"central.api.connect.register_partner",
-		{"connect_partner_id": partner, "partner_name": row.partner_name, "owner_email": email},
+		{
+			"connect_partner_id": partner,
+			"partner_name": frappe.db.get_value("Partner", partner, "partner_name"),
+			"owner_email": email,
+			"return_url": return_url,
+		},
 	)
 	if result["status"] == "Completed":
 		frappe.db.set_value("Partner", partner, "cloud_registration", "Completed")
-		return True
+		return None
 
 	frappe.db.set_value(
 		"Partner", partner, {"cloud_registration": "Pending", "cloud_registration_sent_on": now_datetime()}
 	)
-	_send_registration_email(email, row.partner_name, result["url"])
-	return False
+	return result["url"]
+
+
+def get_cloud_account_status() -> dict:
+	"""Partner onboarding's Frappe Cloud step for the caller's partner. While Connect doesn't know
+	the team yet it asks Frappe Cloud, so an admin back from picking it sees the step done."""
+	from connect.partner.doctype.partner.partner import _my_partner
+
+	partner = _my_partner()
+	if not is_cloud_enabled():
+		return {"enabled": False, "completed": False}
+	if frappe.db.get_value("Partner", partner, "cloud_registration") == "Completed":
+		return {"enabled": True, "completed": True}
+
+	try:
+		result = _get_cloud_client().post_api(
+			"central.api.connect.get_partner_registration", {"connect_partner_id": partner}
+		)
+	except Exception:
+		frappe.log_error(title=f"Could not read the Frappe Cloud registration for {partner}")
+		return {"enabled": True, "completed": False}
+
+	if result["status"] == "Completed":
+		frappe.db.set_value("Partner", partner, "cloud_registration", "Completed")
+	return {"enabled": True, "completed": result["status"] == "Completed"}
+
+
+def connect_cloud_account() -> dict:
+	"""Partner onboarding's Connect Frappe Cloud: the link where the partner's admin picks or
+	creates the partner's Frappe Cloud team now. No link when Frappe Cloud already knows it."""
+	from connect.partner.doctype.partner.partner import _my_partner
+
+	partner = _my_partner()
+	user = frappe.session.user
+	if not _is_partner_admin(partner, user):
+		frappe.throw(_("Only your company's admin can connect Frappe Cloud."), frappe.PermissionError)
+
+	email = frappe.db.get_value("User", user, "email") or user
+	url = _request_registration(_get_cloud_client(), partner, email, get_url(ONBOARDING_PATH))
+	return {"completed": not url, "url": url}
 
 
 def _send_registration_email(email: str, partner_name: str, url: str) -> None:

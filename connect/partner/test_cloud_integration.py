@@ -8,7 +8,13 @@ from frappe.tests import IntegrationTestCase
 
 from connect.customer.doctype.customer_project.customer_project import hired_partner
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
-from connect.partner.cloud_integration import request_cloud_link, retry_cloud_links, sync_cloud_links
+from connect.partner.cloud_integration import (
+	connect_cloud_account,
+	get_cloud_account_status,
+	request_cloud_link,
+	retry_cloud_links,
+	sync_cloud_links,
+)
 
 PARTNER = "_Test Cloud Partner"
 BUYER = "cloud.buyer@example.test"
@@ -17,6 +23,9 @@ SETUP_URL = "https://cloud.example.test/dashboard/connect/customer/abc"
 REGISTER = "central.api.connect.register_partner"
 CREATE = "central.api.connect.create_partner_link"
 READ = "central.api.connect.get_partner_link"
+REGISTRATION = "central.api.connect.get_partner_registration"
+REGISTER_URL = "https://cloud.example.test/dashboard/connect/partner/xyz"
+STAFF = "cloud.partner.staff@example.test"
 
 
 class FakeCloud:
@@ -144,3 +153,68 @@ class TestCloudLink(IntegrationTestCase):
 		self.assertEqual(
 			(self.project.cloud_link_status, self.project.cloud_setup_url), ("Requested", SETUP_URL)
 		)
+
+
+class TestCloudAccountStep(IntegrationTestCase):
+	"""Partner onboarding's "Connect your Frappe Cloud account" step, and the approval it gates."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		make_partner(PARTNER)
+		make_partner_admin(PARTNER, PARTNER_ADMIN)
+		frappe.db.set_value(
+			"Partner", PARTNER, {"cloud_registration": "", "cloud_registration_sent_on": None}
+		)
+		frappe.db.set_single_value("Integration Settings", "cloud_enabled", 1)
+		self.addCleanup(frappe.db.set_single_value, "Integration Settings", "cloud_enabled", 0)
+		self.addCleanup(frappe.set_user, "Administrator")
+
+	def as_user(self, user, cloud: FakeCloud, action):
+		frappe.set_user(user)
+		with patch("connect.partner.cloud_integration._get_cloud_client", return_value=cloud.client):
+			return action()
+
+	def test_the_admin_gets_a_link_that_comes_back_to_onboarding(self):
+		cloud = FakeCloud(**{REGISTER: {"status": "Pending", "url": REGISTER_URL}})
+		result = self.as_user(PARTNER_ADMIN, cloud, connect_cloud_account)
+
+		(sent,) = cloud.calls(REGISTER)
+		self.assertEqual(
+			(sent["owner_email"], result), (PARTNER_ADMIN, {"completed": False, "url": REGISTER_URL})
+		)
+		self.assertTrue(sent["return_url"].endswith("/connect/partner-onboarding"))
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER, "cloud_registration"), "Pending")
+
+	def test_only_the_admin_can_connect_frappe_cloud(self):
+		if not frappe.db.exists("User", STAFF):
+			frappe.get_doc({"doctype": "User", "email": STAFF, "first_name": "Staff"}).insert(
+				ignore_permissions=True
+			)
+		if not frappe.db.exists("Connect Partner Member", {"partner": PARTNER, "user": STAFF}):
+			frappe.get_doc(
+				{"doctype": "Connect Partner Member", "partner": PARTNER, "user": STAFF, "is_admin": 0}
+			).insert(ignore_permissions=True)
+		with self.assertRaises(frappe.PermissionError):
+			self.as_user(STAFF, FakeCloud(), connect_cloud_account)
+
+	def test_the_step_is_done_once_frappe_cloud_has_the_team(self):
+		waiting = FakeCloud(**{REGISTRATION: {"status": "Pending", "team": None}})
+		self.assertEqual(
+			self.as_user(PARTNER_ADMIN, waiting, get_cloud_account_status),
+			{"enabled": True, "completed": False},
+		)
+
+		done = FakeCloud(**{REGISTRATION: {"status": "Completed", "team": "TEAM-00002"}})
+		self.assertEqual(
+			self.as_user(PARTNER_ADMIN, done, get_cloud_account_status), {"enabled": True, "completed": True}
+		)
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER, "cloud_registration"), "Completed")
+
+	def test_an_application_needs_the_frappe_cloud_account_to_be_submitted(self):
+		application = frappe.new_doc("Partner Application")
+		application.partner = PARTNER
+		with self.assertRaises(frappe.ValidationError):
+			application._validate_cloud_account()
+
+		frappe.db.set_value("Partner", PARTNER, "cloud_registration", "Completed")
+		application._validate_cloud_account()
