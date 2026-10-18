@@ -553,7 +553,98 @@
             },
             {
              "baseStyles": {
-              "marginTop": "16px",
+              "alignItems": "center",
+              "display": "{{ isGuest ? 'none' : 'flex' }}",
+              "flexDirection": "row",
+              "gap": "8px",
+              "marginTop": "18px"
+             },
+             "children": [
+              {
+               "componentId": "spc-agree-check",
+               "componentName": "Checkbox",
+               "componentProps": {
+                "modelValue": {
+                 "$type": "variable",
+                 "name": "termsAgreed"
+                },
+                "size": "sm"
+               }
+              },
+              {
+               "baseStyles": {
+                "alignItems": "baseline",
+                "display": "flex",
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": "4px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-7)",
+                  "cursor": "pointer",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.01em",
+                  "lineHeight": "1.5",
+                  "margin": "0px"
+                 },
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "termsAgreed.value = !termsAgreed.value;"
+                  }
+                 },
+                 "componentId": "spc-agree-text",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "",
+                  "tag": "span",
+                  "text": "I agree to the"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "cursor": "pointer",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.01em",
+                  "lineHeight": "1.5",
+                  "margin": "0px",
+                  "textDecoration": "underline",
+                  "textUnderlineOffset": "2px"
+                 },
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "showTerms.value = true;"
+                  }
+                 },
+                 "componentId": "spc-agree-terms",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "",
+                  "tag": "span",
+                  "text": "Starter Pack terms"
+                 }
+                }
+               ],
+               "componentId": "spc-agree-label",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "componentId": "spc-agree",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "marginTop": "{{ isGuest ? '16px' : '10px' }}",
               "width": "100%"
              },
              "componentEvents": {
@@ -566,8 +657,10 @@
              "componentId": "spc-checkout",
              "componentName": "Button",
              "componentProps": {
+              "disabled": "{{ !isGuest && !termsAgreed }}",
               "iconLeft": "{{ isGuest ? 'lucide-user' : '' }}",
-              "label": "{{ isGuest ? 'Sign up to continue' : 'Continue to checkout' }}",
+              "label": "{{ isGuest ? 'Sign up to continue' : 'Check out' }}",
+              "loading": "{{ checkingOut }}",
               "size": "md",
               "variant": "solid"
              }
@@ -809,6 +902,145 @@
      "componentId": "content-wrapper",
      "componentName": "container",
      "originalElement": "div"
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "20px",
+        "paddingBottom": "4px"
+       },
+       "componentId": "spc-terms-list",
+       "componentName": "Repeater",
+       "componentProps": {
+        "data": "{{ terms }}",
+        "dataKey": "title",
+        "emptyStateMessage": ""
+       },
+       "componentSlots": {
+        "default": {
+         "parentBlockId": "spc-terms-list",
+         "slotContent": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-9)",
+              "fontSize": "14.5px",
+              "fontWeight": "500",
+              "letterSpacing": "0.01em",
+              "lineHeight": "1.5",
+              "margin": "0px"
+             },
+             "componentId": "spc-terms-heading",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "",
+              "tag": "h3",
+              "text": "{{ dataItem.title }}"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "6px",
+              "marginTop": "5px",
+              "paddingLeft": "4px"
+             },
+             "componentId": "spc-terms-items",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ dataItem.items }}",
+              "dataKey": "text",
+              "emptyStateMessage": ""
+             },
+             "componentSlots": {
+              "default": {
+               "parentBlockId": "spc-terms-items",
+               "slotContent": [
+                {
+                 "baseStyles": {
+                  "alignItems": "flex-start",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "gap": "8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-4)",
+                    "flexShrink": "0",
+                    "fontSize": "14px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.01em",
+                    "lineHeight": "1.5",
+                    "margin": "0px"
+                   },
+                   "componentId": "spc-terms-bullet",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "",
+                    "tag": "span",
+                    "text": "\u2022"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-7)",
+                    "fontSize": "14px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.005em",
+                    "lineHeight": "1.5",
+                    "margin": "0px"
+                   },
+                   "componentId": "spc-terms-text",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "",
+                    "tag": "span",
+                    "text": "{{ dataItem.text }}"
+                   }
+                  }
+                 ],
+                 "componentId": "spc-terms-item",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "slotId": "spc-terms-items:default",
+               "slotName": "default"
+              }
+             }
+            }
+           ],
+           "componentId": "spc-terms-section",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "slotId": "spc-terms-list:default",
+         "slotName": "default"
+        }
+       }
+      }
+     ],
+     "componentId": "spc-terms-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "showTerms"
+      },
+      "size": "xl",
+      "title": "Terms and conditions"
+     }
     }
    ],
    "componentId": "root",
@@ -822,7 +1054,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-10-18 17:08:22.293398",
+ "modified": "2026-10-18 18:00:01.551532",
  "modified_by": "Administrator",
  "name": "starter_pack_cart",
  "owner": "Administrator",
@@ -842,5 +1074,17 @@
   }
  ],
  "route": "/starter-pack-cart",
- "studio_app": "connect"
+ "studio_app": "connect",
+ "variables": [
+  {
+   "initial_value": "false",
+   "variable_name": "termsAgreed",
+   "variable_type": "Boolean"
+  },
+  {
+   "initial_value": "false",
+   "variable_name": "showTerms",
+   "variable_type": "Boolean"
+  }
+ ]
 }

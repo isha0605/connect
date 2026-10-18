@@ -1,11 +1,16 @@
 // The Starter Pack cart, shared by the landing, details and cart pages: which packs the
 // visitor has picked, kept in this browser until checkout. Core and Core + Manufacturing
 // are alternatives, so picking one replaces the other. Also the terms every pack is sold on.
+//
+// Each cart pack is one or more catalog packs, and checkout charges for those at the catalog's
+// prices, so once the catalog is in, the cart shows its prices, hours and GST rate too. The
+// figures below are only what shows until then.
 
 import { computed, ref } from "vue"
+import { rememberOrderKey } from "@app/utils/checkoutSession"
 
 const STORAGE_KEY = "connect_starter_pack_cart"
-const GST_RATE = 18
+const DEFAULT_GST_RATE = 18
 
 export const CART_PACKS = {
 	core: {
@@ -14,7 +19,7 @@ export const CART_PACKS = {
 		hours: "5 hrs within 5 sessions",
 		price: 10000,
 		logo: "/assets/connect/images/app_icons/erpnext.png",
-		// the catalog packs checkout charges for
+		// the catalog packs an order holds for it
 		catalogPacks: ["accounts_sales_purchase_stock"],
 	},
 	"core-manufacturing": {
@@ -35,6 +40,21 @@ export const CART_PACKS = {
 	},
 }
 const BASE_PACKS = ["core", "core-manufacturing"]
+
+// Which cart packs a set of catalog packs makes up, biggest first: an order of
+// accounts_sales_purchase_stock + manufacturing is Core + Manufacturing, not Core.
+export function cartPacksFor(catalogKeys) {
+	const left = new Set(catalogKeys)
+	const found = []
+	const biggestFirst = Object.entries(CART_PACKS).sort(([, a], [, b]) => b.catalogPacks.length - a.catalogPacks.length)
+	for (const [key, pack] of biggestFirst) {
+		if (pack.catalogPacks.every((k) => left.has(k))) {
+			pack.catalogPacks.forEach((k) => left.delete(k))
+			found.push(key)
+		}
+	}
+	return found
+}
 
 export const STARTER_PACK_TERMS = [
 	{ title: "Eligibility", items: [{ text: "For Frappe Cloud customers on plans of ₹820/month and above" }] },
@@ -79,8 +99,11 @@ function readCart() {
 	}
 }
 
-// one cart for every page in this tab; the browser keeps it across reloads
+// one cart and one catalog for every page in this tab; the browser keeps the cart across reloads
 const cartKeys = ref(readCart())
+const catalog = ref(null)
+let catalogRequested = false
+const checkingOut = ref(false)
 
 function saveCart(keys) {
 	cartKeys.value = keys
@@ -91,17 +114,49 @@ function saveCart(keys) {
 	}
 }
 
+// After a paid order: what was in the cart has been bought.
+export function clearCart() {
+	saveCart([])
+}
+
 export function money(amount) {
 	return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount)
 }
 
-export function starterPackCart(context) {
-	const { router, myContext } = context
+// A cart pack priced as checkout will charge it: the sum of its catalog packs.
+function priced(key) {
+	const pack = CART_PACKS[key]
+	const rows = (catalog.value?.packs || []).filter((p) => pack.catalogPacks.includes(p.pack_key))
+	if (rows.length !== pack.catalogPacks.length) return { price: pack.price, hours: pack.hours }
+	const totalHours = rows.reduce((sum, p) => sum + p.total_hours, 0)
+	return { price: rows.reduce((sum, p) => sum + p.price, 0), hours: `${totalHours} hrs within 5 sessions` }
+}
 
-	const items = computed(() => cartKeys.value.map((key) => ({ key, ...CART_PACKS[key], priceLabel: money(CART_PACKS[key].price) })))
+export function starterPackCart(context) {
+	const { router, myContext, call, toast } = context
+
+	if (!catalogRequested && call) {
+		catalogRequested = true
+		call("connect.api.starter_pack.get_catalog")
+			.then((data) => {
+				catalog.value = data
+			})
+			.catch(() => {
+				// the cart still shows its own figures; checkout prices the order regardless
+				catalogRequested = false
+			})
+	}
+
+	const gstRate = computed(() => catalog.value?.gst_rate ?? DEFAULT_GST_RATE)
+	const items = computed(() =>
+		cartKeys.value.map((key) => {
+			const { price, hours } = priced(key)
+			return { key, ...CART_PACKS[key], price, hours, priceLabel: money(price) }
+		}),
+	)
 	const cartCount = computed(() => cartKeys.value.length)
 	const subtotal = computed(() => items.value.reduce((sum, item) => sum + item.price, 0))
-	const gst = computed(() => Math.round((subtotal.value * GST_RATE) / 100))
+	const gst = computed(() => Math.round((subtotal.value * gstRate.value) / 100))
 
 	function inCart(key) {
 		return cartKeys.value.includes(key)
@@ -128,13 +183,43 @@ export function starterPackCart(context) {
 
 	const isGuest = computed(() => !myContext?.data || myContext.data.user === "Guest")
 
-	// Checkout charges for catalog packs; someone signed out signs up first and carries on there.
-	function checkout() {
-		const packs = [...new Set(items.value.flatMap((item) => item.catalogPacks))]
-		if (!packs.length) return
-		const target = router.resolve({ path: "/starter-pack-checkout", query: { packs: packs.join(",") } }).fullPath
-		if (isGuest.value) router.push({ path: "/login-signup-redesign", query: { next: target } })
-		else router.push(target)
+	// Places the order for the cart's catalog packs and sends the buyer to Razorpay. Razorpay
+	// sends them back to the checkout page, which checks the payment with the gateway and opens
+	// the project; the cart empties there, once the order is paid. Someone signed out signs up
+	// first and comes back to the cart. An order needs a company and an email: an account without
+	// either (Administrator's id is no email) goes to the checkout page's form, which asks.
+	async function checkout() {
+		const packs = [...new Set(cartKeys.value.flatMap((key) => CART_PACKS[key].catalogPacks))]
+		if (!packs.length || checkingOut.value) return
+		if (isGuest.value) {
+			router.push({ path: "/login-signup-redesign", query: { next: "/starter-pack-cart" } })
+			return
+		}
+		const account = myContext.data
+		const company = account.customer?.customer_name
+		if (!company || !String(account.user).includes("@")) {
+			router.push({ path: "/starter-pack-checkout", query: { packs: packs.join(",") } })
+			return
+		}
+
+		checkingOut.value = true
+		try {
+			// the account has no phone number; the buyer's last order may
+			const last = await call("connect.api.starter_pack.last_checkout_details", { email: account.user }).catch(() => null)
+			const res = await call("connect.api.starter_pack.checkout", {
+				packs: JSON.stringify(packs),
+				buyer_name: account.full_name || account.user,
+				buyer_email: account.user,
+				company_name: company,
+				phone: last?.phone || undefined,
+				terms_accepted: 1,
+			})
+			rememberOrderKey(res)
+			window.location.href = res.payment_url
+		} catch (err) {
+			checkingOut.value = false
+			toast.error((err && err.messages && err.messages.join(", ")) || "Couldn't start the payment")
+		}
 	}
 
 	return {
@@ -143,13 +228,14 @@ export function starterPackCart(context) {
 		cartSubtotal: computed(() => money(subtotal.value)),
 		cartGst: computed(() => money(gst.value)),
 		cartTotal: computed(() => money(subtotal.value + gst.value)),
-		gstRate: GST_RATE,
+		gstRate,
 		inCart,
 		addToCart,
 		removeFromCart,
 		toggleCart,
 		viewCart,
 		checkout,
+		checkingOut,
 		isGuest,
 	}
 }
