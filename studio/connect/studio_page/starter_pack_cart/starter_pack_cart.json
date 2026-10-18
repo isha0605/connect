@@ -1,0 +1,846 @@
+{
+ "allow_guest": 1,
+ "blocks": [
+  {
+   "baseStyles": {
+    "backgroundColor": "var(--surface-base)",
+    "display": "flex",
+    "flexDirection": "row",
+    "height": "100%",
+    "overflowX": "hidden",
+    "width": "inherit"
+   },
+   "blockName": "body",
+   "children": [
+    {
+     "baseStyles": {
+      "display": "flex"
+     },
+     "blockName": "AppSidebar",
+     "componentId": "appsidebar-spc",
+     "componentName": "appsidebar",
+     "isStudioComponent": true
+    },
+    {
+     "baseStyles": {
+      "backgroundColor": "var(--surface-base)",
+      "display": "flex",
+      "flex": "1",
+      "flexDirection": "column",
+      "minWidth": "0px",
+      "overflow": "auto"
+     },
+     "children": [
+      {
+       "baseStyles": {
+        "alignItems": "center",
+        "borderBottom": "1px solid var(--outline-gray-1)",
+        "display": "flex",
+        "flexDirection": "row",
+        "flexShrink": "0",
+        "padding": "12px 20px 12px 22px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "6px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "cursor": "pointer",
+            "fontSize": "16px",
+            "fontWeight": "420",
+            "letterSpacing": "0.02em",
+            "lineHeight": "1.5",
+            "margin": "0px"
+           },
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "router.push('/starter-pack-landing');"
+            }
+           },
+           "componentId": "spc-crumb-packs",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "",
+            "tag": "span",
+            "text": "Starter Packs"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-4)",
+            "fontSize": "16px",
+            "fontWeight": "420",
+            "letterSpacing": "0.02em",
+            "lineHeight": "1.5",
+            "margin": "0px"
+           },
+           "componentId": "spc-crumb-sep",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "",
+            "tag": "span",
+            "text": "/"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-9)",
+            "fontSize": "16px",
+            "fontWeight": "420",
+            "letterSpacing": "0.02em",
+            "lineHeight": "1.5",
+            "margin": "0px"
+           },
+           "componentId": "spc-crumb-cart",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "",
+            "tag": "span",
+            "text": "Cart"
+           }
+          }
+         ],
+         "componentId": "spc-crumbs",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "componentId": "header-row",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "alignItems": "flex-start",
+        "alignSelf": "center",
+        "display": "{{ cartCount ? 'flex' : 'none' }}",
+        "flexDirection": "row",
+        "gap": "64px",
+        "maxWidth": "1040px",
+        "padding": "32px 20px 96px 20px",
+        "width": "100%"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1",
+          "flexDirection": "column",
+          "minWidth": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-9)",
+            "fontSize": "16px",
+            "fontWeight": "500",
+            "letterSpacing": "0.02em",
+            "lineHeight": "1.4",
+            "margin": "0px"
+           },
+           "componentId": "spc-cart-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "",
+            "tag": "h1",
+            "text": "Your cart"
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "0px",
+            "marginTop": "24px"
+           },
+           "componentId": "spc-items",
+           "componentName": "Repeater",
+           "componentProps": {
+            "data": "{{ cartItems }}",
+            "dataKey": "key",
+            "emptyStateMessage": ""
+           },
+           "componentSlots": {
+            "default": {
+             "parentBlockId": "spc-items",
+             "slotContent": [
+              {
+               "baseStyles": {
+                "alignItems": "flex-start",
+                "borderTop": "{{ dataIndex > 0 ? '1px solid var(--outline-gray-1)' : 'none' }}",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "16px",
+                "padding": "{{ dataIndex > 0 ? '20px 0px' : '0px 0px 20px 0px' }}"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "backgroundColor": "var(--surface-gray-2)",
+                  "borderRadius": "12px",
+                  "display": "flex",
+                  "flexShrink": "0",
+                  "height": "56px",
+                  "justifyContent": "center",
+                  "position": "relative",
+                  "width": "56px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-7)",
+                    "flexShrink": "0",
+                    "height": "20px",
+                    "width": "20px"
+                   },
+                   "componentId": "spc-item-icon",
+                   "componentName": "Icon",
+                   "componentProps": {
+                    "icon": "lucide-package"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "borderRadius": "5px",
+                    "bottom": "0px",
+                    "boxShadow": "0 0 0 2px var(--surface-base)",
+                    "display": "flex",
+                    "position": "absolute",
+                    "right": "-1px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "display": "flex"
+                     },
+                     "componentId": "spc-item-logo",
+                     "componentName": "HTML",
+                     "componentProps": {
+                      "html": "{{ '<img src=\"' + dataItem.logo + '\" alt=\"\" style=\"width:16px;height:16px;display:block;object-fit:contain\">' }}"
+                     }
+                    }
+                   ],
+                   "componentId": "spc-item-badge",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  }
+                 ],
+                 "componentId": "spc-item-tile",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "display": "flex",
+                  "flex": "1",
+                  "flexDirection": "column",
+                  "minWidth": "0px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-9)",
+                    "fontSize": "16px",
+                    "fontWeight": "600",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "1.4",
+                    "margin": "0px"
+                   },
+                   "componentId": "spc-item-title",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "",
+                    "tag": "h3",
+                    "text": "{{ dataItem.title }}"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)",
+                    "fontSize": "13px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.01em",
+                    "lineHeight": "1.5",
+                    "margin": "0px",
+                    "marginTop": "4px"
+                   },
+                   "componentId": "spc-item-modules",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "",
+                    "tag": "p",
+                    "text": "{{ dataItem.modules }}"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)",
+                    "fontSize": "13px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.01em",
+                    "lineHeight": "1.5",
+                    "margin": "0px",
+                    "marginTop": "4px"
+                   },
+                   "componentId": "spc-item-hours",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "",
+                    "tag": "p",
+                    "text": "{{ dataItem.hours }}"
+                   }
+                  }
+                 ],
+                 "componentId": "spc-item-info",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "flex-end",
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "flexShrink": "0"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-9)",
+                    "fontSize": "17px",
+                    "fontWeight": "600",
+                    "letterSpacing": "0.01em",
+                    "lineHeight": "1.4",
+                    "margin": "0px"
+                   },
+                   "componentId": "spc-item-price",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "",
+                    "tag": "p",
+                    "text": "{{ dataItem.priceLabel }}"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)",
+                    "cursor": "pointer",
+                    "fontSize": "14px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.01em",
+                    "lineHeight": "1.5",
+                    "margin": "0px",
+                    "marginTop": "6px"
+                   },
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "removeFromCart(dataItem.key);"
+                    }
+                   },
+                   "componentId": "spc-item-remove",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "",
+                    "tag": "span",
+                    "text": "Remove"
+                   }
+                  }
+                 ],
+                 "componentId": "spc-item-side",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "componentId": "spc-item",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "slotId": "spc-items:default",
+             "slotName": "default"
+            }
+           }
+          }
+         ],
+         "componentId": "spc-cart",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "0 0 300px",
+          "flexDirection": "column",
+          "gap": "16px",
+          "marginTop": "4px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "border": "1px solid var(--outline-gray-2)",
+            "borderRadius": "12px",
+            "display": "flex",
+            "flexDirection": "column",
+            "padding": "16px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "6px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "display": "flex",
+                "flexDirection": "row",
+                "justifyContent": "space-between"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.01em",
+                  "lineHeight": "1.5",
+                  "margin": "0px"
+                 },
+                 "componentId": "spc-subtotal-label",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "",
+                  "tag": "span",
+                  "text": "Subtotal"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.01em",
+                  "lineHeight": "1.5",
+                  "margin": "0px"
+                 },
+                 "componentId": "spc-subtotal-value",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "",
+                  "tag": "span",
+                  "text": "{{ cartSubtotal }}"
+                 }
+                }
+               ],
+               "componentId": "spc-subtotal",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "display": "flex",
+                "flexDirection": "row",
+                "justifyContent": "space-between"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.01em",
+                  "lineHeight": "1.5",
+                  "margin": "0px"
+                 },
+                 "componentId": "spc-gst-label",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "",
+                  "tag": "span",
+                  "text": "{{ gstRate + '% GST' }}"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.01em",
+                  "lineHeight": "1.5",
+                  "margin": "0px"
+                 },
+                 "componentId": "spc-gst-value",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "",
+                  "tag": "span",
+                  "text": "{{ cartGst }}"
+                 }
+                }
+               ],
+               "componentId": "spc-gst",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "componentId": "spc-lines",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "borderTop": "1px solid var(--outline-gray-2)",
+              "display": "flex",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "marginTop": "12px",
+              "paddingTop": "12px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-9)",
+                "fontSize": "14px",
+                "fontWeight": "500",
+                "letterSpacing": "0.01em",
+                "lineHeight": "1.5",
+                "margin": "0px"
+               },
+               "componentId": "spc-total-label",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "",
+                "tag": "span",
+                "text": "Total"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-9)",
+                "fontSize": "18px",
+                "fontWeight": "600",
+                "letterSpacing": "0.01em",
+                "lineHeight": "1.4",
+                "margin": "0px"
+               },
+               "componentId": "spc-total-value",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "",
+                "tag": "span",
+                "text": "{{ cartTotal }}"
+               }
+              }
+             ],
+             "componentId": "spc-total",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "marginTop": "16px",
+              "width": "100%"
+             },
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "checkout();"
+              }
+             },
+             "componentId": "spc-checkout",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "{{ isGuest ? 'lucide-user' : '' }}",
+              "label": "{{ isGuest ? 'Sign up to continue' : 'Continue to checkout' }}",
+              "size": "md",
+              "variant": "solid"
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-6)",
+              "fontSize": "13px",
+              "fontWeight": "420",
+              "letterSpacing": "0.01em",
+              "lineHeight": "1.5",
+              "margin": "0px",
+              "marginTop": "12px",
+              "textAlign": "center"
+             },
+             "componentId": "spc-hosting",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "",
+              "tag": "p",
+              "text": "Plus hosting from \u20b9820/month, billed later"
+             }
+            }
+           ],
+           "componentId": "spc-summary",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "border": "1px solid var(--outline-gray-2)",
+            "borderRadius": "12px",
+            "display": "flex",
+            "flexDirection": "column",
+            "padding": "16px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-9)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "letterSpacing": "0.01em",
+              "lineHeight": "1.5",
+              "margin": "0px"
+             },
+             "componentId": "spc-how-title",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "",
+              "tag": "h2",
+              "text": "How it works"
+             }
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "0px",
+              "marginTop": "12px"
+             },
+             "componentId": "spc-steps",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ howItWorks }}",
+              "dataKey": "text",
+              "emptyStateMessage": ""
+             },
+             "componentSlots": {
+              "default": {
+               "parentBlockId": "spc-steps",
+               "slotContent": [
+                {
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "gap": "11px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexShrink": "0",
+                    "justifyContent": "center",
+                    "position": "relative",
+                    "width": "16px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "backgroundColor": "var(--ink-gray-4)",
+                      "borderRadius": "9999px",
+                      "height": "6px",
+                      "marginTop": "7px",
+                      "width": "6px"
+                     },
+                     "componentId": "spc-step-dot",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "backgroundColor": "var(--outline-gray-3)",
+                      "bottom": "-7px",
+                      "display": "{{ dataIndex < howItWorks.length - 1 ? 'block' : 'none' }}",
+                      "left": "7.5px",
+                      "position": "absolute",
+                      "top": "13px",
+                      "width": "1px"
+                     },
+                     "componentId": "spc-step-line",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    }
+                   ],
+                   "componentId": "spc-step-rail",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-7)",
+                    "fontSize": "13px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.01em",
+                    "lineHeight": "1.5",
+                    "margin": "0px",
+                    "paddingBottom": "8px"
+                   },
+                   "componentId": "spc-step-text",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "",
+                    "tag": "p",
+                    "text": "{{ dataItem.text }}"
+                   }
+                  }
+                 ],
+                 "componentId": "spc-step",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "slotId": "spc-steps:default",
+               "slotName": "default"
+              }
+             }
+            }
+           ],
+           "componentId": "spc-how",
+           "componentName": "container",
+           "originalElement": "div"
+          }
+         ],
+         "componentId": "spc-aside",
+         "componentName": "container",
+         "mobileStyles": {
+          "flex": "none",
+          "width": "100%"
+         },
+         "originalElement": "div"
+        }
+       ],
+       "componentId": "spc-body",
+       "componentName": "container",
+       "mobileStyles": {
+        "flexDirection": "column",
+        "gap": "32px",
+        "padding": "20px 16px 64px 16px"
+       },
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "alignItems": "center",
+        "display": "{{ cartCount ? 'none' : 'flex' }}",
+        "flex": "1",
+        "flexDirection": "column",
+        "justifyContent": "center",
+        "padding": "48px 20px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-7)",
+          "flexShrink": "0",
+          "height": "22px",
+          "width": "22px"
+         },
+         "componentId": "spc-empty-icon",
+         "componentName": "Icon",
+         "componentProps": {
+          "icon": "lucide-shopping-bag"
+         }
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-8)",
+          "fontSize": "16px",
+          "fontWeight": "500",
+          "letterSpacing": "0.02em",
+          "lineHeight": "1.4",
+          "margin": "0px",
+          "marginTop": "12px"
+         },
+         "componentId": "spc-empty-title",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "",
+          "tag": "p",
+          "text": "No packs added"
+         }
+        },
+        {
+         "baseStyles": {
+          "marginTop": "16px"
+         },
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "router.push('/starter-pack-landing');"
+          }
+         },
+         "componentId": "spc-empty-explore",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "Explore Starter Packs",
+          "size": "sm",
+          "variant": "solid"
+         }
+        }
+       ],
+       "componentId": "spc-empty",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "componentId": "content-wrapper",
+     "componentName": "container",
+     "originalElement": "div"
+    }
+   ],
+   "componentId": "root",
+   "componentName": "div",
+   "originalElement": "body"
+  }
+ ],
+ "creation": "2026-10-18 17:02:07.653007",
+ "docstatus": 0,
+ "doctype": "Studio Page",
+ "frappe_app": "connect",
+ "idx": 0,
+ "is_standard": 1,
+ "modified": "2026-10-18 17:08:22.293398",
+ "modified_by": "Administrator",
+ "name": "starter_pack_cart",
+ "owner": "Administrator",
+ "page_name": "page-f99dd698",
+ "page_title": "Starter Pack Cart",
+ "published": 1,
+ "resources": [
+  {
+   "auto": 1,
+   "fetch_document_using_filters": 0,
+   "limit": 0,
+   "method": "GET",
+   "params": "{}",
+   "resource_name": "myContext",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.account.get_my_context"
+  }
+ ],
+ "route": "/starter-pack-cart",
+ "studio_app": "connect"
+}
