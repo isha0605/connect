@@ -1,8 +1,9 @@
 // Starter Pack details: what one pack includes, opened from the landing page's "What's
 // included" as /starter-pack-details?pack=<key>. Every pack shares the layout and the terms;
-// only the content below changes. An unknown key shows Core.
+// only the content below changes. An unknown key shows Core. The cart lives in @app/utils/starterPackCart.
 
 import { computed } from "vue"
+import { starterPackCart } from "@app/utils/starterPackCart"
 
 const SETUP = {
 	key: "setup",
@@ -165,7 +166,8 @@ const TERMS = [
 export default function setup(context) {
 	const { route } = context
 
-	const pack = computed(() => PACKS[String(route.query.pack || "")] || PACKS.core)
+	const packKey = computed(() => (String(route.query.pack || "") in PACKS ? String(route.query.pack) : "core"))
+	const pack = computed(() => PACKS[packKey.value])
 
-	return { pack, terms: TERMS }
+	return { ...starterPackCart(context), pack, packKey, terms: TERMS }
 }

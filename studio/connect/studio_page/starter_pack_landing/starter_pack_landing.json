@@ -619,11 +619,19 @@
                      "baseStyles": {
                       "width": "100%"
                      },
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleCart('core');"
+                      }
+                     },
                      "componentId": "spl-core-choose",
                      "componentName": "Button",
                      "componentProps": {
-                      "label": "Choose Core",
-                      "variant": "solid"
+                      "iconLeft": "{{ inCart('core') ? 'lucide-check' : '' }}",
+                      "label": "{{ inCart('core') ? 'In cart' : 'Choose Core' }}",
+                      "variant": "{{ inCart('core') ? 'subtle' : 'solid' }}"
                      },
                      "componentSlots": {}
                     },
@@ -943,11 +951,19 @@
                      "baseStyles": {
                       "width": "100%"
                      },
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleCart('core-manufacturing');"
+                      }
+                     },
                      "componentId": "spl-core-mfg-choose",
                      "componentName": "Button",
                      "componentProps": {
-                      "label": "Choose Core + Manufacturing",
-                      "variant": "solid"
+                      "iconLeft": "{{ inCart('core-manufacturing') ? 'lucide-check' : '' }}",
+                      "label": "{{ inCart('core-manufacturing') ? 'In cart' : 'Choose Core + Manufacturing' }}",
+                      "variant": "{{ inCart('core-manufacturing') ? 'subtle' : 'solid' }}"
                      },
                      "componentSlots": {}
                     },
@@ -1225,11 +1241,19 @@
                    "baseStyles": {
                     "width": "100%"
                    },
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "toggleCart('hr-payroll');"
+                    }
+                   },
                    "componentId": "spl-hr-choose",
                    "componentName": "Button",
                    "componentProps": {
-                    "label": "Add to cart",
-                    "variant": "solid"
+                    "iconLeft": "{{ inCart('hr-payroll') ? 'lucide-check' : '' }}",
+                    "label": "{{ inCart('hr-payroll') ? 'In cart' : 'Add to cart' }}",
+                    "variant": "{{ inCart('hr-payroll') ? 'subtle' : 'solid' }}"
                    },
                    "componentSlots": {}
                   },
@@ -1293,24 +1317,6 @@
                "children": [
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-6)",
-                  "fontSize": "13px",
-                  "fontWeight": "420",
-                  "letterSpacing": "0.02em",
-                  "lineHeight": "1.5",
-                  "margin": "0px"
-                 },
-                 "componentId": "spl-total-label",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "",
-                  "tag": "p",
-                  "text": "Total"
-                 },
-                 "componentSlots": {}
-                },
-                {
-                 "baseStyles": {
                   "color": "var(--ink-gray-9)",
                   "fontSize": "20px",
                   "fontWeight": "600",
@@ -1323,7 +1329,7 @@
                  "componentProps": {
                   "fontSize": "",
                   "tag": "p",
-                  "text": "\u20b90"
+                  "text": "{{ cartSubtotal }}"
                  },
                  "componentSlots": {}
                 },
@@ -1354,11 +1360,18 @@
                "originalElement": "div"
               },
               {
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "viewCart();"
+                }
+               },
                "componentId": "spl-view-cart",
                "componentName": "Button",
                "componentProps": {
                 "iconLeft": "lucide-shopping-bag",
-                "label": "View cart",
+                "label": "{{ cartCount ? 'View cart (' + cartCount + ')' : 'View cart' }}",
                 "variant": "subtle"
                },
                "componentSlots": {}
