@@ -4,6 +4,16 @@ from frappe.desk.doctype.notification_log.notification_log import enqueue_create
 
 from connect.permissions import _get_partner_admin
 
+# The documents Connect notifies people about. Anything else in Notification Log (Frappe's own
+# impersonation or mail-server alerts) stays out of Connect's panel and unread count.
+CONNECT_NOTIFICATION_DOCTYPES = (
+	"Connect Thread",
+	"Connect DM Thread",
+	"Customer Project",
+	"Project Quote",
+	"Starter Pack Order",
+)
+
 
 def _notification_targets(doc):
 	"""Returns everyone else currently in the thread, who's allowed to know this message exists."""
