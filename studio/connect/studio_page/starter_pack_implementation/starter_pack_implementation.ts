@@ -206,7 +206,12 @@ export default function setup(context) {
 	if (bookedOpen.value) {
 		const query = { ...route.query }
 		delete query.booked
-		router.replace({ path: route.path, query })
+		// Setup runs while the navigation here is still resolving, and replacing the URL then
+		// cancels it and loads the page afresh without ?booked. So tidy the URL once it lands.
+		const stop = router.afterEach(() => {
+			stop()
+			router.replace({ path: route.path, query })
+		})
 	}
 
 	function dismissBooked() {
