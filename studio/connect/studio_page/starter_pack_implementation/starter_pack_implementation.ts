@@ -2,6 +2,7 @@ import { computed, ref } from "vue"
 import { toast, call } from "frappe-ui"
 import { orderKey } from "@app/utils/checkoutSession"
 import { MODULE_ICONS } from "@app/utils/recommendation"
+import { CART_PACKS, cartPacksFor, clearCart } from "@app/utils/starterPackCart"
 
 // "Set up your Starter Pack": where checkout sends the buyer once their order is paid
 // (/starter-pack-implementation?order=SPO-…). The right panel and "Pay upfront" come from
@@ -199,11 +200,13 @@ export default function setup(context) {
 		toast.info("Feedback form is coming soon.")
 	}
 
-	// ---- "Your Starter Packs are booked" ----
+	// ---- "Welcome to your project!" ----
 	// Checkout redirects here with ?booked=1 the moment the gateway confirms payment.
 	// The flag is dropped from the URL on arrival so a reload doesn't greet them twice.
 	const bookedOpen = ref(Boolean(route.query.booked))
 	if (bookedOpen.value) {
+		// the order is paid, so what was in the cart has been bought
+		clearCart()
 		const query = { ...route.query }
 		delete query.booked
 		// Setup runs while the navigation here is still resolving, and replacing the URL then
@@ -213,6 +216,28 @@ export default function setup(context) {
 			router.replace({ path: route.path, query })
 		})
 	}
+
+	// What was bought, as the cart names it. Orders from before the cart could hold a catalog
+	// pack on its own (just HR); that shows under its own name.
+	const bookedPacks = computed(() => {
+		const rows = order.value?.packs || []
+		const keys = cartPacksFor(rows.map((row) => row.starter_pack))
+		const covered = new Set(keys.flatMap((key) => CART_PACKS[key].catalogPacks))
+		const singles = rows
+			.filter((row) => !covered.has(row.starter_pack))
+			.map((row) => ({
+				key: row.starter_pack,
+				title: row.pack_name,
+				hours: row.total_hours ? `${row.total_hours} hrs` : "",
+				logo: CART_PACKS["hr-payroll"].catalogPacks.includes(row.starter_pack)
+					? CART_PACKS["hr-payroll"].logo
+					: CART_PACKS.core.logo,
+			}))
+		// hours as sold, from the order's own lines
+		const soldHours = (key) =>
+			rows.filter((row) => CART_PACKS[key].catalogPacks.includes(row.starter_pack)).reduce((sum, row) => sum + (row.total_hours || 0), 0)
+		return [...keys.map((key) => ({ key, ...CART_PACKS[key], hours: `${soldHours(key)} hrs within 5 sessions` })), ...singles]
+	})
 
 	function dismissBooked() {
 		bookedOpen.value = false
@@ -272,6 +297,7 @@ export default function setup(context) {
 		openFeedback,
 		accountMenuOptions,
 		bookedOpen,
+		bookedPacks,
 		dismissBooked,
 		downloadInvoice,
 	}
