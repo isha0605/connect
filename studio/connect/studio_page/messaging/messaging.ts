@@ -638,12 +638,20 @@ export default function setup(context) {
 		}
 	}
 
+	// A message a link asked to show (?message=, a search result, a notification). Kept until its
+	// flash ends, so a messages reload that lands after the jump re-shows it instead of snapping
+	// the pane back to the bottom. Declared before selectThread, which can run while the page is
+	// still being set up (when the inbox lists are already loaded).
+	let jumpTarget = ""
+
 	// Accepts either a unified-list item ({name, convType, ...}) or a bare thread name (still
 	// supported for the odd caller that only has a company-thread id on hand) — always resolves
 	// to a definite convType so every step below knows which doctype/resource it's dealing with.
 	function selectThread(item) {
 		const name = typeof item === "string" ? item : item.name
 		const convType = typeof item === "string" ? "company" : item.convType || "company"
+		// Opening a thread lands on its newest message; a link's message is re-set right after.
+		jumpTarget = ""
 		selectedThread.value = name
 		selectedThreadType.value = convType
 		showMembersDialog.value = false
@@ -935,6 +943,10 @@ export default function setup(context) {
 			// one manages the scroll position itself (see loadOlderMessages) — jumping to the
 			// bottom here too would undo it the instant the older page arrives.
 			if (isLoadingOlderMessages) return
+			if (jumpTarget) {
+				scrollToMessage(jumpTarget)
+				return
+			}
 			scrollMessagesToBottom()
 		},
 	)
@@ -3243,19 +3255,24 @@ export default function setup(context) {
 	// Waits for the conversation's messages to render (up to ~2s), scrolls the message into view and flashes
 	// its row so it's easy to spot; the flash fades on its own.
 	async function scrollToMessage(name) {
+		jumpTarget = name
 		for (let attempt = 0; attempt < 20; attempt++) {
 			await new Promise((resolve) => setTimeout(resolve, 100))
 			const el = document.querySelector(`[data-message-id="${name}"]`)
 			if (el) {
+				stickToBottom = false
 				el.scrollIntoView({ behavior: "smooth", block: "center" })
 				flashedMessage.value = name
 				clearTimeout(flashTimer)
 				flashTimer = setTimeout(() => {
 					if (flashedMessage.value === name) flashedMessage.value = ""
+					if (jumpTarget === name) jumpTarget = ""
 				}, MESSAGE_FLASH_MS)
 				return
 			}
 		}
+		// Not in this conversation (deleted, or older than the loaded page): stop holding the scroll.
+		if (jumpTarget === name) jumpTarget = ""
 	}
 	onScopeDispose(() => clearTimeout(flashTimer))
 
@@ -3346,6 +3363,17 @@ export default function setup(context) {
 	}
 	window.addEventListener("popstate", handlePopState)
 	onScopeDispose(() => window.removeEventListener("popstate", handlePopState))
+
+	// Studio runs this script before a navigation into the page lands, while the address is still the
+	// previous page's, so a link from another page (a notification, the Projects page) would open the
+	// first thread instead of its own. Re-read the address once the route arrives. context.route is a
+	// snapshot taken at setup, so this watches the router's live current route.
+	watch(
+		() => context.router?.currentRoute.value.fullPath,
+		() => {
+			if (context.router.currentRoute.value.path === "/messaging") handlePopState()
+		},
+	)
 
 	// Mirrors the media search box's focus treatment (see media-search-box's CSS) on the
 	// composer: the pill is a container wrapping a ghost TextInput, so there's no single

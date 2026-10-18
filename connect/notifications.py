@@ -4,6 +4,16 @@ from frappe.desk.doctype.notification_log.notification_log import enqueue_create
 
 from connect.permissions import _get_partner_admin
 
+# The documents Connect notifies people about. Anything else in Notification Log (Frappe's own
+# impersonation or mail-server alerts) stays out of Connect's panel and unread count.
+CONNECT_NOTIFICATION_DOCTYPES = (
+	"Connect Thread",
+	"Connect DM Thread",
+	"Customer Project",
+	"Project Quote",
+	"Starter Pack Order",
+)
+
 
 def _notification_targets(doc):
 	"""Returns everyone else currently in the thread, who's allowed to know this message exists."""
@@ -119,10 +129,11 @@ def notify_thread_members(doc, method=None):
 		# Their content is a JSON snapshot, so the bell shows the sidebar's preview of it.
 		subject = _message_preview_text(doc.as_dict())
 	else:
-		subject = frappe.utils.strip_html(doc.content)
+		subject = frappe.utils.strip_html(_message_preview_text(doc))
 	# A silent message (sent outside the sender's working hours) is still delivered and pushed live, but
-	# doesn't ping anyone with a notification.
-	if not doc.flags.get("silent"):
+	# doesn't ping anyone with a notification. A quote is announced once, as a project notification
+	# (see project_notifications.notify_quote_update), not again as a message.
+	if not doc.flags.get("silent") and doc.message_type != "Quote":
 		enqueue_create_notification(
 			members,
 			{
@@ -131,6 +142,8 @@ def notify_thread_members(doc, method=None):
 				"document_name": doc.thread,
 				"subject": subject[:140],
 				"from_user": doc.sender,
+				# Opens the thread at this message (Messaging scrolls to and highlights it).
+				"link": f"/messaging?thread={doc.thread}&message={doc.name}",
 			},
 		)
 
@@ -258,6 +271,7 @@ def notify_dm_recipient(doc, method=None):
 				"document_name": doc.dm_thread,
 				"subject": frappe.utils.strip_html(doc.content)[:140],
 				"from_user": doc.sender,
+				"link": f"/messaging?thread={doc.dm_thread}&type=dm&message={doc.name}",
 			},
 		)
 
