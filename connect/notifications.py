@@ -119,7 +119,7 @@ def notify_thread_members(doc, method=None):
 		# Their content is a JSON snapshot, so the bell shows the sidebar's preview of it.
 		subject = _message_preview_text(doc.as_dict())
 	else:
-		subject = frappe.utils.strip_html(doc.content)
+		subject = frappe.utils.strip_html(_message_preview_text(doc))
 	# A silent message (sent outside the sender's working hours) is still delivered and pushed live, but
 	# doesn't ping anyone with a notification.
 	if not doc.flags.get("silent"):
