@@ -142,6 +142,8 @@ def notify_thread_members(doc, method=None):
 				"document_name": doc.thread,
 				"subject": subject[:140],
 				"from_user": doc.sender,
+				# Opens the thread at this message (Messaging scrolls to and highlights it).
+				"link": f"/messaging?thread={doc.thread}&message={doc.name}",
 			},
 		)
 
@@ -269,6 +271,7 @@ def notify_dm_recipient(doc, method=None):
 				"document_name": doc.dm_thread,
 				"subject": frappe.utils.strip_html(doc.content)[:140],
 				"from_user": doc.sender,
+				"link": f"/messaging?thread={doc.dm_thread}&type=dm&message={doc.name}",
 			},
 		)
 
