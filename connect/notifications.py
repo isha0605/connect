@@ -121,8 +121,9 @@ def notify_thread_members(doc, method=None):
 	else:
 		subject = frappe.utils.strip_html(_message_preview_text(doc))
 	# A silent message (sent outside the sender's working hours) is still delivered and pushed live, but
-	# doesn't ping anyone with a notification.
-	if not doc.flags.get("silent"):
+	# doesn't ping anyone with a notification. A quote is announced once, as a project notification
+	# (see project_notifications.notify_quote_update), not again as a message.
+	if not doc.flags.get("silent") and doc.message_type != "Quote":
 		enqueue_create_notification(
 			members,
 			{

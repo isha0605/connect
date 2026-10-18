@@ -9,6 +9,10 @@ from frappe.query_builder.functions import Sum
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.customer.doctype.customer_project.partner_matching import normalize_criteria
+from connect.customer.doctype.customer_project.project_notifications import (
+	notify_project_created,
+	notify_project_step,
+)
 
 # What the questionnaire's verdict ("packs" / "custom", from recommend() in
 # studio/connect/utils/recommendation.ts) is stored as.
@@ -44,6 +48,12 @@ class CustomerProject(Document):
 
 	def validate(self):
 		self._stamp_status_change()
+
+	def after_insert(self):
+		notify_project_created(self)
+
+	def on_update(self):
+		notify_project_step(self)
 
 	def _stamp_status_change(self):
 		# Only the first time: a declined or withdrawn hire puts the project back to Shared.
