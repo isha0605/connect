@@ -3,7 +3,7 @@
 // only the content below changes. An unknown key shows Core. The cart lives in @app/utils/starterPackCart.
 
 import { computed } from "vue"
-import { starterPackCart } from "@app/utils/starterPackCart"
+import { STARTER_PACK_TERMS, starterPackCart } from "@app/utils/starterPackCart"
 
 const SETUP = {
 	key: "setup",
@@ -129,45 +129,11 @@ const PACKS = {
 	},
 }
 
-const TERMS = [
-	{ title: "Eligibility", items: [{ text: "For Frappe Cloud customers on plans of ₹820/month and above" }] },
-	{
-		title: "Sessions",
-		items: [
-			{ text: "Your pack's hours are guided onboarding sessions, scheduled in advance" },
-			{ text: "Missed sessions can't be rescheduled or carried forward, and count as used" },
-		],
-	},
-	{
-		title: "Scope",
-		items: [
-			{ text: "Covers the modules your pack lists, and their basic, standard features" },
-			{ text: "Other modules and advanced features are outside the scope" },
-			{
-				text: "Topics outside the scope can be explored through ERPNext documentation, videos and community resources, or with an ERPNext partner",
-			},
-			{ text: "Frappe decides whether a question, request or use case is in scope" },
-		],
-	},
-	{
-		title: "Payment",
-		items: [
-			{ text: "Payment to Frappe in full, in advance" },
-			{ text: "18% GST charged on top" },
-			{ text: "Fees are non-refundable and non-transferable" },
-		],
-	},
-	{
-		title: "What we need from you",
-		items: [{ text: "Nominate a project champion" }, { text: "Attend each session at its scheduled time" }],
-	},
-]
-
 export default function setup(context) {
 	const { route } = context
 
 	const packKey = computed(() => (String(route.query.pack || "") in PACKS ? String(route.query.pack) : "core"))
 	const pack = computed(() => PACKS[packKey.value])
 
-	return { ...starterPackCart(context), pack, packKey, terms: TERMS }
+	return { ...starterPackCart(context), pack, packKey, terms: STARTER_PACK_TERMS }
 }

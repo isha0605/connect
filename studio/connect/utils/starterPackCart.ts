@@ -1,6 +1,6 @@
 // The Starter Pack cart, shared by the landing, details and cart pages: which packs the
 // visitor has picked, kept in this browser until checkout. Core and Core + Manufacturing
-// are alternatives, so picking one replaces the other.
+// are alternatives, so picking one replaces the other. Also the terms every pack is sold on.
 
 import { computed, ref } from "vue"
 
@@ -35,6 +35,40 @@ export const CART_PACKS = {
 	},
 }
 const BASE_PACKS = ["core", "core-manufacturing"]
+
+export const STARTER_PACK_TERMS = [
+	{ title: "Eligibility", items: [{ text: "For Frappe Cloud customers on plans of ₹820/month and above" }] },
+	{
+		title: "Sessions",
+		items: [
+			{ text: "Your pack's hours are guided onboarding sessions, scheduled in advance" },
+			{ text: "Missed sessions can't be rescheduled or carried forward, and count as used" },
+		],
+	},
+	{
+		title: "Scope",
+		items: [
+			{ text: "Covers the modules your pack lists, and their basic, standard features" },
+			{ text: "Other modules and advanced features are outside the scope" },
+			{
+				text: "Topics outside the scope can be explored through ERPNext documentation, videos and community resources, or with an ERPNext partner",
+			},
+			{ text: "Frappe decides whether a question, request or use case is in scope" },
+		],
+	},
+	{
+		title: "Payment",
+		items: [
+			{ text: "Payment to Frappe in full, in advance" },
+			{ text: "18% GST charged on top" },
+			{ text: "Fees are non-refundable and non-transferable" },
+		],
+	},
+	{
+		title: "What we need from you",
+		items: [{ text: "Nominate a project champion" }, { text: "Attend each session at its scheduled time" }],
+	},
+]
 
 function readCart() {
 	try {
