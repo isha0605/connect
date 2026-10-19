@@ -14,6 +14,16 @@ const VALUE_PROPS = [
 export default function setup(context) {
 	const { router } = context
 
+	// Starter Packs start on the landing page now; this page only answers old links. Replacing
+	// the URL during setup cancels the navigation here, so it waits for it to land. The Studio
+	// editor (/studio/…) still opens the page itself.
+	if (!window.location.pathname.startsWith("/studio/")) {
+		const stop = router.afterEach(() => {
+			stop()
+			router.replace("/starter-pack-landing")
+		})
+	}
+
 	function getQuotes() {
 		router.push("/partner-directory-redesign")
 	}

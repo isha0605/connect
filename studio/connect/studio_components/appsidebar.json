@@ -109,6 +109,13 @@
       "baseStyles": {
        "display": "{{ (myContext.data && myContext.data.user && myContext.data.user !== 'Guest') ? 'flex' : 'none' }}"
       },
+      "componentEvents": {
+       "click": {
+        "action": "Run Script",
+        "event": "click",
+        "script": "window.dispatchEvent(new CustomEvent('connect:open-notifications', { detail: { refreshBadge: () => myContext.reload() } }));"
+       }
+      },
       "componentId": "SidebarItem-fpr-notifications",
       "componentName": "SidebarItem",
       "componentProps": {
@@ -135,13 +142,6 @@
          }
         ],
         "slotId": "SidebarItem-fpr-notifications:suffix"
-       }
-      },
-      "componentEvents": {
-       "click": {
-        "action": "Run Script",
-        "event": "click",
-        "script": "window.dispatchEvent(new CustomEvent('connect:open-notifications', { detail: { refreshBadge: () => myContext.reload() } }));"
        }
       }
      },
@@ -177,10 +177,10 @@
       "componentId": "SidebarItem-fpr-starter-packs",
       "componentName": "SidebarItem",
       "componentProps": {
-       "active": "{{ ['/starter-packs-redesign', '/starter-pack-recommendation', '/starter-pack-checkout', '/starter-pack-confirmed'].includes(route.path) }}",
+       "active": "{{ ['/starter-pack-landing', '/starter-pack-details', '/starter-pack-cart', '/starter-packs-redesign', '/starter-pack-recommendation', '/starter-pack-checkout', '/starter-pack-confirmed'].includes(route.path) }}",
        "icon": "lucide-package",
        "label": "Starter Packs",
-       "route": "/starter-packs-redesign"
+       "route": "/starter-pack-landing"
       },
       "componentSlots": {}
      },
@@ -277,12 +277,12 @@
  },
  "component_id": "appsidebar",
  "component_name": "AppSidebar",
- "creation": "2026-10-07 16:57:01.627863",
+ "creation": "2026-10-18 23:35:39.258820",
  "docstatus": 0,
  "doctype": "Studio Component",
  "idx": 0,
  "is_disabled": 0,
- "modified": "2026-10-05 22:10:00",
+ "modified": "2026-10-18 23:35:26.504859",
  "modified_by": "Administrator",
  "name": "appsidebar",
  "owner": "Administrator"

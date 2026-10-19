@@ -244,7 +244,7 @@ export default function setup(context) {
 	}
 
 	function backToStarterPacks() {
-		router.push("/starter-packs-redesign")
+		router.push("/starter-pack-landing")
 	}
 
 	return {

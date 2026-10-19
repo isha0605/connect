@@ -116,7 +116,7 @@ export default function setup(context) {
 	}
 
 	function newProject() {
-		router.push("/starter-packs-redesign")
+		router.push("/starter-pack-landing")
 	}
 
 	// ---- Saved partners ----
