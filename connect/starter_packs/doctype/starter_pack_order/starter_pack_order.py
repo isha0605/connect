@@ -10,9 +10,11 @@ from frappe.model.document import Document
 from frappe.utils import cint, flt, get_datetime, get_system_timezone, now_datetime
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
+from connect.customer.doctype.requirement.requirement import save_company_details as save_requirement_details
 from connect.starter_packs.doctype.starter_pack_order.implementation import (
 	hand_over,
 	move_thread,
+	post_company_details,
 	project_title,
 	timeline_days,
 )
@@ -34,6 +36,10 @@ GATEWAY_STATUS_MAP = {
 	"Partially Refunded": "Partially Refunded",
 	"Refunded": "Refunded",
 }
+
+# "Tell us about your company" sends the sizes the recommendation quiz uses; the Requirement
+# writes them with an en dash, as the Find Partners wizard always has.
+COMPANY_SIZES = {"1-10": "1–10", "11-50": "11–50", "51-200": "51–200", "201-500": "201–500", "500+": "500+"}
 
 # What the Confirmed page's partner card shows (industry feeds its industries list).
 PARTNER_CARD_FIELDS = [
@@ -391,6 +397,7 @@ def get_order(order=None, payment_request=None, key=None):
 		"amount": doc.amount,
 		"total_hours": doc.total_hours,
 		"kickoff_date": doc.kickoff_date,
+		"company_details": company_details(doc),
 		"partner": get_assigned_partner(doc.partner) if doc.partner else None,
 		"consultant": consultant_card(doc.consultant),
 		# Frappe implements the Starter Packs until a partner is assigned
@@ -507,6 +514,62 @@ def pay(order, key=None):
 	payment link expired. Reuses an open link rather than opening a second one."""
 	doc = get_own_order(order, key)
 	return payment_response(doc, doc.create_payment_request())
+
+
+def order_customer(doc):
+	return doc.customer or (get_customer_for_user(doc.user) if doc.user not in (None, "", "Guest") else None)
+
+
+def company_details(doc):
+	"""The order's "Tell us about your company" answers: the buyer's company's Requirement, so
+	they're answered once per company, not once per order. None until size, industry and
+	current system are all there."""
+	customer = order_customer(doc)
+	if not customer:
+		return None
+	req = frappe.db.get_value(
+		"Requirement",
+		{"customer": customer},
+		["company_size", "industry", "current_situation", "additional_notes"],
+		as_dict=True,
+		order_by="creation desc",
+	)
+	if not (req and req.company_size and req.industry and req.current_situation):
+		return None
+	sizes = {v: k for k, v in COMPANY_SIZES.items()}
+	return {
+		"employees": sizes.get(req.company_size, req.company_size),
+		"industry": req.industry,
+		"system": req.current_situation,
+		"focus": req.additional_notes or "",
+	}
+
+
+def save_company_details(order, employees, industry, system, focus=None, key=None):
+	"""Saves "Tell us about your company" to the buyer's Requirement and, when that changes it,
+	posts the answers in the project's thread."""
+	doc = get_own_order(order, key)
+	if doc.payment_status != "Paid":
+		frappe.throw(_("This order isn't paid."))
+	customer = order_customer(doc)
+	if not customer:
+		frappe.throw(_("Sign in with the account that placed this order to save your company's details."))
+	if not (employees and industry and system):
+		frappe.throw(_("Number of employees, industry and what you use today are all needed."))
+
+	focus = (focus or "").strip()
+	changed = save_requirement_details(
+		customer,
+		{
+			"company_size": COMPANY_SIZES.get(employees, employees),
+			"industry": industry,
+			"current_situation": system,
+			"additional_notes": focus,
+		},
+	)
+	if changed:
+		post_company_details(doc, customer, focus)
+	return company_details(doc)
 
 
 def get_own_order(order, key=None):

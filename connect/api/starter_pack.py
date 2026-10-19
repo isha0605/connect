@@ -46,6 +46,12 @@ def last_checkout_details(email=None):
 	return last_checkout_details(email)
 
 
+@frappe.whitelist(methods=["POST"])
+def save_company_details(order, employees, industry, system, focus=None, key=None):
+	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import save_company_details
+	return save_company_details(order, employees, industry, system, focus=focus, key=key)
+
+
 @frappe.whitelist()
 def my_orders():
 	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import my_orders

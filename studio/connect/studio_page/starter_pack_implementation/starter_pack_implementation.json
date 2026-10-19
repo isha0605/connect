@@ -336,7 +336,7 @@
                       "alignItems": "center",
                       "backgroundColor": "var(--ink-gray-7)",
                       "borderRadius": "50%",
-                      "display": "{{ stepStatus('terms') === 'completed' ? 'flex' : 'none' }}",
+                      "display": "{{ stepStatus('company') === 'completed' ? 'flex' : 'none' }}",
                       "flexShrink": "0",
                       "height": "16px",
                       "justifyContent": "center",
@@ -349,7 +349,7 @@
                         "height": "10px",
                         "width": "10px"
                        },
-                       "componentId": "step-terms-status-check",
+                       "componentId": "step-company-status-check",
                        "componentName": "Icon",
                        "componentProps": {
                         "icon": "lucide-check"
@@ -357,7 +357,7 @@
                        "componentSlots": {}
                       }
                      ],
-                     "componentId": "step-terms-status-done",
+                     "componentId": "step-company-status-done",
                      "componentName": "container",
                      "componentProps": {},
                      "componentSlots": {},
@@ -366,12 +366,12 @@
                     {
                      "baseStyles": {
                       "color": "var(--ink-gray-4)",
-                      "display": "{{ stepStatus('terms') === 'completed' ? 'none' : 'flex' }}",
+                      "display": "{{ stepStatus('company') === 'completed' ? 'none' : 'flex' }}",
                       "flexShrink": "0",
                       "height": "16px",
                       "width": "16px"
                      },
-                     "componentId": "step-terms-status-pending",
+                     "componentId": "step-company-status-pending",
                      "componentName": "Icon",
                      "componentProps": {
                       "icon": "lucide-circle-dashed"
@@ -379,7 +379,7 @@
                      "componentSlots": {}
                     }
                    ],
-                   "componentId": "step-terms-status-icon",
+                   "componentId": "step-company-status-icon",
                    "componentName": "container",
                    "componentProps": {},
                    "componentSlots": {},
@@ -393,23 +393,23 @@
                    "children": [
                     {
                      "baseStyles": {
-                      "color": "{{ stepStatus('terms') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
+                      "color": "{{ stepStatus('company') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
                       "fontSize": "14px",
                       "fontWeight": "500",
                       "letterSpacing": "0.02em",
                       "lineHeight": "1.15",
-                      "textDecoration": "{{ stepStatus('terms') === 'completed' ? 'line-through' : 'none' }}"
+                      "textDecoration": "{{ stepStatus('company') === 'completed' ? 'line-through' : 'none' }}"
                      },
-                     "componentId": "step-terms-title",
+                     "componentId": "step-company-title",
                      "componentName": "TextBlock",
                      "componentProps": {
                       "tag": "span",
-                      "text": "Agree to Terms and Conditions"
+                      "text": "Tell us about your company"
                      },
                      "componentSlots": {}
                     }
                    ],
-                   "componentId": "step-terms-title-wrap",
+                   "componentId": "step-company-title-wrap",
                    "componentName": "container",
                    "componentProps": {},
                    "componentSlots": {},
@@ -420,11 +420,11 @@
                     "color": "var(--ink-gray-6)",
                     "flexShrink": "0",
                     "height": "16px",
-                    "transform": "{{ isStepOpen('terms') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
+                    "transform": "{{ isStepOpen('company') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
                     "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
                     "width": "16px"
                    },
-                   "componentId": "step-terms-chevron",
+                   "componentId": "step-company-chevron",
                    "componentName": "Icon",
                    "componentProps": {
                     "icon": "lucide-chevron-down"
@@ -436,10 +436,10 @@
                   "click": {
                    "action": "Run Script",
                    "event": "click",
-                   "script": "toggleStep('terms');"
+                   "script": "toggleStep('company');"
                   }
                  },
-                 "componentId": "step-terms-trigger",
+                 "componentId": "step-company-trigger",
                  "componentName": "container",
                  "componentProps": {},
                  "componentSlots": {},
@@ -447,24 +447,24 @@
                 },
                 {
                  "baseStyles": {
-                  "display": "{{ isStepOpen('terms') ? 'block' : 'none' }}",
+                  "display": "{{ isStepOpen('company') ? 'block' : 'none' }}",
                   "padding": "0 4px 16px 28px"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-6)",
+                    "color": "{{ stepStatus('company') === 'completed' ? 'var(--ink-gray-7)' : 'var(--ink-gray-6)' }}",
                     "fontSize": "14px",
                     "fontWeight": "420",
                     "letterSpacing": "0.02em",
                     "lineHeight": "1.5",
                     "maxWidth": "65ch"
                    },
-                   "componentId": "step-terms-description",
+                   "componentId": "step-company-description",
                    "componentName": "TextBlock",
                    "componentProps": {
                     "tag": "p",
-                    "text": "{{ 'The terms set out the scope of each pack, the payment and validity period, and what your team is responsible for during the implementation. ' + partnerName + ' starts once you have agreed to them.' }}"
+                    "text": "{{ stepStatus('company') === 'completed' ? companySummary : 'This helps Frappe\u2019s team prepare for your sessions.' }}"
                    },
                    "componentSlots": {}
                   },
@@ -480,33 +480,33 @@
                       "click": {
                        "action": "Run Script",
                        "event": "click",
-                       "script": "viewTermsDetails();"
+                       "script": "openCompany();"
                       }
                      },
-                     "componentId": "step-terms-action-btn",
+                     "componentId": "step-company-action-btn",
                      "componentName": "Button",
                      "componentProps": {
-                      "label": "Review and agree",
-                      "variant": "solid"
+                      "label": "{{ stepStatus('company') === 'completed' ? 'Edit' : 'Add details' }}",
+                      "variant": "{{ stepStatus('company') === 'completed' ? 'subtle' : 'solid' }}"
                      },
                      "componentSlots": {}
                     }
                    ],
-                   "componentId": "step-terms-actions",
+                   "componentId": "step-company-actions",
                    "componentName": "container",
                    "componentProps": {},
                    "componentSlots": {},
                    "originalElement": "div"
                   }
                  ],
-                 "componentId": "step-terms-content",
+                 "componentId": "step-company-content",
                  "componentName": "container",
                  "componentProps": {},
                  "componentSlots": {},
                  "originalElement": "div"
                 }
                ],
-               "componentId": "step-terms-item",
+               "componentId": "step-company-item",
                "componentName": "container",
                "componentProps": {},
                "componentSlots": {},
@@ -1019,7 +1019,7 @@
                      "componentName": "TextBlock",
                      "componentProps": {
                       "tag": "span",
-                      "text": "Add a payment method and set up a minimum $25 plan"
+                      "text": "Add a payment method and set up a plan of at least \u20b9820/month"
                      },
                      "componentSlots": {}
                     }
@@ -2806,6 +2806,227 @@
       "title": "Scope of work"
      },
      "componentSlots": {}
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "boxSizing": "border-box",
+        "display": "flex",
+        "flexDirection": "column",
+        "padding": "24px",
+        "position": "relative",
+        "width": "100%"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "cursor": "pointer",
+          "display": "flex",
+          "height": "24px",
+          "justifyContent": "center",
+          "position": "absolute",
+          "right": "18px",
+          "top": "18px",
+          "width": "24px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "flexShrink": "0",
+            "height": "16px",
+            "width": "16px"
+           },
+           "componentId": "company-close-icon",
+           "componentName": "Icon",
+           "componentProps": {
+            "icon": "lucide-x"
+           }
+          }
+         ],
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "companyOpen.value = false;"
+          }
+         },
+         "componentId": "company-close",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-9)",
+          "fontSize": "17px",
+          "fontWeight": "600",
+          "letterSpacing": "0.01em",
+          "lineHeight": "1.35",
+          "margin": "0px",
+          "paddingRight": "32px"
+         },
+         "componentId": "company-title",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "",
+          "tag": "p",
+          "text": "Tell us about your company"
+         }
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)",
+          "fontSize": "14px",
+          "fontWeight": "420",
+          "letterSpacing": "0.01em",
+          "lineHeight": "1.5",
+          "margin": "0px",
+          "marginTop": "4px"
+         },
+         "componentId": "company-subtitle",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "",
+          "tag": "p",
+          "text": "This helps Frappe\u2019s team prepare for your sessions."
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "16px",
+          "marginTop": "24px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%"
+           },
+           "componentId": "company-employees",
+           "componentName": "FormControl",
+           "componentProps": {
+            "label": "Number of employees",
+            "modelValue": {
+             "$type": "variable",
+             "name": "companyEmployees"
+            },
+            "options": "{{ employeeOptions }}",
+            "placeholder": "Select",
+            "required": true,
+            "size": "sm",
+            "type": "select"
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%"
+           },
+           "componentId": "company-industry",
+           "componentName": "FormControl",
+           "componentProps": {
+            "label": "Industry",
+            "modelValue": {
+             "$type": "variable",
+             "name": "companyIndustry"
+            },
+            "options": "{{ industryOptions }}",
+            "placeholder": "Select",
+            "required": true,
+            "size": "sm",
+            "type": "combobox"
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%"
+           },
+           "componentId": "company-system",
+           "componentName": "FormControl",
+           "componentProps": {
+            "label": "What do you use today?",
+            "modelValue": {
+             "$type": "variable",
+             "name": "companySystem"
+            },
+            "options": "{{ systemOptions }}",
+            "placeholder": "Select",
+            "required": true,
+            "size": "sm",
+            "type": "select"
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%"
+           },
+           "componentId": "company-focus",
+           "componentName": "FormControl",
+           "componentProps": {
+            "label": "Anything you\u2019d like the sessions to focus on?",
+            "modelValue": {
+             "$type": "variable",
+             "name": "companyFocus"
+            },
+            "placeholder": "For example, GST invoicing or tracking stock across two shops",
+            "required": false,
+            "rows": 3,
+            "size": "sm",
+            "type": "textarea"
+           }
+          }
+         ],
+         "componentId": "company-fields",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "alignSelf": "flex-end",
+          "marginTop": "24px"
+         },
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "saveCompany();"
+          }
+         },
+         "componentId": "company-save",
+         "componentName": "Button",
+         "componentProps": {
+          "disabled": "{{ !companyEmployees || !companyIndustry || !companySystem }}",
+          "label": "Save",
+          "size": "md",
+          "variant": "solid"
+         }
+        }
+       ],
+       "componentId": "company-body",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "componentId": "company-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "bare": true,
+      "modelValue": {
+       "$type": "variable",
+       "name": "companyOpen"
+      },
+      "size": "md"
+     }
     }
    ],
    "componentId": "root",
@@ -2820,7 +3041,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-10-18 18:00:02.237500",
+ "modified": "2026-10-19 00:17:39.969078",
  "modified_by": "Administrator",
  "name": "starter_pack_implementation",
  "owner": "Administrator",
@@ -2840,5 +3061,32 @@
   }
  ],
  "route": "/starter-pack-implementation",
- "studio_app": "connect"
+ "studio_app": "connect",
+ "variables": [
+  {
+   "initial_value": "false",
+   "variable_name": "companyOpen",
+   "variable_type": "Boolean"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "companyEmployees",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "companyIndustry",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "companySystem",
+   "variable_type": "String"
+  },
+  {
+   "initial_value": "\"\"",
+   "variable_name": "companyFocus",
+   "variable_type": "String"
+  }
+ ]
 }

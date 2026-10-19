@@ -1,7 +1,7 @@
-import { computed, ref } from "vue"
+import { computed, ref, watch } from "vue"
 import { toast, call } from "frappe-ui"
 import { orderKey } from "@app/utils/checkoutSession"
-import { MODULE_ICONS } from "@app/utils/recommendation"
+import { EMPLOYEE_OPTIONS, INDUSTRY_OPTIONS, MODULE_ICONS, SYSTEM_OPTIONS } from "@app/utils/recommendation"
 import { CART_PACKS, cartPacksFor, clearCart } from "@app/utils/starterPackCart"
 
 // "Set up your Starter Pack": where checkout sends the buyer once their order is paid
@@ -15,7 +15,7 @@ const PAYMENT_BADGES = {
 }
 
 export default function setup(context) {
-	const { route, router } = context
+	const { route, router, companyOpen, companyEmployees, companyIndustry, companySystem, companyFocus } = context
 
 	// ---- The order ----
 	// Same test Studio's own isEditor() uses. The editor opens pages with no query string,
@@ -158,13 +158,67 @@ export default function setup(context) {
 			.catch(() => go(null))
 	}
 
-	// ---- Steps accordion ----
-	// Only "Pay upfront" can be done so far; it's done once the order is paid.
-	function stepStatus(key) {
-		return key === "pay-upfront" && order.value ? "completed" : "pending"
+	// ---- "Tell us about your company" ----
+	// Saved to the buyer's company Requirement, so it comes with the order (company_details).
+	const savedCompany = computed(() => order.value?.company_details || null)
+	const companySummary = computed(() => {
+		const saved = savedCompany.value
+		if (!saved) return ""
+		const employees = EMPLOYEE_OPTIONS.find((o) => o.value === saved.employees)?.label || saved.employees
+		return `${employees} employees, ${saved.industry}.`
+	})
+
+	function openCompany() {
+		const saved = savedCompany.value || {}
+		companyEmployees.value = saved.employees || ""
+		companyIndustry.value = saved.industry || ""
+		companySystem.value = saved.system || ""
+		companyFocus.value = saved.focus || ""
+		companyOpen.value = true
 	}
 
-	const openStep = ref("terms")
+	let savingCompany = false
+	function saveCompany() {
+		if (!order.value || !companyEmployees.value || !companyIndustry.value || !companySystem.value) return
+		if (savingCompany) return
+		savingCompany = true
+		call("connect.api.starter_pack.save_company_details", {
+			order: order.value.order,
+			key: orderKey(order.value.order),
+			employees: companyEmployees.value,
+			industry: companyIndustry.value,
+			system: companySystem.value,
+			focus: String(companyFocus.value || "").trim(),
+		})
+			.then((details) => {
+				order.value = { ...order.value, company_details: details }
+				companyOpen.value = false
+			})
+			.catch((err) => {
+				toast.error((err && err.messages && err.messages.join(", ")) || "Couldn't save your company's details")
+			})
+			.finally(() => {
+				savingCompany = false
+			})
+	}
+
+	// ---- Steps accordion ----
+	// "Pay upfront" is done once the order is paid; "Tell us about your company" once answered.
+	function stepStatus(key) {
+		if (key === "pay-upfront") return order.value ? "completed" : "pending"
+		if (key === "company") return savedCompany.value ? "completed" : "pending"
+		return "pending"
+	}
+
+	// Opens on the first step still to do; after saving, the company step stays open on its summary.
+	const openStep = ref("company")
+	watch(
+		order,
+		() => {
+			if (savedCompany.value) openStep.value = "kickoff"
+		},
+		{ once: true },
+	)
 
 	function isStepOpen(key) {
 		return openStep.value === key
@@ -188,10 +242,6 @@ export default function setup(context) {
 	}
 
 	// ---- Placeholder actions (no backend behind them yet) ----
-	function viewTermsDetails() {
-		toast.info("Terms & Conditions details are coming soon.")
-	}
-
 	function viewRequirements() {
 		toast.info("Requirements are coming soon.")
 	}
@@ -292,7 +342,12 @@ export default function setup(context) {
 		toggleStep,
 		hostedSiteUrl,
 		submitHostedSiteUrl,
-		viewTermsDetails,
+		employeeOptions: EMPLOYEE_OPTIONS,
+		industryOptions: INDUSTRY_OPTIONS,
+		systemOptions: SYSTEM_OPTIONS,
+		companySummary,
+		openCompany,
+		saveCompany,
 		viewRequirements,
 		openFeedback,
 		accountMenuOptions,

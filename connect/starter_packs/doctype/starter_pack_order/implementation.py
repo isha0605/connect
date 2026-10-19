@@ -219,6 +219,35 @@ def post_looking_after(thread, consultant):
 def opening_messages(order, customer):
 	"""The hello, then a Requirement card: what the buyer told us about their company, with
 	the project in place of what they're looking for. Messaging renders that card already."""
+	return [
+		{
+			"message_type": "Text",
+			"content": _("Hi — we have just bought the {0}. Here is where we are today.").format(
+				bought_packs(order)
+			),
+		},
+		requirement_card(order, customer),
+	]
+
+
+def post_company_details(order, customer, focus=None):
+	"""Once the buyer fills in "Tell us about your company", a second card in their thread
+	with what they said: the first one went out at payment, before they'd answered. What
+	they want the sessions to focus on goes in the line before it, as the card has no room
+	for notes. Before the thread is open there's nothing to do: the opening card will
+	already carry the answers."""
+	if not order.implementation_thread:
+		return
+	intro = _("Here is more about our company.")
+	if focus:
+		intro += " " + _("We'd like the sessions to focus on: {0}").format(focus)
+	for message in ({"message_type": "Text", "content": intro}, requirement_card(order, customer)):
+		frappe.get_doc(
+			{"doctype": "Connect Message", "thread": order.implementation_thread, "sender": order.user, **message}
+		).insert(ignore_permissions=True)
+
+
+def requirement_card(order, customer):
 	card = get_requirement_snapshot(customer) or {}
 	card.update(
 		{
@@ -228,15 +257,7 @@ def opening_messages(order, customer):
 			"timeline": _("{0} days").format(timeline_days(order)),
 		}
 	)
-	return [
-		{
-			"message_type": "Text",
-			"content": _("Hi — we have just bought the {0}. Here is where we are today.").format(
-				bought_packs(order)
-			),
-		},
-		{"message_type": "Requirement", "content": json.dumps({k: v for k, v in card.items() if v})},
-	]
+	return {"message_type": "Requirement", "content": json.dumps({k: v for k, v in card.items() if v})}
 
 
 def pack_names(order):

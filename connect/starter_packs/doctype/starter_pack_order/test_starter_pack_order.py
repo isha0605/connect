@@ -14,6 +14,7 @@ from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import 
 	get_my_projects,
 	get_order,
 	pay,
+	save_company_details,
 )
 
 RAZORPAY = "bwh_payments.bwh_payments.doctype.razorpay_gateway_settings.razorpay_gateway_settings.RazorpayGatewaySettings"
@@ -744,6 +745,68 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		order.db_set({"user": "Guest", "customer": None})
 		post_opening_message(order.name)
 		self.assertIsNone(frappe.db.get_value("Starter Pack Order", order.name, "implementation_thread"))
+
+	def test_company_details_go_on_the_buyers_requirement(self):
+		order = self.paid_order()
+		_user, customer, _admin = self.signed_in_buyer(order)
+		frappe.db.delete("Requirement", {"customer": customer})
+		self.assertIsNone(get_order(order.name)["company_details"])
+		frappe.get_doc(
+			{"doctype": "Requirement", "customer": customer, "company_name": "Test Co", "country": "India",
+			 "industry": "Manufacturing", "looking_for": "CRM", "timeline": "Within 1 month"}
+		).insert(ignore_permissions=True)
+
+		details = save_company_details(order.name, "11-50", "Discrete Manufacturing", "Tally", focus=" Stock ")
+		self.assertEqual(
+			details, {"employees": "11-50", "industry": "Discrete Manufacturing", "system": "Tally", "focus": "Stock"}
+		)
+		self.assertEqual(get_order(order.name)["company_details"], details)
+		req = frappe.get_last_doc("Requirement", {"customer": customer})
+		self.assertEqual((req.company_size, req.industry, req.current_situation), ("11–50", "Discrete Manufacturing", "Tally"))
+		# what the buyer said elsewhere stays
+		self.assertEqual((req.looking_for, req.timeline), ("CRM", "Within 1 month"))
+		self.assertEqual(frappe.db.count("Requirement", {"customer": customer}), 1)
+
+	def test_a_buyer_without_a_requirement_gets_one(self):
+		order = self.paid_order()
+		_user, customer, _admin = self.signed_in_buyer(order)
+		frappe.db.delete("Requirement", {"customer": customer})
+		save_company_details(order.name, "500+", "Retail", "Zoho")
+		req = frappe.get_last_doc("Requirement", {"customer": customer})
+		self.assertEqual((req.country, req.outcome, req.company_size), ("India", "Starter Pack", "500+"))
+
+	def test_company_details_follow_the_opening_card_in_the_thread(self):
+		order = self.paid_order()
+		hand_over(order.name)
+		user, customer, _admin = self.signed_in_buyer(order)
+		frappe.db.delete("Requirement", {"customer": customer})
+		post_opening_message(order.name)
+		thread = frappe.db.get_value("Starter Pack Order", order.name, "implementation_thread")
+		# the buyer's thread with the partner is shared by this class's tests, which read it from the start
+		self.addCleanup(frappe.db.delete, "Connect Message", {"thread": thread})
+		posted = frappe.db.count("Connect Message", {"thread": thread})
+
+		save_company_details(order.name, "1-10", "Retail", "Busy", focus="GST returns")
+		intro, card = frappe.get_all(
+			"Connect Message",
+			filters={"thread": thread},
+			fields=["sender", "message_type", "content"],
+			order_by="creation asc",
+		)[-2:]
+		self.assertEqual((intro.sender, intro.message_type), (user, "Text"))
+		self.assertIn("GST returns", intro.content)
+		self.assertEqual(card.message_type, "Requirement")
+		answers = frappe.parse_json(card.content)
+		self.assertEqual((answers["company_size"], answers["industry"]), ("1–10", "Retail"))
+
+		save_company_details(order.name, "1-10", "Retail", "Busy", focus="GST returns")  # nothing new
+		self.assertEqual(frappe.db.count("Connect Message", {"thread": thread}), posted + 2)
+
+	def test_company_details_need_the_buyers_account(self):
+		order = self.paid_order()
+		order.db_set({"user": "Guest", "customer": None})
+		with self.assertRaises(frappe.ValidationError):
+			save_company_details(order.name, "1-10", "Retail", "Tally")
 
 	def test_home_lists_the_buyers_paid_orders_as_projects(self):
 		paid = self.paid_order()

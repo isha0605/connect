@@ -81,6 +81,36 @@ def save_customer_requirement(
 	return {"name": doc.name}
 
 
+COMPANY_DETAIL_FIELDS = ["company_size", "industry", "current_situation", "additional_notes"]
+
+
+def save_company_details(customer, values):
+	"""Sets just these fields on the customer's one Requirement, creating it if they have none,
+	so what they told the Find Partners wizard or the Settings form stays as it was. Returns
+	whether anything changed. A new Requirement is for India: Starter Packs only sell there."""
+	values = {f: values.get(f) or "" for f in COMPANY_DETAIL_FIELDS}
+	existing = frappe.db.get_value("Requirement", {"customer": customer}, "name", order_by="creation desc")
+	if existing:
+		doc = frappe.get_doc("Requirement", existing)
+		if all((doc.get(f) or "") == v for f, v in values.items()):
+			return False
+		doc.update(values)
+		doc.save(ignore_permissions=True)
+		return True
+
+	frappe.get_doc(
+		{
+			"doctype": "Requirement",
+			"customer": customer,
+			"company_name": frappe.db.get_value("Customer", customer, "customer_name"),
+			"country": "India",
+			"outcome": "Starter Pack",
+			**values,
+		}
+	).insert(ignore_permissions=True)
+	return True
+
+
 REQUIREMENT_FIELDS = [
 	"name", "company_name", "country", "industry", "looking_for", "company_size",
 	"current_situation", "timeline", "delivery_preference", "budget",
