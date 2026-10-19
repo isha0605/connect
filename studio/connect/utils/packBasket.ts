@@ -7,6 +7,8 @@
 import { computed } from "vue"
 import { MODULE_ICONS, commercialTerms } from "@app/utils/recommendation"
 
+const BASE_PACKS = ["core", "core-manufacturing"]
+
 export function packBasket(context) {
 	const { route, router, catalog, myContext, pickedPacks, scopePackKey, showScope } = context
 
@@ -26,10 +28,14 @@ export function packBasket(context) {
 		return pickedPacks.value.includes(key)
 	}
 
+	// Core and Core + Manufacturing are alternatives, so ticking one unticks the other.
 	function togglePack(key) {
-		pickedPacks.value = isPicked(key)
-			? pickedPacks.value.filter((k) => k !== key)
-			: [...pickedPacks.value, key]
+		if (isPicked(key)) {
+			pickedPacks.value = pickedPacks.value.filter((k) => k !== key)
+			return
+		}
+		const others = BASE_PACKS.includes(key) ? BASE_PACKS : []
+		pickedPacks.value = [...pickedPacks.value.filter((k) => !others.includes(k)), key]
 	}
 
 	const scopePack = computed(() => packs.value.find((p) => p.pack_key === scopePackKey.value) || null)

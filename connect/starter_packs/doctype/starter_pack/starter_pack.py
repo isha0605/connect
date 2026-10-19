@@ -9,6 +9,10 @@ class StarterPack(Document):
 	"""A fixed-price pack Frappe sells. Prices are Frappe's, not a partner's."""
 
 
+# Sections kept on the pack for Frappe's own reference, not shown to buyers.
+HIDDEN_SECTION_LABELS = {"Not included"}
+
+
 def get_catalog():
 	"""Active packs, each with its View details sections grouped by module, plus what
 	the cost card needs to show a total: the GST rate and currency."""
@@ -18,6 +22,8 @@ def get_catalog():
 		pack = frappe.get_cached_doc("Starter Pack", name)
 		modules = {}
 		for row in pack.sections:
+			if row.label in HIDDEN_SECTION_LABELS:
+				continue
 			modules.setdefault(row.module_name, []).append({"label": row.label, "content": row.content})
 		packs.append(
 			{

@@ -2,9 +2,9 @@
 // visitor has picked, kept in this browser until checkout. Core and Core + Manufacturing
 // are alternatives, so picking one replaces the other. Also the terms every pack is sold on.
 //
-// Each cart pack is one or more catalog packs, and checkout charges for those at the catalog's
-// prices, so once the catalog is in, the cart shows its prices, hours and GST rate too. The
-// figures below are only what shows until then.
+// Each cart pack is a Starter Pack of the same key, and checkout charges the catalog's prices,
+// so once the catalog is in, the cart shows its prices, hours and GST rate too. The figures
+// below are only what shows until then.
 
 import { computed, ref } from "vue"
 import { rememberOrderKey } from "@app/utils/checkoutSession"
@@ -19,8 +19,6 @@ export const CART_PACKS = {
 		hours: "5 hrs within 5 sessions",
 		price: 10000,
 		logo: "/assets/connect/images/app_icons/erpnext.png",
-		// the catalog packs an order holds for it
-		catalogPacks: ["accounts_sales_purchase_stock"],
 	},
 	"core-manufacturing": {
 		title: "Core + Manufacturing",
@@ -28,7 +26,6 @@ export const CART_PACKS = {
 		hours: "10 hrs within 5 sessions",
 		price: 20000,
 		logo: "/assets/connect/images/app_icons/erpnext.png",
-		catalogPacks: ["accounts_sales_purchase_stock", "manufacturing"],
 	},
 	"hr-payroll": {
 		title: "HR and Payroll",
@@ -36,25 +33,9 @@ export const CART_PACKS = {
 		hours: "10 hrs within 5 sessions",
 		price: 20000,
 		logo: "/assets/connect/images/app_icons/frappe-hr.png",
-		catalogPacks: ["hr", "payroll"],
 	},
 }
 const BASE_PACKS = ["core", "core-manufacturing"]
-
-// Which cart packs a set of catalog packs makes up, biggest first: an order of
-// accounts_sales_purchase_stock + manufacturing is Core + Manufacturing, not Core.
-export function cartPacksFor(catalogKeys) {
-	const left = new Set(catalogKeys)
-	const found = []
-	const biggestFirst = Object.entries(CART_PACKS).sort(([, a], [, b]) => b.catalogPacks.length - a.catalogPacks.length)
-	for (const [key, pack] of biggestFirst) {
-		if (pack.catalogPacks.every((k) => left.has(k))) {
-			pack.catalogPacks.forEach((k) => left.delete(k))
-			found.push(key)
-		}
-	}
-	return found
-}
 
 export const STARTER_PACK_TERMS = [
 	{ title: "Eligibility", items: [{ text: "For Frappe Cloud customers on plans of ₹820/month and above" }] },
@@ -123,13 +104,11 @@ export function money(amount) {
 	return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount)
 }
 
-// A cart pack priced as checkout will charge it: the sum of its catalog packs.
+// A cart pack priced as checkout will charge it.
 function priced(key) {
-	const pack = CART_PACKS[key]
-	const rows = (catalog.value?.packs || []).filter((p) => pack.catalogPacks.includes(p.pack_key))
-	if (rows.length !== pack.catalogPacks.length) return { price: pack.price, hours: pack.hours }
-	const totalHours = rows.reduce((sum, p) => sum + p.total_hours, 0)
-	return { price: rows.reduce((sum, p) => sum + p.price, 0), hours: `${totalHours} hrs within 5 sessions` }
+	const pack = (catalog.value?.packs || []).find((p) => p.pack_key === key)
+	if (!pack) return { price: CART_PACKS[key].price, hours: CART_PACKS[key].hours }
+	return { price: pack.price, hours: `${pack.total_hours} hrs within 5 sessions` }
 }
 
 export function starterPackCart(context) {
@@ -183,13 +162,13 @@ export function starterPackCart(context) {
 
 	const isGuest = computed(() => !myContext?.data || myContext.data.user === "Guest")
 
-	// Places the order for the cart's catalog packs and sends the buyer to Razorpay. Razorpay
+	// Places the order for the cart's packs and sends the buyer to Razorpay. Razorpay
 	// sends them back to the checkout page, which checks the payment with the gateway and opens
 	// the project; the cart empties there, once the order is paid. Someone signed out signs up
 	// first and comes back to the cart. An order needs a company and an email: an account without
 	// either (Administrator's id is no email) goes to the checkout page's form, which asks.
 	async function checkout() {
-		const packs = [...new Set(cartKeys.value.flatMap((key) => CART_PACKS[key].catalogPacks))]
+		const packs = [...cartKeys.value]
 		if (!packs.length || checkingOut.value) return
 		if (isGuest.value) {
 			router.push({ path: "/login-signup-redesign", query: { next: "/starter-pack-cart" } })

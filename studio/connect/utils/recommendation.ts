@@ -145,28 +145,31 @@ const CORE_PACK_REASONS = {
 	outgrowing: "The base the rest of ERPNext is built on",
 }
 
-// Pack key -> why it's recommended for these answers, or null when it isn't.
+// The manufacturing industries in the answers. "Manufacturing" alone is the group, as older
+// links sent it.
+function madeIndustries(a) {
+	return a.industries.filter((i) => i === "Manufacturing" || MANUFACTURING_INDUSTRIES.includes(i))
+}
+
+// Pack key -> why it's recommended for these answers, or null when it isn't. Core and
+// Core + Manufacturing are alternatives: a business that makes things gets the second.
 const PACK_REASONS = {
-	accounts_sales_purchase_stock: (a) => {
-		// Only payroll and leave to fix: HR and Payroll cover it on their own.
+	core: (a) => {
+		// Only payroll and leave to fix: HR and Payroll cover it on its own.
 		if (a.problems.length === 1 && a.problems[0] === "hr_by_hand") return null
+		if (madeIndustries(a).length) return null
 		const first = a.problems.find((p) => CORE_PACK_REASONS[p])
 		return first ? CORE_PACK_REASONS[first] : "The base the rest of ERPNext is built on"
 	},
-	manufacturing: (a) => {
-		// "Manufacturing" alone is the group, as older links sent it.
-		const made = a.industries.filter((i) => i === "Manufacturing" || MANUFACTURING_INDUSTRIES.includes(i))
+	"core-manufacturing": (a) => {
+		const made = madeIndustries(a)
 		if (!made.length) return null
 		const what = made.length === 1 ? made[0].toLowerCase() : "manufacturing"
 		return `You're in ${what}, so work orders and BOMs get planned against the stock you hold`
 	},
-	hr: (a) =>
+	"hr-payroll": (a) =>
 		a.problems.includes("hr_by_hand")
-			? "Leave and attendance are kept by hand today; this puts them on one employee record"
-			: null,
-	payroll: (a) =>
-		a.problems.includes("hr_by_hand")
-			? "Salaries are worked out by hand today; this runs them off the attendance HR records"
+			? "Leave, attendance and salaries are kept by hand today; this puts them on one employee record and runs pay off it"
 			: null,
 }
 
@@ -319,22 +322,27 @@ export const EXTRA_HOUR_RATE = 2000
 // One line under each pack's name, from the prototype. Keyed by Starter Pack name; a pack
 // added later without one here just shows no line.
 export const PACK_PITCHES = {
-	accounts_sales_purchase_stock: "Run the business without spreadsheets.",
-	manufacturing: "Plan production against real stock.",
-	hr: "Keep people, leave and attendance in one place.",
-	payroll: "Pay people on time, off their attendance.",
+	core: "Run the business without spreadsheets.",
+	"core-manufacturing": "Run the business and plan production against real stock.",
+	"hr-payroll": "Keep people, leave and attendance in one place, and pay them on time.",
 }
 
 // Icon beside each module in a pack's "Modules covered" list, by the module's name in the
 // catalog. Anything unlisted falls back to a plain box.
 export const MODULE_ICONS = {
+	Setup: "lucide-settings-2",
+	"Buying and selling": "lucide-arrow-left-right",
+	Stock: "lucide-warehouse",
 	Accounting: "lucide-landmark",
+	Manufacturing: "lucide-factory",
+	"Data and users": "lucide-database",
+	HRMS: "lucide-users",
+	Payroll: "lucide-wallet",
+	// the packs sold before Core, Core + Manufacturing and HR and Payroll
 	Selling: "lucide-trending-up",
 	Buying: "lucide-shopping-cart",
 	Inventory: "lucide-warehouse",
-	Manufacturing: "lucide-factory",
 	HR: "lucide-users",
-	Payroll: "lucide-wallet",
 }
 
 // The commercial terms, shared by the recommendation page (before paying) and the

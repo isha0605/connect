@@ -70,6 +70,41 @@ class IntegrationTestStarterPackOrder(IntegrationTestCase):
 		frappe.db.set_value("Starter Pack", self.pack_a, "is_active", 0)
 		self.assertRaises(frappe.ValidationError, make_order, [self.pack_a])
 
+	def test_rejects_both_core_packs(self):
+		core, with_manufacturing = make_pack("core", 10000, 5), make_pack("core-manufacturing", 20000, 10)
+		self.assertRaises(frappe.ValidationError, make_order, [core, with_manufacturing])
+		self.assertEqual(make_order([with_manufacturing, self.pack_a]).subtotal, 30000)
+
+	def test_the_ui_packs_replace_the_old_ones(self):
+		from connect.patches.replace_starter_packs_with_ui_packs import OLD_PACKS, execute
+		from connect.starter_packs.doctype.starter_pack.starter_pack import get_catalog
+
+		for key in ("core", "core-manufacturing", "hr-payroll"):
+			frappe.db.delete("Starter Pack Module Section", {"parent": key})
+			frappe.db.delete("Starter Pack", key)
+		for key in OLD_PACKS:
+			make_pack(key, 10000, 5)
+
+		execute()
+		self.assertEqual(
+			frappe.db.get_value("Starter Pack", "core-manufacturing", ["pack_name", "price", "total_hours"]),
+			("Core + Manufacturing", 20000, 10),
+		)
+		self.assertFalse(frappe.db.get_all("Starter Pack", filters={"name": ["in", OLD_PACKS], "is_active": 1}))
+		self.assertTrue(
+			frappe.db.exists("Starter Pack Module Section", {"parent": "hr-payroll", "label": "Not included"})
+		)
+
+		# kept on the pack, never shown to buyers
+		catalog = {p["pack_key"]: p for p in get_catalog()["packs"]}
+		labels = {s["label"] for m in catalog["hr-payroll"]["modules"] for s in m["sections"]}
+		self.assertEqual(labels, {"Covers"})
+		self.assertNotIn("manufacturing", catalog)
+
+		frappe.db.set_value("Starter Pack", "core", "price", 12000)
+		execute()  # never overwrites what Desk changed
+		self.assertEqual(frappe.db.get_value("Starter Pack", "core", "price"), 12000)
+
 	def test_packs_are_frozen_once_placed(self):
 		order = make_order([self.pack_a])
 		order.append("packs", {"starter_pack": self.pack_b})

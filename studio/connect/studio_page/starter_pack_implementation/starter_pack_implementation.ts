@@ -2,7 +2,7 @@ import { computed, ref, watch } from "vue"
 import { toast, call } from "frappe-ui"
 import { orderKey } from "@app/utils/checkoutSession"
 import { EMPLOYEE_OPTIONS, INDUSTRY_OPTIONS, MODULE_ICONS, SYSTEM_OPTIONS } from "@app/utils/recommendation"
-import { CART_PACKS, cartPacksFor, clearCart } from "@app/utils/starterPackCart"
+import { CART_PACKS, clearCart } from "@app/utils/starterPackCart"
 
 // "Set up your Starter Pack": where checkout sends the buyer once their order is paid
 // (/starter-pack-implementation?order=SPO-…). The right panel and "Pay upfront" come from
@@ -267,27 +267,22 @@ export default function setup(context) {
 		})
 	}
 
-	// What was bought, as the cart names it. Orders from before the cart could hold a catalog
-	// pack on its own (just HR); that shows under its own name.
-	const bookedPacks = computed(() => {
-		const rows = order.value?.packs || []
-		const keys = cartPacksFor(rows.map((row) => row.starter_pack))
-		const covered = new Set(keys.flatMap((key) => CART_PACKS[key].catalogPacks))
-		const singles = rows
-			.filter((row) => !covered.has(row.starter_pack))
-			.map((row) => ({
+	// What was bought, as the cart names it, with hours as sold. Orders from before the cart's
+	// packs were the catalog's hold the older packs (Manufacturing, HR…); those show under
+	// their own names.
+	const OLD_HR_PACKS = ["hr", "payroll"]
+	const bookedPacks = computed(() =>
+		(order.value?.packs || []).map((row) => {
+			const pack = CART_PACKS[row.starter_pack]
+			if (pack) return { key: row.starter_pack, ...pack, hours: `${row.total_hours} hrs within 5 sessions` }
+			return {
 				key: row.starter_pack,
 				title: row.pack_name,
 				hours: row.total_hours ? `${row.total_hours} hrs` : "",
-				logo: CART_PACKS["hr-payroll"].catalogPacks.includes(row.starter_pack)
-					? CART_PACKS["hr-payroll"].logo
-					: CART_PACKS.core.logo,
-			}))
-		// hours as sold, from the order's own lines
-		const soldHours = (key) =>
-			rows.filter((row) => CART_PACKS[key].catalogPacks.includes(row.starter_pack)).reduce((sum, row) => sum + (row.total_hours || 0), 0)
-		return [...keys.map((key) => ({ key, ...CART_PACKS[key], hours: `${soldHours(key)} hrs within 5 sessions` })), ...singles]
-	})
+				logo: OLD_HR_PACKS.includes(row.starter_pack) ? CART_PACKS["hr-payroll"].logo : CART_PACKS.core.logo,
+			}
+		}),
+	)
 
 	function dismissBooked() {
 		bookedOpen.value = false

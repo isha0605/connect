@@ -41,6 +41,9 @@ GATEWAY_STATUS_MAP = {
 # writes them with an en dash, as the Find Partners wizard always has.
 COMPANY_SIZES = {"1-10": "1–10", "11-50": "11–50", "51-200": "51–200", "201-500": "201–500", "500+": "500+"}
 
+# Packs an order can hold only one of: Core + Manufacturing is Core with more, not an add-on.
+ALTERNATIVE_PACKS = {"core", "core-manufacturing"}
+
 # What the Confirmed page's partner card shows (industry feeds its industries list).
 PARTNER_CARD_FIELDS = [
 	"name",
@@ -103,6 +106,9 @@ class StarterPackOrder(Document):
 			row.price = pack.price
 			row.total_hours = pack.total_hours
 			row.delivery_days = pack.delivery_days
+
+		if len(seen & ALTERNATIVE_PACKS) > 1:
+			frappe.throw(_("Pick either Core or Core + Manufacturing, not both."))
 
 	def validate_packs_unchanged(self):
 		before = self.get_doc_before_save()
