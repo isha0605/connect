@@ -156,6 +156,15 @@ export function starterPackCart(context) {
 		inCart(key) ? removeFromCart(key) : addToCart(key)
 	}
 
+	// A pack button's text. With the other base pack in the cart, picking this one swaps them:
+	// Core + Manufacturing is an upgrade from Core, and Core a switch back.
+	function packButtonLabel(key, label) {
+		if (inCart(key)) return "In cart"
+		if (key === "core-manufacturing" && inCart("core")) return "Upgrade to this"
+		if (key === "core" && inCart("core-manufacturing")) return "Switch to this"
+		return label
+	}
+
 	function viewCart() {
 		router.push("/starter-pack-cart")
 	}
@@ -212,6 +221,7 @@ export function starterPackCart(context) {
 		addToCart,
 		removeFromCart,
 		toggleCart,
+		packButtonLabel,
 		viewCart,
 		checkout,
 		checkingOut,
