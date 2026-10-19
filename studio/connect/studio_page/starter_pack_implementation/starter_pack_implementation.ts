@@ -1,4 +1,4 @@
-import { computed, ref, watch } from "vue"
+import { computed, onScopeDispose, ref, watch } from "vue"
 import { toast, call } from "frappe-ui"
 import { orderKey } from "@app/utils/checkoutSession"
 import { EMPLOYEE_OPTIONS, INDUSTRY_OPTIONS, MODULE_ICONS, SYSTEM_OPTIONS } from "@app/utils/recommendation"
@@ -202,11 +202,43 @@ export default function setup(context) {
 			})
 	}
 
+	// ---- Kickoff call ----
+	// The consultant shares it from Messaging; the step is done once the call's time has passed.
+	const now = ref(Date.now())
+	const clock = setInterval(() => {
+		now.value = Date.now()
+	}, 60 * 1000)
+	onScopeDispose(() => clearInterval(clock))
+
+	const kickoffAt = computed(() => (order.value?.kickoff_at ? new Date(order.value.kickoff_at) : null))
+	const meetingLink = computed(() => order.value?.meeting_link || "")
+	const kickoffHappened = computed(() => !!kickoffAt.value && kickoffAt.value.getTime() <= now.value)
+	const kickoffDescription = computed(() => {
+		if (!kickoffAt.value) {
+			return `Agree a kickoff date with ${partnerName.value}. They will go through your requirements with you and plan the implementation.`
+		}
+		const when = kickoffAt.value.toLocaleString("en-US", {
+			weekday: "short",
+			month: "short",
+			day: "numeric",
+			hour: "numeric",
+			minute: "2-digit",
+		})
+		return kickoffHappened.value
+			? `Your kickoff call with ${partnerName.value} was on ${when}.`
+			: `Your kickoff call with ${partnerName.value} is on ${when}.`
+	})
+
+	function joinCall() {
+		if (meetingLink.value) window.open(meetingLink.value, "_blank", "noopener")
+	}
+
 	// ---- Steps accordion ----
 	// "Pay upfront" is done once the order is paid; "Tell us about your company" once answered.
 	function stepStatus(key) {
 		if (key === "pay-upfront") return order.value ? "completed" : "pending"
 		if (key === "company") return savedCompany.value ? "completed" : "pending"
+		if (key === "kickoff") return kickoffHappened.value ? "completed" : "pending"
 		return "pending"
 	}
 
@@ -340,6 +372,9 @@ export default function setup(context) {
 		employeeOptions: EMPLOYEE_OPTIONS,
 		industryOptions: INDUSTRY_OPTIONS,
 		systemOptions: SYSTEM_OPTIONS,
+		kickoffDescription,
+		meetingLink,
+		joinCall,
 		companySummary,
 		openCompany,
 		saveCompany,

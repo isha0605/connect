@@ -52,6 +52,12 @@ def save_company_details(order, employees, industry, system, focus=None, key=Non
 	return save_company_details(order, employees, industry, system, focus=focus, key=key)
 
 
+@frappe.whitelist(methods=["POST"])
+def share_kickoff_meeting(thread, link, starts_at):
+	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import share_kickoff_meeting
+	return share_kickoff_meeting(thread, link, starts_at)
+
+
 @frappe.whitelist()
 def my_orders():
 	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import my_orders

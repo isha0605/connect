@@ -669,7 +669,7 @@
                    "componentName": "TextBlock",
                    "componentProps": {
                     "tag": "p",
-                    "text": "{{ 'Agree a kickoff date with ' + partnerName + '. They will go through your requirements with you and plan the implementation.' }}"
+                    "text": "{{ kickoffDescription }}"
                    },
                    "componentSlots": {}
                   },
@@ -685,6 +685,24 @@
                       "click": {
                        "action": "Run Script",
                        "event": "click",
+                       "script": "joinCall();"
+                      }
+                     },
+                     "componentId": "step-kickoff-join-btn",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "iconLeft": "lucide-video",
+                      "label": "Join call",
+                      "variant": "solid"
+                     },
+                     "componentSlots": {},
+                     "visibilityCondition": "meetingLink"
+                    },
+                    {
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
                        "script": "openThread();"
                       }
                      },
@@ -692,7 +710,7 @@
                      "componentName": "Button",
                      "componentProps": {
                       "label": "{{ 'Message ' + partnerName }}",
-                      "variant": "solid"
+                      "variant": "{{ meetingLink ? 'subtle' : 'solid' }}"
                      },
                      "componentSlots": {}
                     }

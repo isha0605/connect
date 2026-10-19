@@ -247,6 +247,22 @@ def post_company_details(order, customer, focus=None):
 		).insert(ignore_permissions=True)
 
 
+def post_meeting_card(order, sender, link, starts_at):
+	"""The kickoff call as a card in the project's thread, with a Join button. The newest card
+	for an order is the live one; Messaging shows older ones as replaced."""
+	frappe.get_doc(
+		{
+			"doctype": "Connect Message",
+			"thread": order.implementation_thread,
+			"sender": sender,
+			"message_type": "Meeting",
+			"content": json.dumps(
+				{"order": order.name, "title": _("Kickoff call"), "link": link, "starts_at": starts_at}
+			),
+		}
+	).insert(ignore_permissions=True)
+
+
 def requirement_card(order, customer):
 	card = get_requirement_snapshot(customer) or {}
 	card.update(

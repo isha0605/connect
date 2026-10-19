@@ -15,6 +15,7 @@ from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import 
 	get_order,
 	pay,
 	save_company_details,
+	share_kickoff_meeting,
 )
 
 RAZORPAY = "bwh_payments.bwh_payments.doctype.razorpay_gateway_settings.razorpay_gateway_settings.RazorpayGatewaySettings"
@@ -836,6 +837,48 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 
 		save_company_details(order.name, "1-10", "Retail", "Busy", focus="GST returns")  # nothing new
 		self.assertEqual(frappe.db.count("Connect Message", {"thread": thread}), posted + 2)
+
+	def test_the_consultant_shares_the_kickoff_call(self):
+		from connect.partner.test_consultants import make_consultant
+
+		order = self.paid_order()
+		hand_over(order.name)
+		user, _customer, _admin = self.signed_in_buyer(order)
+		post_opening_message(order.name)
+		thread = frappe.db.get_value("Starter Pack Order", order.name, "implementation_thread")
+		self.addCleanup(frappe.db.delete, "Connect Message", {"thread": thread})
+		consultant = make_consultant("_test_sp_consultant@example.com", "Test Consultant")
+		order.db_set("consultant", consultant)
+		starts_at = frappe.utils.add_days(frappe.utils.now_datetime(), 2).replace(microsecond=0)
+
+		def share_as(who, link="https://meet.google.com/abc-defg-hij", when=starts_at):
+			frappe.set_user(who)
+			try:
+				return share_kickoff_meeting(thread, link, str(when))
+			finally:
+				frappe.set_user("Administrator")
+
+		self.assertRaises(frappe.PermissionError, share_as, user)  # the buyer can't
+		self.assertRaises(frappe.ValidationError, share_as, consultant, link="http://meet.example.com/x")
+		self.assertRaises(frappe.ValidationError, share_as, consultant, link="javascript:alert(1)")
+		self.assertRaises(frappe.ValidationError, share_as, consultant, when=frappe.utils.add_days(starts_at, -3))
+
+		share_as(consultant)
+		order.reload()
+		self.assertEqual((order.kickoff_at, order.meeting_link), (starts_at, "https://meet.google.com/abc-defg-hij"))
+		self.assertIsNone(order.kickoff_date)  # still refundable until it happens
+		result = get_order(order.name)
+		self.assertEqual(result["meeting_link"], "https://meet.google.com/abc-defg-hij")
+		self.assertTrue(result["kickoff_at"].startswith(starts_at.isoformat()))
+
+		card = frappe.get_last_doc("Connect Message", {"thread": thread})
+		self.assertEqual((card.sender, card.message_type), (consultant, "Meeting"))
+		content = frappe.parse_json(card.content)
+		self.assertEqual((content["order"], content["link"]), (order.name, "https://meet.google.com/abc-defg-hij"))
+
+		share_as(consultant, link="https://zoom.us/j/123")  # moved: a second card, the order follows
+		self.assertEqual(frappe.db.count("Connect Message", {"thread": thread, "message_type": "Meeting"}), 2)
+		self.assertEqual(frappe.db.get_value("Starter Pack Order", order.name, "meeting_link"), "https://zoom.us/j/123")
 
 	def test_company_details_need_the_buyers_account(self):
 		order = self.paid_order()

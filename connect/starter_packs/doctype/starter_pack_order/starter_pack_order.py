@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import hmac
+from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
 import frappe
@@ -15,6 +16,7 @@ from connect.starter_packs.doctype.starter_pack_order.implementation import (
 	hand_over,
 	move_thread,
 	post_company_details,
+	post_meeting_card,
 	project_title,
 	timeline_days,
 )
@@ -403,6 +405,8 @@ def get_order(order=None, payment_request=None, key=None):
 		"amount": doc.amount,
 		"total_hours": doc.total_hours,
 		"kickoff_date": doc.kickoff_date,
+		"kickoff_at": with_timezone(doc.kickoff_at),
+		"meeting_link": doc.meeting_link,
 		"company_details": company_details(doc),
 		"partner": get_assigned_partner(doc.partner) if doc.partner else None,
 		"consultant": consultant_card(doc.consultant),
@@ -419,6 +423,15 @@ def get_order(order=None, payment_request=None, key=None):
 			for r in doc.packs
 		],
 	}
+
+
+def site_datetime(value):
+	"""A time from the browser, which says its offset (2026-10-22T09:30:00Z), as Frappe stores
+	datetimes: in the system time zone, without one."""
+	value = get_datetime(value)
+	if value.tzinfo:
+		value = value.astimezone(ZoneInfo(get_system_timezone())).replace(tzinfo=None)
+	return value
 
 
 def with_timezone(value):
@@ -576,6 +589,38 @@ def save_company_details(order, employees, industry, system, focus=None, key=Non
 	if changed:
 		post_company_details(doc, customer, focus)
 	return company_details(doc)
+
+
+def share_kickoff_meeting(thread, link, starts_at):
+	"""The consultant sets the kickoff call for the project in this thread: saved on the order
+	and posted in the thread as a card the customer joins from. Sharing again replaces it.
+
+	Only the order's own consultant can. Doesn't touch kickoff_date, which stops refunds:
+	a call that's only planned mustn't."""
+	user = frappe.session.user
+	order = frappe.db.get_value(
+		"Starter Pack Order",
+		{"implementation_thread": thread, "consultant": user, "payment_status": "Paid"},
+		"name",
+		order_by="creation desc",
+	)
+	if not order:
+		frappe.throw(_("Only the project's consultant can share its kickoff call."), frappe.PermissionError)
+
+	link = (link or "").strip()
+	parsed = urlparse(link)
+	if parsed.scheme != "https" or not parsed.netloc:
+		frappe.throw(_("Enter the meeting link, starting with https://"))
+	if not starts_at:
+		frappe.throw(_("Pick when the call is."))
+	starts_at = site_datetime(starts_at)
+	if starts_at <= now_datetime():
+		frappe.throw(_("Pick a time that's still to come."))
+
+	doc = frappe.get_doc("Starter Pack Order", order)
+	doc.db_set({"kickoff_at": starts_at, "meeting_link": link})
+	post_meeting_card(doc, user, link, with_timezone(starts_at))
+	return {"kickoff_at": with_timezone(starts_at), "meeting_link": link}
 
 
 def get_own_order(order, key=None):

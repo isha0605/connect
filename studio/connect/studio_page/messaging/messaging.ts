@@ -1242,6 +1242,105 @@ export default function setup(context) {
 		})
 	}
 
+	// ---- Kickoff call: the consultant shares a meeting link, both sides join from a card ----
+	// message_type "Meeting"; content is { order, title, link, starts_at } (see
+	// share_kickoff_meeting). Only the consultant of a Starter Pack thread shares one. Sharing
+	// again posts a new card, and the older cards for that order show as replaced.
+	function canShareMeeting() {
+		const me = context.myContext.data && context.myContext.data.user
+		const thread = currentThread()
+		return selectedThreadType.value === "company" && !!thread.consultant && thread.consultant === me
+	}
+
+	function isMeetingReplaced(item) {
+		const order = parseRequirementContent(item).order
+		return currentMessages().some(
+			(m) =>
+				m.message_type === "Meeting" &&
+				m.name !== item.name &&
+				m.creation > item.creation &&
+				parseRequirementContent(m).order === order,
+		)
+	}
+
+	function meetingCardTime(item) {
+		const startsAt = parseRequirementContent(item).starts_at
+		if (!startsAt) return ""
+		return new Date(startsAt).toLocaleString("en-US", {
+			weekday: "short",
+			month: "short",
+			day: "numeric",
+			hour: "numeric",
+			minute: "2-digit",
+		})
+	}
+
+	// "meet.google.com/abc-defg-hij": the link without its https://
+	function meetingCardLink(item) {
+		return String(parseRequirementContent(item).link || "").replace(/^https:\/\//, "")
+	}
+
+	function meetingCardStatus(item) {
+		return isMeetingReplaced(item) ? "Replaced by a newer time" : ""
+	}
+
+	function joinMeeting(item) {
+		const link = parseRequirementContent(item).link
+		if (link) window.open(link, "_blank", "noopener")
+	}
+
+	const showMeetingDialog = ref(false)
+	const meetingLinkDraft = ref("")
+	const meetingStartsAt = ref("")
+	const sharingMeeting = ref(false)
+
+	// A datetime-local input's value ("2026-10-22T15:00") for a time, in this browser's zone.
+	function localInputValue(value) {
+		const date = new Date(value)
+		const pad = (n) => String(n).padStart(2, "0")
+		return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+	}
+
+	// Opens on the call already shared, if there is one, so moving it is one change.
+	function openMeetingDialog() {
+		const latest = [...currentMessages()].reverse().find((m) => m.message_type === "Meeting")
+		const shared = latest ? parseRequirementContent(latest) : {}
+		meetingLinkDraft.value = shared.link || ""
+		meetingStartsAt.value = shared.starts_at ? localInputValue(shared.starts_at) : ""
+		showMeetingDialog.value = true
+	}
+
+	function shareMeeting() {
+		const link = String(meetingLinkDraft.value || "").trim()
+		if (!/^https:\/\/\S+$/.test(link)) {
+			toast.error("Enter the meeting link, starting with https://")
+			return
+		}
+		if (!meetingStartsAt.value) {
+			toast.error("Pick when the call is.")
+			return
+		}
+		if (sharingMeeting.value) return
+		sharingMeeting.value = true
+		call("connect.api.starter_pack.share_kickoff_meeting", {
+			thread: selectedThread.value,
+			link,
+			// with this browser's offset, so the server stores the time that was meant
+			starts_at: new Date(meetingStartsAt.value).toISOString(),
+		})
+			.then(() => {
+				showMeetingDialog.value = false
+				toast.success("Kickoff call shared")
+				context.messages.reload()
+			})
+			.catch((error) => {
+				toast.error(error?.messages?.[0] || "Couldn't share the call. Try again.")
+			})
+			.finally(() => {
+				sharingMeeting.value = false
+			})
+	}
+
 	// ---- Requirement card (a customer's brief), as Pragati's design shows it ----
 	// Title, the start of what they need built, budget and industry; View details opens the
 	// whole brief. Share requirements cards carry "Custom implementation: <what they need>";
@@ -2115,6 +2214,7 @@ export default function setup(context) {
 		if (!message) return ""
 		if (message.message_type === "File") return message.file_name || "Attachment"
 		if (message.message_type === "Requirement") return "Requirement details"
+		if (message.message_type === "Meeting") return "Kickoff call"
 		return message.content || ""
 	}
 
@@ -2216,6 +2316,7 @@ export default function setup(context) {
 	function pinnedPreviewText(message) {
 		if (message.message_type === "File") return "📎 " + (message.file_name || "Attachment")
 		if (message.message_type === "Requirement") return "Requirement details"
+		if (message.message_type === "Meeting") return "📹 Kickoff call"
 		return message.content || ""
 	}
 
@@ -2227,6 +2328,7 @@ export default function setup(context) {
 		if (!message) return ""
 		if (message.message_type === "File") return escapeHtmlAttr("\ud83d\udcce " + (message.file_name || "Attachment"))
 		if (message.message_type === "Requirement") return escapeHtmlAttr("Requirement details")
+		if (message.message_type === "Meeting") return escapeHtmlAttr("\ud83d\udcf9 Kickoff call")
 		return formatMessageContent(message)
 	}
 
@@ -3888,6 +3990,18 @@ export default function setup(context) {
 		goBackToThreadList,
 		closeThread,
 		amPartner,
+		canShareMeeting,
+		isMeetingReplaced,
+		meetingCardTime,
+		meetingCardLink,
+		meetingCardStatus,
+		joinMeeting,
+		showMeetingDialog,
+		meetingLinkDraft,
+		meetingStartsAt,
+		sharingMeeting,
+		openMeetingDialog,
+		shareMeeting,
 		isPartnerAdmin,
 		isCustomerAdmin,
 		isAnyAdmin,

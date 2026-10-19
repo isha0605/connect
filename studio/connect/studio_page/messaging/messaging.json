@@ -2089,7 +2089,7 @@
                           "maxWidth": "85vw"
                          },
                          "originalElement": "div",
-                         "visibilityCondition": "dataItem.message_type !== 'File' && dataItem.message_type !== 'Requirement' && dataItem.message_type !== 'Quote' && dataItem.message_type !== 'Hire Request'"
+                         "visibilityCondition": "dataItem.message_type !== 'File' && dataItem.message_type !== 'Requirement' && dataItem.message_type !== 'Quote' && dataItem.message_type !== 'Hire Request' && dataItem.message_type !== 'Meeting'"
                         },
                         {
                          "baseStyles": {
@@ -2462,6 +2462,152 @@
                         },
                         {
                          "baseStyles": {
+                          "backgroundColor": "var(--surface-base)",
+                          "border": "1px solid var(--outline-gray-1)",
+                          "borderRadius": "10px",
+                          "boxSizing": "border-box",
+                          "display": "flex",
+                          "flexDirection": "column",
+                          "gap": "10px",
+                          "maxWidth": "100%",
+                          "padding": "14px 16px",
+                          "width": "480px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "gap": "6px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "height": "14px",
+                              "width": "14px"
+                             },
+                             "componentId": "message-meeting-icon",
+                             "componentName": "Icon",
+                             "componentProps": {
+                              "icon": "lucide-video"
+                             },
+                             "componentSlots": {}
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "fontWeight": "500",
+                              "lineHeight": "20px"
+                             },
+                             "componentId": "message-meeting-kicker",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-sm",
+                              "tag": "span",
+                              "text": "Kickoff call"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "message-meeting-label",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-9, oklch(0.168 0 0))",
+                            "fontWeight": "600",
+                            "lineHeight": "26px"
+                           },
+                           "componentId": "message-meeting-time",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-lg",
+                            "tag": "span",
+                            "text": "{{ meetingCardTime(dataItem) }}"
+                           },
+                           "componentSlots": {}
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-6)",
+                            "lineHeight": "20px",
+                            "overflow": "hidden",
+                            "textOverflow": "ellipsis",
+                            "whiteSpace": "nowrap"
+                           },
+                           "componentId": "message-meeting-link",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-base",
+                            "tag": "span",
+                            "text": "{{ meetingCardLink(dataItem) }}"
+                           },
+                           "componentSlots": {}
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-7)",
+                            "lineHeight": "20px"
+                           },
+                           "componentId": "message-meeting-status",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-sm",
+                            "tag": "span",
+                            "text": "{{ meetingCardStatus(dataItem) }}"
+                           },
+                           "componentSlots": {},
+                           "visibilityCondition": "isMeetingReplaced(dataItem)"
+                          },
+                          {
+                           "baseStyles": {
+                            "display": "flex",
+                            "gap": "8px",
+                            "marginTop": "4px"
+                           },
+                           "children": [
+                            {
+                             "componentEvents": {
+                              "click": {
+                               "action": "Run Script",
+                               "event": "click",
+                               "script": "joinMeeting(dataItem);"
+                              }
+                             },
+                             "componentId": "message-meeting-join",
+                             "componentName": "Button",
+                             "componentProps": {
+                              "iconLeft": "lucide-video",
+                              "label": "Join call",
+                              "variant": "solid"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "message-meeting-actions",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div",
+                           "visibilityCondition": "!isMeetingReplaced(dataItem)"
+                          }
+                         ],
+                         "componentId": "message-meeting-card",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {
+                          "width": "calc(100vw - 80px)"
+                         },
+                         "originalElement": "div",
+                         "visibilityCondition": "dataItem.message_type === 'Meeting'"
+                        },
+                        {
+                         "baseStyles": {
                           "alignItems": "center",
                           "backgroundColor": "var(--surface-gray-1)",
                           "border": "1px solid var(--outline-gray-2)",
@@ -2745,7 +2891,7 @@
                           "maxWidth": "85vw"
                          },
                          "originalElement": "div",
-                         "visibilityCondition": "dataItem.message_type !== 'File' && dataItem.message_type !== 'Requirement' && dataItem.message_type !== 'Quote' && dataItem.message_type !== 'Hire Request'"
+                         "visibilityCondition": "dataItem.message_type !== 'File' && dataItem.message_type !== 'Requirement' && dataItem.message_type !== 'Quote' && dataItem.message_type !== 'Hire Request' && dataItem.message_type !== 'Meeting'"
                         },
                         {
                          "baseStyles": {
@@ -3164,6 +3310,152 @@
                          },
                          "originalElement": "div",
                          "visibilityCondition": "dataItem.message_type === 'Hire Request'"
+                        },
+                        {
+                         "baseStyles": {
+                          "backgroundColor": "var(--surface-base)",
+                          "border": "1px solid var(--outline-gray-1)",
+                          "borderRadius": "10px",
+                          "boxSizing": "border-box",
+                          "display": "flex",
+                          "flexDirection": "column",
+                          "gap": "10px",
+                          "maxWidth": "100%",
+                          "padding": "14px 16px",
+                          "width": "480px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "gap": "6px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "height": "14px",
+                              "width": "14px"
+                             },
+                             "componentId": "message-meeting-icon-o",
+                             "componentName": "Icon",
+                             "componentProps": {
+                              "icon": "lucide-video"
+                             },
+                             "componentSlots": {}
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "fontWeight": "500",
+                              "lineHeight": "20px"
+                             },
+                             "componentId": "message-meeting-kicker-o",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-sm",
+                              "tag": "span",
+                              "text": "Kickoff call"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "message-meeting-label-o",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-9, oklch(0.168 0 0))",
+                            "fontWeight": "600",
+                            "lineHeight": "26px"
+                           },
+                           "componentId": "message-meeting-time-o",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-lg",
+                            "tag": "span",
+                            "text": "{{ meetingCardTime(dataItem) }}"
+                           },
+                           "componentSlots": {}
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-6)",
+                            "lineHeight": "20px",
+                            "overflow": "hidden",
+                            "textOverflow": "ellipsis",
+                            "whiteSpace": "nowrap"
+                           },
+                           "componentId": "message-meeting-link-o",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-base",
+                            "tag": "span",
+                            "text": "{{ meetingCardLink(dataItem) }}"
+                           },
+                           "componentSlots": {}
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-7)",
+                            "lineHeight": "20px"
+                           },
+                           "componentId": "message-meeting-status-o",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-sm",
+                            "tag": "span",
+                            "text": "{{ meetingCardStatus(dataItem) }}"
+                           },
+                           "componentSlots": {},
+                           "visibilityCondition": "isMeetingReplaced(dataItem)"
+                          },
+                          {
+                           "baseStyles": {
+                            "display": "flex",
+                            "gap": "8px",
+                            "marginTop": "4px"
+                           },
+                           "children": [
+                            {
+                             "componentEvents": {
+                              "click": {
+                               "action": "Run Script",
+                               "event": "click",
+                               "script": "joinMeeting(dataItem);"
+                              }
+                             },
+                             "componentId": "message-meeting-join-o",
+                             "componentName": "Button",
+                             "componentProps": {
+                              "iconLeft": "lucide-video",
+                              "label": "Join call",
+                              "variant": "solid"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "message-meeting-actions-o",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div",
+                           "visibilityCondition": "!isMeetingReplaced(dataItem)"
+                          }
+                         ],
+                         "componentId": "message-meeting-card-o",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {
+                          "width": "calc(100vw - 80px)"
+                         },
+                         "originalElement": "div",
+                         "visibilityCondition": "dataItem.message_type === 'Meeting'"
                         },
                         {
                          "baseStyles": {
@@ -5510,6 +5802,29 @@
                     "variant": "ghost"
                    },
                    "componentSlots": {}
+                  },
+                  {
+                   "baseStyles": {
+                    "marginLeft": "5px",
+                    "paddingLeft": "0px"
+                   },
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "openMeetingDialog();"
+                    }
+                   },
+                   "componentId": "share-meeting-trigger-btn",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "icon": "lucide-video",
+                    "theme": "gray",
+                    "tooltip": "Share the kickoff call",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {},
+                   "visibilityCondition": "canShareMeeting()"
                   }
                  ],
                  "componentId": "container-w3gfltv9s",
@@ -17462,6 +17777,126 @@
       "title": "Decline this hire?"
      },
      "componentSlots": {}
+    },
+    {
+     "blockName": "Share Meeting Dialog",
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "14px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)",
+          "lineHeight": "20px"
+         },
+         "componentId": "share-meeting-description",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-sm",
+          "tag": "span",
+          "text": "The customer gets a card in this chat with a Join call button, and sees the call on their project."
+         },
+         "componentSlots": {}
+        },
+        {
+         "componentId": "share-meeting-link",
+         "componentName": "FormControl",
+         "componentProps": {
+          "label": "Meeting link",
+          "modelValue": {
+           "$type": "variable",
+           "name": "meetingLinkDraft"
+          },
+          "placeholder": "https://meet.google.com/abc-defg-hij",
+          "type": "text"
+         },
+         "componentSlots": {}
+        },
+        {
+         "componentId": "share-meeting-time",
+         "componentName": "FormControl",
+         "componentProps": {
+          "label": "When",
+          "modelValue": {
+           "$type": "variable",
+           "name": "meetingStartsAt"
+          },
+          "type": "datetime-local"
+         },
+         "componentSlots": {}
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "8px",
+          "justifyContent": "flex-end"
+         },
+         "children": [
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "showMeetingDialog.value = false;"
+            }
+           },
+           "componentId": "share-meeting-cancel-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "theme": "gray",
+            "variant": "outline"
+           },
+           "componentSlots": {}
+          },
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "shareMeeting();"
+            }
+           },
+           "componentId": "share-meeting-confirm-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Share",
+            "loading": "{{ sharingMeeting }}",
+            "variant": "solid"
+           },
+           "componentSlots": {}
+          }
+         ],
+         "componentId": "share-meeting-actions",
+         "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
+         "originalElement": "div"
+        }
+       ],
+       "componentId": "share-meeting-body",
+       "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
+       "originalElement": "div"
+      }
+     ],
+     "componentId": "share-meeting-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "showMeetingDialog"
+      },
+      "size": "sm",
+      "title": "Share the kickoff call"
+     },
+     "componentSlots": {}
     }
    ],
    "componentId": "root",
@@ -17471,13 +17906,13 @@
    "originalElement": "body"
   }
  ],
- "creation": "2026-10-08 16:46:28.584081",
+ "creation": "2026-10-18 20:05:04.903078",
  "docstatus": 0,
  "doctype": "Studio Page",
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-10-16 14:23:29.506942",
+ "modified": "2026-10-19 00:16:48.599173",
  "modified_by": "Administrator",
  "name": "messaging",
  "owner": "Administrator",
