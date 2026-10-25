@@ -319,6 +319,16 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 		self.assertTrue(order.partner_auto_assigned)
 		self.assertEqual(order.status, "Partner Assigned")
 
+	def test_placing_and_paying_are_recorded_once_each(self):
+		with patch(f"{ORDER_MODULE}.capture") as capture:
+			_, order = self.place([self.pack_a])
+			self.request(order).apply_webhook_status("Paid", "evt_1")
+			self.request(order).apply_webhook_status("Paid", "evt_1")
+
+		events = [call.args[0] for call in capture.call_args_list]
+		self.assertEqual(events, ["order_placed", "payment_completed"])
+		self.assertEqual(capture.call_args.args[2]["packs"], self.pack_a)
+
 	def test_a_replayed_webhook_changes_nothing(self):
 		_, order = self.place([self.pack_a])
 		self.assertTrue(self.request(order).apply_webhook_status("Paid", "evt_1"))
