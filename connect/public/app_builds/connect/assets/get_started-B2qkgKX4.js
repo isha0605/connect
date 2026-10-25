@@ -1,0 +1,2 @@
+import{Yt as e}from"./studioRenderer-Cb21RSsz.js";import{t}from"./tracking-C8_18R8B.js";function n(n){t(n);let{router:r,myContext:i}=n,a=window.location.pathname.startsWith(`/studio/`);return e(()=>i==null?void 0:i.data,e=>{a||!e||!e.user||e.user===`Guest`||r.replace(`/home`)},{immediate:!0}),{}}export{n as default};
+//# sourceMappingURL=get_started-B2qkgKX4.js.map

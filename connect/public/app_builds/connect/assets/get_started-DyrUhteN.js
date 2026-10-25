@@ -1,2 +1,0 @@
-import{Xt as e}from"./studioRenderer-CYU0MeV_.js";function t(t){let{router:n,myContext:r}=t,i=window.location.pathname.startsWith(`/studio/`);return e(()=>r==null?void 0:r.data,e=>{i||!e||!e.user||e.user===`Guest`||n.replace(`/home`)},{immediate:!0}),{}}export{t as default};
-//# sourceMappingURL=get_started-DyrUhteN.js.map
