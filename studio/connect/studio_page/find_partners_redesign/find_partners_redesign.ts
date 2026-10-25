@@ -272,7 +272,7 @@ export default function setup(context) {
 		sharing.value = true
 		const company = myContext?.data?.customer?.customer_name
 		call("connect.api.projects.save_project", {
-			project_name: company ? `ERPNext implementation for ${company}` : "Custom implementation",
+			project_name: company ? `Custom implementation for ${company}` : "Custom implementation",
 			go_live: shareGoLive.value,
 			operations: operations.value,
 			systems: JSON.stringify(currentSystems.value || []),
