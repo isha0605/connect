@@ -257,7 +257,7 @@ onBeforeUnmount(() => {
 						@click="openLog(log)"
 					>
 						<span
-							class="relative grid size-8 shrink-0 place-items-center rounded-lg"
+							class="relative grid size-8 shrink-0 place-items-center rounded-2"
 							:class="lookOf(log).tile"
 						>
 							<span :class="lookOf(log).icon" class="size-4" />
