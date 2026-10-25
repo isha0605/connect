@@ -28,15 +28,18 @@ def send_code(email, full_name=None, company_name=None, country=None, flow=BUYER
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 @rate_limit(limit=20, seconds=EmailCode.TTL_SECONDS, methods="POST")
 @rate_limit(key="email", ip_based=False, limit=10, seconds=EmailCode.TTL_SECONDS, methods="POST")
-def verify_code(email, code, full_name=None, company_name=None, country=None, flow=None, next=None):
+def verify_code(
+	email, code, full_name=None, company_name=None, country=None, flow=None, next=None, visitor_id=None
+):
 	"""Sign in with an emailed code. Answers `needs_profile` (with what's `missing`) while a new
-	account still needs its name or company, else `redirect`: where to go next."""
+	account still needs its name or company, else `redirect`: where to go next. `visitor_id` is
+	the browser's analytics id, to tie a new buyer's earlier visit to their account."""
 	email = validated_email(email)
 	if not isinstance(code, str) or len(code) != 6 or not code.isascii() or not code.isdigit():
 		frappe.throw(_("Enter the 6-digit code from your email."), frappe.ValidationError)
 	details = profile_details(full_name, company_name, country, flow)
 	details["next"] = next
-	return sign_in_with_code(email, code, details)
+	return sign_in_with_code(email, code, details, visitor_id=visitor_id)
 
 
 def validated_email(email):

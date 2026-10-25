@@ -19,6 +19,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint, escape_html, random_string
 
+from connect.analytics import record_signup
 from connect.auth.email_code import EmailCode
 from connect.roles import CONSULTANT_ROLE
 
@@ -47,7 +48,7 @@ def send_sign_in_code(email, details=None):
 # ---- Checking it ----
 
 
-def sign_in_with_code(email, code, details=None):
+def sign_in_with_code(email, code, details=None, visitor_id=None):
 	"""Sign in with a checked code, creating the account for a new address. A new address
 	needs its profile (a name, and for a buyer a company); without it the code stays valid,
 	so the person can add it and send the same code again."""
@@ -65,7 +66,7 @@ def sign_in_with_code(email, code, details=None):
 			if missing:
 				email_code.remember(given)
 				return {"needs_profile": True, "missing": missing}
-			name = create_account(email, profile)
+			name = create_account(email, profile, visitor_id)
 		else:
 			name = user.name
 		email_code.discard()
@@ -85,11 +86,12 @@ def missing_profile(profile):
 # ---- Making the account ----
 
 
-def create_account(email, profile):
+def create_account(email, profile, visitor_id=None):
 	"""A Website User, and for a buyer their Customer and an admin membership of it."""
 	user = create_user(email, profile["full_name"], profile.get("country"))
 	if profile.get("flow", BUYER) == BUYER:
 		create_customer(user.name, profile["full_name"], profile["company_name"], profile.get("country"))
+		record_signup(user.name, profile.get("country"), visitor_id)
 	# Last, since joining a customer team saves the User again (it adds the customer role).
 	made_by(user, user.name)
 	return user.name
