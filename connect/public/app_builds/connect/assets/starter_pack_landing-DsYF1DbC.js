@@ -1,2 +1,0 @@
-import{_t as e,gt as t}from"./studioRenderer-CYU0MeV_.js";import{i as n}from"./starterPackCart-DT5_d-4u.js";e();function r(e){return t({},n(e))}export{r as default};
-//# sourceMappingURL=starter_pack_landing-DsYF1DbC.js.map

@@ -4,6 +4,7 @@
 
 import { CUSTOM_IF, HOW_IT_WORKS, INCLUDED, NOT_INCLUDED, OUR_NEEDS } from "@app/utils/recommendation"
 import { packBasket } from "@app/utils/packBasket"
+import { startTracking } from "@app/utils/tracking"
 
 const VALUE_PROPS = [
 	{ icon: "lucide-circle-dollar-sign", title: "Standardized pricing", body: "Based on region" },
@@ -12,6 +13,7 @@ const VALUE_PROPS = [
 ]
 
 export default function setup(context) {
+	startTracking(context)
 	const { router } = context
 
 	// Starter Packs start on the landing page now; this page only answers old links. Replacing

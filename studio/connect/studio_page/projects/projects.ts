@@ -5,8 +5,10 @@
 
 import { computed } from "vue"
 import { projectDialog, projectPath } from "@app/utils/projectDialog"
+import { startTracking } from "@app/utils/tracking"
 
 export default function setup(context) {
+	startTracking(context)
 	const { route, router, call, toast, myProjects } = context
 
 	// The repeater needs one key across both kinds of row.

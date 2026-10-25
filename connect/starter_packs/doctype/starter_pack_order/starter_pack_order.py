@@ -10,6 +10,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, flt, get_datetime, get_system_timezone, now_datetime
 
+from connect.analytics import capture
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.customer.doctype.requirement.requirement import save_company_details as save_requirement_details
 from connect.starter_packs.doctype.starter_pack_order.implementation import (
@@ -180,9 +181,22 @@ class StarterPackOrder(Document):
 		if not frappe.db.get_value("Frappe Consultant", self.consultant, "enabled"):
 			frappe.throw(_("{0} isn't an enabled Frappe consultant.").format(frappe.bold(self.consultant)))
 
+	def after_insert(self):
+		capture("order_placed", self.user, self.analytics_properties())
+
 	def on_update(self):
 		if self.has_value_changed("partner") or self.has_value_changed("consultant"):
 			move_thread(self)
+		if self.has_value_changed("payment_status") and self.payment_status == "Paid":
+			capture("payment_completed", self.user, self.analytics_properties())
+
+	def analytics_properties(self):
+		return {
+			"order": self.name,
+			"packs": ",".join(row.starter_pack for row in self.packs),
+			"pack_count": len(self.packs),
+			"subtotal": flt(self.subtotal),
+		}
 
 	def set_totals(self):
 		# Always derived from the snapshotted rows, so the total can't drift from the lines.

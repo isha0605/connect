@@ -11,8 +11,10 @@
 
 import { computed, watch } from "vue"
 import { orderKey, rememberOrderKey } from "@app/utils/checkoutSession"
+import { startTracking } from "@app/utils/tracking"
 
 export default function setup(context) {
+	startTracking(context)
 	const {
 		route,
 		router,

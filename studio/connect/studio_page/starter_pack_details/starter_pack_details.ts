@@ -4,6 +4,7 @@
 
 import { computed } from "vue"
 import { STARTER_PACK_TERMS, starterPackCart } from "@app/utils/starterPackCart"
+import { startTracking } from "@app/utils/tracking"
 
 const SETUP = {
 	key: "setup",
@@ -130,6 +131,7 @@ const PACKS = {
 }
 
 export default function setup(context) {
+	startTracking(context)
 	const { route } = context
 
 	const packKey = computed(() => (String(route.query.pack || "") in PACKS ? String(route.query.pack) : "core"))

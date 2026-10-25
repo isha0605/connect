@@ -1,5 +1,6 @@
 import { onScopeDispose, ref } from "vue"
 import { call } from "frappe-ui"
+import { startTracking, visitorId } from "@app/utils/tracking"
 
 const OTP_PREFIX = "otp-digit-"
 const STYLE_ID = "connect-otp-input-style"
@@ -24,6 +25,7 @@ function errorText(err, fallback) {
 // in and says where to go. A new email that came through "Log in" is asked for its profile
 // (name and company) before its account is made, with the same code.
 export default function setup(context) {
+	startTracking(context)
 	const {
 		route,
 		authStep,
@@ -158,7 +160,12 @@ export default function setup(context) {
 	function verifyCode() {
 		if (verifying.value) return
 		authError.value = ""
-		const params = { email: email(), code: code(), next: partnerNext.value || next || undefined }
+		const params = {
+			email: email(),
+			code: code(),
+			next: partnerNext.value || next || undefined,
+			visitor_id: visitorId() || undefined,
+		}
 		if (!/^\d{6}$/.test(params.code)) {
 			authError.value = "Enter the 6-digit code from your email."
 			return

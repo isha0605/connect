@@ -1,5 +1,6 @@
 import { computed } from "vue"
 import { call, toast } from "frappe-ui"
+import { startTracking } from "@app/utils/tracking"
 
 // Home for a signed-in buyer: their Starter Pack projects and saved partners come from the
 // server; Resources, Blog and Upcoming events are Frappe's own content, kept here as literals
@@ -81,6 +82,7 @@ const TICK_PATH =
 const SEAL_COLORS = { Gold: "#D4A017", Silver: "#A6A6A6", Bronze: "#7A4A28" }
 
 export default function setup(context) {
+	startTracking(context)
 	const { router, myProfile, myProjects, myShortlist } = context
 
 	// ---- Greeting ----

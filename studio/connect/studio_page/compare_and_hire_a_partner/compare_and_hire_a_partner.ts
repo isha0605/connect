@@ -6,6 +6,7 @@
 
 import { computed } from "vue"
 import { toast } from "frappe-ui"
+import { startTracking } from "@app/utils/tracking"
 
 const LOGOS = "/assets/connect/images/project"
 
@@ -75,6 +76,7 @@ const RESOURCES = [
 ]
 
 export default function setup(context) {
+	startTracking(context)
 	const { router, activeTab, hiredPartner, quoteRequested } = context
 
 	const tabs = computed(() =>

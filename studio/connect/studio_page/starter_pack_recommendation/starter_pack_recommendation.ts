@@ -18,8 +18,10 @@ import {
 } from "@app/utils/recommendation"
 import { packBasket } from "@app/utils/packBasket"
 import { projectDialog, projectPath } from "@app/utils/projectDialog"
+import { startTracking } from "@app/utils/tracking"
 
 export default function setup(context) {
+	startTracking(context)
 	const { route, router, call, toast, partnerCountries, pickedPacks } = context
 	const basket = packBasket(context)
 	const { packs } = basket

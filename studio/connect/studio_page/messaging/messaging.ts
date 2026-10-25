@@ -2,6 +2,7 @@ import { ref, computed, watch, onScopeDispose, nextTick, h } from "vue"
 import { toast, call, useFileUpload, setConfig } from "frappe-ui"
 import { io } from "socket.io-client"
 import { installScrollFade } from "@app/utils/scrollFade"
+import { startTracking } from "@app/utils/tracking"
 
 // Raven's FileTypeIcon (apps/web/src/components/common/FileIcons/FileTypeIcon.tsx, size "lg"):
 // a 28px coloured tile with a white glyph. PDF / Word / Excel / PowerPoint are Raven's own marks;
@@ -54,6 +55,7 @@ const FILE_TYPE_TILES = [
 const DEFAULT_FILE_TILE = { bg: "var(--gray-500)", glyph: lucideSvg("file") }
 
 export default function setup(context) {
+	startTracking(context)
 	// the thread list's thin scrollbar that fades when idle (see @app/utils/scrollFade)
 	installScrollFade()
 	// ---- State ----
