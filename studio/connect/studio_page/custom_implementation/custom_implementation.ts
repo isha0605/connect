@@ -351,6 +351,8 @@ export default function setup(context) {
 	const isAwaitingPartner = computed(() => project.value?.status === "Hiring")
 	const isHired = computed(() => !!hired.value?.confirmed)
 	const declinedHire = computed(() => project.value?.declined_hire || null)
+	// While quotes are listed, the heading, tabs and column header stay put and only the rows scroll.
+	const pinsQuoteList = computed(() => hasQuotes.value && !isHired.value && !isAwaitingPartner.value)
 	const stageTitle = computed(() => {
 		if (isHired.value) return "Set up hosting"
 		if (isAwaitingPartner.value) return `Waiting for ${hired.value?.partner_name || "your partner"}`
@@ -582,6 +584,7 @@ export default function setup(context) {
 		hired,
 		isHired,
 		isAwaitingPartner,
+		pinsQuoteList,
 		awaitingLine,
 		declinedHire,
 		declinedLine,

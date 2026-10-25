@@ -1181,10 +1181,12 @@
           "boxSizing": "border-box",
           "flex": "1",
           "minWidth": "0px",
-          "overflowY": "{{ inEditor ? 'visible' : 'auto' }}",
-          "padding": "30px 24px 48px",
+          "overflowY": "{{ inEditor ? 'visible' : pinsQuoteList ? 'hidden' : 'auto' }}",
+          "padding": "{{ pinsQuoteList && !inEditor ? '30px 24px 0px' : '30px 24px 48px' }}",
           "scrollbarColor": "var(--outline-gray-3) transparent",
-          "scrollbarWidth": "thin"
+          "scrollbarWidth": "thin",
+          "display": "flex",
+          "flexDirection": "column"
          },
          "children": [
           {
@@ -1193,7 +1195,9 @@
             "flexDirection": "column",
             "margin": "0px auto",
             "maxWidth": "700px",
-            "width": "100%"
+            "width": "100%",
+            "flex": "{{ pinsQuoteList && !inEditor ? '1 1 0px' : '0 0 auto' }}",
+            "minHeight": "0px"
            },
            "children": [
             {
@@ -1504,7 +1508,9 @@
              "baseStyles": {
               "display": "{{ hasQuotes && !isHired && !isAwaitingPartner ? 'flex' : 'none' }}",
               "flexDirection": "column",
-              "width": "100%"
+              "width": "100%",
+              "flex": "1",
+              "minHeight": "0px"
              },
              "children": [
               {
@@ -1583,7 +1589,9 @@
                 "display": "{{ shownQuotes.length ? 'flex' : 'none' }}",
                 "flexDirection": "column",
                 "marginTop": "18px",
-                "width": "100%"
+                "width": "100%",
+                "flex": "1",
+                "minHeight": "0px"
                },
                "children": [
                 {
@@ -1664,7 +1672,13 @@
                   "flexDirection": "column",
                   "gap": "0px",
                   "rowGap": "0px",
-                  "width": "100%"
+                  "width": "100%",
+                  "flex": "1",
+                  "minHeight": "0px",
+                  "paddingBottom": "48px",
+                  "overflowY": "{{ inEditor ? 'visible' : 'auto' }}",
+                  "scrollbarWidth": "none",
+                  "flexWrap": "nowrap"
                  },
                  "componentId": "cs-quote-rows",
                  "componentName": "Repeater",
@@ -1683,7 +1697,8 @@
                       "borderTop": "1px solid var(--outline-gray-1)",
                       "display": "grid",
                       "gridTemplateColumns": "316px 120px 147px minmax(0, 1fr)",
-                      "padding": "9.5px 0px"
+                      "padding": "9.5px 0px",
+                      "flexShrink": "0"
                      },
                      "children": [
                       {
