@@ -3,6 +3,7 @@ import { toast, call } from "frappe-ui"
 import { orderKey } from "@app/utils/checkoutSession"
 import { EMPLOYEE_OPTIONS, INDUSTRY_OPTIONS, MODULE_ICONS, SYSTEM_OPTIONS } from "@app/utils/recommendation"
 import { CART_PACKS, clearCart } from "@app/utils/starterPackCart"
+import { startTracking } from "@app/utils/tracking"
 
 // "Set up your Starter Pack": where checkout sends the buyer once their order is paid
 // (/starter-pack-implementation?order=SPO-…). The right panel and "Pay upfront" come from
@@ -15,6 +16,7 @@ const PAYMENT_BADGES = {
 }
 
 export default function setup(context) {
+	startTracking(context)
 	const { route, router, companyOpen, companyEmployees, companyIndustry, companySystem, companyFocus } = context
 
 	// ---- The order ----

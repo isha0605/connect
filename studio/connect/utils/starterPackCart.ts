@@ -8,6 +8,7 @@
 
 import { computed, ref } from "vue"
 import { rememberOrderKey } from "@app/utils/checkoutSession"
+import { track } from "@app/utils/tracking"
 
 const STORAGE_KEY = "connect_starter_pack_cart"
 const DEFAULT_GST_RATE = 18
@@ -145,10 +146,12 @@ export function starterPackCart(context) {
 		if (!(key in CART_PACKS)) return
 		const others = BASE_PACKS.includes(key) ? BASE_PACKS : [key]
 		saveCart([...cartKeys.value.filter((k) => !others.includes(k)), key])
+		track("pack_added_to_cart", { pack: key, cart: cartKeys.value.join(",") })
 	}
 
 	function removeFromCart(key) {
 		saveCart(cartKeys.value.filter((k) => k !== key))
+		track("pack_removed_from_cart", { pack: key, cart: cartKeys.value.join(",") })
 	}
 
 	// "In cart" is the same button, so a second click takes the pack out again
@@ -179,6 +182,7 @@ export function starterPackCart(context) {
 	async function checkout() {
 		const packs = [...cartKeys.value]
 		if (!packs.length || checkingOut.value) return
+		track("checkout_started", { packs: packs.join(","), signed_in: !isGuest.value })
 		if (isGuest.value) {
 			router.push({ path: "/login-signup-redesign", query: { next: "/starter-pack-cart" } })
 			return

@@ -6,6 +6,7 @@
 
 import { computed } from "vue"
 import { MODULE_ICONS, commercialTerms } from "@app/utils/recommendation"
+import { track } from "@app/utils/tracking"
 
 const BASE_PACKS = ["core", "core-manufacturing"]
 
@@ -32,10 +33,12 @@ export function packBasket(context) {
 	function togglePack(key) {
 		if (isPicked(key)) {
 			pickedPacks.value = pickedPacks.value.filter((k) => k !== key)
+			track("pack_removed_from_cart", { pack: key, cart: pickedPacks.value.join(",") })
 			return
 		}
 		const others = BASE_PACKS.includes(key) ? BASE_PACKS : []
 		pickedPacks.value = [...pickedPacks.value.filter((k) => !others.includes(k)), key]
+		track("pack_added_to_cart", { pack: key, cart: pickedPacks.value.join(",") })
 	}
 
 	const scopePack = computed(() => packs.value.find((p) => p.pack_key === scopePackKey.value) || null)
@@ -62,6 +65,7 @@ export function packBasket(context) {
 	// Someone signed out signs up (or in) first, which carries on to checkout afterwards.
 	function startCheckout() {
 		const query = { packs: pickedPacks.value.join(",") }
+		track("checkout_started", { packs: query.packs, signed_in: !isGuest.value })
 		// Picked inside one of the customer's projects: the order is bought for that project.
 		if (route?.query?.project) query.project = String(route.query.project)
 		if (isGuest.value) {

@@ -24,8 +24,10 @@ import {
 	recommend,
 	regionOf,
 } from "@app/utils/recommendation"
+import { startTracking } from "@app/utils/tracking"
 
 export default function setup(context) {
+	startTracking(context)
 	const {
 		route,
 		router,

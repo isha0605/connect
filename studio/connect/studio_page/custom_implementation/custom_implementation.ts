@@ -18,8 +18,10 @@ import {
 } from "@app/utils/recommendation"
 import { projectDialog, projectPath } from "@app/utils/projectDialog"
 import { blankCriteria, criteriaSummary, orList, partnerCriteria, workCriterion } from "@app/utils/partnerCriteria"
+import { startTracking } from "@app/utils/tracking"
 
 export default function setup(context) {
+	startTracking(context)
 	const { route, router, call, toast } = context
 
 	// Same test Studio's own isEditor() uses. The editor opens pages with no query string,

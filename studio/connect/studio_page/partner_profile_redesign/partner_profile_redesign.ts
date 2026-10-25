@@ -3,6 +3,7 @@
 // the page.
 
 import { computed, onScopeDispose, ref, watch } from "vue"
+import { startTracking } from "@app/utils/tracking"
 
 const HERO_CONNECT = "contact-btn-ppr"
 const HEADER = "header-row-ppr"
@@ -31,6 +32,7 @@ function listOf(items, shown = 3) {
 }
 
 export default function setup(context) {
+	startTracking(context)
 	const { partner, myContext, showHeaderConnect, loginDialogOpen, contactStep, contactDialogOpen } = context
 
 	// Same as the Connect button beside the partner's name.
