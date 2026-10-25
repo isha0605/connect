@@ -1,0 +1,2 @@
+import{Yt as e}from"./studioRenderer-BAalI8kj.js";import{t}from"./tracking-DNeQWb-r.js";function n(n){t(n);let{router:r,myContext:i}=n,a=window.location.pathname.startsWith(`/studio/`);return e(()=>i==null?void 0:i.data,e=>{a||!e||!e.user||e.user===`Guest`||r.replace(`/home`)},{immediate:!0}),{}}export{n as default};
+//# sourceMappingURL=get_started-DhuB2oc4.js.map

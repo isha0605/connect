@@ -1,2 +1,0 @@
-import{Yt as e}from"./studioRenderer-BH5rR7us.js";import{t}from"./tracking-CsQyj12R.js";function n(n){t(n);let{router:r,myContext:i}=n,a=window.location.pathname.startsWith(`/studio/`);return e(()=>i==null?void 0:i.data,e=>{a||!e||!e.user||e.user===`Guest`||r.replace(`/home`)},{immediate:!0}),{}}export{n as default};
-//# sourceMappingURL=get_started-CJSYz1l0.js.map

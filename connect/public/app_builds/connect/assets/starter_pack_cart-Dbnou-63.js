@@ -1,2 +1,0 @@
-import{gt as e,ht as t}from"./studioRenderer-BH5rR7us.js";import{t as n}from"./tracking-CsQyj12R.js";import{i as r,n as i}from"./starterPackCart-CXnkUWts.js";e();var a=[{text:`Pay Frappe upfront, at one fixed price`},{text:`Tell us about your company`},{text:`Join live sessions with Frappe onboarding specialists`}];function o(e){return n(e),t(t({},r(e)),{},{howItWorks:a,terms:i})}export{o as default};
-//# sourceMappingURL=starter_pack_cart-Dbnou-63.js.map
