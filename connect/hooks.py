@@ -143,6 +143,7 @@ permission_query_conditions = {
 	"Connect DM Thread": "connect.permissions.get_dm_thread_permission_query_conditions",
 	"Connect DM Message": "connect.permissions.get_dm_message_permission_query_conditions",
 	"Studio Page": "connect.permissions.get_studio_page_permission_query_conditions",
+	"Studio Component": "connect.permissions.get_studio_component_permission_query_conditions",
 	"Customer": "connect.customer.doctype.customer.customer.get_permission_query_conditions",
 	"Shortlist": "connect.customer.doctype.shortlist.shortlist.get_permission_query_conditions",
 	"Requirement": "connect.customer.doctype.requirement.requirement.get_permission_query_conditions",
@@ -158,6 +159,7 @@ has_permission = {
 	"Connect DM Thread": "connect.permissions.has_dm_thread_permission",
 	"Connect DM Message": "connect.permissions.has_dm_message_permission",
 	"Studio Page": "connect.permissions.has_studio_page_permission",
+	"Studio Component": "connect.permissions.has_studio_component_permission",
 	"Customer": "connect.customer.doctype.customer.customer.has_permission",
 	"Shortlist": "connect.customer.doctype.shortlist.shortlist.has_permission",
 	"Requirement": "connect.customer.doctype.requirement.requirement.has_permission",
@@ -185,10 +187,13 @@ sqlite_search = ["connect.search.PartnerSearch"]
 # just the one being added (see frappe.permissions.get_valid_perms). So System Manager and
 # Studio User are re-declared here as an exact mirror of studio_page.json's own rows, purely
 # to keep their existing access from silently disappearing once the "All" row exists.
+#
+# Studio Component follows the same pattern: Studio's renderer fetches the sidebar component
+# at runtime, and has_studio_component_permission narrows the "All" row to connect's own.
 fixtures = [
 	{
 		"doctype": "Custom DocPerm",
-		"filters": [["parent", "=", "Studio Page"]],
+		"filters": [["parent", "in", ["Studio Page", "Studio Component"]]],
 	},
 ]
 

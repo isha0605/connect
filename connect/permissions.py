@@ -1,3 +1,6 @@
+import functools
+from pathlib import Path
+
 import frappe
 
 
@@ -369,3 +372,30 @@ def get_studio_page_permission_query_conditions(user, doctype=None):
 	if user == "Guest":
 		return base + " and `tabStudio Page`.allow_guest = 1"
 	return base
+
+
+def has_studio_component_permission(doc, ptype="read", user=None, **kwargs):
+	"""Lets signed-in users load the components connect's pages render (the sidebar), and no others.
+	Studio's renderer fetches them at runtime, so a page without them loses its sidebar."""
+	user = user or frappe.session.user
+	if _has_studio_access(user) or ptype != "read":
+		return True
+	return doc.name in get_connect_component_names()
+
+
+def get_studio_component_permission_query_conditions(user, doctype=None):
+	if _has_studio_access(user):
+		return ""
+	names = ", ".join(frappe.db.escape(name) for name in get_connect_component_names())
+	return f"`tabStudio Component`.name in ({names})"
+
+
+@functools.cache
+def get_connect_component_names() -> tuple[str, ...]:
+	"""connect's own components: one JSON file each, named after the component."""
+	folder = Path(frappe.get_app_source_path("connect"), "studio", "connect", "studio_components")
+	return tuple(sorted(path.stem for path in folder.glob("*.json")))
+
+
+def _has_studio_access(user):
+	return _has_full_access(user) or "Studio User" in frappe.get_roles(user)
