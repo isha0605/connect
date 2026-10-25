@@ -2610,7 +2610,7 @@
          "baseStyles": {
           "alignSelf": "flex-start",
           "display": "{{ scopePacks.length > 1 ? 'flex' : 'none' }}",
-          "marginTop": "0px"
+          "marginBottom": "16px"
          },
          "componentId": "sow-tabs",
          "componentName": "TabButtons",
@@ -2626,25 +2626,11 @@
         },
         {
          "baseStyles": {
-          "color": "var(--ink-gray-6)",
-          "marginTop": "{{ scopePacks.length > 1 ? '16px' : '-18px' }}"
-         },
-         "componentId": "sow-subtitle",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-p-base",
-          "tag": "span",
-          "text": "{{ scopeSubtitle }}"
-         },
-         "componentSlots": {}
-        },
-        {
-         "baseStyles": {
           "display": "flex",
           "flexDirection": "column",
           "flexWrap": "nowrap",
           "gap": "0px",
-          "marginTop": "18px",
+          "marginTop": "0px",
           "maxHeight": "calc(100vh - 260px)",
           "overflowY": "auto",
           "paddingRight": "4px",
@@ -2667,20 +2653,33 @@
               "borderTop": "{{ dataIndex > 0 ? '1px solid var(--outline-gray-1)' : 'none' }}",
               "display": "flex",
               "flexDirection": "column",
-              "gap": "12px",
               "minWidth": "0px",
-              "paddingBottom": "{{ scopePack && dataIndex < scopePack.modules.length - 1 ? '24px' : '0px' }}",
-              "paddingTop": "{{ dataIndex > 0 ? '24px' : '0px' }}",
+              "paddingBottom": "{{ scopePack && dataIndex < scopePack.modules.length - 1 ? '16px' : '0px' }}",
+              "paddingTop": "{{ dataIndex > 0 ? '16px' : '0px' }}",
               "width": "100%"
              },
+             "componentId": "sow-module",
+             "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "children": [
               {
                "baseStyles": {
                 "alignItems": "center",
-                "display": "{{ scopePack && scopePack.modules.length > 1 ? 'flex' : 'none' }}",
+                "cursor": "pointer",
+                "display": "flex",
                 "flexDirection": "row",
-                "gap": "8px"
+                "gap": "12px",
+                "width": "100%"
                },
+               "componentId": "sow-module-head",
+               "componentName": "container",
+               "componentProps": {
+                "role": "button",
+                "tabindex": "0",
+                "aria-expanded": "{{ openModule === dataItem.module_name }}"
+               },
+               "componentSlots": {},
                "children": [
                 {
                  "baseStyles": {
@@ -2698,70 +2697,75 @@
                 },
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-8)",
-                  "fontWeight": "600"
+                  "color": "var(--ink-gray-7)",
+                  "fontWeight": "600",
+                  "flex": "1"
                  },
                  "componentId": "sow-module-name",
                  "componentName": "TextBlock",
                  "componentProps": {
-                  "fontSize": "text-lg",
+                  "fontSize": "text-base",
                   "tag": "span",
                   "text": "{{ dataItem.module_name }}"
                  },
                  "componentSlots": {}
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "flexShrink": "0",
+                  "height": "16px",
+                  "width": "16px"
+                 },
+                 "componentId": "sow-module-toggle",
+                 "componentName": "Icon",
+                 "componentProps": {
+                  "icon": "{{ openModule === dataItem.module_name ? 'lucide-minus' : 'lucide-plus' }}"
+                 },
+                 "componentSlots": {}
                 }
                ],
-               "componentId": "sow-module-head",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
+               "originalElement": "div",
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "toggleModule(dataItem.module_name);"
+                }
+               }
               },
               {
                "baseStyles": {
-                "display": "flex",
+                "display": "{{ openModule === dataItem.module_name ? 'flex' : 'none' }}",
                 "flexDirection": "column",
-                "gap": "10px"
+                "paddingLeft": "28px",
+                "paddingTop": "8px"
                },
-               "componentId": "sow-rows",
-               "componentName": "Repeater",
-               "componentProps": {
-                "data": "{{ dataItem.sections }}",
-                "dataKey": "label",
-                "emptyStateMessage": ""
-               },
-               "componentSlots": {
-                "default": {
-                 "parentBlockId": "sow-rows",
-                 "slotContent": [
-                  {
-                   "baseStyles": {
-                    "display": "flex",
-                    "flexDirection": "row",
-                    "gap": "24px",
-                    "minWidth": "0px",
-                    "width": "100%"
-                   },
-                   "children": [
+               "componentId": "sow-module-content",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "children": [
+                {
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "6px"
+                 },
+                 "componentId": "sow-rows",
+                 "componentName": "Repeater",
+                 "componentProps": {
+                  "data": "{{ dataItem.sections }}",
+                  "dataKey": "label",
+                  "emptyStateMessage": ""
+                 },
+                 "componentSlots": {
+                  "default": {
+                   "parentBlockId": "sow-rows",
+                   "slotContent": [
                     {
                      "baseStyles": {
-                      "color": "var(--ink-gray-6)",
-                      "flexShrink": "0",
-                      "width": "136px"
-                     },
-                     "componentId": "sow-row-label",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-p-base",
-                      "tag": "span",
-                      "text": "{{ dataItem.label }}"
-                     },
-                     "componentSlots": {}
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "{{ dataItem.label === 'Not included' ? 'var(--ink-gray-5)' : 'var(--ink-gray-8)' }}",
-                      "flex": "1"
+                      "color": "var(--ink-gray-7)"
                      },
                      "componentId": "sow-row-content",
                      "componentName": "TextBlock",
@@ -2773,27 +2777,15 @@
                      "componentSlots": {}
                     }
                    ],
-                   "componentId": "sow-row",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "mobileStyles": {
-                    "flexDirection": "column",
-                    "gap": "2px"
-                   },
-                   "originalElement": "div"
+                   "slotId": "sow-rows:default",
+                   "slotName": "default"
                   }
-                 ],
-                 "slotId": "sow-rows:default",
-                 "slotName": "default"
+                 }
                 }
-               }
+               ],
+               "originalElement": "div"
               }
              ],
-             "componentId": "sow-module",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
              "originalElement": "div"
             }
            ],
@@ -2820,7 +2812,7 @@
        "$type": "variable",
        "name": "scopeOpen"
       },
-      "size": "3xl",
+      "size": "xl",
       "title": "Scope of work"
      },
      "componentSlots": {}

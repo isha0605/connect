@@ -129,14 +129,20 @@ export default function setup(context) {
 	const scopePack = computed(
 		() => scopePacks.value.find((p) => p.pack_key === scopeTab.value) || scopePacks.value[0] || null,
 	)
-	const scopeSubtitle = computed(() => {
-		const pack = scopePack.value
-		return pack?.total_hours ? `${pack.total_hours} hours · ${pack.delivery_days} days to deliver` : ""
+	// An accordion: one module open at a time, the pack's first when the dialog or a tab opens.
+	const openModule = ref("")
+	watch(scopePack, (pack) => {
+		openModule.value = pack?.modules?.[0]?.module_name || ""
 	})
 
 	function viewScope() {
 		scopeTab.value = scopePacks.value[0]?.pack_key || ""
+		openModule.value = scopePack.value?.modules?.[0]?.module_name || ""
 		scopeOpen.value = true
+	}
+
+	function toggleModule(name) {
+		openModule.value = openModule.value === name ? "" : name
 	}
 
 	function moduleIcon(name) {
@@ -356,7 +362,8 @@ export default function setup(context) {
 		scopeTab,
 		scopeTabs,
 		scopePack,
-		scopeSubtitle,
+		openModule,
+		toggleModule,
 		viewScope,
 		moduleIcon,
 		cost,
