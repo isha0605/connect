@@ -3,6 +3,7 @@ import { toast, call } from "frappe-ui"
 import { orderKey } from "@app/utils/checkoutSession"
 import { focusFirstFieldOnOpen, keyboardAccess } from "@app/utils/keyboard"
 import { EMPLOYEE_OPTIONS, INDUSTRY_OPTIONS, MODULE_ICONS, SYSTEM_OPTIONS } from "@app/utils/recommendation"
+import { signOut } from "@app/utils/signIn"
 import { CART_PACKS, clearCart } from "@app/utils/starterPackCart"
 import { startTracking } from "@app/utils/tracking"
 
@@ -344,11 +345,7 @@ export default function setup(context) {
 			{
 				icon: "lucide-log-out",
 				label: "Log out",
-				onClick: () => {
-					call("logout").then(() => {
-						window.location.href = "/login"
-					})
-				},
+				onClick: () => signOut(call),
 			},
 		]
 	}

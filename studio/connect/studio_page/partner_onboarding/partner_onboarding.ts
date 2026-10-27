@@ -1,12 +1,13 @@
 import { ref, watch } from "vue"
 import { toast, call, useFileUpload } from "frappe-ui"
+import { signOut } from "@app/utils/signIn"
 
 // Port of Press's dashboard/src/onboarding (PartnerOnboarding.vue + usePartnerOnboarding.ts and
 // its dialogs) onto connect's Partner Application API: Press's Team is connect's Partner, so every
 // call resolves the caller's partner server-side (_my_partner) instead of taking a team.
 
 // Written by the login/signup page's "Become a partner?" wizard when a logged-out visitor clicks
-// Proceed: they're sent through /login and land here, where the stashed details are registered.
+// Proceed: they sign in on Connect's page and land here, where the stashed details are registered.
 const REGISTRATION_STASH_KEY = "connect_partner_registration"
 
 const API = "connect.api.partner"
@@ -840,11 +841,7 @@ export default function setup(context) {
 			{
 				icon: "lucide-log-out",
 				label: "Log out",
-				onClick: () => {
-					call("logout").then(() => {
-						window.location.href = "/login"
-					})
-				},
+				onClick: () => signOut(call),
 			},
 		]
 	}

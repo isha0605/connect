@@ -2,6 +2,7 @@ import { ref, computed, watch, onScopeDispose, nextTick, h } from "vue"
 import { toast, call, useFileUpload, setConfig } from "frappe-ui"
 import { io } from "socket.io-client"
 import { installScrollFade } from "@app/utils/scrollFade"
+import { goToSignIn, signOut } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
 
 // Raven's FileTypeIcon (apps/web/src/components/common/FileIcons/FileTypeIcon.tsx, size "lg"):
@@ -1001,13 +1002,13 @@ export default function setup(context) {
 
 	function accountMenuOptions() {
 		if (!isSignedIn()) {
-			return [{ icon: "lucide-log-in", label: "Log in", onClick: () => { window.location.href = "/login" } }]
+			return [{ icon: "lucide-log-in", label: "Log in", onClick: () => goToSignIn({ screen: "login" }) }]
 		}
 		return [
 			{
 				icon: "lucide-log-out",
 				label: "Log out",
-				onClick: () => { call("logout").then(() => { window.location.href = "/login" }) },
+				onClick: () => signOut(call),
 			},
 		]
 	}
