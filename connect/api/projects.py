@@ -53,9 +53,9 @@ def delete_project(name):
 # Guests too: the Find Partners questions show the live count before anyone signs up. It
 # only counts partners the public directory already lists.
 @frappe.whitelist(allow_guest=True)
-def partner_criteria(criteria=None):
+def partner_criteria(criteria=None, include_recipients=False):
 	from connect.customer.doctype.customer_project.partner_matching import partner_criteria
-	return partner_criteria(criteria)
+	return partner_criteria(criteria, frappe.utils.sbool(include_recipients))
 
 
 @frappe.whitelist(methods=["POST"])

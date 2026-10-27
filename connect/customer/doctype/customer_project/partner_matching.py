@@ -20,11 +20,23 @@ WORK_MODES = {"onsite": ("Onsite", "Hybrid"), "remote": ("Remote", "Hybrid")}
 PARTNER_FIELDS = {"countries": "country", "industries": "industry", "cities": "city", "tiers": "tier"}
 
 
-def partner_criteria(criteria: str | dict | None = None) -> dict:
+def partner_criteria(criteria: str | dict | None = None, include_recipients: bool = False) -> dict:
 	"""The Edit criteria chips with how many partners each covers, and how many match the
 	given criteria. Chip counts are per option on their own, among the partners in the
-	chosen countries and industries (what the questions answered)."""
+	chosen countries and industries (what the questions answered). With `include_recipients`,
+	a signed-in caller also gets the partners the brief would be sent to."""
 	criteria = normalize_criteria(frappe.parse_json(criteria) or {})
+	facets = _criteria_facets(criteria)
+	if include_recipients and frappe.session.user != "Guest":
+		facets["recipients"] = _recipient_cards(criteria)
+	return facets
+
+
+def get_brief_recipients(criteria: dict) -> list[str]:
+	return frappe.get_all("Partner", filters=_recipient_filters(criteria), pluck="name")
+
+
+def _criteria_facets(criteria: dict) -> dict:
 	in_reach = normalize_criteria({"countries": criteria["countries"], "industries": criteria["industries"]})
 	partners = frappe.get_all("Partner", filters=get_partner_filters(in_reach), fields=["name", "city", "tier"])
 	modes = _child_values_by_partner(
@@ -48,6 +60,25 @@ def partner_criteria(criteria: str | dict | None = None) -> dict:
 		],
 		"total": frappe.db.count("Partner", get_partner_filters(criteria)),
 	}
+
+
+def _recipient_cards(criteria: dict) -> list[dict]:
+	partners = frappe.get_all(
+		"Partner",
+		filters=_recipient_filters(criteria),
+		fields=["name", "partner_name", "logo", "logo_icon"],
+		order_by="partner_name asc",
+	)
+	return [
+		{"name": p.name, "partner_name": p.partner_name or p.name, "logo": p.logo_icon or p.logo}
+		for p in partners
+	]
+
+
+def _recipient_filters(criteria: dict) -> list:
+	"""Matching partners that have an admin to read the brief."""
+	with_admin = frappe.get_all("Connect Partner Member", filters={"is_admin": 1}, pluck="partner", distinct=True)
+	return [*get_partner_filters(criteria), ["Partner", "name", "in", with_admin or [""]]]
 
 
 def get_partner_filters(criteria: dict) -> list:

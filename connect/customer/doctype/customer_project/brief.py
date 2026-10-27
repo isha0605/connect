@@ -5,13 +5,13 @@ import frappe
 from frappe import _
 
 from connect.customer.doctype.customer_project.answers import answer_label, work_label
-from connect.customer.doctype.customer_project.partner_matching import get_partner_filters, normalize_criteria
+from connect.customer.doctype.customer_project.partner_matching import get_brief_recipients, normalize_criteria
 
 def send_to_partners(doc, customer: str) -> int:
 	"""Sends the brief to each matching partner's admin, as the customer's own Requirement card
 	in their thread with that partner, and returns how many got it."""
 	card = requirement_card(doc, customer)
-	partners = _partners_to_brief(normalize_criteria(frappe.parse_json(doc.criteria) or {}))
+	partners = get_brief_recipients(normalize_criteria(frappe.parse_json(doc.criteria) or {}))
 	for partner in partners:
 		send_brief(doc, customer, partner, card)
 	return len(partners)
@@ -100,13 +100,6 @@ def partner_brief(criteria: dict) -> str:
 	work = work_label(criteria["work"]).lower()
 	# "A partner." says nothing on its own, so it's only there with a place or industry
 	return (_("A partner") + who + ". " if who else "") + f"{tier}, {work}."
-
-
-def _partners_to_brief(criteria: dict) -> list[str]:
-	"""Matching partners that have an admin to read the brief."""
-	with_admin = frappe.get_all("Connect Partner Member", filters={"is_admin": 1}, pluck="partner", distinct=True)
-	filters = [*get_partner_filters(criteria), ["Partner", "name", "in", with_admin or [""]]]
-	return frappe.get_all("Partner", filters=filters, pluck="name")
 
 
 def _current_situation(doc) -> str:
