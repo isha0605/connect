@@ -1,8 +1,10 @@
 // Partner profile: a Connect button in the pinned header once the one beside the partner's
 // name has scrolled away, the photo and video gallery, and the partner's story at the end of
-// the page.
+// the page. Connect opens the New project dialog for this partner (partnerConnect.ts).
 
 import { computed, onScopeDispose, ref, watch } from "vue"
+import { partnerConnect } from "@app/utils/partnerConnect"
+import { goToSignIn } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
 
 const HERO_CONNECT = "contact-btn-ppr"
@@ -33,16 +35,13 @@ function listOf(items, shown = 3) {
 
 export default function setup(context) {
 	startTracking(context)
-	const { partner, myContext, showHeaderConnect, loginDialogOpen, contactStep, contactDialogOpen } = context
+	const { route, partner, showHeaderConnect } = context
 
-	// Same as the Connect button beside the partner's name.
+	// Every Connect on the page: the one beside the partner's name, the header's, and the
+	// pricing cards'.
+	const connecting = partnerConnect(context)
 	function connect() {
-		if (!myContext.data || !myContext.data.customer) {
-			loginDialogOpen.value = true
-		} else {
-			contactStep.value = 1
-			contactDialogOpen.value = true
-		}
+		connecting.connectWith({ name: route.params.partner_id, partner_name: partner.data?.partner_name })
 	}
 
 	// Watch the hero's Connect button against the area below the header: when it has
@@ -183,7 +182,9 @@ export default function setup(context) {
 	}
 
 	return {
+		...connecting,
 		connect,
+		goToSignIn,
 		origin,
 		pmmLevel,
 		pmmLabel,

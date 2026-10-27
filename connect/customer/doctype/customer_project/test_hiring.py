@@ -7,7 +7,11 @@ import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, now_datetime
 
-from connect.customer.doctype.customer_project.customer_project import get_project, set_quote_status
+from connect.customer.doctype.customer_project.customer_project import (
+	get_project,
+	set_quote_status,
+	start_project_with_partner,
+)
 from connect.customer.doctype.customer_project.hiring import (
 	HIRE_REQUEST_EXPIRY_DAYS,
 	cancel_hire_request,
@@ -239,3 +243,79 @@ class TestHiring(IntegrationTestCase):
 		self.request()
 		cancel_hire_request(self.project.name)
 		self.assertEqual(frappe.db.get_value("Customer Project", self.project.name, "shared_on"), shared_on)
+
+
+# What the New project dialog sends.
+PROJECT_ANSWERS = {
+	"project_name": "Stock and accounts",
+	"go_live": "3-months",
+	"operations": "spreadsheets",
+	"problems": '["stock"]',
+	"verdict": "packs",
+}
+
+
+class TestStartProjectWithPartner(IntegrationTestCase):
+	"""Connect on a partner's profile or card: the New project answers become a project, sent to
+	that partner as the customer's Requirement card."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		self.addCleanup(frappe.set_user, "Administrator")
+		make_partner(PARTNER)
+		make_partner_admin(PARTNER, PARTNER_ADMIN)
+		make_buyer(BUYER, "Hiring Buyer Co")
+
+	def start(self, partner=PARTNER, as_user=BUYER, **answers):
+		frappe.set_user(as_user)
+		try:
+			return start_project_with_partner(partner, **{**PROJECT_ANSWERS, **answers})
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_the_project_is_sent_to_the_partner_as_a_requirement(self):
+		result = self.start(project_name="Warehouse rollout")
+
+		project = frappe.get_doc("Customer Project", result["project"]["name"])
+		self.assertEqual((project.status, project.shared_count, project.user), ("Shared", 1, BUYER))
+		card = frappe.get_all(
+			"Connect Message",
+			filters={
+				"thread": result["thread"],
+				"message_type": "Requirement",
+				"content": ["like", "%Warehouse rollout%"],
+			},
+			fields=["sender", "content"],
+		)
+		self.assertEqual(len(card), 1)
+		self.assertEqual(card[0].sender, BUYER)
+		# No brief written yet, so the project's name says what they're looking for.
+		self.assertEqual(frappe.parse_json(card[0].content)["looking_for"], "Warehouse rollout")
+		self.assertEqual(frappe.db.get_value("Connect Thread", result["thread"], "partner"), PARTNER)
+		# The partner's quote is matched to this project.
+		self.assertTrue(
+			frappe.db.exists("Project Quote", {"customer_project": project.name, "partner": PARTNER})
+		)
+
+	def test_another_project_goes_to_the_same_chat(self):
+		first = self.start()
+		second = self.start(project_name="Payroll")
+		self.assertEqual(first["thread"], second["thread"])
+		self.assertNotEqual(first["project"]["name"], second["project"]["name"])
+
+	def test_an_account_without_a_company_is_refused(self):
+		user = "hiring.no.company@example.test"
+		if not frappe.db.exists("User", user):
+			frappe.get_doc({"doctype": "User", "email": user, "first_name": "Partner"}).insert(
+				ignore_permissions=True
+			)
+		self.assertRaises(frappe.PermissionError, self.start, as_user=user)
+
+	def test_a_partner_nobody_reads_for_is_refused_before_the_project_is_saved(self):
+		lonely = make_partner("_Test Partner Without Admin")
+		before = frappe.db.count("Customer Project", {"user": BUYER})
+		self.assertRaises(frappe.ValidationError, self.start, partner=lonely)
+		self.assertEqual(frappe.db.count("Customer Project", {"user": BUYER}), before)
+
+	def test_a_project_needs_a_name(self):
+		self.assertRaises(frappe.ValidationError, self.start, project_name=" ")

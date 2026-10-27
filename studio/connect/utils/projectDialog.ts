@@ -1,7 +1,8 @@
 // The New project / Edit draft dialog: three steps (name and go-live, how they operate
 // today, what they're trying to fix), saved as a Customer Project with the verdict
 // recommend() gives. Shared by the Projects page and both recommendation pages, which
-// spread this into their setup() return and render the same dialog blocks.
+// spread this into their setup() return and render the same dialog blocks. Opened for a
+// partner (their Connect button, see partnerConnect.ts), it sends the project to them instead.
 
 import { computed, ref } from "vue"
 import {
@@ -31,7 +32,8 @@ export function projectPath(row) {
 	return { path, query: { project: row.project } }
 }
 
-// onSaved(project) runs after a successful save, with the saved Customer Project.
+// onSaved(project, thread) runs after a successful save, with the saved Customer Project and,
+// when it was sent to a partner, the chat it went to.
 export function projectDialog(context, { onSaved }) {
 	const { call, toast } = context
 
@@ -40,13 +42,21 @@ export function projectDialog(context, { onSaved }) {
 	const newProject = ref(blankProject())
 	// Set while editing an existing draft; empty for a new project.
 	const editingProject = ref("")
+	// The partner a new project goes to, as { name, partner_name }; null for a draft.
+	const forPartner = ref(null)
 	const savingProject = ref(false)
 
-	const projectDialogTitle = computed(() => (editingProject.value ? "Edit draft" : "New project"))
+	const partnerLabel = computed(() => forPartner.value && (forPartner.value.partner_name || forPartner.value.name))
+	const projectDialogTitle = computed(() => {
+		if (editingProject.value) return "Edit draft"
+		return partnerLabel.value ? `New project for ${partnerLabel.value}` : "New project"
+	})
+	const projectSaveLabel = computed(() => (partnerLabel.value ? `Send to ${partnerLabel.value}` : "Save draft"))
 
-	function openNewProject() {
+	function openNewProject(partner = null) {
 		newProject.value = blankProject()
 		editingProject.value = ""
+		forPartner.value = partner
 		newProjectStep.value = 1
 		projectDialogOpen.value = true
 	}
@@ -60,6 +70,7 @@ export function projectDialog(context, { onSaved }) {
 			problems: project.problems || [],
 		}
 		editingProject.value = project.name
+		forPartner.value = null
 		newProjectStep.value = 1
 		projectDialogOpen.value = true
 	}
@@ -100,8 +111,7 @@ export function projectDialog(context, { onSaved }) {
 			systems: draft.systems,
 			problems: draft.problems,
 		})
-		savingProject.value = true
-		call("connect.api.projects.save_project", {
+		const answers = {
 			project_name: draft.project_name,
 			go_live: draft.go_live,
 			operations: draft.operations,
@@ -109,14 +119,21 @@ export function projectDialog(context, { onSaved }) {
 			systems: JSON.stringify(usesOtherSystems(draft.operations) ? draft.systems : []),
 			problems: JSON.stringify(draft.problems),
 			verdict,
-			name: editingProject.value || undefined,
-		})
-			.then((project) => {
+		}
+		const partner = forPartner.value
+		savingProject.value = true
+		const saving = partner
+			? call("connect.api.projects.start_project_with_partner", { partner: partner.name, ...answers })
+			: call("connect.api.projects.save_project", { ...answers, name: editingProject.value || undefined })
+		saving
+			.then((result) => {
 				projectDialogOpen.value = false
-				onSaved(project)
+				if (partner) onSaved(result.project, result.thread)
+				else onSaved(result)
 			})
 			.catch((error) => {
-				toast.error(error?.messages?.[0] || "Couldn't save the project. Try again.")
+				const fallback = partner ? "Couldn't send the project. Try again." : "Couldn't save the project. Try again."
+				toast.error(error?.messages?.[0] || fallback)
 			})
 			.finally(() => {
 				savingProject.value = false
@@ -126,6 +143,7 @@ export function projectDialog(context, { onSaved }) {
 	return {
 		projectDialogOpen,
 		projectDialogTitle,
+		projectSaveLabel,
 		newProjectStep,
 		newProject,
 		savingProject,

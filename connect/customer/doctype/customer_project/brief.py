@@ -10,23 +10,30 @@ from connect.customer.doctype.customer_project.partner_matching import get_partn
 def send_to_partners(doc, customer: str) -> int:
 	"""Sends the brief to each matching partner's admin, as the customer's own Requirement card
 	in their thread with that partner, and returns how many got it."""
-	from connect.messaging.doctype.connect_thread.connect_thread import get_or_open_thread
-
-	card = frappe.as_json(requirement_card(doc, customer))
+	card = requirement_card(doc, customer)
 	partners = _partners_to_brief(normalize_criteria(frappe.parse_json(doc.criteria) or {}))
 	for partner in partners:
-		thread = get_or_open_thread(customer, partner, doc.user)
-		frappe.get_doc(
-			{
-				"doctype": "Connect Message",
-				"thread": thread,
-				"sender": doc.user,
-				"message_type": "Requirement",
-				"content": card,
-			}
-		).insert(ignore_permissions=True)
-		await_quote(doc.name, partner, thread)
+		send_brief(doc, customer, partner, card)
 	return len(partners)
+
+
+def send_brief(doc, customer: str, partner: str, card: dict | None = None) -> str:
+	"""Sends the brief to one partner, as the customer's Requirement card in their thread with
+	that partner, and returns the thread."""
+	from connect.messaging.doctype.connect_thread.connect_thread import get_or_open_thread
+
+	thread = get_or_open_thread(customer, partner, doc.user)
+	frappe.get_doc(
+		{
+			"doctype": "Connect Message",
+			"thread": thread,
+			"sender": doc.user,
+			"message_type": "Requirement",
+			"content": frappe.as_json(card or requirement_card(doc, customer)),
+		}
+	).insert(ignore_permissions=True)
+	await_quote(doc.name, partner, thread)
+	return thread
 
 
 def await_quote(project: str, partner: str, thread: str):
@@ -69,6 +76,9 @@ def requirement_card(doc, customer: str) -> dict:
 
 
 def looking_for(doc) -> str:
+	# A project sent from a partner's Connect button has no brief written yet: its name says it.
+	if not doc.description:
+		return doc.project_name
 	return _("Custom implementation: {0}").format(doc.description)
 
 

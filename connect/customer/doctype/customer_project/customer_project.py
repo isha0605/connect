@@ -99,6 +99,30 @@ def save_project(
 	return project_dict(doc)
 
 
+def start_project_with_partner(
+	partner, project_name, go_live=None, operations=None, problems=None, verdict=None, systems=None
+) -> dict:
+	"""Connect on a partner's profile or directory card: saves a new project from the New project
+	answers and sends it to that one partner, as the customer's Requirement card in their chat.
+	Returns the project and the chat."""
+	from connect.customer.doctype.customer_project.brief import send_brief
+	from connect.permissions import _get_partner_admin
+
+	customer = get_customer_for_user(frappe.session.user)
+	if not customer:
+		frappe.throw(_("Sign in with your company account to connect with a partner."), frappe.PermissionError)
+	# Nobody would read it: a partner's chats go to their admin.
+	if not frappe.db.exists("Partner", partner) or not _get_partner_admin(partner):
+		frappe.throw(_("This partner can't take messages yet."))
+
+	doc = get_own_project(save_project(project_name, go_live, operations, problems, verdict, systems=systems)["name"])
+	thread = send_brief(doc, customer, partner)
+	doc.status = "Shared"
+	doc.shared_count = 1
+	doc.save(ignore_permissions=True)
+	return {"project": project_dict(doc), "thread": thread}
+
+
 def get_project(name: str) -> dict:
 	return project_dict(get_own_project(name))
 
