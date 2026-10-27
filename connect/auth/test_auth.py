@@ -22,6 +22,8 @@ class IntegrationTestEmailCodeSignIn(IntegrationTestCase):
 	is read from what would have been emailed, and logging in is recorded, not done."""
 
 	def setUp(self):
+		# Codes are read from the email here, so not from a local site's demo sign-in.
+		patch("connect.auth.email_code.demo_sign_in", return_value=False).start()
 		self.sendmail = patch("frappe.sendmail").start()
 		self.login_manager = MagicMock()
 		patch.object(frappe.local, "login_manager", self.login_manager, create=True).start()
@@ -232,3 +234,42 @@ class IntegrationTestEmailCodeSignIn(IntegrationTestCase):
 		with self.assertRaisesRegex(frappe.ValidationError, "customer"):
 			user.save(ignore_permissions=True)
 
+
+class IntegrationTestDemoSignIn(IntegrationTestCase):
+	"""Local demos: with connect_demo_sign_in and developer mode, the code comes back to the
+	sign-in page instead of by email. Anything else gets the email as always."""
+
+	def setUp(self):
+		self.sendmail = patch("frappe.sendmail").start()
+		self.login_manager = MagicMock()
+		patch.object(frappe.local, "login_manager", self.login_manager, create=True).start()
+
+	def tearDown(self):
+		patch.stopall()
+
+	def send(self, **conf):
+		with patch.dict(frappe.conf, conf):
+			return send_code(new_email("demo"))
+
+	def test_the_code_comes_back_instead_of_an_email(self):
+		email = new_email("demo")
+		with patch.dict(frappe.conf, {"developer_mode": 1, "connect_demo_sign_in": 1}):
+			reply = send_code(email)
+		self.sendmail.assert_not_called()
+		self.assertRegex(reply["demo_code"], r"^\d{6}$")
+		# It's a real code: it signs in like an emailed one.
+		frappe.get_doc({"doctype": "User", "email": email, "first_name": "Demo", "send_welcome_email": 0}).insert(
+			ignore_permissions=True
+		)
+		verify_code(email, reply["demo_code"])
+		self.login_manager.login_as.assert_called_once_with(email)
+
+	def test_without_developer_mode_the_setting_does_nothing(self):
+		reply = self.send(developer_mode=0, connect_demo_sign_in=1)
+		self.assertNotIn("demo_code", reply)
+		self.sendmail.assert_called_once()
+
+	def test_without_the_setting_the_code_is_emailed(self):
+		reply = self.send(developer_mode=1, connect_demo_sign_in=0)
+		self.assertNotIn("demo_code", reply)
+		self.sendmail.assert_called_once()

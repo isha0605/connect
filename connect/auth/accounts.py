@@ -31,16 +31,17 @@ BUYER, PARTNER = "buyer", "partner"
 
 def send_sign_in_code(email, details=None):
 	"""Email a code to any address. A disabled account gets a notice instead, so nobody can
-	tell from the reply whether an account exists or is disabled."""
+	tell from the reply whether an account exists or is disabled. Returns the code only with
+	demo sign-in on (see connect.auth.email_code.demo_sign_in)."""
 	user = find_user(email)
 	if user and not user.enabled:
 		send_disabled_notice(email)
 	elif user:
-		EmailCode(email).send(_("{0} is your Frappe Connect sign-in code"), _("Sign in to Frappe Connect"))
+		return EmailCode(email).send(_("{0} is your Frappe Connect sign-in code"), _("Sign in to Frappe Connect"))
 	else:
 		if (details or {}).get("company_name"):
 			check_company_is_free(details["company_name"])
-		EmailCode(email).send(
+		return EmailCode(email).send(
 			_("{0} is your Frappe Connect sign-up code"), _("Create your Frappe Connect account"), details
 		)
 

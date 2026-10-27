@@ -1,5 +1,5 @@
 import { onScopeDispose, ref } from "vue"
-import { call } from "frappe-ui"
+import { call, toast } from "frappe-ui"
 import { startTracking, visitorId } from "@app/utils/tracking"
 
 const OTP_PREFIX = "otp-digit-"
@@ -91,6 +91,16 @@ export default function setup(context) {
 		setTimeout(() => otpBoxes()[0]?.focus(), 50)
 	}
 
+	// Demo sign-in on a local site (connect.auth.email_code.demo_sign_in): no email, the code
+	// comes back with the reply and goes straight into the boxes.
+	function fillDemoCode(res) {
+		const demo = res && res.demo_code
+		if (!demo) return false
+		digits.forEach((d, i) => (d.value = demo[i] || ""))
+		toast.success("Demo sign-in: your code is filled in.")
+		return true
+	}
+
 	// Continue on "Create your account" or "Log in to your account".
 	function sendCode(origin) {
 		if (sending.value) return
@@ -124,11 +134,11 @@ export default function setup(context) {
 
 		sending.value = true
 		call("connect.api.auth.send_code", params)
-			.then(() => {
+			.then((res) => {
 				clearDigits()
 				authStep.value = "otp"
 				startResendWait()
-				focusFirstDigit()
+				if (!fillDemoCode(res)) focusFirstDigit()
 			})
 			.catch((err) => {
 				authError.value = errorText(err, "We couldn't send a code. Try again.")
@@ -143,10 +153,10 @@ export default function setup(context) {
 		authError.value = ""
 		sending.value = true
 		call("connect.api.auth.send_code", { email: email() })
-			.then(() => {
+			.then((res) => {
 				clearDigits()
 				startResendWait()
-				focusFirstDigit()
+				if (!fillDemoCode(res)) focusFirstDigit()
 			})
 			.catch((err) => {
 				authError.value = errorText(err, "We couldn't send a code. Try again.")

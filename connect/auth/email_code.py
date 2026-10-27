@@ -21,6 +21,13 @@ class EmailCodeError(frappe.ValidationError):
 	"""The code is wrong, expired or locked."""
 
 
+def demo_sign_in() -> bool:
+	"""Local demos only: a code goes back to the sign-in page, which fills it in, instead of by
+	email. Needs the site's connect_demo_sign_in setting and developer mode, so a production site
+	never does it, even with the setting copied over."""
+	return bool(frappe.conf.developer_mode and frappe.conf.get("connect_demo_sign_in"))
+
+
 class EmailCode:
 	TTL_SECONDS = 10 * 60
 	MAX_ATTEMPTS = 5
@@ -37,7 +44,8 @@ class EmailCode:
 
 	def send(self, subject, heading, details=None):
 		"""Email a fresh code. Wrong tries carry over, so a resend can't reset the lock; the
-		sign-up details are kept from the first request unless new ones are given."""
+		sign-up details are kept from the first request unless new ones are given. With demo
+		sign-in on, the code is returned instead of emailed."""
 		pending = self.pending or {}
 		attempts = pending.get("attempts", 0)
 		if attempts >= self.MAX_ATTEMPTS:
@@ -51,6 +59,8 @@ class EmailCode:
 				"details": {**(pending.get("details") or {}), **{k: v for k, v in (details or {}).items() if v}},
 			}
 		)
+		if demo_sign_in():
+			return code
 		if frappe.conf.developer_mode:
 			# A local bench usually can't send email, so the code is in logs/connect.auth.log too (as a warning: the dev server logs nothing quieter).
 			frappe.logger("connect.auth").warning(f"Sign-in code for {self.email}: {code}")

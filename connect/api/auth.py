@@ -18,9 +18,12 @@ NAME_MAX_LENGTH = 140
 @rate_limit(key="email", ip_based=False, limit=5, seconds=EmailCode.TTL_SECONDS, methods="POST")
 def send_code(email, full_name=None, company_name=None, country=None, flow=BUYER):
 	"""Email a sign-in code. A new email gets one too: the account is made when it's checked.
-	The sign-up form sends its details here, so the code screen only has to send the code."""
+	The sign-up form sends its details here, so the code screen only has to send the code.
+	With demo sign-in on (local sites only), the code comes back as `demo_code` instead."""
 	email = validated_email(email)
-	send_sign_in_code(email, profile_details(full_name, company_name, country, flow))
+	code = send_sign_in_code(email, profile_details(full_name, company_name, country, flow))
+	if code:
+		return {"message": _("Demo sign-in: no email was sent."), "demo_code": code}
 	return {"message": _("We sent a code to {0}.").format(email)}
 
 
