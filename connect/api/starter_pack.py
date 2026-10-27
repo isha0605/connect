@@ -70,9 +70,3 @@ def my_orders():
 def pay(order, key=None):
 	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import pay
 	return pay(order, key=key)
-
-
-@frappe.whitelist()
-def get_my_projects():
-	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import get_my_projects
-	return get_my_projects()

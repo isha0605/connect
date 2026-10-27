@@ -147,7 +147,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "newProject();"
+                 "script": "openNewProject();"
                 }
                },
                "componentId": "home-new-project",
@@ -179,7 +179,7 @@
              "componentName": "Repeater",
              "componentProps": {
               "data": "{{ projects }}",
-              "dataKey": "order",
+              "dataKey": "key",
               "emptyStateMessage": ""
              },
              "componentSlots": {
@@ -364,7 +364,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "newProject();"
+                 "script": "browseStarterPacks();"
                 }
                },
                "componentId": "home-projects-empty-btn",
@@ -381,6 +381,27 @@
              "componentProps": {},
              "componentSlots": {},
              "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "alignSelf": "flex-start",
+              "marginTop": "16px"
+             },
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "viewAllProjects();"
+              }
+             },
+             "componentId": "home-projects-view-all",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "View all projects",
+              "variant": "subtle"
+             },
+             "componentSlots": {},
+             "visibilityCondition": "hasMoreProjects"
             }
            ],
            "componentId": "home-greeting",
@@ -1562,6 +1583,453 @@
      "componentProps": {},
      "componentSlots": {},
      "originalElement": "div"
+    },
+    {
+     "blockName": "New Project Dialog",
+     "children": [
+      {
+       "baseStyles": {
+        "boxSizing": "border-box",
+        "display": "flex",
+        "flexDirection": "column",
+        "marginTop": "-12px",
+        "width": "100%"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "display": "flex",
+          "gap": "4px",
+          "marginTop": "0px",
+          "width": "100%"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "backgroundColor": "{{ stepFilled(1) ? 'var(--ink-gray-8)' : 'var(--surface-gray-2)' }}",
+            "borderRadius": "2px",
+            "flex": "1",
+            "height": "4px"
+           },
+           "componentId": "proj-dlg-seg-1",
+           "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "backgroundColor": "{{ stepFilled(2) ? 'var(--ink-gray-8)' : 'var(--surface-gray-2)' }}",
+            "borderRadius": "2px",
+            "flex": "1",
+            "height": "4px"
+           },
+           "componentId": "proj-dlg-seg-2",
+           "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "backgroundColor": "{{ stepFilled(3) ? 'var(--ink-gray-8)' : 'var(--surface-gray-2)' }}",
+            "borderRadius": "2px",
+            "flex": "1",
+            "height": "4px"
+           },
+           "componentId": "proj-dlg-seg-3",
+           "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
+           "originalElement": "div"
+          }
+         ],
+         "componentId": "proj-dlg-progress",
+         "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "16px",
+          "marginTop": "24px",
+          "width": "100%"
+         },
+         "children": [
+          {
+           "componentId": "proj-dlg-name",
+           "componentName": "FormControl",
+           "componentProps": {
+            "label": "Project name",
+            "modelValue": {
+             "$type": "variable",
+             "name": "newProject.project_name"
+            },
+            "placeholder": "ERP rollout",
+            "required": true,
+            "size": "md",
+            "type": "text"
+           },
+           "componentSlots": {}
+          },
+          {
+           "componentId": "proj-dlg-golive",
+           "componentName": "FormControl",
+           "componentProps": {
+            "label": "When do you need it live?",
+            "modelValue": {
+             "$type": "variable",
+             "name": "newProject.go_live"
+            },
+            "options": "{{ goLiveOptions }}",
+            "placeholder": "Select",
+            "size": "sm",
+            "type": "select"
+           },
+           "componentSlots": {}
+          },
+          {
+           "baseStyles": {
+            "marginTop": "16px",
+            "width": "100%"
+           },
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "nextProjectStep();"
+            }
+           },
+           "componentId": "proj-dlg-step1-continue",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Continue",
+            "size": "sm",
+            "variant": "solid"
+           },
+           "componentSlots": {}
+          }
+         ],
+         "componentId": "proj-dlg-step-1",
+         "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
+         "originalElement": "div",
+         "visibilityCondition": "newProjectStep === 1"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "marginTop": "21px",
+          "width": "100%"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "1.4"
+           },
+           "componentId": "proj-dlg-ops-question",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "p",
+            "text": "How would you describe your operations today?"
+           },
+           "componentSlots": {}
+          },
+          {
+           "baseStyles": {
+            "marginTop": "4px",
+            "width": "100%"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "0px",
+              "width": "100%"
+             },
+             "componentId": "proj-dlg-ops-list",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ operationOptions }}",
+              "dataKey": "value",
+              "emptyStateMessage": ""
+             },
+             "componentSlots": {
+              "default": {
+               "parentBlockId": "proj-dlg-ops-list",
+               "slotContent": [
+                {
+                 "baseStyles": {
+                  "boxSizing": "border-box",
+                  "height": "32px",
+                  "margin": "0px 0px 0px -12px",
+                  "padding": "0px 12px"
+                 },
+                 "componentId": "proj-dlg-ops-option",
+                 "componentName": "Radio",
+                 "componentProps": {
+                  "label": "{{ dataItem.label }}",
+                  "value": "{{ dataItem.value }}"
+                 },
+                 "componentSlots": {}
+                }
+               ],
+               "slotId": "default",
+               "slotName": "default"
+              }
+             }
+            }
+           ],
+           "componentId": "proj-dlg-ops",
+           "componentName": "RadioGroup",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "newProject.operations"
+            },
+            "padded": true,
+            "size": "md"
+           },
+           "componentSlots": {}
+          },
+          {
+           "baseStyles": {
+            "display": "{{ usesOtherSystems(newProject.operations) ? 'block' : 'none' }}",
+            "marginTop": "20px",
+            "width": "100%"
+           },
+           "componentId": "proj-dlg-systems",
+           "componentName": "MultiSelect",
+           "componentProps": {
+            "label": "Which systems do you use?",
+            "modelValue": {
+             "$type": "variable",
+             "name": "newProject.systems"
+            },
+            "options": "{{ systemOptions }}",
+            "placeholder": "Select"
+           },
+           "componentSlots": {}
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "gap": "8px",
+            "justifyContent": "flex-end",
+            "marginTop": "32px",
+            "width": "100%"
+           },
+           "children": [
+            {
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "prevProjectStep();"
+              }
+             },
+             "componentId": "proj-dlg-step2-back",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "lucide-chevron-left",
+              "label": "Back",
+              "size": "sm",
+              "variant": "subtle"
+             },
+             "componentSlots": {}
+            },
+            {
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "nextProjectStep();"
+              }
+             },
+             "componentId": "proj-dlg-step2-continue",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Continue",
+              "size": "sm",
+              "variant": "solid"
+             },
+             "componentSlots": {}
+            }
+           ],
+           "componentId": "proj-dlg-step2-actions",
+           "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
+           "originalElement": "div"
+          }
+         ],
+         "componentId": "proj-dlg-step-2",
+         "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
+         "originalElement": "div",
+         "visibilityCondition": "newProjectStep === 2"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "marginTop": "21px",
+          "width": "100%"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-7)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "1.4"
+           },
+           "componentId": "proj-dlg-fix-question",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "p",
+            "text": "What are you trying to fix?"
+           },
+           "componentSlots": {}
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "0px",
+            "marginTop": "4px",
+            "width": "100%"
+           },
+           "componentId": "proj-dlg-fix-list",
+           "componentName": "Repeater",
+           "componentProps": {
+            "data": "{{ problemOptions }}",
+            "dataKey": "value",
+            "emptyStateMessage": ""
+           },
+           "componentSlots": {
+            "default": {
+             "parentBlockId": "proj-dlg-fix-list",
+             "slotContent": [
+              {
+               "baseStyles": {
+                "boxSizing": "border-box",
+                "height": "32px",
+                "margin": "0px 0px 0px -12px",
+                "padding": "0px 12px"
+               },
+               "componentEvents": {
+                "update:modelValue": {
+                 "action": "Run Script",
+                 "event": "update:modelValue",
+                 "script": "toggleProblem(dataItem.value);"
+                }
+               },
+               "componentId": "proj-dlg-fix-option",
+               "componentName": "Checkbox",
+               "componentProps": {
+                "label": "{{ dataItem.label }}",
+                "modelValue": "{{ hasProblem(dataItem.value) }}",
+                "padded": true,
+                "size": "md"
+               },
+               "componentSlots": {}
+              }
+             ],
+             "slotId": "default",
+             "slotName": "default"
+            }
+           }
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "gap": "8px",
+            "justifyContent": "flex-end",
+            "marginTop": "32px",
+            "width": "100%"
+           },
+           "children": [
+            {
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "prevProjectStep();"
+              }
+             },
+             "componentId": "proj-dlg-step3-back",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "lucide-chevron-left",
+              "label": "Back",
+              "size": "sm",
+              "variant": "subtle"
+             },
+             "componentSlots": {}
+            },
+            {
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "saveProjectDraft();"
+              }
+             },
+             "componentId": "proj-dlg-save",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Save draft",
+              "loading": "{{ savingProject }}",
+              "size": "sm",
+              "variant": "solid"
+             },
+             "componentSlots": {}
+            }
+           ],
+           "componentId": "proj-dlg-step3-actions",
+           "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
+           "originalElement": "div"
+          }
+         ],
+         "componentId": "proj-dlg-step-3",
+         "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
+         "originalElement": "div",
+         "visibilityCondition": "newProjectStep === 3"
+        }
+       ],
+       "componentId": "proj-dlg-body",
+       "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
+       "originalElement": "div"
+      }
+     ],
+     "componentId": "proj-new-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "projectDialogOpen"
+      },
+      "size": "md",
+      "title": "{{ projectDialogTitle }}"
+     },
+     "componentSlots": {}
     }
    ],
    "componentId": "root",
@@ -1570,13 +2038,13 @@
    "componentSlots": {}
   }
  ],
- "creation": "2026-10-05 16:00:00",
+ "creation": "2026-10-27 15:25:30.546798",
  "docstatus": 0,
  "doctype": "Studio Page",
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-10-27 11:50:48.696977",
+ "modified": "2026-10-27 15:51:29.583623",
  "modified_by": "Administrator",
  "name": "home",
  "owner": "Administrator",
@@ -1600,16 +2068,6 @@
    "limit": 0,
    "method": "GET",
    "params": "{}",
-   "resource_name": "myProjects",
-   "resource_type": "API Resource",
-   "url": "/api/method/connect.api.starter_pack.get_my_projects"
-  },
-  {
-   "auto": 1,
-   "fetch_document_using_filters": 0,
-   "limit": 0,
-   "method": "GET",
-   "params": "{}",
    "resource_name": "myShortlist",
    "resource_type": "API Resource",
    "url": "/api/method/connect.api.customer.list_my_shortlist"
@@ -1623,6 +2081,16 @@
    "resource_name": "myContext",
    "resource_type": "API Resource",
    "url": "/api/method/connect.api.account.get_my_context"
+  },
+  {
+   "auto": 1,
+   "fetch_document_using_filters": 0,
+   "limit": 0,
+   "method": "GET",
+   "params": "{}",
+   "resource_name": "projectList",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.projects.list_projects"
   }
  ],
  "route": "/home",

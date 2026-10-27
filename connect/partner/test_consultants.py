@@ -15,8 +15,8 @@ from connect.starter_packs.doctype.starter_pack_order.implementation import (
 )
 from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import (
 	PAYMENT_HOOK_FLAG,
-	get_my_projects,
 	get_order,
+	my_orders,
 )
 from connect.starter_packs.doctype.starter_pack_order.test_starter_pack_order import make_order, make_pack, make_user
 from connect.partner.consultants import on_user_update, sync_consultant
@@ -218,14 +218,14 @@ class IntegrationTestFrappeConsultants(IntegrationTestCase):
 		self.assertNotEqual(contact, frappe.db.get_value("Starter Pack Order", order.name, "implementation_thread"))
 		self.assertIsNone(frappe.db.get_value("Connect Thread", contact, "consultant"))
 
-	def test_the_buyer_sees_their_consultant_on_the_setup_page_and_home(self):
+	def test_the_buyer_sees_their_consultant_on_the_setup_page_and_projects(self):
 		buyer = self.buyer("h")
 		order = self.handed_over(buyer)
 		full_name = frappe.db.get_value("Frappe Consultant", order.consultant, "full_name")
 		self.assertEqual(get_order(order.name)["consultant"]["label"], full_name)
 		frappe.set_user(buyer[0])
-		project = next(p for p in get_my_projects() if p["order"] == order.name)
-		self.assertEqual(project["partner"]["partner_name"], full_name)
+		project = next(p for p in my_orders() if p["order"] == order.name)
+		self.assertEqual(project["partner_name"], full_name)
 
 	# ---- Nobody enabled ----
 

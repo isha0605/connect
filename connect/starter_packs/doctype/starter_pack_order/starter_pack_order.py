@@ -528,18 +528,28 @@ def my_orders():
 	rows = []
 	for name in names:
 		doc = frappe.get_doc("Starter Pack Order", name)
-		partner = get_assigned_partner(doc.partner) if doc.partner else None
 		rows.append(
 			{
 				"order": doc.name,
 				"project_title": project_title(doc),
-				# Frappe implements the Starter Packs until a partner is assigned.
-				"partner_name": (partner or {}).get("partner_name") or "Frappe",
-				"partner_logo": (partner or {}).get("logo") or FRAPPE_LOGO,
+				"status": doc.status,
+				**_order_card(doc),
 				"created_on": with_timezone(doc.creation),
 			}
 		)
 	return rows
+
+
+def _order_card(doc):
+	"""Who a project row shows: the consultant Frappe gave it, else its partner, else Frappe,
+	which implements the Starter Packs until a partner is assigned."""
+	if consultant := consultant_card(doc.consultant):
+		return {"partner_name": consultant["label"], "partner_logo": consultant["photo"]}
+	partner = get_assigned_partner(doc.partner) if doc.partner else None
+	return {
+		"partner_name": (partner or {}).get("partner_name") or "Frappe",
+		"partner_logo": (partner or {}).get("logo") or FRAPPE_LOGO,
+	}
 
 
 def get_assigned_partner(partner):
@@ -665,65 +675,3 @@ def get_own_order(order, key=None):
 	if "System Manager" in frappe.get_roles():
 		return doc
 	frappe.throw(_("Not permitted"), frappe.PermissionError)
-
-
-def get_my_projects():
-	"""The signed-in buyer's paid Starter Pack orders, newest first, for Home's project cards.
-	Orders belong to the company, so a teammate's purchase shows up too."""
-	user = frappe.session.user
-	if user == "Guest":
-		return []
-	or_filters = {"user": user}
-	if customer := get_customer_for_user(user):
-		or_filters["customer"] = customer
-
-	orders = frappe.get_all(
-		"Starter Pack Order",
-		filters={"payment_status": ["in", ["Paid", "Partially Refunded"]]},
-		or_filters=or_filters,
-		fields=["name", "company_name", "status", "partner", "consultant", "creation"],
-		order_by="creation desc",
-	)
-	if not orders:
-		return []
-
-	packs = {}
-	for row in frappe.get_all(
-		"Starter Pack Order Item",
-		filters={"parent": ["in", [o.name for o in orders]], "parenttype": "Starter Pack Order"},
-		fields=["parent", "pack_name"],
-		order_by="idx asc",
-	):
-		packs.setdefault(row.parent, []).append(row)
-	partners = {
-		p.name: p
-		for p in frappe.get_all(
-			"Partner",
-			filters={"name": ["in", list({o.partner for o in orders if o.partner})]},
-			fields=["name", "partner_name", "logo"],
-		)
-	}
-
-	return [
-		{
-			"order": o.name,
-			"title": project_title(frappe._dict(packs=packs.get(o.name, []), company_name=o.company_name)),
-			"status": o.status,
-			"is_active": o.status != "Completed",
-			"created_on": with_timezone(o.creation),
-			"partner": project_partner(partners.get(o.partner), consultant_card(o.consultant)),
-		}
-		for o in orders
-	]
-
-
-def project_partner(partner, consultant):
-	"""Who a project card shows: the consultant, when Frappe has given it one."""
-	if not consultant:
-		return partner
-	return {
-		"name": partner.name if partner else None,
-		"partner_name": consultant["label"],
-		"logo": consultant["photo"],
-		"consultant": consultant["name"],
-	}

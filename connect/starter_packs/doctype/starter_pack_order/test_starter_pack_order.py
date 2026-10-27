@@ -11,8 +11,8 @@ from frappe.utils import today
 from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import (
 	PAYMENT_HOOK_FLAG,
 	checkout,
-	get_my_projects,
 	get_order,
+	my_orders,
 	pay,
 	save_company_details,
 	share_kickoff_meeting,
@@ -938,7 +938,7 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		with self.assertRaises(frappe.ValidationError):
 			save_company_details(order.name, "1-10", "Retail", "Tally")
 
-	def test_home_lists_the_buyers_paid_orders_as_projects(self):
+	def test_projects_list_the_buyers_paid_orders(self):
 		paid = self.paid_order()
 		hand_over(paid.name)
 		user, customer, _admin = self.signed_in_buyer(paid)
@@ -947,20 +947,36 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 
 		frappe.set_user(user)
 		try:
-			projects = get_my_projects()
+			projects = my_orders()
 		finally:
 			frappe.set_user("Administrator")
 		self.assertIn(paid.name, [p["order"] for p in projects])
 		self.assertNotIn(unpaid.name, [p["order"] for p in projects])
 		project = next(p for p in projects if p["order"] == paid.name)
-		self.assertEqual(project["title"], "_test_pack_a implementation for Test Co")
-		self.assertEqual(project["partner"]["name"], self.partner)
-		self.assertTrue(project["is_active"])
+		self.assertEqual(project["project_title"], "ERPNext implementation for Test Co")
+		self.assertEqual(project["partner_name"], frappe.db.get_value("Partner", self.partner, "partner_name"))
+		self.assertNotEqual(project["status"], "Completed")
 
-	def test_home_has_no_projects_for_a_guest(self):
+	def test_a_teammate_does_not_see_the_buyers_projects(self):
+		paid = self.paid_order()
+		hand_over(paid.name)
+		_user, customer, _admin = self.signed_in_buyer(paid)
+		teammate = make_user("_test_sp_teammate@example.com")
+		if not frappe.db.exists("Customer Team Member", {"user": teammate}):
+			frappe.get_doc({"doctype": "Customer Team Member", "customer": customer, "user": teammate}).insert(
+				ignore_permissions=True
+			)
+
+		frappe.set_user(teammate)
+		try:
+			self.assertNotIn(paid.name, [p["order"] for p in my_orders()])
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_projects_are_empty_for_a_guest(self):
 		frappe.set_user("Guest")
 		try:
-			self.assertEqual(get_my_projects(), [])
+			self.assertEqual(my_orders(), [])
 		finally:
 			frappe.set_user("Administrator")
 
