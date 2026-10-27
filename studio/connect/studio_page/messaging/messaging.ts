@@ -305,6 +305,29 @@ export default function setup(context) {
 		showMediaDialog.value = panel === "media"
 	}
 
+	// The header title's menu. A customer can open the partner's profile from a partner thread;
+	// a consultant thread is with Frappe itself, which has no partner profile.
+	function threadTitleOptions() {
+		const thread = currentThread()
+		const media = [
+			{ icon: "lucide-file", label: "Files", onClick: () => openMediaTab("Files") },
+			{ icon: "lucide-link", label: "Links", onClick: () => openMediaTab("Links") },
+		]
+		if (amPartner() || selectedThreadType.value === "dm" || !thread.partner || thread.consultant) return media
+
+		const profile = {
+			icon: "lucide-building-2",
+			label: "View profile",
+			onClick: () => context.router.push(`/partner-profile-redesign/${encodeURIComponent(thread.partner)}`),
+		}
+		return [profile, ...media]
+	}
+
+	function openMediaTab(tab) {
+		openPanel("media")
+		mediaTab.value = tab
+	}
+
 	// The panel header is shared by every side panel, so its title is resolved here rather
 	// than as a chain of ternaries inside a {{ }} binding.
 	function panelTitle() {
@@ -4069,6 +4092,7 @@ export default function setup(context) {
 		showAfterHoursBanner,
 		afterHoursBannerText,
 		afterHoursBannerOptions,
+		threadTitleOptions,
 		afterHoursBannerDismissed,
 		workDayRows,
 		toggleWorkDay,
