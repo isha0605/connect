@@ -163,6 +163,20 @@ class IntegrationTestEmailCodeSignIn(IntegrationTestCase):
 		with self.assertRaisesRegex(frappe.ValidationError, "already registered"):
 			send_code(new_email("taken"), full_name="A B", company_name=company)
 
+	def test_a_company_already_here_is_refused_before_any_account_is_made(self):
+		# The company can be typed in on the verify step too. Making the User can commit (it
+		# clears the email's old sessions), so the check has to come first, or a refused sign-up
+		# leaves a User with no company behind.
+		company = f"_Test Auth Taken Late {frappe.generate_hash(length=6)}"
+		frappe.get_doc({"doctype": "Customer", "customer_name": company}).insert(ignore_permissions=True)
+		email = new_email("taken_late")
+		send_code(email)
+		with patch("connect.auth.accounts.create_user") as create_user:
+			with self.assertRaisesRegex(frappe.ValidationError, "already registered"):
+				verify_code(email, self.code_sent(), full_name="A B", company_name=company)
+		create_user.assert_not_called()
+		self.assertFalse(frappe.db.exists("User", email))
+
 	def test_sign_ups_stop_past_the_hourly_cap(self):
 		email = new_email("cap")
 		send_code(email, full_name="A B", company_name=f"_Test Auth Cap {frappe.generate_hash(length=6)}")
@@ -217,3 +231,4 @@ class IntegrationTestEmailCodeSignIn(IntegrationTestCase):
 		user.append("roles", {"role": CONSULTANT_ROLE})
 		with self.assertRaisesRegex(frappe.ValidationError, "customer"):
 			user.save(ignore_permissions=True)
+

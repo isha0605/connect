@@ -88,6 +88,11 @@ def missing_profile(profile):
 
 def create_account(email, profile, visitor_id=None):
 	"""A Website User, and for a buyer their Customer and an admin membership of it."""
+	# Checked before anything is made: inserting the User can commit (it clears the email's old
+	# sessions, and that commits), so a company refused afterwards would leave a User behind
+	# with no company, who then signs straight in.
+	if profile.get("flow", BUYER) == BUYER:
+		check_company_is_free(profile["company_name"])
 	user = create_user(email, profile["full_name"], profile.get("country"))
 	if profile.get("flow", BUYER) == BUYER:
 		create_customer(user.name, profile["full_name"], profile["company_name"], profile.get("country"))

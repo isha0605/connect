@@ -21,9 +21,11 @@ from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import 
 RAZORPAY = "bwh_payments.bwh_payments.doctype.razorpay_gateway_settings.razorpay_gateway_settings.RazorpayGatewaySettings"
 ORDER_MODULE = "connect.starter_packs.doctype.starter_pack_order.starter_pack_order"
 GPR_MODULE = "bwh_payments.bwh_payments.doctype.gateway_payment_request.gateway_payment_request"
+from connect.customer.doctype.customer_project.test_hiring import make_buyer
 from connect.starter_packs.doctype.starter_pack_order.implementation import (
 	hand_over,
 	hand_over_waiting_orders,
+	link_company,
 	post_opening_message,
 )
 from connect.starter_packs.doctype.starter_pack_order.partner_rotation import (
@@ -33,6 +35,8 @@ from connect.starter_packs.doctype.starter_pack_order.partner_rotation import (
 )
 
 NOTIFY = "frappe.desk.doctype.notification_log.notification_log.enqueue_create_notification"
+CHECKOUT_BUYER = "_test_sp_checkout_buyer@example.com"
+CHECKOUT_COMPANY = "_Test SP Checkout Co"
 IMPLEMENTATION_MODULE = "connect.starter_packs.doctype.starter_pack_order.implementation"
 ROTATION_MODULE = "connect.starter_packs.doctype.starter_pack_order.partner_rotation"
 
@@ -193,6 +197,8 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 			"Starter Pack Settings", {"implementation_partner": "", "auto_assign_partners": 0}
 		)
 		without_site_consultants()
+		# Checkout is for a signed-in buyer with a company, as every buyer is now.
+		self.buyer = make_buyer(CHECKOUT_BUYER, CHECKOUT_COMPANY)
 
 		# Records persist across tests within a class (the rollback is per class), and
 		# order_ref is unique, so every fake session needs its own id.
@@ -219,15 +225,19 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 			p.stop()
 		frappe.flags[PAYMENT_HOOK_FLAG] = False
 
-	def place(self, packs):
-		result = checkout(
-			frappe.as_json(packs),
-			"Test Co",
-			phone="9999999999",
-			terms_accepted=1,
-			buyer_name="Asha Rao",
-			buyer_email="asha@example.com",
-		)
+	def place(self, packs, as_user=CHECKOUT_BUYER, company="Test Co"):
+		frappe.set_user(as_user)
+		try:
+			result = checkout(
+				frappe.as_json(packs),
+				company,
+				phone="9999999999",
+				terms_accepted=1,
+				buyer_name="Asha Rao",
+				buyer_email="asha@example.com",
+			)
+		finally:
+			frappe.set_user("Administrator")
 		return result, frappe.get_doc("Starter Pack Order", result["order"])
 
 	def request(self, order):
@@ -253,16 +263,11 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 			frappe.ValidationError, checkout, packs, "Test Co", terms_accepted=1, buyer_name="Asha", buyer_email="nope"
 		)
 
-	def test_a_guest_can_buy_without_an_account(self):
-		users_before = frappe.db.count("User")
-		frappe.set_user("Guest")
-		try:
-			result, order = self.place([self.pack_a])
-		finally:
-			frappe.set_user("Administrator")
-		self.assertEqual(frappe.db.count("User"), users_before)
-		self.assertEqual((order.user, order.customer), ("Guest", None))
-		self.assertEqual((order.buyer_name, order.buyer_email, order.company_name), ("Asha Rao", "asha@example.com", "Test Co"))
+	def test_the_order_is_the_buyers_company(self):
+		result, order = self.place([self.pack_a])
+		self.assertEqual((order.user, order.customer), (CHECKOUT_BUYER, CHECKOUT_COMPANY))
+		# the company's own name, not whatever the form sent
+		self.assertEqual((order.buyer_name, order.buyer_email, order.company_name), ("Asha Rao", "asha@example.com", CHECKOUT_COMPANY))
 		self.assertEqual(result["key"], order.access_key)
 		# What was typed at checkout is what the payment request, and so Razorpay, gets.
 		request = self.request(order)
@@ -271,10 +276,28 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 			("Asha", "Rao", "asha@example.com", "9999999999"),
 		)
 
+	def test_guests_sign_in_to_buy(self):
+		self.assertRaises(frappe.PermissionError, self.place, [self.pack_a], as_user="Guest")
+
+	def test_a_buyer_without_a_company_gets_one_at_checkout(self):
+		# e.g. a sign-up that stopped before its company was saved
+		user = make_user("_test_sp_no_company@example.com")
+		company = f"_Test SP New Co {frappe.generate_hash(length=6)}"
+		_, order = self.place([self.pack_a], as_user=user, company=company)
+		self.assertEqual(order.customer, company)
+		self.assertTrue(frappe.db.exists("Customer Team Member", {"customer": company, "user": user, "is_admin": 1}))
+
+		# a company that's already here is someone else's: its admin adds them instead
+		other = make_user("_test_sp_no_company_2@example.com")
+		self.assertRaisesRegex(
+			frappe.ValidationError, "already registered", self.place, [self.pack_a], as_user=other, company=company
+		)
+		self.assertRaisesRegex(frappe.ValidationError, "company", self.place, [self.pack_a], as_user=other, company=" ")
+
 	def test_a_guest_reads_their_order_back_only_with_its_key(self):
+		result, order = self.place([self.pack_a])
 		frappe.set_user("Guest")
 		try:
-			result, order = self.place([self.pack_a])
 			self.assertEqual(get_order(payment_request=result["payment_request"], key=result["key"])["order"], order.name)
 			self.assertRaises(frappe.PermissionError, get_order, order.name)
 			self.assertRaises(frappe.PermissionError, get_order, order.name, key="not-the-key")
@@ -707,6 +730,25 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 			).insert(ignore_permissions=True)
 		order.db_set({"user": user, "customer": customer})
 		return user, customer, admin
+
+	def test_a_paid_order_without_a_company_is_linked_to_one_in_desk(self):
+		order = self.paid_order()
+		hand_over(order.name)
+		user = make_user("_test_sp_unlinked@example.com")
+		order.db_set({"user": user, "customer": None})
+		company = frappe.db.get_value("Customer", {"customer_name": "_Test SP Linked Co"}) or (
+			frappe.get_doc({"doctype": "Customer", "customer_name": "_Test SP Linked Co"}).insert(ignore_permissions=True).name
+		)
+
+		with patch(f"{IMPLEMENTATION_MODULE}.post_opening_message") as post:
+			link_company(order.name, company)
+		order.reload()
+		self.assertTrue(order.partner)
+		self.assertEqual((order.customer, order.company_name), (company, "_Test SP Linked Co"))
+		# they belonged to no company, so they join this one, as its admin since it has none
+		self.assertTrue(frappe.db.exists("Customer Team Member", {"customer": company, "user": user, "is_admin": 1}))
+		post.assert_called_once_with(order.name)  # the chat opens, as payment would have
+		self.assertRaises(frappe.ValidationError, link_company, order.name, company)
 
 	def test_a_paid_order_goes_to_the_implementation_partner(self):
 		order = self.paid_order()

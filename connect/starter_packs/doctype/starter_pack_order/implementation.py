@@ -131,6 +131,45 @@ def assign_now(order):
 	return partner
 
 
+@frappe.whitelist(methods=["POST"])
+def link_company(order, customer):
+	"""The Desk "Link to a company" button, for a paid order placed without a company (before
+	checkout asked for one): the order becomes the company's, the buyer joins it if they belong
+	to no company yet, and what payment would have done runs now: the chat opens with the
+	buyer's opening messages."""
+	frappe.only_for("System Manager")
+	doc = frappe.get_doc("Starter Pack Order", order)
+	if doc.customer:
+		frappe.throw(_("This order is already linked to {0}.").format(frappe.bold(doc.customer)))
+	if not frappe.db.exists("Customer", customer):
+		frappe.throw(_("Company {0} not found.").format(frappe.bold(customer)))
+	if doc.user in (None, "", "Guest"):
+		frappe.throw(_("This order was placed without an account, so there's no one to open a chat for."))
+
+	current = get_customer_for_user(doc.user)
+	if current and current != customer:
+		frappe.throw(_("The buyer belongs to {0}. Link the order to that company.").format(frappe.bold(current)))
+	if not current:
+		has_admin = frappe.db.exists("Customer Team Member", {"customer": customer, "is_admin": 1})
+		frappe.get_doc(
+			{
+				"doctype": "Customer Team Member",
+				"customer": customer,
+				"user": doc.user,
+				"full_name": doc.buyer_name,
+				"is_admin": 0 if has_admin else 1,
+			}
+		).insert(ignore_permissions=True)
+
+	doc.db_set({"customer": customer, "company_name": frappe.db.get_value("Customer", customer, "customer_name")})
+	if doc.payment_status == "Paid":
+		if doc.partner:
+			post_opening_message(doc.name)
+		else:
+			hand_over(doc.name)
+	return frappe.db.get_value("Starter Pack Order", doc.name, "implementation_thread")
+
+
 def post_opening_message(order_name):
 	"""Post the buyer's first messages to their partner, once: a hello and the project card.
 

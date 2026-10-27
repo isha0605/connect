@@ -4,8 +4,9 @@ from frappe.rate_limiter import rate_limit
 # Whitelisted entry points only — the logic lives next to the Starter Pack and
 # Starter Pack Order doctypes. See connect/api/customer.py for why.
 #
-# Checkout is open to guests: sign-in is a mock today, and the buyer is whoever the form
-# names. Placing an order opens a Razorpay payment link, so it's rate limited per IP.
+# Checkout needs a signed-in buyer (it refuses guests with a message, rather than a bare 403).
+# Placing an order opens a Razorpay payment link, so it's rate limited per IP. Reading an order
+# back and paying again stay open to guests, with the order's access key.
 
 
 @frappe.whitelist(allow_guest=True)

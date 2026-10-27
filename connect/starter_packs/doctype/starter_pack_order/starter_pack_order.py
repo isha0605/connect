@@ -319,10 +319,9 @@ def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None,
 	"""Place an order for the given pack keys and open its payment. Returns where to
 	send the customer to pay, and the order's access key.
 
-	Anyone can buy, logged in or not: sign-in is a mock today, so the buyer is whoever the
-	checkout form names. No account is made for them — their name and email are kept on the
-	order and its payment request, and the access key is what lets their browser read the
-	order back after paying.
+	The buyer is signed in, and the order is their company's (see buyer_company): a company
+	is what the project's chat, its company details and its CRM lead hang off. The name and
+	email the form gives go onto the order and its payment request.
 
 	Takes pack keys only. Prices and totals are worked out server-side from the catalog.
 	`project` is the buyer's own Customer Project when checkout started from one: the order
@@ -341,13 +340,15 @@ def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None,
 	pack_keys = frappe.parse_json(packs)
 	if not pack_keys:
 		frappe.throw(_("Pick at least one pack."))
+	customer = buyer_company(company_name, buyer_name)
 
 	order = frappe.get_doc(
 		{
 			"doctype": "Starter Pack Order",
+			"customer": customer,
 			"buyer_name": buyer_name,
 			"buyer_email": buyer_email,
-			"company_name": company_name,
+			"company_name": frappe.db.get_value("Customer", customer, "customer_name"),
 			"phone": phone,
 			"terms_accepted": 1,
 			"customer_project": own_project(project),
@@ -356,6 +357,24 @@ def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None,
 	).insert(ignore_permissions=True)
 
 	return payment_response(order, order.create_payment_request())
+
+
+def buyer_company(company_name, buyer_name):
+	"""The signed-in buyer's company, made now from `company_name` when they have none — say
+	their sign-up stopped before its company was saved. An order without one would be paid
+	and stuck: no chat, no company details and no CRM lead."""
+	user = frappe.session.user
+	if user == "Guest":
+		frappe.throw(_("Sign in to buy a Starter Pack."), frappe.PermissionError)
+	customer = get_customer_for_user(user)
+	if customer:
+		return customer
+	if not (company_name or "").strip():
+		frappe.throw(_("Enter your company's name."))
+
+	from connect.auth.accounts import create_customer
+
+	return create_customer(user, buyer_name, company_name)
 
 
 def own_project(project):
@@ -586,7 +605,7 @@ def save_company_details(order, employees, industry, system, focus=None, key=Non
 		frappe.throw(_("This order isn't paid."))
 	customer = order_customer(doc)
 	if not customer:
-		frappe.throw(_("Sign in with the account that placed this order to save your company's details."))
+		frappe.throw(_("This order isn't linked to a company yet. Contact Frappe to link it."))
 	if not (employees and industry and system):
 		frappe.throw(_("Number of employees, industry and what you use today are all needed."))
 
