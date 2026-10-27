@@ -173,10 +173,11 @@ def delete_project(name: str):
 
 
 def my_projects() -> list[dict]:
-	"""The caller's draft projects, newest first, in the Projects page's row shape. Once
-	hired, a row shows the partner, like a booked pack."""
+	"""The caller's draft projects, newest first, in the Projects page's row shape. Once the
+	partner accepts, a row shows them like a booked pack; until then it says who it's waiting on."""
 	if frappe.session.user == "Guest":
 		return []
+	from connect.customer.doctype.customer_project.hiring import get_hire_days_left
 	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import FRAPPE_LOGO, with_timezone
 
 	return [
@@ -188,7 +189,9 @@ def my_projects() -> list[dict]:
 			"verdict": VERDICT_KEYS.get(row.verdict, ""),
 			"quotes": int(row.quotes),
 			"shortlisted": int(row.shortlisted),
-			"hired": bool(row.partner),
+			"hired": row.status in ("Hired", "Completed"),
+			"awaiting_partner": row.status == "Hiring",
+			"hire_days_left": get_hire_days_left(row.hire_requested_on) if row.status == "Hiring" else None,
 			"partner_name": (row.partner_name or row.partner) if row.partner else "Frappe",
 			"partner_logo": (row.logo_icon or row.logo) if row.partner else FRAPPE_LOGO,
 			"created_on": with_timezone(row.creation),
@@ -407,6 +410,7 @@ def _project_rows(user: str) -> list[dict]:
 		.on(Quote.customer_project == Project.name)
 		.select(
 			Project.name, Project.project_name, Project.status, Project.verdict, Project.partner, Project.creation,
+			Project.hire_requested_on,
 			Partner.partner_name, Partner.logo, Partner.logo_icon,
 			_count_where(Quote.status.isin(OPEN_QUOTE_STATUSES)).as_("quotes"),
 			_count_where(Quote.status == "Interested").as_("shortlisted"),

@@ -291,7 +291,7 @@
                       {
                        "baseStyles": {
                         "color": "var(--ink-gray-6, oklch(0.439 0 0))",
-                        "display": "{{ dataItem.kind === 'project' && !dataItem.hired && dataItem.status !== 'Shared' ? 'block' : 'none' }}",
+                        "display": "{{ dataItem.kind === 'project' && !dataItem.hired && !dataItem.awaiting_partner && dataItem.status !== 'Shared' ? 'block' : 'none' }}",
                         "fontSize": "13px",
                         "fontWeight": "400",
                         "letterSpacing": "0px",
@@ -404,6 +404,51 @@
                         }
                        ],
                        "componentId": "proj-row-quotes",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "{{ dataItem.kind === 'project' && dataItem.awaiting_partner ? 'flex' : 'none' }}",
+                        "gap": "5px",
+                        "marginTop": "4px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6)",
+                          "flexShrink": "0",
+                          "height": "14px",
+                          "width": "14px"
+                         },
+                         "componentId": "proj-row-awaiting-icon",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "lucide-clock"
+                         },
+                         "componentSlots": {}
+                        },
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6, oklch(0.439 0 0))",
+                          "fontSize": "13px",
+                          "fontWeight": "400",
+                          "letterSpacing": "0px",
+                          "lineHeight": "1.2"
+                         },
+                         "componentId": "proj-row-awaiting-label",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "tag": "p",
+                          "text": "{{ 'Waiting for ' + dataItem.partner_name + ' to accept · ' + dataItem.hire_days_left + (dataItem.hire_days_left === 1 ? ' day left' : ' days left') }}"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "proj-row-awaiting",
                        "componentName": "container",
                        "componentProps": {},
                        "componentSlots": {},

@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Isha and contributors
 # For license information, please see license.txt
 
+import math
+
 import frappe
 from frappe import _
 from frappe.utils import add_days, cint, escape_html, get_url, now_datetime
@@ -128,6 +130,13 @@ def expire_hire_requests() -> None:
 		except Exception:
 			frappe.db.rollback()
 			frappe.log_error(title=f"Could not expire the hire request for {name}")
+
+
+def get_hire_days_left(requested_on) -> int:
+	"""Whole days until an unanswered hire request expires. Never below 1: the daily
+	expiry job can leave a request open for a few hours past its deadline."""
+	remaining = add_days(requested_on, HIRE_REQUEST_EXPIRY_DAYS) - now_datetime()
+	return max(1, math.ceil(remaining.total_seconds() / 86400))
 
 
 def _accept(doc, row):

@@ -9,6 +9,7 @@ from frappe.utils import add_days, now_datetime
 
 from connect.customer.doctype.customer_project.customer_project import (
 	get_project,
+	my_projects,
 	set_quote_status,
 	start_project_with_partner,
 )
@@ -138,6 +139,22 @@ class TestHiring(IntegrationTestCase):
 		)
 		frappe.set_user(BUYER)
 		self.assertTrue(get_project(self.project.name)["hired"]["confirmed"])
+
+	def test_the_projects_list_waits_on_the_partner_until_they_accept(self, enqueue):
+		self.request()
+		row = self.list_row()
+		self.assertFalse(row["hired"])
+		self.assertTrue(row["awaiting_partner"])
+		self.assertEqual(row["hire_days_left"], HIRE_REQUEST_EXPIRY_DAYS)
+
+		self.answer(accept=1)
+		frappe.set_user(BUYER)
+		row = self.list_row()
+		self.assertTrue(row["hired"])
+		self.assertFalse(row["awaiting_partner"])
+
+	def list_row(self):
+		return next(row for row in my_projects() if row["project"] == self.project.name)
 
 	def test_declining_needs_a_reason_and_frees_the_project(self, enqueue):
 		self.request()
