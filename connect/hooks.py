@@ -179,8 +179,8 @@ sqlite_search = ["connect.search.PartnerSearch"]
 # has_studio_page_permission/get_studio_page_permission_query_conditions above can only
 # narrow access down, never grant it (Frappe's has_permission hooks are deny-only) — every
 # logged-in user needs this base read grant before those hooks get a chance to scope it down
-# to just this app's own published pages. Owned here (not edited into studio's own
-# studio_page.json) so it survives `git pull`/updates on the studio app.
+# to just this app's own published pages. Owned here (not edited into Frappe's own
+# studio_page.json) so it survives Frappe updates.
 #
 # All 3 rows below must travel together: the moment a doctype has ANY Custom DocPerm record,
 # Frappe stops reading that doctype's JSON-defined permissions entirely — for every role, not
@@ -202,8 +202,8 @@ fixtures = [
 # Studio's page-script endpoint denies guests, which empties every script-backed page
 # for logged-out visitors. See connect/api/studio_scripts.py.
 override_whitelisted_methods = {
-	"studio.api.get_studio_page_scripts": "connect.api.studio_scripts.get_studio_page_scripts",
-	"studio.api.get_custom_vue_components": "connect.api.studio_scripts.get_custom_vue_components",
+	"frappe.studio.api.get_studio_page_scripts": "connect.api.studio_scripts.get_studio_page_scripts",
+	"frappe.studio.api.get_custom_vue_components": "connect.api.studio_scripts.get_custom_vue_components",
 }
 
 override_doctype_class = {

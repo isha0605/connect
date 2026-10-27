@@ -1,4 +1,6 @@
 import frappe
+from frappe.studio.api import get_custom_vue_components as studio_custom_vue_components
+from frappe.studio.api import get_studio_page_scripts as studio_page_scripts
 
 # Studio's own get_studio_page_scripts is @frappe.whitelist() with no allow_guest, so a
 # logged-out visitor gets 403 for it. Without the bundle, the renderer fetches page
@@ -12,8 +14,6 @@ import frappe
 
 @frappe.whitelist(allow_guest=True)
 def get_studio_page_scripts(frappe_app: str) -> list[dict]:
-	from studio.api import get_studio_page_scripts as studio_page_scripts
-
 	scripts = studio_page_scripts(frappe_app)
 	if frappe.session.user != "Guest":
 		return scripts
@@ -36,6 +36,4 @@ def get_custom_vue_components(frappe_app: str) -> list[dict]:
 	Nothing here is per-page: the list is the app's own component sources, which ship to
 	every visitor in a built bundle anyway, so guests get it unfiltered.
 	"""
-	from studio.api import get_custom_vue_components as studio_custom_vue_components
-
 	return studio_custom_vue_components(frappe_app)
