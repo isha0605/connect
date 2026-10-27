@@ -1,6 +1,5 @@
 import { ref, computed, watch, onScopeDispose, nextTick, h } from "vue"
 import { toast, call, useFileUpload, setConfig } from "frappe-ui"
-import { io } from "socket.io-client"
 import { avatarTheme } from "@app/utils/avatarTheme"
 import { installScrollFade } from "@app/utils/scrollFade"
 import { goToSignIn, signOut } from "@app/utils/signIn"
@@ -723,23 +722,12 @@ export default function setup(context) {
 	}
 
 	// ---- Realtime ----
-	// A dedicated connection for this page rather than reusing Studio's own — page scripts
-	// run in a detached effect scope with no component instance, so the socket Studio
-	// provides via Vue's provide()/inject() further up the tree isn't reachable here.
+	// Studio's own connection, shared with every page of the app, so each listener added here
+	// is taken off again when the page closes.
 	// connect.connect.notifications.notify_thread_members publishes this event straight to
 	// a thread's other members the instant a message is sent — the sender's own tab already
 	// reloads after sendMessage(), so this is purely for tabs that didn't send it.
-	// frappe-ui 1.0.0-rc.1 dropped initSocket(), so the connection is opened here — these are
-	// the same lines it ran. It keyed the namespace off window.site_name in production builds,
-	// which nothing on this page sets, so it silently connected to "/undefined" and the server
-	// rejected the handshake with a 400. window.location.hostname is what the server actually
-	// expects (it matches its own site-name resolution from the request's Origin header), so
-	// the URL is built from that directly rather than by assigning to a global.
-	const socketPort = window.location.port ? ":9000" : ""
-	const socket = io(`${socketPort ? "http" : "https"}://${window.location.hostname}${socketPort}/${window.location.hostname}`, {
-		withCredentials: true,
-		reconnectionAttempts: 5,
-	})
+	const socket = context.socket
 
 	// Without this, useFileUpload's client-side size check (fileSizeLimitMessage) has no
 	// limit to compare against and silently lets oversized files through to the raw upload,
@@ -749,9 +737,17 @@ export default function setup(context) {
 	call("frappe.core.api.file.get_max_file_size").then((maxFileSize) => {
 		if (maxFileSize) setConfig("maxFileSize", maxFileSize)
 	})
-	socket.on("connect", () => console.log("[connect realtime] connected, socket id:", socket.id))
-	socket.on("connect_error", (err) => console.error("[connect realtime] connect_error:", err.message))
-	socket.on("disconnect", (reason) => console.warn("[connect realtime] disconnected:", reason))
+	const logConnected = () => console.log("[connect realtime] connected, socket id:", socket.id)
+	const logConnectError = (err) => console.error("[connect realtime] connect_error:", err.message)
+	const logDisconnected = (reason) => console.warn("[connect realtime] disconnected:", reason)
+	socket.on("connect", logConnected)
+	socket.on("connect_error", logConnectError)
+	socket.on("disconnect", logDisconnected)
+	onScopeDispose(() => {
+		socket.off("connect", logConnected)
+		socket.off("connect_error", logConnectError)
+		socket.off("disconnect", logDisconnected)
+	})
 	function handleNewMessage(payload) {
 		console.log("[connect realtime] connect_new_message received:", payload, "selectedThread:", selectedThread.value)
 		if (payload.thread === selectedThread.value) {
