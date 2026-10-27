@@ -1,4 +1,5 @@
 import frappe
+from frappe.rate_limiter import rate_limit
 
 # Whitelisted entry points only — the actual logic lives next to the doctype it
 # belongs to (Customer, Requirement, Shortlist, Price Estimate). Kept here as
@@ -68,3 +69,29 @@ def save_customer_requirement(
 def get_my_requirement():
 	from connect.customer.doctype.requirement.requirement import get_my_requirement
 	return get_my_requirement()
+
+
+# Open to visitors without an account, so a few per hour from one address, against spam.
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+@rate_limit(limit=5, seconds=60 * 60)
+def submit_enquiry(
+	first_name, last_name, email, phone, company_name, designation, employees, current_software,
+	industry, state, message, source=None,
+):
+	from connect.customer.doctype.enquiry.enquiry import submit_enquiry
+	return submit_enquiry(
+		{
+			"first_name": first_name,
+			"last_name": last_name,
+			"email": email,
+			"phone": phone,
+			"company_name": company_name,
+			"designation": designation,
+			"employees": employees,
+			"current_software": current_software,
+			"industry": industry,
+			"state": state,
+			"message": message,
+		},
+		source=source,
+	)
