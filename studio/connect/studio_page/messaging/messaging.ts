@@ -1948,51 +1948,24 @@ export default function setup(context) {
 	// ---- Messages ----
 	const uploadingFile = computed(() => draftAttachments.value.some((a) => a.uploading))
 
-	function messageActionsOptions(item) {
-		if (!item || !isMine(item.sender)) return []
-		const options = []
-		if (!item.isFileCluster) {
-			options.push({ label: "Reply", icon: "lucide-reply", onClick: () => startReply(item) })
-		}
-		if (!item.isFileCluster && item.message_type === "Text") {
-			options.push({ label: "Edit", icon: "lucide-pencil", onClick: () => confirmEditMessage(item) })
-		}
-		if (!item.isFileCluster) {
-			options.push({
-				label: isPinned(item) ? "Unpin" : "Pin",
-				icon: isPinned(item) ? "lucide-pin-off" : "lucide-pin",
-				onClick: () => togglePinMessage(item),
-			})
-		}
-		const onDelete = item.isFileCluster ? () => confirmDeleteCluster(item) : () => confirmDeleteMessage(item)
-		options.push({ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick: onDelete })
-		return options
+	// Right-click on a group of files you sent: the files are deleted together. Each file's own
+	// actions live on its card (see messageMoreOptions).
+	function clusterMenuOptions(cluster) {
+		if (!cluster || !isMine(cluster.sender)) return []
+		return [{ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick: () => confirmDeleteCluster(cluster) }]
 	}
 
-	// Right-click menu for someone else's message — Reply + Pin/Unpin, since edit/delete are
-	// sender-only (see messageActionsOptions). File clusters aren't pinnable/replyable.
-	function otherMessageActionsOptions(item) {
-		if (!item || item.isFileCluster) return []
-		return [
-			{ label: "Reply", icon: "lucide-reply", onClick: () => startReply(item) },
-			{
-				label: isPinned(item) ? "Unpin" : "Pin",
-				icon: isPinned(item) ? "lucide-pin-off" : "lucide-pin",
-				onClick: () => togglePinMessage(item),
-			},
-		]
-	}
-
-	// ---- Hover toolbar (Raven-style) ----
-	// Name of the message whose "more" menu is open. It's portaled out of the row, so the row loses
-	// :hover the moment the pointer enters it — this keeps the toolbar (and row highlight) shown for
-	// that one message until the menu closes.
+	// ---- Message menu ----
+	// Name of the message whose "..." menu is open. Double-clicking a message opens it; the toolbar
+	// holding the "..." button shows only while it's open, as the menu's anchor.
 	const messageMenuOpenFor = ref(null)
-	// Name of the file message under the pointer. Each file card in a cluster has its own toolbar, and
-	// Tailwind's group-hover would light up every card's toolbar when the whole cluster row is hovered, so
-	// hover is tracked here instead — except a single-file cluster has no such ambiguity, where the
-	// whole row (not just the card) sets this too, same as a text message's whole bubble does.
-	const hoveredFile = ref("")
+
+	function openMessageMenu(item) {
+		if (!messageMoreOptions(item).length) return
+		// A double-click also selects the word under the pointer.
+		window.getSelection()?.removeAllRanges()
+		messageMenuOpenFor.value = item.name
+	}
 
 	function messageCopyText(item) {
 		if (item.message_type === "Requirement") return requirementDetailsText(item)
@@ -4039,10 +4012,9 @@ export default function setup(context) {
 		newTeamMemberPassword,
 		addingTeamMember,
 		addTeamMember,
-		messageActionsOptions,
-		otherMessageActionsOptions,
+		clusterMenuOptions,
 		messageMenuOpenFor,
-		hoveredFile,
+		openMessageMenu,
 		messageMoreOptions,
 		showForwardDialog,
 		messageToForward,

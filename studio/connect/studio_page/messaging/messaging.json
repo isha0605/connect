@@ -2784,7 +2784,7 @@
                        "componentId": "message-content-row",
                        "componentName": "ContextMenu",
                        "componentProps": {
-                        "options": "{{ messageActionsOptions(dataItem) }}"
+                        "options": "{{ messageMoreOptions(dataItem) }}"
                        },
                        "componentSlots": {},
                        "visibilityCondition": "isMine(dataItem.sender)"
@@ -3639,7 +3639,7 @@
                        "componentId": "message-content-row-o",
                        "componentName": "ContextMenu",
                        "componentProps": {
-                        "options": "{{ otherMessageActionsOptions(dataItem) }}"
+                        "options": "{{ messageMoreOptions(dataItem) }}"
                        },
                        "componentSlots": {},
                        "visibilityCondition": "!isMine(dataItem.sender)"
@@ -3671,7 +3671,7 @@
                     "border": "1px solid var(--outline-gray-2)",
                     "borderRadius": "8px",
                     "boxShadow": "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
-                    "display": "{{ messageMenuOpenFor === dataItem.name ? 'flex' : '' }}",
+                    "display": "{{ messageMenuOpenFor === dataItem.name ? 'flex' : 'none' }}",
                     "gap": "2px",
                     "left": "{{ isMine(dataItem.sender) ? '14px' : '' }}",
                     "padding": "2px",
@@ -3681,32 +3681,6 @@
                     "zIndex": "10"
                    },
                    "children": [
-                    {
-                     "attributes": {
-                      "aria-label": "Reply"
-                     },
-                     "baseStyles": {
-                      "height": "32px",
-                      "width": "32px"
-                     },
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "startReply(dataItem);"
-                      }
-                     },
-                     "componentId": "message-toolbar-reply",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "icon": "lucide-reply",
-                      "size": "sm",
-                      "theme": "gray",
-                      "tooltip": "Reply",
-                      "variant": "ghost"
-                     },
-                     "componentSlots": {}
-                    },
                     {
                      "children": [
                       {
@@ -3740,15 +3714,12 @@
                      "componentName": "Dropdown",
                      "componentProps": {
                       "align": "end",
+                      "open": "{{ messageMenuOpenFor === dataItem.name }}",
                       "options": "{{ messageMoreOptions(dataItem) }}"
                      },
                      "componentSlots": {},
                      "visibilityCondition": "messageMoreOptions(dataItem).length > 0"
                     }
-                   ],
-                   "classes": [
-                    "hidden",
-                    "group-hover:flex"
                    ],
                    "componentId": "message-hover-toolbar",
                    "componentName": "container",
@@ -3766,6 +3737,13 @@
                   "py-2",
                   "px-3.5"
                  ],
+                 "componentEvents": {
+                  "dblclick": {
+                   "action": "Run Script",
+                   "event": "dblclick",
+                   "script": "openMessageMenu(dataItem);"
+                  }
+                 },
                  "componentId": "message-row",
                  "componentName": "container",
                  "componentProps": {},
@@ -4499,7 +4477,7 @@
                               "border": "1px solid var(--outline-gray-2)",
                               "borderRadius": "8px",
                               "boxShadow": "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
-                              "display": "{{ (hoveredFile === dataItem.name || messageMenuOpenFor === dataItem.name) ? 'flex' : 'none' }}",
+                              "display": "{{ messageMenuOpenFor === dataItem.name ? 'flex' : 'none' }}",
                               "gap": "2px",
                               "left": "{{ isMine(dataItem.sender) ? '14px' : '' }}",
                               "padding": "2px",
@@ -4509,32 +4487,6 @@
                               "zIndex": "10"
                              },
                              "children": [
-                              {
-                               "attributes": {
-                                "aria-label": "Reply"
-                               },
-                               "baseStyles": {
-                                "height": "32px",
-                                "width": "32px"
-                               },
-                               "componentEvents": {
-                                "click": {
-                                 "action": "Run Script",
-                                 "event": "click",
-                                 "script": "startReply(dataItem);"
-                                }
-                               },
-                               "componentId": "message-toolbar-reply-fi",
-                               "componentName": "Button",
-                               "componentProps": {
-                                "icon": "lucide-reply",
-                                "size": "sm",
-                                "theme": "gray",
-                                "tooltip": "Reply",
-                                "variant": "ghost"
-                               },
-                               "componentSlots": {}
-                              },
                               {
                                "children": [
                                 {
@@ -4568,6 +4520,7 @@
                                "componentName": "Dropdown",
                                "componentProps": {
                                 "align": "end",
+                                "open": "{{ messageMenuOpenFor === dataItem.name }}",
                                 "options": "{{ messageMoreOptions(dataItem) }}"
                                },
                                "componentSlots": {},
@@ -4582,15 +4535,10 @@
                             }
                            ],
                            "componentEvents": {
-                            "mouseenter": {
+                            "dblclick": {
                              "action": "Run Script",
-                             "event": "mouseenter",
-                             "script": "hoveredFile.value = dataItem.name;"
-                            },
-                            "mouseleave": {
-                             "action": "Run Script",
-                             "event": "mouseleave",
-                             "script": "hoveredFile.value = '';"
+                             "event": "dblclick",
+                             "script": "openMessageMenu(dataItem);"
                             }
                            },
                            "componentId": "cluster-file-item-fi",
@@ -4618,7 +4566,7 @@
                        "componentId": "file-cluster-content-row",
                        "componentName": "ContextMenu",
                        "componentProps": {
-                        "options": "{{ messageActionsOptions(dataItem) }}"
+                        "options": "{{ clusterMenuOptions(dataItem) }}"
                        },
                        "componentSlots": {},
                        "visibilityCondition": "isMine(dataItem.sender)"
@@ -4880,7 +4828,7 @@
                               "border": "1px solid var(--outline-gray-2)",
                               "borderRadius": "8px",
                               "boxShadow": "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
-                              "display": "{{ (hoveredFile === dataItem.name || messageMenuOpenFor === dataItem.name) ? 'flex' : 'none' }}",
+                              "display": "{{ messageMenuOpenFor === dataItem.name ? 'flex' : 'none' }}",
                               "gap": "2px",
                               "left": "{{ isMine(dataItem.sender) ? '14px' : '' }}",
                               "padding": "2px",
@@ -4890,32 +4838,6 @@
                               "zIndex": "10"
                              },
                              "children": [
-                              {
-                               "attributes": {
-                                "aria-label": "Reply"
-                               },
-                               "baseStyles": {
-                                "height": "32px",
-                                "width": "32px"
-                               },
-                               "componentEvents": {
-                                "click": {
-                                 "action": "Run Script",
-                                 "event": "click",
-                                 "script": "startReply(dataItem);"
-                                }
-                               },
-                               "componentId": "message-toolbar-reply-fio",
-                               "componentName": "Button",
-                               "componentProps": {
-                                "icon": "lucide-reply",
-                                "size": "sm",
-                                "theme": "gray",
-                                "tooltip": "Reply",
-                                "variant": "ghost"
-                               },
-                               "componentSlots": {}
-                              },
                               {
                                "children": [
                                 {
@@ -4949,6 +4871,7 @@
                                "componentName": "Dropdown",
                                "componentProps": {
                                 "align": "end",
+                                "open": "{{ messageMenuOpenFor === dataItem.name }}",
                                 "options": "{{ messageMoreOptions(dataItem) }}"
                                },
                                "componentSlots": {},
@@ -4963,15 +4886,10 @@
                             }
                            ],
                            "componentEvents": {
-                            "mouseenter": {
+                            "dblclick": {
                              "action": "Run Script",
-                             "event": "mouseenter",
-                             "script": "hoveredFile.value = dataItem.name;"
-                            },
-                            "mouseleave": {
-                             "action": "Run Script",
-                             "event": "mouseleave",
-                             "script": "hoveredFile.value = '';"
+                             "event": "dblclick",
+                             "script": "openMessageMenu(dataItem);"
                             }
                            },
                            "componentId": "cluster-file-item-fio",
@@ -5031,15 +4949,10 @@
                   "group"
                  ],
                  "componentEvents": {
-                  "mouseenter": {
+                  "dblclick": {
                    "action": "Run Script",
-                   "event": "mouseenter",
-                   "script": "if (dataItem.files && dataItem.files.length === 1) hoveredFile.value = dataItem.files[0].name;"
-                  },
-                  "mouseleave": {
-                   "action": "Run Script",
-                   "event": "mouseleave",
-                   "script": "if (dataItem.files && dataItem.files.length === 1) hoveredFile.value = '';"
+                   "event": "dblclick",
+                   "script": "if (dataItem.files && dataItem.files.length === 1) openMessageMenu(dataItem.files[0]);"
                   }
                  },
                  "componentId": "file-cluster-row",
