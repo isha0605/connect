@@ -1,6 +1,7 @@
 import { ref, computed, watch, onScopeDispose, nextTick, h } from "vue"
 import { toast, call, useFileUpload, setConfig } from "frappe-ui"
 import { io } from "socket.io-client"
+import { avatarTheme } from "@app/utils/avatarTheme"
 import { installScrollFade } from "@app/utils/scrollFade"
 import { goToSignIn, signOut } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
@@ -2968,18 +2969,6 @@ export default function setup(context) {
 	// ---- Avatars ----
 	// frappe-ui's Avatar component only takes a `theme` name (not a raw color), so a key
 	// just hashes to one of its 5 non-gray themes — same person, same color, every time.
-	const AVATAR_THEMES = ["blue", "green", "amber", "red", "violet"]
-
-	function avatarHash(key) {
-		const s = String(key || "")
-		let h = 0
-		for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % AVATAR_THEMES.length
-		return h
-	}
-
-	function avatarTheme(key) {
-		return AVATAR_THEMES[avatarHash(key)]
-	}
 
 	// ---- Sender hover card ----
 	// memberProfiles is fetched once per selectThread() (see there) rather than per-message,
