@@ -10,6 +10,7 @@
 
 import { computed, ref, watch } from "vue"
 import { call, toast } from "frappe-ui"
+import { avatarTheme } from "@app/utils/avatarTheme"
 import { blankCriteria, criteriaSummary, partnerCriteria } from "@app/utils/partnerCriteria"
 import {
 	BUDGET_OPTIONS,
@@ -209,7 +210,7 @@ export default function setup(context) {
 	const shareGoLive = ref("no_deadline")
 	const shareOpen = ref(false)
 	const editingCriteria = ref(false)
-	const matchTotal = ref(null)
+	const recipients = ref(null)
 	const sharing = ref(false)
 	const chips = partnerCriteria(context, {
 		saved: () => shareCriteria.value,
@@ -217,12 +218,19 @@ export default function setup(context) {
 	})
 	const shareSummary = computed(() => criteriaSummary(shareCriteria.value, shareGoLive.value))
 
-	function countMatches() {
-		call("connect.api.projects.partner_criteria", { criteria: JSON.stringify(shareCriteria.value) })
+	// The partners the brief goes to, from the same query the send uses.
+	function loadRecipients() {
+		recipients.value = null
+		call("connect.api.projects.partner_criteria", {
+			criteria: JSON.stringify(shareCriteria.value),
+			include_recipients: 1,
+		})
 			.then((data) => {
-				matchTotal.value = data.total
+				recipients.value = data.recipients || []
 			})
-			.catch(() => {})
+			.catch(() => {
+				recipients.value = []
+			})
 	}
 
 	function openShare() {
@@ -232,7 +240,7 @@ export default function setup(context) {
 			industries: partnerIndustries(industries.value),
 		}
 		editingCriteria.value = false
-		countMatches()
+		loadRecipients()
 		shareOpen.value = true
 	}
 
@@ -241,15 +249,53 @@ export default function setup(context) {
 		if (editingCriteria.value) {
 			shareCriteria.value = chips.draftFilters()
 			shareGoLive.value = chips.criteriaDraft.value.go_live || shareGoLive.value
-			matchTotal.value = chips.criteriaFacets.value.total
 			editingCriteria.value = false
+			loadRecipients()
 		} else {
 			chips.startEditing()
 			editingCriteria.value = true
 		}
 	}
 
-	const noMatches = computed(() => (editingCriteria.value ? chips.criteriaFacets.value.total : matchTotal.value) === 0)
+	const noMatches = computed(() =>
+		editingCriteria.value ? chips.criteriaFacets.value.total === 0 : recipients.value?.length === 0,
+	)
+
+	const recipientCount = computed(() => recipients.value?.length || 0)
+	const recipientAvatars = computed(() => stackAvatars(recipients.value || []))
+	const partnersWord = computed(() => (recipientCount.value === 1 ? "partner" : "partners"))
+	const recipientHeadline = computed(() => {
+		if (recipients.value === null) return "Finding matched partners…"
+		if (!recipientCount.value) return "No partners match yet"
+		return `Sharing with ${recipientCount.value} matched ${partnersWord.value}`
+	})
+	const recipientReach = computed(() => reachSentence(shareCriteria.value))
+	const seenByLabel = computed(() =>
+		recipientCount.value ? `What these ${recipientCount.value} ${partnersWord.value} will see` : "What partners will see",
+	)
+	const shareButtonLabel = computed(() =>
+		recipientCount.value ? `Share with ${recipientCount.value} ${partnersWord.value}` : "Share requirements",
+	)
+	const shareFootnote = computed(() =>
+		recipientCount.value
+			? `Only ${recipientCount.value === 1 ? "this partner" : `these ${recipientCount.value} partners`} will see your brief. They reply in Messages with a quote.`
+			: "Widen your criteria to reach more partners.",
+	)
+	// What the Requirement card carries to each partner, beyond the criteria listed above.
+	const sharedDetails = computed(() =>
+		[
+			{ label: "Budget", value: briefBudget.value },
+			{ label: "Project details", value: openingWords(briefDescription.value, 40) },
+			{ label: "Company", value: companyLine() },
+			{ label: "Sent as", value: myContext?.data?.full_name || myContext?.data?.user || "" },
+		].map((row, i) => ({ ...row, first: i === 0 })),
+	)
+
+	function companyLine() {
+		const company = myContext?.data?.customer?.customer_name
+		const size = EMPLOYEE_OPTIONS.find((o) => o.value === employeeCount.value)?.label
+		return [company, size && `${size} employees`].filter(Boolean).join(" · ")
+	}
 
 	function continueFromBrief() {
 		if (!briefBudget.value || !briefDescription.value.trim()) {
@@ -313,6 +359,17 @@ export default function setup(context) {
 			.finally(() => {
 				sharing.value = false
 			})
+	}
+
+	// Same test Studio's own isEditor() uses. The editor never runs the flow that fills this
+	// dialog, so it gets a sample brief and the real partners in India (enough for a "+N").
+	const inEditor = window.location.pathname.startsWith("/studio/")
+	if (inEditor) {
+		briefBudget.value = BUDGET_OPTIONS[1].value
+		briefDescription.value = "Dealer orders, billing and stock across three warehouses."
+		employeeCount.value = "11-50"
+		shareCriteria.value = { ...blankCriteria(), countries: ["India"] }
+		loadRecipients()
 	}
 
 	// Back from signing up: their answers again, on the brief, with the dialog open.
@@ -383,6 +440,13 @@ export default function setup(context) {
 		finishStep3,
 		shareOpen,
 		shareSummary,
+		recipientAvatars,
+		recipientHeadline,
+		recipientReach,
+		seenByLabel,
+		shareButtonLabel,
+		shareFootnote,
+		sharedDetails,
 		editingCriteria,
 		toggleEditCriteria,
 		noMatches,
@@ -407,4 +471,70 @@ export default function setup(context) {
 		continueFromOperations,
 		seeRecommendation,
 	}
+}
+
+// "Based in India, serving Manufacturing": where and what the brief is aimed at.
+function reachSentence(criteria) {
+	const place = criteria.cities?.length ? criteria.cities : criteria.countries || []
+	const parts = []
+	if (place.length) parts.push(`based in ${either(place)}`)
+	if (criteria.industries?.length) parts.push(`serving ${either(criteria.industries)}`)
+	const sentence = parts.join(", ") || "any partner listed on Connect"
+	return sentence[0].toUpperCase() + sentence.slice(1)
+}
+
+// The table has one line per row: the start of the brief, cut at a word.
+function openingWords(text, maxLength) {
+	const clean = (text || "").trim().replace(/\s+/g, " ")
+	if (clean.length <= maxLength) return clean
+	const cut = clean.slice(0, maxLength)
+	const lastSpace = cut.lastIndexOf(" ")
+	return `${(lastSpace > maxLength / 2 ? cut.slice(0, lastSpace) : cut).replace(/[,.;:]$/, "")}…`
+}
+
+function either(values) {
+	return values.length === 1 ? values[0] : `${values.slice(0, -1).join(", ")} or ${values.at(-1)}`
+}
+
+const MAX_AVATARS = 5
+
+function partnerAvatar(partner, i) {
+	return {
+		key: partner.name,
+		image: partner.logo,
+		label: partner.partner_name,
+		tooltip: partner.partner_name,
+		theme: avatarTheme(partner.partner_name),
+		first: i === 0,
+		more: false,
+	}
+}
+
+// The avatar row at the top of Share requirements. Each item renders as an Avatar
+// (image, label, theme) or, when `more` is set, a "+N" circle showing `label`;
+// `tooltip` shows on hover and `first` drops the overlap margin.
+// The tooltip bubble doesn't wrap, so name a few and count the rest.
+function hiddenNames(partners) {
+	const names = partners.slice(0, 2).map((p) => p.partner_name)
+	const rest = partners.length - names.length
+	if (rest) return `${names.join(", ")} and ${rest} more`
+	return names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`
+}
+
+// Five slots at most: past five, the fifth becomes "+N" and its tooltip names the rest.
+function stackAvatars(partners) {
+	if (partners.length <= MAX_AVATARS) return partners.map(partnerAvatar)
+
+	const shown = partners.slice(0, MAX_AVATARS - 1)
+	const hidden = partners.slice(MAX_AVATARS - 1)
+	return [
+		...shown.map(partnerAvatar),
+		{
+			key: "more",
+			label: `+${hidden.length}`,
+			tooltip: hiddenNames(hidden),
+			first: false,
+			more: true,
+		},
+	]
 }
