@@ -286,7 +286,9 @@ export default function setup(context) {
 			.then((data) => {
 				project.value = data
 				const n = data.shared_count || 0
-				toast.success(`Sent to ${n} partner${n === 1 ? "" : "s"}. Their quotes arrive in Messages and on this page.`)
+				toast.success(`Sent to ${n} partner${n === 1 ? "" : "s"}. Their quotes arrive in Messages and on this page.`, {
+					action: data.brief_thread && { label: "View", onClick: viewBriefInMessages },
+				})
 			})
 			.catch((error) => {
 				toast.error(error?.messages?.[0] || "Couldn't send your requirements. Try again.")
@@ -471,6 +473,11 @@ export default function setup(context) {
 	function viewPartnerProfile() {
 		if (hired.value) router.push(`/partner-profile-redesign/${encodeURIComponent(hired.value.partner)}`)
 	}
+	// The Requirement card as partners got it, in the first thread it went to.
+	const briefThread = computed(() => project.value?.brief_thread || "")
+	function viewBriefInMessages() {
+		if (briefThread.value) router.push({ path: "/messaging", query: { thread: briefThread.value } })
+	}
 	const sentLine = computed(() => {
 		const n = project.value?.shared_count || 0
 		return `Sent to ${n} partner${n === 1 ? "" : "s"}. Quotes arrive in Messages, usually within a few working days.`
@@ -602,6 +609,8 @@ export default function setup(context) {
 		messagePartner,
 		viewPartnerProfile,
 		sentLine,
+		briefThread,
+		viewBriefInMessages,
 		timelineLabel,
 		createdOn,
 		openFeedback,

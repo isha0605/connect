@@ -211,6 +211,7 @@ def project_dict(doc: CustomerProject) -> dict:
 		"problems": frappe.parse_json(doc.problems) or [],
 		"criteria": normalize_criteria(frappe.parse_json(doc.criteria) or {}),
 		"shared_count": doc.shared_count or 0,
+		"brief_thread": first_brief_thread(doc.name),
 		"shared_on": with_timezone(doc.shared_on),
 		"budget": doc.budget,
 		"description": doc.description,
@@ -222,6 +223,13 @@ def project_dict(doc: CustomerProject) -> dict:
 		"done_tasks": frappe.parse_json(doc.done_tasks) or [],
 		**quote_counts(doc.name),
 	}
+
+
+def first_brief_thread(project: str) -> str | None:
+	"""The thread the brief was first sent in, so "View in Messages" opens the Requirement card."""
+	return frappe.db.get_value(
+		"Project Quote", {"customer_project": project, "thread": ["is", "set"]}, "thread", order_by="creation asc"
+	)
 
 
 def booked_order(project: str) -> str | None:

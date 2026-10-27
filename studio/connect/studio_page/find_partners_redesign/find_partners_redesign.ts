@@ -349,7 +349,12 @@ export default function setup(context) {
 					// Nothing kept, nothing to clear.
 				}
 				const n = project.shared_count || 0
-				toast.success(`Sent to ${n} partner${n === 1 ? "" : "s"}. Their replies come back as quotes.`)
+				toast.success(`Sent to ${n} partner${n === 1 ? "" : "s"}. Their replies come back as quotes.`, {
+					action: project.brief_thread && {
+						label: "View",
+						onClick: () => router.push({ path: "/messaging", query: { thread: project.brief_thread } }),
+					},
+				})
 				shareOpen.value = false
 				router.push({ path: "/custom-implementation", query: { project: project.name } })
 			})
