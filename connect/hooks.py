@@ -229,8 +229,16 @@ doc_events = {
 			"connect.notifications.sync_dm_thread_last_message",
 		],
 	},
+	"Connect Thread": {
+		# A new consultant on a thread is the new owner of its CRM Lead.
+		"on_update": "connect.crm_integration.queue_lead_owner_sync",
+	},
 	"Partner CRM Settings": {
 		"on_update": "connect.crm_integration.sync_reply_webhook",
+	},
+	"Enquiry": {
+		# A Contact us enquiry becomes a Lead on Frappe's CRM.
+		"after_insert": "connect.crm_enquiries.queue_enquiry_sync",
 	},
 	"Connect Partner Member": {
 		"after_insert": "connect.roles.grant_company_role",
@@ -267,6 +275,10 @@ scheduler_events = {
 		"connect.starter_packs.doctype.starter_pack_order.implementation.hand_over_waiting_orders",
 		# Hired projects whose partner link Frappe Cloud hasn't created yet.
 		"connect.partner.cloud_integration.retry_cloud_links",
+		# Chat messages a partner's CRM didn't get when they were sent.
+		"connect.crm_integration.retry_crm_sync",
+		# Contact us enquiries Frappe's CRM didn't get.
+		"connect.crm_enquiries.retry_enquiry_sync",
 	],
 	"daily": [
 		"connect.customer.doctype.customer_project.hiring.expire_hire_requests",

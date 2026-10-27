@@ -220,11 +220,9 @@ def notify_partner_of_new_requirement(doc, method=None):
 	)
 
 
-def _send_new_requirement_email(thread_name, customer, admin, content):
-	"""Background worker: sends the new-requirement notification email."""
-	recipient = frappe.db.get_value("User", admin, "email") or admin
-	customer_name = frappe.db.get_value("Customer", customer, "customer_name") or customer
-	requirement = frappe.parse_json(content) if content else {}
+def requirement_fields(requirement):
+	"""A Requirement card's answers as (label, value) pairs, leaving out the ones not given."""
+	apps = requirement.get("apps")
 	fields = [
 		("Company", requirement.get("company_name")),
 		("Country", requirement.get("country")),
@@ -235,10 +233,18 @@ def _send_new_requirement_email(thread_name, customer, admin, content):
 		("Timeline", requirement.get("timeline")),
 		("Delivery", requirement.get("delivery_preference")),
 		("Budget", requirement.get("budget")),
-		("Apps", ", ".join(requirement.get("apps")) if isinstance(requirement.get("apps"), list) else requirement.get("apps")),
+		("Apps", ", ".join(apps) if isinstance(apps, list) else apps),
 	]
+	return [(label, value) for label, value in fields if value]
+
+
+def _send_new_requirement_email(thread_name, customer, admin, content):
+	"""Background worker: sends the new-requirement notification email."""
+	recipient = frappe.db.get_value("User", admin, "email") or admin
+	customer_name = frappe.db.get_value("Customer", customer, "customer_name") or customer
+	requirement = frappe.parse_json(content) if content else {}
 	details_html = "".join(
-		f"<p><b>{label}:</b> {frappe.utils.escape_html(value)}</p>" for label, value in fields if value
+		f"<p><b>{label}:</b> {frappe.utils.escape_html(value)}</p>" for label, value in requirement_fields(requirement)
 	)
 	thread_url = frappe.utils.get_url(f"/connect/messaging?thread={thread_name}")
 

@@ -30,7 +30,7 @@ def _verify_signature(partner):
 @frappe.whitelist(allow_guest=True)
 def receive_crm_reply(
 	reference_doctype=None, reference_name=None, sent_or_received=None, content=None, name=None,
-	creation=None,
+	creation=None, sender=None,
 ):
 	"""Called by the partner's CRM when they send a reply, so the reply also shows up in the Connect thread."""
 	# Not read from the whitelisted kwargs above: the webhook sends a JSON body, and Frappe's
@@ -39,4 +39,4 @@ def receive_crm_reply(
 	partner = frappe.local.request.args.get("partner")
 	_verify_signature(partner)
 
-	record_crm_reply(partner, name, reference_doctype, reference_name, sent_or_received, content)
+	record_crm_reply(partner, name, reference_doctype, reference_name, sent_or_received, content, sender)

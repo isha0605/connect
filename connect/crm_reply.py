@@ -1,17 +1,13 @@
 import mimetypes
 import re
+from email.utils import parseaddr
 
 import frappe
-import requests
 from bs4 import BeautifulSoup
 from frappe import _
-from frappe.integrations.utils import make_get_request
-from frappe.utils.password import get_decrypted_password
 
+from connect.crm_integration import crm_request
 from connect.permissions import _get_partner_admin
-
-# Seconds to wait on the partner's CRM before giving up on a request.
-CRM_REQUEST_TIMEOUT = 30
 
 # Matches a mail client's own "On <date>, <person> wrote:" line introducing quoted history,
 # for clients that inline it as plain text rather than wrapping it in a recognizable element.
@@ -28,8 +24,9 @@ def record_crm_reply(
 	reference_name: str | None,
 	sent_or_received: str | None,
 	content: str | None,
+	sender: str | None = None,
 ) -> None:
-	"""Posts a partner's CRM reply into its Connect thread.
+	"""Posts a partner's CRM reply into its Connect thread, as the person who sent it.
 
 	The text goes in now; attachments follow from a background job, because the CRM's
 	webhook gives up after a few seconds and would retry a delivery that already landed.
@@ -44,8 +41,8 @@ def record_crm_reply(
 	if frappe.db.exists("Connect Message", {"crm_source_communication": communication}):
 		return  # already synced — the partner's CRM retried this webhook delivery
 
-	admin = _get_partner_admin(partner)
-	if not admin:
+	author = reply_author(thread, partner, sender)
+	if not author:
 		frappe.log_error(
 			title=f"CRM reply dropped: Partner {partner} has no admin",
 			message=f"Communication {communication} for Connect Thread {thread} had no one to post as.",
@@ -54,7 +51,7 @@ def record_crm_reply(
 
 	reply_text = extract_reply_text(content or "")
 	if reply_text:
-		_insert_reply_message(thread, admin, communication, "Text", reply_text)
+		_insert_reply_message(thread, author, communication, "Text", reply_text)
 
 	frappe.enqueue(
 		sync_reply_attachments,
@@ -64,12 +61,33 @@ def record_crm_reply(
 		enqueue_after_commit=True,
 		partner=partner,
 		thread=thread,
-		admin=admin,
+		author=author,
 		communication=communication,
 	)
 
 
-def sync_reply_attachments(partner: str, thread: str, admin: str, communication: str) -> None:
+def reply_author(thread, partner, sender):
+	"""Who a CRM reply is posted as: the person who sent it, when they write for the partner in
+	this thread (found by their email, or their Suite email for a consultant); else the thread's
+	consultant; else the partner's admin."""
+	partner_side = frappe.get_all(
+		"Connect Thread Member", filters={"thread": thread, "side": "Partner", "is_removed": 0}, pluck="user"
+	)
+	email = parseaddr(sender or "")[1]
+	if email:
+		people = frappe.get_all("User", filters={"email": email}, pluck="name")
+		people += frappe.get_all("Frappe Consultant", filters={"suite_email": email}, pluck="user")
+		for person in people:
+			if person in partner_side:
+				return person
+
+	consultant = frappe.db.get_value("Connect Thread", thread, "consultant")
+	if consultant and consultant in partner_side:
+		return consultant
+	return _get_partner_admin(partner)
+
+
+def sync_reply_attachments(partner: str, thread: str, author: str, communication: str) -> None:
 	"""Copies the files on a CRM reply into the thread, and names any that couldn't be copied."""
 	if frappe.db.exists(
 		"Connect Message", {"crm_source_communication": communication, "message_type": ["in", ["File", "System"]]}
@@ -84,7 +102,7 @@ def sync_reply_attachments(partner: str, thread: str, admin: str, communication:
 		return
 
 	for attachment in attachments:
-		_insert_reply_message(thread, admin, communication, "File", attachment["file_name"], attachment=attachment)
+		_insert_reply_message(thread, author, communication, "File", attachment["file_name"], attachment=attachment)
 
 	if failed_files:
 		# A System line rather than silence: a reply that reads "here's the file" otherwise lands with
@@ -98,7 +116,7 @@ def sync_reply_attachments(partner: str, thread: str, admin: str, communication:
 		)
 		# Plain text: the thread shows System lines as text, which escapes them itself.
 		names = ", ".join(f or _("(unnamed)") for f in failed_files)
-		_insert_reply_message(thread, admin, communication, "System", f"{label}: {names}", silent=True)
+		_insert_reply_message(thread, author, communication, "System", f"{label}: {names}", silent=True)
 
 
 def extract_reply_text(html_content: str) -> str:
@@ -131,11 +149,11 @@ def extract_reply_text(html_content: str) -> str:
 	return text.strip()
 
 
-def _insert_reply_message(thread, admin, communication, message_type, content, attachment=None, silent=False):
+def _insert_reply_message(thread, author, communication, message_type, content, attachment=None, silent=False):
 	message = frappe.get_doc({
 		"doctype": "Connect Message",
 		"thread": thread,
-		"sender": admin,
+		"sender": author,
 		"message_type": message_type,
 		"content": content,
 		"crm_source_communication": communication,
@@ -153,17 +171,16 @@ def _insert_reply_message(thread, admin, communication, message_type, content, a
 
 def _fetch_crm_attachments(partner, communication):
 	"""Downloads files the partner attached in their CRM so they show up as real attachments in Connect, not just filenames."""
-	settings = frappe.db.get_value("Partner CRM Settings", partner, ["site_url", "api_key"], as_dict=True)
+	settings = frappe.db.get_value(
+		"Partner CRM Settings", partner, ["name", "partner", "site_url", "api_key"], as_dict=True
+	)
 	if not settings:
 		return [], []
 
-	api_secret = get_decrypted_password("Partner CRM Settings", partner, "api_secret")
-	headers = {"Authorization": f"token {settings.api_key}:{api_secret}"}
-	base_url = settings.site_url.rstrip("/")
-
-	files = make_get_request(
-		f"{base_url}/api/resource/File",
-		headers=headers,
+	files = crm_request(
+		settings,
+		"GET",
+		"/api/resource/File",
 		params={
 			"filters": frappe.as_json(
 				[["attached_to_doctype", "=", "Communication"], ["attached_to_name", "=", communication]]
@@ -171,14 +188,13 @@ def _fetch_crm_attachments(partner, communication):
 			"fields": frappe.as_json(["file_name", "file_url", "file_size"]),
 			"limit_page_length": 500,
 		},
-		timeout=CRM_REQUEST_TIMEOUT,
-	)["data"]
+	).json()["data"]
 
 	attachments = []
 	failed_files = []
 	for f in files:
 		try:
-			attachments.append(_download_crm_file(base_url, headers, f))
+			attachments.append(_download_crm_file(settings, f))
 		except Exception:
 			frappe.log_error(title=f"CRM attachment download failed for Communication {communication}")
 			failed_files.append(f["file_name"])
@@ -186,9 +202,8 @@ def _fetch_crm_attachments(partner, communication):
 	return attachments, failed_files
 
 
-def _download_crm_file(base_url, headers, crm_file):
-	response = requests.get(f"{base_url}{crm_file['file_url']}", headers=headers, timeout=CRM_REQUEST_TIMEOUT)
-	response.raise_for_status()
+def _download_crm_file(settings, crm_file):
+	response = crm_request(settings, "GET", crm_file["file_url"])
 
 	file_doc = frappe.get_doc({
 		"doctype": "File",
