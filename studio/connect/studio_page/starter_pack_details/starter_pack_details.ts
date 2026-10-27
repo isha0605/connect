@@ -3,6 +3,7 @@
 // only the content below changes. An unknown key shows Core. The cart lives in @app/utils/starterPackCart.
 
 import { computed } from "vue"
+import { keyboardAccess } from "@app/utils/keyboard"
 import { STARTER_PACK_TERMS, starterPackCart } from "@app/utils/starterPackCart"
 import { startTracking } from "@app/utils/tracking"
 
@@ -133,6 +134,7 @@ const PACKS = {
 export default function setup(context) {
 	startTracking(context)
 	const { route } = context
+	keyboardAccess()
 
 	const packKey = computed(() => (String(route.query.pack || "") in PACKS ? String(route.query.pack) : "core"))
 	const pack = computed(() => PACKS[packKey.value])

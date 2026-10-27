@@ -1,6 +1,7 @@
 import { computed, onScopeDispose, ref, watch } from "vue"
 import { toast, call } from "frappe-ui"
 import { orderKey } from "@app/utils/checkoutSession"
+import { focusFirstFieldOnOpen, keyboardAccess } from "@app/utils/keyboard"
 import { EMPLOYEE_OPTIONS, INDUSTRY_OPTIONS, MODULE_ICONS, SYSTEM_OPTIONS } from "@app/utils/recommendation"
 import { CART_PACKS, clearCart } from "@app/utils/starterPackCart"
 import { startTracking } from "@app/utils/tracking"
@@ -18,6 +19,9 @@ const PAYMENT_BADGES = {
 export default function setup(context) {
 	startTracking(context)
 	const { route, router, companyOpen, companyEmployees, companyIndustry, companySystem, companyFocus } = context
+	keyboardAccess()
+	// "Tell us about your company" opens with the cursor in its first field
+	focusFirstFieldOnOpen(companyOpen, "company-fields")
 
 	// ---- The order ----
 	// Same test Studio's own isEditor() uses. The editor opens pages with no query string,

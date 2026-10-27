@@ -2,6 +2,7 @@
 // to with GST, and the way on to checkout. The cart itself lives in @app/utils/starterPackCart.
 
 import { STARTER_PACK_TERMS, starterPackCart } from "@app/utils/starterPackCart"
+import { keyboardAccess } from "@app/utils/keyboard"
 import { startTracking } from "@app/utils/tracking"
 
 const HOW_IT_WORKS = [
@@ -12,5 +13,6 @@ const HOW_IT_WORKS = [
 
 export default function setup(context) {
 	startTracking(context)
+	keyboardAccess()
 	return { ...starterPackCart(context), howItWorks: HOW_IT_WORKS, terms: STARTER_PACK_TERMS }
 }

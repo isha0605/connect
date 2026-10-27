@@ -6,6 +6,7 @@
 import { computed } from "vue"
 import { MODULE_ICONS, OUR_NEEDS, PACK_PITCHES, commercialTerms } from "@app/utils/recommendation"
 import { orderKey } from "@app/utils/checkoutSession"
+import { keyboardAccess } from "@app/utils/keyboard"
 import { startTracking } from "@app/utils/tracking"
 
 const ORDER_STATUS_BADGES = {
@@ -27,6 +28,7 @@ const INDUSTRIES_SHOWN = 3
 export default function setup(context) {
 	startTracking(context)
 	const { route, router, call, catalog, order, loadError, openKeys } = context
+	keyboardAccess()
 
 	const orderName = String(route.query.order || "")
 
