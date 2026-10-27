@@ -12,6 +12,7 @@ from frappe.utils import cint, flt, get_datetime, get_system_timezone, now_datet
 
 from connect.analytics import capture
 from connect.customer.doctype.customer.customer import get_customer_for_user
+from connect.customer.doctype.requirement.requirement import COMPANY_SIZES
 from connect.customer.doctype.requirement.requirement import save_company_details as save_requirement_details
 from connect.starter_packs.doctype.starter_pack_order.implementation import (
 	hand_over,
@@ -39,10 +40,6 @@ GATEWAY_STATUS_MAP = {
 	"Partially Refunded": "Partially Refunded",
 	"Refunded": "Refunded",
 }
-
-# "Tell us about your company" sends the sizes the recommendation quiz uses; the Requirement
-# writes them with an en dash, as the Find Partners wizard always has.
-COMPANY_SIZES = {"1-10": "1–10", "11-50": "11–50", "51-200": "51–200", "201-500": "201–500", "500+": "500+"}
 
 # Packs an order can hold only one of: Core + Manufacturing is Core with more, not an add-on.
 ALTERNATIVE_PACKS = {"core", "core-manufacturing"}

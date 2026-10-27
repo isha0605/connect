@@ -14,6 +14,11 @@ class Requirement(Document):
 	pass
 
 
+# The forms send the sizes the recommendation quiz uses; company_size stores them with an en dash,
+# as the Find Partners wizard always has.
+COMPANY_SIZES = {"1-10": "1–10", "11-50": "11–50", "51-200": "51–200", "201-500": "201–500", "500+": "500+"}  # noqa: RUF001
+
+
 def _customer_names_for_user(user):
 	return frappe.get_all("Customer Team Member", filters={"user": user}, pluck="customer")
 
@@ -42,8 +47,10 @@ def save_customer_requirement(
 	special_requirements=None, additional_notes=None, outcome=None,
 ):
 	"""Creates or updates the caller's one Requirement, so the wizard and the Settings form share a single saved
-	record. company_name isn't a parameter here — it's already collected at signup (Customer.customer_name),
-	so it's read from there instead of asking again."""
+	record. Only the fields given change: Settings asks about the company alone, and must keep the rest.
+	company_name isn't a parameter here — it's already collected at signup (Customer.customer_name),
+	so it's read from there instead of asking again. company_size takes the forms' values as well
+	as the stored ones (see COMPANY_SIZES)."""
 	customer = get_customer_for_user()
 	if not customer:
 		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
@@ -51,23 +58,24 @@ def save_customer_requirement(
 	if isinstance(apps, str):
 		apps = json.loads(apps or "[]")
 
-	values = {
-		"customer": customer,
-		"company_name": frappe.db.get_value("Customer", customer, "customer_name"),
+	given = {
 		"country": country,
 		"industry": industry,
-		"apps": [{"app": a} for a in (apps or [])],
 		"looking_for": looking_for,
-		"company_size": company_size,
+		"company_size": COMPANY_SIZES.get(company_size, company_size),
 		"current_situation": current_situation,
 		"timeline": timeline,
 		"delivery_preference": delivery_preference,
 		"budget": budget,
-		"special_requirements": special_requirements or "[]",
-		"additional_notes": additional_notes or "",
+		"special_requirements": special_requirements,
+		"additional_notes": additional_notes,
+		"outcome": outcome or None,
 	}
-	if outcome:
-		values["outcome"] = outcome
+	values = {field: value for field, value in given.items() if value is not None}
+	if apps is not None:
+		values["apps"] = [{"app": a} for a in apps]
+	values["customer"] = customer
+	values["company_name"] = frappe.db.get_value("Customer", customer, "customer_name")
 
 	existing = frappe.db.get_value("Requirement", {"customer": customer}, "name", order_by="creation desc")
 	if existing:
@@ -167,6 +175,7 @@ def get_my_requirement():
 		"apps": req.apps,
 		"looking_for": req.looking_for,
 		"company_size": req.company_size,
+		"employees": {v: k for k, v in COMPANY_SIZES.items()}.get(req.company_size, req.company_size),
 		"current_situation": req.current_situation,
 		"timeline": req.timeline,
 		"delivery_preference": req.delivery_preference,

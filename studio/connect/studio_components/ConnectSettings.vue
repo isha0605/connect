@@ -1,5 +1,5 @@
 <script setup>
-// Settings (Profile, Users, Working hours, a customer's Requirements and a partner admin's CRM
+// Settings (Profile, Users, Working hours, a customer's Company details and a partner admin's CRM
 // connection) for every page with the shared sidebar. The
 // sidebar's logo menu opens it with a "connect:open-settings" window event, so pages need no
 // script of their own for it. Same server calls as Messaging's own settings.
@@ -17,6 +17,7 @@ import {
 	toast,
 	useFileUpload,
 } from "frappe-ui"
+import { COUNTRY_OPTIONS, EMPLOYEE_OPTIONS, INDUSTRY_OPTIONS, SYSTEM_OPTIONS } from "@app/utils/recommendation"
 
 const open = ref(false)
 const tab = ref("profile")
@@ -245,46 +246,30 @@ async function saveHours() {
 	}
 }
 
-// ---- Requirements: the customer's saved Requirement (same fields as Messaging's form) ----
+// ---- Company details: the customer's saved Requirement, asked with the same questions and options
+// as the new project and Starter Pack forms. What one project needs is asked on that project.
 const isCustomer = ref(false)
-const INDUSTRIES = ["Manufacturing", "Retail & Distribution", "Healthcare", "Education", "Services", "Construction", "Logistics", "Technology", "Other"]
-const APPS = ["ERPNext", "Frappe Books", "Frappe Builder", "Frappe CRM", "Frappe Drive", "Frappe HR", "Frappe Insights", "Frappe LMS", "Helpdesk", "Wiki"]
-const LOOKING_FOR = ["New ERP Implementation", "Replace Existing ERP", "Manufacturing Setup", "HR & Payroll", "CRM", "Custom App Development", "Consultation / Discovery", "Not sure yet"]
-const COMPANY_SIZES = ["1–10", "11–50", "51–200", "201–1000", "1000+"]
-const SITUATIONS = ["Excel / Spreadsheets", "Tally", "SAP", "Oracle", "Odoo", "Existing ERPNext", "Multiple Systems", "No System Yet"]
-const TIMELINES = ["Immediately", "Within 1 month", "Within 3 months", "Within 6 months", "Just exploring"]
-const DELIVERY = ["Remote", "Hybrid", "On-site", "No preference"]
-const BUDGETS = ["Under ₹2L", "₹2L–₹10L", "₹10L–₹25L", "₹25L–₹50L", "₹50L+", "Not decided"]
-const SPECIAL = ["ETO (Engineer-to-Order)", "Manufacturing Planning", "Multi-site Operations", "HR & Payroll", "Inventory Management", "CRM", "Custom Development", "SAP Migration", "Data Migration", "Training Required", "On-site Support"]
-const req = ref(blankRequirement())
-const savingReq = ref(false)
+const company = ref(blankCompany())
+const savingCompany = ref(false)
 
-function blankRequirement() {
-	return {
-		company_name: "",
-		country: "",
-		industry: "",
-		apps: [],
-		looking_for: "",
-		company_size: "",
-		current_situation: "",
-		timeline: "",
-		delivery_preference: "",
-		budget: "",
-		special_requirements: [],
-	}
+function blankCompany() {
+	return { company_name: "", country: "", employees: "", industry: "", system: "", notes: "" }
 }
 
-function parseList(value) {
-	if (Array.isArray(value)) return value.map((v) => (typeof v === "string" ? v : v.app || v.name || "")).filter(Boolean)
-	try {
-		return JSON.parse(value || "[]")
-	} catch (e) {
-		return []
-	}
+// A value saved before these lists (e.g. industry "Manufacturing") stays selected until it's changed.
+function withSaved(options, value) {
+	const grouped = !!options[0]?.group
+	const known = (grouped ? options.flatMap((group) => group.options) : options).some((o) => o.value === value)
+	if (!value || known) return options
+	const saved = { label: value, value }
+	return grouped ? [{ key: "saved", group: "Saved", options: [saved] }, ...options] : [saved, ...options]
 }
+const countryOptions = computed(() => withSaved(COUNTRY_OPTIONS, company.value.country))
+const employeeOptions = computed(() => withSaved(EMPLOYEE_OPTIONS, company.value.employees))
+const industryOptions = computed(() => withSaved(INDUSTRY_OPTIONS, company.value.industry))
+const systemOptions = computed(() => withSaved(SYSTEM_OPTIONS, company.value.system))
 
-async function loadRequirement() {
+async function loadCompany() {
 	let saved = null
 	let context = null
 	try {
@@ -295,42 +280,34 @@ async function loadRequirement() {
 	} catch (e) {
 		// An empty form still works.
 	}
-	req.value = {
-		...blankRequirement(),
-		...(saved || {}),
+	company.value = {
 		company_name: (saved && saved.company_name) || context?.customer?.customer_name || "",
-		apps: parseList(saved && saved.apps),
-		special_requirements: parseList(saved && saved.special_requirements),
+		country: saved?.country || "",
+		employees: saved?.employees || "",
+		industry: saved?.industry || "",
+		system: saved?.current_situation || "",
+		notes: saved?.additional_notes || "",
 	}
 }
 
-function toggleReq(list, value) {
-	const current = req.value[list]
-	req.value[list] = current.includes(value) ? current.filter((v) => v !== value) : [...current, value]
-}
-
-async function saveRequirement() {
-	if (savingReq.value) return
-	savingReq.value = true
+async function saveCompany() {
+	if (savingCompany.value) return
+	savingCompany.value = true
 	try {
-		const r = req.value
+		const c = company.value
+		// Only these fields: the rest of the Requirement (budget, timeline...) stays as it was.
 		await call("connect.api.customer.save_customer_requirement", {
-			country: r.country,
-			industry: r.industry,
-			apps: r.apps,
-			looking_for: r.looking_for,
-			company_size: r.company_size,
-			current_situation: r.current_situation,
-			timeline: r.timeline,
-			delivery_preference: r.delivery_preference,
-			budget: r.budget,
-			special_requirements: JSON.stringify(r.special_requirements || []),
+			country: c.country,
+			industry: c.industry,
+			company_size: c.employees,
+			current_situation: c.system,
+			additional_notes: c.notes.trim(),
 		})
-		toast.success("Your requirements have been saved.")
+		toast.success("Your company details have been saved.")
 	} catch (e) {
 		toast.error(errorText(e, "Could not save. Please try again."))
 	} finally {
-		savingReq.value = false
+		savingCompany.value = false
 	}
 }
 
@@ -419,7 +396,7 @@ const sections = computed(() =>
 		{ value: "profile", label: "Profile", icon: "lucide-user" },
 		{ value: "users", label: "Users", icon: "lucide-users" },
 		{ value: "hours", label: "Working hours", icon: "lucide-clock" },
-		isCustomer.value && { value: "requirements", label: "Requirements", icon: "lucide-clipboard-list" },
+		isCustomer.value && { value: "company", label: "Company details", icon: "lucide-building-2" },
 		isPartnerAdmin.value && { value: "crm", label: "CRM", icon: "lucide-link" },
 	].filter(Boolean),
 )
@@ -431,9 +408,9 @@ const HEADINGS = {
 		title: "Working hours",
 		description: "Set when you're at work. Outside these hours, Connect can suggest sending your messages silently.",
 	},
-	requirements: {
-		title: "Requirements",
-		description: "Tell partners what you need so we can show you accurate pricing and matches.",
+	company: {
+		title: "Company details",
+		description: "Tell partners about your company. Each project asks what that project needs.",
 	},
 	crm: { title: "CRM", description: "Connect your Frappe CRM account" },
 }
@@ -445,7 +422,7 @@ function openSettings(event) {
 	loadProfile()
 	loadTeam()
 	loadHours()
-	loadRequirement()
+	loadCompany()
 	open.value = true
 }
 
@@ -608,48 +585,20 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 						</div>
 					</template>
 
-					<!-- Requirements (customers) -->
-					<template v-else-if="tab === 'requirements'">
+					<!-- Company details (customers) -->
+					<template v-else-if="tab === 'company'">
 						<div class="mb-[14px] flex gap-3">
-							<FormControl :model-value="req.company_name" class="min-w-0 flex-1" label="Company Name" size="md" variant="outline" disabled />
-							<FormControl v-model="req.country" class="min-w-0 flex-1" label="Country" size="md" variant="outline" />
-						</div>
-						<FormControl v-model="req.industry" class="mb-[14px]" label="Industry" type="select" :options="['', ...INDUSTRIES]" size="md" variant="outline" />
-						<span class="mb-1.5 block text-base text-ink-gray-7">Apps of Interest</span>
-						<div class="flex flex-wrap gap-x-5 gap-y-2">
-							<Checkbox
-								v-for="app in APPS"
-								:key="app"
-								:label="app"
-								:model-value="req.apps.includes(app)"
-								@update:model-value="toggleReq('apps', app)"
-							/>
-						</div>
-						<div class="my-5 border-t border-outline-gray-1" />
-						<div class="mb-[14px] flex gap-3">
-							<FormControl v-model="req.looking_for" class="min-w-0 flex-1" label="What are you looking for?" type="select" :options="['', ...LOOKING_FOR]" size="md" variant="outline" />
-							<FormControl v-model="req.company_size" class="min-w-0 flex-1" label="Company Size" type="select" :options="['', ...COMPANY_SIZES]" size="md" variant="outline" />
+							<FormControl :model-value="company.company_name" class="min-w-0 flex-1" label="Company name" size="md" variant="outline" disabled />
+							<FormControl v-model="company.country" class="min-w-0 flex-1" label="Country" type="combobox" :options="countryOptions" placeholder="Select" size="md" variant="outline" />
 						</div>
 						<div class="mb-[14px] flex gap-3">
-							<FormControl v-model="req.current_situation" class="min-w-0 flex-1" label="Current Situation" type="select" :options="['', ...SITUATIONS]" size="md" variant="outline" />
-							<FormControl v-model="req.timeline" class="min-w-0 flex-1" label="Timeline" type="select" :options="['', ...TIMELINES]" size="md" variant="outline" />
+							<FormControl v-model="company.employees" class="min-w-0 flex-1" label="Number of employees" type="select" :options="employeeOptions" placeholder="Select" size="md" variant="outline" />
+							<FormControl v-model="company.industry" class="min-w-0 flex-1" label="Industry" type="combobox" :options="industryOptions" placeholder="Select" size="md" variant="outline" />
 						</div>
-						<div class="mb-[14px] flex gap-3">
-							<FormControl v-model="req.delivery_preference" class="min-w-0 flex-1" label="Delivery Preference" type="select" :options="['', ...DELIVERY]" size="md" variant="outline" />
-							<FormControl v-model="req.budget" class="min-w-0 flex-1" label="Budget" type="select" :options="['', ...BUDGETS]" size="md" variant="outline" />
-						</div>
-						<span class="mb-1.5 block text-base text-ink-gray-7">Special Requirements</span>
-						<div class="flex flex-wrap gap-x-5 gap-y-2">
-							<Checkbox
-								v-for="item in SPECIAL"
-								:key="item"
-								:label="item"
-								:model-value="req.special_requirements.includes(item)"
-								@update:model-value="toggleReq('special_requirements', item)"
-							/>
-						</div>
+						<FormControl v-model="company.system" class="mb-[14px]" label="What do you use today?" type="select" :options="systemOptions" placeholder="Select" size="md" variant="outline" />
+						<FormControl v-model="company.notes" label="Anything partners should know?" type="textarea" :rows="3" placeholder="For example, GST invoicing or tracking stock across two shops" size="md" variant="outline" />
 						<div class="mt-5 flex justify-end">
-							<Button label="Save" icon-left="lucide-check" :loading="savingReq" @click="saveRequirement" />
+							<Button label="Save" icon-left="lucide-check" :loading="savingCompany" @click="saveCompany" />
 						</div>
 					</template>
 
