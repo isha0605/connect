@@ -16,7 +16,7 @@ import {
 	goLiveCriterion,
 	recommend,
 } from "@app/utils/recommendation"
-import { projectDialog, projectPath } from "@app/utils/projectDialog"
+import { isProjectSent, projectDialog, projectPath } from "@app/utils/projectDialog"
 import { blankCriteria, criteriaSummary, orList, partnerCriteria, workCriterion } from "@app/utils/partnerCriteria"
 import { startTracking } from "@app/utils/tracking"
 
@@ -214,8 +214,7 @@ export default function setup(context) {
 
 
 	const projectTitle = computed(() => project.value?.project_name || "Project")
-	// Shared, Hiring, Hired and Completed are all past the draft: the brief has gone out.
-	const isDraft = computed(() => !["Shared", "Hiring", "Hired", "Completed"].includes(project.value?.status))
+	const isDraft = computed(() => !isProjectSent(project.value?.status))
 	const breadcrumbItems = computed(() => [
 		{ label: "Projects", route: { path: "/projects" } },
 		{ label: projectTitle.value },

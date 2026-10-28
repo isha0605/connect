@@ -17,7 +17,7 @@ import {
 	recommend,
 } from "@app/utils/recommendation"
 import { packBasket } from "@app/utils/packBasket"
-import { projectDialog, projectPath } from "@app/utils/projectDialog"
+import { isProjectSent, projectDialog, projectPath } from "@app/utils/projectDialog"
 import { startTracking } from "@app/utils/tracking"
 
 export default function setup(context) {
@@ -50,6 +50,11 @@ export default function setup(context) {
 					router.replace({ path: "/starter-pack-implementation", query: { order: data.order } })
 					return
 				}
+				// Already sent to partners: its chats and quotes live on the custom page.
+				if (isProjectSent(data.status)) {
+					router.replace({ path: "/custom-implementation", query: { project: data.name } })
+					return
+				}
 				project.value = data
 				answers.value = answersFromProject(data)
 				tickRecommended()
@@ -59,6 +64,7 @@ export default function setup(context) {
 
 	const inProject = !!projectName
 	const projectTitle = computed(() => project.value?.project_name || "Project")
+	const isDraft = computed(() => !!project.value && !isProjectSent(project.value.status))
 	const breadcrumbItems = computed(() => [
 		{ label: "Projects", route: { path: "/projects" } },
 		{ label: projectTitle.value },
@@ -165,6 +171,7 @@ export default function setup(context) {
 		customSectionClick,
 		inProject,
 		projectTitle,
+		isDraft,
 		breadcrumbItems,
 		projectMenu,
 		headline,

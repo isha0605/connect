@@ -24,11 +24,17 @@ export function usesOtherSystems(value) {
 	return !!value && value !== "spreadsheets"
 }
 
-// Where a project opens: a paid order its implementation steps, a draft whichever
-// page its answers recommended.
+// Shared, Hiring, Hired and Completed are all past the draft: the brief has gone out.
+export function isProjectSent(status) {
+	return ["Shared", "Hiring", "Hired", "Completed"].includes(status)
+}
+
+// Where a project opens: a paid order its implementation steps, a sent project the custom
+// page (its chats and quotes), a draft whichever page its answers recommended.
 export function projectPath(row) {
 	if (row.kind === "order") return { path: "/starter-pack-implementation", query: { order: row.order } }
-	const path = row.verdict === "custom" ? "/custom-implementation" : "/starter-pack-recommendation"
+	const custom = row.verdict === "custom" || isProjectSent(row.status)
+	const path = custom ? "/custom-implementation" : "/starter-pack-recommendation"
 	return { path, query: { project: row.project } }
 }
 
