@@ -2816,6 +2816,11 @@ export default function setup(context) {
 		return sender === (context.myContext.data && context.myContext.data.user)
 	}
 
+	// Requirement and Quote cards span the whole chat width on phones
+	function isFullWidthCard(item) {
+		return item?.message_type === "Requirement" || item?.message_type === "Quote"
+	}
+
 	// "Partner"/"Customer" tag next to a message's sender — only meaningful pointed at the
 	// *other* side, so a customer sees who on the partner side is talking and vice versa;
 	// same-side colleagues (and your own messages) never get tagged with your own side.
@@ -4085,6 +4090,7 @@ export default function setup(context) {
 		sendMessage,
 		sendMessageOnEnter,
 		isMine,
+		isFullWidthCard,
 		senderSide,
 		showSenderSideBadge,
 		isGrouped,
