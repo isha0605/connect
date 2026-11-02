@@ -13,7 +13,7 @@ from frappe.utils import cint, flt, now_datetime
 
 from connect.partner.logo import attach_normalized_logos
 from connect.partner.story_image import queue_missing_story_images
-from connect.permissions import _my_company_membership
+from connect.permissions import _is_partner_admin, _my_company_membership
 
 COUNTRY_TO_REGION = {
 	"united states": "North America",
@@ -68,7 +68,12 @@ DIMENSION_SCORE_FIELDS = (
 
 class Partner(Document):
 	def validate(self):
+		self.validate_hourly_rate()
 		self.set_starter_pack_sequence()
+
+	def validate_hourly_rate(self):
+		if flt(self.hourly_rate) < 0:
+			frappe.throw(_("Hourly rate can't be negative."))
 
 	def set_starter_pack_sequence(self):
 		"""Gives each Starter Pack partner a unique rotation slot so paid orders round-robin fairly."""
@@ -1005,6 +1010,9 @@ _PROFILE_MULTISELECT_FIELDS = {
 	"languages": "language",
 }
 
+# cover_image too: a story without a frappe.io cover keeps the one it was given
+_STORY_FIELDS = ("client_name", "client_logo", "headline", "category", "url", "cover_image")
+
 _PROFILE_SIMPLE_FIELDS = (
 	# partner_name is deliberately excluded — it's the doc's autoname source (see
 	# "autoname": "field:partner_name" in partner.json), so letting partners edit it here
@@ -1016,8 +1024,86 @@ _PROFILE_SIMPLE_FIELDS = (
 	"industry", "year_founded", "rollouts", "hourly_rate",
 	"sites_deployed", "typical_project_size", "proposal_timeline", "certified_experts",
 	"certs_erpnext", "certs_frappe_framework", "countries_served", "references_count",
-	"demo_available", "logo_position_x", "logo_position_y",
+	"demo_available", "logo_position_x", "logo_position_y", "phone", "team_size", "journey_blog_url",
+	"logo", "logo_icon", "why_choose_them", "how_we_work", "successful_implementation", "origin_story",
 )
+
+# What the partner's Profile builder edits, beyond the lists below.
+_BUILDER_FIELDS = (
+	"tagline", "website", "phone", "journey_blog_url", "logo", "logo_icon", "description", "year_founded",
+	"team_size", "rollouts", "certs_erpnext", "certs_frappe_framework", "address", "city", "country",
+	"industry", "hourly_rate", "why_choose_them", "how_we_work", "successful_implementation", "origin_story",
+)
+# Longest text each profile field may hold, so every partner's profile lays out the same way.
+# The Profile builder shows the same limits as it counts.
+_TEXT_LIMITS = {
+	"tagline": 80, "address": 200, "description": 500, "why_choose_them": 300, "how_we_work": 300,
+	"successful_implementation": 300, "origin_story": 1000,
+}
+_FOUNDER_LIMITS = {"member_name": 60, "designation": 40, "bio": 280}
+_STORY_LIMITS = {"client_name": 40, "headline": 90}
+
+# Shown on the public profile, so a link must be an upload, an app asset or an https page.
+_MEDIA_PREFIXES = ("/files/", "/assets/", "https://")
+
+
+def get_my_profile() -> dict:
+	"""Everything the caller's Profile builder and Listing show: their own partner's public profile,
+	what Frappe sets for them (tier, PMM, verification), and whether they may edit it (admin only)."""
+	partner = _my_partner()
+	doc = frappe.get_doc("Partner", partner)
+	founder = next((row for row in doc.team if row.is_founder), None)
+	stories = [{field: row.get(field) for field in _STORY_FIELDS} for row in doc.success_stories]
+	attach_normalized_logos(stories)
+	return {
+		"partner": doc.name,
+		"partner_name": doc.partner_name,
+		**{fieldname: doc.get(fieldname) for fieldname in _BUILDER_FIELDS},
+		"apps": [row.app for row in doc.apps],
+		"migrations": [row.migration_path for row in doc.migrations],
+		"founder": {field: founder.get(field) for field in ("member_name", "designation", "bio", "photo")} if founder else {},
+		"photos": [{"image": row.image, "video": row.video} for row in doc.photos],
+		"success_stories": stories,
+		# what the public profile shows under its industry tags
+		"display_industries": _compute_display_industries(doc.industry, stories),
+		"tier": doc.tier,
+		"pmm_level": doc.pmm_level,
+		"is_verified": doc.verification_status == "Verified",
+		"can_edit": _is_partner_admin(partner, frappe.session.user),
+		"options": _profile_options(),
+	}
+
+
+def _profile_options() -> dict:
+	meta = frappe.get_meta("Partner")
+	return {
+		"apps": frappe.get_all("App", pluck="name", order_by="name asc"),
+		"migrations": frappe.get_all("Migration Path", pluck="name", order_by="name asc"),
+		"industries": [option for option in (meta.get_field("industry").options or "").split("\n") if option],
+		"categories": sorted(set(frappe.get_all("Partner Success Story", filters={"category": ["is", "set"]}, pluck="category"))),
+	}
+
+
+def _check_profile_lengths(doc) -> None:
+	rows = [(doc, _TEXT_LIMITS)]
+	rows += [(row, _FOUNDER_LIMITS) for row in doc.team if row.is_founder]
+	rows += [(row, _STORY_LIMITS) for row in doc.success_stories]
+	for row, limits in rows:
+		for fieldname, limit in limits.items():
+			length = len(row.get(fieldname) or "")
+			if length > limit:
+				label = _(row.meta.get_label(fieldname))
+				frappe.throw(_("{0} is {1} characters long; the limit is {2}.").format(label, length, limit))
+
+
+def _check_profile_media(doc) -> None:
+	links = [doc.logo, doc.logo_icon]
+	links += [row.photo for row in doc.team]
+	links += [link for row in doc.photos for link in (row.image, row.video)]
+	links += [link for row in doc.success_stories for link in (row.client_logo, row.cover_image)]
+	for link in filter(None, links):
+		if not link.startswith(_MEDIA_PREFIXES):
+			frappe.throw(_("Images and videos must be uploaded files or https links: {0}").format(link))
 
 
 def update_my_partner_profile(
@@ -1030,11 +1116,16 @@ def update_my_partner_profile(
 	logo_position_x=None, logo_position_y=None,
 	apps=None, migrations=None, business_processes=None, implementation_types=None, languages=None,
 	founder=None, success_stories=None, packs=None, addons=None,
+	phone=None, team_size=None, journey_blog_url=None,
+	logo=None, logo_icon=None, why_choose_them=None, origin_story=None, photos=None,
+	how_we_work=None, successful_implementation=None,
 ):
-	"""Lets any member of the caller's own partner company edit their public profile —
+	"""Lets the admin of the caller's own partner company edit their public profile —
 	the same fields (and the same About / Success Stories / Pricing grouping) shown on the
-	customer-facing partner profile page."""
+	customer-facing partner profile page. Other members only read it."""
 	partner = _my_partner()
+	if not _is_partner_admin(partner, frappe.session.user):
+		frappe.throw(_("Only your partner admin can edit the profile."), frappe.PermissionError)
 	doc = frappe.get_doc("Partner", partner)
 
 	values = dict(
@@ -1047,6 +1138,9 @@ def update_my_partner_profile(
 		countries_served=countries_served, references_count=references_count,
 		starter_pack=starter_pack, demo_available=demo_available,
 		logo_position_x=logo_position_x, logo_position_y=logo_position_y,
+		phone=phone, team_size=team_size, journey_blog_url=journey_blog_url,
+		logo=logo, logo_icon=logo_icon, why_choose_them=why_choose_them, origin_story=origin_story,
+		how_we_work=how_we_work, successful_implementation=successful_implementation,
 	)
 	for fieldname in _PROFILE_SIMPLE_FIELDS:
 		value = values[fieldname]
@@ -1078,14 +1172,12 @@ def update_my_partner_profile(
 
 	if success_stories is not None:
 		doc.set("success_stories", [
-			{
-				"client_name": row.get("client_name"),
-				"client_logo": row.get("client_logo"),
-				"headline": row.get("headline"),
-				"category": row.get("category"),
-				"url": row.get("url"),
-			}
-			for row in _parse_json_arg(success_stories, [])
+			{field: row.get(field) for field in _STORY_FIELDS} for row in _parse_json_arg(success_stories, [])
+		])
+
+	if photos is not None:
+		doc.set("photos", [
+			{"image": row.get("image"), "video": row.get("video")} for row in _parse_json_arg(photos, [])
 		])
 
 	# `packs` is accepted and ignored: Starter Pack prices are Frappe's (see the Starter
@@ -1098,5 +1190,7 @@ def update_my_partner_profile(
 			for row in _parse_json_arg(addons, [])
 		])
 
+	_check_profile_lengths(doc)
+	_check_profile_media(doc)
 	doc.save(ignore_permissions=True)
 	return {"partner": doc.name}

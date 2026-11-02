@@ -169,6 +169,9 @@ def update_my_partner_profile(
 	logo_position_x=None, logo_position_y=None,
 	apps=None, migrations=None, business_processes=None, implementation_types=None, languages=None,
 	founder=None, success_stories=None, packs=None, addons=None,
+	phone=None, team_size=None, journey_blog_url=None,
+	logo=None, logo_icon=None, why_choose_them=None, origin_story=None, photos=None,
+	how_we_work=None, successful_implementation=None,
 ):
 	from connect.partner.doctype.partner.partner import update_my_partner_profile
 	return update_my_partner_profile(
@@ -184,7 +187,16 @@ def update_my_partner_profile(
 		apps=apps, migrations=migrations, business_processes=business_processes,
 		implementation_types=implementation_types,
 		languages=languages, founder=founder, success_stories=success_stories, packs=packs, addons=addons,
+		phone=phone, team_size=team_size, journey_blog_url=journey_blog_url,
+		logo=logo, logo_icon=logo_icon, why_choose_them=why_choose_them, origin_story=origin_story, photos=photos,
+		how_we_work=how_we_work, successful_implementation=successful_implementation,
 	)
+
+
+@frappe.whitelist()
+def get_my_profile():
+	from connect.partner.doctype.partner.partner import get_my_profile
+	return get_my_profile()
 
 
 @frappe.whitelist()
