@@ -2,17 +2,23 @@
 // The sidebar's Notifications item, which owns the unread count: a red dot on the bell while the
 // sidebar is collapsed, the number beside the label while it is open. A notification that
 // arrives while a page is open also pops up as a toast. Clicking opens ConnectNotifications.
-import { getCurrentInstance, inject, onBeforeUnmount, onMounted, ref } from "vue"
+import { getCurrentInstance, onBeforeUnmount, onMounted, ref } from "vue"
 import { Badge, SidebarItem, call, toast } from "frappe-ui"
 import { LOG_API, bodyOf, categoryOf, titleOf } from "@app/utils/notificationLogs"
 
 const TOAST_CHECK_LIMIT = 5
 
 const unread = ref(0)
-const socket = inject("socket", null)
 const router = getCurrentInstance()?.appContext.config.globalProperties.$router
 // The newest notification already on screen when the page opened, or already toasted.
 let newestSeen = ""
+
+// Frappe's socket is always available on window.frappe.realtime in deployed Studio.
+// inject("socket") resolves to null there because no parent provides it, so we use
+// the global directly instead.
+function frappe_realtime() {
+	return window.frappe?.realtime || null
+}
 
 async function recount() {
 	try {
@@ -56,11 +62,11 @@ function openPanel() {
 onMounted(() => {
 	recount()
 	rememberNewest().catch(() => {})
-	socket?.on("notification", onNotification)
+	frappe_realtime()?.on("notification", onNotification)
 	window.addEventListener("connect:notifications-read", recount)
 })
 onBeforeUnmount(() => {
-	socket?.off("notification", onNotification)
+	frappe_realtime()?.off("notification", onNotification)
 	window.removeEventListener("connect:notifications-read", recount)
 })
 </script>
