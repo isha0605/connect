@@ -4,6 +4,8 @@
 
 import { computed, onScopeDispose, ref, watch } from "vue"
 import { partnerConnect } from "@app/utils/partnerConnect"
+import { DEFAULT_ANSWERS } from "@app/utils/partnerProfile"
+import { onPreviewChange, readPreview, withPreview } from "@app/utils/profilePreview"
 import { goToSignIn } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
 
@@ -35,7 +37,32 @@ function listOf(items, shown = 3) {
 
 export default function setup(context) {
 	startTracking(context)
-	const { route, partner, showHeaderConnect } = context
+	const { route, partner, showHeaderConnect, toast } = context
+
+	// ?preview=1, from the partner's own Profile builder: their unsaved profile over the saved
+	// one, kept in step as they type in the builder's tab. Only ever this browser's own draft.
+	const partnerId = route.params.partner_id
+	let savedRecord = null
+	function showPreview(draft) {
+		if (draft && savedRecord) partner.setData(withPreview(savedRecord, draft))
+	}
+	if (route.query.preview) {
+		const stopWatching = watch(
+			() => partner.data,
+			(data) => {
+				if (!data || savedRecord) return
+				savedRecord = data
+				showPreview(readPreview(partnerId))
+				toast.info("Preview: your unsaved changes. Customers see the saved profile.")
+			},
+			{ immediate: true },
+		)
+		const stopListening = onPreviewChange(partnerId, showPreview)
+		onScopeDispose(() => {
+			stopWatching()
+			stopListening()
+		})
+	}
 
 	// Every Connect on the page: the one beside the partner's name, the header's, and the
 	// pricing cards'.
@@ -186,6 +213,10 @@ export default function setup(context) {
 		connect,
 		goToSignIn,
 		origin,
+		howWeWork: computed(() => partner.data?.how_we_work || DEFAULT_ANSWERS.how_we_work),
+		successfulImplementation: computed(
+			() => partner.data?.successful_implementation || DEFAULT_ANSWERS.successful_implementation,
+		),
 		pmmLevel,
 		pmmLabel,
 		openPmmGuide,
