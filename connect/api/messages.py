@@ -3,12 +3,21 @@ import json
 import frappe
 
 from connect.api.attachments import _attach_file_to_message, _claim_staged_attachment, _copy_message_attachment
+from connect.messaging.customer_identity import (
+	ANONYMOUS_USER,
+	anonymous_company,
+	customer_users,
+	hidden_threads,
+	hides_customer,
+	mask_message,
+)
 from connect.permissions import (
 	_check_can_read,
 	_check_can_write,
 	_dm_thread_pair,
 	_has_full_access,
 	_thread_membership,
+	_visible_message_filters,
 )
 
 # Requirement cards are one-off snapshots tied to their thread, so only plain text and files can be
@@ -112,14 +121,19 @@ def unpin_message(message):
 @frappe.whitelist()
 def get_pinned_messages(thread):
 	"""Returns the thread's pins newest first, filtered by the same read query so a removed member sees only pins from their time."""
-	_check_can_read(thread, frappe.session.user)
-	return frappe.get_list(
+	user = frappe.session.user
+	_check_can_read(thread, user)
+	# Read without permission checks: scoped to the thread and the caller's membership.
+	pins = frappe.get_all(
 		"Connect Message",
-		filters={"thread": thread, "is_pinned": 1},
+		filters={**_visible_message_filters(thread, user), "is_pinned": 1},
 		fields=PINNED_MESSAGE_FIELDS,
 		order_by="pinned_at desc",
-		limit_page_length=0,
 	)
+	if not hides_customer(thread, user):
+		return pins
+	customers = customer_users(thread)
+	return [mask_message(pin, customers) for pin in pins]
 
 
 @frappe.whitelist()
@@ -215,19 +229,13 @@ def search_messages(query, thread=None, is_dm=0, kind="messages"):
 		if thread and source_is_dm != bool(is_dm):
 			continue
 		scoped = filters + ([[thread_field, "=", thread]] if thread else [])
-		rows = frappe.get_list(
-			doctype,
-			filters=scoped,
-			fields=["name", f"{thread_field} as thread", "sender", "message_type", "content", "file_name", "creation"],
-			order_by="creation desc",
-			limit_page_length=MAX_SEARCH_RESULTS,
-		)
+		rows = (_search_dm_messages if source_is_dm else _search_thread_messages)(scoped)
 		for row in rows:
 			row["is_dm"] = int(source_is_dm)
 		results.extend(rows)
 
 	results.sort(key=lambda r: r.creation, reverse=True)
-	results = results[:MAX_SEARCH_RESULTS]
+	results = _mask_search_results(results[:MAX_SEARCH_RESULTS])
 
 	full_names = {
 		u.name: u.full_name
@@ -235,6 +243,51 @@ def search_messages(query, thread=None, is_dm=0, kind="messages"):
 			"User", filters={"name": ["in", list({r.sender for r in results})]}, fields=["name", "full_name"]
 		)
 	}
+	full_names[ANONYMOUS_USER] = anonymous_company()
 	for row in results:
 		row["sender_full_name"] = full_names.get(row.sender)
 	return results
+
+
+SEARCH_FIELDS = ["name", "sender", "message_type", "content", "file_name", "creation"]
+
+
+def _search_dm_messages(filters):
+	return frappe.get_list(
+		"Connect DM Message",
+		filters=filters,
+		fields=[*SEARCH_FIELDS, "dm_thread as thread"],
+		order_by="creation desc",
+		limit_page_length=MAX_SEARCH_RESULTS,
+	)
+
+
+def _search_thread_messages(filters):
+	"""Searches the threads the caller is on now, where an anonymous customer's messages are
+	masked rather than left out, and the ones they were removed from, up to their removal."""
+	user = frappe.session.user
+	fields = [*SEARCH_FIELDS, "thread"]
+	active = frappe.get_all(
+		"Connect Thread Member", filters={"user": user, "is_removed": 0}, pluck="thread"
+	)
+	# Read without permission checks: scoped to the caller's own active threads.
+	rows = frappe.get_all(
+		"Connect Message",
+		filters=filters + [["thread", "in", active]],
+		fields=fields,
+		order_by="creation desc",
+		limit=MAX_SEARCH_RESULTS,
+	) if active else []
+	return rows + frappe.get_list(
+		"Connect Message",
+		filters=filters + [["thread", "not in", active or [""]]],
+		fields=fields,
+		order_by="creation desc",
+		limit_page_length=MAX_SEARCH_RESULTS,
+	)
+
+
+def _mask_search_results(results):
+	hidden = hidden_threads(list({r.thread for r in results if not r.is_dm}))
+	customers = {thread: customer_users(thread) for thread in hidden}
+	return [mask_message(r, customers[r.thread]) if not r.is_dm and r.thread in hidden else r for r in results]

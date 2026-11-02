@@ -2246,6 +2246,21 @@
                             "variant": "subtle"
                            },
                            "componentSlots": {}
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)",
+                            "marginTop": "10px"
+                           },
+                           "componentId": "req-card-anonymous-note",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-sm",
+                            "tag": "p",
+                            "text": "Partners see you as an anonymous company. They see your name and contact details once you're interested in their quote."
+                           },
+                           "componentSlots": {},
+                           "visibilityCondition": "isAnonymousToPartners()"
                           }
                          ],
                          "classes": [
@@ -10037,7 +10052,7 @@
                         "variant": "subtle"
                        },
                        "componentSlots": {},
-                       "visibilityCondition": "dataItem.user === (threadAdmins.data && threadAdmins.data.partner_admin)"
+                       "visibilityCondition": "((threadAdmins.data && threadAdmins.data.partner_admins) || []).includes(dataItem.user)"
                       }
                      ],
                      "componentId": "member-row-email-row",
@@ -18005,27 +18020,21 @@
   },
   {
    "auto": 0,
-   "document_type": "Connect Message",
    "fetch_document_using_filters": 0,
-   "fields": "[\"name\", \"thread\", \"sender\", \"message_type\", \"content\", \"attachment\", \"file_name\", \"file_type\", \"file_size\", \"is_edited\", \"creation\", \"reply_to\", \"is_forwarded\"]",
-   "filters": "{\"thread\":[\"=\",\"{{ selectedThread }}\"]}",
-   "limit": 200,
    "method": "GET",
    "resource_name": "messages",
-   "resource_type": "Document List",
-   "sort_field": "creation",
-   "sort_order": "DESC"
+   "resource_type": "API Resource",
+   "url": "connect.api.threads.get_thread_messages",
+   "limit": 0
   },
   {
    "auto": 0,
-   "document_type": "Connect Thread Member",
    "fetch_document_using_filters": 0,
-   "fields": "[\"name\",\"user\",\"side\",\"permission\",\"is_removed\"]",
-   "filters": "{\"thread\":[\"=\",\"{{ selectedThread }}\"]}",
-   "limit": 50,
    "method": "GET",
    "resource_name": "threadMembers",
-   "resource_type": "Document List"
+   "resource_type": "API Resource",
+   "url": "connect.api.threads.get_thread_members",
+   "limit": 0
   },
   {
    "auto": 0,

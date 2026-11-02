@@ -109,42 +109,12 @@
       "baseStyles": {
        "display": "{{ (myContext.data && myContext.data.user && myContext.data.user !== 'Guest') ? 'flex' : 'none' }}"
       },
-      "componentEvents": {
-       "click": {
-        "action": "Run Script",
-        "event": "click",
-        "script": "window.dispatchEvent(new CustomEvent('connect:open-notifications', { detail: { refreshBadge: () => myContext.reload() } }));"
-       }
-      },
-      "componentId": "SidebarItem-fpr-notifications",
-      "componentName": "SidebarItem",
-      "componentProps": {
-       "active": "{{ false }}",
-       "icon": "lucide-bell",
-       "label": "Notifications"
-      },
-      "componentSlots": {
-       "suffix": {
-        "parentBlockId": "SidebarItem-fpr-notifications",
-        "slotContent": [
-         {
-          "baseStyles": {
-           "display": "{{ (myContext.data && myContext.data.unread_notifications) ? 'flex' : 'none' }}",
-           "marginRight": "8px"
-          },
-          "componentId": "SidebarItem-fpr-notifications-count",
-          "componentName": "Badge",
-          "componentProps": {
-           "label": "{{ myContext.data && myContext.data.unread_notifications > 99 ? '99+' : (myContext.data && myContext.data.unread_notifications) }}",
-           "theme": "red",
-           "variant": "subtle"
-          },
-          "componentSlots": {}
-         }
-        ],
-        "slotId": "SidebarItem-fpr-notifications:suffix"
-       }
-      }
+      "blockName": "NotificationsSidebarItem",
+      "componentId": "NotificationsSidebarItem-fpr",
+      "componentName": "NotificationsSidebarItem",
+      "componentProps": {},
+      "componentSlots": {},
+      "isCustomVueComponent": true
      },
      {
       "baseStyles": {
@@ -277,10 +247,10 @@
       "componentId": "SidebarItem-fpr-customers",
       "componentName": "SidebarItem",
       "componentProps": {
-       "active": "{{ route.path === '/partner-section' && route.query.section === 'customers' }}",
+       "active": "{{ route.path === '/customers' || route.path.startsWith('/customers/') }}",
        "icon": "lucide-users",
        "label": "Customers",
-       "route": "/partner-section?section=customers"
+       "route": "/customers"
       },
       "componentSlots": {}
      },
@@ -291,10 +261,10 @@
       "componentId": "SidebarItem-fpr-leads",
       "componentName": "SidebarItem",
       "componentProps": {
-       "active": "{{ route.path === '/partner-section' && route.query.section === 'leads' }}",
+       "active": "{{ route.path === '/leads' || route.path.startsWith('/leads/') }}",
        "icon": "lucide-target",
        "label": "Leads",
-       "route": "/partner-section?section=leads"
+       "route": "/leads"
       },
       "componentSlots": {}
      },

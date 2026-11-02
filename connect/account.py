@@ -3,7 +3,7 @@ from frappe import _
 from frappe.utils import cint
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
-from connect.notifications import CONNECT_NOTIFICATION_DOCTYPES
+from connect.notifications import unread_notification_count
 from connect.permissions import _my_company_membership
 
 
@@ -97,12 +97,7 @@ def get_my_context():
 		# The sidebar's Projects item: shown once the buyer has something to show there.
 		"has_projects": bool(projects_route),
 		"projects_route": projects_route,
-		"unread_notifications": frappe.db.count(
-			"Notification Log",
-			{"for_user": user, "read": 0, "document_type": ["in", CONNECT_NOTIFICATION_DOCTYPES]},
-		)
-		if signed_in
-		else 0,
+		"unread_notifications": unread_notification_count(user) if signed_in else 0,
 	}
 
 

@@ -11,6 +11,7 @@
   "partner",
   "user",
   "is_admin",
+  "access",
   "role",
   "is_removed",
   "removed_on"
@@ -34,10 +35,22 @@
   },
   {
    "default": "0",
+   "description": "An owner of the partner firm in Connect. A firm can have several.",
    "fieldname": "is_admin",
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Is Admin"
+  },
+  {
+   "default": "Member",
+   "depends_on": "eval:!doc.is_admin",
+   "description": "What this person can do in Connect. Owners (Is Admin) can do everything, so this applies to everyone else.",
+   "fieldname": "access",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Access",
+   "options": "Member\nSales\nFinance"
   },
   {
    "fieldname": "role",
@@ -60,7 +73,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-08-06 22:08:35.099381",
+ "modified": "2026-11-02 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Partner",
  "name": "Connect Partner Member",

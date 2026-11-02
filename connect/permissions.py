@@ -20,8 +20,31 @@ def _is_partner_admin(partner, user):
 	)
 
 
-def _get_partner_admin(partner):
-	return frappe.db.get_value("Connect Partner Member", {"partner": partner, "is_admin": 1}, "user")
+def _get_partner_owners(partner) -> list[str]:
+	"""The partner's active owners (admins), earliest first. A partner can have several."""
+	return frappe.get_all(
+		"Connect Partner Member",
+		filters={"partner": partner, "is_admin": 1, "is_removed": 0},
+		order_by="creation asc",
+		pluck="user",
+	)
+
+
+def _is_active_partner_member(partner, user):
+	return bool(
+		frappe.db.exists("Connect Partner Member", {"partner": partner, "user": user, "is_removed": 0})
+	)
+
+
+def _my_active_partner(user):
+	"""The partner the user is on the team of, or a PermissionError: only a partner's team works
+	with its leads and customers."""
+	from frappe import _
+
+	partner = frappe.db.get_value("Connect Partner Member", {"user": user, "is_removed": 0}, "partner")
+	if not partner:
+		frappe.throw(_("Only a partner's team can see this."), frappe.PermissionError)
+	return partner
 
 
 def _is_partner_reviewer(user):
@@ -72,6 +95,15 @@ def _check_can_write(thread, user):
 		frappe.throw(_("You don't have permission to post in this thread"), frappe.PermissionError)
 	if frappe.db.get_value("Connect Thread", thread, "status") == "Closed":
 		frappe.throw(_("This thread is closed"))
+
+
+def _visible_message_filters(thread, user):
+	"""Filters for the thread's messages a member may read: a removed member's stop at their removal."""
+	filters = {"thread": thread}
+	membership = _thread_membership(thread, user)
+	if membership and membership.is_removed:
+		filters["creation"] = ["<=", membership.removed_on]
+	return filters
 
 
 def _check_can_read(thread, user):
@@ -198,10 +230,35 @@ def has_message_permission(doc, ptype="read", user=None, **kwargs):
 				return False
 		return True
 
+	if _is_anonymous_customer_row(doc.thread, user, doc.get("sender")):
+		return False
 	# removed members keep a frozen view up to the moment they were removed
 	if not membership.is_removed:
 		return True
 	return bool(doc.get("creation")) and doc.creation <= membership.removed_on
+
+
+def _is_anonymous_customer_row(thread, user, customer_user):
+	"""A row that would tell the partner side who an anonymous customer is: the masked APIs in
+	connect.api.threads serve it instead."""
+	from connect.messaging.customer_identity import customer_users, hides_customer
+
+	return hides_customer(thread, user) and customer_user in customer_users(thread)
+
+
+def _anonymous_customer_sql(user, table, user_column):
+	"""SQL that holds for a row of `table` whose `user_column` is the customer side of a thread
+	where `user` writes for the partner and the customer is still anonymous."""
+	return f"""exists (
+		select 1 from `tabConnect Thread` anon_thread
+		join `tabConnect Thread Member` anon_viewer
+			on anon_viewer.thread = anon_thread.name and anon_viewer.user = {user} and anon_viewer.side = 'Partner'
+		join `tabConnect Thread Member` anon_customer
+			on anon_customer.thread = anon_thread.name and anon_customer.side = 'Customer'
+		where anon_thread.name = `{table}`.thread
+		and anon_thread.is_customer_revealed = 0
+		and anon_customer.user = `{table}`.{user_column}
+	)"""
 
 
 def get_message_permission_query_conditions(user, doctype=None):
@@ -213,7 +270,7 @@ def get_message_permission_query_conditions(user, doctype=None):
 		where ctm.thread = `tabConnect Message`.thread
 		and ctm.user = {escaped_user}
 		and (ctm.is_removed = 0 or `tabConnect Message`.creation <= ctm.removed_on)
-	)"""
+	) and not {_anonymous_customer_sql(escaped_user, "tabConnect Message", "sender")}"""
 
 
 def has_thread_member_permission(doc, ptype="read", user=None, **kwargs):
@@ -237,6 +294,8 @@ def has_thread_member_permission(doc, ptype="read", user=None, **kwargs):
 		return False
 
 	# read: any active member of the same thread can see the roster
+	if doc.side == "Customer" and _is_anonymous_customer_row(doc.thread, user, doc.user):
+		return False
 	return bool(_thread_membership(doc.thread, user))
 
 
@@ -246,7 +305,7 @@ def get_thread_member_permission_query_conditions(user, doctype=None):
 	user = frappe.db.escape(user)
 	return f"""`tabConnect Thread Member`.thread in (
 		select thread from `tabConnect Thread Member` where user = {user}
-	)"""
+	) and not {_anonymous_customer_sql(user, "tabConnect Thread Member", "user")}"""
 
 
 def has_dm_thread_permission(doc, ptype="read", user=None, **kwargs):

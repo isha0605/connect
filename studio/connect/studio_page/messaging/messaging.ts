@@ -5,6 +5,10 @@ import { installScrollFade } from "@app/utils/scrollFade"
 import { goToSignIn, signOut } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
 
+// connect.messaging.customer_identity.ANONYMOUS_USER: who the partner side sees in place of an
+// anonymous customer's people.
+const ANONYMOUS_CUSTOMER = "anonymous-customer"
+
 // Raven's FileTypeIcon (apps/web/src/components/common/FileIcons/FileTypeIcon.tsx, size "lg"):
 // a 28px coloured tile with a white glyph. PDF / Word / Excel / PowerPoint are Raven's own marks;
 // the rest are the Lucide icons it uses. Keyed by extension, exactly as Raven switches on it.
@@ -120,6 +124,13 @@ export default function setup(context) {
 			unifiedThreadList().find((t) => t.name === selectedThread.value && t.convType === selectedThreadType.value) ||
 			{}
 		)
+	}
+
+	// The customer's own Requirement card says so while the partner still sees them anonymously.
+	function isAnonymousToPartners() {
+		const thread = currentThread()
+		const amCustomer = context.myContext.data && context.myContext.data.customer
+		return Boolean(amCustomer) && thread.convType !== "dm" && thread.is_customer_revealed === 0
 	}
 
 	function otherPartyName(thread) {
@@ -718,9 +729,9 @@ export default function setup(context) {
 			return
 		}
 
-		context.messages.filters = { thread: name }
+		context.messages.params = { thread: name }
 		context.messages.reload()
-		context.threadMembers.filters = { thread: name }
+		context.threadMembers.params = { thread: name }
 		context.threadMembers.reload()
 		context.threadAdmins.params = { thread: name }
 		context.threadAdmins.reload()
@@ -2997,6 +3008,8 @@ export default function setup(context) {
 	// (no separate inbox or popup — see unifiedThreadList).
 	async function connectWithUser(email) {
 		if (!email || email === (context.myContext.data && context.myContext.data.user)) return
+		// An anonymous customer has no one to message directly until they're revealed.
+		if (email === ANONYMOUS_CUSTOMER) return
 		try {
 			const thread = await call("connect.api.dm.start_dm", { user: email })
 			await context.myDMThreads.reload()
@@ -4113,6 +4126,7 @@ export default function setup(context) {
 		unifiedThreadList,
 		currentMessages,
 		connectWithUser,
+		isAnonymousToPartners,
 		showCommandPalette,
 		commandSearchQuery,
 		commandActiveIndex,

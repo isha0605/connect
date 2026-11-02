@@ -25,9 +25,15 @@ def remove_team_member(member):
 
 
 @frappe.whitelist()
-def add_team_member(email, role=None, password=None):
+def add_team_member(email, role=None, password=None, full_name=None, access_level=None):
 	from connect.team import add_team_member
-	return add_team_member(email, role=role, password=password)
+	return add_team_member(email, role=role, password=password, full_name=full_name, access_level=access_level)
+
+
+@frappe.whitelist()
+def set_team_member_access(member, access_level):
+	from connect.team import set_team_member_access
+	return set_team_member_access(member, access_level)
 
 
 @frappe.whitelist()
@@ -52,6 +58,12 @@ def upload_profile_image():
 def get_my_context():
 	from connect.account import get_my_context
 	return get_my_context()
+
+
+@frappe.whitelist()
+def get_unread_notification_count():
+	from connect.notifications import unread_notification_count
+	return unread_notification_count(frappe.session.user)
 
 
 @frappe.whitelist()

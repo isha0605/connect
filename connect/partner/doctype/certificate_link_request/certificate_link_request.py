@@ -30,14 +30,15 @@ class CertificateLinkRequest(Document):
 		if self.status == "Approved":
 			self.link_certificate()
 
-		from connect.permissions import _get_partner_admin
+		from connect.permissions import _get_partner_owners
 
-		frappe.publish_realtime(
-			"partner_application_certificates_updated",
-			{"partner": self.partner},
-			user=_get_partner_admin(self.partner),
-			after_commit=True,
-		)
+		for owner in _get_partner_owners(self.partner):
+			frappe.publish_realtime(
+				"partner_application_certificates_updated",
+				{"partner": self.partner},
+				user=owner,
+				after_commit=True,
+			)
 
 	def link_certificate(self):
 		row_name = frappe.db.get_value(

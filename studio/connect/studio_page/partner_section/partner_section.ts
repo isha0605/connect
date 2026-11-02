@@ -6,8 +6,6 @@ import { startTracking } from "@app/utils/tracking"
 
 const SECTIONS = {
 	dashboard: { label: "Dashboard", icon: "lucide-layout-dashboard" },
-	customers: { label: "Customers", icon: "lucide-users" },
-	leads: { label: "Leads", icon: "lucide-target" },
 	certifications: { label: "Certifications", icon: "lucide-award" },
 	resources: { label: "Resources", icon: "lucide-book-open" },
 	contributions: { label: "Contributions", icon: "lucide-git-pull-request" },

@@ -6,10 +6,15 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import now_datetime
 
-from connect.permissions import _get_partner_admin
+from connect.permissions import _get_partner_owners
 
 
 class ConnectThread(Document):
+	def before_insert(self):
+		# A Starter Pack consultant works for the customer who bought it, so they know who it is.
+		if self.consultant:
+			self.is_customer_revealed = 1
+
 	def validate(self):
 		if not self.is_new():
 			# freezing customer/partner stops a partner admin's write access from silently reassigning the thread to another customer
@@ -108,6 +113,14 @@ class ConnectThread(Document):
 
 		return member_doc
 
+	def reveal_customer(self):
+		"""Lets the partner side see who the customer is. It never goes back: they can't unlearn it."""
+		if self.is_customer_revealed:
+			return
+		self.is_customer_revealed = 1
+		# A system step, run for whichever side triggered it; neither may write the thread itself.
+		self.save(ignore_permissions=True)
+
 	def close(self, user):
 		"""Closes the thread, restricted to a partner admin since the customer side has no close action by spec."""
 		from connect.permissions import _is_partner_admin
@@ -127,7 +140,8 @@ class ConnectThread(Document):
 
 def open_contact_thread(customer: str, partner: str, user: str) -> str:
 	"""The customer's Contact Partner thread with the partner, created if missing, with the
-	user and the partner's admin as members."""
+	user and the partner's admin as members. The customer chose this partner, so the partner
+	sees who they are."""
 	# Not a Starter Pack consultant's thread with Frappe: those come from the order.
 	thread = frappe.db.get_value(
 		"Connect Thread", {"customer": customer, "partner": partner, "consultant": ["is", "not set"]}, "name"
@@ -138,19 +152,19 @@ def open_contact_thread(customer: str, partner: str, user: str) -> str:
 			"customer": customer,
 			"partner": partner,
 		}).insert().name
+	frappe.get_doc("Connect Thread", thread).reveal_customer()
 
 	ensure_thread_member(thread, user, "Customer", user)
 
-	partner_admin = _get_partner_admin(partner)
-	if partner_admin:
-		ensure_thread_member(thread, partner_admin, "Partner", user)
+	for owner in _get_partner_owners(partner):
+		ensure_thread_member(thread, owner, "Partner", user)
 	return thread
 
 
 def get_or_open_thread(customer: str, partner: str, user: str, consultant: str | None = None) -> str:
 	"""The customer's thread with the partner — with Frappe, the one with this consultant —
 	reopened if it was closed. Its members are the buyer and, on the partner side, the
-	consultant, or the partner's admin when there's no consultant (the thread Contact Partner
+	consultant, or the partner's owners when there's no consultant (the thread Contact Partner
 	opens)."""
 	key = {"customer": customer, "partner": partner, "consultant": consultant or ["is", "not set"]}
 	thread = frappe.db.get_value("Connect Thread", key, "name")
@@ -169,9 +183,8 @@ def get_or_open_thread(customer: str, partner: str, user: str, consultant: str |
 		)
 
 	ensure_thread_member(thread, user, "Customer", user)
-	partner_side = consultant or _get_partner_admin(partner)
-	if partner_side:
-		ensure_partner_member(thread, partner_side, user)
+	for partner_user in [consultant] if consultant else _get_partner_owners(partner):
+		ensure_partner_member(thread, partner_user, user)
 	return thread
 
 

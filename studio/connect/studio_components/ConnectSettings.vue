@@ -3,7 +3,7 @@
 // connection) for every page with the shared sidebar. The
 // sidebar's logo menu opens it with a "connect:open-settings" window event, so pages need no
 // script of their own for it. Same server calls as Messaging's own settings.
-import { computed, onBeforeUnmount, onMounted, ref } from "vue"
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import {
 	Avatar,
 	Badge,
@@ -13,14 +13,24 @@ import {
 	Dropdown,
 	FormControl,
 	Spinner,
+	TextInput,
+	Tooltip,
 	call,
+	dialog,
 	toast,
 	useFileUpload,
 } from "frappe-ui"
+import { List, ListCell, ListRow, ListRows } from "frappe-ui/list"
 import { COUNTRY_OPTIONS, EMPLOYEE_OPTIONS, INDUSTRY_OPTIONS, SYSTEM_OPTIONS } from "@app/utils/recommendation"
 
 const open = ref(false)
 const tab = ref("profile")
+
+// On phones the tabs scroll sideways, so bring the active one into view
+const tabButtons = {}
+watch([tab, open], () => {
+	nextTick(() => tabButtons[tab.value]?.scrollIntoView({ block: "nearest", inline: "nearest" }))
+})
 
 const errorText = (e, fallback) => (e && e.messages && e.messages[0]) || (e && e.message) || fallback
 
@@ -115,6 +125,7 @@ async function loadTeam() {
 		])
 		team.value = (rows || []).filter((m) => !m.is_removed)
 		me.value = context?.user || ""
+		isPartner.value = !!context?.partner
 		isCustomer.value = !!context?.customer && !context?.partner
 		isPartnerAdmin.value = !!(context?.partner && context.partner.is_admin)
 		if (isPartnerAdmin.value) loadCrm()
@@ -163,6 +174,104 @@ async function disableMember(member) {
 		toast.success("Team member disabled")
 	} catch (e) {
 		toast.error(errorText(e, "Could not disable team member"))
+	}
+}
+
+// ---- Users on a partner firm: Pragati's panel, after Frappe CRM's Settings → Users ----
+// One access level each, as a menu that saves on pick; the last owner's is locked, and Remove
+// sits in the ⋯ menu. Only owners change anything.
+const isPartner = ref(false)
+const ACCESS_LEVELS = [
+	{ key: "Owner", icon: "lucide-shield", description: "Everything, including the team, audits, link requests and settings" },
+	{ key: "Sales", icon: "lucide-briefcase", description: "Leads, quotes and customers" },
+	{ key: "Finance", icon: "lucide-receipt", description: "Billing, Contributions and customer invoices" },
+	{ key: "Member", icon: "lucide-user", description: "View-only: standing, team, profile and resources" },
+]
+const ACCESS_OPTIONS = ACCESS_LEVELS.map((level) => ({ label: level.key, value: level.key }))
+const levelOf = (member) => ACCESS_LEVELS.find((level) => level.key === member.access_level) || ACCESS_LEVELS[3]
+const memberName = (member) => member.full_name || member.user
+const ownerCount = computed(() => team.value.filter((m) => m.access_level === "Owner").length)
+const isLastOwner = (member) => member.access_level === "Owner" && ownerCount.value === 1
+
+// Frappe CRM shows search only once the list is long enough to need it.
+const teamQuery = ref("")
+const shownTeam = computed(() => {
+	const query = teamQuery.value.trim().toLowerCase()
+	return team.value.filter((m) => !query || memberName(m).toLowerCase().includes(query) || m.user.toLowerCase().includes(query))
+})
+
+function accessOptions(member) {
+	return ACCESS_LEVELS.map((level) => ({
+		label: level.key,
+		icon: level.icon,
+		description: level.description,
+		selected: member.access_level === level.key,
+		onClick: () => setAccess(member, level.key),
+	}))
+}
+
+async function setAccess(member, level) {
+	if (member.access_level === level) return
+	try {
+		await call("connect.api.account.set_team_member_access", { member: member.name, access_level: level })
+		await loadTeam()
+		toast.success(`${memberName(member)} has been granted ${level} access`)
+	} catch (e) {
+		toast.error(errorText(e, "Could not change their access"))
+	}
+}
+
+const partnerMemberOptions = (member) => [
+	{ label: "Remove", icon: "lucide-trash-2", theme: "red", onClick: () => confirmRemove(member) },
+]
+
+function confirmRemove(member) {
+	if (isLastOwner(member)) return toast.error("Make someone else owner first")
+	dialog.danger({
+		title: `Remove ${memberName(member)}?`,
+		message: "They lose access to your firm in Connect. You can invite them again any time.",
+		confirmLabel: "Remove",
+		onConfirm: async ({ close }) => {
+			await call("connect.api.account.remove_team_member", { member: member.name })
+			close()
+			await loadTeam()
+			toast.success(`Removed ${memberName(member)} from the team`)
+		},
+	})
+}
+
+const inviteOpen = ref(false)
+const invite = ref({ name: "", email: "", access: "Member" })
+const inviteErrors = ref({})
+const inviting = ref(false)
+
+function startInvite() {
+	invite.value = { name: "", email: "", access: "Member" }
+	inviteErrors.value = {}
+	inviteOpen.value = true
+}
+
+async function sendInvite() {
+	const errors = {}
+	if (!invite.value.name.trim()) errors.name = "Enter their name"
+	if (!/^\S+@\S+\.\S+$/.test(invite.value.email.trim())) errors.email = "Enter a valid email, like name@company.com"
+	inviteErrors.value = errors
+	if (Object.keys(errors).length || inviting.value) return
+
+	inviting.value = true
+	try {
+		await call("connect.api.account.add_team_member", {
+			email: invite.value.email.trim(),
+			full_name: invite.value.name.trim(),
+			access_level: invite.value.access,
+		})
+		inviteOpen.value = false
+		await loadTeam()
+		toast.success(`Invite sent to ${invite.value.email.trim()}`)
+	} catch (e) {
+		inviteErrors.value = { email: errorText(e, "Could not send the invite") }
+	} finally {
+		inviting.value = false
 	}
 }
 
@@ -414,7 +523,10 @@ const HEADINGS = {
 	},
 	crm: { title: "CRM", description: "Connect your Frappe CRM account" },
 }
-const heading = computed(() => HEADINGS[tab.value] || HEADINGS.profile)
+// A partner's Users header is Pragati's: the title alone, with Invite beside it.
+const heading = computed(() =>
+	tab.value === "users" && isPartner.value ? { title: "Users", description: "" } : HEADINGS[tab.value] || HEADINGS.profile,
+)
 
 // ---- Opening ----
 function openSettings(event) {
@@ -432,37 +544,52 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 
 <template>
 	<Dialog v-model="open" size="4xl" bare>
-		<div class="relative flex flex-row" style="height: min(620px, 80vh)">
-			<!-- left nav -->
+		<!-- Opening focuses the panel itself, so no menu item looks selected; Tab moves into the menu -->
+		<div class="relative flex flex-col outline-none sm:flex-row" style="height: min(620px, 80vh)" tabindex="0" autofocus>
+			<!-- left nav; on phones a tab strip that scrolls sideways -->
 			<div
-				class="flex w-[220px] shrink-0 flex-col gap-[2px] border-r border-outline-gray-2 p-2"
+				class="flex shrink-0 border-b border-outline-gray-2 sm:w-[220px] sm:border-b-0 sm:border-r"
 				style="background-color: var(--surface-sidebar)"
 			>
-				<div class="my-[3px] flex h-[30px] items-center px-2 py-[7px] text-xs font-medium text-ink-gray-5">Settings</div>
-				<button
-					v-for="item in sections"
-					:key="item.value"
-					type="button"
-					class="flex h-7 items-center gap-2 rounded-[6px] px-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
-					:style="
-						tab === item.value
-							? 'background-color: var(--surface-elevation-3); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05)'
-							: 'background-color: transparent'
-					"
-					@click="tab = item.value"
+				<div
+					class="flex min-w-0 flex-1 flex-row gap-[2px] overflow-x-auto p-2 sm:flex-col sm:overflow-x-visible"
+					style="scrollbar-width: none"
 				>
-					<span :class="[item.icon, 'size-[15px] shrink-0 text-ink-gray-7']" />
-					<span class="truncate text-base text-ink-gray-7">{{ item.label }}</span>
-				</button>
+					<div class="my-[3px] hidden h-[30px] items-center px-2 py-[7px] text-xs font-medium text-ink-gray-5 sm:flex">Settings</div>
+					<button
+						v-for="item in sections"
+						:key="item.value"
+						:ref="(element) => (tabButtons[item.value] = element)"
+						type="button"
+						class="flex h-7 shrink-0 items-center gap-2 rounded-[6px] px-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
+						:style="
+							tab === item.value
+								? 'background-color: var(--surface-elevation-3); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05)'
+								: 'background-color: transparent'
+						"
+						@click="tab = item.value"
+					>
+						<span :class="[item.icon, 'size-[15px] shrink-0 text-ink-gray-7']" />
+						<span class="truncate text-base text-ink-gray-7">{{ item.label }}</span>
+					</button>
+				</div>
 			</div>
 
 			<!-- right pane -->
 			<div class="flex min-h-0 flex-1 flex-col">
-				<div class="flex shrink-0 items-start justify-between gap-4 px-10 pt-10">
+				<div class="flex shrink-0 items-start justify-between gap-4 px-4 pt-5 sm:px-10 sm:pt-10">
 					<div class="flex min-w-0 flex-col gap-1">
 						<h2 class="text-lg font-semibold text-ink-gray-8">{{ heading.title }}</h2>
-						<p class="text-base text-ink-gray-6">{{ heading.description }}</p>
+						<p v-if="heading.description" class="text-base text-ink-gray-6">{{ heading.description }}</p>
 					</div>
+					<Button
+						v-if="tab === 'users' && isPartner && amAdmin"
+						class="shrink-0"
+						variant="solid"
+						label="Invite"
+						icon-left="lucide-plus"
+						@click="startInvite"
+					/>
 					<Badge
 						v-if="tab === 'crm'"
 						class="mt-[2px] shrink-0"
@@ -473,7 +600,7 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 					/>
 				</div>
 
-				<div class="min-h-0 flex-1 overflow-y-auto px-10 pb-10 pt-5" style="scrollbar-width: thin; scrollbar-color: var(--outline-gray-3) transparent">
+				<div class="min-h-0 flex-1 overflow-y-auto px-4 pb-6 pt-5 sm:px-10 sm:pb-10" style="scrollbar-width: thin; scrollbar-color: var(--outline-gray-3) transparent">
 					<!-- Profile -->
 					<template v-if="tab === 'profile'">
 						<div class="mb-5 flex items-center justify-center rounded-lg bg-surface-gray-1 py-5">
@@ -494,11 +621,11 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 								</span>
 							</button>
 						</div>
-						<div class="mb-[14px] flex gap-3">
+						<div class="mb-[14px] flex flex-col gap-3 sm:flex-row">
 							<FormControl v-model="fullName" class="min-w-0 flex-1" label="Full name" placeholder="Your name" size="md" variant="outline" />
 							<FormControl v-model="role" class="min-w-0 flex-1" label="Role" placeholder="e.g. Sales, Support" size="md" variant="outline" />
 						</div>
-						<div class="flex gap-3">
+						<div class="flex flex-col gap-3 sm:flex-row">
 							<FormControl :model-value="profile?.email || ''" class="min-w-0 flex-1" label="Email" size="md" variant="outline" disabled />
 							<FormControl v-model="phone" class="min-w-0 flex-1" label="Phone number" placeholder="Your phone number" size="md" variant="outline" />
 						</div>
@@ -516,28 +643,79 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 					<!-- Users -->
 					<template v-else-if="tab === 'users'">
 						<p v-if="teamError" class="text-base text-ink-gray-5">{{ teamError }}</p>
+						<!-- A partner firm: Pragati's rows, one access level each -->
+						<template v-else-if="isPartner">
+							<TextInput v-if="team.length > 10" v-model="teamQuery" type="search" placeholder="Search users" class="mb-3">
+								<template #prefix><span class="lucide-search size-4 text-ink-gray-5" aria-hidden="true" /></template>
+							</TextInput>
+							<List :columns="['minmax(0,1fr)', 'auto', 'auto']" :row-height="56">
+								<ListRows :items="shownTeam" row-key="name" v-slot="{ item }">
+									<ListRow>
+										<ListCell>
+											<div class="flex min-w-0 items-center gap-3">
+												<Avatar :label="memberName(item)" :image="item.user_image" size="xl" class="shrink-0" />
+												<div class="min-w-0">
+													<div class="flex items-center gap-2">
+														<span class="truncate text-p-base text-ink-gray-8">{{ memberName(item) }}</span>
+														<Badge v-if="item.is_invited" theme="amber" variant="subtle" label="Invited" />
+													</div>
+													<div class="truncate text-p-sm text-ink-gray-5">{{ item.user }}</div>
+												</div>
+											</div>
+										</ListCell>
+
+										<!-- Access: a menu for owners, locked for the last owner, text for everyone else -->
+										<ListCell class="justify-end">
+											<template v-if="amAdmin">
+												<Tooltip v-if="isLastOwner(item)" text="A firm needs at least one owner">
+													<Button :label="levelOf(item).key" :icon-left="levelOf(item).icon" />
+												</Tooltip>
+												<Dropdown
+													v-else
+													:options="accessOptions(item)"
+													:button="{ label: levelOf(item).key, iconLeft: levelOf(item).icon, iconRight: 'lucide-chevron-down' }"
+													align="end"
+												/>
+											</template>
+											<span v-else class="inline-flex items-center gap-1.5 text-base text-ink-gray-7">
+												<span :class="[levelOf(item).icon, 'size-4 text-ink-gray-5']" aria-hidden="true" />
+												{{ levelOf(item).key }}
+											</span>
+										</ListCell>
+
+										<ListCell class="justify-end">
+											<Dropdown
+												v-if="amAdmin"
+												:options="partnerMemberOptions(item)"
+												:button="{ icon: 'lucide-more-horizontal', variant: 'ghost', 'aria-label': `More for ${memberName(item)}` }"
+												align="end"
+											/>
+										</ListCell>
+									</ListRow>
+								</ListRows>
+							</List>
+						</template>
 						<template v-else>
 							<div
-								class="grid w-full gap-[10px] border-b border-outline-gray-2 pb-2 text-xs font-medium text-ink-gray-5"
-								style="grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.4fr) 90px 40px"
+								class="hidden w-full gap-[10px] border-b border-outline-gray-2 pb-2 text-xs font-medium text-ink-gray-5 sm:grid sm:grid-cols-[minmax(120px,1fr)_minmax(140px,1.4fr)_90px_40px]"
 							>
 								<span>Name</span><span>Email</span><span>Role</span><span />
 							</div>
+							<!-- Phones: name, email and role stack on the left with the menu on the right -->
 							<div
 								v-for="m in team"
 								:key="m.name"
-								class="grid items-center gap-[10px] border-b border-outline-gray-1 py-[10px]"
-								style="grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.4fr) 90px 40px"
+								class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-[10px] gap-y-1 border-b border-outline-gray-1 py-[10px] sm:grid-cols-[minmax(120px,1fr)_minmax(140px,1.4fr)_90px_40px] sm:gap-y-[10px]"
 							>
-								<span class="flex min-w-0 items-center gap-1.5">
+								<span class="col-start-1 row-start-1 flex min-w-0 items-center gap-1.5 sm:col-auto sm:row-auto">
 									<span class="truncate text-sm font-medium text-ink-gray-9">{{ m.full_name || m.user }}</span>
 									<Badge v-if="m.is_admin" label="Admin" size="sm" theme="gray" variant="subtle" />
 								</span>
-								<span class="truncate text-sm text-ink-gray-5">{{ m.user }}</span>
-								<span class="flex flex-wrap items-center gap-1.5">
+								<span class="col-start-1 row-start-2 truncate text-sm text-ink-gray-5 sm:col-auto sm:row-auto">{{ m.user }}</span>
+								<span class="col-start-1 row-start-3 flex flex-wrap items-center gap-1.5 empty:hidden sm:col-auto sm:row-auto sm:empty:flex">
 									<Badge v-if="m.role" :label="m.role" size="sm" theme="gray" variant="subtle" />
 								</span>
-								<span class="flex items-center justify-end">
+								<span class="col-start-2 row-start-1 row-end-3 flex items-center justify-end sm:col-auto sm:row-auto">
 									<Dropdown v-if="amAdmin && m.user !== me" :options="memberOptions(m)" align="end">
 										<Button icon="lucide-more-horizontal" size="sm" variant="ghost" />
 									</Dropdown>
@@ -587,11 +765,11 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 
 					<!-- Company details (customers) -->
 					<template v-else-if="tab === 'company'">
-						<div class="mb-[14px] flex gap-3">
+						<div class="mb-[14px] flex flex-col gap-3 sm:flex-row">
 							<FormControl :model-value="company.company_name" class="min-w-0 flex-1" label="Company name" size="md" variant="outline" disabled />
 							<FormControl v-model="company.country" class="min-w-0 flex-1" label="Country" type="combobox" :options="countryOptions" placeholder="Select" size="md" variant="outline" />
 						</div>
-						<div class="mb-[14px] flex gap-3">
+						<div class="mb-[14px] flex flex-col gap-3 sm:flex-row">
 							<FormControl v-model="company.employees" class="min-w-0 flex-1" label="Number of employees" type="select" :options="employeeOptions" placeholder="Select" size="md" variant="outline" />
 							<FormControl v-model="company.industry" class="min-w-0 flex-1" label="Industry" type="combobox" :options="industryOptions" placeholder="Select" size="md" variant="outline" />
 						</div>
@@ -605,7 +783,7 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 					<!-- CRM (partner admins) -->
 					<template v-else-if="tab === 'crm'">
 						<FormControl v-model="crm.site_url" class="mb-[14px]" label="Site URL" placeholder="https://crm.example.com" size="md" variant="outline" />
-						<div class="mb-[14px] flex gap-3">
+						<div class="mb-[14px] flex flex-col gap-3 sm:flex-row">
 							<FormControl v-model="crm.api_key" class="min-w-0 flex-1" label="API Key" type="password" placeholder="API key" size="md" />
 							<FormControl
 								v-model="crm.api_secret"
@@ -625,16 +803,21 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 					</template>
 				</div>
 			</div>
-
-			<button
-				type="button"
-				class="absolute right-4 top-4 z-20 flex size-7 items-center justify-center rounded-[6px] hover:bg-surface-gray-2"
-				aria-label="Close"
-				@click="open = false"
-			>
-				<span class="lucide-x size-4 text-ink-gray-7" />
-			</button>
 		</div>
+	</Dialog>
+
+	<Dialog v-model="inviteOpen" title="Invite">
+		<template #default>
+			<form class="space-y-4" novalidate @submit.prevent="sendInvite">
+				<FormControl v-model="invite.name" label="Name" required :error="inviteErrors.name" />
+				<FormControl v-model="invite.email" type="email" label="Email" placeholder="name@company.com" required :error="inviteErrors.email" />
+				<FormControl v-model="invite.access" type="select" label="Role" :options="ACCESS_OPTIONS" />
+				<div class="flex justify-end gap-2 pt-2">
+					<Button label="Cancel" @click="inviteOpen = false" />
+					<Button variant="solid" type="submit" label="Send invite" :loading="inviting" />
+				</div>
+			</form>
+		</template>
 	</Dialog>
 
 	<Dialog v-model="showAdd" title="Add a team member" size="sm">

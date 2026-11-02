@@ -1,8 +1,24 @@
 import frappe
 from frappe import _
 
+from connect.messaging.customer_identity import (
+	ANONYMOUS_USER,
+	anonymous_company,
+	anonymous_profile,
+	customer_users,
+	hidden_threads,
+	hides_customer,
+	mask_message,
+)
 from connect.messaging.doctype.connect_thread_member.connect_thread_member import get_unread_counts, mark_read
-from connect.permissions import _check_can_read, _get_partner_admin
+from connect.permissions import _check_can_read, _get_partner_owners, _visible_message_filters
+
+# The newest messages a thread opens with, as the Messages page has always loaded them.
+THREAD_MESSAGE_LIMIT = 200
+THREAD_MESSAGE_FIELDS = [
+	"name", "thread", "sender", "message_type", "content", "attachment", "file_name", "file_type",
+	"file_size", "is_edited", "creation", "reply_to", "is_forwarded",
+]
 
 
 @frappe.whitelist()
@@ -47,7 +63,7 @@ def make_thread_admin(thread, member):
 
 @frappe.whitelist()
 def get_thread_admins(thread):
-	"""Returns the two companies' admin emails, to show an Admin badge and gate per-member actions."""
+	"""Returns the partner's owners and the customer's admin, to show an Admin badge and gate per-member actions."""
 	user = frappe.session.user
 	_check_can_read(thread, user)
 
@@ -55,11 +71,12 @@ def get_thread_admins(thread):
 	if not thread_doc:
 		frappe.throw(_("Thread not found"))
 
-	partner_admin = _get_partner_admin(thread_doc.partner)
 	customer_admin = frappe.db.get_value(
 		"Customer Team Member", {"customer": thread_doc.customer, "is_admin": 1}, "user"
 	)
-	return {"partner_admin": partner_admin, "customer_admin": customer_admin}
+	if hides_customer(thread, user):
+		customer_admin = ANONYMOUS_USER
+	return {"partner_admins": _get_partner_owners(thread_doc.partner), "customer_admin": customer_admin}
 
 
 @frappe.whitelist()
@@ -68,12 +85,54 @@ def get_thread_member_profiles(thread):
 	user = frappe.session.user
 	_check_can_read(thread, user)
 
-	emails = frappe.get_list("Connect Thread Member", filters={"thread": thread}, pluck="user", distinct=True)
-	if not emails:
-		return []
-	return frappe.get_list(
-		"User", filters={"name": ["in", emails]}, fields=["name", "full_name", "user_image"]
+	# Read without permission checks: _check_can_read has scoped the thread, and the partner
+	# side's reads leave out an anonymous customer's members.
+	members = frappe.get_all("Connect Thread Member", filters={"thread": thread}, fields=["user", "side"])
+	hidden = hides_customer(thread, user)
+	emails = list({m.user for m in members if not (hidden and m.side == "Customer")})
+	profiles = frappe.get_all("User", filters={"name": ["in", emails]}, fields=["name", "full_name", "user_image"]) if emails else []
+	return profiles + ([anonymous_profile()] if hidden else [])
+
+
+@frappe.whitelist()
+def get_thread_messages(thread):
+	"""The thread's messages, newest first, as the caller may see them: a removed member up to
+	their removal, the partner side without an anonymous customer's identity."""
+	user = frappe.session.user
+	_check_can_read(thread, user)
+
+	# Read without permission checks: scoped to the thread and the caller's membership.
+	messages = frappe.get_all(
+		"Connect Message",
+		filters=_visible_message_filters(thread, user),
+		fields=THREAD_MESSAGE_FIELDS,
+		order_by="creation desc",
+		limit=THREAD_MESSAGE_LIMIT,
 	)
+	if not hides_customer(thread, user):
+		return messages
+	customers = customer_users(thread)
+	return [mask_message(message, customers) for message in messages]
+
+
+@frappe.whitelist()
+def get_thread_members(thread):
+	"""The thread's roster. The partner side sees an anonymous customer's people as one member."""
+	user = frappe.session.user
+	_check_can_read(thread, user)
+
+	members = frappe.get_all(
+		"Connect Thread Member",
+		filters={"thread": thread},
+		fields=["name", "user", "side", "permission", "is_removed"],
+		order_by="creation asc",
+	)
+	if not hides_customer(thread, user):
+		return members
+	partner_side = [m for m in members if m.side != "Customer"]
+	return partner_side + [
+		{"name": ANONYMOUS_USER, "user": ANONYMOUS_USER, "side": "Customer", "permission": "Write", "is_removed": 0}
+	]
 
 
 @frappe.whitelist()
@@ -84,7 +143,7 @@ def get_my_threads():
 		"Connect Thread",
 		fields=[
 			"name", "customer", "partner", "consultant", "status", "creation",
-			"last_message_at", "last_message_preview", "last_message_sender",
+			"last_message_at", "last_message_preview", "last_message_sender", "is_customer_revealed",
 		],
 		order_by="last_message_at desc, creation desc",
 		limit_page_length=100,
@@ -93,6 +152,8 @@ def get_my_threads():
 		return []
 
 	unread_counts = get_unread_counts([t.name for t in threads], user)
+	hidden = hidden_threads([t.name for t in threads], user)
+	customers_hidden = _hidden_customer_senders(hidden)
 	partner_logos = {
 		p.name: p.logo
 		for p in frappe.get_all(
@@ -126,10 +187,15 @@ def get_my_threads():
 
 	result = []
 	for t in threads:
+		is_hidden = t.name in hidden
+		sender = t.last_message_sender
+		if is_hidden and sender in customers_hidden.get(t.name, ()):
+			sender = ANONYMOUS_USER
 		result.append({
 			"name": t.name,
-			"customer": t.customer,
-			"customer_name": customer_names.get(t.customer),
+			# A Customer's ID is its company name, so an anonymous one has neither.
+			"customer": None if is_hidden else t.customer,
+			"customer_name": anonymous_company() if is_hidden else customer_names.get(t.customer),
 			"partner": t.partner,
 			"partner_logo": partner_logos.get(t.partner),
 			"consultant": t.consultant,
@@ -139,12 +205,24 @@ def get_my_threads():
 			"creation": t.creation,
 			"last_message": t.last_message_preview or "",
 			"last_message_at": t.last_message_at or t.creation,
-			"last_message_sender": t.last_message_sender,
-			"last_message_sender_name": sender_names.get(t.last_message_sender),
+			"last_message_sender": sender,
+			"last_message_sender_name": anonymous_company() if sender == ANONYMOUS_USER else sender_names.get(sender),
 			"unread_count": unread_counts.get(t.name, 0),
+			"is_customer_revealed": t.is_customer_revealed,
 		})
 
 	return result
+
+
+def _hidden_customer_senders(threads: set[str]) -> dict[str, set[str]]:
+	if not threads:
+		return {}
+	senders = {}
+	for row in frappe.get_all(
+		"Connect Thread Member", filters={"thread": ["in", list(threads)], "side": "Customer"}, fields=["thread", "user"]
+	):
+		senders.setdefault(row.thread, set()).add(row.user)
+	return senders
 
 
 @frappe.whitelist()
