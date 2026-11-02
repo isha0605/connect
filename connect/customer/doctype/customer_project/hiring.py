@@ -14,7 +14,7 @@ from connect.customer.doctype.customer_project.customer_project import (
 	project_dict,
 )
 from connect.partner.cloud_integration import queue_cloud_link
-from connect.permissions import _check_can_read, _get_partner_admin, _is_partner_admin
+from connect.permissions import _check_can_read, _get_partner_owners, _is_partner_admin
 
 # A request the partner hasn't answered by then is withdrawn, so the customer can hire someone else.
 HIRE_REQUEST_EXPIRY_DAYS = 7
@@ -43,7 +43,7 @@ def hire_partner(quote: str) -> dict:
 	doc.save(ignore_permissions=True)
 
 	_post_hire_request(doc, row)
-	_email_partner_admin(doc, row)
+	_email_partner_owners(doc, row)
 	return project_dict(doc)
 
 
@@ -212,14 +212,13 @@ def _post_system_message(thread: str | None, content: str):
 		frappe.get_doc("Connect Thread", thread).post_system_message(content)
 
 
-def _email_partner_admin(doc, row):
-	admin = _get_partner_admin(row.partner)
-	if admin:
+def _email_partner_owners(doc, row):
+	for owner in _get_partner_owners(row.partner):
 		frappe.enqueue(
 			"connect.customer.doctype.customer_project.hiring.send_hire_request_email",
 			queue="short",
 			enqueue_after_commit=True,
-			admin=admin,
+			admin=owner,
 			project=doc.name,
 			quote=row.name,
 		)

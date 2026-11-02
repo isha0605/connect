@@ -106,17 +106,22 @@ def start_project_with_partner(
 	answers and sends it to that one partner, as the customer's Requirement card in their chat.
 	Returns the project and the chat."""
 	from connect.customer.doctype.customer_project.brief import send_brief
-	from connect.permissions import _get_partner_admin
+	from connect.messaging.doctype.connect_thread.connect_thread import get_or_open_thread
+	from connect.permissions import _get_partner_owners
 
 	customer = get_customer_for_user(frappe.session.user)
 	if not customer:
 		frappe.throw(_("Sign in with your company account to connect with a partner."), frappe.PermissionError)
-	# Nobody would read it: a partner's chats go to their admin.
-	if not frappe.db.exists("Partner", partner) or not _get_partner_admin(partner):
+	# Nobody would read it: a partner's chats go to their owners.
+	if not frappe.db.exists("Partner", partner) or not _get_partner_owners(partner):
 		frappe.throw(_("This partner can't take messages yet."))
 
 	doc = get_own_project(save_project(project_name, go_live, operations, problems, verdict, systems=systems)["name"])
-	thread = send_brief(doc, customer, partner)
+	# The customer picked this partner themselves, so the partner sees who they are, from the
+	# brief's own notifications on.
+	thread = get_or_open_thread(customer, partner, doc.user)
+	frappe.get_doc("Connect Thread", thread).reveal_customer()
+	send_brief(doc, customer, partner)
 	doc.status = "Shared"
 	doc.shared_count = 1
 	doc.save(ignore_permissions=True)
@@ -284,7 +289,9 @@ def set_quote_status(quote: str, status: str) -> dict:
 		frappe.throw(_("This partner hasn't quoted yet."))
 	if row.status in HIRE_QUOTE_STATUSES:
 		frappe.throw(_("You have already asked this partner to take the project on."))
-	row.db_set("status", status)
+	row.status = status
+	# Project Quote is a system DocType; get_own_project above checked this is the customer's own.
+	row.save(ignore_permissions=True)
 	return quote_counts(row.customer_project)
 
 

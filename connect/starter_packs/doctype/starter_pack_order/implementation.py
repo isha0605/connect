@@ -31,7 +31,7 @@ from connect.starter_packs.doctype.starter_pack_order.partner_rotation import (
 	assign_partner,
 	tell_admins,
 )
-from connect.permissions import _get_partner_admin
+from connect.permissions import _get_partner_owners
 
 SETTINGS = "Starter Pack Settings"
 SAVEPOINT = "starter_pack_implementation_partner"
@@ -230,10 +230,9 @@ def move_thread(order):
 
 	remove_partner_member(thread.name, old)
 	if not new:
-		# No one to hand it to: Frappe's admin looks after it until someone does.
-		admin = _get_partner_admin(order.partner)
-		if admin:
-			ensure_partner_member(thread.name, admin, frappe.session.user)
+		# No one to hand it to: Frappe's owners look after it until someone does.
+		for owner in _get_partner_owners(order.partner):
+			ensure_partner_member(thread.name, owner, frappe.session.user)
 		return
 
 	existing = frappe.db.get_value(

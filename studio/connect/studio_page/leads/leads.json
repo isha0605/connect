@@ -1,0 +1,1021 @@
+{
+ "allow_guest": 0,
+ "blocks": [
+  {
+   "baseStyles": {
+    "height": "100vh"
+   },
+   "children": [
+    {
+     "baseStyles": {
+      "display": "flex"
+     },
+     "componentId": "ld-sidebar",
+     "componentName": "appsidebar",
+     "isStudioComponent": true
+    },
+    {
+     "baseStyles": {
+      "height": "100%"
+     },
+     "children": [
+      {
+       "baseStyles": {
+        "height": "48px",
+        "padding": "0 20px"
+       },
+       "children": [
+        {
+         "children": [
+          {
+           "classes": [
+            "shrink-0",
+            "cursor-pointer",
+            "whitespace-nowrap",
+            "rounded",
+            "px-0.5",
+            "py-1",
+            "text-ink-gray-5",
+            "transition-colors",
+            "hover:text-ink-gray-7"
+           ],
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "router.push('/leads')"
+            }
+           },
+           "componentId": "ld-crumb-root",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-lg-medium",
+            "tag": "span",
+            "text": "Leads"
+           }
+          },
+          {
+           "classes": [
+            "mx-0.5",
+            "text-ink-gray-4"
+           ],
+           "componentId": "ld-crumb-slash",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-base",
+            "tag": "span",
+            "text": "/"
+           }
+          },
+          {
+           "children": [
+            {
+             "classes": [
+              "text-nowrap"
+             ],
+             "componentId": "ld-view-btn",
+             "componentName": "Button",
+             "componentProps": {
+              "aria-label": "{{ currentView.label }}",
+              "iconRight": "lucide-chevron-down",
+              "variant": "ghost"
+             },
+             "componentSlots": {
+              "default": {
+               "parentBlockId": "ld-view-btn",
+               "slotContent": [
+                {
+                 "baseStyles": {
+                  "lineHeight": "1.15"
+                 },
+                 "classes": [
+                  "text-ink-gray-8"
+                 ],
+                 "componentId": "ld-view-label",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-base",
+                  "tag": "span",
+                  "text": "{{ currentView.label }}"
+                 }
+                }
+               ]
+              },
+              "prefix": {
+               "parentBlockId": "ld-view-btn",
+               "slotContent": [
+                {
+                 "classes": [
+                  "size-4"
+                 ],
+                 "componentId": "ld-view-icon",
+                 "componentName": "Icon",
+                 "componentProps": {
+                  "icon": "{{ currentView.icon }}"
+                 }
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "componentId": "ld-view-menu",
+           "componentName": "Dropdown",
+           "componentProps": {
+            "options": "{{ viewMenu }}"
+           }
+          }
+         ],
+         "classes": [
+          "flex",
+          "min-w-0",
+          "items-center",
+          "pr-3"
+         ],
+         "componentId": "ld-crumbs",
+         "componentName": "container",
+         "componentProps": {},
+         "originalElement": "div"
+        },
+        {
+         "classes": [
+          "flex",
+          "shrink-0",
+          "items-center",
+          "gap-2"
+         ],
+         "componentId": "ld-actions",
+         "componentName": "container",
+         "componentProps": {},
+         "originalElement": "div"
+        }
+       ],
+       "classes": [
+        "flex",
+        "shrink-0",
+        "items-center",
+        "justify-between",
+        "border-b",
+        "border-outline-gray-1"
+       ],
+       "componentId": "ld-header",
+       "componentName": "container",
+       "componentProps": {},
+       "originalElement": "div"
+      },
+      {
+       "children": [
+        {
+         "children": [
+          {
+           "children": [
+            {
+             "classes": [
+              "w-full",
+              "sm:w-56"
+             ],
+             "componentId": "ld-search",
+             "componentName": "TextInput",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "query"
+              },
+              "placeholder": "Lead or company",
+              "type": "search"
+             },
+             "componentSlots": {
+              "prefix": {
+               "parentBlockId": "ld-search",
+               "slotContent": [
+                {
+                 "classes": [
+                  "size-4",
+                  "text-ink-gray-5"
+                 ],
+                 "componentId": "ld-search-icon",
+                 "componentName": "Icon",
+                 "componentProps": {
+                  "icon": "lucide-search"
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "classes": [
+              "min-w-36"
+             ],
+             "componentId": "ld-stage",
+             "componentName": "Select",
+             "componentProps": {
+              "aria-label": "Stage",
+              "modelValue": {
+               "$type": "variable",
+               "name": "stage"
+              },
+              "options": "{{ stageOptions }}"
+             }
+            },
+            {
+             "classes": [
+              "min-w-36"
+             ],
+             "componentId": "ld-owner",
+             "componentName": "Select",
+             "componentProps": {
+              "aria-label": "Assigned to",
+              "modelValue": {
+               "$type": "variable",
+               "name": "owner"
+              },
+              "options": "{{ ownerOptions }}"
+             }
+            },
+            {
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "clearFilters()"
+              }
+             },
+             "componentId": "ld-clear",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Clear",
+              "variant": "ghost"
+             },
+             "visibilityCondition": "isFiltered"
+            }
+           ],
+           "classes": [
+            "flex",
+            "min-w-0",
+            "flex-1",
+            "flex-wrap",
+            "items-center",
+            "gap-2"
+           ],
+           "componentId": "ld-filters-left",
+           "componentName": "container",
+           "componentProps": {},
+           "originalElement": "div"
+          },
+          {
+           "children": [
+            {
+             "classes": [
+              "hidden",
+              "h-5",
+              "border-l",
+              "border-outline-gray-2",
+              "sm:block"
+             ],
+             "componentId": "ld-divider",
+             "componentName": "container",
+             "componentProps": {},
+             "originalElement": "div"
+            },
+            {
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "refresh()"
+              }
+             },
+             "componentId": "ld-refresh",
+             "componentName": "Button",
+             "componentProps": {
+              "aria-label": "Refresh",
+              "icon": "lucide-refresh-ccw",
+              "loading": "{{ refreshing }}",
+              "tooltip": "Refresh"
+             }
+            },
+            {
+             "children": [
+              {
+               "componentId": "ld-filter-btn",
+               "componentName": "Button",
+               "componentProps": {
+                "aria-label": "Filter",
+                "iconLeft": "lucide-list-filter"
+               },
+               "componentSlots": {
+                "default": {
+                 "parentBlockId": "ld-filter-btn",
+                 "slotContent": [
+                  {
+                   "componentId": "ld-filter-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-base",
+                    "tag": "span",
+                    "text": "Filter"
+                   }
+                  }
+                 ]
+                },
+                "suffix": {
+                 "parentBlockId": "ld-filter-btn",
+                 "slotContent": [
+                  {
+                   "classes": [
+                    "grid",
+                    "size-5",
+                    "place-items-center",
+                    "rounded-4",
+                    "bg-surface-base",
+                    "font-medium",
+                    "shadow-sm"
+                   ],
+                   "componentId": "ld-filter-count",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xs",
+                    "tag": "span",
+                    "text": "1"
+                   },
+                   "visibilityCondition": "hasProbabilityFilter"
+                  }
+                 ]
+                }
+               }
+              }
+             ],
+             "componentId": "ld-filter-menu",
+             "componentName": "Dropdown",
+             "componentProps": {
+              "align": "end",
+              "options": "{{ filterMenu }}"
+             }
+            },
+            {
+             "children": [
+              {
+               "componentId": "ld-sort-btn",
+               "componentName": "Button",
+               "componentProps": {
+                "iconLeft": "lucide-arrow-down-up",
+                "label": "{{ sortLabel }}"
+               }
+              }
+             ],
+             "componentId": "ld-sort-menu",
+             "componentName": "Dropdown",
+             "componentProps": {
+              "align": "end",
+              "options": "{{ sortMenu }}"
+             }
+            },
+            {
+             "children": [
+              {
+               "componentId": "ld-columns-btn",
+               "componentName": "Button",
+               "componentProps": {
+                "iconLeft": "lucide-columns-3",
+                "label": "Columns"
+               }
+              }
+             ],
+             "componentId": "ld-columns-menu",
+             "componentName": "Dropdown",
+             "componentProps": {
+              "align": "end",
+              "options": "{{ columnsMenu }}"
+             }
+            }
+           ],
+           "classes": [
+            "flex",
+            "flex-wrap",
+            "items-center",
+            "gap-2"
+           ],
+           "componentId": "ld-filters-right",
+           "componentName": "container",
+           "componentProps": {},
+           "originalElement": "div"
+          }
+         ],
+         "classes": [
+          "flex",
+          "shrink-0",
+          "flex-wrap",
+          "items-center",
+          "justify-between",
+          "gap-2",
+          "px-3",
+          "py-4",
+          "sm:px-5"
+         ],
+         "componentId": "ld-filters",
+         "componentName": "container",
+         "componentProps": {},
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "scrollbarColor": "var(--outline-gray-3) transparent",
+          "scrollbarWidth": "thin"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "--list-row-padding-x": "8px"
+           },
+           "children": [
+            {
+             "children": [
+              {
+               "children": [
+                {
+                 "classes": [
+                  "text-ink-gray-5"
+                 ],
+                 "componentId": "ld-h-lead-text",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Lead"
+                 }
+                }
+               ],
+               "componentId": "ld-h-lead",
+               "componentName": "ListHeaderCell",
+               "componentProps": {}
+              },
+              {
+               "children": [
+                {
+                 "classes": [
+                  "text-ink-gray-5"
+                 ],
+                 "componentId": "ld-h-company-text",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Company"
+                 }
+                }
+               ],
+               "classes": [
+                "hidden",
+                "md:flex"
+               ],
+               "componentId": "ld-h-company",
+               "componentName": "ListHeaderCell",
+               "componentProps": {},
+               "visibilityCondition": "isShown('company')"
+              },
+              {
+               "children": [
+                {
+                 "classes": [
+                  "text-ink-gray-5"
+                 ],
+                 "componentId": "ld-h-stage-text",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Stage"
+                 }
+                }
+               ],
+               "classes": [
+                "hidden",
+                "md:flex"
+               ],
+               "componentId": "ld-h-stage",
+               "componentName": "ListHeaderCell",
+               "componentProps": {},
+               "visibilityCondition": "isShown('stage')"
+              },
+              {
+               "children": [
+                {
+                 "classes": [
+                  "text-ink-gray-5"
+                 ],
+                 "componentId": "ld-h-owner-text",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Assigned to"
+                 }
+                }
+               ],
+               "classes": [
+                "hidden",
+                "md:flex"
+               ],
+               "componentId": "ld-h-owner",
+               "componentName": "ListHeaderCell",
+               "componentProps": {},
+               "visibilityCondition": "isShown('owner')"
+              },
+              {
+               "children": [
+                {
+                 "classes": [
+                  "text-ink-gray-5"
+                 ],
+                 "componentId": "ld-h-probability-text",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Probability"
+                 }
+                }
+               ],
+               "classes": [
+                "hidden",
+                "md:flex"
+               ],
+               "componentId": "ld-h-probability",
+               "componentName": "ListHeaderCell",
+               "componentProps": {},
+               "visibilityCondition": "isShown('probability')"
+              },
+              {
+               "children": [
+                {
+                 "classes": [
+                  "text-ink-gray-5"
+                 ],
+                 "componentId": "ld-h-updated-text",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Updated"
+                 }
+                }
+               ],
+               "classes": [
+                "justify-end"
+               ],
+               "componentId": "ld-h-updated",
+               "componentName": "ListHeaderCell",
+               "componentProps": {}
+              }
+             ],
+             "classes": [
+              "mb-2",
+              "rounded-4",
+              "bg-surface-gray-2",
+              "px-2"
+             ],
+             "componentId": "ld-list-header",
+             "componentName": "ListHeader",
+             "componentProps": {}
+            },
+            {
+             "componentId": "ld-rows",
+             "componentName": "ListRows",
+             "componentProps": {
+              "items": "{{ page }}",
+              "rowKey": "id"
+             },
+             "componentSlots": {
+              "default": {
+               "parentBlockId": "ld-rows",
+               "slotContent": [
+                {
+                 "children": [
+                  {
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "backgroundColor": "{{ item.stageColor }}"
+                     },
+                     "classes": [
+                      "size-2",
+                      "shrink-0",
+                      "rounded-full",
+                      "md:hidden"
+                     ],
+                     "componentId": "ld-c-lead-dot",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "{{ item.titleColor }}",
+                      "fontWeight": "{{ item.titleWeight }}"
+                     },
+                     "classes": [
+                      "truncate"
+                     ],
+                     "componentId": "ld-c-lead-title",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-base",
+                      "tag": "span",
+                      "text": "{{ item.project }}"
+                     }
+                    }
+                   ],
+                   "classes": [
+                    "min-w-0",
+                    "gap-2"
+                   ],
+                   "componentId": "ld-c-lead",
+                   "componentName": "ListCell",
+                   "componentProps": {}
+                  },
+                  {
+                   "children": [
+                    {
+                     "classes": [
+                      "truncate",
+                      "text-ink-gray-7"
+                     ],
+                     "componentId": "ld-c-company-text",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-base",
+                      "tag": "span",
+                      "text": "{{ item.companyLabel }}"
+                     }
+                    }
+                   ],
+                   "classes": [
+                    "hidden",
+                    "md:flex",
+                    "min-w-0"
+                   ],
+                   "componentId": "ld-c-company",
+                   "componentName": "ListCell",
+                   "componentProps": {},
+                   "visibilityCondition": "isShown('company')"
+                  },
+                  {
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "backgroundColor": "{{ item.stageColor }}"
+                     },
+                     "classes": [
+                      "size-2",
+                      "shrink-0",
+                      "rounded-full"
+                     ],
+                     "componentId": "ld-c-stage-dot",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "originalElement": "div"
+                    },
+                    {
+                     "classes": [
+                      "truncate",
+                      "text-ink-gray-7"
+                     ],
+                     "componentId": "ld-c-stage-text",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-base",
+                      "tag": "span",
+                      "text": "{{ item.stage }}"
+                     }
+                    }
+                   ],
+                   "classes": [
+                    "hidden",
+                    "md:flex",
+                    "min-w-0",
+                    "gap-2"
+                   ],
+                   "componentId": "ld-c-stage",
+                   "componentName": "ListCell",
+                   "componentProps": {},
+                   "visibilityCondition": "isShown('stage')"
+                  },
+                  {
+                   "children": [
+                    {
+                     "componentId": "ld-c-owner-avatar",
+                     "componentName": "Avatar",
+                     "componentProps": {
+                      "label": "{{ item.ownerName }}",
+                      "size": "sm"
+                     },
+                     "visibilityCondition": "item.ownerName"
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "{{ item.ownerName ? 'var(--ink-gray-7)' : 'var(--ink-gray-5)' }}"
+                     },
+                     "classes": [
+                      "truncate"
+                     ],
+                     "componentId": "ld-c-owner-name",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-base",
+                      "tag": "span",
+                      "text": "{{ item.ownerName || 'Unassigned' }}"
+                     }
+                    }
+                   ],
+                   "classes": [
+                    "hidden",
+                    "md:flex",
+                    "min-w-0",
+                    "gap-2"
+                   ],
+                   "componentId": "ld-c-owner",
+                   "componentName": "ListCell",
+                   "componentProps": {},
+                   "visibilityCondition": "isShown('owner')"
+                  },
+                  {
+                   "children": [
+                    {
+                     "classes": [
+                      "text-ink-gray-7"
+                     ],
+                     "componentId": "ld-c-probability-text",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-base",
+                      "tag": "span",
+                      "text": "{{ item.probabilityLabel }}"
+                     }
+                    }
+                   ],
+                   "classes": [
+                    "hidden",
+                    "md:flex"
+                   ],
+                   "componentId": "ld-c-probability",
+                   "componentName": "ListCell",
+                   "componentProps": {},
+                   "visibilityCondition": "isShown('probability')"
+                  },
+                  {
+                   "children": [
+                    {
+                     "classes": [
+                      "text-ink-gray-5"
+                     ],
+                     "componentId": "ld-c-updated-text",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-base",
+                      "tag": "span",
+                      "text": "{{ item.updated }}"
+                     }
+                    }
+                   ],
+                   "classes": [
+                    "justify-end",
+                    "whitespace-nowrap"
+                   ],
+                   "componentId": "ld-c-updated",
+                   "componentName": "ListCell",
+                   "componentProps": {}
+                  }
+                 ],
+                 "componentId": "ld-row",
+                 "componentName": "ListRow",
+                 "componentProps": {
+                  "route": "{{ item.route }}",
+                  "value": "{{ value }}"
+                 }
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "componentId": "ld-list",
+           "componentName": "List",
+           "componentProps": {
+            "columns": "{{ gridColumns }}",
+            "rowHeight": 40
+           },
+           "visibilityCondition": "page.length"
+          },
+          {
+           "children": [
+            {
+             "children": [
+              {
+               "classes": [
+                "block",
+                "size-6"
+               ],
+               "componentId": "ld-empty-icon",
+               "componentName": "Icon",
+               "componentProps": {
+                "icon": "{{ emptyIcon }}"
+               }
+              }
+             ],
+             "classes": [
+              "rounded-full",
+              "bg-surface-gray-2",
+              "p-3",
+              "text-ink-gray-5"
+             ],
+             "componentId": "ld-empty-icon-wrap",
+             "componentName": "container",
+             "componentProps": {},
+             "originalElement": "div"
+            },
+            {
+             "classes": [
+              "text-ink-gray-7"
+             ],
+             "componentId": "ld-empty-title",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-base",
+              "tag": "p",
+              "text": "{{ emptyTitle }}"
+             }
+            },
+            {
+             "children": [
+              {
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "clearFilters()"
+                }
+               },
+               "componentId": "ld-empty-clear",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "Clear filters"
+               },
+               "visibilityCondition": "isFiltered"
+              },
+              {
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "showOpenLeads()"
+                }
+               },
+               "componentId": "ld-empty-open",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "View open leads"
+               },
+               "visibilityCondition": "!isFiltered && view === 'needs'"
+              }
+             ],
+             "classes": [
+              "mt-2"
+             ],
+             "componentId": "ld-empty-actions",
+             "componentName": "container",
+             "componentProps": {},
+             "originalElement": "div"
+            }
+           ],
+           "classes": [
+            "flex",
+            "flex-col",
+            "items-center",
+            "justify-center",
+            "gap-3",
+            "py-16",
+            "text-center"
+           ],
+           "componentId": "ld-empty",
+           "componentName": "container",
+           "componentProps": {},
+           "originalElement": "div",
+           "visibilityCondition": "!page.length"
+          }
+         ],
+         "classes": [
+          "min-h-0",
+          "flex-1",
+          "overflow-y-auto",
+          "px-3",
+          "sm:px-5"
+         ],
+         "componentId": "ld-table",
+         "componentName": "container",
+         "componentProps": {},
+         "originalElement": "div"
+        },
+        {
+         "children": [
+          {
+           "componentId": "ld-page-size",
+           "componentName": "TabButtons",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "pageSize"
+            },
+            "options": "{{ pageSizes }}"
+           }
+          },
+          {
+           "classes": [
+            "tabular-nums",
+            "text-ink-gray-5"
+           ],
+           "componentId": "ld-footer-count",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-base",
+            "tag": "span",
+            "text": "{{ footerCount }}"
+           }
+          }
+         ],
+         "classes": [
+          "flex",
+          "shrink-0",
+          "items-center",
+          "justify-between",
+          "border-t",
+          "border-outline-gray-1",
+          "px-3",
+          "py-2",
+          "sm:px-5"
+         ],
+         "componentId": "ld-footer",
+         "componentName": "container",
+         "componentProps": {},
+         "originalElement": "div"
+        }
+       ],
+       "classes": [
+        "flex",
+        "min-h-0",
+        "min-w-0",
+        "flex-1",
+        "flex-col"
+       ],
+       "componentId": "ld-content",
+       "componentName": "container",
+       "componentProps": {},
+       "originalElement": "div"
+      }
+     ],
+     "classes": [
+      "flex",
+      "min-w-0",
+      "flex-1",
+      "flex-col",
+      "bg-surface-base"
+     ],
+     "componentId": "ld-main",
+     "componentName": "container",
+     "componentProps": {},
+     "originalElement": "div"
+    }
+   ],
+   "classes": [
+    "flex",
+    "w-full",
+    "overflow-hidden",
+    "bg-surface-base"
+   ],
+   "componentId": "ld-root",
+   "componentName": "container",
+   "componentProps": {},
+   "originalElement": "div"
+  }
+ ],
+ "doctype": "Studio Page",
+ "frappe_app": "connect",
+ "is_standard": 1,
+ "name": "leads",
+ "page_name": "page-3e9b14a6",
+ "page_title": "Leads",
+ "published": 1,
+ "resources": [
+  {
+   "auto": 1,
+   "fetch_document_using_filters": 0,
+   "limit": 0,
+   "method": "GET",
+   "resource_name": "myContext",
+   "resource_type": "API Resource",
+   "url": "connect.api.account.get_my_context"
+  }
+ ],
+ "route": "/leads",
+ "studio_app": "connect"
+}

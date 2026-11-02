@@ -23,7 +23,7 @@ def send_brief(doc, customer: str, partner: str, card: dict | None = None) -> st
 	from connect.messaging.doctype.connect_thread.connect_thread import get_or_open_thread
 
 	thread = get_or_open_thread(customer, partner, doc.user)
-	frappe.get_doc(
+	message = frappe.get_doc(
 		{
 			"doctype": "Connect Message",
 			"thread": thread,
@@ -32,16 +32,23 @@ def send_brief(doc, customer: str, partner: str, card: dict | None = None) -> st
 			"content": frappe.as_json(card or requirement_card(doc, customer)),
 		}
 	).insert(ignore_permissions=True)
-	await_quote(doc.name, partner, thread)
+	await_quote(doc.name, partner, thread, message.name)
 	return thread
 
 
-def await_quote(project: str, partner: str, thread: str):
-	"""Remembers that this partner has the brief, so their quote can be matched to it."""
+def await_quote(project: str, partner: str, thread: str, brief_message: str | None = None):
+	"""Remembers that this partner has the brief, so their quote can be matched to it. It is
+	also the partner's lead for the brief."""
 	if frappe.db.exists("Project Quote", {"customer_project": project, "partner": partner}):
 		return
 	frappe.get_doc(
-		{"doctype": "Project Quote", "customer_project": project, "partner": partner, "thread": thread}
+		{
+			"doctype": "Project Quote",
+			"customer_project": project,
+			"partner": partner,
+			"thread": thread,
+			"brief_message": brief_message,
+		}
 	).insert(ignore_permissions=True)
 
 

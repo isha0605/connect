@@ -84,12 +84,15 @@ class PartnerApplication(Document):
 		elif self.status == "Rejected":
 			self._apply_rejection()
 
-		frappe.publish_realtime(
-			"partner_application_status_updated",
-			{"partner": self.partner},
-			user=self._partner_admin_user(),
-			after_commit=True,
-		)
+		from connect.permissions import _get_partner_owners
+
+		for owner in _get_partner_owners(self.partner):
+			frappe.publish_realtime(
+				"partner_application_status_updated",
+				{"partner": self.partner},
+				user=owner,
+				after_commit=True,
+			)
 
 	@frappe.whitelist()
 	def approve(self):
@@ -145,11 +148,6 @@ class PartnerApplication(Document):
 
 	def _apply_rejection(self):
 		frappe.db.set_value("Partner", self.partner, "verification_status", "Rejected")
-
-	def _partner_admin_user(self):
-		from connect.permissions import _get_partner_admin
-
-		return _get_partner_admin(self.partner)
 
 
 def _active_application_filters(partner: str) -> dict:

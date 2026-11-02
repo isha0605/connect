@@ -14,6 +14,8 @@ from frappe.utils import add_to_date, escape_html, now_datetime
 from frappe.utils.password import get_decrypted_password, set_encrypted_password
 from frappe.utils.synchronization import filelock
 
+from connect.messaging.customer_identity import anonymous_company
+
 WEBHOOK_SECRET_HEADER = "X-Frappe-Webhook-Signature"
 
 # Seconds to wait on the partner's CRM before giving up on a request.
@@ -190,7 +192,8 @@ def _sync_thread(thread):
 		if settings.crm_type != "Frappe CRM":
 			frappe.throw(_("Unsupported CRM type: {0}").format(settings.crm_type))
 
-		customer = _customer_contact(thread_doc)
+		# An anonymous customer's Lead has no contact until they are revealed.
+		customer = _customer_contact(thread_doc) if thread_doc.is_customer_revealed else frappe._dict()
 		if not thread_doc.crm_lead_id:
 			lead, owner = _create_lead(thread_doc, settings, customer)
 			thread_doc.db_set("crm_lead_id", lead, update_modified=False)
@@ -298,14 +301,9 @@ def crm_user(settings, consultant):
 def _create_lead(thread_doc, settings, customer):
 	"""Makes the thread's Lead, owned by its consultant when they're on the CRM. The CRM assigns
 	the Lead to its owner itself. Returns the Lead and its owner."""
-	customer_name = frappe.db.get_value("Customer", thread_doc.customer, "customer_name")
 	owner = crm_user(settings, thread_doc.consultant)
 	payload = {
-		"first_name": customer.first_name or customer_name or "Connect Customer",
-		"last_name": customer.last_name,
-		"email": customer.email,
-		"organization": customer_name,
-		"lead_name": customer_name or customer.first_name,
+		**_lead_identity(thread_doc, customer),
 		"status": settings.default_lead_status,
 		"source": lead_source(
 			settings, STARTER_PACK_LEAD_SOURCE if thread_doc.consultant else CHAT_LEAD_SOURCE
@@ -318,6 +316,21 @@ def _create_lead(thread_doc, settings, customer):
 	return lead, owner
 
 
+def _lead_identity(thread_doc, customer) -> dict:
+	"""Who the Lead is about. The partner learns who an anonymous customer is only once they are
+	revealed (see sync_lead_identity)."""
+	if not thread_doc.is_customer_revealed:
+		return {"first_name": anonymous_company(), "lead_name": anonymous_company()}
+	customer_name = frappe.db.get_value("Customer", thread_doc.customer, "customer_name")
+	return {
+		"first_name": customer.first_name or customer_name or "Connect Customer",
+		"last_name": customer.last_name,
+		"email": customer.email,
+		"organization": customer_name,
+		"lead_name": customer_name or customer.first_name,
+	}
+
+
 def _add_email(thread_doc, message, settings, customer, partner_side):
 	"""Puts the message on the Lead as an email, as if the two sides had been emailing: the
 	partner side's as sent to the customer, the customer's as received. The reply webhook skips
@@ -326,13 +339,18 @@ def _add_email(thread_doc, message, settings, customer, partner_side):
 		frappe.db.get_value("User", message.sender, ["email", "full_name"], as_dict=True) or frappe._dict()
 	)
 	sent = message.sender in partner_side
-	customer_name = frappe.db.get_value("Customer", thread_doc.customer, "customer_name")
+	if thread_doc.is_customer_revealed:
+		customer_name = frappe.db.get_value("Customer", thread_doc.customer, "customer_name") or thread_doc.customer
+	else:
+		customer_name = anonymous_company()
+		if not sent:
+			sender = frappe._dict(full_name=anonymous_company())
 	payload = {
 		"communication_type": "Communication",
 		"communication_medium": "Email",
 		"sent_or_received": "Sent" if sent else "Received",
 		"status": "Linked" if sent else "Open",
-		"subject": f"Connect conversation with {customer_name or thread_doc.customer}",
+		"subject": f"Connect conversation with {customer_name}",
 		"sender": sender.email,
 		"sender_full_name": sender.full_name,
 		"recipients": customer.email if sent else None,
@@ -405,6 +423,35 @@ def _attach_file_to_crm_communication(message, communication, settings):
 		data={"doctype": "Communication", "docname": communication, "is_private": 1},
 		files={"file": (message.file_name or file_doc.file_name, content)},
 	)
+
+
+def queue_lead_identity_sync(doc, method=None):
+	"""on_update on Connect Thread: once the customer is revealed, their Lead gets their name and
+	contact details."""
+	if not doc.crm_lead_id or not doc.is_customer_revealed or not doc.has_value_changed("is_customer_revealed"):
+		return
+	if crm_settings(doc.partner):
+		frappe.enqueue(
+			"connect.crm_integration.sync_lead_identity", queue="short", enqueue_after_commit=True, thread=doc.name
+		)
+
+
+def sync_lead_identity(thread):
+	"""Background job: puts the revealed customer's name and contact details on their Lead."""
+	thread_doc = frappe.get_doc("Connect Thread", thread)
+	settings = crm_settings(thread_doc.partner)
+	if not settings or not thread_doc.crm_lead_id:
+		return
+	identity = _lead_identity(thread_doc, _customer_contact(thread_doc))
+	try:
+		crm_request(
+			settings,
+			"PUT",
+			f"/api/resource/CRM Lead/{quote(thread_doc.crm_lead_id)}",
+			json={k: v for k, v in identity.items() if v},
+		)
+	except Exception:
+		frappe.log_error(title=f"Couldn't add the revealed customer to the Lead of Connect Thread {thread}")
 
 
 def queue_lead_owner_sync(doc, method=None):

@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from frappe import _
 
 from connect.crm_integration import crm_request
-from connect.permissions import _get_partner_admin
+from connect.permissions import _get_partner_owners
 
 # Matches a mail client's own "On <date>, <person> wrote:" line introducing quoted history,
 # for clients that inline it as plain text rather than wrapping it in a recognizable element.
@@ -84,7 +84,8 @@ def reply_author(thread, partner, sender):
 	consultant = frappe.db.get_value("Connect Thread", thread, "consultant")
 	if consultant and consultant in partner_side:
 		return consultant
-	return _get_partner_admin(partner)
+	owners = _get_partner_owners(partner)
+	return owners[0] if owners else None
 
 
 def sync_reply_attachments(partner: str, thread: str, author: str, communication: str) -> None:

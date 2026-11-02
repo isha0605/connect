@@ -19,7 +19,14 @@
   "amount",
   "timeline_weeks",
   "note",
-  "quote_message"
+  "quote_message",
+  "section_break_lead",
+  "lead_stage",
+  "lead_owner",
+  "column_break_lead",
+  "probability",
+  "lost_reason",
+  "brief_message"
  ],
  "fields": [
   {
@@ -112,11 +119,59 @@
    "label": "Quote Message",
    "options": "Connect Message",
    "read_only": 1
+  },
+  {
+   "fieldname": "section_break_lead",
+   "fieldtype": "Section Break",
+   "label": "Lead"
+  },
+  {
+   "default": "Open",
+   "fieldname": "lead_stage",
+   "fieldtype": "Select",
+   "label": "Stage",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Where the partner's sales team has this brief. Won is set when the customer hires the partner.",
+   "options": "Open\nQualification\nDemo/Making\nProposal/Quotation\nFollow Up\nNegotiation\nReady to Close\nWon\nLost\nJunk\nClosed"
+  },
+  {
+   "fieldname": "lead_owner",
+   "fieldtype": "Link",
+   "label": "Assigned To",
+   "options": "User",
+   "in_standard_filter": 1,
+   "description": "The partner's team member working this lead. They are added to the thread."
+  },
+  {
+   "fieldname": "column_break_lead",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "probability",
+   "fieldtype": "Select",
+   "label": "Probability",
+   "options": "\nHot\nWarm\nCold"
+  },
+  {
+   "depends_on": "eval:doc.lead_stage=='Lost'",
+   "fieldname": "lost_reason",
+   "fieldtype": "Select",
+   "label": "Lost Reason",
+   "options": "\nLost to competitor\nNo budget\nNot responding\nChose another product\nOther"
+  },
+  {
+   "description": "The customer's Requirement card that sent this brief to the partner.",
+   "fieldname": "brief_message",
+   "fieldtype": "Link",
+   "label": "Brief Message",
+   "options": "Connect Message",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-14 16:00:00.000000",
+ "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Customer",
  "name": "Project Quote",
