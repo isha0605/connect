@@ -4,23 +4,12 @@
 // user's Notification Log entries, read through the framework's own notification APIs.
 import { computed, getCurrentInstance, onBeforeUnmount, onMounted, ref } from "vue"
 import { Button, Select, Spinner, TabButtons, call, toast } from "frappe-ui"
-
-const LOG_API = "frappe.desk.doctype.notification_log.notification_log"
+import { LOG_API, bodyOf, categoryOf, titleOf as logTitle } from "@app/utils/notificationLogs"
 
 // Icons match the sidebar items with the same name.
 const CATEGORIES = {
 	messages: { label: "Messages", icon: "lucide-inbox", tile: "bg-surface-blue-2 text-ink-blue-6" },
 	projects: { label: "Projects", icon: "lucide-briefcase", tile: "bg-surface-green-2 text-ink-green-6" },
-}
-
-// Mirrors CONNECT_NOTIFICATION_DOCTYPES in connect/notifications.py. Anything else (Frappe's
-// impersonation or mail-server alerts) isn't shown.
-const CATEGORY_OF_DOCTYPE = {
-	"Connect Thread": "messages",
-	"Connect DM Thread": "messages",
-	"Customer Project": "projects",
-	"Project Quote": "projects",
-	"Starter Pack Order": "projects",
 }
 
 const open = ref(false)
@@ -31,37 +20,13 @@ const view = ref("all")
 const category = ref("")
 const left = ref(0)
 const anchor = ref(null)
-let refreshBadge = null
 const router = getCurrentInstance()?.appContext.config.globalProperties.$router
-
-// Grouped by the linked document, not the subject text, so wording changes never move a row.
-function categoryOf(log) {
-	return CATEGORY_OF_DOCTYPE[log.document_type] || null
-}
 
 function lookOf(log) {
 	return CATEGORIES[categoryOf(log)]
 }
 
-function senderName(log) {
-	return users.value[log.from_user]?.fullname || log.from_user || "Someone"
-}
-
-function titleOf(log) {
-	if (categoryOf(log) === "messages") return `New message from ${senderName(log)}`
-	return plainText(log.subject)
-}
-
-function bodyOf(log) {
-	if (categoryOf(log) === "messages") return plainText(log.subject)
-	return plainText(log.email_content)
-}
-
-function plainText(html) {
-	const element = document.createElement("div")
-	element.innerHTML = html || ""
-	return (element.textContent || "").trim()
-}
+const titleOf = (log) => logTitle(log, users.value)
 
 const rows = computed(() =>
 	logs.value.filter(
@@ -156,18 +121,12 @@ function timeAgo(value) {
 	return years > 1 ? `${years} years ago` : "a year ago"
 }
 
-// The sidebar's unread count comes from each page's own myContext resource, so the sidebar hands
-// over a callback that reloads it.
+// The sidebar's Notifications item owns the unread count; it recounts when told.
 function updateBadge() {
-	try {
-		refreshBadge?.()
-	} catch (e) {
-		// A page without myContext has no badge to refresh.
-	}
+	window.dispatchEvent(new CustomEvent("connect:notifications-read"))
 }
 
-function openPanel(event) {
-	refreshBadge = event?.detail?.refreshBadge || null
+function openPanel() {
 	// The panel docks to the sidebar's right edge, which moves when the sidebar is expanded.
 	left.value = anchor.value?.parentElement?.getBoundingClientRect().right || 0
 	open.value = true

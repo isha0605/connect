@@ -230,8 +230,12 @@ doc_events = {
 		],
 	},
 	"Connect Thread": {
-		# A new consultant on a thread is the new owner of its CRM Lead.
-		"on_update": "connect.crm_integration.queue_lead_owner_sync",
+		"on_update": [
+			# A new consultant on a thread is the new owner of its CRM Lead.
+			"connect.crm_integration.queue_lead_owner_sync",
+			# A revealed customer's name and contact go on their CRM Lead.
+			"connect.crm_integration.queue_lead_identity_sync",
+		],
 	},
 	"Partner CRM Settings": {
 		"on_update": "connect.crm_integration.sync_reply_webhook",

@@ -2,7 +2,14 @@ import frappe
 from frappe import _
 from frappe.desk.doctype.notification_log.notification_log import enqueue_create_notification
 
-from connect.permissions import _get_partner_admin
+from connect.messaging.customer_identity import (
+	anonymous_company,
+	customer_users,
+	hides_customer,
+	mask_message,
+	mask_requirement,
+)
+from connect.permissions import _get_partner_owners
 
 # The documents Connect notifies people about. Anything else in Notification Log (Frappe's own
 # impersonation or mail-server alerts) stays out of Connect's panel and unread count.
@@ -13,6 +20,13 @@ CONNECT_NOTIFICATION_DOCTYPES = (
 	"Project Quote",
 	"Starter Pack Order",
 )
+
+
+def unread_notification_count(user: str) -> int:
+	"""The sidebar's unread count: Connect's own notifications the user hasn't read."""
+	return frappe.db.count(
+		"Notification Log", {"for_user": user, "read": 0, "document_type": ["in", CONNECT_NOTIFICATION_DOCTYPES]}
+	)
 
 
 def _notification_targets(doc):
@@ -135,19 +149,23 @@ def notify_thread_members(doc, method=None):
 	# A silent message (sent outside the sender's working hours) is still delivered and pushed live, but
 	# doesn't ping anyone with a notification. A quote is announced once, as a project notification
 	# (see project_notifications.notify_quote_update), not again as a message.
+	hidden = _members_not_told_who_sent(doc, members)
 	if not doc.flags.get("silent") and doc.message_type != "Quote":
-		enqueue_create_notification(
-			members,
-			{
-				"type": "Alert",
-				"document_type": "Connect Thread",
-				"document_name": doc.thread,
-				"subject": subject[:140],
-				"from_user": doc.sender,
-				# Opens the thread at this message (Messaging scrolls to and highlights it).
-				"link": f"/messaging?thread={doc.thread}&message={doc.name}",
-			},
-		)
+		for recipients, from_user in ((set(members) - hidden, doc.sender), (hidden, None)):
+			if not recipients:
+				continue
+			enqueue_create_notification(
+				list(recipients),
+				{
+					"type": "Alert",
+					"document_type": "Connect Thread",
+					"document_name": doc.thread,
+					"subject": subject[:140],
+					"from_user": from_user,
+					# Opens the thread at this message (Messaging scrolls to and highlights it).
+					"link": f"/messaging?thread={doc.thread}&message={doc.name}",
+				},
+			)
 
 	# Live push for anyone with the thread open right now — same shape as the `messages`
 	# Document List resource in messaging.json, so the client can drop it straight into
@@ -167,8 +185,19 @@ def notify_thread_members(doc, method=None):
 		"is_forwarded": doc.is_forwarded,
 		"creation": str(doc.creation),
 	}
+	masked = mask_message(dict(payload), {doc.sender}) if hidden else payload
 	for member in members:
-		frappe.publish_realtime("connect_new_message", payload, user=member, after_commit=True)
+		frappe.publish_realtime(
+			"connect_new_message", masked if member in hidden else payload, user=member, after_commit=True
+		)
+
+
+def _members_not_told_who_sent(doc, members) -> set[str]:
+	"""The partner side, when the sender is an anonymous customer: they get the message without
+	the sender."""
+	if not members or doc.sender not in customer_users(doc.thread):
+		return set()
+	return {member for member in members if hides_customer(doc.thread, member)}
 
 
 def notify_message_deleted(doc):
@@ -205,19 +234,17 @@ def notify_partner_of_new_requirement(doc, method=None):
 	if not thread:
 		return
 
-	admin = _get_partner_admin(thread.partner)
-	if not admin:
-		return
-
-	frappe.enqueue(
-		"connect.notifications._send_new_requirement_email",
-		queue="short",
-		thread_name=doc.thread,
-		customer=thread.customer,
-		admin=admin,
-		content=doc.content,
-		enqueue_after_commit=True,
-	)
+	for owner in _get_partner_owners(thread.partner):
+		anonymous = hides_customer(doc.thread, owner)
+		frappe.enqueue(
+			"connect.notifications._send_new_requirement_email",
+			queue="short",
+			thread_name=doc.thread,
+			customer=None if anonymous else thread.customer,
+			admin=owner,
+			content=mask_requirement(doc.content) if anonymous and doc.content else doc.content,
+			enqueue_after_commit=True,
+		)
 
 
 def requirement_fields(requirement):
@@ -239,9 +266,10 @@ def requirement_fields(requirement):
 
 
 def _send_new_requirement_email(thread_name, customer, admin, content):
-	"""Background worker: sends the new-requirement notification email."""
+	"""Background worker: sends the new-requirement notification email. No customer: they are
+	still anonymous to the partner."""
 	recipient = frappe.db.get_value("User", admin, "email") or admin
-	customer_name = frappe.db.get_value("Customer", customer, "customer_name") or customer
+	customer_name = (customer and frappe.db.get_value("Customer", customer, "customer_name")) or customer or anonymous_company()
 	requirement = frappe.parse_json(content) if content else {}
 	details_html = "".join(
 		f"<p><b>{label}:</b> {frappe.utils.escape_html(value)}</p>" for label, value in requirement_fields(requirement)
