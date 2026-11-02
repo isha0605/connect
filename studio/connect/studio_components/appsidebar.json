@@ -125,6 +125,7 @@
       },
       "componentSlots": {
        "suffix": {
+        "parentBlockId": "SidebarItem-fpr-notifications",
         "slotContent": [
          {
           "baseStyles": {
@@ -221,9 +222,138 @@
       "componentProps": {
        "active": "{{ ['/partner-onboarding'].includes(route.path) }}",
        "icon": "lucide-badge-check",
-       "label": "Partnership",
+       "label": "Overview",
        "route": "/partner-onboarding"
-      }
+      },
+      "componentSlots": {}
+     },
+     {
+      "baseStyles": {
+       "display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+      },
+      "componentId": "SidebarItem-fpr-listing",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "active": "{{ route.path === '/partner-listing' }}",
+       "icon": "lucide-store",
+       "label": "Listing",
+       "route": "/partner-listing"
+      },
+      "componentSlots": {}
+     },
+     {
+      "baseStyles": {
+       "display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+      },
+      "componentId": "SidebarItem-fpr-profile",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "active": "{{ route.path === '/my-partner-profile' }}",
+       "icon": "lucide-id-card",
+       "label": "Profile",
+       "route": "/my-partner-profile"
+      },
+      "componentSlots": {}
+     },
+     {
+      "baseStyles": {
+       "__last_display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}",
+       "display": "none"
+      },
+      "componentId": "SidebarItem-fpr-dashboard",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "active": "{{ route.path === '/partner-section' && route.query.section === 'dashboard' }}",
+       "icon": "lucide-layout-dashboard",
+       "label": "Dashboard",
+       "route": "/partner-section?section=dashboard"
+      },
+      "componentSlots": {}
+     },
+     {
+      "baseStyles": {
+       "display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+      },
+      "componentId": "SidebarItem-fpr-customers",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "active": "{{ route.path === '/partner-section' && route.query.section === 'customers' }}",
+       "icon": "lucide-users",
+       "label": "Customers",
+       "route": "/partner-section?section=customers"
+      },
+      "componentSlots": {}
+     },
+     {
+      "baseStyles": {
+       "display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+      },
+      "componentId": "SidebarItem-fpr-leads",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "active": "{{ route.path === '/partner-section' && route.query.section === 'leads' }}",
+       "icon": "lucide-target",
+       "label": "Leads",
+       "route": "/partner-section?section=leads"
+      },
+      "componentSlots": {}
+     },
+     {
+      "baseStyles": {
+       "display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+      },
+      "componentId": "SidebarItem-fpr-certifications",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "active": "{{ route.path === '/partner-section' && route.query.section === 'certifications' }}",
+       "icon": "lucide-award",
+       "label": "Certifications",
+       "route": "/partner-section?section=certifications"
+      },
+      "componentSlots": {}
+     },
+     {
+      "baseStyles": {
+       "__last_display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}",
+       "display": "none"
+      },
+      "componentId": "SidebarItem-fpr-resources",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "active": "{{ route.path === '/partner-section' && route.query.section === 'resources' }}",
+       "icon": "lucide-book-open",
+       "label": "Resources",
+       "route": "/partner-section?section=resources"
+      },
+      "componentSlots": {}
+     },
+     {
+      "baseStyles": {
+       "display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+      },
+      "componentId": "SidebarItem-fpr-contributions",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "active": "{{ route.path === '/partner-section' && route.query.section === 'contributions' }}",
+       "icon": "lucide-git-pull-request",
+       "label": "Contributions",
+       "route": "/partner-section?section=contributions"
+      },
+      "componentSlots": {}
+     },
+     {
+      "baseStyles": {
+       "display": "{{ (myContext.data && myContext.data.partner) ? 'flex' : 'none' }}"
+      },
+      "componentId": "SidebarItem-fpr-audits",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "active": "{{ route.path === '/partner-section' && route.query.section === 'audits' }}",
+       "icon": "lucide-clipboard-check",
+       "label": "Audits",
+       "route": "/partner-section?section=audits"
+      },
+      "componentSlots": {}
      }
     ],
     "componentId": "container-fpr-nav",
@@ -256,6 +386,7 @@
     "componentId": "ConnectSettings-fpr",
     "componentName": "ConnectSettings",
     "componentProps": {},
+    "componentSlots": {},
     "isCustomVueComponent": true
    },
    {
@@ -263,13 +394,14 @@
     "componentId": "ConnectNotifications-fpr",
     "componentName": "ConnectNotifications",
     "componentProps": {},
+    "componentSlots": {},
     "isCustomVueComponent": true
    }
   ],
   "componentId": "Sidebar-fpr",
   "componentName": "Sidebar",
   "componentProps": {
-   "collapsed": true,
+   "collapsed": false,
    "collapsedWidth": "3rem",
    "width": "15rem"
   },
@@ -277,13 +409,13 @@
  },
  "component_id": "appsidebar",
  "component_name": "AppSidebar",
- "creation": "2026-10-18 23:35:39.258820",
+ "creation": "2026-10-27 15:25:29.782159",
  "docstatus": 0,
  "doctype": "Studio Component",
  "idx": 0,
  "is_disabled": 0,
  "is_standard": 1,
- "modified": "2026-10-18 23:35:26.504859",
+ "modified": "2026-11-02 12:22:03.520899",
  "modified_by": "Administrator",
  "name": "appsidebar",
  "owner": "Administrator"
