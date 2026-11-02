@@ -138,7 +138,7 @@ class IntegrationTestPartnerCRMSettings(IntegrationTestCase):
 
 	def test_a_reply_with_no_partner_admin_is_logged(self):
 		with (
-			patch(f"{REPLY_MODULE}._get_partner_admin", return_value=None),
+			patch(f"{REPLY_MODULE}._get_partner_owners", return_value=[]),
 			patch(f"{REPLY_MODULE}.frappe.log_error") as log_error,
 		):
 			rows = self._deliver("_test_comm_8", content="<p>Hello?</p>")
