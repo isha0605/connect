@@ -412,10 +412,9 @@ export default function setup(context) {
 	const unregisterOpen = ref(false)
 	const unregistering = ref(false)
 
+	// Only while onboarding: an approved partnership can't be undone by the partner.
 	function unregisterMessage() {
-		return isApproved()
-			? "This removes your partner registration and partner privileges."
-			: "This deletes your current application. You can reapply later, but the company will need to go through review again."
+		return "This deletes your current application. You can reapply later, but the company will need to go through review again."
 	}
 
 	function unregister(leavePage) {
@@ -866,6 +865,7 @@ export default function setup(context) {
 		connectCloud,
 		submitting,
 		isRejected,
+		isApproved,
 		reviewerComments,
 		canClickPrimary,
 		submitLabel,
