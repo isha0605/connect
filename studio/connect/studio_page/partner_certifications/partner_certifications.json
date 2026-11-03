@@ -1,0 +1,1514 @@
+{
+ "allow_guest": 0,
+ "blocks": [
+  {
+   "baseStyles": {
+    "backgroundColor": "var(--surface-base)",
+    "display": "flex",
+    "flexDirection": "row",
+    "height": "100vh",
+    "overflow": "hidden",
+    "width": "100%"
+   },
+   "children": [
+    {
+     "baseStyles": {
+      "display": "flex"
+     },
+     "blockName": "AppSidebar",
+     "componentId": "appsidebar-pc",
+     "componentName": "appsidebar",
+     "isStudioComponent": true
+    },
+    {
+     "baseStyles": {
+      "backgroundColor": "var(--surface-base)",
+      "display": "flex",
+      "flex": "1",
+      "flexDirection": "column",
+      "height": "100%",
+      "minWidth": "0px"
+     },
+     "children": [
+      {
+       "baseStyles": {
+        "alignItems": "center",
+        "borderBottom": "1px solid var(--outline-gray-1)",
+        "display": "flex",
+        "flexShrink": "0",
+        "height": "48px",
+        "padding": "0 20px"
+       },
+       "children": [
+        {
+         "componentId": "header-breadcrumbs",
+         "componentName": "Breadcrumbs",
+         "componentProps": {
+          "items": [
+           {
+            "label": "Certifications",
+            "route": "/partner-certifications"
+           }
+          ]
+         }
+        }
+       ],
+       "componentId": "header",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "flex": "1",
+        "minHeight": "0px",
+        "overflowY": "auto",
+        "padding": "20px 20px 64px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "24px",
+          "margin": "0 auto",
+          "maxWidth": "1200px",
+          "width": "100%"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-red-7)",
+            "fontSize": "14px",
+            "fontWeight": "420",
+            "letterSpacing": "0.02em",
+            "lineHeight": "22px"
+           },
+           "componentId": "pc-load-error",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "p",
+            "text": "Couldn't load your certificates. Refresh the page to try again."
+           },
+           "visibilityCondition": "loadError"
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "display": "flex",
+            "flexWrap": "wrap",
+            "gap": "8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "width": "140px"
+             },
+             "componentId": "pc-course",
+             "componentName": "FormControl",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "courseFilter"
+              },
+              "options": "{{ courseFilterOptions }}",
+              "size": "sm",
+              "type": "select",
+              "variant": "subtle"
+             }
+            },
+            {
+             "baseStyles": {
+              "flex": "1"
+             },
+             "componentId": "pc-toolbar-gap",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "attributes": {
+              "aria-label": "Open Frappe School"
+             },
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "openSchool();"
+              }
+             },
+             "componentId": "pc-help",
+             "componentName": "Button",
+             "componentProps": {
+              "icon": "lucide-circle-help",
+              "label": "",
+              "tooltip": "Frappe School",
+              "variant": "subtle"
+             }
+            },
+            {
+             "attributes": {
+              "aria-label": "Refresh"
+             },
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "load();"
+              }
+             },
+             "componentId": "pc-refresh",
+             "componentName": "Button",
+             "componentProps": {
+              "icon": "lucide-refresh-cw",
+              "label": "",
+              "loading": "{{ loading }}",
+              "variant": "subtle"
+             }
+            },
+            {
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "openApply();"
+              }
+             },
+             "componentId": "pc-apply",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "lucide-plus",
+              "label": "Apply for Certification",
+              "variant": "subtle"
+             },
+             "visibilityCondition": "canEdit"
+            },
+            {
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "openLink();"
+              }
+             },
+             "componentId": "pc-link",
+             "componentName": "Button",
+             "componentProps": {
+              "iconLeft": "lucide-link",
+              "label": "Link Certificate",
+              "variant": "subtle"
+             }
+            }
+           ],
+           "componentId": "pc-toolbar",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "status"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "backgroundColor": "var(--surface-gray-2)",
+              "borderRadius": "8px",
+              "display": "grid",
+              "gap": "16px",
+              "gridTemplateColumns": "minmax(0, 1.2fr) minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 0.8fr) 168px",
+              "padding": "6px 8px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-6)",
+                "fontSize": "13px",
+                "fontWeight": "420",
+                "letterSpacing": "0.02em",
+                "lineHeight": "20px"
+               },
+               "componentId": "pc-head-name",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "p",
+                "text": "Member Name"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-6)",
+                "fontSize": "13px",
+                "fontWeight": "420",
+                "letterSpacing": "0.02em",
+                "lineHeight": "20px"
+               },
+               "componentId": "pc-head-email",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "p",
+                "text": "Member Email"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-6)",
+                "fontSize": "13px",
+                "fontWeight": "420",
+                "letterSpacing": "0.02em",
+                "lineHeight": "20px"
+               },
+               "componentId": "pc-head-issued",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "p",
+                "text": "Issued On"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-6)",
+                "fontSize": "13px",
+                "fontWeight": "420",
+                "letterSpacing": "0.02em",
+                "lineHeight": "20px"
+               },
+               "componentId": "pc-head-course",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "p",
+                "text": "Course"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-6)",
+                "fontSize": "13px",
+                "fontWeight": "420",
+                "letterSpacing": "0.02em",
+                "lineHeight": "20px",
+                "textAlign": "center"
+               },
+               "componentId": "pc-head-link",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "p",
+                "text": "Certificate"
+               }
+              }
+             ],
+             "componentId": "pc-head",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "4px"
+             },
+             "componentId": "pc-rows",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ certificates }}",
+              "dataKey": "name",
+              "emptyStateMessage": ""
+             },
+             "componentSlots": {
+              "default": {
+               "parentBlockId": "pc-rows",
+               "slotContent": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "grid",
+                  "gap": "16px",
+                  "gridTemplateColumns": "minmax(0, 1.2fr) minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 0.8fr) 168px",
+                  "padding": "6px 8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-9)",
+                    "fontSize": "14px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "22px",
+                    "minWidth": "0px",
+                    "overflow": "hidden",
+                    "textOverflow": "ellipsis",
+                    "whiteSpace": "nowrap"
+                   },
+                   "componentId": "pc-row-name",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "p",
+                    "text": "{{ dataItem.partner_member_name }}"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-7)",
+                    "fontSize": "14px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "22px",
+                    "minWidth": "0px",
+                    "overflow": "hidden",
+                    "textOverflow": "ellipsis",
+                    "whiteSpace": "nowrap"
+                   },
+                   "componentId": "pc-row-email",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "p",
+                    "text": "{{ dataItem.partner_member_email }}"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "gap": "6px",
+                    "minWidth": "0px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-7)",
+                      "fontSize": "14px",
+                      "fontWeight": "420",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "22px",
+                      "minWidth": "0px",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "componentId": "pc-row-issued",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "{{ dataItem.issued }}"
+                     }
+                    },
+                    {
+                     "attributes": {
+                      "aria-label": "{{ dataItem.expiryTip }}",
+                      "title": "{{ dataItem.expiryTip }}"
+                     },
+                     "baseStyles": {
+                      "color": "{{ dataItem.expiry === 'expired' ? 'var(--ink-red-6)' : 'var(--ink-amber-6)' }}",
+                      "cursor": "help",
+                      "flexShrink": "0",
+                      "height": "14px",
+                      "width": "14px"
+                     },
+                     "componentId": "pc-row-expiry-icon",
+                     "componentName": "Icon",
+                     "componentProps": {
+                      "icon": "{{ dataItem.expiry === 'expired' ? 'lucide-circle-alert' : 'lucide-clock-alert' }}"
+                     },
+                     "componentSlots": {},
+                     "visibilityCondition": "dataItem.expiry"
+                    }
+                   ],
+                   "componentId": "pc-row-dates",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-7)",
+                    "fontSize": "14px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "22px",
+                    "minWidth": "0px",
+                    "overflow": "hidden",
+                    "textOverflow": "ellipsis",
+                    "whiteSpace": "nowrap"
+                   },
+                   "componentId": "pc-row-course",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "p",
+                    "text": "{{ dataItem.course_label }}"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "gap": "4px",
+                    "justifyContent": "center"
+                   },
+                   "children": [
+                    {
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "openCertificate(dataItem);"
+                      }
+                     },
+                     "componentId": "pc-row-view",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "iconLeft": "lucide-external-link",
+                      "label": "View",
+                      "size": "sm",
+                      "variant": "subtle"
+                     },
+                     "visibilityCondition": "dataItem.certificate_url"
+                    },
+                    {
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "askRemove(dataItem);"
+                      }
+                     },
+                     "componentId": "pc-row-remove",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "label": "Remove",
+                      "size": "sm",
+                      "variant": "ghost"
+                     },
+                     "componentSlots": {},
+                     "visibilityCondition": "canEdit"
+                    }
+                   ],
+                   "componentId": "pc-row-link",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  }
+                 ],
+                 "componentId": "pc-row",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ]
+              }
+             }
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "fontSize": "14px",
+              "fontWeight": "420",
+              "letterSpacing": "0.02em",
+              "lineHeight": "22px"
+             },
+             "componentId": "pc-empty",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "p",
+              "text": "No certificates yet. Link one your team member already has, or apply for a new one."
+             },
+             "visibilityCondition": "!hasCertificates"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "fontSize": "14px",
+              "fontWeight": "420",
+              "letterSpacing": "0.02em",
+              "lineHeight": "22px"
+             },
+             "componentId": "pc-no-match",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "p",
+              "text": "No certificates for this course."
+             },
+             "visibilityCondition": "hasCertificates && !certificates.length"
+            }
+           ],
+           "componentId": "pc-table",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "status"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "2px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-9)",
+                "fontSize": "15px",
+                "fontWeight": "600",
+                "letterSpacing": "0.02em",
+                "lineHeight": "24px"
+               },
+               "componentId": "pc-pending-title",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "h2",
+                "text": "Waiting for approval"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "fontSize": "13px",
+                "fontWeight": "420",
+                "letterSpacing": "0.02em",
+                "lineHeight": "20px"
+               },
+               "componentId": "pc-pending-hint",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "p",
+                "text": "We emailed each holder a link. Their certificate shows above once they confirm."
+               }
+              }
+             ],
+             "componentId": "pc-pending-head",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column"
+             },
+             "componentId": "pc-pending-list",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ pendingRequests }}",
+              "dataKey": "name",
+              "emptyStateMessage": ""
+             },
+             "componentSlots": {
+              "default": {
+               "parentBlockId": "pc-pending-list",
+               "slotContent": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderBottom": "1px solid var(--outline-gray-1)",
+                  "display": "flex",
+                  "gap": "12px",
+                  "padding": "10px 8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)",
+                    "flexShrink": "0",
+                    "height": "16px",
+                    "width": "16px"
+                   },
+                   "componentId": "pc-pending-icon",
+                   "componentName": "Icon",
+                   "componentProps": {
+                    "icon": "lucide-mail"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "display": "flex",
+                    "flex": "1",
+                    "flexDirection": "column",
+                    "gap": "2px",
+                    "minWidth": "0px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-8)",
+                      "fontSize": "14px",
+                      "fontWeight": "420",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "22px",
+                      "minWidth": "0px",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "componentId": "pc-pending-email",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "{{ dataItem.user_email }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)",
+                      "fontSize": "13px",
+                      "fontWeight": "420",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "20px"
+                     },
+                     "componentId": "pc-pending-meta",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "{{ dataItem.course_label + ' \u00b7 ' + dataItem.sent }}"
+                     }
+                    }
+                   ],
+                   "componentId": "pc-pending-text",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "resend(dataItem);"
+                    }
+                   },
+                   "componentId": "pc-pending-resend",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "label": "{{ resending === dataItem.name ? 'Sending\u2026' : 'Resend' }}",
+                    "size": "sm",
+                    "variant": "subtle"
+                   }
+                  }
+                 ],
+                 "componentId": "pc-pending-row",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "componentId": "pc-pending",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "pendingRequests.length"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "8px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexDirection": "row",
+              "gap": "12px",
+              "justifyContent": "space-between"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "2px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-9)",
+                  "fontSize": "15px",
+                  "fontWeight": "600",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "24px"
+                 },
+                 "componentId": "pc-apps-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "h2",
+                  "text": "Free certifications"
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "20px"
+                 },
+                 "componentId": "pc-apps-hint",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "Once Frappe School issues the certificate, we email the holder to confirm it, and it shows above."
+                 },
+                 "componentSlots": {}
+                }
+               ],
+               "componentId": "pc-apps-head-text",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
+              },
+              {
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "checkApplications();"
+                }
+               },
+               "componentId": "pc-apps-check",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "{{ checking ? 'Checking\u2026' : 'Check now' }}",
+                "size": "sm",
+                "variant": "subtle"
+               },
+               "componentSlots": {},
+               "visibilityCondition": "hasApprovedApplications"
+              }
+             ],
+             "componentId": "pc-apps-head",
+             "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column"
+             },
+             "componentId": "pc-apps-list",
+             "componentName": "Repeater",
+             "componentProps": {
+              "data": "{{ applications }}",
+              "dataKey": "name",
+              "emptyStateMessage": ""
+             },
+             "componentSlots": {
+              "default": {
+               "parentBlockId": "pc-apps-list",
+               "slotContent": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderBottom": "1px solid var(--outline-gray-1)",
+                  "display": "flex",
+                  "gap": "12px",
+                  "padding": "10px 8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)",
+                    "flexShrink": "0",
+                    "height": "16px",
+                    "width": "16px"
+                   },
+                   "componentId": "pc-apps-icon",
+                   "componentName": "Icon",
+                   "componentProps": {
+                    "icon": "lucide-graduation-cap"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "baseStyles": {
+                    "display": "flex",
+                    "flex": "1",
+                    "flexDirection": "column",
+                    "gap": "2px",
+                    "minWidth": "0px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-8)",
+                      "fontSize": "14px",
+                      "fontWeight": "420",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "22px",
+                      "minWidth": "0px",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "componentId": "pc-apps-email",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "{{ dataItem.member_email }}"
+                     },
+                     "componentSlots": {}
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)",
+                      "fontSize": "13px",
+                      "fontWeight": "420",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "20px"
+                     },
+                     "componentId": "pc-apps-meta",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "{{ dataItem.meta }}"
+                     },
+                     "componentSlots": {}
+                    }
+                   ],
+                   "componentId": "pc-apps-text",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "flexShrink": "0"
+                   },
+                   "componentId": "pc-apps-status",
+                   "componentName": "Badge",
+                   "componentProps": {
+                    "label": "{{ dataItem.status }}",
+                    "theme": "{{ dataItem.theme }}",
+                    "variant": "subtle"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "cancelApplication(dataItem);"
+                    }
+                   },
+                   "componentId": "pc-apps-cancel",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "label": "{{ cancelling === dataItem.name ? 'Cancelling\u2026' : 'Cancel' }}",
+                    "size": "sm",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {},
+                   "visibilityCondition": "canEdit && dataItem.canCancel"
+                  }
+                 ],
+                 "componentId": "pc-apps-row",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "originalElement": "div"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "componentId": "pc-apps",
+           "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
+           "originalElement": "div",
+           "visibilityCondition": "applications.length"
+          }
+         ],
+         "componentId": "pc-page",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "componentId": "body",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "componentId": "main",
+     "componentName": "container",
+     "originalElement": "div"
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "16px",
+        "padding": "20px 24px 24px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-9)",
+          "fontSize": "16px",
+          "fontWeight": "600",
+          "letterSpacing": "0.02em",
+          "lineHeight": "24px"
+         },
+         "componentId": "pc-link-dialog-title",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "h3",
+          "text": "Link a certificate"
+         }
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-7)",
+          "fontSize": "14px",
+          "fontWeight": "420",
+          "letterSpacing": "0.02em",
+          "lineHeight": "22px"
+         },
+         "componentId": "pc-link-intro",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "For a team member who already has a Frappe School certificate. We email them a link, and the certificate is added once they confirm."
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "6px",
+          "minWidth": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "fontSize": "12px",
+            "fontWeight": "420",
+            "letterSpacing": "0.02em",
+            "lineHeight": "1.15"
+           },
+           "componentId": "pc-link-email-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "label",
+            "text": "Their email on Frappe School"
+           }
+          },
+          {
+           "componentId": "pc-link-email-input",
+           "componentName": "FormControl",
+           "componentProps": {
+            "disabled": false,
+            "modelValue": {
+             "$type": "variable",
+             "name": "linkForm.email"
+            },
+            "placeholder": "name@company.com",
+            "size": "sm",
+            "type": "text",
+            "variant": "outline"
+           }
+          }
+         ],
+         "componentId": "pc-link-email",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "6px",
+          "minWidth": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "fontSize": "12px",
+            "fontWeight": "420",
+            "letterSpacing": "0.02em",
+            "lineHeight": "1.15"
+           },
+           "componentId": "pc-link-type-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "label",
+            "text": "Certificate"
+           }
+          },
+          {
+           "componentId": "pc-link-type-input",
+           "componentName": "FormControl",
+           "componentProps": {
+            "disabled": false,
+            "modelValue": {
+             "$type": "variable",
+             "name": "linkForm.type"
+            },
+            "options": "{{ courseOptions }}",
+            "size": "sm",
+            "type": "select",
+            "variant": "outline"
+           }
+          }
+         ],
+         "componentId": "pc-link-type",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-red-7)",
+          "fontSize": "13px",
+          "fontWeight": "420",
+          "letterSpacing": "0.02em",
+          "lineHeight": "20px"
+         },
+         "componentId": "pc-link-error",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "{{ linkError }}"
+         },
+         "visibilityCondition": "linkError"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "gap": "8px",
+          "justifyContent": "flex-end"
+         },
+         "children": [
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "linkOpen.value = false;"
+            }
+           },
+           "componentId": "pc-link-cancel",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "variant": "subtle"
+           }
+          },
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "sendLink();"
+            }
+           },
+           "componentId": "pc-link-send",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Send request",
+            "loading": "{{ linking }}",
+            "variant": "solid"
+           }
+          }
+         ],
+         "componentId": "pc-link-dialog-actions",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "componentId": "pc-link-dialog-panel",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "componentId": "pc-link-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "bare": true,
+      "modelValue": {
+       "$type": "variable",
+       "name": "linkOpen"
+      },
+      "size": "md"
+     }
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "16px",
+        "padding": "20px 24px 24px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-9)",
+          "fontSize": "16px",
+          "fontWeight": "600",
+          "letterSpacing": "0.02em",
+          "lineHeight": "24px"
+         },
+         "componentId": "pc-remove-title",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "h3",
+          "text": "Remove this certificate?"
+         },
+         "componentSlots": {}
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-7)",
+          "fontSize": "14px",
+          "fontWeight": "420",
+          "letterSpacing": "0.02em",
+          "lineHeight": "22px"
+         },
+         "componentId": "pc-remove-text",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "{{ removeText }} You can link it again later."
+         },
+         "componentSlots": {}
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "gap": "8px",
+          "justifyContent": "flex-end"
+         },
+         "children": [
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "removeOpen.value = false;"
+            }
+           },
+           "componentId": "pc-remove-cancel",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "variant": "subtle"
+           },
+           "componentSlots": {}
+          },
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "confirmRemove();"
+            }
+           },
+           "componentId": "pc-remove-confirm",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Remove",
+            "loading": "{{ removing }}",
+            "theme": "red",
+            "variant": "solid"
+           },
+           "componentSlots": {}
+          }
+         ],
+         "componentId": "pc-remove-actions",
+         "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
+         "originalElement": "div"
+        }
+       ],
+       "componentId": "pc-remove-panel",
+       "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
+       "originalElement": "div"
+      }
+     ],
+     "componentId": "pc-remove-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "bare": true,
+      "modelValue": {
+       "$type": "variable",
+       "name": "removeOpen"
+      },
+      "size": "sm"
+     },
+     "componentSlots": {}
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "16px",
+        "padding": "20px 24px 24px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-9)",
+          "fontSize": "16px",
+          "fontWeight": "600",
+          "letterSpacing": "0.02em",
+          "lineHeight": "24px"
+         },
+         "componentId": "pc-apply-dialog-title",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "h3",
+          "text": "Apply for certification"
+         }
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-7)",
+          "fontSize": "14px",
+          "fontWeight": "420",
+          "letterSpacing": "0.02em",
+          "lineHeight": "22px"
+         },
+         "componentId": "pc-apply-intro",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "For a team member who doesn't have a certificate yet. They take the course and the exam on Frappe School."
+         }
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-5)",
+          "fontSize": "13px",
+          "fontWeight": "420",
+          "letterSpacing": "0.02em",
+          "lineHeight": "20px"
+         },
+         "componentId": "pc-apply-free",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "{{ freeText }}"
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "6px",
+          "minWidth": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "fontSize": "12px",
+            "fontWeight": "420",
+            "letterSpacing": "0.02em",
+            "lineHeight": "1.15"
+           },
+           "componentId": "pc-apply-email-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "label",
+            "text": "Their email on Frappe School"
+           },
+           "componentSlots": {}
+          },
+          {
+           "componentId": "pc-apply-email-input",
+           "componentName": "FormControl",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "applyEmail"
+            },
+            "placeholder": "name@company.com",
+            "size": "sm",
+            "type": "text",
+            "variant": "outline"
+           },
+           "componentSlots": {}
+          }
+         ],
+         "componentId": "pc-apply-email",
+         "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
+         "originalElement": "div",
+         "visibilityCondition": "canApplyFree"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "6px",
+          "minWidth": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "fontSize": "12px",
+            "fontWeight": "420",
+            "letterSpacing": "0.02em",
+            "lineHeight": "1.15"
+           },
+           "componentId": "pc-apply-course-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "label",
+            "text": "Certificate"
+           }
+          },
+          {
+           "componentId": "pc-apply-course-input",
+           "componentName": "FormControl",
+           "componentProps": {
+            "disabled": false,
+            "modelValue": {
+             "$type": "variable",
+             "name": "applyCourse"
+            },
+            "options": "{{ courseOptions }}",
+            "size": "sm",
+            "type": "select",
+            "variant": "outline"
+           }
+          }
+         ],
+         "componentId": "pc-apply-course",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-red-7)",
+          "fontSize": "13px",
+          "fontWeight": "420",
+          "letterSpacing": "0.02em",
+          "lineHeight": "20px"
+         },
+         "componentId": "pc-apply-error",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "{{ applyError }}"
+         },
+         "componentSlots": {},
+         "visibilityCondition": "applyError"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "gap": "8px",
+          "justifyContent": "flex-end"
+         },
+         "children": [
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "applyOpen.value = false;"
+            }
+           },
+           "componentId": "pc-apply-cancel",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "variant": "subtle"
+           }
+          },
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "submitApply();"
+            }
+           },
+           "componentId": "pc-apply-open",
+           "componentName": "Button",
+           "componentProps": {
+            "iconRight": "{{ canApplyFree ? '' : 'lucide-external-link' }}",
+            "label": "{{ canApplyFree ? 'Apply' : 'Open Frappe School' }}",
+            "loading": "{{ applying }}",
+            "variant": "solid"
+           }
+          }
+         ],
+         "componentId": "pc-apply-dialog-actions",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "componentId": "pc-apply-dialog-panel",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "componentId": "pc-apply-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "bare": true,
+      "modelValue": {
+       "$type": "variable",
+       "name": "applyOpen"
+      },
+      "size": "md"
+     }
+    }
+   ],
+   "componentId": "root",
+   "componentName": "container",
+   "originalElement": "div"
+  }
+ ],
+ "creation": "2026-11-02 12:52:41.415048",
+ "docstatus": 0,
+ "doctype": "Studio Page",
+ "frappe_app": "connect",
+ "idx": 0,
+ "is_standard": 1,
+ "modified": "2026-11-03 20:11:05.812153",
+ "modified_by": "tridots@example.com",
+ "name": "partner_certifications",
+ "owner": "Administrator",
+ "page_name": "page-64af75a2",
+ "page_title": "Partner Certifications",
+ "published": 1,
+ "resources": [
+  {
+   "auto": 1,
+   "fetch_document_using_filters": 0,
+   "limit": 0,
+   "method": "GET",
+   "resource_name": "myContext",
+   "resource_type": "API Resource",
+   "url": "connect.api.account.get_my_context"
+  }
+ ],
+ "route": "/partner-certifications",
+ "studio_app": "connect"
+}

@@ -1,0 +1,248 @@
+{
+ "allow_guest": 1,
+ "blocks": [
+  {
+   "baseStyles": {
+    "backgroundColor": "var(--surface-base)",
+    "boxSizing": "border-box",
+    "minHeight": "100vh",
+    "padding": "80px 16px",
+    "width": "100%"
+   },
+   "children": [
+    {
+     "baseStyles": {
+      "border": "1px solid var(--outline-gray-2)",
+      "borderRadius": "12px",
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "16px",
+      "margin": "0 auto",
+      "maxWidth": "460px",
+      "padding": "28px",
+      "width": "100%"
+     },
+     "children": [
+      {
+       "baseStyles": {
+        "color": "var(--ink-gray-5)",
+        "fontSize": "13px",
+        "fontWeight": "420",
+        "letterSpacing": "0.02em",
+        "lineHeight": "20px"
+       },
+       "componentId": "ca-brand",
+       "componentName": "TextBlock",
+       "componentProps": {
+        "tag": "p",
+        "text": "Frappe Connect"
+       }
+      },
+      {
+       "baseStyles": {
+        "color": "var(--ink-gray-9)",
+        "fontSize": "18px",
+        "fontWeight": "600",
+        "letterSpacing": "0.02em",
+        "lineHeight": "26px"
+       },
+       "componentId": "ca-title",
+       "componentName": "TextBlock",
+       "componentProps": {
+        "tag": "h1",
+        "text": "Confirm your certificate"
+       }
+      },
+      {
+       "baseStyles": {
+        "color": "var(--ink-gray-5)",
+        "fontSize": "14px",
+        "fontWeight": "420",
+        "letterSpacing": "0.02em",
+        "lineHeight": "22px"
+       },
+       "componentId": "ca-loading",
+       "componentName": "TextBlock",
+       "componentProps": {
+        "tag": "p",
+        "text": "Loading\u2026"
+       },
+       "visibilityCondition": "state === 'loading'"
+      },
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "16px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-7)",
+          "fontSize": "15px",
+          "fontWeight": "420",
+          "letterSpacing": "0.02em",
+          "lineHeight": "24px"
+         },
+         "componentId": "ca-question",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "{{ question }}"
+         }
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-5)",
+          "fontSize": "13px",
+          "fontWeight": "420",
+          "letterSpacing": "0.02em",
+          "lineHeight": "20px"
+         },
+         "componentId": "ca-holder",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "{{ holder }}"
+         }
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-red-7)",
+          "fontSize": "13px",
+          "fontWeight": "420",
+          "letterSpacing": "0.02em",
+          "lineHeight": "20px"
+         },
+         "componentId": "ca-error",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "{{ error }}"
+         },
+         "visibilityCondition": "error"
+        },
+        {
+         "baseStyles": {
+          "alignSelf": "flex-start"
+         },
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "approve();"
+          }
+         },
+         "componentId": "ca-confirm",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "Confirm",
+          "loading": "{{ approving }}",
+          "variant": "solid"
+         }
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-5)",
+          "fontSize": "13px",
+          "fontWeight": "420",
+          "letterSpacing": "0.02em",
+          "lineHeight": "20px"
+         },
+         "componentId": "ca-ignore",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "Didn't expect this? Ignore the email, and nothing changes."
+         }
+        }
+       ],
+       "componentId": "ca-ready",
+       "componentName": "container",
+       "originalElement": "div",
+       "visibilityCondition": "state === 'ready'"
+      },
+      {
+       "baseStyles": {
+        "alignItems": "flex-start",
+        "display": "flex",
+        "gap": "10px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-green-6)",
+          "flexShrink": "0",
+          "height": "20px",
+          "width": "20px"
+         },
+         "componentId": "ca-done-icon",
+         "componentName": "Icon",
+         "componentProps": {
+          "icon": "lucide-circle-check"
+         }
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-7)",
+          "fontSize": "15px",
+          "fontWeight": "420",
+          "letterSpacing": "0.02em",
+          "lineHeight": "24px"
+         },
+         "componentId": "ca-done-text",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "{{ done }}"
+         }
+        }
+       ],
+       "componentId": "ca-done",
+       "componentName": "container",
+       "originalElement": "div",
+       "visibilityCondition": "state === 'approved'"
+      },
+      {
+       "baseStyles": {
+        "color": "var(--ink-gray-7)",
+        "fontSize": "15px",
+        "fontWeight": "420",
+        "letterSpacing": "0.02em",
+        "lineHeight": "24px"
+       },
+       "componentId": "ca-invalid",
+       "componentName": "TextBlock",
+       "componentProps": {
+        "tag": "p",
+        "text": "This link isn't valid any more. Ask the partner to send the request again."
+       },
+       "visibilityCondition": "state === 'invalid'"
+      }
+     ],
+     "componentId": "ca-card",
+     "componentName": "container",
+     "originalElement": "div"
+    }
+   ],
+   "componentId": "root",
+   "componentName": "container",
+   "originalElement": "div"
+  }
+ ],
+ "creation": "2026-11-02 12:52:42.448634",
+ "docstatus": 0,
+ "doctype": "Studio Page",
+ "frappe_app": "connect",
+ "idx": 0,
+ "is_standard": 1,
+ "modified": "2026-11-03 20:11:05.756556",
+ "modified_by": "tridots@example.com",
+ "name": "certificate_approval",
+ "owner": "Administrator",
+ "page_name": "page-dfc59bc6",
+ "page_title": "Certificate Approval",
+ "published": 1,
+ "route": "/certificate-approval",
+ "studio_app": "connect"
+}

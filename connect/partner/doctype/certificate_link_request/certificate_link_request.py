@@ -4,14 +4,40 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import get_url
+from frappe.utils import escape_html, get_url
 
-# Same type -> Frappe School courses mapping as Press's CertificateLinkRequest.resolve_certificate:
-# the onboarding dialog asks for a certificate type, not a course slug.
-CERTIFICATE_COURSES = {
-	"frappe": ["frappe-developer-certification", "app-development-with-frappe-framework"],
-	"erpnext": ["erpnext-distribution", "erpnext-training"],
-}
+from connect.partner.doctype.partner_certificate.partner_certificate import (
+	CERTIFICATE_COURSES,
+	COURSE_PAGES,
+	cancel_approved_requests,
+	course_label,
+	is_expired,
+	publish_certificates_updated,
+	recount_certificates,
+	tell_partner_certificate_moved,
+)
+
+DEFAULT_SCHOOL_URL = "https://school.frappe.io"
+
+
+def _school_url() -> str:
+	return (frappe.get_cached_doc("Integration Settings").school_site_url or DEFAULT_SCHOOL_URL).rstrip("/")
+
+
+def is_school_enabled() -> bool:
+	return bool(frappe.db.get_single_value("Integration Settings", "school_enabled"))
+
+
+def certificate_url(course: str | None, school_certificate_id: str | None) -> str | None:
+	"""The certificate's public page on Frappe School."""
+	if not (course and school_certificate_id):
+		return None
+	return f"{_school_url()}/courses/{course}/{school_certificate_id}"
+
+
+def course_page_url(certificate_type: str) -> str:
+	"""Where a team member takes the course and exam for "erpnext" or "frappe"."""
+	return f"{_school_url()}/lms/courses/{COURSE_PAGES[certificate_type]}"
 
 
 class CertificateLinkRequest(Document):
@@ -29,31 +55,38 @@ class CertificateLinkRequest(Document):
 
 		if self.status == "Approved":
 			self.link_certificate()
+		publish_certificates_updated(self.partner)
 
-		from connect.permissions import _get_partner_owners
 
-		for owner in _get_partner_owners(self.partner):
-			frappe.publish_realtime(
-				"partner_application_certificates_updated",
-				{"partner": self.partner},
-				user=owner,
-				after_commit=True,
-			)
+	def validate(self):
+		# refuse before the request is marked Approved, not after
+		if self.status == "Approved" and self.has_value_changed("status"):
+			self.get_certificate_to_link()
 
-	def link_certificate(self):
-		row_name = frappe.db.get_value(
+	def get_certificate_to_link(self) -> frappe._dict:
+		"""The certificate this request links. One linked to another partner moves: the holder owns
+		their certificate, and confirming the emailed link is their consent."""
+		row = frappe.db.get_value(
 			"Partner Certificate",
 			{"partner_member_email": self.user_email, "course": self.course},
-			"name",
+			["name", "partner", "expiry_date"],
+			as_dict=True,
 		)
-		if not row_name:
+		if not row:
 			frappe.throw(_("No matching certificate found for {0} / {1}").format(self.user_email, self.course))
+		if is_expired(row.expiry_date):
+			frappe.throw(_("This certificate has expired."))
+		return row
 
-		existing_partner = frappe.db.get_value("Partner Certificate", row_name, "partner")
-		if existing_partner and existing_partner != self.partner:
-			frappe.throw(_("This certificate is already linked to another partner."))
-
-		frappe.db.set_value("Partner Certificate", row_name, "partner", self.partner)
+	def link_certificate(self):
+		row = self.get_certificate_to_link()
+		frappe.db.set_value("Partner Certificate", row.name, "partner", self.partner)
+		recount_certificates(self.partner)
+		if row.partner and row.partner != self.partner:
+			cancel_approved_requests(row.partner, self.user_email, self.course)
+			recount_certificates(row.partner)
+			publish_certificates_updated(row.partner)
+			tell_partner_certificate_moved(row.partner, self.partner_name or self.partner, self.user_email, self.course)
 
 	@frappe.whitelist()
 	def resend(self):
@@ -62,19 +95,20 @@ class CertificateLinkRequest(Document):
 		self._send_email()
 
 	def _send_email(self):
-		link = get_url(f"/certificate-approval?key={self.key}")
-		try:
-			frappe.sendmail(
-				recipients=[self.user_email],
-				subject=_("Confirm your certificate for {0}").format(self.partner_name or self.partner),
-				message=(
-					f"<p>{_('Please confirm that your {0} certificate should be linked to {1}.').format(self.course, frappe.utils.escape_html(self.partner_name or self.partner))}</p>"
-					f"<p><a href='{link}'>{_('Confirm')}</a></p>"
-				),
-				now=True,
-			)
-		except Exception:
-			frappe.log_error(title=f"Certificate link email failed for {self.name}")
+		link = get_url(f"/connect/certificate-approval?key={self.key}")
+		partner_name = escape_html(self.partner_name or self.partner)
+		ask = _("Please confirm that your {0} certificate should be linked to {1}.").format(course_label(self.course), partner_name)
+		linked_to = frappe.db.get_value(
+			"Partner Certificate", {"partner_member_email": self.user_email, "course": self.course}, "partner"
+		)
+		if linked_to and linked_to != self.partner:
+			linked_name = frappe.db.get_value("Partner", linked_to, "partner_name") or linked_to
+			ask += " " + _("It's linked to {0} now, and confirming moves it.").format(escape_html(linked_name))
+		frappe.sendmail(
+			recipients=[self.user_email],
+			subject=_("Confirm your certificate for {0}").format(self.partner_name or self.partner),
+			message=f"<p>{ask}</p><p><a href='{link}'>{_('Confirm')}</a></p>",
+		)
 
 
 def _get_school_client():
@@ -94,25 +128,36 @@ def _get_school_client():
 	)
 
 
-def _fetch_school_certificate(user_email: str, courses: list[str]) -> tuple[str, str | None]:
-	"""Verifies the certificate really exists on Frappe School before asking the holder to link it, and caches it locally."""
+def school_certificates(user_email: str, courses: list[str]) -> list[dict]:
+	"""The holder's published certificates for these courses on Frappe School, newest first. Its
+	Connect user only sees published ones."""
 	client = _get_school_client()
-
 	try:
-		matches = client.get_list(
+		return client.get_list(
 			"LMS Certificate",
 			filters=[["member", "=", user_email], ["course", "in", courses]],
-			fields=["name", "course", "issue_date", "member", "member_name"],
+			fields=["name", "course", "issue_date", "expiry_date", "member", "member_name"],
 			order_by="issue_date desc",
 		)
 	except Exception:
 		frappe.log_error(title="Frappe School certificate lookup failed")
 		frappe.throw(_("Could not reach Frappe School right now. Please try again shortly."))
 
+
+def has_current_school_certificate(user_email: str, courses: list[str]) -> bool:
+	return any(not is_expired(row.get("expiry_date")) for row in school_certificates(user_email, courses))
+
+
+def _fetch_school_certificate(user_email: str, courses: list[str]) -> tuple[str, str | None]:
+	"""Verifies the certificate really exists on Frappe School before asking the holder to link it, and caches it locally."""
+	matches = school_certificates(user_email, courses)
 	if not matches:
 		frappe.throw(_("No certificate found for {0}.").format(user_email))
+	current = [row for row in matches if not is_expired(row.get("expiry_date"))]
+	if not current:
+		frappe.throw(_("This certificate has expired."))
 
-	match = matches[0]
+	match = current[0]
 	course = match.get("course")
 	existing_name = frappe.db.get_value(
 		"Partner Certificate", {"partner_member_email": user_email, "course": course}, "name"
@@ -121,6 +166,7 @@ def _fetch_school_certificate(user_email: str, courses: list[str]) -> tuple[str,
 		"course": course,
 		"school_certificate_id": match.get("name"),
 		"issue_date": match.get("issue_date"),
+		"expiry_date": match.get("expiry_date"),
 		"partner_member_email": user_email,
 		"partner_member_name": match.get("member_name") or user_email,
 	}
@@ -139,8 +185,6 @@ def create_or_resend(partner: str, user_email: str, certificate_type: str) -> di
 	course, existing_link = _fetch_school_certificate(user_email, courses)
 	if existing_link == partner:
 		return {"status": "Linked"}
-	if existing_link:
-		frappe.throw(_("This certificate is already linked to another partner."))
 
 	existing_request = frappe.db.get_value(
 		"Certificate Link Request",
@@ -157,6 +201,21 @@ def create_or_resend(partner: str, user_email: str, certificate_type: str) -> di
 	)
 	doc.insert(ignore_permissions=True)
 	return {"status": "Pending", "request": doc.as_dict()}
+
+
+def get_request_for_holder(key: str) -> dict:
+	"""What the certificate holder sees before approving: which partner asks for which certificate."""
+	request = frappe.db.get_value(
+		"Certificate Link Request", {"key": key}, ["partner_name", "course", "user_email", "status"], as_dict=True
+	)
+	if not key or not request:
+		frappe.throw(_("Invalid or expired link."), frappe.DoesNotExistError)
+	return {
+		"partner_name": request.partner_name,
+		"course": course_label(request.course),
+		"user_email": request.user_email,
+		"status": request.status,
+	}
 
 
 def approve_from_key(key: str):
