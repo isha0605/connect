@@ -8,7 +8,6 @@ const SECTIONS = {
 	dashboard: { label: "Dashboard", icon: "lucide-layout-dashboard" },
 	certifications: { label: "Certifications", icon: "lucide-award" },
 	resources: { label: "Resources", icon: "lucide-book-open" },
-	contributions: { label: "Contributions", icon: "lucide-git-pull-request" },
 	audits: { label: "Audits", icon: "lucide-clipboard-check" },
 }
 
