@@ -1,0 +1,1614 @@
+{
+ "allow_guest": 0,
+ "blocks": [
+  {
+   "baseStyles": {
+    "backgroundColor": "var(--surface-base)",
+    "display": "flex",
+    "flexDirection": "row",
+    "height": "100vh",
+    "overflow": "hidden",
+    "width": "100%"
+   },
+   "children": [
+    {
+     "baseStyles": {
+      "display": "flex"
+     },
+     "blockName": "AppSidebar",
+     "componentId": "appsidebar-pa",
+     "componentName": "appsidebar",
+     "isStudioComponent": true
+    },
+    {
+     "baseStyles": {
+      "backgroundColor": "var(--surface-base)",
+      "display": "flex",
+      "flex": "1",
+      "flexDirection": "column",
+      "height": "100%",
+      "minWidth": "0px"
+     },
+     "children": [
+      {
+       "baseStyles": {
+        "alignItems": "center",
+        "borderBottom": "1px solid var(--outline-gray-1)",
+        "display": "flex",
+        "flexShrink": "0",
+        "height": "48px",
+        "padding": "0 20px"
+       },
+       "children": [
+        {
+         "componentId": "header-breadcrumbs",
+         "componentName": "Breadcrumbs",
+         "componentProps": {
+          "items": "{{ breadcrumbItems }}"
+         }
+        }
+       ],
+       "componentId": "header",
+       "componentName": "container",
+       "originalElement": "div"
+      },
+      {
+       "baseStyles": {
+        "flex": "1",
+        "minHeight": "0px",
+        "overflowY": "auto",
+        "padding": "20px 20px 64px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "margin": "0 auto",
+          "maxWidth": "1200px",
+          "width": "100%"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "16px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "gap": "6px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "flexShrink": "0",
+                "height": "14px",
+                "width": "14px"
+               },
+               "componentId": "pa-note-icon",
+               "componentName": "Icon",
+               "componentProps": {
+                "icon": "lucide-info"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "fontSize": "13px",
+                "fontWeight": "420",
+                "letterSpacing": "0.02em",
+                "lineHeight": "20px"
+               },
+               "componentId": "pa-note-text",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "p",
+                "text": "Sample data. Audits aren't connected to Frappe yet."
+               }
+              }
+             ],
+             "componentId": "pa-note",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "flexWrap": "wrap",
+              "gap": "8px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "width": "220px"
+               },
+               "componentId": "pa-date",
+               "componentName": "FormControl",
+               "componentProps": {
+                "modelValue": {
+                 "$type": "variable",
+                 "name": "dateFilter"
+                },
+                "placeholder": "Audit date",
+                "size": "sm",
+                "type": "date",
+                "variant": "subtle"
+               }
+              },
+              {
+               "baseStyles": {
+                "width": "160px"
+               },
+               "componentId": "pa-status",
+               "componentName": "FormControl",
+               "componentProps": {
+                "modelValue": {
+                 "$type": "variable",
+                 "name": "statusFilter"
+                },
+                "options": "{{ statusOptions }}",
+                "size": "sm",
+                "type": "select",
+                "variant": "subtle"
+               }
+              },
+              {
+               "baseStyles": {
+                "flex": "1"
+               },
+               "componentId": "pa-toolbar-gap",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "openRequest();"
+                }
+               },
+               "componentId": "pa-request",
+               "componentName": "Button",
+               "componentProps": {
+                "iconLeft": "lucide-plus",
+                "label": "Request for Audit",
+                "variant": "subtle"
+               }
+              }
+             ],
+             "componentId": "pa-toolbar",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "8px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "backgroundColor": "var(--surface-gray-2)",
+                "borderRadius": "8px",
+                "display": "grid",
+                "gap": "16px",
+                "gridTemplateColumns": "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr) 90px minmax(0, 1fr) minmax(0, 1fr)",
+                "padding": "6px 8px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "20px"
+                 },
+                 "componentId": "pa-head-type",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "Audit Type"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "20px"
+                 },
+                 "componentId": "pa-head-status",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "Status"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "20px"
+                 },
+                 "componentId": "pa-head-by",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "Conducted By"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "20px",
+                  "textAlign": "center"
+                 },
+                 "componentId": "pa-head-nc",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "NC Count"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "20px"
+                 },
+                 "componentId": "pa-head-requested",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "Requested Date"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "20px"
+                 },
+                 "componentId": "pa-head-held",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "Audit Date"
+                 }
+                }
+               ],
+               "componentId": "pa-head",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "2px"
+               },
+               "componentId": "pa-rows",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ rows }}",
+                "dataKey": "name",
+                "emptyStateMessage": ""
+               },
+               "componentSlots": {
+                "default": {
+                 "parentBlockId": "pa-rows",
+                 "slotContent": [
+                  {
+                   "attributes": {
+                    "role": "link",
+                    "tabindex": "0"
+                   },
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "borderRadius": "8px",
+                    "cursor": "pointer",
+                    "display": "grid",
+                    "gap": "16px",
+                    "gridTemplateColumns": "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr) 90px minmax(0, 1fr) minmax(0, 1fr)",
+                    "padding": "8px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-9)",
+                      "fontSize": "14px",
+                      "fontWeight": "420",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "22px",
+                      "minWidth": "0px",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "componentId": "pa-row-type",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "{{ dataItem.mode_of_audit }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "display": "flex"
+                     },
+                     "children": [
+                      {
+                       "componentId": "pa-row-badge",
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ dataItem.status }}",
+                        "theme": "{{ dataItem.theme }}",
+                        "variant": "subtle"
+                       }
+                      }
+                     ],
+                     "componentId": "pa-row-status",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "{{ dataItem.conducted_by ? 'var(--ink-gray-7)' : 'var(--ink-gray-5)' }}",
+                      "fontSize": "14px",
+                      "fontWeight": "420",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "22px",
+                      "minWidth": "0px",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "componentId": "pa-row-by",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "{{ dataItem.conductedBy }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "display": "flex",
+                      "justifyContent": "center"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-gray-2)",
+                        "borderRadius": "999px",
+                        "color": "var(--ink-gray-7)",
+                        "fontSize": "12px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "20px",
+                        "padding": "0 8px",
+                        "whiteSpace": "nowrap"
+                       },
+                       "componentId": "pa-row-nc-count",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "{{ dataItem.ncCount }}"
+                       }
+                      }
+                     ],
+                     "componentId": "pa-row-nc",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-7)",
+                      "fontSize": "14px",
+                      "fontWeight": "420",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "22px",
+                      "minWidth": "0px",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "componentId": "pa-row-requested",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "{{ dataItem.requested }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-7)",
+                      "fontSize": "14px",
+                      "fontWeight": "420",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "22px",
+                      "minWidth": "0px",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "componentId": "pa-row-held",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "{{ dataItem.held }}"
+                     }
+                    }
+                   ],
+                   "classes": [
+                    "hover:bg-surface-gray-1"
+                   ],
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "showAudit(dataItem.name);"
+                    }
+                   },
+                   "componentId": "pa-row",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  }
+                 ]
+                }
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "fontSize": "14px",
+                "fontWeight": "420",
+                "letterSpacing": "0.02em",
+                "lineHeight": "22px"
+               },
+               "componentId": "pa-empty",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "p",
+                "text": "No audits match these filters."
+               },
+               "visibilityCondition": "!rows.length"
+              }
+             ],
+             "componentId": "pa-table",
+             "componentName": "container",
+             "originalElement": "div"
+            }
+           ],
+           "componentId": "pa-list",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "!audit"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "20px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "display": "flex",
+              "gap": "6px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "flexShrink": "0",
+                "height": "14px",
+                "width": "14px"
+               },
+               "componentId": "pa-audit-note-icon",
+               "componentName": "Icon",
+               "componentProps": {
+                "icon": "lucide-info"
+               }
+              },
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "fontSize": "13px",
+                "fontWeight": "420",
+                "letterSpacing": "0.02em",
+                "lineHeight": "20px"
+               },
+               "componentId": "pa-audit-note-text",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "p",
+                "text": "Sample data. Audits aren't connected to Frappe yet."
+               }
+              }
+             ],
+             "componentId": "pa-audit-note",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "alignItems": "flex-start",
+              "display": "flex",
+              "gap": "12px",
+              "justifyContent": "space-between"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "4px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "gap": "8px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-9)",
+                    "fontSize": "18px",
+                    "fontWeight": "600",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "26px"
+                   },
+                   "componentId": "pa-audit-title",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "h1",
+                    "text": "{{ auditTitle }}"
+                   }
+                  },
+                  {
+                   "componentId": "pa-audit-badge",
+                   "componentName": "Badge",
+                   "componentProps": {
+                    "label": "{{ audit.status }}",
+                    "theme": "{{ auditTheme }}",
+                    "variant": "subtle"
+                   }
+                  }
+                 ],
+                 "componentId": "pa-audit-title-row",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "20px"
+                 },
+                 "componentId": "pa-audit-summary",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "{{ auditSummary }}"
+                 }
+                }
+               ],
+               "componentId": "pa-audit-head-text",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "showList();"
+                }
+               },
+               "componentId": "pa-back",
+               "componentName": "Button",
+               "componentProps": {
+                "iconLeft": "lucide-arrow-left",
+                "label": "All audits",
+                "variant": "subtle"
+               }
+              }
+             ],
+             "componentId": "pa-audit-head",
+             "componentName": "container",
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "alignItems": "flex-start",
+              "display": "flex",
+              "gap": "24px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "borderRight": "1px solid var(--outline-gray-1)",
+                "display": "flex",
+                "flexDirection": "column",
+                "flexShrink": "0",
+                "gap": "12px",
+                "paddingRight": "16px",
+                "width": "260px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "fontSize": "16px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "22px"
+                 },
+                 "componentId": "pa-nc-list-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "h2",
+                  "text": "Non Conformance List"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "12px"
+                 },
+                 "componentId": "pa-nc-cards",
+                 "componentName": "Repeater",
+                 "componentProps": {
+                  "data": "{{ ncCards }}",
+                  "dataKey": "name",
+                  "emptyStateMessage": ""
+                 },
+                 "componentSlots": {
+                  "default": {
+                   "parentBlockId": "pa-nc-cards",
+                   "slotContent": [
+                    {
+                     "attributes": {
+                      "aria-pressed": "{{ dataItem.active }}",
+                      "role": "button",
+                      "tabindex": "0"
+                     },
+                     "baseStyles": {
+                      "alignItems": "flex-start",
+                      "backgroundColor": "{{ dataItem.active ? 'var(--surface-gray-1)' : 'transparent' }}",
+                      "border": "1px solid var(--outline-gray-2)",
+                      "borderRadius": "10px",
+                      "cursor": "pointer",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "12px",
+                      "justifyContent": "space-between",
+                      "padding": "14px 16px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "{{ dataItem.active ? 'var(--ink-gray-9)' : 'var(--ink-gray-6)' }}",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "22px"
+                       },
+                       "componentId": "pa-nc-card-text",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "{{ dataItem.nc_statement }}"
+                       }
+                      },
+                      {
+                       "baseStyles": {
+                        "flexShrink": "0"
+                       },
+                       "componentId": "pa-nc-card-badge",
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ dataItem.status }}",
+                        "theme": "{{ dataItem.theme }}",
+                        "variant": "subtle"
+                       }
+                      }
+                     ],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "selectNc(dataItem.name);"
+                      }
+                     },
+                     "componentId": "pa-nc-card",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    }
+                   ]
+                  }
+                 }
+                }
+               ],
+               "componentId": "pa-nc-list",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flex": "1",
+                "flexDirection": "column",
+                "gap": "16px",
+                "maxWidth": "720px",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "flex-start",
+                  "border": "1px solid var(--outline-gray-2)",
+                  "borderRadius": "10px",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "gap": "12px",
+                  "justifyContent": "space-between",
+                  "padding": "16px 20px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "gap": "6px",
+                    "minWidth": "0px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-9)",
+                      "fontSize": "18px",
+                      "fontWeight": "500",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "26px"
+                     },
+                     "componentId": "pa-nc-statement",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "h2",
+                      "text": "{{ nc.nc_statement }}"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)",
+                      "fontSize": "14px",
+                      "fontWeight": "420",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "22px",
+                      "whiteSpace": "pre"
+                     },
+                     "componentId": "pa-nc-reference",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "{{ nc.reference }}"
+                     }
+                    }
+                   ],
+                   "componentId": "pa-nc-title-text",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "flexShrink": "0"
+                   },
+                   "componentId": "pa-nc-badge",
+                   "componentName": "Badge",
+                   "componentProps": {
+                    "label": "{{ nc.status }}",
+                    "theme": "{{ nc.theme }}",
+                    "variant": "subtle"
+                   }
+                  }
+                 ],
+                 "componentId": "pa-nc-title",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "border": "1px solid var(--outline-gray-2)",
+                  "borderRadius": "10px",
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "12px",
+                  "padding": "16px 20px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-9)",
+                    "fontSize": "15px",
+                    "fontWeight": "600",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "24px"
+                   },
+                   "componentId": "pa-nc-finding-title",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "h3",
+                    "text": "What the auditor found"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-7)",
+                    "fontSize": "15px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "24px"
+                   },
+                   "componentId": "pa-nc-finding-text",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "p",
+                    "text": "{{ nc.nc_description }}"
+                   }
+                  }
+                 ],
+                 "componentId": "pa-nc-finding",
+                 "componentName": "container",
+                 "originalElement": "div",
+                 "visibilityCondition": "nc.nc_description"
+                },
+                {
+                 "baseStyles": {
+                  "border": "1px solid var(--outline-gray-2)",
+                  "borderRadius": "10px",
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "12px",
+                  "padding": "16px 20px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-9)",
+                    "fontSize": "15px",
+                    "fontWeight": "600",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "24px"
+                   },
+                   "componentId": "pa-nc-audit-title",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "h3",
+                    "text": "Audit Information"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "display": "grid",
+                    "gap": "16px",
+                    "gridTemplateColumns": "repeat(2, minmax(0, 1fr))"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "display": "flex",
+                      "flexDirection": "column",
+                      "gap": "2px",
+                      "minWidth": "0px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "22px"
+                       },
+                       "componentId": "pa-nc-audit-0-label",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "Conducted By"
+                       }
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-8)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "22px",
+                        "overflowWrap": "anywhere"
+                       },
+                       "componentId": "pa-nc-audit-0-value",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "{{ nc.auditor }}"
+                       }
+                      }
+                     ],
+                     "componentId": "pa-nc-audit-0",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "display": "flex",
+                      "flexDirection": "column",
+                      "gap": "2px",
+                      "minWidth": "0px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "22px"
+                       },
+                       "componentId": "pa-nc-audit-1-label",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "Conducted On"
+                       }
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-8)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "22px",
+                        "overflowWrap": "anywhere"
+                       },
+                       "componentId": "pa-nc-audit-1-value",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "{{ nc.auditedOn }}"
+                       }
+                      }
+                     ],
+                     "componentId": "pa-nc-audit-1",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    }
+                   ],
+                   "componentId": "pa-nc-audit-grid",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  }
+                 ],
+                 "componentId": "pa-nc-audit",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "border": "1px solid var(--outline-gray-2)",
+                  "borderRadius": "10px",
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "12px",
+                  "padding": "16px 20px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-9)",
+                    "fontSize": "15px",
+                    "fontWeight": "600",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "24px"
+                   },
+                   "componentId": "pa-nc-closure-title",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "h3",
+                    "text": "Closure Information"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "display": "grid",
+                    "gap": "16px",
+                    "gridTemplateColumns": "repeat(2, minmax(0, 1fr))"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "display": "flex",
+                      "flexDirection": "column",
+                      "gap": "2px",
+                      "minWidth": "0px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "22px"
+                       },
+                       "componentId": "pa-nc-closure-0-label",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "Closed By"
+                       }
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-8)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "22px",
+                        "overflowWrap": "anywhere"
+                       },
+                       "componentId": "pa-nc-closure-0-value",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "{{ nc.closed_by }}"
+                       }
+                      }
+                     ],
+                     "componentId": "pa-nc-closure-0",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "display": "flex",
+                      "flexDirection": "column",
+                      "gap": "2px",
+                      "minWidth": "0px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "22px"
+                       },
+                       "componentId": "pa-nc-closure-1-label",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "Closed On"
+                       }
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-8)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "22px",
+                        "overflowWrap": "anywhere"
+                       },
+                       "componentId": "pa-nc-closure-1-value",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "{{ nc.closedOn }}"
+                       }
+                      }
+                     ],
+                     "componentId": "pa-nc-closure-1",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    }
+                   ],
+                   "componentId": "pa-nc-closure-grid",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  }
+                 ],
+                 "componentId": "pa-nc-closure",
+                 "componentName": "container",
+                 "originalElement": "div",
+                 "visibilityCondition": "nc.isClosed"
+                },
+                {
+                 "baseStyles": {
+                  "border": "1px solid var(--outline-gray-2)",
+                  "borderRadius": "10px",
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "12px",
+                  "padding": "16px 20px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-9)",
+                    "fontSize": "15px",
+                    "fontWeight": "600",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "24px"
+                   },
+                   "componentId": "pa-nc-expected-title",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "h3",
+                    "text": "Closure"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "display": "grid",
+                    "gap": "16px",
+                    "gridTemplateColumns": "repeat(2, minmax(0, 1fr))"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "display": "flex",
+                      "flexDirection": "column",
+                      "gap": "2px",
+                      "minWidth": "0px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "22px"
+                       },
+                       "componentId": "pa-nc-expected-0-label",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "Expected by"
+                       }
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-8)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "22px",
+                        "overflowWrap": "anywhere"
+                       },
+                       "componentId": "pa-nc-expected-0-value",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "{{ nc.expected }}"
+                       }
+                      }
+                     ],
+                     "componentId": "pa-nc-expected-0",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "display": "flex",
+                      "flexDirection": "column",
+                      "gap": "2px",
+                      "minWidth": "0px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "22px"
+                       },
+                       "componentId": "pa-nc-expected-1-label",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "Status"
+                       }
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-8)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "22px",
+                        "overflowWrap": "anywhere"
+                       },
+                       "componentId": "pa-nc-expected-1-value",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "{{ nc.status }}"
+                       }
+                      }
+                     ],
+                     "componentId": "pa-nc-expected-1",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    }
+                   ],
+                   "componentId": "pa-nc-expected-grid",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  }
+                 ],
+                 "componentId": "pa-nc-expected",
+                 "componentName": "container",
+                 "originalElement": "div",
+                 "visibilityCondition": "!nc.isClosed"
+                },
+                {
+                 "baseStyles": {
+                  "border": "1px solid var(--outline-gray-2)",
+                  "borderRadius": "10px",
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "12px",
+                  "padding": "16px 20px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-9)",
+                    "fontSize": "15px",
+                    "fontWeight": "600",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "24px"
+                   },
+                   "componentId": "pa-nc-measures-title",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "h3",
+                    "text": "Measures to be taken"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "{{ nc.measures_to_close_nc ? 'var(--ink-gray-7)' : 'var(--ink-gray-5)' }}",
+                    "fontSize": "15px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "24px"
+                   },
+                   "componentId": "pa-nc-measures-text",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "p",
+                    "text": "{{ nc.measures }}"
+                   }
+                  }
+                 ],
+                 "componentId": "pa-nc-measures",
+                 "componentName": "container",
+                 "originalElement": "div"
+                }
+               ],
+               "componentId": "pa-nc-details",
+               "componentName": "container",
+               "originalElement": "div",
+               "visibilityCondition": "nc"
+              }
+             ],
+             "componentId": "pa-split",
+             "componentName": "container",
+             "originalElement": "div",
+             "visibilityCondition": "ncCards.length"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-5)",
+              "fontSize": "14px",
+              "fontWeight": "420",
+              "letterSpacing": "0.02em",
+              "lineHeight": "22px"
+             },
+             "componentId": "pa-nc-empty",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "tag": "p",
+              "text": "{{ noNcText }}"
+             },
+             "visibilityCondition": "!ncCards.length"
+            }
+           ],
+           "componentId": "pa-audit",
+           "componentName": "container",
+           "originalElement": "div",
+           "visibilityCondition": "audit"
+          }
+         ],
+         "componentId": "pa-page",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "componentId": "body",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "componentId": "main",
+     "componentName": "container",
+     "originalElement": "div"
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "16px",
+        "padding": "20px 24px 24px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-9)",
+          "fontSize": "16px",
+          "fontWeight": "600",
+          "letterSpacing": "0.02em",
+          "lineHeight": "24px"
+         },
+         "componentId": "pa-request-dialog-title",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "h3",
+          "text": "Request for audit"
+         }
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-7)",
+          "fontSize": "14px",
+          "fontWeight": "420",
+          "letterSpacing": "0.02em",
+          "lineHeight": "22px"
+         },
+         "componentId": "pa-request-intro",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "Pick a date that suits your team. Frappe confirms the date and assigns an auditor."
+         }
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "6px",
+          "minWidth": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "fontSize": "12px",
+            "fontWeight": "420",
+            "letterSpacing": "0.02em",
+            "lineHeight": "1.15"
+           },
+           "componentId": "pa-request-date-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "label",
+            "text": "Preferred date"
+           }
+          },
+          {
+           "componentId": "pa-request-date-input",
+           "componentName": "FormControl",
+           "componentProps": {
+            "disabled": false,
+            "modelValue": {
+             "$type": "variable",
+             "name": "requestForm.date"
+            },
+            "size": "sm",
+            "type": "date",
+            "variant": "outline"
+           }
+          }
+         ],
+         "componentId": "pa-request-date",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "6px",
+          "minWidth": "0px"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "fontSize": "12px",
+            "fontWeight": "420",
+            "letterSpacing": "0.02em",
+            "lineHeight": "1.15"
+           },
+           "componentId": "pa-request-type-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "label",
+            "text": "Audit type"
+           }
+          },
+          {
+           "componentId": "pa-request-type-input",
+           "componentName": "FormControl",
+           "componentProps": {
+            "disabled": false,
+            "modelValue": {
+             "$type": "variable",
+             "name": "requestForm.type"
+            },
+            "options": "{{ typeOptions }}",
+            "size": "sm",
+            "type": "select",
+            "variant": "outline"
+           }
+          }
+         ],
+         "componentId": "pa-request-type",
+         "componentName": "container",
+         "originalElement": "div"
+        },
+        {
+         "baseStyles": {
+          "color": "var(--ink-red-7)",
+          "fontSize": "13px",
+          "fontWeight": "420",
+          "letterSpacing": "0.02em",
+          "lineHeight": "20px"
+         },
+         "componentId": "pa-request-error",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "{{ requestError }}"
+         },
+         "visibilityCondition": "requestError"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "gap": "8px",
+          "justifyContent": "flex-end"
+         },
+         "children": [
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "requestOpen.value = false;"
+            }
+           },
+           "componentId": "pa-request-cancel",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "variant": "subtle"
+           }
+          },
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "sendRequest();"
+            }
+           },
+           "componentId": "pa-request-send",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Request",
+            "variant": "solid"
+           }
+          }
+         ],
+         "componentId": "pa-request-dialog-actions",
+         "componentName": "container",
+         "originalElement": "div"
+        }
+       ],
+       "componentId": "pa-request-dialog-panel",
+       "componentName": "container",
+       "originalElement": "div"
+      }
+     ],
+     "componentId": "pa-request-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "bare": true,
+      "modelValue": {
+       "$type": "variable",
+       "name": "requestOpen"
+      },
+      "size": "md"
+     }
+    }
+   ],
+   "componentId": "root",
+   "componentName": "container",
+   "originalElement": "div"
+  }
+ ],
+ "creation": "2026-11-02 13:22:13.706297",
+ "docstatus": 0,
+ "doctype": "Studio Page",
+ "frappe_app": "connect",
+ "idx": 0,
+ "is_standard": 1,
+ "modified": "2026-11-03 20:11:05.679489",
+ "modified_by": "tridots@example.com",
+ "name": "partner_audits",
+ "owner": "Administrator",
+ "page_name": "page-f9178639",
+ "page_title": "Partner Audits",
+ "published": 1,
+ "resources": [
+  {
+   "auto": 1,
+   "fetch_document_using_filters": 0,
+   "limit": 0,
+   "method": "GET",
+   "resource_name": "myContext",
+   "resource_type": "API Resource",
+   "url": "connect.api.account.get_my_context"
+  }
+ ],
+ "route": "/partner-audits",
+ "studio_app": "connect",
+ "variables": [
+  {
+   "initial_value": "\"\"",
+   "variable_name": "openAudit",
+   "variable_type": "String"
+  }
+ ]
+}
