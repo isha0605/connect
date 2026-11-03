@@ -5,6 +5,7 @@
 import { useFileUpload } from "frappe-ui"
 
 export const PROFILE_API = "connect.api.partner"
+export const MAX_INDUSTRIES = 6
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 const DRAFT_FIELDS = [
 	"tagline",
@@ -17,12 +18,9 @@ const DRAFT_FIELDS = [
 	"year_founded",
 	"team_size",
 	"rollouts",
-	"certs_erpnext",
-	"certs_frappe_framework",
 	"address",
 	"city",
 	"country",
-	"industry",
 	"hourly_rate",
 	"why_choose_them",
 	"how_we_work",
@@ -46,7 +44,6 @@ export const SAMPLE_PROFILE = {
 	address: "No. 100, Lake View Estate, Main Road\nChennai, Tamil Nadu 600116, India",
 	city: "Chennai",
 	country: "India",
-	industry: "Manufacturing",
 	hourly_rate: 2500,
 	why_choose_them: "We aim for excellence in every line of code and every customer conversation.",
 	how_we_work: "A dedicated team, a weekly demo and one shared plan from kickoff to go-live.",
@@ -56,12 +53,18 @@ export const SAMPLE_PROFILE = {
 	founder: { member_name: "Asha Rao", designation: "Founder and CEO", bio: "Twenty years in manufacturing IT." },
 	photos: [],
 	success_stories: [{ client_name: "Refex", headline: "Refex runs its plants on ERPNext", category: "Manufacturing" }],
-	display_industries: ["Manufacturing"],
+	industries: ["Manufacturing", "Textile Manufacturing"],
+	industry_badges: [
+		{ industry: "Manufacturing", stories: 3, verified: true },
+		{ industry: "Textile Manufacturing", stories: 1, verified: false },
+	],
+	suggested_industries: [{ industry: "Agriculture", stories: 2 }],
 	tier: "Gold",
 	pmm_level: 3,
 	is_verified: true,
 	can_edit: true,
-	options: { apps: ["ERPNext", "Frappe HR"], migrations: ["Tally to ERPNext"], industries: ["Manufacturing"], categories: ["Manufacturing"] },
+	has_unpublished_changes: true,
+	options: { apps: ["ERPNext", "Frappe HR"], migrations: ["Tally to ERPNext"], industries: ["Agriculture", "Manufacturing", "Retail", "Textile Manufacturing"], categories: ["Manufacturing"] },
 }
 
 // The same limits update_my_partner_profile enforces, with the label and builder tab to point at.
@@ -108,6 +111,7 @@ export function toDraft(data) {
 		...fields,
 		apps: [...(data.apps || [])],
 		migrations: [...(data.migrations || [])],
+		industries: [...(data.industries || [])],
 		founder: { member_name: "", designation: "", bio: "", photo: "", ...(data.founder || {}) },
 		photos: (data.photos || []).map((photo) => ({ ...photo })),
 		success_stories: (data.success_stories || []).map((story) => ({ ...story })),
@@ -134,28 +138,33 @@ export function isStoryOver(story, field) {
 	return String(story[field] || "").length > STORY_LIMITS[field]
 }
 
-// Why the draft can't be saved yet, or "".
-export function draftProblem(draft) {
-	const over = Object.keys(LIMITS).find((path) => isOverLimit(draft, path))
+// Why the draft can't be saved yet, or "". Only text changed since `saved` must fit its limit, as on
+// the server: text saved before the limits existed doesn't block the rest of the profile.
+export function overLimitPaths(draft, saved) {
+	return Object.keys(LIMITS).filter((path) => isOverLimit(draft, path) && valueAt(draft, path) !== valueAt(saved, path))
+}
+
+export function draftProblem(draft, saved) {
+	const over = overLimitPaths(draft, saved)[0]
 	if (over) return `Shorten ${LIMITS[over].label} to ${LIMITS[over].limit} characters before saving.`
 	const year = String(draft.year_founded || "").trim()
 	if (year && !/^\d{4}$/.test(year)) return "Enter the year founded as four digits, like 2015."
 	if (Number(draft.hourly_rate) < 0) return "Hourly rate can't be negative."
+	if ((draft.industries || []).length > MAX_INDUSTRIES) return `Pick up to ${MAX_INDUSTRIES} industries.`
 	return ""
 }
 
 export function toSavePayload(draft) {
-	const { apps, migrations, founder, photos, success_stories, ...fields } = draft
+	const { apps, migrations, industries, founder, photos, success_stories, ...fields } = draft
 	return {
 		...fields,
 		// number fields: an empty box saves as 0, which the profile shows as unset
 		year_founded: String(fields.year_founded || "").trim() || 0,
 		rollouts: fields.rollouts || 0,
-		certs_erpnext: fields.certs_erpnext || 0,
-		certs_frappe_framework: fields.certs_frappe_framework || 0,
 		hourly_rate: fields.hourly_rate || 0,
 		apps: JSON.stringify(apps),
 		migrations: JSON.stringify(migrations),
+		industries: JSON.stringify(industries || []),
 		founder: JSON.stringify(founder),
 		photos: JSON.stringify(photos),
 		success_stories: JSON.stringify(success_stories),

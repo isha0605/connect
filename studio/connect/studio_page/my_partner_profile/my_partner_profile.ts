@@ -8,11 +8,13 @@ import { EMPLOYEE_OPTIONS } from "@app/utils/recommendation"
 import { writePreview } from "@app/utils/profilePreview"
 import {
 	LIMITS,
+	MAX_INDUSTRIES,
 	PROFILE_API,
 	SAMPLE_PROFILE,
 	STORY_LIMITS,
 	draftProblem,
 	imageTile,
+	overLimitPaths,
 	isBlank,
 	isOverLimit,
 	isStoryOver,
@@ -31,7 +33,7 @@ import { startTracking } from "@app/utils/tracking"
 const TABS = [
 	{ key: "basics", label: "Basics", fields: ["logo", "tagline", "website", "phone"] },
 	{ key: "about", label: "About", fields: ["description", "year_founded", "team_size", "rollouts", "address"] },
-	{ key: "services", label: "Services", fields: ["industry", "apps", "migrations"] },
+	{ key: "services", label: "Services", fields: ["industries", "apps", "migrations"] },
 	{ key: "vision", label: "Partner vision", fields: ["why_choose_them", "how_we_work", "successful_implementation"] },
 	{ key: "founder", label: "Founder", fields: ["founder.member_name", "founder.bio"] },
 	{ key: "gallery", label: "Gallery", fields: ["photos"] },
@@ -173,9 +175,9 @@ export default function setup(context) {
 
 	function saveProfile() {
 		if (saving.value || !hasChanges.value) return
-		const problem = draftProblem(draft.value)
+		const problem = draftProblem(draft.value, JSON.parse(savedDraft.value))
 		if (problem) {
-			const over = Object.keys(LIMITS).find((path) => isOverLimit(draft.value, path))
+			const over = overLimitPaths(draft.value, JSON.parse(savedDraft.value))[0]
 			if (over) activeTab.value = LIMITS[over].tab
 			saveError.value = problem
 			return
@@ -193,11 +195,19 @@ export default function setup(context) {
 			})
 	}
 
+	// Counted from linked certificates on the server, so they show here but aren't edited.
+	const certSummary = computed(() => {
+		const p = profile.value || {}
+		return `${p.certs_erpnext || 0} ERPNext · ${p.certs_frappe_framework || 0} Framework`
+	})
+
 	return {
 		tabs,
 		selectTab,
 		previousTab,
 		nextTab,
+		certSummary,
+		openCertifications: () => router.push("/partner-certifications"),
 		counter: (path) => limitCounter(draft.value, path),
 		isOver: (path) => isOverLimit(draft.value, path),
 		storyCounter: (field) => storyCounter(story.value, field),
@@ -218,7 +228,9 @@ export default function setup(context) {
 			return `Tier: ${p.tier || "not set"} · PMM level: ${pmm || "not rated yet"}. Frappe sets these.`
 		}),
 		teamSizeOptions: [{ label: "Select", value: "" }, ...EMPLOYEE_OPTIONS],
-		industryOptions: computed(() => [{ label: "Select", value: "" }, ...toOptions(options.value.industries)]),
+		industryOptions: computed(() => toOptions(options.value.industries)),
+		industryCount: computed(() => `${(draft.value.industries || []).length} of ${MAX_INDUSTRIES}`),
+		tooManyIndustries: computed(() => (draft.value.industries || []).length > MAX_INDUSTRIES),
 		appOptions: computed(() => toOptions(options.value.apps)),
 		migrationOptions: computed(() => toOptions(options.value.migrations)),
 		categoryOptions: computed(() => options.value.categories || []),

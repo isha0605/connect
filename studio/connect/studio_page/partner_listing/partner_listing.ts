@@ -1,11 +1,12 @@
 // The partner's Listing: their profile laid out the way businesses see it in the directory,
-// one section at a time, each with an Edit dialog. Only the partner's admin may edit. Reviews come
-// from customers, and success stories (with their client logos) are submitted on frappe.io, so
-// those only show.
+// one section at a time, each with an Edit dialog. Only the partner's admin may edit. Edits wait as
+// unpublished changes until Publish makes them live. Reviews come from customers, and success
+// stories (with their client logos) are submitted on frappe.io, so those only show.
 
 import { computed, ref } from "vue"
 import {
 	DEFAULT_ANSWERS,
+	MAX_INDUSTRIES,
 	PROFILE_API,
 	SAMPLE_PROFILE,
 	draftProblem,
@@ -64,7 +65,7 @@ export default function setup(context) {
 
 	const inEditor = window.location.pathname.startsWith("/studio/")
 	function load() {
-		return call(`${PROFILE_API}.get_my_profile`)
+		return call(`${PROFILE_API}.get_my_profile`, { with_draft: 1 })
 			.catch((error) => {
 				// The editor signed in as someone on no partner's team gets the sample instead.
 				if (inEditor) return SAMPLE_PROFILE
@@ -122,7 +123,7 @@ export default function setup(context) {
 			address: p.address || "Not added yet",
 			rate: p.hourly_rate ? `From ₹${Number(p.hourly_rate).toLocaleString("en-IN")}/hr` : "Not added yet",
 			countries: p.country ? [p.country] : [],
-			industries: p.display_industries || [],
+			industries: p.industry_badges || [],
 			apps: p.apps || [],
 			migrations: p.migrations || [],
 		}
@@ -181,18 +182,18 @@ export default function setup(context) {
 
 	function saveSection() {
 		if (saving.value) return
-		const problem = draftProblem(draft.value)
+		const problem = draftProblem(draft.value, toDraft(profile.value))
 		if (problem) {
 			saveError.value = problem
 			return
 		}
 		saving.value = true
 		saveError.value = ""
-		call(`${PROFILE_API}.update_my_partner_profile`, toSavePayload(draft.value))
+		call(`${PROFILE_API}.update_my_partner_profile`, { ...toSavePayload(draft.value), as_draft: 1 })
 			.then(() => load())
 			.then(() => {
 				editOpen.value = false
-				toast.success("Listing saved")
+				toast.success("Saved. Publish to show it to businesses.")
 			})
 			.catch((error) => {
 				saveError.value = error?.messages?.[0] || "Couldn't save your listing. Try again."
@@ -203,6 +204,39 @@ export default function setup(context) {
 	}
 
 	const upload = (target, onUploaded) => uploadImage({ toast, uploading, target, onUploaded })
+
+	// ---- Publish: the saved edits go live together; Discard drops them ----
+	const hasUnpublished = computed(() => !!profile.value?.has_unpublished_changes)
+	const publishing = ref(false)
+	const discardOpen = ref(false)
+	const discarding = ref(false)
+
+	function publishListing() {
+		if (publishing.value) return
+		publishing.value = true
+		call(`${PROFILE_API}.publish_my_profile_draft`)
+			.then(() => load())
+			.then(() => toast.success("Published. Businesses now see your changes."))
+			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't publish your listing. Try again."))
+			.finally(() => {
+				publishing.value = false
+			})
+	}
+
+	function discardChanges() {
+		if (discarding.value) return
+		discarding.value = true
+		call(`${PROFILE_API}.discard_my_profile_draft`)
+			.then(() => load())
+			.then(() => {
+				discardOpen.value = false
+				toast.success("Unpublished changes discarded")
+			})
+			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't discard your changes. Try again."))
+			.finally(() => {
+				discarding.value = false
+			})
+	}
 
 	function uploadLabel(target, empty, replace) {
 		if (uploading.value === target) return "Uploading…"
@@ -215,6 +249,12 @@ export default function setup(context) {
 		profile,
 		loadError,
 		canEdit,
+		hasUnpublished,
+		publishing,
+		publishListing,
+		discardOpen,
+		discarding,
+		discardChanges,
 		listingName,
 		openDirectory,
 		mainPhoto: computed(() => photos.value[0] || null),
@@ -255,7 +295,19 @@ export default function setup(context) {
 		addPhoto: () => upload("gallery", (url) => draft.value.photos.push({ image: url, video: "" })),
 		removePhoto: (index) => draft.value.photos.splice(index, 1),
 		draftPhotos: computed(() => (draft.value.photos || []).map((photo, index) => ({ ...photo, index }))),
-		industryOptions: computed(() => [{ label: "Select", value: "" }, ...toOptions(options.value.industries)]),
+		industryOptions: computed(() => toOptions(options.value.industries)),
+		industryCount: computed(() => `${(draft.value.industries || []).length} of ${MAX_INDUSTRIES}`),
+		tooManyIndustries: computed(() => (draft.value.industries || []).length > MAX_INDUSTRIES),
+		// industries their stories prove that they haven't picked yet
+		industrySuggestions: computed(() =>
+			(profile.value?.suggested_industries || [])
+				.filter((row) => !(draft.value.industries || []).includes(row.industry))
+				.map((row) => ({ ...row, label: `${row.industry} · ${row.stories} stories` })),
+		),
+		addIndustry: (industry) => {
+			const picked = draft.value.industries || []
+			if (picked.length < MAX_INDUSTRIES && !picked.includes(industry)) draft.value.industries = [...picked, industry]
+		},
 		appOptions: computed(() => toOptions(options.value.apps)),
 		migrationOptions: computed(() => toOptions(options.value.migrations)),
 	}

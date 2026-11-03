@@ -34,7 +34,7 @@
   "phone",
   "journey_blog_url",
   "column_break_contact",
-  "industry",
+  "industries",
   "team_size",
   "section_break_metrics",
   "rollouts",
@@ -51,6 +51,7 @@
   "certified_experts",
   "certs_erpnext",
   "certs_frappe_framework",
+  "free_certifications",
   "column_break_certs",
   "countries_served",
   "starter_pack",
@@ -91,7 +92,9 @@
   "successful_implementation",
   "section_break_demos",
   "demos",
-  "is_featured"
+  "is_featured",
+  "section_break_profile_draft",
+  "profile_draft"
  ],
  "fields": [
   {
@@ -278,11 +281,11 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "industry",
-   "fieldtype": "Select",
-   "in_standard_filter": 1,
-   "label": "Industry",
-   "options": "\nManufacturing\nRetail\nHealthcare\nFinTech\nEducation\nLogistics\nProfessional Services\nNonprofit\nGovernment\nTechnology\nOther"
+   "description": "Up to 6. An industry with 2 or more success stories shows a verified tick.",
+   "fieldname": "industries",
+   "fieldtype": "Table MultiSelect",
+   "label": "Industries",
+   "options": "Partner Industry"
   },
   {
    "fieldname": "team_size",
@@ -363,14 +366,26 @@
    "label": "Certified Experts"
   },
   {
+   "description": "Counted from this partner's linked, unexpired certificates.",
    "fieldname": "certs_erpnext",
    "fieldtype": "Int",
-   "label": "ERPNext Certifications"
+   "label": "ERPNext Certifications",
+   "read_only": 1
   },
   {
+   "description": "Counted from this partner's linked, unexpired certificates.",
    "fieldname": "certs_frappe_framework",
    "fieldtype": "Int",
-   "label": "Frappe Framework Certifications"
+   "label": "Frappe Framework Certifications",
+   "read_only": 1
+  },
+  {
+   "default": "2",
+   "description": "Free Frappe School certifications Frappe gives this partner once their partnership is approved. Set by Frappe; partners can't change it.",
+   "fieldname": "free_certifications",
+   "fieldtype": "Int",
+   "label": "Free Certifications",
+   "non_negative": 1
   },
   {
    "fieldname": "column_break_certs",
@@ -610,11 +625,25 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Featured (curated profile)"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_profile_draft",
+   "fieldtype": "Section Break",
+   "label": "Unpublished Changes"
+  },
+  {
+   "description": "Listing changes the partner admin saved but hasn't published yet. Publish copies them to the profile.",
+   "fieldname": "profile_draft",
+   "fieldtype": "JSON",
+   "label": "Unpublished Profile Changes",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-30 18:00:00.000000",
+ "modified": "2026-11-03 14:00:00.000000",
  "modified_by": "Administrator",
  "module": "Partner",
  "name": "Partner",

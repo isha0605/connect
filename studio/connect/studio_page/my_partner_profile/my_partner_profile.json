@@ -815,7 +815,8 @@
                 },
                 {
                  "baseStyles": {
-                  "resize": "none"
+                  "resize": "none",
+                  "scrollbarWidth": "thin"
                  },
                  "componentId": "pb-description-input",
                  "componentName": "FormControl",
@@ -1013,52 +1014,73 @@
               },
               {
                "baseStyles": {
-                "display": "grid",
-                "gap": "16px",
-                "gridTemplateColumns": "repeat(2, minmax(0, 1fr))"
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "6px",
+                "minWidth": "0px"
                },
                "children": [
                 {
                  "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "fontSize": "12px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "1.15"
+                 },
+                 "componentId": "pb-certs-label",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "label",
+                  "text": "Certified experts"
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
                   "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "6px",
-                  "minWidth": "0px"
+                  "flexDirection": "row",
+                  "gap": "12px",
+                  "justifyContent": "space-between"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-5)",
-                    "fontSize": "12px",
+                    "color": "var(--ink-gray-8)",
+                    "fontSize": "14px",
                     "fontWeight": "420",
                     "letterSpacing": "0.02em",
-                    "lineHeight": "1.15"
+                    "lineHeight": "22px"
                    },
-                   "componentId": "pb-certs-erpnext-label",
+                   "componentId": "pb-certs-summary",
                    "componentName": "TextBlock",
                    "componentProps": {
-                    "tag": "label",
-                    "text": "ERPNext experts"
+                    "tag": "p",
+                    "text": "{{ certSummary }}"
                    },
                    "componentSlots": {}
                   },
                   {
-                   "componentId": "pb-certs-erpnext-input",
-                   "componentName": "FormControl",
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "openCertifications();"
+                    }
+                   },
+                   "componentId": "pb-certs-manage",
+                   "componentName": "Button",
                    "componentProps": {
-                    "disabled": "{{ !canEdit }}",
-                    "modelValue": {
-                     "$type": "variable",
-                     "name": "draft.certs_erpnext"
-                    },
+                    "iconRight": "lucide-arrow-right",
+                    "label": "Manage certificates",
                     "size": "sm",
-                    "type": "number",
-                    "variant": "outline"
+                    "variant": "ghost"
                    },
                    "componentSlots": {}
                   }
                  ],
-                 "componentId": "pb-certs-erpnext",
+                 "componentId": "pb-certs-row",
                  "componentName": "container",
                  "componentProps": {},
                  "componentSlots": {},
@@ -1066,49 +1088,19 @@
                 },
                 {
                  "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "6px",
-                  "minWidth": "0px"
+                  "color": "var(--ink-gray-5)",
+                  "fontSize": "12px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "18px"
                  },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-5)",
-                    "fontSize": "12px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "1.15"
-                   },
-                   "componentId": "pb-certs-framework-label",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "label",
-                    "text": "Framework experts"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "componentId": "pb-certs-framework-input",
-                   "componentName": "FormControl",
-                   "componentProps": {
-                    "disabled": "{{ !canEdit }}",
-                    "modelValue": {
-                     "$type": "variable",
-                     "name": "draft.certs_frappe_framework"
-                    },
-                    "size": "sm",
-                    "type": "number",
-                    "variant": "outline"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "pb-certs-framework",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
+                 "componentId": "pb-certs-hint",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "Counted from your team's linked Frappe School certificates. Expired ones don't count."
+                 },
+                 "componentSlots": {}
                 }
                ],
                "componentId": "pb-certs",
@@ -1143,7 +1135,8 @@
                 },
                 {
                  "baseStyles": {
-                  "resize": "none"
+                  "resize": "none",
+                  "scrollbarWidth": "thin"
                  },
                  "componentId": "pb-address-input",
                  "componentName": "FormControl",
@@ -1355,47 +1348,98 @@
                "baseStyles": {
                 "display": "flex",
                 "flexDirection": "column",
-                "gap": "6px",
-                "minWidth": "0px"
+                "gap": "6px"
                },
                "children": [
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-5)",
-                  "fontSize": "12px",
-                  "fontWeight": "420",
-                  "letterSpacing": "0.02em",
-                  "lineHeight": "1.15"
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "6px",
+                  "minWidth": "0px"
                  },
-                 "componentId": "pb-industry-label",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "tag": "label",
-                  "text": "Main industry"
-                 },
-                 "componentSlots": {}
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)",
+                    "fontSize": "12px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "1.15"
+                   },
+                   "componentId": "pb-industries-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "label",
+                    "text": "Industries you serve"
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "width": "100%"
+                   },
+                   "componentId": "pb-industries-input",
+                   "componentName": "MultiSelect",
+                   "componentProps": {
+                    "modelValue": {
+                     "$type": "variable",
+                     "name": "draft.industries"
+                    },
+                    "options": "{{ industryOptions }}",
+                    "placeholder": "Select"
+                   }
+                  }
+                 ],
+                 "componentId": "pb-industries",
+                 "componentName": "container",
+                 "originalElement": "div"
                 },
                 {
-                 "componentId": "pb-industry-input",
-                 "componentName": "FormControl",
-                 "componentProps": {
-                  "disabled": "{{ !canEdit }}",
-                  "modelValue": {
-                   "$type": "variable",
-                   "name": "draft.industry"
-                  },
-                  "options": "{{ industryOptions }}",
-                  "size": "sm",
-                  "type": "select",
-                  "variant": "outline"
+                 "baseStyles": {
+                  "display": "flex",
+                  "gap": "12px",
+                  "justifyContent": "space-between"
                  },
-                 "componentSlots": {}
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)",
+                    "fontSize": "13px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "20px"
+                   },
+                   "componentId": "pb-industries-hint",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "p",
+                    "text": "Up to 6. An industry with 2 or more success stories gets a check mark."
+                   }
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "{{ tooManyIndustries ? 'var(--ink-red-7)' : 'var(--ink-gray-5)' }}",
+                    "flexShrink": "0",
+                    "fontSize": "12px",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "16px",
+                    "textAlign": "right"
+                   },
+                   "componentId": "pb-industries-count",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "p",
+                    "text": "{{ industryCount }}"
+                   }
+                  }
+                 ],
+                 "componentId": "pb-industries-foot",
+                 "componentName": "container",
+                 "originalElement": "div"
                 }
                ],
                "componentId": "pb-industry",
                "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -1423,6 +1467,9 @@
                  "componentSlots": {}
                 },
                 {
+                 "baseStyles": {
+                  "width": "100%"
+                 },
                  "componentId": "pb-apps-input",
                  "componentName": "MultiSelect",
                  "componentProps": {
@@ -1467,6 +1514,9 @@
                  "componentSlots": {}
                 },
                 {
+                 "baseStyles": {
+                  "width": "100%"
+                 },
                  "componentId": "pb-migrations-input",
                  "componentName": "MultiSelect",
                  "componentProps": {
@@ -1573,7 +1623,8 @@
                 },
                 {
                  "baseStyles": {
-                  "resize": "none"
+                  "resize": "none",
+                  "scrollbarWidth": "thin"
                  },
                  "componentId": "pb-why-input",
                  "componentName": "FormControl",
@@ -1640,7 +1691,8 @@
                 },
                 {
                  "baseStyles": {
-                  "resize": "none"
+                  "resize": "none",
+                  "scrollbarWidth": "thin"
                  },
                  "componentId": "pb-how-we-work-input",
                  "componentName": "FormControl",
@@ -1707,7 +1759,8 @@
                 },
                 {
                  "baseStyles": {
-                  "resize": "none"
+                  "resize": "none",
+                  "scrollbarWidth": "thin"
                  },
                  "componentId": "pb-success-input",
                  "componentName": "FormControl",
@@ -2057,7 +2110,8 @@
                 },
                 {
                  "baseStyles": {
-                  "resize": "none"
+                  "resize": "none",
+                  "scrollbarWidth": "thin"
                  },
                  "componentId": "pb-founder-bio-input",
                  "componentName": "FormControl",
@@ -2067,7 +2121,7 @@
                    "$type": "variable",
                    "name": "draft.founder.bio"
                   },
-                  "rows": 3,
+                  "rows": 4,
                   "size": "sm",
                   "type": "textarea",
                   "variant": "outline"
@@ -2533,7 +2587,8 @@
                 },
                 {
                  "baseStyles": {
-                  "resize": "none"
+                  "resize": "none",
+                  "scrollbarWidth": "thin"
                  },
                  "componentId": "pb-origin-story-input",
                  "componentName": "FormControl",
@@ -2543,7 +2598,7 @@
                    "$type": "variable",
                    "name": "draft.origin_story"
                   },
-                  "rows": 8,
+                  "rows": 10,
                   "size": "sm",
                   "type": "textarea",
                   "variant": "outline"
@@ -3109,7 +3164,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-02 12:23:43.055767",
+ "modified": "2026-11-03 20:11:06.137538",
  "modified_by": "tridots@example.com",
  "name": "my_partner_profile",
  "owner": "Administrator",

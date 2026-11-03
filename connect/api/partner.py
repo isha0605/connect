@@ -1,4 +1,5 @@
 import frappe
+from frappe.rate_limiter import rate_limit
 
 # Whitelisted entry points only — the actual logic lives next to the doctype it
 # belongs to (Partner, Partner Review). Kept here as thin wrappers because the
@@ -161,7 +162,7 @@ def upload_partner_asset():
 @frappe.whitelist()
 def update_my_partner_profile(
 	partner_name=None, tagline=None, description=None, country=None, city=None,
-	address=None, website=None, industry=None, year_founded=None, rollouts=None,
+	address=None, website=None, year_founded=None, rollouts=None,
 	hourly_rate=None, sites_deployed=None,
 	typical_project_size=None, proposal_timeline=None, certified_experts=None,
 	certs_erpnext=None, certs_frappe_framework=None, countries_served=None,
@@ -171,12 +172,12 @@ def update_my_partner_profile(
 	founder=None, success_stories=None, packs=None, addons=None,
 	phone=None, team_size=None, journey_blog_url=None,
 	logo=None, logo_icon=None, why_choose_them=None, origin_story=None, photos=None,
-	how_we_work=None, successful_implementation=None,
+	how_we_work=None, successful_implementation=None, industries=None, as_draft=False,
 ):
 	from connect.partner.doctype.partner.partner import update_my_partner_profile
 	return update_my_partner_profile(
 		partner_name=partner_name, tagline=tagline, description=description, country=country,
-		city=city, address=address, website=website, industry=industry, year_founded=year_founded,
+		city=city, address=address, website=website, year_founded=year_founded,
 		rollouts=rollouts, hourly_rate=hourly_rate,
 		sites_deployed=sites_deployed, typical_project_size=typical_project_size,
 		proposal_timeline=proposal_timeline, certified_experts=certified_experts,
@@ -189,14 +190,27 @@ def update_my_partner_profile(
 		languages=languages, founder=founder, success_stories=success_stories, packs=packs, addons=addons,
 		phone=phone, team_size=team_size, journey_blog_url=journey_blog_url,
 		logo=logo, logo_icon=logo_icon, why_choose_them=why_choose_them, origin_story=origin_story, photos=photos,
-		how_we_work=how_we_work, successful_implementation=successful_implementation,
+		how_we_work=how_we_work, successful_implementation=successful_implementation, industries=industries,
+		as_draft=as_draft,
 	)
 
 
+@frappe.whitelist(methods=["POST"])
+def publish_my_profile_draft():
+	from connect.partner.doctype.partner.partner import publish_my_profile_draft
+	return publish_my_profile_draft()
+
+
+@frappe.whitelist(methods=["POST"])
+def discard_my_profile_draft():
+	from connect.partner.doctype.partner.partner import discard_my_profile_draft
+	return discard_my_profile_draft()
+
+
 @frappe.whitelist()
-def get_my_profile():
+def get_my_profile(with_draft=False):
 	from connect.partner.doctype.partner.partner import get_my_profile
-	return get_my_profile()
+	return get_my_profile(with_draft=with_draft)
 
 
 @frappe.whitelist()
@@ -291,6 +305,57 @@ def send_certificate_link_request(user_email, certificate_type):
 	from connect.partner.doctype.certificate_link_request.certificate_link_request import create_or_resend
 
 	return create_or_resend(_my_partner(), (user_email or "").strip(), certificate_type)
+
+
+# allow_guest: the certificate holder approves from an emailed link and often has no Connect
+# account; the unguessable key in that link is what authorises them.
+@frappe.whitelist(allow_guest=True)
+@rate_limit(limit=30, seconds=60 * 60)
+def get_certificate_link_request(key):
+	from connect.partner.doctype.certificate_link_request.certificate_link_request import get_request_for_holder
+
+	return get_request_for_holder(key)
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+@rate_limit(limit=30, seconds=60 * 60)
+def approve_certificate_link(key):
+	from connect.partner.doctype.certificate_link_request.certificate_link_request import (
+		approve_from_key,
+		get_request_for_holder,
+	)
+
+	approve_from_key(key)
+	return get_request_for_holder(key)
+
+
+@frappe.whitelist(methods=["POST"])
+def apply_for_certificate(member_email, certificate_type, member_name=None):
+	from connect.partner.doctype.certificate_application.certificate_application import apply
+
+	return apply(member_email, certificate_type, member_name)
+
+
+@frappe.whitelist(methods=["POST"])
+def cancel_certificate_application(application):
+	from connect.partner.doctype.certificate_application.certificate_application import cancel
+
+	return cancel(application)
+
+
+@frappe.whitelist(methods=["POST"])
+def check_certificate_applications():
+	from connect.partner.doctype.certificate_application.certificate_application import check_approved_applications
+	from connect.partner.doctype.partner.partner import _my_partner
+
+	return {"certified": check_approved_applications(_my_partner())}
+
+
+@frappe.whitelist(methods=["POST"])
+def remove_certificate(certificate):
+	from connect.partner.doctype.partner_certificate.partner_certificate import remove_certificate
+
+	return remove_certificate(certificate)
 
 
 @frappe.whitelist(methods=["POST"])

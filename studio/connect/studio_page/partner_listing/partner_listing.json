@@ -18,6 +18,8 @@
      "blockName": "AppSidebar",
      "componentId": "appsidebar-pl",
      "componentName": "appsidebar",
+     "componentProps": {},
+     "componentSlots": {},
      "isStudioComponent": true
     },
     {
@@ -50,11 +52,14 @@
             "route": "/partner-listing"
            }
           ]
-         }
+         },
+         "componentSlots": {}
         }
        ],
        "componentId": "header",
        "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
        "originalElement": "div"
       },
       {
@@ -86,12 +91,14 @@
             "tag": "p",
             "text": "Couldn't load your listing. Refresh the page to try again."
            },
+           "componentSlots": {},
            "visibilityCondition": "loadError"
           },
           {
            "baseStyles": {
             "display": "flex",
             "flexDirection": "column",
+            "flexWrap": "nowrap",
             "gap": "48px"
            },
            "children": [
@@ -130,7 +137,8 @@
                    "componentProps": {
                     "tag": "h1",
                     "text": "How businesses see you"
-                   }
+                   },
+                   "componentSlots": {}
                   },
                   {
                    "baseStyles": {
@@ -145,33 +153,141 @@
                    "componentProps": {
                     "tag": "p",
                     "text": "Listed in the Frappe Connect directory"
-                   }
+                   },
+                   "componentSlots": {}
                   }
                  ],
                  "componentId": "pl-header-text",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 },
                 {
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "openDirectory();"
-                  }
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "flexShrink": "0",
+                  "gap": "8px"
                  },
-                 "componentId": "pl-directory",
-                 "componentName": "Button",
-                 "componentProps": {
-                  "iconRight": "lucide-external-link",
-                  "label": "View in directory",
-                  "variant": "subtle"
-                 }
+                 "children": [
+                  {
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "discardOpen.value = true;"
+                    }
+                   },
+                   "componentId": "pl-discard",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "label": "Discard changes",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {},
+                   "visibilityCondition": "canEdit && hasUnpublished"
+                  },
+                  {
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "openDirectory();"
+                    }
+                   },
+                   "componentId": "pl-directory",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "iconRight": "lucide-external-link",
+                    "label": "View in directory",
+                    "variant": "subtle"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "publishListing();"
+                    }
+                   },
+                   "componentId": "pl-publish",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "disabled": "{{ !hasUnpublished }}",
+                    "label": "Publish",
+                    "loading": "{{ publishing }}",
+                    "variant": "solid"
+                   },
+                   "componentSlots": {},
+                   "visibilityCondition": "canEdit"
+                  }
+                 ],
+                 "componentId": "pl-header-actions",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "originalElement": "div"
                 }
                ],
                "componentId": "pl-header",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "var(--surface-amber-1)",
+                "borderRadius": "8px",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "8px",
+                "marginTop": "8px",
+                "padding": "8px 12px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-amber-6)",
+                  "flexShrink": "0",
+                  "height": "14px",
+                  "width": "14px"
+                 },
+                 "componentId": "pl-unpublished-icon",
+                 "componentName": "Icon",
+                 "componentProps": {
+                  "icon": "lucide-info"
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-amber-7)",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "20px"
+                 },
+                 "componentId": "pl-unpublished-text",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "You have unpublished changes. Businesses see your last published listing until you publish."
+                 },
+                 "componentSlots": {}
+                }
+               ],
+               "componentId": "pl-unpublished",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div",
+               "visibilityCondition": "canEdit && hasUnpublished"
               },
               {
                "baseStyles": {
@@ -187,11 +303,14 @@
                 "tag": "p",
                 "text": "Only your partner admin can edit this listing."
                },
+               "componentSlots": {},
                "visibilityCondition": "profile && !canEdit"
               }
              ],
              "componentId": "pl-top",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -224,7 +343,8 @@
                  "componentProps": {
                   "tag": "p",
                   "text": "Name and tagline"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "componentEvents": {
@@ -241,11 +361,14 @@
                   "label": "Edit",
                   "variant": "ghost"
                  },
+                 "componentSlots": {},
                  "visibilityCondition": "canEdit"
                 }
                ],
                "componentId": "name-head",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -269,6 +392,8 @@
                  },
                  "componentId": "name-logo",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 },
                 {
@@ -299,7 +424,8 @@
                      "componentProps": {
                       "tag": "h2",
                       "text": "{{ listingName }}"
-                     }
+                     },
+                     "componentSlots": {}
                     },
                     {
                      "attributes": {
@@ -316,11 +442,14 @@
                      "componentProps": {
                       "icon": "lucide-badge-check"
                      },
+                     "componentSlots": {},
                      "visibilityCondition": "profile.is_verified"
                     }
                    ],
                    "componentId": "name-title",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div"
                   },
                   {
@@ -336,21 +465,28 @@
                    "componentProps": {
                     "tag": "p",
                     "text": "{{ profile.tagline || 'No tagline yet' }}"
-                   }
+                   },
+                   "componentSlots": {}
                   }
                  ],
                  "componentId": "name-text",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 }
                ],
                "componentId": "name-row",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               }
              ],
              "componentId": "name-section",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -383,7 +519,8 @@
                  "componentProps": {
                   "tag": "p",
                   "text": "Photos and video"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "componentEvents": {
@@ -400,11 +537,14 @@
                   "label": "Edit",
                   "variant": "ghost"
                  },
+                 "componentSlots": {},
                  "visibilityCondition": "canEdit"
                 }
                ],
                "componentId": "photos-head",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -453,11 +593,14 @@
                      "componentName": "Icon",
                      "componentProps": {
                       "icon": "lucide-play"
-                     }
+                     },
+                     "componentSlots": {}
                     }
                    ],
                    "componentId": "photos-main-play",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div",
                    "visibilityCondition": "mainPhoto.video"
                   }
@@ -471,6 +614,8 @@
                  },
                  "componentId": "photos-main",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 },
                 {
@@ -530,11 +675,14 @@
                          "componentName": "Icon",
                          "componentProps": {
                           "icon": "lucide-play"
-                         }
+                         },
+                         "componentSlots": {}
                         }
                        ],
                        "componentId": "photos-side-play",
                        "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
                        "originalElement": "div",
                        "visibilityCondition": "dataItem.video && !dataItem.more"
                       },
@@ -562,11 +710,14 @@
                          "componentProps": {
                           "tag": "p",
                           "text": "{{ dataItem.more }}"
-                         }
+                         },
+                         "componentSlots": {}
                         }
                        ],
                        "componentId": "photos-more",
                        "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
                        "originalElement": "div",
                        "visibilityCondition": "dataItem.more"
                       }
@@ -580,9 +731,12 @@
                      },
                      "componentId": "photos-side-tile",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     }
-                   ]
+                   ],
+                   "slotId": "photos-side:default"
                   }
                  },
                  "visibilityCondition": "sidePhotos.length"
@@ -590,6 +744,8 @@
                ],
                "componentId": "photos-grid",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div",
                "visibilityCondition": "mainPhoto"
               },
@@ -607,11 +763,14 @@
                 "tag": "p",
                 "text": "No photos or videos yet."
                },
+               "componentSlots": {},
                "visibilityCondition": "!mainPhoto"
               }
              ],
              "componentId": "photos-section",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -644,7 +803,8 @@
                  "componentProps": {
                   "tag": "p",
                   "text": "Client logos"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "baseStyles": {
@@ -659,11 +819,14 @@
                  "componentProps": {
                   "tag": "p",
                   "text": "From your success stories"
-                 }
+                 },
+                 "componentSlots": {}
                 }
                ],
                "componentId": "logos-head",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -706,9 +869,12 @@
                    },
                    "componentId": "logos-item",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div"
                   }
-                 ]
+                 ],
+                 "slotId": "logos-row:default"
                 }
                },
                "visibilityCondition": "clientLogos.length"
@@ -727,11 +893,14 @@
                 "tag": "p",
                 "text": "No client logos yet. They come from your success stories."
                },
+               "componentSlots": {},
                "visibilityCondition": "!clientLogos.length"
               }
              ],
              "componentId": "logos-section",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -764,7 +933,8 @@
                  "componentProps": {
                   "tag": "p",
                   "text": "Details"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "componentEvents": {
@@ -781,11 +951,14 @@
                   "label": "Edit",
                   "variant": "ghost"
                  },
+                 "componentSlots": {},
                  "visibilityCondition": "canEdit"
                 }
                ],
                "componentId": "details-head",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -825,7 +998,8 @@
                      "componentName": "Icon",
                      "componentProps": {
                       "icon": "lucide-building-2"
-                     }
+                     },
+                     "componentSlots": {}
                     },
                     {
                      "baseStyles": {
@@ -840,11 +1014,14 @@
                      "componentProps": {
                       "tag": "h3",
                       "text": "About"
-                     }
+                     },
+                     "componentSlots": {}
                     }
                    ],
                    "componentId": "details-about-head",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div"
                   },
                   {
@@ -883,7 +1060,8 @@
                          "componentProps": {
                           "tag": "p",
                           "text": "PMM"
-                         }
+                         },
+                         "componentSlots": {}
                         },
                         {
                          "attributes": {
@@ -899,11 +1077,14 @@
                          "componentName": "Icon",
                          "componentProps": {
                           "icon": "lucide-info"
-                         }
+                         },
+                         "componentSlots": {}
                         }
                        ],
                        "componentId": "details-pmm-head",
                        "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
                        "originalElement": "div"
                       },
                       {
@@ -920,11 +1101,14 @@
                        "componentProps": {
                         "tag": "p",
                         "text": "{{ details.pmm }}"
-                       }
+                       },
+                       "componentSlots": {}
                       }
                      ],
                      "componentId": "details-pmm",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     },
                     {
@@ -956,11 +1140,14 @@
                          "componentProps": {
                           "tag": "p",
                           "text": "Certified members"
-                         }
+                         },
+                         "componentSlots": {}
                         }
                        ],
                        "componentId": "details-certified-head",
                        "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
                        "originalElement": "div"
                       },
                       {
@@ -997,9 +1184,11 @@
                            "componentProps": {
                             "tag": "p",
                             "text": "{{ dataItem }}"
-                           }
+                           },
+                           "componentSlots": {}
                           }
-                         ]
+                         ],
+                         "slotId": "details-certified-chips:default"
                         }
                        },
                        "visibilityCondition": "details.certified.length"
@@ -1018,11 +1207,14 @@
                         "tag": "p",
                         "text": "None yet"
                        },
+                       "componentSlots": {},
                        "visibilityCondition": "!details.certified.length"
                       }
                      ],
                      "componentId": "details-certified",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     },
                     {
@@ -1054,11 +1246,14 @@
                          "componentProps": {
                           "tag": "p",
                           "text": "Address"
-                         }
+                         },
+                         "componentSlots": {}
                         }
                        ],
                        "componentId": "details-address-head",
                        "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
                        "originalElement": "div"
                       },
                       {
@@ -1075,21 +1270,28 @@
                        "componentProps": {
                         "tag": "p",
                         "text": "{{ details.address }}"
-                       }
+                       },
+                       "componentSlots": {}
                       }
                      ],
                      "componentId": "details-address",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     }
                    ],
                    "componentId": "details-about-rows",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div"
                   }
                  ],
                  "componentId": "details-about",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 },
                 {
@@ -1120,7 +1322,8 @@
                      "componentName": "Icon",
                      "componentProps": {
                       "icon": "lucide-briefcase"
-                     }
+                     },
+                     "componentSlots": {}
                     },
                     {
                      "baseStyles": {
@@ -1135,11 +1338,14 @@
                      "componentProps": {
                       "tag": "h3",
                       "text": "Services and Expertise"
-                     }
+                     },
+                     "componentSlots": {}
                     }
                    ],
                    "componentId": "details-services-head",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div"
                   },
                   {
@@ -1178,11 +1384,14 @@
                          "componentProps": {
                           "tag": "p",
                           "text": "Rate"
-                         }
+                         },
+                         "componentSlots": {}
                         }
                        ],
                        "componentId": "details-rate-head",
                        "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
                        "originalElement": "div"
                       },
                       {
@@ -1199,11 +1408,14 @@
                        "componentProps": {
                         "tag": "p",
                         "text": "{{ details.rate }}"
-                       }
+                       },
+                       "componentSlots": {}
                       }
                      ],
                      "componentId": "details-rate",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     },
                     {
@@ -1235,11 +1447,14 @@
                          "componentProps": {
                           "tag": "p",
                           "text": "Countries served"
-                         }
+                         },
+                         "componentSlots": {}
                         }
                        ],
                        "componentId": "details-countries-head",
                        "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
                        "originalElement": "div"
                       },
                       {
@@ -1276,9 +1491,11 @@
                            "componentProps": {
                             "tag": "p",
                             "text": "{{ dataItem }}"
-                           }
+                           },
+                           "componentSlots": {}
                           }
-                         ]
+                         ],
+                         "slotId": "details-countries-chips:default"
                         }
                        },
                        "visibilityCondition": "details.countries.length"
@@ -1297,11 +1514,14 @@
                         "tag": "p",
                         "text": "Not added yet"
                        },
+                       "componentSlots": {},
                        "visibilityCondition": "!details.countries.length"
                       }
                      ],
                      "componentId": "details-countries",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     },
                     {
@@ -1333,11 +1553,14 @@
                          "componentProps": {
                           "tag": "p",
                           "text": "Industries served"
-                         }
+                         },
+                         "componentSlots": {}
                         }
                        ],
                        "componentId": "details-industries-head",
                        "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
                        "originalElement": "div"
                       },
                       {
@@ -1346,37 +1569,74 @@
                         "flexWrap": "wrap",
                         "gap": "6px"
                        },
-                       "componentId": "details-industries-chips",
+                       "componentId": "details-industries-list",
                        "componentName": "Repeater",
                        "componentProps": {
                         "data": "{{ details.industries }}",
-                        "dataKey": "",
+                        "dataKey": "industry",
                         "emptyStateMessage": ""
                        },
                        "componentSlots": {
                         "default": {
-                         "parentBlockId": "details-industries-chips",
+                         "parentBlockId": "details-industries-list",
                          "slotContent": [
                           {
+                           "attributes": {
+                            "title": "{{ dataItem.verified ? 'Backed by ' + dataItem.stories + ' success stories' : '' }}"
+                           },
                            "baseStyles": {
+                            "alignItems": "center",
                             "backgroundColor": "var(--surface-gray-2)",
                             "borderRadius": "8px",
                             "color": "var(--ink-gray-7)",
+                            "display": "inline-flex",
                             "fontSize": "13px",
                             "fontWeight": "420",
+                            "gap": "4px",
                             "letterSpacing": "0.02em",
                             "lineHeight": "20px",
                             "padding": "1px 8px",
                             "whiteSpace": "nowrap"
                            },
-                           "componentId": "details-industries-chips-chip",
-                           "componentName": "TextBlock",
-                           "componentProps": {
-                            "tag": "p",
-                            "text": "{{ dataItem }}"
-                           }
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "inherit",
+                              "fontSize": "inherit",
+                              "lineHeight": "inherit"
+                             },
+                             "componentId": "details-industry-name",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "tag": "span",
+                              "text": "{{ dataItem.industry }}"
+                             },
+                             "componentSlots": {}
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6, oklch(0.439 0 0))",
+                              "flexShrink": "0",
+                              "height": "14px",
+                              "width": "14px"
+                             },
+                             "componentId": "details-industry-tick",
+                             "componentName": "Icon",
+                             "componentProps": {
+                              "icon": "lucide-badge-check"
+                             },
+                             "componentSlots": {},
+                             "visibilityCondition": "dataItem.verified"
+                            }
+                           ],
+                           "componentId": "details-industry",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div"
                           }
-                         ]
+                         ],
+                         "slotId": "details-industries-list:default"
                         }
                        },
                        "visibilityCondition": "details.industries.length"
@@ -1395,11 +1655,14 @@
                         "tag": "p",
                         "text": "Not added yet"
                        },
+                       "componentSlots": {},
                        "visibilityCondition": "!details.industries.length"
                       }
                      ],
                      "componentId": "details-industries",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     },
                     {
@@ -1431,11 +1694,14 @@
                          "componentProps": {
                           "tag": "p",
                           "text": "Apps"
-                         }
+                         },
+                         "componentSlots": {}
                         }
                        ],
                        "componentId": "details-apps-head",
                        "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
                        "originalElement": "div"
                       },
                       {
@@ -1472,9 +1738,11 @@
                            "componentProps": {
                             "tag": "p",
                             "text": "{{ dataItem }}"
-                           }
+                           },
+                           "componentSlots": {}
                           }
-                         ]
+                         ],
+                         "slotId": "details-apps-chips:default"
                         }
                        },
                        "visibilityCondition": "details.apps.length"
@@ -1493,11 +1761,14 @@
                         "tag": "p",
                         "text": "Not added yet"
                        },
+                       "componentSlots": {},
                        "visibilityCondition": "!details.apps.length"
                       }
                      ],
                      "componentId": "details-apps",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     },
                     {
@@ -1529,11 +1800,14 @@
                          "componentProps": {
                           "tag": "p",
                           "text": "Migration"
-                         }
+                         },
+                         "componentSlots": {}
                         }
                        ],
                        "componentId": "details-migrations-head",
                        "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
                        "originalElement": "div"
                       },
                       {
@@ -1570,9 +1844,11 @@
                            "componentProps": {
                             "tag": "p",
                             "text": "{{ dataItem }}"
-                           }
+                           },
+                           "componentSlots": {}
                           }
-                         ]
+                         ],
+                         "slotId": "details-migrations-chips:default"
                         }
                        },
                        "visibilityCondition": "details.migrations.length"
@@ -1591,26 +1867,35 @@
                         "tag": "p",
                         "text": "Not added yet"
                        },
+                       "componentSlots": {},
                        "visibilityCondition": "!details.migrations.length"
                       }
                      ],
                      "componentId": "details-migrations",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     }
                    ],
                    "componentId": "details-services-rows",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div"
                   }
                  ],
                  "componentId": "details-services",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 }
                ],
                "componentId": "details-card",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -1627,11 +1912,14 @@
                "componentProps": {
                 "tag": "p",
                 "text": "Tier, PMM and certifications come from Frappe."
-               }
+               },
+               "componentSlots": {}
               }
              ],
              "componentId": "details-section",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -1664,7 +1952,8 @@
                  "componentProps": {
                   "tag": "p",
                   "text": "Partner vision"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "componentEvents": {
@@ -1681,11 +1970,14 @@
                   "label": "Edit",
                   "variant": "ghost"
                  },
+                 "componentSlots": {},
                  "visibilityCondition": "canEdit"
                 }
                ],
                "componentId": "vision-head",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -1714,6 +2006,8 @@
                    },
                    "componentId": "vision-top-rule-mark",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div"
                   },
                   {
@@ -1724,11 +2018,15 @@
                    },
                    "componentId": "vision-top-rule-line",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div"
                   }
                  ],
                  "componentId": "vision-top-rule",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 },
                 {
@@ -1744,15 +2042,15 @@
                     "fontSize": "14px",
                     "fontWeight": "420",
                     "letterSpacing": "0.02em",
-                    "lineHeight": "22px",
-                    "maxWidth": "660px"
+                    "lineHeight": "22px"
                    },
                    "componentId": "vision-quote-text",
                    "componentName": "TextBlock",
                    "componentProps": {
                     "tag": "p",
                     "text": "{{ founder.bio || 'No quote yet. Add your founder and their words.' }}"
-                   }
+                   },
+                   "componentSlots": {}
                   },
                   {
                    "baseStyles": {
@@ -1775,6 +2073,8 @@
                      },
                      "componentId": "vision-founder-photo",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     },
                     {
@@ -1797,7 +2097,8 @@
                        "componentProps": {
                         "tag": "span",
                         "text": "{{ founder.designation }}"
-                       }
+                       },
+                       "componentSlots": {}
                       },
                       {
                        "baseStyles": {
@@ -1812,22 +2113,29 @@
                        "componentProps": {
                         "tag": "p",
                         "text": "{{ founder.member_name }}"
-                       }
+                       },
+                       "componentSlots": {}
                       }
                      ],
                      "componentId": "vision-founder-text",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     }
                    ],
                    "componentId": "vision-founder",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div",
                    "visibilityCondition": "founder.member_name"
                   }
                  ],
                  "componentId": "vision-quote-col",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 },
                 {
@@ -1846,6 +2154,8 @@
                    },
                    "componentId": "vision-bottom-rule-line",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div"
                   },
                   {
@@ -1860,21 +2170,29 @@
                    },
                    "componentId": "vision-bottom-rule-mark",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div"
                   }
                  ],
                  "componentId": "vision-bottom-rule",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 }
                ],
                "componentId": "vision-card",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               }
              ],
              "componentId": "vision-section",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -1907,7 +2225,8 @@
                  "componentProps": {
                   "tag": "p",
                   "text": "How you work"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "componentEvents": {
@@ -1924,11 +2243,14 @@
                   "label": "Edit",
                   "variant": "ghost"
                  },
+                 "componentSlots": {},
                  "visibilityCondition": "canEdit"
                 }
                ],
                "componentId": "answers-head",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -1989,11 +2311,15 @@
                          },
                          "componentId": "answer-icon",
                          "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
                          "originalElement": "div"
                         }
                        ],
                        "componentId": "answer-badge",
                        "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
                        "originalElement": "div"
                       },
                       {
@@ -2010,11 +2336,14 @@
                        "componentProps": {
                         "tag": "span",
                         "text": "{{ dataItem.label }}"
-                       }
+                       },
+                       "componentSlots": {}
                       }
                      ],
                      "componentId": "answer-label",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     },
                     {
@@ -2039,7 +2368,8 @@
                        "componentProps": {
                         "tag": "p",
                         "text": "{{ dataItem.text }}"
-                       }
+                       },
+                       "componentSlots": {}
                       },
                       {
                        "baseStyles": {
@@ -2055,25 +2385,33 @@
                         "tag": "p",
                         "text": "Frappe's default text. Write your own with Edit."
                        },
+                       "componentSlots": {},
                        "visibilityCondition": "dataItem.empty"
                       }
                      ],
                      "componentId": "answer-text-col",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     }
                    ],
                    "componentId": "answer",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div"
                   }
-                 ]
+                 ],
+                 "slotId": "answers:default"
                 }
                }
               }
              ],
              "componentId": "answers-section",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -2106,7 +2444,8 @@
                  "componentProps": {
                   "tag": "p",
                   "text": "Reviews"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "baseStyles": {
@@ -2121,11 +2460,14 @@
                  "componentProps": {
                   "tag": "p",
                   "text": "From businesses you worked with"
-                 }
+                 },
+                 "componentSlots": {}
                 }
                ],
                "componentId": "reviews-head",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -2141,7 +2483,8 @@
                "componentProps": {
                 "tag": "h2",
                 "text": "Reviews"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "baseStyles": {
@@ -2177,7 +2520,8 @@
                      "componentProps": {
                       "tag": "p",
                       "text": "{{ averageRating }}"
-                     }
+                     },
+                     "componentSlots": {}
                     },
                     {
                      "baseStyles": {
@@ -2190,11 +2534,14 @@
                      "componentName": "Icon",
                      "componentProps": {
                       "icon": "lucide-star"
-                     }
+                     },
+                     "componentSlots": {}
                     }
                    ],
                    "componentId": "reviews-score",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div"
                   },
                   {
@@ -2210,11 +2557,14 @@
                    "componentProps": {
                     "tag": "p",
                     "text": "{{ reviewCount }}"
-                   }
+                   },
+                   "componentSlots": {}
                   }
                  ],
                  "componentId": "reviews-summary",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 },
                 {
@@ -2259,6 +2609,8 @@
                          },
                          "componentId": "review-avatar",
                          "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
                          "originalElement": "div"
                         },
                         {
@@ -2283,7 +2635,8 @@
                            "componentProps": {
                             "tag": "p",
                             "text": "{{ dataItem.reviewer_name }}"
-                           }
+                           },
+                           "componentSlots": {}
                           },
                           {
                            "baseStyles": {
@@ -2298,11 +2651,14 @@
                            "componentProps": {
                             "tag": "p",
                             "text": "{{ dataItem.customer_name || '' }}"
-                           }
+                           },
+                           "componentSlots": {}
                           }
                          ],
                          "componentId": "review-who",
                          "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
                          "originalElement": "div"
                         },
                         {
@@ -2318,11 +2674,14 @@
                          "componentProps": {
                           "tag": "p",
                           "text": "{{ dataItem.when }}"
-                         }
+                         },
+                         "componentSlots": {}
                         }
                        ],
                        "componentId": "review-head",
                        "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
                        "originalElement": "div"
                       },
                       {
@@ -2343,7 +2702,8 @@
                          "componentName": "Icon",
                          "componentProps": {
                           "icon": "lucide-star"
-                         }
+                         },
+                         "componentSlots": {}
                         },
                         {
                          "baseStyles": {
@@ -2358,11 +2718,14 @@
                          "componentProps": {
                           "tag": "p",
                           "text": "{{ dataItem.rating }}"
-                         }
+                         },
+                         "componentSlots": {}
                         }
                        ],
                        "componentId": "review-rating",
                        "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
                        "originalElement": "div"
                       },
                       {
@@ -2378,14 +2741,18 @@
                        "componentProps": {
                         "tag": "p",
                         "text": "{{ dataItem.quote || dataItem.headline || '' }}"
-                       }
+                       },
+                       "componentSlots": {}
                       }
                      ],
                      "componentId": "review",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     }
-                   ]
+                   ],
+                   "slotId": "reviews-list:default"
                   }
                  }
                 },
@@ -2407,11 +2774,14 @@
                   "label": "{{ showAllReviews ? 'Show fewer' : 'View all' }}",
                   "variant": "ghost"
                  },
+                 "componentSlots": {},
                  "visibilityCondition": "hasMoreReviews"
                 }
                ],
                "componentId": "reviews-filled",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div",
                "visibilityCondition": "reviews.length"
               },
@@ -2429,11 +2799,14 @@
                 "tag": "p",
                 "text": "No reviews yet. Businesses you've worked with can review you from your profile."
                },
+               "componentSlots": {},
                "visibilityCondition": "!reviews.length"
               }
              ],
              "componentId": "reviews-section",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -2466,7 +2839,8 @@
                  "componentProps": {
                   "tag": "p",
                   "text": "Case studies"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "baseStyles": {
@@ -2481,11 +2855,14 @@
                  "componentProps": {
                   "tag": "p",
                   "text": "Submitted on frappe.io"
-                 }
+                 },
+                 "componentSlots": {}
                 }
                ],
                "componentId": "stories-head",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -2508,7 +2885,8 @@
                  "componentProps": {
                   "tag": "h2",
                   "text": "Success stories"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "baseStyles": {
@@ -2527,11 +2905,14 @@
                  "componentProps": {
                   "tag": "p",
                   "text": "{{ storyCount }}"
-                 }
+                 },
+                 "componentSlots": {}
                 }
                ],
                "componentId": "stories-title-row",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -2564,6 +2945,8 @@
                    },
                    "componentId": "story-featured-cover",
                    "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
                    "originalElement": "div"
                   },
                   {
@@ -2580,7 +2963,8 @@
                    "componentProps": {
                     "tag": "p",
                     "text": "{{ featuredStory.category || '' }}"
-                   }
+                   },
+                   "componentSlots": {}
                   },
                   {
                    "baseStyles": {
@@ -2595,7 +2979,8 @@
                    "componentProps": {
                     "tag": "p",
                     "text": "{{ featuredStory.headline }}"
-                   }
+                   },
+                   "componentSlots": {}
                   }
                  ],
                  "componentEvents": {
@@ -2607,6 +2992,8 @@
                  },
                  "componentId": "story-featured",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 },
                 {
@@ -2649,6 +3036,8 @@
                        },
                        "componentId": "story-card-cover",
                        "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
                        "originalElement": "div"
                       },
                       {
@@ -2665,7 +3054,8 @@
                        "componentProps": {
                         "tag": "p",
                         "text": "{{ dataItem.category || '' }}"
-                       }
+                       },
+                       "componentSlots": {}
                       },
                       {
                        "baseStyles": {
@@ -2680,7 +3070,8 @@
                        "componentProps": {
                         "tag": "p",
                         "text": "{{ dataItem.headline }}"
-                       }
+                       },
+                       "componentSlots": {}
                       }
                      ],
                      "componentEvents": {
@@ -2692,9 +3083,12 @@
                      },
                      "componentId": "story-card",
                      "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
                      "originalElement": "div"
                     }
-                   ]
+                   ],
+                   "slotId": "stories-grid:default"
                   }
                  },
                  "visibilityCondition": "otherStories.length"
@@ -2702,6 +3096,8 @@
                ],
                "componentId": "stories-filled",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div",
                "visibilityCondition": "featuredStory"
               },
@@ -2719,6 +3115,7 @@
                 "tag": "p",
                 "text": "No success stories yet."
                },
+               "componentSlots": {},
                "visibilityCondition": "!featuredStory"
               },
               {
@@ -2738,32 +3135,43 @@
                 "iconRight": "lucide-external-link",
                 "label": "Submit on frappe.io",
                 "variant": "subtle"
-               }
+               },
+               "componentSlots": {}
               }
              ],
              "componentId": "stories-section",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             }
            ],
            "componentId": "pl-listing",
            "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
            "originalElement": "div",
            "visibilityCondition": "profile"
           }
          ],
          "componentId": "pl-page",
          "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
          "originalElement": "div"
         }
        ],
        "componentId": "body",
        "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
        "originalElement": "div"
       }
      ],
      "componentId": "main",
      "componentName": "container",
+     "componentProps": {},
+     "componentSlots": {},
      "originalElement": "div"
     },
     {
@@ -2789,7 +3197,8 @@
          "componentProps": {
           "tag": "h3",
           "text": "{{ editTitle }}"
-         }
+         },
+         "componentSlots": {}
         },
         {
          "baseStyles": {
@@ -2838,6 +3247,8 @@
                  },
                  "componentId": "edit-logo-tile",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 },
                 {
@@ -2860,7 +3271,8 @@
                    "componentProps": {
                     "tag": "label",
                     "text": "Logo"
-                   }
+                   },
+                   "componentSlots": {}
                   },
                   {
                    "componentEvents": {
@@ -2877,16 +3289,21 @@
                     "loading": "{{ uploading !== '' }}",
                     "variant": "subtle"
                    },
+                   "componentSlots": {},
                    "visibilityCondition": "canEdit"
                   }
                  ],
                  "componentId": "edit-logo-text",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 }
                ],
                "componentId": "edit-logo",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -2911,6 +3328,8 @@
                  },
                  "componentId": "edit-mark-tile",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 },
                 {
@@ -2933,7 +3352,8 @@
                    "componentProps": {
                     "tag": "label",
                     "text": "Mark (square icon)"
-                   }
+                   },
+                   "componentSlots": {}
                   },
                   {
                    "componentEvents": {
@@ -2950,21 +3370,28 @@
                     "loading": "{{ uploading !== '' }}",
                     "variant": "subtle"
                    },
+                   "componentSlots": {},
                    "visibilityCondition": "canEdit"
                   }
                  ],
                  "componentId": "edit-mark-text",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 }
                ],
                "componentId": "edit-mark",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               }
              ],
              "componentId": "edit-logos",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -2987,7 +3414,8 @@
                "componentProps": {
                 "tag": "label",
                 "text": "Company name"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "baseStyles": {
@@ -3002,7 +3430,8 @@
                "componentProps": {
                 "tag": "p",
                 "text": "{{ listingName }}"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "baseStyles": {
@@ -3017,11 +3446,14 @@
                "componentProps": {
                 "tag": "p",
                 "text": "To change your company name, contact Frappe."
-               }
+               },
+               "componentSlots": {}
               }
              ],
              "componentId": "edit-company",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -3045,7 +3477,8 @@
                "componentProps": {
                 "tag": "label",
                 "text": "Tagline"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "componentId": "edit-tagline-input",
@@ -3060,7 +3493,8 @@
                 "size": "sm",
                 "type": "text",
                 "variant": "outline"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "baseStyles": {
@@ -3076,16 +3510,21 @@
                "componentProps": {
                 "tag": "p",
                 "text": "{{ counter('tagline') }}"
-               }
+               },
+               "componentSlots": {}
               }
              ],
              "componentId": "edit-tagline",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             }
            ],
            "componentId": "edit-name",
            "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
            "originalElement": "div",
            "visibilityCondition": "editSection === 'name'"
           },
@@ -3109,7 +3548,8 @@
              "componentProps": {
               "tag": "p",
               "text": "The first one shows large; the next two beside it."
-             }
+             },
+             "componentSlots": {}
             },
             {
              "baseStyles": {
@@ -3158,14 +3598,18 @@
                     "label": "Remove",
                     "size": "sm",
                     "variant": "subtle"
-                   }
+                   },
+                   "componentSlots": {}
                   }
                  ],
                  "componentId": "edit-photo",
                  "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
                  "originalElement": "div"
                 }
-               ]
+               ],
+               "slotId": "edit-photos-grid:default"
               }
              }
             },
@@ -3186,11 +3630,14 @@
               "iconLeft": "plus",
               "label": "{{ uploading === 'gallery' ? 'Uploading\u2026' : 'Add photo' }}",
               "variant": "subtle"
-             }
+             },
+             "componentSlots": {}
             }
            ],
            "componentId": "edit-photos",
            "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
            "originalElement": "div",
            "visibilityCondition": "editSection === 'photos'"
           },
@@ -3222,11 +3669,13 @@
                "componentProps": {
                 "tag": "label",
                 "text": "Address"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "baseStyles": {
-                "resize": "none"
+                "resize": "none",
+                "scrollbarWidth": "thin"
                },
                "componentId": "edit-address-input",
                "componentName": "FormControl",
@@ -3240,7 +3689,8 @@
                 "size": "sm",
                 "type": "textarea",
                 "variant": "outline"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "baseStyles": {
@@ -3256,11 +3706,14 @@
                "componentProps": {
                 "tag": "p",
                 "text": "{{ counter('address') }}"
-               }
+               },
+               "componentSlots": {}
               }
              ],
              "componentId": "edit-address",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -3291,7 +3744,8 @@
                  "componentProps": {
                   "tag": "label",
                   "text": "Hourly rate (\u20b9)"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "componentId": "edit-rate-input",
@@ -3306,11 +3760,14 @@
                   "size": "sm",
                   "type": "number",
                   "variant": "outline"
-                 }
+                 },
+                 "componentSlots": {}
                 }
                ],
                "componentId": "edit-rate",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -3334,7 +3791,8 @@
                  "componentProps": {
                   "tag": "label",
                   "text": "Country"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "componentId": "edit-country-input",
@@ -3348,60 +3806,202 @@
                   "size": "sm",
                   "type": "text",
                   "variant": "outline"
-                 }
+                 },
+                 "componentSlots": {}
                 }
                ],
                "componentId": "edit-country",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               }
              ],
              "componentId": "edit-rate-row",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
              "baseStyles": {
               "display": "flex",
               "flexDirection": "column",
-              "gap": "6px",
-              "minWidth": "0px"
+              "gap": "6px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "6px",
+                "minWidth": "0px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "fontSize": "12px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "1.15"
+                 },
+                 "componentId": "edit-industries-label",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "label",
+                  "text": "Industries you serve"
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "baseStyles": {
+                  "width": "100%"
+                 },
+                 "componentId": "edit-industries-input",
+                 "componentName": "MultiSelect",
+                 "componentProps": {
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "draft.industries"
+                  },
+                  "options": "{{ industryOptions }}",
+                  "placeholder": "Select"
+                 },
+                 "componentSlots": {}
+                }
+               ],
+               "componentId": "edit-industries",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "gap": "12px",
+                "justifyContent": "space-between"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "fontSize": "13px",
+                  "fontWeight": "420",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "20px"
+                 },
+                 "componentId": "edit-industries-hint",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "Up to 6. An industry with 2 or more success stories gets a check mark."
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "baseStyles": {
+                  "color": "{{ tooManyIndustries ? 'var(--ink-red-7)' : 'var(--ink-gray-5)' }}",
+                  "flexShrink": "0",
+                  "fontSize": "12px",
+                  "letterSpacing": "0.02em",
+                  "lineHeight": "16px",
+                  "marginTop": "0px",
+                  "textAlign": "right"
+                 },
+                 "componentId": "edit-industries-count",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "{{ industryCount }}"
+                 },
+                 "componentSlots": {}
+                }
+               ],
+               "componentId": "edit-industries-foot",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
+              }
+             ],
+             "componentId": "edit-industries-wrap",
+             "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "6px"
              },
              "children": [
               {
                "baseStyles": {
                 "color": "var(--ink-gray-5)",
-                "fontSize": "12px",
+                "fontSize": "13px",
                 "fontWeight": "420",
                 "letterSpacing": "0.02em",
-                "lineHeight": "1.15"
+                "lineHeight": "20px"
                },
-               "componentId": "edit-industry-label",
+               "componentId": "edit-suggestions-label",
                "componentName": "TextBlock",
                "componentProps": {
-                "tag": "label",
-                "text": "Main industry"
-               }
+                "tag": "p",
+                "text": "Your success stories also cover:"
+               },
+               "componentSlots": {}
               },
               {
-               "componentId": "edit-industry-input",
-               "componentName": "FormControl",
+               "baseStyles": {
+                "display": "flex",
+                "flexWrap": "wrap",
+                "gap": "6px"
+               },
+               "componentId": "edit-suggestion-list",
+               "componentName": "Repeater",
                "componentProps": {
-                "disabled": "{{ !canEdit }}",
-                "modelValue": {
-                 "$type": "variable",
-                 "name": "draft.industry"
-                },
-                "options": "{{ industryOptions }}",
-                "size": "sm",
-                "type": "select",
-                "variant": "outline"
+                "data": "{{ industrySuggestions }}",
+                "dataKey": "industry",
+                "emptyStateMessage": ""
+               },
+               "componentSlots": {
+                "default": {
+                 "parentBlockId": "edit-suggestion-list",
+                 "slotContent": [
+                  {
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "addIndustry(dataItem.industry);"
+                    }
+                   },
+                   "componentId": "edit-suggestion",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "iconLeft": "lucide-plus",
+                    "label": "{{ dataItem.label }}",
+                    "size": "sm",
+                    "variant": "subtle"
+                   },
+                   "componentSlots": {}
+                  }
+                 ],
+                 "slotId": "edit-suggestion-list:default"
+                }
                }
               }
              ],
-             "componentId": "edit-industry",
+             "componentId": "edit-suggestions",
              "componentName": "container",
-             "originalElement": "div"
+             "componentProps": {},
+             "componentSlots": {},
+             "originalElement": "div",
+             "visibilityCondition": "industrySuggestions.length"
             },
             {
              "baseStyles": {
@@ -3424,9 +4024,13 @@
                "componentProps": {
                 "tag": "label",
                 "text": "Apps"
-               }
+               },
+               "componentSlots": {}
               },
               {
+               "baseStyles": {
+                "width": "100%"
+               },
                "componentId": "edit-apps-input",
                "componentName": "MultiSelect",
                "componentProps": {
@@ -3436,11 +4040,14 @@
                 },
                 "options": "{{ appOptions }}",
                 "placeholder": "Select"
-               }
+               },
+               "componentSlots": {}
               }
              ],
              "componentId": "edit-apps",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -3464,9 +4071,13 @@
                "componentProps": {
                 "tag": "label",
                 "text": "Migrations you do"
-               }
+               },
+               "componentSlots": {}
               },
               {
+               "baseStyles": {
+                "width": "100%"
+               },
                "componentId": "edit-migrations-input",
                "componentName": "MultiSelect",
                "componentProps": {
@@ -3476,11 +4087,14 @@
                 },
                 "options": "{{ migrationOptions }}",
                 "placeholder": "Select"
-               }
+               },
+               "componentSlots": {}
               }
              ],
              "componentId": "edit-migrations",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -3495,12 +4109,15 @@
              "componentName": "TextBlock",
              "componentProps": {
               "tag": "p",
-              "text": "Tier, PMM and certifications come from Frappe. Industries served are your main industry plus any industry with two or more success stories."
-             }
+              "text": "Tier, PMM and certifications come from Frappe."
+             },
+             "componentSlots": {}
             }
            ],
            "componentId": "edit-details",
            "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
            "originalElement": "div",
            "visibilityCondition": "editSection === 'details'"
           },
@@ -3533,6 +4150,8 @@
                },
                "componentId": "edit-founder-photo-tile",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -3555,7 +4174,8 @@
                  "componentProps": {
                   "tag": "label",
                   "text": "Founder photo"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "componentEvents": {
@@ -3572,16 +4192,21 @@
                   "loading": "{{ uploading !== '' }}",
                   "variant": "subtle"
                  },
+                 "componentSlots": {},
                  "visibilityCondition": "canEdit"
                 }
                ],
                "componentId": "edit-founder-photo-text",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               }
              ],
              "componentId": "edit-founder-photo",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -3612,7 +4237,8 @@
                  "componentProps": {
                   "tag": "label",
                   "text": "Name"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "componentId": "edit-founder-name-input",
@@ -3626,7 +4252,8 @@
                   "size": "sm",
                   "type": "text",
                   "variant": "outline"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "baseStyles": {
@@ -3642,11 +4269,14 @@
                  "componentProps": {
                   "tag": "p",
                   "text": "{{ counter('founder.member_name') }}"
-                 }
+                 },
+                 "componentSlots": {}
                 }
                ],
                "componentId": "edit-founder-name",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -3670,7 +4300,8 @@
                  "componentProps": {
                   "tag": "label",
                   "text": "Role"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "componentId": "edit-founder-role-input",
@@ -3685,7 +4316,8 @@
                   "size": "sm",
                   "type": "text",
                   "variant": "outline"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "baseStyles": {
@@ -3701,16 +4333,21 @@
                  "componentProps": {
                   "tag": "p",
                   "text": "{{ counter('founder.designation') }}"
-                 }
+                 },
+                 "componentSlots": {}
                 }
                ],
                "componentId": "edit-founder-role",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               }
              ],
              "componentId": "edit-founder-names",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -3734,11 +4371,13 @@
                "componentProps": {
                 "tag": "label",
                 "text": "Their quote"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "baseStyles": {
-                "resize": "none"
+                "resize": "none",
+                "scrollbarWidth": "thin"
                },
                "componentId": "edit-quote-input",
                "componentName": "FormControl",
@@ -3748,11 +4387,12 @@
                  "$type": "variable",
                  "name": "draft.founder.bio"
                 },
-                "rows": 3,
+                "rows": 5,
                 "size": "sm",
                 "type": "textarea",
                 "variant": "outline"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "baseStyles": {
@@ -3768,16 +4408,21 @@
                "componentProps": {
                 "tag": "p",
                 "text": "{{ counter('founder.bio') }}"
-               }
+               },
+               "componentSlots": {}
               }
              ],
              "componentId": "edit-quote",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             }
            ],
            "componentId": "edit-vision",
            "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
            "originalElement": "div",
            "visibilityCondition": "editSection === 'vision'"
           },
@@ -3801,7 +4446,8 @@
              "componentProps": {
               "tag": "p",
               "text": "Left empty, an answer shows Frappe's default text."
-             }
+             },
+             "componentSlots": {}
             },
             {
              "baseStyles": {
@@ -3824,11 +4470,13 @@
                "componentProps": {
                 "tag": "label",
                 "text": "Why work with us?"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "baseStyles": {
-                "resize": "none"
+                "resize": "none",
+                "scrollbarWidth": "thin"
                },
                "componentId": "edit-why-input",
                "componentName": "FormControl",
@@ -3838,11 +4486,12 @@
                  "$type": "variable",
                  "name": "draft.why_choose_them"
                 },
-                "rows": 4,
+                "rows": 5,
                 "size": "sm",
                 "type": "textarea",
                 "variant": "outline"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "baseStyles": {
@@ -3858,11 +4507,14 @@
                "componentProps": {
                 "tag": "p",
                 "text": "{{ counter('why_choose_them') }}"
-               }
+               },
+               "componentSlots": {}
               }
              ],
              "componentId": "edit-why",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -3886,11 +4538,13 @@
                "componentProps": {
                 "tag": "label",
                 "text": "How we'll work together"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "baseStyles": {
-                "resize": "none"
+                "resize": "none",
+                "scrollbarWidth": "thin"
                },
                "componentId": "edit-how-input",
                "componentName": "FormControl",
@@ -3900,11 +4554,12 @@
                  "$type": "variable",
                  "name": "draft.how_we_work"
                 },
-                "rows": 4,
+                "rows": 5,
                 "size": "sm",
                 "type": "textarea",
                 "variant": "outline"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "baseStyles": {
@@ -3920,11 +4575,14 @@
                "componentProps": {
                 "tag": "p",
                 "text": "{{ counter('how_we_work') }}"
-               }
+               },
+               "componentSlots": {}
               }
              ],
              "componentId": "edit-how",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             },
             {
@@ -3948,11 +4606,13 @@
                "componentProps": {
                 "tag": "label",
                 "text": "How we define a successful implementation"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "baseStyles": {
-                "resize": "none"
+                "resize": "none",
+                "scrollbarWidth": "thin"
                },
                "componentId": "edit-success-input",
                "componentName": "FormControl",
@@ -3962,11 +4622,12 @@
                  "$type": "variable",
                  "name": "draft.successful_implementation"
                 },
-                "rows": 4,
+                "rows": 5,
                 "size": "sm",
                 "type": "textarea",
                 "variant": "outline"
-               }
+               },
+               "componentSlots": {}
               },
               {
                "baseStyles": {
@@ -3982,22 +4643,29 @@
                "componentProps": {
                 "tag": "p",
                 "text": "{{ counter('successful_implementation') }}"
-               }
+               },
+               "componentSlots": {}
               }
              ],
              "componentId": "edit-success",
              "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
              "originalElement": "div"
             }
            ],
            "componentId": "edit-answers",
            "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
            "originalElement": "div",
            "visibilityCondition": "editSection === 'answers'"
           }
          ],
          "componentId": "edit-fields",
          "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
          "originalElement": "div"
         },
         {
@@ -4014,6 +4682,7 @@
           "tag": "p",
           "text": "{{ saveError }}"
          },
+         "componentSlots": {},
          "visibilityCondition": "saveError"
         },
         {
@@ -4036,7 +4705,8 @@
            "componentProps": {
             "label": "Cancel",
             "variant": "subtle"
-           }
+           },
+           "componentSlots": {}
           },
           {
            "componentEvents": {
@@ -4052,16 +4722,21 @@
             "label": "Save",
             "loading": "{{ saving }}",
             "variant": "solid"
-           }
+           },
+           "componentSlots": {}
           }
          ],
          "componentId": "edit-actions",
          "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
          "originalElement": "div"
         }
        ],
        "componentId": "edit-panel",
        "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
        "originalElement": "div"
       }
      ],
@@ -4074,11 +4749,110 @@
        "name": "editOpen"
       },
       "size": "2xl"
-     }
+     },
+     "componentSlots": {}
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)",
+          "fontSize": "14px",
+          "letterSpacing": "0.12px",
+          "lineHeight": "20.6px"
+         },
+         "componentId": "discard-text",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "Your listing goes back to what businesses see now. This can't be undone."
+         },
+         "componentSlots": {}
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "8px",
+          "justifyContent": "flex-end",
+          "marginTop": "24px"
+         },
+         "children": [
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "discardOpen.value = false;"
+            }
+           },
+           "componentId": "discard-cancel",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "size": "sm",
+            "variant": "subtle"
+           },
+           "componentSlots": {}
+          },
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "discardChanges();"
+            }
+           },
+           "componentId": "discard-confirm",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Discard",
+            "loading": "{{ discarding }}",
+            "size": "sm",
+            "theme": "red",
+            "variant": "solid"
+           },
+           "componentSlots": {}
+          }
+         ],
+         "componentId": "discard-actions",
+         "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
+         "originalElement": "div"
+        }
+       ],
+       "componentId": "discard-body",
+       "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
+       "originalElement": "div"
+      }
+     ],
+     "componentId": "discard-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "discardOpen"
+      },
+      "size": "sm",
+      "title": "Discard unpublished changes?"
+     },
+     "componentSlots": {}
     }
    ],
    "componentId": "root",
    "componentName": "container",
+   "componentProps": {},
+   "componentSlots": {},
    "originalElement": "div"
   }
  ],
@@ -4088,7 +4862,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-02 12:23:42.670721",
+ "modified": "2026-11-03 20:11:05.907134",
  "modified_by": "tridots@example.com",
  "name": "partner_listing",
  "owner": "Administrator",

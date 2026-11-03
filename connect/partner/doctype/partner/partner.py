@@ -10,7 +10,17 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.query_builder.functions import Max
 from frappe.utils import cint, flt, now_datetime
+from frappe.utils.data import cast
 
+from connect.partner.industries import (
+	attach_industries,
+	industries_by_partner,
+	industry_badges,
+	partners_in_industries,
+	picked_industries,
+	suggested_industries,
+	validate_industries,
+)
 from connect.partner.logo import attach_normalized_logos
 from connect.partner.story_image import queue_missing_story_images
 from connect.permissions import _is_partner_admin, _my_company_membership
@@ -69,6 +79,7 @@ DIMENSION_SCORE_FIELDS = (
 class Partner(Document):
 	def validate(self):
 		self.validate_hourly_rate()
+		validate_industries(self)
 		self.set_starter_pack_sequence()
 
 	def validate_hourly_rate(self):
@@ -172,7 +183,7 @@ def _normalize_multi(value):
 
 PARTNER_FIELDS = [
 	"name", "partner_name", "logo", "logo_icon", "tagline", "tier", "specialist",
-	"rating", "industry", "country", "city", "rollouts", "hourly_rate",
+	"rating", "country", "city", "rollouts", "hourly_rate",
 	"response_time_hours",
 ]
 # The "is this partner visible at all" gate — combined as AND with whatever
@@ -334,7 +345,7 @@ def search_partners(
 
 	filters = list(BASE_PARTNER_FILTERS)
 	for value, field in [
-		(industry, "industry"), (region, "region"), (country, "country"), (tier, "tier"),
+		(region, "region"), (country, "country"), (tier, "tier"),
 	]:
 		if value:
 			filters.append(["Partner", field, "in" if isinstance(value, list) else "=", value])
@@ -354,8 +365,10 @@ def search_partners(
 		if value:
 			op = "in" if isinstance(value, list) else "="
 			child_matches.append(_partners_matching_child(doctype, field, op, value, parentfield=parentfield))
+	if industry:
+		child_matches.append(partners_in_industries(industry if isinstance(industry, list) else [industry]))
 	if child_matches:
-		filters.append(["Partner", "name", "in", list(set.intersection(*child_matches))])
+		filters.append(["Partner", "name", "in", list(set.intersection(*child_matches)) or [""]])
 
 	exclude = _normalize_multi(exclude)
 	if exclude:
@@ -433,23 +446,23 @@ def search_partners(
 	for p in partners:
 		p["apps_preview"] = apps_by_partner.get(p.name, [])[:2]
 
+	attach_industries(partners)
 	attach_success_story_previews(partners)
 	return partners
 
 
-# The finder wizard's industry options don't share the same value set as
-# Partner.industry (different taxonomy, written for customers rather than
-# partner classification) — translate to the closest Partner industry value.
+# The finder wizard's industry answers are broader than the Industry list partners pick from —
+# translate each to the closest Industry; matching then also takes in that Industry's group.
 WIZARD_TO_PARTNER_INDUSTRY = {
 	"Manufacturing": "Manufacturing",
-	"Retail & Distribution": "Retail",
+	"Retail & Distribution": "Trading and Distribution",
 	"Healthcare": "Healthcare",
 	"Education": "Education",
-	"Services": "Professional Services",
-	"Construction": "Other",
+	"Services": "Services",
+	"Construction": "Engineering and Construction",
 	"Logistics": "Logistics",
 	"Technology": "Technology",
-	"Other": "Other",
+	"Other": "Others",
 }
 
 
@@ -489,12 +502,12 @@ def count_matching_partners(answers=None):
 	# count never exceeds what the directory actually shows right now.
 	filters = list(BASE_PARTNER_FILTERS)
 
-	industry = answers.get("industry")
-	if industry:
-		filters.append(["Partner", "industry", "=", WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry)])
-
 	# Same membership-subquery approach as search_partners — see _partners_matching_child.
 	child_matches = []
+
+	industry = answers.get("industry")
+	if industry:
+		child_matches.append(partners_in_industries([WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry)]))
 
 	impl_type = LOOKING_FOR_TO_IMPL_TYPE.get(answers.get("looking_for"))
 	if impl_type:
@@ -553,6 +566,7 @@ def _score_partners_by_requirements(answers):
 
 	industry = answers.get("industry")
 	wanted_industry = WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry) if industry else None
+	in_wanted_industry = partners_in_industries([wanted_industry]) if wanted_industry else set()
 
 	delivery = answers.get("delivery_preference")
 	wanted_mode = DELIVERY_TO_MODE.get(delivery) if delivery and delivery != "No preference" else None
@@ -587,7 +601,7 @@ def _score_partners_by_requirements(answers):
 		if not row:
 			continue
 		missing = []
-		if wanted_industry and row.industry != wanted_industry:
+		if wanted_industry and name not in in_wanted_industry:
 			missing.append(f"{industry} Experience")
 		if wanted_apps and not any(a in apps_by_partner.get(name, []) for a in wanted_apps):
 			missing.append(", ".join(wanted_apps) + (" Support" if len(wanted_apps) == 1 else " support"))
@@ -645,6 +659,7 @@ def list_matching_partners(answers=None, limit=8):
 		row["missing_label"] = ", ".join(missing) if missing else None
 		result.append(row)
 
+	attach_industries(result)
 	attach_success_story_previews(result)
 	return result
 
@@ -685,6 +700,8 @@ def _decorate_directory_rows(rows):
 	for row in rows:
 		row["review_count"] = review_counts.get(row.name, 0)
 
+	# rows from search_partners have them already; the Shortlist's own query doesn't
+	attach_industries([row for row in rows if "industries" not in row])
 	attach_success_story_previews(rows)
 
 	business_processes = _business_processes_by_partner(names)
@@ -754,18 +771,16 @@ def list_industry_facets(search=None, tier=None, country=None,
 	business_process=None, implementation_type=None, language=None,
 	min_rating=None, max_response_time=None):
 	"""Industry>Segment counts for the Directory's Industry multi-select, computed with every OTHER
-	active filter applied but not industry/category themselves. Groups are Partner.industry's real
-	values; each group's children are whichever success-story categories actually occur among that
-	industry's matching partners — derived from real data instead of a hand-guessed taxonomy, since
-	our success-story categories (scraped from frappe.io) don't map cleanly onto the industry
-	Select's own vocabulary (e.g. "Automotive Manufacturing" vs the Select's "Manufacturing")."""
+	active filter applied but not industry/category themselves. Groups are the industries partners
+	picked (a partner counts under each of theirs); each group's children are whichever success-story
+	categories actually occur among that group's partners."""
 	rows = search_partners(
 		search=search, tier=tier, country=country,
 		business_process=business_process, implementation_type=implementation_type, language=language,
 		min_rating=min_rating, max_response_time=max_response_time, limit=10000,
 	)
 	names = [r.name for r in rows]
-	industry_counts = Counter(r.industry for r in rows if r.industry)
+	industry_counts = Counter(industry for r in rows for industry in r.industries)
 
 	categories_by_partner = {}
 	if names:
@@ -777,7 +792,7 @@ def list_industry_facets(search=None, tier=None, country=None,
 
 	facets = []
 	for industry, group_count in industry_counts.most_common():
-		group_names = [r.name for r in rows if r.industry == industry]
+		group_names = [r.name for r in rows if industry in r.industries]
 		category_counts = Counter()
 		for pname in group_names:
 			for cat in categories_by_partner.get(pname, ()):
@@ -828,14 +843,12 @@ def list_partner_countries():
 
 
 def list_partner_industries():
-	"""Returns distinct industries actually in use among directory-listed partners (same
+	"""Returns distinct industries actually picked among directory-listed partners (same
 	is_featured/enabled scope as list_directory_partners), for the Industry filter dropdown —
-	deliberately not the Partner.industry Select's full static option list, so a value with zero
-	partners behind it (e.g. "Nonprofit") doesn't show up as a dead-end filter."""
-	rows = frappe.get_all(
-		"Partner", fields=["industry"], filters={"industry": ["is", "set"], "is_featured": 1, "enabled": 1}, distinct=True
-	)
-	return sorted({row.industry for row in rows if row.industry})
+	deliberately not the full Industry list, so a value with zero partners behind it doesn't show
+	up as a dead-end filter."""
+	listed = frappe.get_all("Partner", filters=BASE_PARTNER_FILTERS, pluck="name")
+	return sorted({industry for industries in industries_by_partner(listed).values() for industry in industries})
 
 
 def list_partner_filter_options():
@@ -854,37 +867,18 @@ def get_partner_preview(partner):
 	fields = [
 		"name", "partner_name", "logo", "description", "tier", "specialist",
 		"rating", "city", "country", "pmm_level", "hourly_rate", "response_time_hours",
-		"certs_erpnext", "certs_frappe_framework", "industry", "address",
+		"certs_erpnext", "certs_frappe_framework", "address",
 	]
 	doc = frappe.db.get_value("Partner", partner, fields, as_dict=True)
 	if not doc:
 		frappe.throw(_("Partner not found"), frappe.DoesNotExistError)
 
 	doc["apps"] = _apps_by_partner([partner]).get(partner, [])
+	attach_industries([doc])
 	doc["migrations"] = frappe.get_all(
 		"Partner Migration Path", filters={"parent": partner}, pluck="migration_path", order_by="idx asc"
 	)
 	return doc
-
-
-def _compute_display_industries(industry, success_stories):
-	"""Industries to show under the profile's "Industry" tags: the manually-set primary
-	industry, plus any success-story category with at least 2 published case studies —
-	the same "prove it with case studies" bar frappe.io/partners itself uses to decide
-	which industries a partner is shown as serving."""
-	counts = {}
-	for row in success_stories or []:
-		category = (row.get("category") or "").strip()
-		if category:
-			counts[category] = counts.get(category, 0) + 1
-
-	industries = []
-	if industry:
-		industries.append(industry)
-	for category, count in counts.items():
-		if count >= 2 and category not in industries:
-			industries.append(category)
-	return industries
 
 
 def get_partner_document(partner):
@@ -897,7 +891,10 @@ def get_partner_document(partner):
 	doc["founded_years_ago"] = (
 		now_datetime().year - doc["year_founded"] if doc.get("year_founded") else None
 	)
-	doc["display_industries"] = _compute_display_industries(doc.get("industry"), doc.get("success_stories"))
+	industries = [row.industry for row in doc.get("industries") or []]
+	# the picked industries, each with the verified tick its success stories earn
+	doc["industry_badges"] = industry_badges(industries, doc.get("success_stories"))
+	doc["display_industries"] = industries
 	# adds client_logo_display per success story — a greyscale-normalized copy of
 	# the client logo where one has been built, else the original URL
 	attach_normalized_logos(doc.get("success_stories"))
@@ -1008,10 +1005,18 @@ _PROFILE_MULTISELECT_FIELDS = {
 	"business_processes": "business_process",
 	"implementation_types": "implementation_type",
 	"languages": "language",
+	"industries": "industry",
 }
 
 # cover_image too: a story without a frappe.io cover keeps the one it was given
 _STORY_FIELDS = ("client_name", "client_logo", "headline", "category", "url", "cover_image")
+_FOUNDER_FIELDS = ("member_name", "designation", "bio", "photo")
+# Profile tables saved whole, with the fields each row keeps.
+_PROFILE_ROW_FIELDS = {
+	"success_stories": _STORY_FIELDS,
+	"photos": ("image", "video"),
+	"addons": ("addon_name", "typical_hours"),
+}
 
 _PROFILE_SIMPLE_FIELDS = (
 	# partner_name is deliberately excluded — it's the doc's autoname source (see
@@ -1019,11 +1024,12 @@ _PROFILE_SIMPLE_FIELDS = (
 	# would rename the document and break every Connect Partner Member row that references
 	# it by name. Renaming a partner is an admin-only operation done from the desk.
 	# starter_pack is excluded too: it decides who Frappe may assign paid Starter Pack
-	# orders to, so a partner must not be able to enrol themselves.
+	# orders to, so a partner must not be able to enrol themselves. So are certs_erpnext and
+	# certs_frappe_framework: they're counted from linked certificates (recount_certificates).
 	"tagline", "description", "country", "city", "address", "website",
-	"industry", "year_founded", "rollouts", "hourly_rate",
+	"year_founded", "rollouts", "hourly_rate",
 	"sites_deployed", "typical_project_size", "proposal_timeline", "certified_experts",
-	"certs_erpnext", "certs_frappe_framework", "countries_served", "references_count",
+	"countries_served", "references_count",
 	"demo_available", "logo_position_x", "logo_position_y", "phone", "team_size", "journey_blog_url",
 	"logo", "logo_icon", "why_choose_them", "how_we_work", "successful_implementation", "origin_story",
 )
@@ -1032,7 +1038,7 @@ _PROFILE_SIMPLE_FIELDS = (
 _BUILDER_FIELDS = (
 	"tagline", "website", "phone", "journey_blog_url", "logo", "logo_icon", "description", "year_founded",
 	"team_size", "rollouts", "certs_erpnext", "certs_frappe_framework", "address", "city", "country",
-	"industry", "hourly_rate", "why_choose_them", "how_we_work", "successful_implementation", "origin_story",
+	"hourly_rate", "why_choose_them", "how_we_work", "successful_implementation", "origin_story",
 )
 # Longest text each profile field may hold, so every partner's profile lays out the same way.
 # The Profile builder shows the same limits as it counts.
@@ -1047,11 +1053,16 @@ _STORY_LIMITS = {"client_name": 40, "headline": 90}
 _MEDIA_PREFIXES = ("/files/", "/assets/", "https://")
 
 
-def get_my_profile() -> dict:
+def get_my_profile(with_draft=False) -> dict:
 	"""Everything the caller's Profile builder and Listing show: their own partner's public profile,
-	what Frappe sets for them (tier, PMM, verification), and whether they may edit it (admin only)."""
+	what Frappe sets for them (tier, PMM, verification), and whether they may edit it (admin only).
+	With `with_draft`, the profile shows the admin's unpublished changes."""
 	partner = _my_partner()
 	doc = frappe.get_doc("Partner", partner)
+	draft = _profile_draft(doc)
+	if cint(with_draft):
+		_apply_profile_values(doc, draft)
+
 	founder = next((row for row in doc.team if row.is_founder), None)
 	stories = [{field: row.get(field) for field in _STORY_FIELDS} for row in doc.success_stories]
 	attach_normalized_logos(stories)
@@ -1061,39 +1072,48 @@ def get_my_profile() -> dict:
 		**{fieldname: doc.get(fieldname) for fieldname in _BUILDER_FIELDS},
 		"apps": [row.app for row in doc.apps],
 		"migrations": [row.migration_path for row in doc.migrations],
-		"founder": {field: founder.get(field) for field in ("member_name", "designation", "bio", "photo")} if founder else {},
+		"founder": {field: founder.get(field) for field in _FOUNDER_FIELDS} if founder else {},
 		"photos": [{"image": row.image, "video": row.video} for row in doc.photos],
 		"success_stories": stories,
-		# what the public profile shows under its industry tags
-		"display_industries": _compute_display_industries(doc.industry, stories),
+		"industries": picked_industries(doc),
+		# the picked industries as the public profile shows them, with their verified tick
+		"industry_badges": industry_badges(picked_industries(doc), stories),
+		"suggested_industries": suggested_industries(picked_industries(doc), stories),
 		"tier": doc.tier,
 		"pmm_level": doc.pmm_level,
 		"is_verified": doc.verification_status == "Verified",
 		"can_edit": _is_partner_admin(partner, frappe.session.user),
+		"has_unpublished_changes": bool(draft),
 		"options": _profile_options(),
 	}
 
 
 def _profile_options() -> dict:
-	meta = frappe.get_meta("Partner")
 	return {
 		"apps": frappe.get_all("App", pluck="name", order_by="name asc"),
 		"migrations": frappe.get_all("Migration Path", pluck="name", order_by="name asc"),
-		"industries": [option for option in (meta.get_field("industry").options or "").split("\n") if option],
+		"industries": frappe.get_all("Industry", pluck="name", order_by="name asc"),
 		"categories": sorted(set(frappe.get_all("Partner Success Story", filters={"category": ["is", "set"]}, pluck="category"))),
 	}
 
 
-def _check_profile_lengths(doc) -> None:
-	rows = [(doc, _TEXT_LIMITS)]
-	rows += [(row, _FOUNDER_LIMITS) for row in doc.team if row.is_founder]
-	rows += [(row, _STORY_LIMITS) for row in doc.success_stories]
-	for row, limits in rows:
-		for fieldname, limit in limits.items():
-			length = len(row.get(fieldname) or "")
-			if length > limit:
-				label = _(row.meta.get_label(fieldname))
-				frappe.throw(_("{0} is {1} characters long; the limit is {2}.").format(label, length, limit))
+def _limited_texts(doc) -> list[tuple]:
+	"""(where, row, fieldname, limit) for every profile text that has a length limit."""
+	rows = [("partner", doc, _TEXT_LIMITS)]
+	rows += [("founder", row, _FOUNDER_LIMITS) for row in doc.team if row.is_founder]
+	rows += [("story", row, _STORY_LIMITS) for row in doc.success_stories]
+	return [(where, row, fieldname, limit) for where, row, limits in rows for fieldname, limit in limits.items()]
+
+
+def _check_profile_lengths(doc, before) -> None:
+	"""Refuses text over its limit, but only text this save changes: text saved before the limits
+	existed doesn't stop a partner saving the rest of their profile."""
+	unchanged = {(where, fieldname, row.get(fieldname) or "") for where, row, fieldname, _limit in _limited_texts(before)}
+	for where, row, fieldname, limit in _limited_texts(doc):
+		value = row.get(fieldname) or ""
+		if len(value) > limit and (where, fieldname, value) not in unchanged:
+			label = _(row.meta.get_label(fieldname))
+			frappe.throw(_("{0} is {1} characters long; the limit is {2}.").format(label, len(value), limit))
 
 
 def _check_profile_media(doc) -> None:
@@ -1108,7 +1128,7 @@ def _check_profile_media(doc) -> None:
 
 def update_my_partner_profile(
 	partner_name=None, tagline=None, description=None, country=None, city=None,
-	address=None, website=None, industry=None, year_founded=None, rollouts=None,
+	address=None, website=None, year_founded=None, rollouts=None,
 	hourly_rate=None, sites_deployed=None,
 	typical_project_size=None, proposal_timeline=None, certified_experts=None,
 	certs_erpnext=None, certs_frappe_framework=None, countries_served=None,
@@ -1118,79 +1138,148 @@ def update_my_partner_profile(
 	founder=None, success_stories=None, packs=None, addons=None,
 	phone=None, team_size=None, journey_blog_url=None,
 	logo=None, logo_icon=None, why_choose_them=None, origin_story=None, photos=None,
-	how_we_work=None, successful_implementation=None,
+	how_we_work=None, successful_implementation=None, industries=None, as_draft=False,
 ):
 	"""Lets the admin of the caller's own partner company edit their public profile —
 	the same fields (and the same About / Success Stories / Pricing grouping) shown on the
-	customer-facing partner profile page. Other members only read it."""
-	partner = _my_partner()
-	if not _is_partner_admin(partner, frappe.session.user):
-		frappe.throw(_("Only your partner admin can edit the profile."), frappe.PermissionError)
-	doc = frappe.get_doc("Partner", partner)
+	customer-facing partner profile page. Other members only read it. With `as_draft`, the
+	changes wait in the partner's unpublished changes until publish_my_profile_draft."""
+	partner = _my_admin_partner()
 
-	values = dict(
-		partner_name=partner_name, tagline=tagline, description=description, country=country,
-		city=city, address=address, website=website, industry=industry, year_founded=year_founded,
+	# partner_name, starter_pack and the certificate counts are ignored (see _PROFILE_SIMPLE_FIELDS).
+	# So is `packs`: Starter Pack prices are Frappe's (see the Starter Pack doctype), so partners no
+	# longer set their own. They stay in the signature so an older client that sends them doesn't fail.
+	changes = dict(
+		tagline=tagline, description=description, country=country,
+		city=city, address=address, website=website, year_founded=year_founded,
 		rollouts=rollouts, hourly_rate=hourly_rate,
 		sites_deployed=sites_deployed, typical_project_size=typical_project_size,
 		proposal_timeline=proposal_timeline, certified_experts=certified_experts,
-		certs_erpnext=certs_erpnext, certs_frappe_framework=certs_frappe_framework,
-		countries_served=countries_served, references_count=references_count,
-		starter_pack=starter_pack, demo_available=demo_available,
+		countries_served=countries_served, references_count=references_count, demo_available=demo_available,
 		logo_position_x=logo_position_x, logo_position_y=logo_position_y,
 		phone=phone, team_size=team_size, journey_blog_url=journey_blog_url,
 		logo=logo, logo_icon=logo_icon, why_choose_them=why_choose_them, origin_story=origin_story,
 		how_we_work=how_we_work, successful_implementation=successful_implementation,
-	)
-	for fieldname in _PROFILE_SIMPLE_FIELDS:
-		value = values[fieldname]
-		if value is not None:
-			doc.set(fieldname, value)
-
-	multiselect_values = dict(
 		apps=apps, migrations=migrations, business_processes=business_processes,
-		implementation_types=implementation_types, languages=languages,
+		implementation_types=implementation_types, languages=languages, industries=industries,
+		founder=founder, success_stories=success_stories, photos=photos, addons=addons,
 	)
-	for fieldname, child_field in _PROFILE_MULTISELECT_FIELDS.items():
-		value = multiselect_values[fieldname]
-		if value is not None:
-			doc.set(fieldname, [{child_field: v} for v in _parse_json_arg(value, [])])
+	changes = {key: value for key, value in changes.items() if value is not None}
 
-	founder = _parse_json_arg(founder, None)
-	if founder:
-		team = doc.get("team") or []
-		founder_row = next((row for row in team if row.is_founder), None)
-		if not founder_row and founder.get("member_name"):
-			founder_row = doc.append("team", {"is_founder": 1})
-		if founder_row:
-			founder_row.member_name = founder.get("member_name")
-			founder_row.designation = founder.get("designation")
-			founder_row.bio = founder.get("bio")
-			founder_row.photo = founder.get("photo")
-			founder_row.photo_position_x = founder.get("photo_position_x", 50)
-			founder_row.photo_position_y = founder.get("photo_position_y", 50)
+	doc, live = _edited_profile(partner, changes, with_draft=cint(as_draft))
+	if not cint(as_draft):
+		doc.save(ignore_permissions=True)
+		return {"partner": doc.name}
 
-	if success_stories is not None:
-		doc.set("success_stories", [
-			{field: row.get(field) for field in _STORY_FIELDS} for row in _parse_json_arg(success_stories, [])
-		])
+	# The draft isn't saved, so run the checks Partner.validate would.
+	doc.validate_hourly_rate()
+	validate_industries(doc)
+	_save_profile_draft(live, doc)
+	return {"partner": doc.name}
 
-	if photos is not None:
-		doc.set("photos", [
-			{"image": row.get("image"), "video": row.get("video")} for row in _parse_json_arg(photos, [])
-		])
 
-	# `packs` is accepted and ignored: Starter Pack prices are Frappe's (see the Starter
-	# Pack doctype), so partners no longer set their own. Kept in the signature so an
-	# older client that still sends it doesn't fail.
+def publish_my_profile_draft() -> dict:
+	"""Makes the admin's unpublished Listing changes live, checked again as any profile save is."""
+	partner = _my_admin_partner()
+	if not frappe.db.get_value("Partner", partner, "profile_draft"):
+		frappe.throw(_("There are no unpublished changes to publish."))
 
-	if addons is not None:
-		doc.set("addons", [
-			{"addon_name": row.get("addon_name"), "typical_hours": row.get("typical_hours")}
-			for row in _parse_json_arg(addons, [])
-		])
-
-	_check_profile_lengths(doc)
-	_check_profile_media(doc)
+	doc, _live = _edited_profile(partner, {}, with_draft=True)
+	doc.profile_draft = None
 	doc.save(ignore_permissions=True)
 	return {"partner": doc.name}
+
+
+def discard_my_profile_draft() -> dict:
+	partner = _my_admin_partner()
+	frappe.db.set_value("Partner", partner, "profile_draft", None, update_modified=False)
+	return {"partner": partner}
+
+
+def _my_admin_partner() -> str:
+	partner = _my_partner()
+	if not _is_partner_admin(partner, frappe.session.user):
+		frappe.throw(_("Only your partner admin can edit the profile."), frappe.PermissionError)
+	return partner
+
+
+def _edited_profile(partner: str, changes: dict, with_draft: bool) -> tuple:
+	"""The Partner with its unpublished changes (when asked) and `changes` applied, checked but not
+	saved, and the live Partner it started from."""
+	live = frappe.get_doc("Partner", partner)
+	doc = frappe.get_doc("Partner", partner)
+	if with_draft:
+		_apply_profile_values(doc, _profile_draft(doc))
+
+	_apply_profile_values(doc, changes)
+	_check_profile_lengths(doc, live)
+	_check_profile_media(doc)
+	return doc, live
+
+
+def _apply_profile_values(doc, values: dict) -> None:
+	"""Sets the profile fields in `values`, shaped as update_my_partner_profile's arguments, on the
+	Partner. Fields not in `values` keep what they have."""
+	for fieldname in _PROFILE_SIMPLE_FIELDS:
+		if fieldname in values:
+			doc.set(fieldname, values[fieldname])
+
+	for fieldname, child_field in _PROFILE_MULTISELECT_FIELDS.items():
+		if fieldname in values:
+			doc.set(fieldname, [{child_field: v} for v in _parse_json_arg(values[fieldname], [])])
+
+	for fieldname, fields in _PROFILE_ROW_FIELDS.items():
+		if fieldname in values:
+			rows = _parse_json_arg(values[fieldname], [])
+			doc.set(fieldname, [{field: row.get(field) for field in fields} for row in rows])
+
+	_apply_founder(doc, _parse_json_arg(values.get("founder"), None))
+
+
+def _apply_founder(doc, founder: dict | None) -> None:
+	if not founder:
+		return
+
+	team = doc.get("team") or []
+	founder_row = next((row for row in team if row.is_founder), None)
+	if not founder_row and founder.get("member_name"):
+		founder_row = doc.append("team", {"is_founder": 1})
+	if founder_row:
+		founder_row.member_name = founder.get("member_name")
+		founder_row.designation = founder.get("designation")
+		founder_row.bio = founder.get("bio")
+		founder_row.photo = founder.get("photo")
+		founder_row.photo_position_x = founder.get("photo_position_x", 50)
+		founder_row.photo_position_y = founder.get("photo_position_y", 50)
+
+
+def _profile_draft(doc) -> dict:
+	return _parse_json_arg(doc.profile_draft, {}) or {}
+
+
+def _save_profile_draft(live, doc) -> None:
+	"""Keeps only what differs from the live profile, so publishing doesn't put back a value Frappe
+	changed in the Desk since."""
+	live_values = _profile_values(live)
+	draft = {key: value for key, value in _profile_values(doc).items() if value != live_values[key]}
+	# The live profile doesn't change, so its modified time doesn't either.
+	frappe.db.set_value("Partner", live.name, "profile_draft", frappe.as_json(draft) if draft else None, update_modified=False)
+
+
+def _profile_values(doc) -> dict:
+	"""The profile shaped as update_my_partner_profile's arguments, cast so an unchanged field
+	compares equal however it was set."""
+	values = {fieldname: _plain_value(doc, fieldname) for fieldname in _PROFILE_SIMPLE_FIELDS}
+	for fieldname, child_field in _PROFILE_MULTISELECT_FIELDS.items():
+		values[fieldname] = [row.get(child_field) for row in doc.get(fieldname)]
+	for fieldname, fields in _PROFILE_ROW_FIELDS.items():
+		values[fieldname] = [{field: _plain_value(row, field) for field in fields} for row in doc.get(fieldname)]
+
+	founder = next((row for row in doc.team if row.is_founder), None)
+	values["founder"] = {field: _plain_value(founder, field) for field in _FOUNDER_FIELDS} if founder else {}
+	return values
+
+
+def _plain_value(row, fieldname):
+	value = cast(row.meta.get_field(fieldname).fieldtype, row.get(fieldname))
+	return "" if value is None else value

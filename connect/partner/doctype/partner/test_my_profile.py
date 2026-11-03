@@ -5,7 +5,12 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
-from connect.partner.doctype.partner.partner import get_my_profile, update_my_partner_profile
+from connect.partner.doctype.partner.partner import (
+	discard_my_profile_draft,
+	get_my_profile,
+	publish_my_profile_draft,
+	update_my_partner_profile,
+)
 
 PARTNER = "_Test Profile Partner"
 OTHER_PARTNER = "_Test Profile Other Partner"
@@ -13,6 +18,14 @@ ADMIN = "profile.admin@example.test"
 MEMBER = "profile.member@example.test"
 OTHER_ADMIN = "profile.other.admin@example.test"
 BUYER = "profile.buyer@example.test"
+INDUSTRY_NAMES = ["Textile Manufacturing", "Retail", "Agriculture", "Education", "Finance", "Logistics", "Hospitality"]
+
+
+def make_industries():
+	for name in ["Manufacturing", *INDUSTRY_NAMES]:
+		if not frappe.db.exists("Industry", name):
+			group = "Manufacturing" if name.endswith("Manufacturing") and name != "Manufacturing" else None
+			frappe.get_doc({"doctype": "Industry", "title": name, "industry_group": group}).insert(ignore_permissions=True)
 
 
 class IntegrationTestMyProfile(IntegrationTestCase):
@@ -35,6 +48,8 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 
 		partner = frappe.get_doc("Partner", PARTNER)
 		partner.website = "https://profile.example.test"
+		partner.tagline = "The live tagline"
+		partner.profile_draft = None
 		partner.set("success_stories", [])
 		for client in ("Refex", "Motovolt"):
 			partner.append(
@@ -134,14 +149,104 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 			update_my_partner_profile(hourly_rate=-1)
 		self.assertEqual(frappe.db.get_value("Partner", PARTNER, "hourly_rate"), 2500)
 
-	def test_industries_follow_the_public_profile(self):
+	def test_picked_industries_earn_a_tick_from_two_stories(self):
+		make_industries()
 		frappe.set_user(ADMIN)
 		stories = [
-			{"client_name": "Refex", "headline": "Refex story", "category": "Agriculture"},
-			{"client_name": "Motovolt", "headline": "Motovolt story", "category": "Agriculture"},
-			{"client_name": "Kestrel", "headline": "Kestrel story", "category": "Logistics"},
+			{"client_name": "Refex", "headline": "Refex story", "category": "Textile Manufacturing"},
+			{"client_name": "Motovolt", "headline": "Motovolt story", "category": "Textile Manufacturing"},
+			{"client_name": "Kestrel", "headline": "Kestrel story", "category": "Agriculture"},
+			{"client_name": "Orenda", "headline": "Orenda story", "category": "Agriculture"},
+			{"client_name": "Halcyon", "headline": "Halcyon story", "category": "Retail"},
 		]
-		update_my_partner_profile(industry="Manufacturing", success_stories=stories)
+		update_my_partner_profile(industries=["Textile Manufacturing", "Retail"], success_stories=stories)
 
-		# a story industry counts once it has two stories, as on the public profile
-		self.assertEqual(get_my_profile()["display_industries"], ["Manufacturing", "Agriculture"])
+		profile = get_my_profile()
+		self.assertEqual(profile["industries"], ["Textile Manufacturing", "Retail"])
+		self.assertEqual(
+			[(badge["industry"], badge["stories"], badge["verified"]) for badge in profile["industry_badges"]],
+			[("Textile Manufacturing", 2, True), ("Retail", 1, False)],
+		)
+		# proven by stories but not picked: offered in the edit dialog
+		self.assertEqual(profile["suggested_industries"], [{"industry": "Agriculture", "stories": 2}])
+
+	def test_at_most_six_industries(self):
+		make_industries()
+		frappe.set_user(ADMIN)
+		with self.assertRaises(frappe.ValidationError):
+			update_my_partner_profile(industries=INDUSTRY_NAMES[:7])
+		update_my_partner_profile(industries=INDUSTRY_NAMES[:6])
+		self.assertEqual(len(get_my_profile()["industries"]), 6)
+
+	def test_older_text_over_a_limit_does_not_block_other_changes(self):
+		frappe.set_user(ADMIN)
+		update_my_partner_profile(founder={"member_name": "Asha", "bio": "Short bio."})
+		frappe.db.set_value("Partner Team Member", {"parent": PARTNER, "is_founder": 1}, "bio", "x" * 400)
+
+		update_my_partner_profile(tagline="A new tagline", founder={"member_name": "Asha", "bio": "x" * 400})
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER, "tagline"), "A new tagline")
+
+		with self.assertRaises(frappe.ValidationError):
+			update_my_partner_profile(founder={"member_name": "Asha", "bio": "y" * 400})
+
+
+	def save_listing_section(self, **changes):
+		"""Saves like a Listing dialog: the whole profile as the page shows it, with `changes`."""
+		profile = get_my_profile(with_draft=True)
+		fields = ("tagline", "description", "website", "address", "year_founded", "rollouts", "hourly_rate")
+		payload = {field: profile[field] for field in fields}
+		for field in ("apps", "migrations", "industries", "founder", "photos", "success_stories"):
+			payload[field] = frappe.as_json(profile[field])
+		update_my_partner_profile(**{**payload, **changes}, as_draft=1)
+
+	def test_listing_edits_wait_until_published(self):
+		frappe.set_user(ADMIN)
+		self.save_listing_section(tagline="A drafted tagline")
+
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER, "tagline"), "The live tagline")
+		self.assertEqual(frappe.parse_json(frappe.db.get_value("Partner", PARTNER, "profile_draft")), {"tagline": "A drafted tagline"})
+		profile = get_my_profile(with_draft=True)
+		self.assertEqual(profile["tagline"], "A drafted tagline")
+		self.assertTrue(profile["has_unpublished_changes"])
+		self.assertEqual(get_my_profile()["tagline"], "The live tagline")
+
+		publish_my_profile_draft()
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER, ["tagline", "profile_draft"]), ("A drafted tagline", None))
+		self.assertFalse(get_my_profile(with_draft=True)["has_unpublished_changes"])
+
+	def test_discard_drops_unpublished_changes(self):
+		frappe.set_user(ADMIN)
+		self.save_listing_section(tagline="A drafted tagline")
+		discard_my_profile_draft()
+
+		self.assertEqual(get_my_profile(with_draft=True)["tagline"], "The live tagline")
+		with self.assertRaises(frappe.ValidationError):
+			publish_my_profile_draft()
+
+	def test_publish_keeps_a_desk_change_made_since(self):
+		frappe.set_user(ADMIN)
+		self.save_listing_section(tagline="A drafted tagline")
+		frappe.db.set_value("Partner", PARTNER, "website", "https://desk.example.test")
+
+		publish_my_profile_draft()
+		saved = frappe.db.get_value("Partner", PARTNER, ["tagline", "website"])
+		self.assertEqual(saved, ("A drafted tagline", "https://desk.example.test"))
+
+	def test_drafts_are_checked_and_only_for_the_admin(self):
+		frappe.set_user(ADMIN)
+		with self.assertRaises(frappe.ValidationError):
+			self.save_listing_section(tagline="x" * 81)
+		self.assertIsNone(frappe.db.get_value("Partner", PARTNER, "profile_draft"))
+		self.save_listing_section(tagline="A drafted tagline")
+
+		frappe.set_user(MEMBER)
+		for action in (publish_my_profile_draft, discard_my_profile_draft):
+			with self.assertRaises(frappe.PermissionError):
+				action()
+		self.assertTrue(frappe.db.get_value("Partner", PARTNER, "profile_draft"))
+
+	def test_certificate_counts_are_not_typed_in(self):
+		frappe.db.set_value("Partner", PARTNER, "certs_erpnext", 0)
+		frappe.set_user(ADMIN)
+		update_my_partner_profile(certs_erpnext=9, tagline="Counts come from certificates")
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER, ["tagline", "certs_erpnext"]), ("Counts come from certificates", 0))
