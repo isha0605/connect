@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from urllib.parse import unquote
 
 import frappe
+import requests
 from frappe.tests import IntegrationTestCase
 from werkzeug.test import EnvironBuilder
 from werkzeug.wrappers import Request
@@ -17,6 +18,7 @@ from connect.crm_integration import (
 	email_body,
 	queue_crm_lead_sync,
 	reply_webhook,
+	set_up_reply_webhook,
 	sync_lead_owner,
 	sync_thread,
 )
@@ -26,6 +28,7 @@ from connect.messaging.doctype.connect_thread.connect_thread import ensure_threa
 WEBHOOK_MODULE = "connect.api.crm_webhook"
 REPLY_MODULE = "connect.crm_reply"
 SYNC_MODULE = "connect.crm_integration"
+SETTINGS_MODULE = "connect.partner.doctype.partner_crm_settings.partner_crm_settings"
 
 BUYER = "_test_crm_buyer@example.com"
 CONSULTANT_ONE = "_test_crm_consultant_one@example.com"
@@ -372,6 +375,84 @@ class IntegrationTestCRMSync(IntegrationTestCase):
 		self.assertEqual(([a["file_name"] for a in attachments], failed), (["_test_crm_reply.txt"], []))
 
 
+class IntegrationTestCRMConnectionCheck(IntegrationTestCase):
+	"""A partner saving CRM details learns then what's wrong with them, not when Leads fail later."""
+
+	def check(self, crm, **values):
+		doc = frappe.get_doc(
+			{
+				"doctype": "Partner CRM Settings",
+				"partner": "_test_crm_partner",
+				"crm_type": "Frappe CRM",
+				"enabled": 1,
+				"site_url": "https://crm.example.com",
+				"api_key": "_test_key",
+				"api_secret": "_test_secret",
+				"default_lead_status": "New",
+				**values,
+			}
+		)
+		with patch(f"{SETTINGS_MODULE}.crm_request", side_effect=crm):
+			doc.validate()
+
+	def assert_refused(self, crm, message, **values):
+		with self.assertRaisesRegex(frappe.ValidationError, message):
+			self.check(crm, **values)
+
+	def test_working_details_pass(self):
+		self.check(StatusCRM())
+
+	def test_paused_sync_is_not_checked(self):
+		self.check(StatusCRM(fail=requests.ConnectionError()), enabled=0)
+
+	def test_an_unreachable_site_is_named(self):
+		self.assert_refused(StatusCRM(fail=requests.ConnectionError()), "Couldn't reach https://crm")
+
+	def test_a_wrong_key_is_named(self):
+		self.assert_refused(StatusCRM(fail=CRMRequestError(401, "Invalid token")), "didn't accept")
+
+	def test_a_site_that_is_not_frappe_is_named(self):
+		self.assert_refused(StatusCRM(fail=ValueError("not JSON")), "doesn't look like a Frappe site")
+
+	def test_a_site_without_crm_is_named(self):
+		self.assert_refused(StatusCRM(statuses_error=CRMRequestError(404, "no doctype")), "isn't installed")
+
+	def test_a_missing_lead_status_lists_the_ones_there(self):
+		self.assert_refused(StatusCRM(), "Use one of: New, Contacted", default_lead_status="new")
+
+	def test_an_api_user_without_rights_to_add_the_webhook_is_named(self):
+		settings = frappe._dict(name="_test", partner="_test", site_url="https://crm.example.com")
+		crm = StatusCRM(webhook_error=CRMRequestError(403, "no"))
+		with (
+			patch(f"{SYNC_MODULE}.crm_request", side_effect=crm),
+			self.assertRaisesRegex(frappe.ValidationError, "System Manager"),
+		):
+			set_up_reply_webhook(settings)
+
+
+class StatusCRM:
+	"""A partner's CRM as the connection check sees it: a login, its lead statuses, and webhooks."""
+
+	def __init__(self, fail=None, statuses_error=None, webhook_error=None):
+		self.fail = fail
+		self.statuses_error = statuses_error
+		self.webhook_error = webhook_error
+
+	def __call__(self, settings, method, path, **kwargs):
+		response = MagicMock()
+		if path.endswith("get_logged_user"):
+			if self.fail:
+				raise self.fail
+			response.json.return_value = {"message": "connect-sync@example.com"}
+		elif path == "/api/resource/CRM Lead Status":
+			if self.statuses_error:
+				raise self.statuses_error
+			response.json.return_value = {"data": [{"name": "New"}, {"name": "Contacted"}]}
+		elif self.webhook_error:
+			raise self.webhook_error
+		return response
+
+
 class FakeCRM:
 	"""Stands in for a partner's Frappe CRM: answers as it does, and keeps what it was sent."""
 
@@ -515,6 +596,11 @@ def make_thread(partner, customer):
 
 
 def make_crm_settings(partner):
+	with patch(f"{SETTINGS_MODULE}.PartnerCRMSettings.check_crm_connection"):
+		return _insert_crm_settings(partner)
+
+
+def _insert_crm_settings(partner):
 	return (
 		frappe.get_doc(
 			{

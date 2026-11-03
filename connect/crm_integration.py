@@ -71,7 +71,10 @@ def crm_settings(partner):
 def crm_request(settings, method, path, **kwargs):
 	"""One call to the partner's CRM as their API user. A refusal raises with the CRM's own answer,
 	so the thread's sync error says why."""
-	api_secret = get_decrypted_password("Partner CRM Settings", settings.name, "api_secret")
+	# Settings being checked before their first save carry the secret: it isn't stored yet.
+	api_secret = settings.get("api_secret") or get_decrypted_password(
+		"Partner CRM Settings", settings.name, "api_secret"
+	)
 	response = requests.request(
 		method,
 		settings.site_url.rstrip("/") + path,
@@ -561,8 +564,7 @@ def reset_reply_webhook(partner: str) -> None:
 	doc = frappe.get_doc("Partner CRM Settings", partner)
 	if not doc.enabled:
 		frappe.throw(_("Turn on CRM sync for this partner first."))
-	if not set_up_reply_webhook(doc):
-		frappe.throw(_("Couldn't set up the reply webhook. The Error Log says why."))
+	set_up_reply_webhook(doc)
 
 
 def sync_reply_webhook(doc, method=None):
@@ -603,29 +605,42 @@ def reply_webhook(partner, integration_user, secret):
 	}
 
 
-def set_up_reply_webhook(doc) -> bool:
-	"""Makes or updates the reply webhook on the partner's CRM, with a new secret. Returns whether
-	it worked."""
+def set_up_reply_webhook(doc) -> None:
+	"""Makes or updates the reply webhook on the partner's CRM, with a new secret. Throws why it
+	failed, so a save that can't sync replies doesn't look connected."""
 	settings = frappe._dict(name=doc.name, partner=doc.partner, site_url=doc.site_url, api_key=doc.api_key)
 	secret = frappe.generate_hash(length=32)
 	try:
-		integration_user = crm_request(settings, "GET", "/api/method/frappe.auth.get_logged_user").json()[
-			"message"
-		]
-		payload = reply_webhook(doc.partner, integration_user, secret)
-		try:
-			crm_request(settings, "PUT", f"/api/resource/Webhook/{quote(payload['name'])}", json=payload)
-		except CRMRequestError as e:
-			if e.status_code != 404:
-				raise
-			crm_request(settings, "POST", "/api/resource/Webhook", json=payload)
-	except Exception:
-		frappe.log_error(title=f"CRM reply webhook setup failed for Partner CRM Settings {doc.name}")
-		return False
+		webhook = _register_reply_webhook(settings, secret)
+	except CRMRequestError as e:
+		if e.status_code == 403:
+			frappe.throw(
+				_(
+					"Your CRM's API user can't add the webhook that brings replies into Connect."
+					" Give it the System Manager role."
+				)
+			)
+		frappe.throw(
+			_("Your CRM refused to set up reply sync (error {0}). Try saving again.").format(e.status_code)
+		)
+	except requests.RequestException:
+		frappe.throw(_("Couldn't reach your CRM to set up reply sync. Try saving again."))
 
-	doc.db_set("crm_reply_webhook_id", payload["name"], update_modified=False)
+	doc.db_set("crm_reply_webhook_id", webhook, update_modified=False)
 	# db_set on a Password field writes the plain value straight to the main table, bypassing
 	# the __Auth encryption path entirely — get_decrypted_password (used to verify incoming
 	# replies) would never find it there. set_encrypted_password is the correct way to store it.
 	set_encrypted_password("Partner CRM Settings", doc.name, secret, "crm_reply_webhook_secret")
-	return True
+
+
+def _register_reply_webhook(settings, secret) -> str:
+	login = crm_request(settings, "GET", "/api/method/frappe.auth.get_logged_user")
+	integration_user = login.json()["message"]
+	payload = reply_webhook(settings.partner, integration_user, secret)
+	try:
+		crm_request(settings, "PUT", f"/api/resource/Webhook/{quote(payload['name'])}", json=payload)
+	except CRMRequestError as e:
+		if e.status_code != 404:
+			raise
+		crm_request(settings, "POST", "/api/resource/Webhook", json=payload)
+	return payload["name"]

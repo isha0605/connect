@@ -2,12 +2,63 @@
 # For license information, please see license.txt
 
 import frappe
+import requests
 from frappe import _
 from frappe.model.document import Document
 
+from connect.crm_integration import CRMRequestError, crm_request
+
 
 class PartnerCRMSettings(Document):
-	pass
+	def validate(self):
+		if self.enabled and self.crm_type == "Frappe CRM":
+			self.check_crm_connection()
+
+	def check_crm_connection(self) -> None:
+		"""Fails the save with a reason the partner can fix, instead of every Lead failing later."""
+		settings = frappe._dict(
+			name=self.name,
+			site_url=self.site_url,
+			api_key=self.api_key,
+			api_secret=self.get_password("api_secret", raise_exception=False),
+		)
+		self._check_login(settings)
+		self._check_lead_status(settings)
+
+	def _check_login(self, settings) -> None:
+		try:
+			crm_request(settings, "GET", "/api/method/frappe.auth.get_logged_user").json()
+		# ValueError: the page answered, but not with JSON. Caught first: requests' JSON error is
+		# also a RequestException.
+		except (CRMRequestError, ValueError) as e:
+			if getattr(e, "status_code", None) in (401, 403):
+				frappe.throw(_("Your CRM didn't accept the API key and secret."))
+			frappe.throw(_("{0} doesn't look like a Frappe site. Check the Site URL.").format(self.site_url))
+		except requests.RequestException:
+			frappe.throw(_("Couldn't reach {0}. Check the Site URL.").format(self.site_url))
+
+	def _check_lead_status(self, settings) -> None:
+		try:
+			rows = crm_request(
+				settings,
+				"GET",
+				"/api/resource/CRM Lead Status",
+				params={"fields": '["name"]', "limit_page_length": 0},
+			).json()["data"]
+		except CRMRequestError as e:
+			if e.status_code == 403:
+				frappe.throw(
+					_("Your CRM's API user can't read lead statuses. Give it the System Manager role.")
+				)
+			frappe.throw(_("Frappe CRM isn't installed on {0}.").format(self.site_url))
+
+		statuses = [row["name"] for row in rows]
+		if self.default_lead_status not in statuses:
+			frappe.throw(
+				_('Your CRM has no lead status "{0}". Use one of: {1}.').format(
+					self.default_lead_status, ", ".join(statuses)
+				)
+			)
 
 
 def _my_partner_as_admin():
