@@ -11,13 +11,16 @@ from connect.partner.doctype.partner.partner import (
 	_child_values_by_partner,
 	_partners_matching_child,
 )
+from connect.partner.industries import partners_in_industries
 
 # Which partners the brief goes to ("Edit criteria" on the custom implementation page).
 # Each group narrows to any of the picked values; nothing picked means no limit there.
 # "How do you want to work" maps onto the partners' delivery modes, where Hybrid counts
 # for both. The go-live answer is edited alongside but doesn't filter partners.
 WORK_MODES = {"onsite": ("Onsite", "Hybrid"), "remote": ("Remote", "Hybrid")}
-PARTNER_FIELDS = {"countries": "country", "industries": "industry", "cities": "city", "tiers": "tier"}
+PARTNER_FIELDS = {"countries": "country", "cities": "city", "tiers": "tier"}
+# Criteria groups, in the order the chips show; industries match the partners' picked industries.
+CRITERIA_GROUPS = ("countries", "industries", "cities", "tiers")
 
 
 def partner_criteria(criteria: str | dict | None = None, include_recipients: bool = False) -> dict:
@@ -87,6 +90,8 @@ def get_partner_filters(criteria: dict) -> list:
 	for group, field in PARTNER_FIELDS.items():
 		if criteria[group]:
 			filters.append(["Partner", field, "in", criteria[group]])
+	if criteria["industries"]:
+		filters.append(["Partner", "name", "in", list(partners_in_industries(criteria["industries"])) or [""]])
 
 	if criteria["work"]:
 		wanted = {mode for work in criteria["work"] for mode in WORK_MODES[work]}
@@ -99,6 +104,6 @@ def get_partner_filters(criteria: dict) -> list:
 
 def normalize_criteria(criteria: dict | None) -> dict:
 	criteria = criteria or {}
-	normalized = {group: [value for value in criteria.get(group) or [] if value] for group in PARTNER_FIELDS}
+	normalized = {group: [value for value in criteria.get(group) or [] if value] for group in CRITERIA_GROUPS}
 	normalized["work"] = [work for work in criteria.get("work") or [] if work in WORK_MODES]
 	return normalized

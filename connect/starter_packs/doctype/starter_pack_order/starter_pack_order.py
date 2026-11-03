@@ -23,7 +23,7 @@ from connect.starter_packs.doctype.starter_pack_order.implementation import (
 	timeline_days,
 )
 from connect.partner.consultants import consultant_card
-from connect.partner.doctype.partner.partner import _compute_display_industries
+from connect.partner.industries import picked_industries
 
 # Set around the one save that mirrors gateway status onto an order. Nothing
 # else may move payment_status: a customer, or a Desk user, marking their own
@@ -44,7 +44,7 @@ GATEWAY_STATUS_MAP = {
 # Packs an order can hold only one of: Core + Manufacturing is Core with more, not an add-on.
 ALTERNATIVE_PACKS = {"core", "core-manufacturing"}
 
-# What the Confirmed page's partner card shows (industry feeds its industries list).
+# What the Confirmed page's partner card shows, with the industries its profile shows.
 PARTNER_CARD_FIELDS = [
 	"name",
 	"partner_name",
@@ -55,7 +55,6 @@ PARTNER_CARD_FIELDS = [
 	"hourly_rate",
 	"rating",
 	"response_time_hours",
-	"industry",
 ]
 
 
@@ -558,12 +557,7 @@ def get_assigned_partner(partner):
 	card = frappe.db.get_value("Partner", partner, PARTNER_CARD_FIELDS, as_dict=True)
 	if not card:
 		return None
-	stories = frappe.get_all(
-		"Partner Success Story",
-		filters={"parent": partner, "parenttype": "Partner", "parentfield": "success_stories"},
-		fields=["category"],
-	)
-	card["industries"] = _compute_display_industries(card.industry, stories)
+	card["industries"] = picked_industries(frappe.get_doc("Partner", partner))
 	card["review_count"] = frappe.db.count("Partner Review", {"partner": partner})
 	return card
 

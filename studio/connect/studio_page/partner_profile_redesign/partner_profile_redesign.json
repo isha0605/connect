@@ -1552,7 +1552,7 @@
               {
                "baseStyles": {
                 "borderBottom": "1px solid var(--outline-gray-1, #ededed)",
-                "display": "{{ (partner.data && partner.data.display_industries || []).length > 0 ? 'flex' : 'none' }}",
+                "display": "{{ (partner.data && partner.data.industry_badges || []).length > 0 ? 'flex' : 'none' }}",
                 "flexDirection": "column",
                 "gap": "12px",
                 "padding": "12px 0",
@@ -1587,23 +1587,47 @@
                    "componentId": "industries-list",
                    "componentName": "ListRows",
                    "componentProps": {
-                    "items": "{{ (partner.data && partner.data.display_industries || []).slice(0, 5) }}",
-                    "rowKey": "self"
+                    "items": "{{ (partner.data && partner.data.industry_badges || []).slice(0, 6) }}",
+                    "rowKey": "industry"
                    },
                    "componentSlots": {
                     "default": {
                      "parentBlockId": "industries-list",
                      "slotContent": [
                       {
+                       "attributes": {
+                        "title": "{{ item.verified ? 'Backed by ' + item.stories + ' success stories' : '' }}"
+                       },
                        "componentId": "industry-pill-item",
                        "componentName": "Badge",
                        "componentProps": {
-                        "label": "{{ item }}",
+                        "label": "{{ item.industry }}",
                         "size": "sm",
                         "theme": "gray",
                         "variant": "subtle"
                        },
-                       "componentSlots": {}
+                       "componentSlots": {
+                        "suffix": {
+                         "parentBlockId": "industry-pill-item",
+                         "slotContent": [
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-6, oklch(0.439 0 0))",
+                            "height": "12px",
+                            "width": "12px"
+                           },
+                           "componentId": "industry-pill-tick",
+                           "componentName": "Icon",
+                           "componentProps": {
+                            "icon": "lucide-badge-check"
+                           },
+                           "componentSlots": {},
+                           "visibilityCondition": "item.verified"
+                          }
+                         ],
+                         "slotId": "industry-pill-item:suffix"
+                        }
+                       }
                       }
                      ],
                      "slotId": "industries-list:default",
@@ -1613,12 +1637,12 @@
                   },
                   {
                    "baseStyles": {
-                    "display": "{{ ((partner.data && partner.data.display_industries || []).length > 5) ? 'inline-flex' : 'none' }}"
+                    "display": "{{ ((partner.data && partner.data.industry_badges || []).length > 6) ? 'inline-flex' : 'none' }}"
                    },
                    "componentId": "industries-overflow-pill",
                    "componentName": "Badge",
                    "componentProps": {
-                    "label": "{{ '+' + ((partner.data && partner.data.display_industries || []).length - 5) }}",
+                    "label": "{{ '+' + ((partner.data && partner.data.industry_badges || []).length - 6) }}",
                     "size": "sm",
                     "theme": "gray",
                     "variant": "subtle"
@@ -5121,7 +5145,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-02 12:23:43.176284",
+ "modified": "2026-11-03 20:11:06.286910",
  "modified_by": "tridots@example.com",
  "name": "partner_profile_redesign",
  "owner": "Administrator",

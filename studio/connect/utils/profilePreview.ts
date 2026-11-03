@@ -31,13 +31,16 @@ export function onPreviewChange(partner, callback) {
 
 // The saved record (get_partner_document's shape) with the builder's draft laid over it.
 export function withPreview(doc, draft) {
-	const { founder, apps, migrations, photos, success_stories, ...fields } = draft
+	const { founder, apps, migrations, industries, photos, success_stories, ...fields } = draft
 	const others = (doc.team || []).filter((member) => !member.is_founder)
 	return {
 		...doc,
 		...fields,
 		apps: (apps || []).map((app) => ({ app })),
 		migrations: (migrations || []).map((path) => ({ migration_path: path })),
+		industries: (industries || []).map((industry) => ({ industry })),
+		industry_badges: industryBadges(industries || [], success_stories || []),
+		display_industries: industries || [],
 		team: founder?.member_name ? [{ ...founder, is_founder: 1 }, ...others] : others,
 		photos: photos || [],
 		success_stories: (success_stories || []).map((story) => ({
@@ -45,4 +48,14 @@ export function withPreview(doc, draft) {
 			client_logo_display: story.client_logo,
 		})),
 	}
+}
+
+// The same tick rule as connect.partner.industries.industry_badges, for the unsaved draft.
+const STORIES_FOR_TICK = 2
+
+function industryBadges(industries, stories) {
+	return industries.map((industry) => {
+		const count = stories.filter((story) => story.category === industry).length
+		return { industry, stories: count, verified: count >= STORIES_FOR_TICK }
+	})
 }

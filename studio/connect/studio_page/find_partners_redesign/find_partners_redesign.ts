@@ -15,7 +15,6 @@ import { blankCriteria, criteriaSummary, partnerCriteria } from "@app/utils/part
 import {
 	BUDGET_OPTIONS,
 	COUNTRY_OPTIONS,
-	MANUFACTURING_INDUSTRIES,
 	EMPLOYEE_OPTIONS,
 	INDUSTRY_OPTIONS,
 	SYSTEM_OPTIONS,
@@ -185,26 +184,6 @@ export default function setup(context) {
 		return true
 	}
 
-	// The partners' own industry list is coarser than the one asked here.
-	function partnerIndustries(picked) {
-		const map = {
-			Education: "Education",
-			Finance: "FinTech",
-			Government: "Government",
-			Logistics: "Logistics",
-			Nonprofit: "Nonprofit",
-			"Professional services": "Professional Services",
-			Distribution: "Retail",
-			"E-commerce": "Retail",
-			"Fast Moving Consumer Goods": "Retail",
-			Retail: "Retail",
-		}
-		const out = (picked || []).map((i) =>
-			i === "Manufacturing" || MANUFACTURING_INDUSTRIES.includes(i) ? "Manufacturing" : map[i],
-		)
-		return [...new Set(out.filter(Boolean))]
-	}
-
 	// What the brief goes out with: the questions' answers, then whatever Edit criteria adds.
 	const shareCriteria = ref(blankCriteria())
 	const shareGoLive = ref("no_deadline")
@@ -237,7 +216,7 @@ export default function setup(context) {
 		shareCriteria.value = {
 			...blankCriteria(),
 			countries: [...partnerRegions.value],
-			industries: partnerIndustries(industries.value),
+			industries: [...(industries.value || [])],
 		}
 		editingCriteria.value = false
 		loadRecipients()
@@ -402,7 +381,7 @@ export default function setup(context) {
 			: (partnerCountries.data || []).includes(businessCountry.value)
 				? [businessCountry.value]
 				: []
-		return { ...blankCriteria(), countries: [...countries], industries: partnerIndustries(industries.value) }
+		return { ...blankCriteria(), countries: [...countries], industries: [...(industries.value || [])] }
 	}
 	watch(
 		() => JSON.stringify(matchCriteria()),

@@ -1,5 +1,7 @@
 from frappe.search.sqlite_search import SQLiteSearch
 
+from connect.partner.industries import industries_by_partner
+
 
 class PartnerSearch(SQLiteSearch):
 	"""FTS5-backed relevance search over Partner — replaces the old MariaDB-only
@@ -30,10 +32,15 @@ class PartnerSearch(SQLiteSearch):
 				"name",
 				{"title": "partner_name"},
 				{"content": "partner_name"},
-				"tagline", "description", "industry", "city", "country",
+				"tagline", "description", "city", "country",
 			],
 		},
 	}
+
+	def prepare_document(self, doc):
+		# "industry" holds the partner's picked industries, a child table the field list can't read
+		doc["industry"] = ", ".join(industries_by_partner([doc["name"]]).get(doc["name"], []))
+		return super().prepare_document(doc)
 
 	def get_search_filters(self):
 		# Partner search is public (allow_guest) — there's no per-user access to
