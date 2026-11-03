@@ -288,6 +288,8 @@ scheduler_events = {
 		"connect.customer.doctype.customer_project.hiring.expire_hire_requests",
 		"connect.partner.response_time.recompute_all_response_times",
 		"connect.partner.press_integration.sync_all_partner_mrrs",
+		"connect.partner.doctype.partner_certificate.partner_certificate.recount_partners_with_expired_certificates",
+		"connect.partner.doctype.certificate_application.certificate_application.check_all_approved_applications",
 	],
 }
 

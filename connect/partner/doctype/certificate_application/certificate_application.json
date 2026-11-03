@@ -1,0 +1,177 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:CAPP-{#####}",
+ "creation": "2026-11-03 14:00:00.000000",
+ "description": "A partner's request for one of their free Frappe School certifications. Frappe's partner reviewers approve or reject it, and Connect marks it Certified once Frappe School issues the certificate.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "partner",
+  "partner_name",
+  "member_email",
+  "member_name",
+  "certificate_type",
+  "column_break_status",
+  "status",
+  "applied_by",
+  "section_break_review",
+  "reviewed_by",
+  "reviewed_on",
+  "column_break_review",
+  "rejection_reason",
+  "section_break_result",
+  "certified_on",
+  "partner_certificate"
+ ],
+ "fields": [
+  {
+   "fieldname": "partner",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Partner",
+   "options": "Partner",
+   "read_only": 1,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fetch_from": "partner.partner_name",
+   "fieldname": "partner_name",
+   "fieldtype": "Data",
+   "label": "Partner Name",
+   "read_only": 1
+  },
+  {
+   "description": "The email the team member uses on Frappe School.",
+   "fieldname": "member_email",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Member Email",
+   "options": "Email",
+   "read_only": 1,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "member_name",
+   "fieldtype": "Data",
+   "label": "Member Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "certificate_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Certificate",
+   "options": "ERPNext\nFramework",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Applied",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Applied\nApproved\nRejected\nCancelled\nCertified",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "applied_by",
+   "fieldtype": "Link",
+   "label": "Applied By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_review",
+   "fieldtype": "Section Break",
+   "label": "Review"
+  },
+  {
+   "fieldname": "reviewed_by",
+   "fieldtype": "Link",
+   "label": "Reviewed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reviewed_on",
+   "fieldtype": "Datetime",
+   "label": "Reviewed On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_review",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rejection_reason",
+   "fieldtype": "Small Text",
+   "label": "Rejection Reason",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_result",
+   "fieldtype": "Section Break",
+   "label": "Certificate"
+  },
+  {
+   "fieldname": "certified_on",
+   "fieldtype": "Date",
+   "label": "Certified On",
+   "read_only": 1
+  },
+  {
+   "description": "The certificate Frappe School issued. Linking it to the partner still needs the holder's email confirmation.",
+   "fieldname": "partner_certificate",
+   "fieldtype": "Link",
+   "label": "Partner Certificate",
+   "options": "Partner Certificate",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-03 14:00:00.000000",
+ "module": "Partner",
+ "name": "Certificate Application",
+ "naming_rule": "Expression",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Partner Reviewer",
+   "write": 1
+  }
+ ],
+ "search_fields": "partner_name,member_email",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "member_email"
+}

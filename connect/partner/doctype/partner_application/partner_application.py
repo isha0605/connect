@@ -6,6 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, now_datetime
 
+from connect.permissions import _is_partner_admin
 from connect.roles import REVIEWER_ROLE
 
 _APPLICATION_FIELDS = (
@@ -123,8 +124,9 @@ class PartnerApplication(Document):
 			frappe.throw(_("Complete your company profile before submitting for approval."))
 
 	def _validate_certificate_count(self):
-		linked_count = frappe.db.count("Partner Certificate", {"partner": self.partner})
-		if linked_count < 2:
+		from connect.partner.doctype.partner_certificate.partner_certificate import valid_certificates
+
+		if len(valid_certificates(self.partner)) < 2:
 			frappe.throw(_("Link at least two certificates before submitting for approval."))
 
 	def _validate_cloud_account(self):
@@ -227,15 +229,21 @@ def submit_for_approval():
 
 @frappe.whitelist(methods=["POST"])
 def unregister():
-	from connect.partner.doctype.partner.partner import _my_partner
+	"""The partner's admin opts out while onboarding (Draft, Pending Review or Rejected). An approved
+	partnership can't be undone by the partner."""
+	from connect.partner.doctype.partner.partner import _my_admin_partner
+	from connect.partner.doctype.partner_certificate.partner_certificate import recount_certificates
 
-	partner = _my_partner()
+	partner = _my_admin_partner()
 	doc = _get_partner_application(partner)
 	if not doc:
 		return
+	if doc.status == "Approved":
+		frappe.throw(_("Your partnership is approved, so it can't be undone here. Contact Frappe."))
 
 	# bulk update via filter dict avoids an N+1 loop per matching row
 	frappe.db.set_value("Partner Certificate", {"partner": partner}, "partner", None)
+	recount_certificates(partner)
 	frappe.db.set_value(
 		"Certificate Link Request",
 		{"partner": partner, "status": "Pending"},
@@ -251,24 +259,40 @@ def unregister():
 
 @frappe.whitelist()
 def get_certificate_link_status():
+	from connect.partner.doctype.certificate_application.certificate_application import free_certification_status
+	from connect.partner.doctype.certificate_link_request.certificate_link_request import (
+		certificate_url,
+		course_page_url,
+	)
 	from connect.partner.doctype.partner.partner import _my_partner
+	from connect.partner.doctype.partner_certificate.partner_certificate import course_label, is_expired
 
 	partner = _my_partner()
 
 	linked_certificates = frappe.get_all(
 		"Partner Certificate",
 		filters={"partner": partner},
-		fields=["name", "course", "partner_member_email", "partner_member_name"],
-		order_by="creation desc",
+		fields=[
+			"name", "course", "partner_member_email", "partner_member_name", "issue_date", "expiry_date",
+			"school_certificate_id",
+		],
+		order_by="issue_date desc",
 	)
+	for certificate in linked_certificates:
+		certificate.course_label = course_label(certificate.course)
+		certificate.certificate_url = certificate_url(certificate.course, certificate.school_certificate_id)
+		certificate.is_expired = is_expired(certificate.expiry_date)
 	link_requests = frappe.get_all(
 		"Certificate Link Request",
 		filters={"partner": partner, "status": ["in", ["Pending", "Approved"]]},
 		fields=["name", "course", "user_email", "status", "creation"],
 		order_by="creation desc",
 	)
+	for request in link_requests:
+		request.course_label = course_label(request.course)
 	pending_requests = [r for r in link_requests if r.status == "Pending"]
-	linked_count = len(linked_certificates)
+	# expired certificates still show, but don't count
+	linked_count = len([certificate for certificate in linked_certificates if not certificate.is_expired])
 
 	return {
 		"linked_certificates": linked_certificates,
@@ -276,6 +300,15 @@ def get_certificate_link_status():
 		"pending_requests": pending_requests,
 		"linked_count": linked_count,
 		"requirement_complete": linked_count >= 2,
+		"can_edit": _is_partner_admin(partner, frappe.session.user),
+		"applications": frappe.get_all(
+			"Certificate Application",
+			filters={"partner": partner, "status": ["!=", "Cancelled"]},
+			fields=["name", "member_email", "member_name", "certificate_type", "status", "rejection_reason", "creation"],
+			order_by="creation desc",
+		),
+		"free_certifications": free_certification_status(partner),
+		"course_pages": {certificate_type: course_page_url(certificate_type) for certificate_type in ("erpnext", "frappe")},
 	}
 
 
