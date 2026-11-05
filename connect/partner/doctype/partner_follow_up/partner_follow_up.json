@@ -11,7 +11,13 @@
   "mode",
   "spoke_to",
   "notes",
-  "quote"
+  "quote",
+  "meeting_section",
+  "title",
+  "meeting_link",
+  "duration_minutes",
+  "thread",
+  "message"
  ],
  "fields": [
   {
@@ -65,11 +71,49 @@
    "options": "Project Quote",
    "read_only": 1,
    "description": "The lead it was logged on, if any."
+  },
+  {
+   "fieldname": "meeting_section",
+   "fieldtype": "Section Break",
+   "label": "Meeting",
+   "depends_on": "eval:doc.meeting_link",
+   "collapsible": 0
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Meeting Title"
+  },
+  {
+   "fieldname": "meeting_link",
+   "fieldtype": "Data",
+   "options": "URL",
+   "label": "Meeting Link"
+  },
+  {
+   "fieldname": "duration_minutes",
+   "fieldtype": "Int",
+   "label": "Duration (minutes)"
+  },
+  {
+   "fieldname": "thread",
+   "fieldtype": "Link",
+   "options": "Connect Thread",
+   "label": "Thread",
+   "read_only": 1,
+   "description": "The conversation the invite was posted in."
+  },
+  {
+   "fieldname": "message",
+   "fieldtype": "Link",
+   "options": "Connect Message",
+   "label": "Invite Card",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-11-02 12:00:00.000000",
+ "modified": "2026-11-05 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Partner",
  "name": "Partner Follow Up",
@@ -91,7 +135,7 @@
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": [],
- "description": "A call, demo, email or meeting the partner's team had with a customer. Only that partner's team reads it.",
+ "description": "A call, demo, email or meeting the partner's team had or scheduled with a customer. Only that partner's team reads it.",
  "autoname": "hash",
  "naming_rule": "Random"
 }

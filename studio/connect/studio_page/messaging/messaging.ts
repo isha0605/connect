@@ -1276,10 +1276,11 @@ export default function setup(context) {
 		})
 	}
 
-	// ---- Kickoff call: the consultant shares a meeting link, both sides join from a card ----
-	// message_type "Meeting"; content is { order, title, link, starts_at } (see
-	// share_kickoff_meeting). Only the consultant of a Starter Pack thread shares one. Sharing
-	// again posts a new card, and the older cards for that order show as replaced.
+	// ---- Meeting cards: both sides join from a card ----
+	// message_type "Meeting". A kickoff call's content is { order, title, link, starts_at } (see
+	// share_kickoff_meeting): only the consultant of a Starter Pack thread shares one, and sharing
+	// again replaces the older cards for that order. A partner's invite from a lead carries
+	// { follow_up, title, link, starts_at, duration_minutes, agenda } (see Partner Follow Up).
 	function canShareMeeting() {
 		const me = context.myContext.data && context.myContext.data.user
 		const thread = currentThread()
@@ -1288,6 +1289,7 @@ export default function setup(context) {
 
 	function isMeetingReplaced(item) {
 		const order = parseRequirementContent(item).order
+		if (!order) return false
 		return currentMessages().some(
 			(m) =>
 				m.message_type === "Meeting" &&
@@ -1300,13 +1302,23 @@ export default function setup(context) {
 	function meetingCardTime(item) {
 		const startsAt = parseRequirementContent(item).starts_at
 		if (!startsAt) return ""
-		return new Date(startsAt).toLocaleString("en-US", {
+		const when = new Date(startsAt).toLocaleString("en-US", {
 			weekday: "short",
 			month: "short",
 			day: "numeric",
 			hour: "numeric",
 			minute: "2-digit",
 		})
+		const minutes = parseRequirementContent(item).duration_minutes
+		return minutes ? `${when} · ${minutes} min` : when
+	}
+
+	function meetingCardTitle(item) {
+		return parseRequirementContent(item).title || "Kickoff call"
+	}
+
+	function meetingCardAgenda(item) {
+		return parseRequirementContent(item).agenda || ""
 	}
 
 	// "meet.google.com/abc-defg-hij": the link without its https://
@@ -2221,7 +2233,7 @@ export default function setup(context) {
 		if (!message) return ""
 		if (message.message_type === "File") return message.file_name || "Attachment"
 		if (message.message_type === "Requirement") return "Requirement details"
-		if (message.message_type === "Meeting") return "Kickoff call"
+		if (message.message_type === "Meeting") return meetingCardTitle(message)
 		return message.content || ""
 	}
 
@@ -2323,7 +2335,7 @@ export default function setup(context) {
 	function pinnedPreviewText(message) {
 		if (message.message_type === "File") return "📎 " + (message.file_name || "Attachment")
 		if (message.message_type === "Requirement") return "Requirement details"
-		if (message.message_type === "Meeting") return "📹 Kickoff call"
+		if (message.message_type === "Meeting") return "📹 " + meetingCardTitle(message)
 		return message.content || ""
 	}
 
@@ -2335,7 +2347,7 @@ export default function setup(context) {
 		if (!message) return ""
 		if (message.message_type === "File") return escapeHtmlAttr("\ud83d\udcce " + (message.file_name || "Attachment"))
 		if (message.message_type === "Requirement") return escapeHtmlAttr("Requirement details")
-		if (message.message_type === "Meeting") return escapeHtmlAttr("\ud83d\udcf9 Kickoff call")
+		if (message.message_type === "Meeting") return escapeHtmlAttr("\ud83d\udcf9 " + meetingCardTitle(message))
 		return formatMessageContent(message)
 	}
 
@@ -3997,6 +4009,8 @@ export default function setup(context) {
 		meetingCardTime,
 		meetingCardLink,
 		meetingCardStatus,
+		meetingCardTitle,
+		meetingCardAgenda,
 		joinMeeting,
 		showMeetingDialog,
 		meetingLinkDraft,

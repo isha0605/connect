@@ -49,7 +49,8 @@ def _message_preview_text(message):
 		request = frappe.parse_json(message.get("content") or "{}") or {}
 		text = _("Hire request: {0}").format(request.get("project_name") or _("a project"))
 	elif message.get("message_type") == "Meeting":
-		text = "📹 " + _("Kickoff call")
+		meeting = frappe.parse_json(message.get("content") or "{}") or {}
+		text = "📹 " + (meeting.get("title") or _("Kickoff call"))
 	elif message.get("message_type") == "Quote":
 		quote = frappe.parse_json(message.get("content") or "{}") or {}
 		text = _("Quoted {0}").format(frappe.utils.fmt_money(quote.get("amount") or 0, currency="INR", precision=0).replace("₹ ", "₹"))
