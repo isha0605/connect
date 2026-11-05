@@ -1,13 +1,14 @@
-// The Connect button on a partner's profile and on their directory and Shortlisted cards: the
-// New project dialog, sent to that partner (connect.api.projects.start_project_with_partner),
-// then their chat in Messaging. A guest signs in on Connect's page first and comes back to the
+// The Connect button on a partner's profile and on their directory and Shortlisted cards. A
+// customer with projects picks one in the Contact dialog (ContactPartnerDialog.vue); one with
+// none answers the New project dialog. Either way it goes to that partner
+// (connect.api.projects.start_project_with_partner), then their chat in Messaging. A guest signs in on Connect's page first and comes back to the
 // same page with ?connect=<partner>, which opens the dialog; an account without a company (a
 // partner's) is told why it can't.
 //
 // The page spreads this into its setup() return and renders the Projects page's dialog blocks,
-// with {{ projectSaveLabel }} on the last button.
+// with {{ projectSaveLabel }} on the last button, and the ContactPartnerDialog block.
 
-import { watch } from "vue"
+import { ref, watch } from "vue"
 import { projectDialog } from "@app/utils/projectDialog"
 import { goToSignIn } from "@app/utils/signIn"
 
@@ -21,12 +22,37 @@ function isGuest(me) {
 	return !me.user || me.user === "Guest"
 }
 
+// Projects still looking for a partner. A Starter Pack is bought as a fixed scope, so it is not
+// requirements to ask a partner to quote on.
+function isContactable(row) {
+	return row.kind === "project" && row.verdict !== "packs" && !row.hired
+}
+
 export function partnerConnect(context) {
-	const { route, router, myContext, toast } = context
+	const { call, route, router, myContext, toast } = context
 
 	const dialog = projectDialog(context, {
 		onSaved: (project, thread) => router.push({ path: "/messaging", query: { thread } }),
 	})
+
+	const contactDialogOpen = ref(false)
+	const contactPartner = ref(null)
+	const contactProjects = ref([])
+
+	function openContact(partner) {
+		call("connect.api.projects.list_projects")
+			.then((rows) => {
+				const projects = (rows || []).filter(isContactable)
+				if (!projects.length) {
+					dialog.openNewProject(partner)
+					return
+				}
+				contactPartner.value = partner
+				contactProjects.value = projects
+				contactDialogOpen.value = true
+			})
+			.catch(() => toast.error("Couldn't load your projects. Try again."))
+	}
 
 	// partner: { name, partner_name }
 	function connectWith(partner) {
@@ -47,7 +73,7 @@ export function partnerConnect(context) {
 			toast.error(NO_COMPANY)
 			return
 		}
-		dialog.openNewProject(partner)
+		openContact(partner)
 	}
 
 	// Back from signing in: open the dialog they asked for, once, and take it off the URL so a
@@ -64,11 +90,11 @@ export function partnerConnect(context) {
 				router.replace({ query: rest })
 				if (isGuest(me)) return
 				if (!me.customer) toast.error(NO_COMPANY)
-				else dialog.openNewProject({ name: String(pending), partner_name: String(partnerName || "") })
+				else openContact({ name: String(pending), partner_name: String(partnerName || "") })
 			},
 			{ immediate: true },
 		)
 	}
 
-	return { ...dialog, connectWith }
+	return { ...dialog, connectWith, contactDialogOpen, contactPartner, contactProjects }
 }
