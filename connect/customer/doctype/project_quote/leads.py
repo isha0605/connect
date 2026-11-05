@@ -22,7 +22,7 @@ from connect.partner.doctype.partner_customer.customer_records import (
 	notes_of,
 )
 from connect.partner.doctype.partner_lead.partner_lead import CLOSED_STAGES
-from connect.permissions import _check_can_write, _is_partner_admin, _my_partner_with_access
+from connect.permissions import _check_can_write, _has_partner_access, _is_partner_admin, _my_partner_with_access
 
 LEAD_LIMIT = 500
 
@@ -302,10 +302,8 @@ def _crm_owner(row) -> dict:
 	they are on the team at all (an owner can invite them when they aren't)."""
 	if not row.crm_owner:
 		return {"crm_owner": None, "crm_owner_on_team": False}
-	on_team = frappe.db.exists(
-		"Connect Partner Member", {"partner": row.partner, "user": row.crm_owner, "is_removed": 0}
-	)
-	return {"crm_owner": row.crm_owner, "crm_owner_on_team": bool(on_team)}
+	on_team = _has_partner_access(row.partner, row.crm_owner, ACCESS_LEVELS)
+	return {"crm_owner": row.crm_owner, "crm_owner_on_team": on_team}
 
 
 def _company(row) -> str:
