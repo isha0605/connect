@@ -57,6 +57,7 @@ class PartnerLead(Document):
 	def _validate_assigned_to(self):
 		if not self.has_value_changed("assigned_to"):
 			return
+		crm_owner = self.crm_owner
 		# Whoever Connect assigns replaces whoever the CRM had it with.
 		if not self.flags.from_crm:
 			self.crm_owner = None
@@ -66,23 +67,32 @@ class PartnerLead(Document):
 			frappe.throw(_("{0} can't take leads. Only owners and sales can.").format(self.assigned_to))
 		# The CRM gave it to them, so they are on it.
 		if not self.flags.from_crm:
-			self._validate_owner_on_crm()
+			self._validate_owner_on_crm(crm_owner)
 
-	def _validate_owner_on_crm(self):
+	def _validate_owner_on_crm(self, crm_owner: str | None):
 		"""With CRM sync on, the lead's CRM Lead must go to the same person, so they need a user there."""
 		from connect.crm_integration import crm_settings
 
 		if not crm_settings(self.partner):
 			return
-		on_crm = frappe.db.get_value(
-			"Connect Partner Member", {"partner": self.partner, "user": self.assigned_to, "is_removed": 0}, "crm_user"
+		member = frappe.db.get_value(
+			"Connect Partner Member",
+			{"partner": self.partner, "user": self.assigned_to, "is_removed": 0},
+			["name", "crm_user"],
+			as_dict=True,
 		)
-		if not on_crm:
-			name = frappe.db.get_value("User", self.assigned_to, "full_name") or self.assigned_to
-			frappe.throw(
-				_("{0} isn't on your CRM. Create their account there, then match them in Settings → Users.").format(name),
-				NotOnCRMError,
-			)
+		if member.crm_user:
+			return
+		# The CRM named this person as the Lead's owner, so that is their user there. Someone just
+		# invited from the lead gets here before the queued team match links them.
+		if crm_owner and crm_owner.lower() == self.assigned_to.lower():
+			frappe.db.set_value("Connect Partner Member", member.name, "crm_user", crm_owner)
+			return
+		name = frappe.db.get_value("User", self.assigned_to, "full_name") or self.assigned_to
+		frappe.throw(
+			_("{0} isn't on your CRM. Create their account there, then match them in Settings → Users.").format(name),
+			NotOnCRMError,
+		)
 
 	def _add_owner_to_thread(self):
 		"""Whoever works the lead has to read and answer the customer."""

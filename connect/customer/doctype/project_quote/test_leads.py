@@ -172,6 +172,14 @@ class TestLeads(IntegrationTestCase):
 			self.assertRaises(NotOnCRMError, update_lead, self.lead, owner=OWNER)
 			self.assertEqual(update_lead(self.lead, owner=SALES)["owner"], SALES)
 
+	def test_the_crm_owner_invited_from_the_lead_can_take_it(self):
+		# The CRM named SALES as the Lead's owner; they were just invited, so not matched yet.
+		frappe.db.set_value("Partner Lead", self.lead, "crm_owner", SALES)
+		self.as_user(OWNER)
+		with patch("connect.crm_integration.crm_settings", return_value={"name": PARTNER}):
+			self.assertEqual(update_lead(self.lead, owner=SALES)["owner"], SALES)
+		self.assertEqual(frappe.db.get_value("Connect Partner Member", {"partner": PARTNER, "user": SALES}, "crm_user"), SALES)
+
 	def test_a_teammates_reply_is_the_partners_on_the_lead(self):
 		message = {"doctype": "Connect Message", "thread": self.thread, "sender": MEMBER, "content": "On it"}
 		frappe.get_doc(message).insert(ignore_permissions=True)
