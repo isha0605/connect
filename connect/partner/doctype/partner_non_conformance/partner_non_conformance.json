@@ -1,0 +1,212 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:PNC-{#####}",
+ "creation": "2026-11-05 12:00:00.000000",
+ "description": "A gap a Partner Audit found in how a partner works, tracked until the partner closes it.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "partner_audit",
+  "partner",
+  "partner_name",
+  "auditor",
+  "audit_date",
+  "column_break_status",
+  "status",
+  "department",
+  "expected_closure",
+  "section_break_finding",
+  "statement",
+  "description",
+  "section_break_closure",
+  "closure_measures",
+  "evidence",
+  "column_break_closure",
+  "closed_on",
+  "closed_by",
+  "press_section",
+  "press_name"
+ ],
+ "fields": [
+  {
+   "fieldname": "partner_audit",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Partner Audit",
+   "options": "Partner Audit",
+   "reqd": 1,
+   "search_index": 1,
+   "set_only_once": 1
+  },
+  {
+   "fetch_from": "partner_audit.partner",
+   "fieldname": "partner",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Partner",
+   "options": "Partner",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fetch_from": "partner_audit.partner_name",
+   "fieldname": "partner_name",
+   "fieldtype": "Data",
+   "label": "Partner Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "partner_audit.conducted_by",
+   "fieldname": "auditor",
+   "fieldtype": "Link",
+   "label": "Auditor",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "partner_audit.audit_date",
+   "fieldname": "audit_date",
+   "fieldtype": "Date",
+   "label": "Audit Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Open",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Open\nWIP\nClosed\nDiscarded\nOn Hold",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Department",
+   "options": "General\nImplementation\nSupport\nSales",
+   "reqd": 1
+  },
+  {
+   "description": "When the partner should have it closed. Not before the audit date.",
+   "fieldname": "expected_closure",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Expected Closure"
+  },
+  {
+   "fieldname": "section_break_finding",
+   "fieldtype": "Section Break",
+   "label": "Finding"
+  },
+  {
+   "description": "One line: what the partner doesn't do as they should.",
+   "fieldname": "statement",
+   "fieldtype": "Data",
+   "label": "Statement",
+   "reqd": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "section_break_closure",
+   "fieldtype": "Section Break",
+   "label": "Closure"
+  },
+  {
+   "description": "What the partner did, or will do, to close it.",
+   "fieldname": "closure_measures",
+   "fieldtype": "Text",
+   "label": "Measures to Close"
+  },
+  {
+   "fieldname": "evidence",
+   "fieldtype": "Attach",
+   "label": "Evidence"
+  },
+  {
+   "fieldname": "column_break_closure",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Set when the status becomes Closed.",
+   "fieldname": "closed_on",
+   "fieldtype": "Date",
+   "label": "Closed On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "closed_by",
+   "fieldtype": "Link",
+   "label": "Closed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "press_section",
+   "fieldtype": "Section Break",
+   "label": "Imported From Press"
+  },
+  {
+   "description": "The Press Partner Non Conformance this record was copied from, so an import can run again without making it twice.",
+   "fieldname": "press_name",
+   "fieldtype": "Data",
+   "label": "Press Record",
+   "no_copy": 1,
+   "read_only": 1,
+   "unique": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Partner",
+ "name": "Partner Non Conformance",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Partner Reviewer",
+   "write": 1
+  }
+ ],
+ "search_fields": "statement,partner_name",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "statement",
+ "track_changes": 1
+}

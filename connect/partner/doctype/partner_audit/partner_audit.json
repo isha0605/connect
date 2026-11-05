@@ -1,0 +1,262 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:PA-{####}",
+ "creation": "2026-11-05 12:00:00.000000",
+ "description": "An audit Frappe runs on a partner's implementation, sales and support work. It sets their PMM level and can raise non-conformances for the partner to close.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "partner",
+  "partner_name",
+  "mode_of_audit",
+  "partner_tier",
+  "column_break_status",
+  "status",
+  "conducted_by",
+  "section_break_dates",
+  "requested_on",
+  "proposed_audit_date",
+  "column_break_dates",
+  "audit_date",
+  "implementation_tab",
+  "implementation_summary",
+  "implementation_finding",
+  "implementation_observation",
+  "sales_tab",
+  "sales_summary",
+  "sales_finding",
+  "sales_observation",
+  "support_tab",
+  "support_summary",
+  "support_finding",
+  "support_observation",
+  "next_actions_tab",
+  "next_actions",
+  "audit_report",
+  "press_section",
+  "press_name"
+ ],
+ "fields": [
+  {
+   "fieldname": "partner",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Partner",
+   "options": "Partner",
+   "reqd": 1,
+   "search_index": 1,
+   "set_only_once": 1
+  },
+  {
+   "fetch_from": "partner.partner_name",
+   "fieldname": "partner_name",
+   "fieldtype": "Data",
+   "label": "Partner Name",
+   "read_only": 1
+  },
+  {
+   "default": "Online",
+   "fieldname": "mode_of_audit",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Mode of Audit",
+   "options": "Online\nIn-Person\nHybrid",
+   "reqd": 1
+  },
+  {
+   "description": "The partner's tier when the audit was requested.",
+   "fieldname": "partner_tier",
+   "fieldtype": "Data",
+   "label": "Partner Tier",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Requested",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Requested\nScheduled\nIn Progress\nCompleted\nOn Hold\nCancelled",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "description": "Needed before the audit can be completed.",
+   "fieldname": "conducted_by",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Conducted By",
+   "options": "User"
+  },
+  {
+   "fieldname": "section_break_dates",
+   "fieldtype": "Section Break",
+   "label": "Dates"
+  },
+  {
+   "fieldname": "requested_on",
+   "fieldtype": "Date",
+   "label": "Requested On",
+   "read_only": 1
+  },
+  {
+   "description": "The date the partner asked for.",
+   "fieldname": "proposed_audit_date",
+   "fieldtype": "Date",
+   "label": "Proposed Audit Date"
+  },
+  {
+   "fieldname": "column_break_dates",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Needed once the audit is Scheduled, In Progress or Completed.",
+   "fieldname": "audit_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Audit Date"
+  },
+  {
+   "fieldname": "implementation_tab",
+   "fieldtype": "Tab Break",
+   "label": "Implementation"
+  },
+  {
+   "fieldname": "implementation_summary",
+   "fieldtype": "Text Editor",
+   "label": "Summary"
+  },
+  {
+   "fieldname": "implementation_finding",
+   "fieldtype": "Text Editor",
+   "label": "Finding"
+  },
+  {
+   "fieldname": "implementation_observation",
+   "fieldtype": "Text Editor",
+   "label": "Observation"
+  },
+  {
+   "fieldname": "sales_tab",
+   "fieldtype": "Tab Break",
+   "label": "Sales"
+  },
+  {
+   "fieldname": "sales_summary",
+   "fieldtype": "Text Editor",
+   "label": "Summary"
+  },
+  {
+   "fieldname": "sales_finding",
+   "fieldtype": "Text Editor",
+   "label": "Finding"
+  },
+  {
+   "fieldname": "sales_observation",
+   "fieldtype": "Text Editor",
+   "label": "Observation"
+  },
+  {
+   "fieldname": "support_tab",
+   "fieldtype": "Tab Break",
+   "label": "Support"
+  },
+  {
+   "fieldname": "support_summary",
+   "fieldtype": "Text Editor",
+   "label": "Summary"
+  },
+  {
+   "fieldname": "support_finding",
+   "fieldtype": "Text Editor",
+   "label": "Finding"
+  },
+  {
+   "fieldname": "support_observation",
+   "fieldtype": "Text Editor",
+   "label": "Observation"
+  },
+  {
+   "fieldname": "next_actions_tab",
+   "fieldtype": "Tab Break",
+   "label": "Next Actions"
+  },
+  {
+   "fieldname": "next_actions",
+   "fieldtype": "Text Editor",
+   "label": "Next Actions"
+  },
+  {
+   "fieldname": "audit_report",
+   "fieldtype": "Attach",
+   "label": "Audit Report"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "press_section",
+   "fieldtype": "Section Break",
+   "label": "Imported From Press"
+  },
+  {
+   "description": "The Press Partner Audit this record was copied from, so an import can run again without making it twice.",
+   "fieldname": "press_name",
+   "fieldtype": "Data",
+   "label": "Press Record",
+   "no_copy": 1,
+   "read_only": 1,
+   "unique": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [
+  {
+   "link_doctype": "Partner Non Conformance",
+   "link_fieldname": "partner_audit"
+  }
+ ],
+ "modified": "2026-11-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Partner",
+ "name": "Partner Audit",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Partner Reviewer",
+   "write": 1
+  }
+ ],
+ "search_fields": "partner_name",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "partner_name",
+ "track_changes": 1
+}
