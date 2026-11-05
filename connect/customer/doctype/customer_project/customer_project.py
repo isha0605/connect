@@ -100,11 +100,13 @@ def save_project(
 
 
 def start_project_with_partner(
-	partner, project_name, go_live=None, operations=None, problems=None, verdict=None, systems=None
+	partner, project_name=None, go_live=None, operations=None, problems=None, verdict=None, systems=None,
+	project=None, budget=None, description=None,
 ) -> dict:
-	"""Connect on a partner's profile or directory card: saves a new project from the New project
-	answers and sends it to that one partner, as the customer's Requirement card in their chat.
-	Returns the project and the chat."""
+	"""Contact on a partner's profile or directory card: sends one project to that one partner,
+	as the customer's Requirement card in their chat. The project is an existing one of theirs
+	(`project`, with its brief filled in here if it has none yet), or a new one saved from the
+	New project answers. Returns the project and the chat."""
 	from connect.customer.doctype.customer_project.brief import send_brief
 	from connect.messaging.doctype.connect_thread.connect_thread import get_or_open_thread
 	from connect.partner.doctype.partner.partner import VERIFIED
@@ -119,16 +121,45 @@ def start_project_with_partner(
 	if not verified or not _get_partner_owners(partner):
 		frappe.throw(_("This partner can't take messages yet."))
 
-	doc = get_own_project(save_project(project_name, go_live, operations, problems, verdict, systems=systems)["name"])
+	if project:
+		doc = _existing_project_to_send(project, partner, budget, description)
+	else:
+		doc = get_own_project(save_project(project_name, go_live, operations, problems, verdict, systems=systems)["name"])
 	# The customer picked this partner themselves, so the partner sees who they are, from the
 	# brief's own notifications on.
 	thread = get_or_open_thread(customer, partner, doc.user)
 	frappe.get_doc("Connect Thread", thread).reveal_customer()
 	send_brief(doc, customer, partner)
-	doc.status = "Shared"
-	doc.shared_count = 1
+	if doc.status == "Draft":
+		doc.status = "Shared"
+	doc.shared_count = (doc.shared_count or 0) + 1
 	doc.save(ignore_permissions=True)
 	return {"project": project_dict(doc), "thread": thread}
+
+
+def _existing_project_to_send(name: str, partner: str, budget=None, description=None) -> CustomerProject:
+	"""The caller's project, ready to go to `partner`: still looking for one, not sent to them
+	before, and with a brief. A brief given here is kept on the project for the next partner."""
+	doc = get_own_project(name)
+	if doc.status in ("Hired", "Completed"):
+		frappe.throw(_("This project already has a partner."))
+	if frappe.db.exists("Project Quote", {"customer_project": doc.name, "partner": partner}):
+		frappe.throw(_("You've already sent this project to them. Carry on in Messages."))
+
+	if (budget or "").strip():
+		doc.budget = budget.strip()
+	if (description or "").strip():
+		doc.description = description.strip()
+	_check_brief(doc)
+	return doc
+
+
+def _check_brief(doc: CustomerProject):
+	"""What a partner needs to quote: a budget range and what to build."""
+	if not doc.budget:
+		frappe.throw(_("Pick a budget range."))
+	if not doc.description:
+		frappe.throw(_("Tell partners what you want built."))
 
 
 def get_project(name: str) -> dict:
@@ -140,22 +171,16 @@ def share_requirements(name: str, budget=None, description=None) -> dict:
 	criteria match, as the customer's own Requirement card."""
 	from connect.customer.doctype.customer_project.brief import send_to_partners
 
-	budget = (budget or "").strip()
-	description = (description or "").strip()
-	if not budget:
-		frappe.throw(_("Pick a budget range."))
-	if not description:
-		frappe.throw(_("Tell partners what you want built."))
-
 	doc = get_own_project(name)
+	doc.budget = (budget or "").strip()
+	doc.description = (description or "").strip()
+	_check_brief(doc)
 	if doc.status in ("Shared", "Hiring", "Hired", "Completed"):
 		frappe.throw(_("These requirements have already been sent."))
 	customer = get_customer_for_user(doc.user)
 	if not customer:
 		frappe.throw(_("Sign in with your company account to send this to partners."))
 
-	doc.budget = budget
-	doc.description = description
 	sent = send_to_partners(doc, customer)
 	if not sent:
 		frappe.throw(_("No partners match these criteria yet. Try widening them."))
@@ -203,6 +228,9 @@ def my_projects() -> list[dict]:
 			"partner_name": (row.partner_name or row.partner) if row.partner else "Frappe",
 			"partner_logo": (row.logo_icon or row.logo) if row.partner else FRAPPE_LOGO,
 			"created_on": with_timezone(row.creation),
+			# The brief, for the Contact dialog to show or ask for.
+			"budget": row.budget,
+			"description": row.description,
 		}
 		for row in _project_rows(frappe.session.user)
 	]
@@ -420,7 +448,7 @@ def _project_rows(user: str) -> list[dict]:
 		.on(Quote.customer_project == Project.name)
 		.select(
 			Project.name, Project.project_name, Project.status, Project.verdict, Project.partner, Project.creation,
-			Project.hire_requested_on,
+			Project.hire_requested_on, Project.budget, Project.description,
 			Partner.partner_name, Partner.logo, Partner.logo_icon,
 			_count_where(Quote.status.isin(OPEN_QUOTE_STATUSES)).as_("quotes"),
 			_count_where(Quote.status == "Interested").as_("shortlisted"),

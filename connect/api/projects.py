@@ -26,10 +26,13 @@ def save_project(
 
 @frappe.whitelist(methods=["POST"])
 def start_project_with_partner(
-	partner, project_name, go_live=None, operations=None, problems=None, verdict=None, systems=None
+	partner, project_name=None, go_live=None, operations=None, problems=None, verdict=None, systems=None,
+	project=None, budget=None, description=None,
 ):
 	from connect.customer.doctype.customer_project.customer_project import start_project_with_partner
-	return start_project_with_partner(partner, project_name, go_live, operations, problems, verdict, systems)
+	return start_project_with_partner(
+		partner, project_name, go_live, operations, problems, verdict, systems, project, budget, description
+	)
 
 
 @frappe.whitelist()

@@ -10,6 +10,7 @@ from frappe.utils import add_days, now_datetime
 from connect.customer.doctype.customer_project.customer_project import (
 	get_project,
 	my_projects,
+	save_project,
 	set_quote_status,
 	start_project_with_partner,
 )
@@ -344,3 +345,53 @@ class TestStartProjectWithPartner(IntegrationTestCase):
 
 	def test_a_project_needs_a_name(self):
 		self.assertRaises(frappe.ValidationError, self.start, project_name=" ")
+
+
+class TestContactWithExistingProject(IntegrationTestCase):
+	"""Contact on a partner for a customer who has projects: one of them goes to the partner,
+	with its brief asked for first when it has none."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		self.addCleanup(frappe.set_user, "Administrator")
+		self.addCleanup(frappe.db.rollback)
+		make_partner(PARTNER)
+		make_partner_admin(PARTNER, PARTNER_ADMIN)
+		make_buyer(BUYER, "Hiring Buyer Co")
+		frappe.set_user(BUYER)
+		self.project = save_project("Stock and accounts")["name"]
+		frappe.set_user("Administrator")
+
+	def send(self, as_user=BUYER, **brief):
+		frappe.set_user(as_user)
+		try:
+			return start_project_with_partner(PARTNER, project=self.project, **brief)
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_a_brief_given_here_is_kept_and_sent(self):
+		result = self.send(budget="₹5 to 15 lakh", description="We export cotton fabric to Europe.")
+
+		project = frappe.get_doc("Customer Project", self.project)
+		self.assertEqual((project.status, project.shared_count), ("Shared", 1))
+		self.assertEqual((project.budget, project.description), ("₹5 to 15 lakh", "We export cotton fabric to Europe."))
+		card = frappe.db.get_value(
+			"Connect Message", {"thread": result["thread"], "message_type": "Requirement"}, "content"
+		)
+		self.assertEqual(frappe.parse_json(card)["budget"], "₹5 to 15 lakh")
+
+	def test_a_project_without_a_brief_is_not_sent(self):
+		with self.assertRaisesRegex(frappe.ValidationError, "budget range"):
+			self.send()
+		self.assertFalse(frappe.db.exists("Project Quote", {"customer_project": self.project}))
+
+	def test_the_same_project_is_not_sent_to_a_partner_twice(self):
+		self.send(budget="₹5 to 15 lakh", description="We export cotton fabric to Europe.")
+		with self.assertRaisesRegex(frappe.ValidationError, "already sent this project"):
+			self.send()
+
+	def test_someone_elses_project_is_refused(self):
+		other = "hiring.other.buyer@example.test"
+		make_buyer(other, "Other Buyer Co")
+		with self.assertRaises(frappe.PermissionError):
+			self.send(as_user=other, budget="₹5 to 15 lakh", description="Not theirs")
