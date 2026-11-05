@@ -247,7 +247,10 @@ def attach_normalized_logos(success_stories) -> None:
 				deduplicate=True,
 			)
 		except Exception:
-			pass
+			# Usually the job queue is down, so the rest would fail too: log once and show the
+			# original logos. Deferred, as a page load's writes are rolled back.
+			frappe.log_error(title="Connect: could not queue partner logo builds", defer_insert=True)
+			break
 
 
 def build_all_logos():

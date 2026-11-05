@@ -90,8 +90,9 @@ def build_story_image(row_name: str, story_url: str) -> str | None:
 	return image_url
 
 
-def queue_story_image(row_name: str, story_url: str) -> None:
-	"""Enqueues a background fetch — never called from a request that a guest is waiting on."""
+def queue_story_image(row_name: str, story_url: str) -> bool:
+	"""Enqueues a background fetch — never called from a request that a guest is waiting on.
+	False when it couldn't be queued; the error is logged and the backfill can run later."""
 	try:
 		frappe.enqueue(
 			"connect.partner.story_image.build_story_image",
@@ -102,7 +103,9 @@ def queue_story_image(row_name: str, story_url: str) -> None:
 			deduplicate=True,
 		)
 	except Exception:
-		pass
+		frappe.log_error(title="Connect: could not queue a success story image")
+		return False
+	return True
 
 
 def queue_missing_story_images(success_stories) -> None:
@@ -116,8 +119,9 @@ def queue_missing_story_images(success_stories) -> None:
 		url = row.get("url") if isinstance(row, dict) else getattr(row, "url", None)
 		cover_image = row.get("cover_image") if isinstance(row, dict) else getattr(row, "cover_image", None)
 		name = row.get("name") if isinstance(row, dict) else getattr(row, "name", None)
-		if url and not cover_image and name:
-			queue_story_image(name, url)
+		# One failure usually means the job queue is down: stop, so the save logs it once.
+		if url and not cover_image and name and not queue_story_image(name, url):
+			break
 
 
 def build_all_story_images():
