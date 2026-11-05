@@ -22,10 +22,10 @@ function isGuest(me) {
 	return !me.user || me.user === "Guest"
 }
 
-// Projects still looking for a partner. A Starter Pack is bought as a fixed scope, so it is not
-// requirements to ask a partner to quote on.
+// Projects still looking for a partner: not hired, nor waiting on a hire answer. A Starter Pack
+// is bought as a fixed scope, so it is not requirements to ask a partner to quote on.
 function isContactable(row) {
-	return row.kind === "project" && row.verdict !== "packs" && !row.hired
+	return row.kind === "project" && row.verdict !== "packs" && !row.hired && !row.awaiting_partner
 }
 
 export function partnerConnect(context) {

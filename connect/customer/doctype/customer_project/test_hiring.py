@@ -390,6 +390,16 @@ class TestContactWithExistingProject(IntegrationTestCase):
 		with self.assertRaisesRegex(frappe.ValidationError, "already sent this project"):
 			self.send()
 
+	def test_a_project_waiting_on_a_hire_answer_is_not_sent(self):
+		frappe.db.set_value("Customer Project", self.project, "status", "Hiring")
+		with self.assertRaisesRegex(frappe.ValidationError, "Wait for their answer"):
+			self.send(budget="₹5 to 15 lakh", description="We export cotton fabric to Europe.")
+
+	def test_a_disabled_partner_cannot_be_sent_a_project(self):
+		frappe.db.set_value("Partner", PARTNER, "enabled", 0)
+		with self.assertRaisesRegex(frappe.ValidationError, "can't take messages yet"):
+			self.send(budget="₹5 to 15 lakh", description="We export cotton fabric to Europe.")
+
 	def test_someone_elses_project_is_refused(self):
 		other = "hiring.other.buyer@example.test"
 		make_buyer(other, "Other Buyer Co")

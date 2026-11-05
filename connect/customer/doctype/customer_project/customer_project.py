@@ -115,10 +115,11 @@ def start_project_with_partner(
 	customer = get_customer_for_user(frappe.session.user)
 	if not customer:
 		frappe.throw(_("Sign in with your company account to connect with a partner."), frappe.PermissionError)
-	# Only an approved partner takes new work, and their chats go to their owners: without any,
-	# nobody would read it.
-	verified = frappe.db.get_value("Partner", partner, "verification_status") == VERIFIED
-	if not verified or not _get_partner_owners(partner):
+	# Only an approved partner still on Connect takes new work, and their chats go to their
+	# owners: without any, nobody would read it.
+	listed = frappe.db.get_value("Partner", partner, ["enabled", "verification_status"], as_dict=True)
+	takes_work = listed and listed.enabled and listed.verification_status == VERIFIED
+	if not takes_work or not _get_partner_owners(partner):
 		frappe.throw(_("This partner can't take messages yet."))
 
 	if project:
@@ -143,6 +144,8 @@ def _existing_project_to_send(name: str, partner: str, budget=None, description=
 	doc = get_own_project(name)
 	if doc.status in ("Hired", "Completed"):
 		frappe.throw(_("This project already has a partner."))
+	if doc.status == "Hiring":
+		frappe.throw(_("You've asked a partner to take this project on. Wait for their answer first."))
 	if frappe.db.exists("Project Quote", {"customer_project": doc.name, "partner": partner}):
 		frappe.throw(_("You've already sent this project to them. Carry on in Messages."))
 
