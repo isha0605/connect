@@ -471,22 +471,15 @@ def with_timezone(value):
 	return get_datetime(value).replace(tzinfo=ZoneInfo(get_system_timezone())).isoformat()
 
 
-def last_checkout_details(email):
-	"""Name, company and phone from the most recent order placed with this email, for
-	prefilling checkout.
-
-	Sign-in is a mock — it verifies nothing — so this trusts whatever email was typed.
-	Anyone who guesses a buyer's address therefore learns these three fields, which is
-	why it is rate limited and returns nothing else about the order. Revisit when real
-	authentication lands: the caller's session should be what identifies them.
-	"""
-	email = (email or "").strip()
-	if not email:
+def last_checkout_details() -> dict:
+	"""Name, company and phone from the signed-in buyer's most recent order, for prefilling
+	checkout. Only orders they placed themselves: a guest gets nothing."""
+	if frappe.session.user == "Guest":
 		return {}
 
 	last = frappe.get_all(
 		"Starter Pack Order",
-		filters={"buyer_email": email},
+		filters={"user": frappe.session.user},
 		fields=["buyer_name", "company_name", "phone"],
 		order_by="creation desc",
 		limit=1,

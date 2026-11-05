@@ -12,6 +12,7 @@ from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import 
 	PAYMENT_HOOK_FLAG,
 	checkout,
 	get_order,
+	last_checkout_details,
 	my_orders,
 	pay,
 	save_company_details,
@@ -293,6 +294,23 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 			frappe.ValidationError, "already registered", self.place, [self.pack_a], as_user=other, company=company
 		)
 		self.assertRaisesRegex(frappe.ValidationError, "company", self.place, [self.pack_a], as_user=other, company=" ")
+
+	def test_checkout_prefill_reads_only_the_callers_own_orders(self):
+		self.place([self.pack_a])
+		other = make_user("_test_sp_prefill_other@example.com")
+		try:
+			frappe.set_user(CHECKOUT_BUYER)
+			self.assertEqual(last_checkout_details()["phone"], "9999999999")
+			frappe.set_user(other)
+			self.assertEqual(last_checkout_details(), {})
+			frappe.set_user("Guest")
+			self.assertEqual(last_checkout_details(), {})
+		finally:
+			frappe.set_user("Administrator")
+
+		from connect.api import starter_pack
+
+		self.assertNotIn(starter_pack.last_checkout_details, frappe.guest_methods)
 
 	def test_a_guest_reads_their_order_back_only_with_its_key(self):
 		result, order = self.place([self.pack_a])

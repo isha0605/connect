@@ -54,7 +54,7 @@ export default function setup(context) {
 			checkoutCompany.value = checkoutCompany.value || data.customer?.customer_name || ""
 			// The account has no phone number; their last order may. Only fills a blank.
 			if (!referenceId && !checkoutPhone.value) {
-				call("connect.api.starter_pack.last_checkout_details", { email: data.user })
+				call("connect.api.starter_pack.last_checkout_details")
 					.then((last) => {
 						checkoutPhone.value = checkoutPhone.value || last?.phone || ""
 					})

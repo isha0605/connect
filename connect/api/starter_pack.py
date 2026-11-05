@@ -38,13 +38,10 @@ def get_order(order=None, payment_request=None, key=None):
 	return get_order(order=order, payment_request=payment_request, key=key)
 
 
-# POST + rate limited: it answers questions about an email address, and sign-in is a mock,
-# so this must not be cheap to crawl.
-@frappe.whitelist(allow_guest=True, methods=["POST"])
-@rate_limit(limit=20, seconds=60 * 60)
-def last_checkout_details(email=None):
+@frappe.whitelist(methods=["POST"])
+def last_checkout_details():
 	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import last_checkout_details
-	return last_checkout_details(email)
+	return last_checkout_details()
 
 
 @frappe.whitelist(methods=["POST"])

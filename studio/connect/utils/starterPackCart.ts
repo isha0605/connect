@@ -197,7 +197,7 @@ export function starterPackCart(context) {
 		checkingOut.value = true
 		try {
 			// the account has no phone number; the buyer's last order may
-			const last = await call("connect.api.starter_pack.last_checkout_details", { email: account.user }).catch(() => null)
+			const last = await call("connect.api.starter_pack.last_checkout_details").catch(() => null)
 			const res = await call("connect.api.starter_pack.checkout", {
 				packs: JSON.stringify(packs),
 				buyer_name: account.full_name || account.user,
