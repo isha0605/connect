@@ -9,6 +9,7 @@ from connect.partner.doctype.connect_partner_member.connect_partner_member impor
 	LEAD_ACCESS,
 	access_level_of,
 )
+from connect.partner.doctype.partner.partner import VERIFIED
 from connect.permissions import _my_company_membership
 
 
@@ -109,9 +110,14 @@ def get_my_context():
 def partner_access(membership) -> dict:
 	"""What the partner's sidebar shows this person, by their access level."""
 	level = access_level_of(membership)
-	partner_name = frappe.db.get_value("Partner", membership.partner, "partner_name")
+	partner_name, verification_status = frappe.db.get_value(
+		"Partner", membership.partner, ["partner_name", "verification_status"]
+	)
 	return {
 		"partner_name": partner_name,
+		# Approving the partner's application verifies the partner. Until then the sidebar has only
+		# Overview, the onboarding checklist; after, the partner pages and no checklist.
+		"is_approved": verification_status == VERIFIED,
 		"access_level": level,
 		"can_see_leads": level in LEAD_ACCESS,
 		"can_see_customers": level in CUSTOMER_ACCESS,

@@ -306,6 +306,18 @@ export default function setup(context) {
 	// ---- Submit for approval / primary action ----
 	const submitting = ref(false)
 
+	// Once approved, the checklist is done: the partner works from their Listing. myContext is read
+	// again first, so the sidebar swaps Overview for the partner pages.
+	const LISTING_ROUTE = "/partner-listing"
+	function goToListing() {
+		Promise.resolve(context.myContext.reload?.()).finally(() => context.router.replace(LISTING_ROUTE))
+	}
+	watch(
+		() => !!context.myContext.data?.partner?.is_approved,
+		(approved) => approved && context.router.replace(LISTING_ROUTE),
+		{ immediate: true },
+	)
+
 	function isApproved() {
 		return !!app() && app().status === "Approved"
 	}
@@ -346,7 +358,7 @@ export default function setup(context) {
 
 	function primaryAction() {
 		if (isApproved()) {
-			context.router.push("/messaging")
+			goToListing()
 			return
 		}
 		if (isRejected()) {
