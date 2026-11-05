@@ -9,6 +9,10 @@ from frappe.utils import flt, now_datetime
 from connect.permissions import _is_partner_admin
 from connect.roles import REVIEWER_ROLE
 
+# The monthly revenue on Frappe Cloud a partner needs before applying, in the currency Frappe Cloud
+# bills their team in: rupees for an Indian partner, dollars for everyone else. As Press has it.
+MRR_TARGETS = {"INR": 10000, "USD": 100}
+
 _APPLICATION_FIELDS = (
 	"company_name",
 	"registered_country",
@@ -138,8 +142,7 @@ class PartnerApplication(Document):
 			frappe.throw(_("Connect your Frappe Cloud account before submitting for approval."))
 
 	def _validate_mrr(self):
-		target = flt(frappe.db.get_single_value("Integration Settings", "mrr_target")) or 0
-		if flt(self.monthly_revenue) < target:
+		if flt(self.monthly_revenue) < get_mrr_target(self.registered_country)[1]:
 			frappe.throw(_("Reach the minimum monthly revenue before submitting for approval."))
 
 	def _apply_approval(self):
@@ -345,12 +348,18 @@ def get_mrr_status():
 
 	doc = _get_partner_application(partner)
 	current_amount = flt(doc.monthly_revenue) if doc else 0
-	target_amount = flt(frappe.db.get_single_value("Integration Settings", "mrr_target")) or 0
+	currency, target_amount = get_mrr_target(doc.registered_country if doc else None)
 
 	return {
 		"current_amount": current_amount,
 		"target_amount": target_amount,
-		"currency": (doc.revenue_currency if doc else None) or frappe.db.get_default("currency"),
-		"progress": min(100, flt((current_amount / target_amount) * 100, 2)) if target_amount else 0,
-		"requirement_complete": current_amount >= target_amount if target_amount else True,
+		"currency": currency,
+		"progress": min(100, flt((current_amount / target_amount) * 100, 2)),
+		"requirement_complete": current_amount >= target_amount,
 	}
+
+
+def get_mrr_target(country: str | None) -> tuple[str, int]:
+	"""The currency and minimum monthly revenue for a partner registered in `country`."""
+	currency = "INR" if country == "India" else "USD"
+	return currency, MRR_TARGETS[currency]
