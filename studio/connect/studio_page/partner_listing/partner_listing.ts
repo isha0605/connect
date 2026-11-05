@@ -24,6 +24,7 @@ const SUBMIT_STORY_URL = "https://frappe.io/partners"
 const REVIEWS_SHOWN = 4
 // The public profile shows this many client logos, in one row.
 const CLIENT_LOGOS_SHOWN = 6
+const STORIES_SECTION = "stories-section"
 const SECTION_TITLES = {
 	name: "Edit name and tagline",
 	photos: "Edit photos",
@@ -57,7 +58,7 @@ function openInNewTab(url) {
 
 export default function setup(context) {
 	startTracking(context)
-	const { call, toast, router, editSection } = context
+	const { call, toast, router, editSection, selectedStoryIndustry } = context
 
 	const profile = ref(null)
 	const reviews = ref([])
@@ -163,8 +164,25 @@ export default function setup(context) {
 		})),
 	)
 
-	// ---- Case studies: one large, the rest three to a row ----
-	const storyCards = computed(() => stories.value.map((story, index) => ({ ...story, index })))
+	// ---- Case studies: one large, the rest three to a row, filtered by industry as on the public profile ----
+	const storyCards = computed(() =>
+		stories.value
+			.filter((story) => !selectedStoryIndustry.value || story.category === selectedStoryIndustry.value)
+			.map((story, index) => ({ ...story, index })),
+	)
+	const storyIndustryOptions = computed(() => [
+		{ label: "All Industries", value: "" },
+		...[...new Set(stories.value.map((story) => story.category).filter(Boolean))].map((category) => ({
+			label: category,
+			value: category,
+		})),
+	])
+
+	// A verified industry has stories behind it: show only those, where the stories are.
+	function showStoriesFor(industry) {
+		selectedStoryIndustry.value = industry
+		document.querySelector(`[data-component-id="${STORIES_SECTION}"]`)?.scrollIntoView({ behavior: "smooth" })
+	}
 
 	// ---- Edit dialog: editSection is a page variable, so the editor can show any section's form ----
 	const editOpen = ref(false)
@@ -274,6 +292,8 @@ export default function setup(context) {
 		featuredStory: computed(() => storyCards.value[0] || null),
 		otherStories: computed(() => storyCards.value.slice(1)),
 		storyCount: computed(() => String(stories.value.length)),
+		storyIndustryOptions,
+		showStoriesFor,
 		openStory: (story) => openInNewTab(story.url),
 		submitStory: () => openInNewTab(SUBMIT_STORY_URL),
 		imageTile,

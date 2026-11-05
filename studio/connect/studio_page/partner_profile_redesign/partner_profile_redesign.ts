@@ -11,6 +11,7 @@ import { startTracking } from "@app/utils/tracking"
 
 const HERO_CONNECT = "contact-btn-ppr"
 const HEADER = "header-row-ppr"
+const STORIES_SECTION = "success-stories-section"
 // How long to keep looking for the page's buttons after it opens.
 const WAIT_FOR_PAGE_MS = 5000
 
@@ -37,7 +38,7 @@ function listOf(items, shown = 3) {
 
 export default function setup(context) {
 	startTracking(context)
-	const { route, partner, showHeaderConnect, toast } = context
+	const { route, partner, showHeaderConnect, selectedStoryIndustry, toast } = context
 
 	// ?preview=1, from the partner's own Profile builder: their unsaved profile over the saved
 	// one, kept in step as they type in the builder's tab. Only ever this browser's own draft.
@@ -97,6 +98,12 @@ export default function setup(context) {
 		clearTimeout(timer)
 		observer?.disconnect()
 	})
+
+	// A verified industry has stories behind it: show only those, where the stories are.
+	function showStoriesFor(industry) {
+		selectedStoryIndustry.value = industry
+		document.querySelector(`[data-component-id="${STORIES_SECTION}"]`)?.scrollIntoView({ behavior: "smooth" })
+	}
 
 	// ---- Process maturity (PMM) ----
 	// Frappe rates partners Level 1 to 5; 0 means not rated yet (frappe.io shows TBD).
@@ -212,6 +219,7 @@ export default function setup(context) {
 		...connecting,
 		connect,
 		goToSignIn,
+		showStoriesFor,
 		origin,
 		howWeWork: computed(() => partner.data?.how_we_work || DEFAULT_ANSWERS.how_we_work),
 		successfulImplementation: computed(
