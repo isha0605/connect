@@ -56,19 +56,20 @@ def get_lead(name: str) -> dict:
 	"""One lead: every requirement the customer sent, the newest one's brief, and their whole
 	conversation with the partner."""
 	row = _get_lead_row(name)
-	team = lead_team(row.partner)
-	team_users = {member.user for member in team}
 	requirements = _requirements_by_lead([row.name]).get(row.name)
 	if not requirements:
 		frappe.throw(_("Lead not found."), frappe.DoesNotExistError)
 
 	latest = requirements[0]
+	# Everyone who writes for the partner, not only who can take the lead: a Member's reply in
+	# the thread is still the partner's.
+	partner_side = _partner_side(row.partner)
 	return {
 		"me": frappe.session.user,
-		"team": team,
+		"team": lead_team(row.partner),
 		"can_invite": _is_partner_admin(row.partner, frappe.session.user),
 		"lead": {
-			**_list_row(row, requirements, _partner_side(row.partner)),
+			**_list_row(row, requirements, partner_side),
 			**_brief_fields(_brief_card(latest, row.customer)),
 			"thread": row.thread,
 			"thread_closed": row.thread_status == "Closed",
@@ -77,7 +78,7 @@ def get_lead(name: str) -> dict:
 			"contact": _contact(latest.customer_user) if row.is_customer_revealed else {},
 			"requirements": [_requirement_row(requirement) for requirement in requirements],
 			**_crm_owner(row),
-			"messages": _lead_messages(row, team_users),
+			"messages": _lead_messages(row, partner_side),
 			**_lead_records(row, requirements),
 		},
 	}
@@ -340,7 +341,7 @@ def _contact(user: str) -> dict:
 	return {"name": contact.get("full_name"), "email": contact.get("email"), "phone": contact.get("mobile_no")}
 
 
-def _lead_messages(row, team_users: set[str]) -> list[dict]:
+def _lead_messages(row, partner_side: set[str]) -> list[dict]:
 	"""The customer's whole conversation with the partner: the lead is all of it. Read without
 	permission checks: _get_lead_row has scoped the thread."""
 	messages = frappe.get_all(
@@ -353,8 +354,8 @@ def _lead_messages(row, team_users: set[str]) -> list[dict]:
 	return [
 		{
 			"id": message.name,
-			"from": "you" if message.sender in team_users else "them",
-			"author": _author(message.sender, names, team_users, row.is_customer_revealed),
+			"from": "you" if message.sender in partner_side else "them",
+			"author": _author(message.sender, names, partner_side, row.is_customer_revealed),
 			"at": message.creation,
 			"reply_to": message.reply_to,
 			**_message_body(message),
@@ -401,8 +402,8 @@ def _message_body(message) -> dict:
 	return {"kind": "text", "text": _message_preview_text(message)}
 
 
-def _author(sender: str, names: dict, team_users: set[str], is_customer_revealed: bool) -> str:
-	if sender not in team_users and not is_customer_revealed:
+def _author(sender: str, names: dict, partner_side: set[str], is_customer_revealed: bool) -> str:
+	if sender not in partner_side and not is_customer_revealed:
 		return anonymous_company()
 	return names.get(sender) or sender
 
