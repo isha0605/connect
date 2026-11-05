@@ -119,6 +119,31 @@ class IntegrationTestCertificateApplication(IntegrationTestCase):
 		with patch(SCHOOL, return_value=ISSUED), self.assertRaises(frappe.ValidationError):
 			apply_for_certificate("certified.freecert@example.test", "ERPNext")
 
+	def test_status_only_moves_forward_even_through_a_direct_save(self):
+		def save_with(name, **values):
+			doc = frappe.get_doc("Certificate Application", name)
+			doc.update(values)
+			doc.save(ignore_permissions=True)
+
+		application = self.apply()
+		frappe.set_user("Administrator")
+		with self.assertRaises(frappe.ValidationError):
+			save_with(application, status="Certified")
+
+		save_with(application, status="Approved")
+		with self.assertRaises(frappe.ValidationError):
+			save_with(application, status="Certified")
+		with self.assertRaises(frappe.ValidationError):
+			save_with(application, status="Applied")
+
+		other = self.apply("other.freecert@example.test")
+		frappe.set_user("Administrator")
+		with self.assertRaises(frappe.ValidationError):
+			save_with(other, status="Rejected")
+		save_with(other, status="Rejected", rejection_reason="Pick someone on the delivery team.")
+		with self.assertRaises(frappe.ValidationError):
+			save_with(other, status="Applied")
+
 	def test_admin_cancels_only_own_waiting_application(self):
 		application = self.apply()
 		frappe.set_user(OTHER_ADMIN)

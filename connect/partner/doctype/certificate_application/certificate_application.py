@@ -22,6 +22,8 @@ from connect.roles import REVIEWER_ROLE
 OPEN_STATUSES = ("Applied", "Approved")
 # An application holds one of the partner's free certifications in these states.
 USED_STATUSES = ("Applied", "Approved", "Certified")
+# Where each status may move. Rejected, Cancelled and Certified are final.
+NEXT_STATUSES = {"Applied": ("Approved", "Rejected", "Cancelled"), "Approved": ("Certified",)}
 
 
 class CertificateApplication(Document):
@@ -34,6 +36,8 @@ class CertificateApplication(Document):
 	def validate(self):
 		if self.is_new():
 			self._check_can_apply()
+		else:
+			self._check_status_change()
 
 	def after_insert(self):
 		self._email_reviewers()
@@ -70,6 +74,17 @@ class CertificateApplication(Document):
 	def _check_applied(self):
 		if self.status != "Applied":
 			frappe.throw(_("Only an Applied application can be reviewed."))
+
+	def _check_status_change(self):
+		"""Status only moves forward, so a direct save through the API can't reopen a closed
+		application or mark one Certified without its certificate."""
+		before = self.get_doc_before_save()
+		if before and before.status != self.status and self.status not in NEXT_STATUSES.get(before.status, ()):
+			frappe.throw(_("A {0} application can't become {1}.").format(_(before.status), _(self.status)))
+		if self.status == "Rejected" and not (self.rejection_reason or "").strip():
+			frappe.throw(_("Say why the application is rejected. The partner sees it."))
+		if self.status == "Certified" and not self.partner_certificate:
+			frappe.throw(_("A Certified application needs its Partner Certificate."))
 
 	def _check_can_apply(self):
 		status = free_certification_status(self.partner)
