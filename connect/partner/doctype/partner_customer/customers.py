@@ -6,6 +6,7 @@ from frappe import _
 from frappe.query_builder import Order
 
 from connect.customer.doctype.project_quote.leads import partner_team
+from connect.partner.central_billing import customer_billing
 from connect.partner.doctype.partner_customer.customer_records import (
 	activity_of,
 	add_note,
@@ -13,26 +14,29 @@ from connect.partner.doctype.partner_customer.customer_records import (
 	log_follow_up,
 	notes_of,
 )
-from connect.permissions import _is_partner_admin, _my_active_partner
+from connect.partner.doctype.connect_partner_member.connect_partner_member import CUSTOMER_ACCESS
+from connect.permissions import _my_partner_with_access
 
 
 def my_customers() -> dict:
-	"""The partner's Customers page: an owner sees every customer; anyone else, the ones assigned
-	to them or whose chat they are on."""
-	partner = _my_active_partner(frappe.session.user)
+	"""The partner's Customers page: Owners, Sales and Finance see all of the team's customers."""
+	partner = _my_partner_with_access(frappe.session.user, CUSTOMER_ACCESS)
+	rows = _customer_query(partner).run(as_dict=True)
+	billing = customer_billing(rows)
 	return {
 		"me": frappe.session.user,
-		"team": partner_team(partner),
-		"customers": [_customer_dict(row) for row in _customer_query(partner).run(as_dict=True)],
+		"team": partner_team(partner, CUSTOMER_ACCESS),
+		"customers": [_customer_dict(row, billing[row.name]) for row in rows],
 	}
 
 
 def get_customer(name: str) -> dict:
 	"""One customer with the team's notes, follow-ups and the whole history with them."""
 	row = _get_customer_row(name)
+	threads = _customer_threads(row)
 	quotes = frappe.get_all(
 		"Project Quote",
-		filters={"partner": row.partner, "thread": ["in", _customer_threads(row)]},
+		filters={"partner": row.partner, "thread": ["in", threads]},
 		fields=["name", "creation", "customer_project.project_name"],
 	)
 	follow_ups = follow_ups_of(row.partner, row.customer)
@@ -40,12 +44,17 @@ def get_customer(name: str) -> dict:
 		{"name": quote.name, "at": quote.creation, "by": row.customer_name, "project_name": quote.project_name}
 		for quote in quotes
 	]
-	records = {"Project Quote": [quote.name for quote in quotes], "Partner Customer": [row.name]}
+	leads = frappe.get_all("Partner Lead", filters={"partner": row.partner, "thread": ["in", threads]}, pluck="name")
+	records = {
+		"Partner Lead": leads,
+		"Project Quote": [quote.name for quote in quotes],
+		"Partner Customer": [row.name],
+	}
 	return {
 		"me": frappe.session.user,
-		"team": partner_team(row.partner),
+		"team": partner_team(row.partner, CUSTOMER_ACCESS),
 		"customer": {
-			**_customer_dict(row),
+			**_customer_dict(row, customer_billing([row])[row.name]),
 			"notes": notes_of(row.partner, row.customer),
 			"follow_ups": follow_ups,
 			"activity": activity_of(records, briefs, follow_ups),
@@ -54,7 +63,8 @@ def get_customer(name: str) -> dict:
 
 
 def update_customer(name: str, stage=None, assigned_to=None) -> dict:
-	"""Sets what the team changed. A None value is left as it is; an empty owner unassigns."""
+	"""Sets what the team changed. A None value is left as it is; an empty owner unassigns.
+	Moving a customer who wants to link to Onboarding approves the link."""
 	row = _get_customer_row(name)
 	doc = frappe.get_doc("Partner Customer", row.name)
 	if stage is not None:
@@ -85,7 +95,7 @@ def _customer_query(partner: str):
 	Project = frappe.qb.DocType("Customer Project")
 	Contact = frappe.qb.DocType("User").as_("contact_user")
 	Owner = frappe.qb.DocType("User").as_("owner_user")
-	query = (
+	return (
 		frappe.qb.from_(Record)
 		.left_join(Customer)
 		.on(Customer.name == Record.customer)
@@ -97,7 +107,7 @@ def _customer_query(partner: str):
 		.on(Owner.name == Record.assigned_to)
 		.select(
 			Record.name, Record.partner, Record.customer, Record.stage, Record.assigned_to, Record.source,
-			Record.converted_on, Record.creation,
+			Record.converted_on, Record.creation, Record.billing_by, Record.linked_on,
 			Customer.customer_name, Customer.industry, Customer.country,
 			Project.project_name,
 			Contact.full_name.as_("contact"), Contact.email, Contact.mobile_no.as_("phone"),
@@ -106,29 +116,12 @@ def _customer_query(partner: str):
 		.where(Record.partner == partner)
 		.orderby(Record.creation, order=Order.desc)
 	)
-	if _is_partner_admin(partner, frappe.session.user):
-		return query
-	return query.where((Record.assigned_to == frappe.session.user) | Record.customer.isin(_my_customers_by_chat(partner)))
-
-
-def _my_customers_by_chat(partner: str):
-	Thread = frappe.qb.DocType("Connect Thread")
-	Member = frappe.qb.DocType("Connect Thread Member")
-	return (
-		frappe.qb.from_(Thread)
-		.join(Member)
-		.on(Member.thread == Thread.name)
-		.select(Thread.customer)
-		.where(Thread.partner == partner)
-		.where(Member.user == frappe.session.user)
-		.where(Member.is_removed == 0)
-	)
 
 
 def _get_customer_row(name: str):
 	"""The customer, if this user may work with them: the same scope as their Customers list."""
 	Record = frappe.qb.DocType("Partner Customer")
-	rows = _customer_query(_my_active_partner(frappe.session.user)).where(Record.name == name).run(as_dict=True)
+	rows = _customer_query(_my_partner_with_access(frappe.session.user, CUSTOMER_ACCESS)).where(Record.name == name).run(as_dict=True)
 	if not rows:
 		frappe.throw(_("Customer not found."), frappe.DoesNotExistError)
 	return rows[0]
@@ -138,7 +131,8 @@ def _customer_threads(row) -> list[str]:
 	return frappe.get_all("Connect Thread", filters={"partner": row.partner, "customer": row.customer}, pluck="name")
 
 
-def _customer_dict(row) -> dict:
+def _customer_dict(row, billing: dict) -> dict:
+	"""The customer as both pages read it. Sites and MRR come from Frappe Cloud (demo for now)."""
 	return {
 		"name": row.name,
 		"company": row.customer_name or row.customer,
@@ -153,4 +147,7 @@ def _customer_dict(row) -> dict:
 		"phone": row.phone,
 		"industry": row.industry,
 		"country": row.country,
+		"billing_by": row.billing_by,
+		"linked_on": row.linked_on,
+		**billing,
 	}

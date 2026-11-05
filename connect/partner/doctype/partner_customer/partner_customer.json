@@ -9,6 +9,8 @@
   "customer",
   "stage",
   "assigned_to",
+  "billing_by",
+  "linked_on",
   "column_break_source",
   "source",
   "quote",
@@ -36,13 +38,14 @@
    "in_standard_filter": 1
   },
   {
-   "default": "Onboarding",
+   "default": "Wants to link",
    "fieldname": "stage",
    "fieldtype": "Select",
    "label": "Stage",
-   "options": "Onboarding\nLive\nChurned",
+   "options": "Wants to link\nOnboarding\nLive\nChurned",
    "in_list_view": 1,
-   "in_standard_filter": 1
+   "in_standard_filter": 1,
+   "description": "Wants to link until the team approves linking the customer's Frappe Cloud account; then Onboarding."
   },
   {
    "fieldname": "assigned_to",
@@ -68,10 +71,10 @@
   {
    "fieldname": "quote",
    "fieldtype": "Link",
-   "label": "Lead",
+   "label": "Requirement",
    "options": "Project Quote",
    "read_only": 1,
-   "description": "The lead the customer was won from."
+   "description": "The requirement the customer first hired the partner for."
   },
   {
    "fieldname": "project",
@@ -85,11 +88,29 @@
    "fieldtype": "Datetime",
    "label": "Converted On",
    "read_only": 1
+  },
+  {
+   "fieldname": "billing_by",
+   "fieldtype": "Select",
+   "label": "Who Pays",
+   "options": "Customer\nPartner",
+   "default": "Customer",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Who pays Frappe Cloud for the customer's sites. Set by Frappe Cloud; Connect only shows it."
+  },
+  {
+   "fieldname": "linked_on",
+   "fieldtype": "Datetime",
+   "label": "Linked On",
+   "read_only": 1,
+   "description": "When the team approved linking the customer's Frappe Cloud account."
   }
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-11-02 12:00:00.000000",
+ "modified": "2026-11-05 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Partner",
  "name": "Partner Customer",
@@ -110,7 +131,24 @@
  ],
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": [],
+ "states": [
+  {
+   "title": "Wants to link",
+   "color": "Orange"
+  },
+  {
+   "title": "Onboarding",
+   "color": "Blue"
+  },
+  {
+   "title": "Live",
+   "color": "Green"
+  },
+  {
+   "title": "Churned",
+   "color": "Gray"
+  }
+ ],
  "description": "A customer the partner works with, from the moment the customer hired them on Connect.",
  "autoname": "format:PCUST-{#####}",
  "naming_rule": "Expression (old style)",

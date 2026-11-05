@@ -176,7 +176,25 @@
             "align": "end",
             "options": "{{ stageMenu }}"
            },
-           "visibilityCondition": "customer"
+           "visibilityCondition": "customer && !isWaiting"
+          },
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "approve()"
+            }
+           },
+           "componentId": "cd-approve",
+           "componentName": "Button",
+           "componentProps": {
+            "iconLeft": "lucide-check",
+            "label": "Approve link",
+            "variant": "solid",
+            "loading": "{{ approving }}"
+           },
+           "visibilityCondition": "customer && isWaiting"
           }
          ],
          "classes": [
@@ -235,17 +253,50 @@
               {
                "classes": [
                 "flex",
-                "h-8",
                 "items-center",
-                "text-ink-gray-8"
+                "gap-2"
                ],
-               "componentId": "cd-sites-title-text",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-2xl-semibold",
-                "tag": "h2",
-                "text": "Sites"
-               }
+               "children": [
+                {
+                 "classes": [
+                  "flex",
+                  "h-8",
+                  "items-center",
+                  "text-ink-gray-8"
+                 ],
+                 "componentId": "cd-sites-title-text",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-2xl-semibold",
+                  "tag": "h2",
+                  "text": "Sites"
+                 }
+                },
+                {
+                 "componentId": "cd-sites-demo-tip",
+                 "componentName": "Tooltip",
+                 "componentProps": {
+                  "text": "Sample numbers until Connect reads them from Frappe Cloud."
+                 },
+                 "componentSlots": {},
+                 "visibilityCondition": "isDemo",
+                 "children": [
+                  {
+                   "componentId": "cd-sites-demo",
+                   "componentName": "Badge",
+                   "componentProps": {
+                    "label": "Demo data",
+                    "theme": "amber",
+                    "variant": "subtle"
+                   }
+                  }
+                 ]
+                }
+               ],
+               "componentId": "cd-sites-heading",
+               "componentName": "container",
+               "componentProps": {},
+               "originalElement": "div"
               },
               {
                "componentId": "cd-sites-open",
@@ -308,7 +359,7 @@
                "componentProps": {
                 "fontSize": "text-base",
                 "tag": "p",
-                "text": "Not on Frappe Cloud yet"
+                "text": "{{ sitesEmptyTitle }}"
                }
               },
               {
@@ -321,7 +372,7 @@
                "componentProps": {
                 "fontSize": "text-p-sm",
                 "tag": "p",
-                "text": "Sites show here once they link."
+                "text": "{{ sitesEmptyText }}"
                }
               }
              ],
@@ -446,241 +497,6 @@
            "componentProps": {},
            "originalElement": "div",
            "visibilityCondition": "tab === 'sites'"
-          },
-          {
-           "children": [
-            {
-             "children": [
-              {
-               "classes": [
-                "flex",
-                "h-8",
-                "items-center",
-                "text-ink-gray-8"
-               ],
-               "componentId": "cd-invoices-title-text",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-2xl-semibold",
-                "tag": "h2",
-                "text": "Invoices"
-               }
-              }
-             ],
-             "classes": [
-              "mb-3",
-              "mt-3",
-              "flex",
-              "items-center",
-              "justify-between",
-              "gap-3",
-              "sm:mb-4",
-              "sm:mt-8"
-             ],
-             "componentId": "cd-invoices-title",
-             "componentName": "container",
-             "componentProps": {},
-             "originalElement": "div"
-            },
-            {
-             "classes": [
-              "mb-3",
-              "text-ink-gray-5"
-             ],
-             "componentId": "cd-invoices-bill",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-p-sm",
-              "tag": "p",
-              "text": "On your Frappe bill"
-             },
-             "visibilityCondition": "isPartnerPays"
-            },
-            {
-             "children": [
-              {
-               "children": [
-                {
-                 "classes": [
-                  "block",
-                  "size-6"
-                 ],
-                 "componentId": "cd-invoices-empty-icon",
-                 "componentName": "Icon",
-                 "componentProps": {
-                  "icon": "lucide-receipt"
-                 }
-                }
-               ],
-               "classes": [
-                "rounded-full",
-                "bg-surface-gray-2",
-                "p-3",
-                "text-ink-gray-5"
-               ],
-               "componentId": "cd-invoices-empty-icon-wrap",
-               "componentName": "container",
-               "componentProps": {},
-               "originalElement": "div"
-              },
-              {
-               "classes": [
-                "text-ink-gray-7"
-               ],
-               "componentId": "cd-invoices-empty-title",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-base",
-                "tag": "p",
-                "text": "No invoices yet"
-               }
-              }
-             ],
-             "classes": [
-              "flex",
-              "flex-col",
-              "items-center",
-              "justify-center",
-              "gap-3",
-              "py-16",
-              "text-center"
-             ],
-             "componentId": "cd-invoices-empty",
-             "componentName": "container",
-             "componentProps": {},
-             "originalElement": "div",
-             "visibilityCondition": "!invoices.length"
-            },
-            {
-             "baseStyles": {
-              "flexWrap": "nowrap",
-              "gap": "0px"
-             },
-             "classes": [
-              "flex",
-              "flex-col"
-             ],
-             "componentId": "cd-invoices-list",
-             "componentName": "Repeater",
-             "componentProps": {
-              "data": "{{ invoices }}",
-              "dataKey": "id",
-              "emptyStateMessage": ""
-             },
-             "componentSlots": {
-              "default": {
-               "parentBlockId": "cd-invoices-list",
-               "slotContent": [
-                {
-                 "children": [
-                  {
-                   "children": [
-                    {
-                     "classes": [
-                      "block",
-                      "text-ink-gray-8"
-                     ],
-                     "componentId": "cd-invoice-month",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-base",
-                      "tag": "span",
-                      "text": "{{ dataItem.month }}"
-                     }
-                    },
-                    {
-                     "classes": [
-                      "mt-1",
-                      "block",
-                      "tabular-nums",
-                      "text-ink-gray-5"
-                     ],
-                     "componentId": "cd-invoice-number",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-sm",
-                      "tag": "span",
-                      "text": "{{ dataItem.invoice }}"
-                     }
-                    }
-                   ],
-                   "classes": [
-                    "min-w-0"
-                   ],
-                   "componentId": "cd-invoice-text",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "children": [
-                    {
-                     "componentId": "cd-invoice-unpaid",
-                     "componentName": "Badge",
-                     "componentProps": {
-                      "label": "Unpaid",
-                      "size": "sm",
-                      "theme": "amber",
-                      "variant": "subtle"
-                     },
-                     "visibilityCondition": "dataItem.status === 'unpaid'"
-                    },
-                    {
-                     "classes": [
-                      "tabular-nums",
-                      "text-ink-gray-7"
-                     ],
-                     "componentId": "cd-invoice-amount",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-base",
-                      "tag": "span",
-                      "text": "{{ dataItem.amountLabel }}"
-                     }
-                    }
-                   ],
-                   "classes": [
-                    "flex",
-                    "shrink-0",
-                    "items-center",
-                    "gap-3"
-                   ],
-                   "componentId": "cd-invoice-right",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "originalElement": "div"
-                  }
-                 ],
-                 "classes": [
-                  "flex",
-                  "items-center",
-                  "justify-between",
-                  "gap-4",
-                  "border-b",
-                  "border-outline-gray-1",
-                  "py-3",
-                  "last:border-b-0"
-                 ],
-                 "componentId": "cd-invoice",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "originalElement": "div"
-                }
-               ]
-              }
-             },
-             "visibilityCondition": "(invoices || []).length"
-            }
-           ],
-           "classes": [
-            "px-3",
-            "sm:px-10"
-           ],
-           "componentId": "cd-invoices",
-           "componentName": "container",
-           "componentProps": {},
-           "originalElement": "div",
-           "visibilityCondition": "tab === 'invoices'"
           },
           {
            "children": [
@@ -1695,23 +1511,6 @@
                   "icon": "lucide-link",
                   "tooltip": "Copy link"
                  }
-                },
-                {
-                 "children": [
-                  {
-                   "componentId": "cd-aside-more-btn",
-                   "componentName": "Button",
-                   "componentProps": {
-                    "aria-label": "More actions",
-                    "icon": "lucide-ellipsis"
-                   }
-                  }
-                 ],
-                 "componentId": "cd-aside-more",
-                 "componentName": "Dropdown",
-                 "componentProps": {
-                  "options": "{{ moreMenu }}"
-                 }
                 }
                ],
                "classes": [
@@ -2480,6 +2279,29 @@
                 "tag": "span",
                 "text": "Billing"
                }
+              },
+              {
+               "classes": [
+                "ml-auto"
+               ],
+               "componentId": "cd-billing-demo-tip",
+               "componentName": "Tooltip",
+               "componentProps": {
+                "text": "Sample numbers until Connect reads them from Frappe Cloud."
+               },
+               "componentSlots": {},
+               "visibilityCondition": "isDemo",
+               "children": [
+                {
+                 "componentId": "cd-billing-demo",
+                 "componentName": "Badge",
+                 "componentProps": {
+                  "label": "Demo data",
+                  "theme": "amber",
+                  "variant": "subtle"
+                 }
+                }
+               ]
               }
              ],
              "classes": [
@@ -2638,46 +2460,6 @@
                "originalElement": "div"
               },
               {
-               "classes": [
-                "px-3",
-                "text-ink-gray-5"
-               ],
-               "componentId": "cd-f-switch-note",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-p-sm",
-                "tag": "p",
-                "text": "You pay once they confirm in Frappe Cloud"
-               },
-               "visibilityCondition": "customer.billingSwitch"
-              },
-              {
-               "children": [
-                {
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "openSwitch()"
-                  }
-                 },
-                 "componentId": "cd-f-switch-btn",
-                 "componentName": "Button",
-                 "componentProps": {
-                  "label": "Switch to Partner pays"
-                 }
-                }
-               ],
-               "classes": [
-                "px-3"
-               ],
-               "componentId": "cd-f-switch",
-               "componentName": "container",
-               "componentProps": {},
-               "originalElement": "div",
-               "visibilityCondition": "canSwitchBilling"
-              },
-              {
                "children": [
                 {
                  "classes": [
@@ -2695,7 +2477,7 @@
                  "componentProps": {
                   "fontSize": "text-sm",
                   "tag": "span",
-                  "text": "Partner code"
+                  "text": "Linked"
                  }
                 },
                 {
@@ -2711,7 +2493,7 @@
                    "componentProps": {
                     "fontSize": "text-base",
                     "tag": "span",
-                    "text": "{{ partnerCodeLabel }}"
+                    "text": "{{ linkedLabel }}"
                    }
                   }
                  ],
@@ -2891,113 +2673,6 @@
      "componentName": "container",
      "componentProps": {},
      "originalElement": "div"
-    },
-    {
-     "children": [
-      {
-       "children": [
-        {
-         "baseStyles": {
-          "flexWrap": "nowrap",
-          "gap": "0px"
-         },
-         "classes": [
-          "flex",
-          "flex-col",
-          "[&>*+*]:mt-2"
-         ],
-         "componentId": "cd-switch-lines",
-         "componentName": "Repeater",
-         "componentProps": {
-          "data": "{{ switchLines }}",
-          "dataKey": "index",
-          "emptyStateMessage": ""
-         },
-         "componentSlots": {
-          "default": {
-           "parentBlockId": "cd-switch-lines",
-           "slotContent": [
-            {
-             "classes": [
-              "text-ink-gray-7"
-             ],
-             "componentId": "cd-switch-line",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-p-base",
-              "tag": "p",
-              "text": "{{ dataItem }}"
-             }
-            }
-           ]
-          }
-         },
-         "visibilityCondition": "(switchLines || []).length"
-        },
-        {
-         "children": [
-          {
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "closeSwitch()"
-            }
-           },
-           "componentId": "cd-switch-cancel",
-           "componentName": "Button",
-           "componentProps": {
-            "label": "Cancel"
-           }
-          },
-          {
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "requestSwitch()"
-            }
-           },
-           "componentId": "cd-switch-send",
-           "componentName": "Button",
-           "componentProps": {
-            "label": "Send to customer",
-            "variant": "solid"
-           }
-          }
-         ],
-         "classes": [
-          "flex",
-          "justify-end",
-          "gap-2",
-          "pt-2"
-         ],
-         "componentId": "cd-switch-actions",
-         "componentName": "container",
-         "componentProps": {},
-         "originalElement": "div"
-        }
-       ],
-       "classes": [
-        "flex",
-        "flex-col",
-        "gap-4"
-       ],
-       "componentId": "cd-switch-body",
-       "componentName": "container",
-       "componentProps": {},
-       "originalElement": "div"
-      }
-     ],
-     "componentId": "cd-switch-dialog",
-     "componentName": "Dialog",
-     "componentProps": {
-      "modelValue": {
-       "$type": "variable",
-       "name": "switchOpen"
-      },
-      "title": "Switch to Partner pays?"
-     }
     },
     {
      "children": [

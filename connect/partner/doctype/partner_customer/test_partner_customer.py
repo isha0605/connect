@@ -16,6 +16,8 @@ PARTNER = "_Test Records Partner"
 OTHER_PARTNER = "_Test Records Other Partner"
 OWNER = "records.owner@example.test"
 SALES = "records.sales@example.test"
+FINANCE = "records.finance@example.test"
+MEMBER = "records.member@example.test"
 OTHER_OWNER = "records.other.owner@example.test"
 BUYER = "records.buyer@example.test"
 COMPANY = "Records Buyer Co"
@@ -33,6 +35,8 @@ class TestPartnerCustomer(IntegrationTestCase):
 			make_partner(partner)
 			make_partner_admin(partner, owner)
 		make_member(PARTNER, SALES)
+		make_member(PARTNER, FINANCE, "Finance")
+		make_member(PARTNER, MEMBER, "Member")
 		make_buyer(BUYER, COMPANY)
 
 		project = frappe.get_doc(
@@ -40,21 +44,21 @@ class TestPartnerCustomer(IntegrationTestCase):
 		).insert(ignore_permissions=True)
 		project.db_set("user", BUYER)
 		send_brief(project, COMPANY, PARTNER)
-		self.lead = frappe.db.get_value("Project Quote", {"customer_project": project.name}, "name")
+		self.quote, self.lead = frappe.db.get_value("Project Quote", {"customer_project": project.name}, ["name", "lead"])
 
 	def as_user(self, user):
 		frappe.set_user(user)
 
 	def hire(self):
-		quote = frappe.get_doc("Project Quote", self.lead)
+		quote = frappe.get_doc("Project Quote", self.quote)
 		quote.status = "Hired"
 		# Frappe skips Version history in tests by default; Activity reads it.
 		quote.save(ignore_permissions=True, ignore_version=False)
 		return frappe.db.get_value("Partner Customer", {"partner": PARTNER, "customer": COMPANY}, "name")
 
-	def test_accepting_the_hire_wins_the_lead_and_adds_an_onboarding_customer(self):
+	def test_accepting_the_hire_wins_the_lead_and_adds_a_customer_who_wants_to_link(self):
 		customer = self.hire()
-		self.assertEqual(frappe.db.get_value("Partner Customer", customer, "stage"), "Onboarding")
+		self.assertEqual(frappe.db.get_value("Partner Customer", customer, "stage"), "Wants to link")
 
 		self.as_user(OWNER)
 		lead = get_lead(self.lead)["lead"]
@@ -66,7 +70,7 @@ class TestPartnerCustomer(IntegrationTestCase):
 		first = self.hire()
 		from connect.partner.doctype.partner_customer.partner_customer import add_won_customer
 
-		self.assertEqual(add_won_customer(frappe.get_doc("Project Quote", self.lead)), first)
+		self.assertEqual(add_won_customer(frappe.get_doc("Project Quote", self.quote)), first)
 
 	def test_notes_and_follow_ups_follow_the_customer_from_lead_to_customer(self):
 		self.as_user(OWNER)
@@ -95,12 +99,62 @@ class TestPartnerCustomer(IntegrationTestCase):
 		self.as_user(BUYER)
 		self.assertRaises(frappe.PermissionError, my_customers)
 
-	def test_a_member_sees_a_customer_once_it_is_assigned_to_them(self):
+	def test_sales_sees_and_works_every_team_customer(self):
 		customer = self.hire()
 		self.as_user(SALES)
-		self.assertRaises(frappe.DoesNotExistError, get_customer, customer)
+		update_customer(customer, stage="Onboarding")
+		self.assertEqual(update_customer(customer, stage="Live")["stage"], "Live")
 
+	# ---- Linking: Wants to link until the team approves, then Onboarding ----
+
+	def test_a_customer_who_wants_to_link_has_no_sites_and_pays_themselves(self):
+		customer = self.hire()
 		self.as_user(OWNER)
-		update_customer(customer, assigned_to=SALES, stage="Live")
-		self.as_user(SALES)
-		self.assertEqual(get_customer(customer)["customer"]["stage"], "Live")
+		record = get_customer(customer)["customer"]
+		self.assertEqual((record["sites"], record["mrr"], record["billing_by"]), ([], 0, "Customer"))
+		self.assertIsNone(record["linked_on"])
+
+	def test_approving_the_link_moves_to_onboarding_with_sites(self):
+		customer = self.hire()
+		self.as_user(OWNER)
+		update_customer(customer, stage="Onboarding")
+
+		record = get_customer(customer)["customer"]
+		self.assertEqual(record["stage"], "Onboarding")
+		self.assertIsNotNone(record["linked_on"])
+		self.assertTrue(record["sites"])
+		self.assertEqual(record["mrr"], sum(site["amount"] for site in record["sites"]))
+		self.assertTrue(record["is_demo"])
+
+	def test_the_link_is_approved_into_onboarding_only(self):
+		customer = self.hire()
+		self.as_user(OWNER)
+		self.assertRaises(frappe.ValidationError, update_customer, customer, stage="Live")
+
+	def test_a_linked_customer_cannot_go_back_to_wanting_to_link(self):
+		customer = self.hire()
+		self.as_user(OWNER)
+		update_customer(customer, stage="Onboarding")
+		self.assertRaises(frappe.ValidationError, update_customer, customer, stage="Wants to link")
+
+	def test_a_member_or_another_partner_cannot_approve_the_link(self):
+		customer = self.hire()
+		for user in (MEMBER, OTHER_OWNER):
+			self.as_user(user)
+			with self.assertRaises((frappe.PermissionError, frappe.DoesNotExistError)):
+				update_customer(customer, stage="Onboarding")
+		self.assertEqual(frappe.db.get_value("Partner Customer", customer, "stage"), "Wants to link")
+
+	# ---- Access levels: Finance sees customers; a Member doesn't ----
+
+	def test_finance_sees_every_team_customer(self):
+		customer = self.hire()
+		self.as_user(FINANCE)
+		self.assertIn(customer, [row["name"] for row in my_customers()["customers"]])
+
+	def test_a_member_cannot_open_customers_or_be_given_one(self):
+		customer = self.hire()
+		self.as_user(MEMBER)
+		self.assertRaises(frappe.PermissionError, my_customers)
+		self.as_user(OWNER)
+		self.assertRaises(frappe.ValidationError, update_customer, customer, assigned_to=MEMBER)
