@@ -222,30 +222,41 @@ def notify_message_edited(doc):
 
 
 def notify_partner_of_new_requirement(doc, method=None):
-	"""after_insert on Connect Message: emails the partner's admin when a customer's first message
-	in the thread is a Requirement submission — a brand-new lead is easy to miss in the in-app
-	notification alone.  The actual email is sent in a background job so the sender's HTTP request
-	returns immediately and the requirement card appears in chat without delay."""
-	if doc.message_type != "Requirement":
+	"""after_insert on Connect Message: emails the partner about each requirement a customer
+	sends, as one is easy to miss in the in-app notification alone. A customer's later
+	requirements arrive in the same thread as their first, so every one is emailed. The email
+	is sent in a background job so the requirement card appears in chat without delay."""
+	# A Starter Pack order's cards describe a project already bought, not a new requirement.
+	if doc.message_type != "Requirement" or doc.flags.get("from_starter_pack"):
 		return
-	if frappe.db.count("Connect Message", {"thread": doc.thread}) != 1:
-		return  # not the first message in this thread
 
 	thread = frappe.db.get_value("Connect Thread", doc.thread, ["partner", "customer"], as_dict=True)
-	if not thread:
+	if not thread or frappe.db.exists("Connect Partner Member", {"partner": thread.partner, "user": doc.sender}):
 		return
 
-	for owner in _get_partner_owners(thread.partner):
-		anonymous = hides_customer(doc.thread, owner)
+	for user in _requirement_email_recipients(doc.thread, thread.partner):
+		anonymous = hides_customer(doc.thread, user)
 		frappe.enqueue(
 			"connect.notifications._send_new_requirement_email",
 			queue="short",
 			thread_name=doc.thread,
 			customer=None if anonymous else thread.customer,
-			admin=owner,
+			admin=user,
 			content=mask_requirement(doc.content) if anonymous and doc.content else doc.content,
 			enqueue_after_commit=True,
 		)
+
+
+def _requirement_email_recipients(thread: str, partner: str) -> list[str]:
+	"""The partner's owners, and whoever the customer's lead is assigned to, each once."""
+	recipients = _get_partner_owners(partner)
+	assigned_to = frappe.db.get_value("Partner Lead", {"thread": thread}, "assigned_to")
+	is_on_team = assigned_to and frappe.db.exists(
+		"Connect Partner Member", {"partner": partner, "user": assigned_to, "is_removed": 0}
+	)
+	if is_on_team and assigned_to not in recipients:
+		recipients.append(assigned_to)
+	return recipients
 
 
 def requirement_fields(requirement):

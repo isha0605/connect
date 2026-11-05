@@ -192,9 +192,7 @@ def post_opening_message(order_name):
 		thread = get_or_open_thread(customer, order.partner, user, order.consultant)
 		# Posted as the buyer by the payment job, not by a request of theirs.
 		for message in opening_messages(order, customer):
-			frappe.get_doc({"doctype": "Connect Message", "thread": thread, "sender": user, **message}).insert(
-				ignore_permissions=True
-			)
+			post_order_message(thread, user, message)
 		order.db_set("implementation_thread", thread)
 	except Exception:
 		frappe.db.rollback()
@@ -285,9 +283,15 @@ def post_company_details(order, customer, focus=None):
 		intro += " " + _("We'd like the sessions to focus on: {0}").format(focus)
 	# Cards made from the buyer's answers; save_company_details checked the order is theirs.
 	for message in ({"message_type": "Text", "content": intro}, requirement_card(order, customer)):
-		frappe.get_doc(
-			{"doctype": "Connect Message", "thread": order.implementation_thread, "sender": order.user, **message}
-		).insert(ignore_permissions=True)
+		post_order_message(order.implementation_thread, order.user, message)
+
+
+def post_order_message(thread, sender, message):
+	"""Posts one of the order's own messages in its thread, as the buyer."""
+	doc = frappe.get_doc({"doctype": "Connect Message", "thread": thread, "sender": sender, **message})
+	# Its Requirement card is the project bought, so the partner isn't emailed a new requirement.
+	doc.flags.from_starter_pack = True
+	doc.insert(ignore_permissions=True)
 
 
 def post_meeting_card(order, sender, link, starts_at):
