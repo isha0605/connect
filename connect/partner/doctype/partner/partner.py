@@ -189,7 +189,13 @@ PARTNER_FIELDS = [
 # The "is this partner visible at all" gate — combined as AND with whatever
 # else a caller filters on. Callers that append more filters must copy this
 # (list(BASE_PARTNER_FILTERS)) rather than mutate it in place.
-BASE_PARTNER_FILTERS = [["Partner", "is_featured", "=", 1], ["Partner", "enabled", "=", 1]]
+# Only a partner Frappe has approved (their Partner Application) is listed and can be sent work.
+VERIFIED = "Verified"
+BASE_PARTNER_FILTERS = [
+	["Partner", "is_featured", "=", 1],
+	["Partner", "enabled", "=", 1],
+	["Partner", "verification_status", "=", VERIFIED],
+]
 
 
 def _child_values_by_partner(child_doctype, value_field, names, parentfield=None):

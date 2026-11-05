@@ -107,13 +107,16 @@ def start_project_with_partner(
 	Returns the project and the chat."""
 	from connect.customer.doctype.customer_project.brief import send_brief
 	from connect.messaging.doctype.connect_thread.connect_thread import get_or_open_thread
+	from connect.partner.doctype.partner.partner import VERIFIED
 	from connect.permissions import _get_partner_owners
 
 	customer = get_customer_for_user(frappe.session.user)
 	if not customer:
 		frappe.throw(_("Sign in with your company account to connect with a partner."), frappe.PermissionError)
-	# Nobody would read it: a partner's chats go to their owners.
-	if not frappe.db.exists("Partner", partner) or not _get_partner_owners(partner):
+	# Only an approved partner takes new work, and their chats go to their owners: without any,
+	# nobody would read it.
+	verified = frappe.db.get_value("Partner", partner, "verification_status") == VERIFIED
+	if not verified or not _get_partner_owners(partner):
 		frappe.throw(_("This partner can't take messages yet."))
 
 	doc = get_own_project(save_project(project_name, go_live, operations, problems, verdict, systems=systems)["name"])

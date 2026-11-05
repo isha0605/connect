@@ -31,6 +31,8 @@ def make_listed_partner(partner_name):
 				"is_featured": 1,
 			}
 		).insert(ignore_permissions=True)
+	# Only an approved partner is listed and sent briefs.
+	frappe.db.set_value("Partner", partner_name, "verification_status", "Verified")
 
 
 def make_admin(partner, email):
@@ -56,6 +58,11 @@ class TestBriefRecipients(IntegrationTestCase):
 
 		self.assertEqual([r["name"] for r in recipients], get_brief_recipients(normalize_criteria(CRITERIA)))
 		self.assertEqual([r["name"] for r in recipients], [WITH_ADMIN])
+
+	def test_a_partner_not_yet_approved_gets_no_brief(self):
+		frappe.db.set_value("Partner", WITH_ADMIN, "verification_status", "Pending Review")
+		self.addCleanup(frappe.db.set_value, "Partner", WITH_ADMIN, "verification_status", "Verified")
+		self.assertEqual(get_brief_recipients(normalize_criteria(CRITERIA)), [])
 
 	def test_guest_gets_no_recipients(self):
 		frappe.set_user("Guest")

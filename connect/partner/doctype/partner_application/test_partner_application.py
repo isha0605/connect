@@ -4,12 +4,14 @@
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from connect.customer.doctype.customer_project.test_hiring import make_partner, make_partner_admin
+from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
 from connect.partner.doctype.partner_application.partner_application import get_mrr_status, unregister
 from connect.partner.doctype.partner_certificate.partner_certificate import recount_certificates
 
 PARTNER = "_Test Application Partner"
 OWNER = "application.owner@example.test"
+ACTIVE = "_Test Active Unapproved Partner"
+IDLE = "_Test Idle Unapproved Partner"
 UNREGISTER_PARTNER = "_Test Unregister Partner"
 ADMIN = "unregister.admin@example.test"
 MEMBER = "unregister.member@example.test"
@@ -70,6 +72,34 @@ class TestPartnerApplicationMRR(IntegrationTestCase):
 			frappe.db.set_value("Partner", PARTNER, "verification_status", status)
 			frappe.set_user(OWNER)
 			self.assertEqual(get_my_context()["partner"]["is_approved"], is_approved)
+
+
+class TestApproveActivePartners(IntegrationTestCase):
+	"""The patch that approves partners already working with customers before approval mattered."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		self.addCleanup(frappe.db.rollback)
+		for partner in (ACTIVE, IDLE):
+			make_partner(partner)
+			frappe.db.set_value("Partner", partner, "verification_status", "Pending Review")
+		frappe.get_doc({"doctype": "Partner Application", "partner": ACTIVE, "company_name": ACTIVE}).insert(
+			ignore_permissions=True
+		)
+		make_buyer("patch.buyer@example.test", "Patch Buyer Co")
+		frappe.get_doc({"doctype": "Connect Thread", "customer": "Patch Buyer Co", "partner": ACTIVE}).insert(
+			ignore_permissions=True
+		)
+
+	def test_only_partners_with_customers_are_approved(self):
+		from connect.patches.approve_active_partners import execute
+
+		execute()
+
+		self.assertEqual(frappe.db.get_value("Partner", ACTIVE, "verification_status"), "Verified")
+		self.assertEqual(frappe.db.get_value("Partner", IDLE, "verification_status"), "Pending Review")
+		application = frappe.db.get_value("Partner Application", {"partner": ACTIVE}, ["status", "docstatus"])
+		self.assertEqual(application, ("Approved", 1))
 
 
 class IntegrationTestPartnerApplication(IntegrationTestCase):

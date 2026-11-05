@@ -28,11 +28,13 @@ PARTNER_ADMIN = "hiring.partner.admin@example.test"
 
 
 def make_partner(partner_name):
+	"""An approved partner: only those are listed and can be sent work."""
 	if not frappe.db.exists("Partner", partner_name):
 		tier = next(t for t in frappe.get_meta("Partner").get_field("tier").options.split("\n") if t)
 		frappe.get_doc(
 			{"doctype": "Partner", "partner_name": partner_name, "tier": tier, "country": "India"}
 		).insert(ignore_permissions=True)
+	frappe.db.set_value("Partner", partner_name, "verification_status", "Verified")
 	return partner_name
 
 
@@ -289,6 +291,12 @@ class TestStartProjectWithPartner(IntegrationTestCase):
 			return start_project_with_partner(partner, **{**PROJECT_ANSWERS, **answers})
 		finally:
 			frappe.set_user("Administrator")
+
+	def test_a_partner_not_yet_approved_cannot_be_sent_a_project(self):
+		frappe.db.set_value("Partner", PARTNER, "verification_status", "Pending Review")
+		self.addCleanup(frappe.db.set_value, "Partner", PARTNER, "verification_status", "Verified")
+		with self.assertRaisesRegex(frappe.ValidationError, "can't take messages yet"):
+			self.start(project_name="Warehouse rollout")
 
 	def test_the_project_is_sent_to_the_partner_as_a_requirement(self):
 		result = self.start(project_name="Warehouse rollout")

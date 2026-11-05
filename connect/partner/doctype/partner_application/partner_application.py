@@ -6,6 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, now_datetime
 
+from connect.partner.doctype.partner.partner import VERIFIED
 from connect.permissions import _is_partner_admin
 from connect.roles import REVIEWER_ROLE
 
@@ -146,7 +147,7 @@ class PartnerApplication(Document):
 			frappe.throw(_("Reach the minimum monthly revenue before submitting for approval."))
 
 	def _apply_approval(self):
-		updates = {"verification_status": "Verified"}
+		updates = {"verification_status": VERIFIED}
 		if self.company_logo:
 			updates["logo"] = self.company_logo
 		frappe.db.set_value("Partner", self.partner, updates)
