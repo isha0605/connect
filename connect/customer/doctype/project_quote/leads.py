@@ -48,7 +48,7 @@ def my_leads() -> dict:
 	return {
 		"me": frappe.session.user,
 		"team": lead_team(partner),
-		"leads": [_list_row(row, requirements[row.name], partner_side) for row in rows if row.name in requirements],
+		"leads": [_list_row(row, requirements[row.name], partner_side) for row in rows],
 	}
 
 
@@ -164,10 +164,13 @@ def lead_team(partner: str) -> list[dict]:
 
 
 def _lead_query(partner: str):
+	"""The partner's leads that have a requirement in them: a lead is shown through them."""
 	Lead = frappe.qb.DocType("Partner Lead")
 	Thread = frappe.qb.DocType("Connect Thread")
 	Customer = frappe.qb.DocType("Customer")
 	Owner = frappe.qb.DocType("User")
+	Quote = frappe.qb.DocType("Project Quote")
+	with_requirements = frappe.qb.from_(Quote).select(Quote.lead).where(Quote.partner == partner)
 	return (
 		frappe.qb.from_(Lead)
 		.join(Thread)
@@ -185,6 +188,7 @@ def _lead_query(partner: str):
 			Owner.full_name.as_("owner_name"),
 		)
 		.where(Lead.partner == partner)
+		.where(Lead.name.isin(with_requirements))
 		.orderby(Thread.last_message_at, order=Order.desc)
 	)
 

@@ -81,6 +81,19 @@ class TestLeads(IntegrationTestCase):
 		self.assertIn(self.lead, [row["name"] for row in my_leads()["leads"]])
 		self.assertEqual(update_lead(self.lead, probability="Hot")["probability"], "Hot")
 
+	def test_a_lead_without_requirements_takes_no_place_in_the_list(self):
+		make_buyer("leads.empty.buyer@example.test", "Empty Leads Co")
+		thread = frappe.get_doc({"doctype": "Connect Thread", "customer": "Empty Leads Co", "partner": PARTNER})
+		thread.insert(ignore_permissions=True)
+		thread.db_set("last_message_at", frappe.utils.add_days(frappe.utils.now_datetime(), 1))
+		frappe.get_doc(
+			{"doctype": "Partner Lead", "partner": PARTNER, "customer": "Empty Leads Co", "thread": thread.name}
+		).insert(ignore_permissions=True)
+
+		self.as_user(OWNER)
+		with patch("connect.customer.doctype.project_quote.leads.LEAD_LIMIT", 1):
+			self.assertEqual([row["name"] for row in my_leads()["leads"]], [self.lead])
+
 	def test_another_partner_cannot_see_the_lead(self):
 		self.as_user(OTHER_OWNER)
 		self.assertRaises(frappe.DoesNotExistError, get_lead, self.lead)
