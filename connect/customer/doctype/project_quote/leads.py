@@ -97,6 +97,11 @@ def log_lead_follow_up(name: str, values: dict) -> dict:
 	row = _get_lead_row(name)
 	values = frappe.parse_json(values)
 	if values.get("meeting_link"):
+		# The invite is posted in the customer's thread as this person. Anyone who can work the
+		# lead may invite, so they join the thread first, as a lead's owner does.
+		from connect.messaging.doctype.connect_thread.connect_thread import ensure_partner_member
+
+		ensure_partner_member(row.thread, frappe.session.user, frappe.session.user)
 		_check_can_write(row.thread, frappe.session.user)
 	log_follow_up(row.partner, row.customer, values, thread=row.thread)
 	return _lead_records(row, _requirements_by_lead([row.name]).get(row.name, []))

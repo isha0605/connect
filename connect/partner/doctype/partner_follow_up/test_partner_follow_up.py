@@ -9,7 +9,7 @@ from frappe.utils import add_days, now_datetime
 
 from connect.customer.doctype.project_quote.leads import log_lead_follow_up
 from connect.customer.doctype.project_quote import test_leads
-from connect.customer.doctype.project_quote.test_leads import OTHER_OWNER, OWNER
+from connect.customer.doctype.project_quote.test_leads import OTHER_OWNER, OWNER, SALES
 from connect.partner.doctype.partner_follow_up.partner_follow_up import (
 	_calendar_file,
 )
@@ -21,8 +21,8 @@ class TestMeetingInvites(IntegrationTestCase):
 	setUp = test_leads.TestLeads.setUp
 	send = test_leads.TestLeads.send
 
-	def schedule(self, starts_at=None, link="https://meet.google.com/abc-defg-hij"):
-		frappe.set_user(OWNER)
+	def schedule(self, starts_at=None, link="https://meet.google.com/abc-defg-hij", as_user=OWNER):
+		frappe.set_user(as_user)
 		patch("connect.partner.doctype.partner_follow_up.partner_follow_up.frappe.enqueue").start()
 		values = {
 			"followed_up_on": str(starts_at or add_days(now_datetime(), 1)),
@@ -42,6 +42,13 @@ class TestMeetingInvites(IntegrationTestCase):
 		card = frappe.get_doc("Connect Message", invite.message)
 		self.assertEqual((card.thread, card.message_type, card.sender), (self.thread, "Meeting", OWNER))
 		self.assertEqual(frappe.parse_json(card.content)["follow_up"], invite.name)
+
+	def test_sales_not_yet_in_the_thread_can_schedule(self):
+		invite = self.schedule(as_user=SALES)
+		self.assertEqual(frappe.db.get_value("Connect Message", invite.message, "sender"), SALES)
+		self.assertTrue(
+			frappe.db.exists("Connect Thread Member", {"thread": self.thread, "user": SALES, "is_removed": 0})
+		)
 
 	def test_a_meeting_must_be_still_to_come_with_a_https_link(self):
 		with self.assertRaises(frappe.ValidationError):
