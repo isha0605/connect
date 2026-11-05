@@ -19,9 +19,9 @@ from connect.crm_integration import (
 	queue_crm_lead_sync,
 	reply_webhook,
 	set_up_reply_webhook,
-	sync_lead_owner,
 	sync_thread,
 )
+from connect.crm_lead_owner import sync_lead_owner
 from connect.crm_reply import _fetch_crm_attachments, reply_author
 from connect.messaging.doctype.connect_thread.connect_thread import ensure_thread_member
 
@@ -349,7 +349,10 @@ class IntegrationTestCRMSync(IntegrationTestCase):
 		)
 
 		crm = FakeCRM(users=[CONSULTANT_ONE, CONSULTANT_TWO])
-		with patch(f"{SYNC_MODULE}.crm_request", side_effect=crm):
+		with (
+			patch(f"{SYNC_MODULE}.crm_request", side_effect=crm),
+			patch("connect.crm_lead_owner.crm_request", side_effect=crm),
+		):
 			sync_lead_owner(self.thread, previous=CONSULTANT_ONE)
 		self.assertIn(
 			("PUT", "/api/resource/CRM Lead/CRM-LEAD-TEST-0002", {"lead_owner": CONSULTANT_TWO}), crm.calls

@@ -6,7 +6,7 @@ import requests
 from frappe import _
 from frappe.model.document import Document
 
-from connect.crm_integration import CRMRequestError, crm_request
+from connect.crm_integration import CRMRequestError, crm_request, crm_settings
 
 
 class PartnerCRMSettings(Document):
@@ -146,3 +146,22 @@ def disconnect_my_crm():
 	if name:
 		frappe.db.set_value("Partner CRM Settings", name, "enabled", 0)
 	return get_my_settings()
+
+
+def match_my_member_with_crm(member: str) -> bool:
+	"""Settings → Users: looks the team up on the partner's CRM again, after someone was added
+	there. Returns whether this member is on it now."""
+	from connect.crm_lead_owner import match_team
+
+	partner = _my_partner_as_admin()
+	if frappe.db.get_value("Connect Partner Member", member, "partner") != partner:
+		frappe.throw(_("They aren't on your team."), frappe.PermissionError)
+	if not crm_settings(partner):
+		frappe.throw(_("Connect your CRM first, in Settings → CRM."))
+	try:
+		match_team(partner)
+	except (CRMRequestError, requests.RequestException):
+		frappe.log_error(title=f"Couldn't match {partner}'s team with their CRM")
+		frappe.throw(_("Couldn't reach your CRM. Check it's up, then try again."))
+	return bool(frappe.db.get_value("Connect Partner Member", member, "crm_user"))
+

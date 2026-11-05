@@ -221,9 +221,22 @@ async function setAccess(member, level) {
 	}
 }
 
+// With CRM sync on, someone without a CRM user can be looked up again once they're added there.
 const partnerMemberOptions = (member) => [
+	member.in_crm === false && { label: "Match with CRM", icon: "lucide-refresh-cw", onClick: () => matchWithCrm(member) },
 	{ label: "Remove", icon: "lucide-trash-2", theme: "red", onClick: () => confirmRemove(member) },
-]
+].filter(Boolean)
+
+async function matchWithCrm(member) {
+	try {
+		const found = await call("connect.api.partner.match_my_member_with_crm", { member: member.name })
+		await loadTeam()
+		if (found) toast.success(`${memberName(member)} is matched with your CRM`)
+		else toast.error(`${memberName(member)} isn't on your CRM. Add them there with ${member.user}, then try again.`)
+	} catch (e) {
+		toast.error(errorText(e, "Couldn't match them with your CRM"))
+	}
+}
 
 function confirmRemove(member) {
 	if (isLastOwner(member)) return toast.error("Make someone else owner first")
@@ -658,6 +671,7 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 													<div class="flex items-center gap-2">
 														<span class="truncate text-p-base text-ink-gray-8">{{ memberName(item) }}</span>
 														<Badge v-if="item.is_invited" theme="amber" variant="subtle" label="Invited" />
+														<Badge v-if="item.in_crm === false" theme="gray" variant="subtle" label="Not in CRM" />
 													</div>
 													<div class="truncate text-p-sm text-ink-gray-5">{{ item.user }}</div>
 												</div>

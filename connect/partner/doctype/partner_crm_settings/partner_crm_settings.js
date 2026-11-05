@@ -21,13 +21,25 @@ frappe.ui.form.on("Partner CRM Settings", {
 			);
 		});
 
-		frm.add_custom_button(__("Set up reply webhook again"), () =>
+		frm.add_custom_button(__("Set up CRM webhooks again"), () =>
 			frappe
 				.call("connect.crm_integration.reset_reply_webhook", { partner: frm.doc.partner })
 				.then(() => {
-					frappe.show_alert({ message: __("Reply webhook set up"), indicator: "green" });
+					frappe.show_alert({ message: __("CRM webhooks set up"), indicator: "green" });
 					frm.reload_doc();
 				})
+		);
+
+		// Links each team member to their CRM user by email, for Lead owners on both sides.
+		frm.add_custom_button(__("Match team with CRM"), () =>
+			frappe
+				.call("connect.crm_lead_owner.match_crm_team", { partner: frm.doc.partner })
+				.then((r) =>
+					frappe.show_alert({
+						message: __("{0} of the team are on the CRM", [r.message]),
+						indicator: "green",
+					})
+				)
 		);
 	},
 });

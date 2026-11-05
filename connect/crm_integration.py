@@ -198,11 +198,12 @@ def _sync_thread(thread):
 		# An anonymous customer's Lead has no contact until they are revealed.
 		customer = _customer_contact(thread_doc) if thread_doc.is_customer_revealed else frappe._dict()
 		if not thread_doc.crm_lead_id:
-			lead, owner = _create_lead(thread_doc, settings, customer)
+			user = connect_owner(thread_doc)
+			lead, owner = _create_lead(thread_doc, settings, customer, user)
 			thread_doc.db_set("crm_lead_id", lead, update_modified=False)
 			frappe.db.commit()  # the Lead is made: a failure below mustn't make another
-			if thread_doc.consultant and not owner:
-				note = _("The Lead has no owner: {0} has no user on the CRM.").format(thread_doc.consultant)
+			if user and not owner:
+				note = _("The Lead has no owner: {0} has no user on the CRM.").format(user)
 
 		partner_side = _partner_side(thread_doc)
 		for message in messages:
@@ -264,11 +265,24 @@ def _partner_side(thread_doc):
 	return people
 
 
+def connect_owner(thread_doc) -> str | None:
+	"""Who owns the thread's Lead on Connect: whoever its Partner Lead is assigned to, else the
+	Starter Pack consultant."""
+	assigned_to = frappe.db.get_value("Partner Lead", {"thread": thread_doc.name}, "assigned_to")
+	return assigned_to or thread_doc.consultant
+
+
 def crm_user(settings, consultant):
-	"""The consultant's user on the CRM, found by their Connect email, else their Suite email.
-	None when the CRM has neither: the sales team assigns the Lead by hand then."""
+	"""The person's user on the CRM: the one their team membership names, else found by their
+	Connect email or Suite email. None when the CRM has none: the sales team assigns the Lead by
+	hand then."""
 	if not consultant:
 		return None
+	linked = frappe.db.get_value(
+		"Connect Partner Member", {"partner": settings.partner, "user": consultant, "is_removed": 0}, "crm_user"
+	)
+	if linked:
+		return linked
 	emails = [
 		email
 		for email in dict.fromkeys(
@@ -301,10 +315,10 @@ def crm_user(settings, consultant):
 	return next((users[email] for email in emails if email in users), None)
 
 
-def _create_lead(thread_doc, settings, customer):
-	"""Makes the thread's Lead, owned by its consultant when they're on the CRM. The CRM assigns
-	the Lead to its owner itself. Returns the Lead and its owner."""
-	owner = crm_user(settings, thread_doc.consultant)
+def _create_lead(thread_doc, settings, customer, user):
+	"""Makes the thread's Lead, owned by `user` when they're on the CRM. The CRM assigns the
+	Lead to its owner itself. Returns the Lead and its owner."""
+	owner = crm_user(settings, user)
 	payload = {
 		**_lead_identity(thread_doc, customer),
 		"status": settings.default_lead_status,
@@ -457,60 +471,6 @@ def sync_lead_identity(thread):
 		frappe.log_error(title=f"Couldn't add the revealed customer to the Lead of Connect Thread {thread}")
 
 
-def queue_lead_owner_sync(doc, method=None):
-	"""on_update on Connect Thread: when the thread's consultant changes, so does its Lead's owner."""
-	if not doc.crm_lead_id or not doc.has_value_changed("consultant") or not crm_settings(doc.partner):
-		return
-	before = doc.get_doc_before_save()
-	frappe.enqueue(
-		"connect.crm_integration.sync_lead_owner",
-		queue="short",
-		enqueue_after_commit=True,
-		thread=doc.name,
-		previous=before and before.consultant,
-	)
-
-
-def sync_lead_owner(thread, previous=None):
-	"""Background job: makes the thread's consultant the owner of its Lead, which assigns it to
-	them, and takes it off the consultant before them."""
-	thread_doc = frappe.get_doc("Connect Thread", thread)
-	settings = crm_settings(thread_doc.partner)
-	if not settings or not thread_doc.crm_lead_id:
-		return
-
-	try:
-		owner = crm_user(settings, thread_doc.consultant)
-		if owner:
-			crm_request(
-				settings,
-				"PUT",
-				f"/api/resource/CRM Lead/{quote(thread_doc.crm_lead_id)}",
-				json={"lead_owner": owner},
-			)
-		else:
-			# The Lead stays with the consultant before, for the sales team to reassign by hand.
-			thread_doc.db_set(
-				"crm_sync_error",
-				_("The Lead's owner wasn't changed: {0} has no user on the CRM.").format(
-					thread_doc.consultant
-				),
-				update_modified=False,
-			)
-			return
-
-		before = crm_user(settings, previous)
-		if before and before != owner:
-			crm_request(
-				settings,
-				"POST",
-				"/api/method/frappe.desk.form.assign_to.remove",
-				json={"doctype": "CRM Lead", "name": thread_doc.crm_lead_id, "assign_to": before},
-			)
-	except Exception:
-		frappe.log_error(title=f"CRM Lead owner change failed for Connect Thread {thread}")
-
-
 def retry_crm_sync():
 	"""Hourly: sends what a failed or missed sync left behind, for partners with sync on."""
 	partners = frappe.get_all("Partner CRM Settings", filters={"enabled": 1}, pluck="partner")
@@ -559,7 +519,7 @@ def send_all_chats(partner: str) -> int:
 
 @frappe.whitelist(methods=["POST"])
 def reset_reply_webhook(partner: str) -> None:
-	"""Desk: sets up the reply webhook on the partner's CRM again, with Connect's current settings."""
+	"""Desk: sets up the webhooks on the partner's CRM again, with Connect's current settings."""
 	frappe.only_for("System Manager")
 	doc = frappe.get_doc("Partner CRM Settings", partner)
 	if not doc.enabled:
@@ -606,8 +566,8 @@ def reply_webhook(partner, integration_user, secret):
 
 
 def set_up_reply_webhook(doc) -> None:
-	"""Makes or updates the reply webhook on the partner's CRM, with a new secret. Throws why it
-	failed, so a save that can't sync replies doesn't look connected."""
+	"""Makes or updates the webhooks on the partner's CRM (replies, and Lead owner changes) with
+	a new secret. Throws why it failed, so a save that can't sync replies doesn't look connected."""
 	settings = frappe._dict(name=doc.name, partner=doc.partner, site_url=doc.site_url, api_key=doc.api_key)
 	secret = frappe.generate_hash(length=32)
 	try:
@@ -634,13 +594,21 @@ def set_up_reply_webhook(doc) -> None:
 
 
 def _register_reply_webhook(settings, secret) -> str:
+	"""Both webhooks share the secret, so the one stored checks either. Returns the reply one."""
+	from connect.crm_lead_owner import owner_webhook
+
 	login = crm_request(settings, "GET", "/api/method/frappe.auth.get_logged_user")
 	integration_user = login.json()["message"]
-	payload = reply_webhook(settings.partner, integration_user, secret)
+	reply = reply_webhook(settings.partner, integration_user, secret)
+	for payload in (reply, owner_webhook(settings.partner, integration_user, secret)):
+		_put_webhook(settings, payload)
+	return reply["name"]
+
+
+def _put_webhook(settings, payload) -> None:
 	try:
 		crm_request(settings, "PUT", f"/api/resource/Webhook/{quote(payload['name'])}", json=payload)
 	except CRMRequestError as e:
 		if e.status_code != 404:
 			raise
 		crm_request(settings, "POST", "/api/resource/Webhook", json=payload)
-	return payload["name"]

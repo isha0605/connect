@@ -2,6 +2,7 @@ import frappe
 from frappe import _
 from frappe.utils import validate_email_address
 
+from connect.crm_integration import crm_settings
 from connect.partner.doctype.connect_partner_member.connect_partner_member import OWNER
 from connect.permissions import _is_customer_admin, _is_partner_admin, _my_company_membership
 
@@ -34,7 +35,7 @@ def get_my_team():
 		Member[role_field].as_("role"), UserTable.full_name, UserTable.user_image, UserTable.last_login,
 	]
 	if doctype == "Connect Partner Member":
-		columns.append(Member.access)
+		columns += [Member.access, Member.crm_user]
 	rows = (
 		frappe.qb.from_(Member)
 		.left_join(UserTable)
@@ -45,11 +46,14 @@ def get_my_team():
 		.orderby(Member.creation, order=frappe.qb.asc)
 		.run(as_dict=True)
 	)
+	# With CRM sync on, each partner member says whether they have a user on the CRM.
+	has_crm = doctype == "Connect Partner Member" and bool(crm_settings(company))
 	for row in rows:
 		# Invited until they first sign in.
 		row.is_invited = not row.pop("last_login")
 		if doctype == "Connect Partner Member":
 			row.access_level = OWNER if row.is_admin else (row.pop("access") or "Member")
+			row.in_crm = bool(row.pop("crm_user")) if has_crm else None
 	return rows
 
 

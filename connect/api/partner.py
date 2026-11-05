@@ -370,3 +370,10 @@ def resend_certificate_link_request(request_name):
 		frappe.throw(frappe._("Only pending certificate link requests can be resent. Refresh the page."))
 	doc.resend()
 	return {"ok": True}
+
+
+@frappe.whitelist(methods=["POST"])
+def match_my_member_with_crm(member):
+	from connect.partner.doctype.partner_crm_settings.partner_crm_settings import match_my_member_with_crm
+
+	return match_my_member_with_crm(member)

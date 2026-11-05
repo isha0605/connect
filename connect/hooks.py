@@ -232,13 +232,17 @@ doc_events = {
 	"Connect Thread": {
 		"on_update": [
 			# A new consultant on a thread is the new owner of its CRM Lead.
-			"connect.crm_integration.queue_lead_owner_sync",
+			"connect.crm_lead_owner.queue_consultant_owner_sync",
 			# A revealed customer's name and contact go on their CRM Lead.
 			"connect.crm_integration.queue_lead_identity_sync",
 		],
 	},
 	"Partner CRM Settings": {
-		"on_update": "connect.crm_integration.sync_reply_webhook",
+		"on_update": [
+			"connect.crm_integration.sync_reply_webhook",
+			# Which of the team are on the CRM, for the Leads owner picker and Lead owners.
+			"connect.crm_lead_owner.queue_team_match",
+		],
 	},
 	"Enquiry": {
 		# A Contact us enquiry becomes a Lead on Frappe's CRM.
@@ -246,7 +250,7 @@ doc_events = {
 	},
 	"Connect Partner Member": {
 		"after_insert": "connect.roles.grant_company_role",
-		"on_update": "connect.auth.invitations.invite_member",
+		"on_update": ["connect.auth.invitations.invite_member", "connect.crm_lead_owner.queue_member_match"],
 		"on_trash": "connect.roles.revoke_company_role",
 	},
 	"Customer Team Member": {
