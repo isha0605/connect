@@ -153,6 +153,7 @@ def assign_partner(order_name, tell_admins_if_unassigned=True):
 
 		order.partner = partner.name
 		order.flags.auto_assigned = True
+		# The rotation picks, from the payment hook or a job, not on a user's behalf.
 		order.save(ignore_permissions=True)
 		write_pointer(partner)
 		return partner.name
@@ -199,10 +200,12 @@ def assign_consultant(order_name, tell_admins_if_unassigned=True, leaving=None):
 				)
 			if leaving:
 				order.consultant = None
+				# As below: the rotation's save, not the caller's.
 				order.save(ignore_permissions=True)
 			return None
 
 		order.consultant = consultant.name
+		# The rotation picks, from the payment hook, a job or a consultant leaving, not on a user's behalf.
 		order.save(ignore_permissions=True)
 		if not returning_to:
 			write_pointer(consultant, CONSULTANTS)

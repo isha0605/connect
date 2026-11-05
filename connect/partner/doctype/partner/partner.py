@@ -1168,6 +1168,7 @@ def update_my_partner_profile(
 
 	doc, live = _edited_profile(partner, changes, with_draft=cint(as_draft))
 	if not cint(as_draft):
+		# Partners have no Desk write on Partner; _edited_profile found it through _my_admin_partner.
 		doc.save(ignore_permissions=True)
 		return {"partner": doc.name}
 
@@ -1186,6 +1187,7 @@ def publish_my_profile_draft() -> dict:
 
 	doc, _live = _edited_profile(partner, {}, with_draft=True)
 	doc.profile_draft = None
+	# As in update_my_partner_profile: _my_admin_partner stands in for Desk write on Partner.
 	doc.save(ignore_permissions=True)
 	return {"partner": doc.name}
 

@@ -138,4 +138,4 @@ def retry_enquiry_sync():
 		pluck="name",
 	):
 		sync_enquiry(enquiry)
-		frappe.db.commit()
+		frappe.db.commit()  # nosemgrep: keep each enquiry's sync status, so a later failure doesn't send it again

@@ -192,6 +192,7 @@ def cancel(application: str) -> dict:
 	if doc.status != "Applied":
 		frappe.throw(_("Only an application that's still waiting for review can be cancelled."))
 	doc.status = "Cancelled"
+	# As in apply: _my_admin_partner and the partner check above stand in for Desk permission.
 	doc.save(ignore_permissions=True)
 	return {"application": doc.name}
 
@@ -212,6 +213,7 @@ def check_approved_applications(partner: str | None = None) -> list[str]:
 
 		create_or_resend(row.partner, row.member_email, certificate_type)
 		doc = frappe.get_doc("Certificate Application", row.name)
+		# Frappe School issued it: the system marks it, from the daily job or a partner's Check now.
 		doc.update({
 			"status": "Certified", "certified_on": today(),
 			"partner_certificate": frappe.db.get_value(

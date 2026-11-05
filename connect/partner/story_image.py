@@ -86,7 +86,7 @@ def build_story_image(row_name: str, story_url: str) -> str | None:
 	image_url = fetch_og_image(story_url)
 	if image_url:
 		frappe.db.set_value("Partner Success Story", row_name, "cover_image", image_url, update_modified=False)
-		frappe.db.commit()
+		frappe.db.commit()  # nosemgrep: the backfill fetches a page per row; keep each image if the run stops partway
 	return image_url
 
 

@@ -77,6 +77,7 @@ def give_to_implementation_partner(order_name, tell_admins_if_unassigned=True):
 		if order.partner or order.payment_status != "Paid":
 			return order.partner or None
 		order.partner = partner
+		# Runs from the payment hook or a job, not on a user's behalf.
 		order.save(ignore_permissions=True)
 		return partner
 	except Exception:
@@ -100,7 +101,7 @@ def hand_over_waiting_orders():
 		pluck="name",
 	):
 		hand_over(name, tell_admins_if_unassigned=False)
-		frappe.db.commit()
+		frappe.db.commit()  # nosemgrep: keep each order's hand-over if a later one fails, and send its opening message now
 
 	# Frappe's orders paid while no consultant was enabled.
 	frappe_partner = frappe.db.get_single_value(SETTINGS, "implementation_partner")
@@ -118,7 +119,7 @@ def hand_over_waiting_orders():
 		pluck="name",
 	):
 		assign_consultant(name, tell_admins_if_unassigned=False)
-		frappe.db.commit()
+		frappe.db.commit()  # nosemgrep: keep each order's consultant if a later one fails
 
 
 @frappe.whitelist(methods=["POST"])
@@ -151,6 +152,7 @@ def link_company(order, customer):
 		frappe.throw(_("The buyer belongs to {0}. Link the order to that company.").format(frappe.bold(current)))
 	if not current:
 		has_admin = frappe.db.exists("Customer Team Member", {"customer": customer, "is_admin": 1})
+		# Added on the buyer's behalf; only_for above keeps this to System Managers.
 		frappe.get_doc(
 			{
 				"doctype": "Customer Team Member",
@@ -188,6 +190,7 @@ def post_opening_message(order_name):
 
 	try:
 		thread = get_or_open_thread(customer, order.partner, user, order.consultant)
+		# Posted as the buyer by the payment job, not by a request of theirs.
 		for message in opening_messages(order, customer):
 			frappe.get_doc({"doctype": "Connect Message", "thread": thread, "sender": user, **message}).insert(
 				ignore_permissions=True
@@ -244,6 +247,7 @@ def move_thread(order):
 		thread = frappe.get_doc("Connect Thread", existing)
 	else:
 		thread.consultant = new
+		# The rotation moves the chat, whoever's save set the new consultant.
 		thread.save(ignore_permissions=True)
 	ensure_partner_member(thread.name, new, frappe.session.user)
 	post_looking_after(thread, new)
@@ -279,6 +283,7 @@ def post_company_details(order, customer, focus=None):
 	intro = _("Here is more about our company.")
 	if focus:
 		intro += " " + _("We'd like the sessions to focus on: {0}").format(focus)
+	# Cards made from the buyer's answers; save_company_details checked the order is theirs.
 	for message in ({"message_type": "Text", "content": intro}, requirement_card(order, customer)):
 		frappe.get_doc(
 			{"doctype": "Connect Message", "thread": order.implementation_thread, "sender": order.user, **message}
@@ -288,6 +293,7 @@ def post_company_details(order, customer, focus=None):
 def post_meeting_card(order, sender, link, starts_at):
 	"""The kickoff call as a card in the project's thread, with a Join button. The newest card
 	for an order is the live one; Messaging shows older ones as replaced."""
+	# A card, not a typed message; share_kickoff_meeting checked the sender is the project's consultant.
 	frappe.get_doc(
 		{
 			"doctype": "Connect Message",

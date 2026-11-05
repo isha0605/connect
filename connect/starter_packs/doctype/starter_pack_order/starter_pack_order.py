@@ -249,6 +249,7 @@ def save_as_payment_hook(order):
 	"""Save an order whose payment_status the gateway moved — the one save allowed to."""
 	frappe.flags[PAYMENT_HOOK_FLAG] = True
 	try:
+		# The gateway's callback or the buyer's checkout saves it; neither may write orders.
 		order.save(ignore_permissions=True)
 	finally:
 		frappe.flags[PAYMENT_HOOK_FLAG] = False
@@ -338,6 +339,7 @@ def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None,
 		frappe.throw(_("Pick at least one pack."))
 	customer = buyer_company(company_name, buyer_name)
 
+	# Buyers have no Desk permission on orders; checkout is the only way in, and prices them itself.
 	order = frappe.get_doc(
 		{
 			"doctype": "Starter Pack Order",

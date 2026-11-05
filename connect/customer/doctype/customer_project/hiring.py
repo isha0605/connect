@@ -31,6 +31,7 @@ def hire_partner(quote: str) -> dict:
 		frappe.throw(_("Only a partner who has quoted can be hired."))
 
 	row.update({"status_before_hire": row.status, "status": "Hire Requested", "decline_reason": None})
+	# Only System Managers write projects and quotes; get_own_project checked the caller owns this one.
 	row.save(ignore_permissions=True)
 	doc.update(
 		{
@@ -141,6 +142,7 @@ def get_hire_days_left(requested_on) -> int:
 
 def _accept(doc, row):
 	row.update({"status": "Hired", "responded_on": now_datetime()})
+	# Only System Managers write projects and quotes; respond_to_hire checked the caller is the partner's admin.
 	row.save(ignore_permissions=True)
 	doc.status = "Hired"
 	doc.save(ignore_permissions=True)
@@ -156,6 +158,7 @@ def _decline(doc, row, reason: str):
 		frappe.throw(_("Tell the customer why you're declining."))
 
 	row.update({"status": "Hire Declined", "responded_on": now_datetime(), "decline_reason": reason})
+	# As in _accept: respond_to_hire checked the caller is the partner's admin.
 	row.save(ignore_permissions=True)
 	_free_project(doc)
 	_post_system_message(
@@ -168,6 +171,7 @@ def _withdraw(doc, message: str):
 	"""Puts the quote back where it was before the request, and the project back to Shared."""
 	row = frappe.get_doc("Project Quote", doc.hired_quote)
 	row.update({"status": row.status_before_hire or "Quoted", "status_before_hire": None})
+	# The customer's own cancel (get_own_project checked) or the daily expiry job.
 	row.save(ignore_permissions=True)
 	_free_project(doc)
 	_post_system_message(row.thread, message)
@@ -183,11 +187,13 @@ def _free_project(doc):
 			"hire_requested_on": None,
 		}
 	)
+	# Every caller checked who may free the project: the customer, the partner's admin, or the expiry job.
 	doc.save(ignore_permissions=True)
 
 
 def _post_hire_request(doc, row):
 	"""The request as a card in the customer's thread with the partner, where the partner answers it."""
+	# A card the hire posts, not a message the customer types; the thread is their own quote's.
 	frappe.get_doc(
 		{
 			"doctype": "Connect Message",

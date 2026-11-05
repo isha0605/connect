@@ -129,6 +129,7 @@ def create_user(email, full_name, country=None):
 
 def create_customer(user, full_name, company_name, country=None):
 	check_company_is_free(company_name)
+	# Made during sign-up, before the person has any role, for the user just created.
 	customer = frappe.get_doc(
 		{"doctype": "Customer", "customer_name": company_name.strip(), "country": country or None}
 	).insert(ignore_permissions=True)

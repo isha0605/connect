@@ -67,6 +67,7 @@ def sync_consultant(user):
 	"""Bring the user's Frappe Consultant record in line with their role. Joining and leaving
 	the team follow from the record (Frappe Consultant.after_insert / on_update)."""
 	wanted = is_wanted(frappe.get_doc("User", user))
+	# Follows a role change on the User; whoever made it may have no rights on consultant records.
 	if not frappe.db.exists(CONSULTANT, user):
 		if wanted:
 			frappe.get_doc({"doctype": CONSULTANT, "user": user}).insert(ignore_permissions=True)
@@ -93,6 +94,7 @@ def join_frappe_team(user):
 		frappe.db.set_value("Connect Partner Member", member, {"is_removed": 0, "removed_on": None})
 		frappe.get_doc("User", user).add_roles(PARTNER_ROLE)
 		return
+	# As in sync_consultant: it follows the consultant record, not the caller's rights.
 	frappe.get_doc(
 		{"doctype": "Connect Partner Member", "partner": partner, "user": user, "is_admin": 0, "role": "Consultant"}
 	).insert(ignore_permissions=True)

@@ -69,7 +69,7 @@ def sync_pmm_levels(dry_run=False):
 
 	report.not_on_connect = sorted(p.names[0] for p in pages if p.url not in matched_urls)
 	if not dry_run:
-		frappe.db.commit()
+		frappe.db.commit()  # nosemgrep: also run from bench console, which doesn't commit for it
 	return report
 
 
