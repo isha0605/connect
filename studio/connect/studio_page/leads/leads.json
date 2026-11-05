@@ -296,62 +296,18 @@
              }
             },
             {
-             "children": [
-              {
-               "componentId": "ld-filter-btn",
-               "componentName": "Button",
-               "componentProps": {
-                "aria-label": "Filter",
-                "iconLeft": "lucide-list-filter"
-               },
-               "componentSlots": {
-                "default": {
-                 "parentBlockId": "ld-filter-btn",
-                 "slotContent": [
-                  {
-                   "componentId": "ld-filter-label",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "Filter"
-                   }
-                  }
-                 ]
-                },
-                "suffix": {
-                 "parentBlockId": "ld-filter-btn",
-                 "slotContent": [
-                  {
-                   "classes": [
-                    "grid",
-                    "size-5",
-                    "place-items-center",
-                    "rounded-4",
-                    "bg-surface-base",
-                    "font-medium",
-                    "shadow-sm"
-                   ],
-                   "componentId": "ld-filter-count",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-xs",
-                    "tag": "span",
-                    "text": "1"
-                   },
-                   "visibilityCondition": "hasProbabilityFilter"
-                  }
-                 ]
-                }
-               }
-              }
-             ],
-             "componentId": "ld-filter-menu",
-             "componentName": "Dropdown",
+             "blockName": "ListFilter",
+             "componentId": "ld-filter",
+             "componentName": "ListFilter",
              "componentProps": {
-              "align": "end",
-              "options": "{{ filterMenu }}"
-             }
+              "fields": "{{ filterFields }}",
+              "modelValue": {
+               "$type": "variable",
+               "name": "filters"
+              }
+             },
+             "componentSlots": {},
+             "isCustomVueComponent": true
             },
             {
              "children": [
@@ -504,6 +460,30 @@
                  "classes": [
                   "text-ink-gray-5"
                  ],
+                 "componentId": "ld-h-status-text",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "Status"
+                 }
+                }
+               ],
+               "classes": [
+                "hidden",
+                "md:flex"
+               ],
+               "componentId": "ld-h-status",
+               "componentName": "ListHeaderCell",
+               "componentProps": {},
+               "visibilityCondition": "isShown('status')"
+              },
+              {
+               "children": [
+                {
+                 "classes": [
+                  "text-ink-gray-5"
+                 ],
                  "componentId": "ld-h-owner-text",
                  "componentName": "TextBlock",
                  "componentProps": {
@@ -624,6 +604,33 @@
                       "tag": "span",
                       "text": "{{ item.project }}"
                      }
+                    },
+                    {
+                     "children": [
+                      {
+                       "classes": [
+                        "shrink-0"
+                       ],
+                       "componentId": "ld-c-lead-count",
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ item.requirementBadge }}",
+                        "theme": "gray",
+                        "variant": "subtle",
+                        "size": "sm"
+                       }
+                      }
+                     ],
+                     "classes": [
+                      "shrink-0"
+                     ],
+                     "componentId": "ld-c-lead-count-tip",
+                     "componentName": "Tooltip",
+                     "componentProps": {
+                      "text": "{{ item.requirementTooltip }}"
+                     },
+                     "componentSlots": {},
+                     "visibilityCondition": "item.requirementBadge"
                     }
                    ],
                    "classes": [
@@ -700,6 +707,28 @@
                    "componentName": "ListCell",
                    "componentProps": {},
                    "visibilityCondition": "isShown('stage')"
+                  },
+                  {
+                   "children": [
+                    {
+                     "componentId": "ld-c-status-badge",
+                     "componentName": "Badge",
+                     "componentProps": {
+                      "label": "{{ item.communication_status }}",
+                      "theme": "{{ item.statusTheme }}",
+                      "variant": "subtle"
+                     }
+                    }
+                   ],
+                   "classes": [
+                    "hidden",
+                    "md:flex",
+                    "min-w-0"
+                   ],
+                   "componentId": "ld-c-status",
+                   "componentName": "ListCell",
+                   "componentProps": {},
+                   "visibilityCondition": "isShown('status')"
                   },
                   {
                    "children": [
@@ -862,21 +891,6 @@
                 "label": "Clear filters"
                },
                "visibilityCondition": "isFiltered"
-              },
-              {
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "showOpenLeads()"
-                }
-               },
-               "componentId": "ld-empty-open",
-               "componentName": "Button",
-               "componentProps": {
-                "label": "View open leads"
-               },
-               "visibilityCondition": "!isFiltered && view === 'needs'"
               }
              ],
              "classes": [

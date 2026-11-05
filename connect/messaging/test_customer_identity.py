@@ -39,7 +39,7 @@ class TestCustomerIdentity(IntegrationTestCase):
 		).insert(ignore_permissions=True)
 		project.db_set("user", BUYER)
 		self.thread = send_brief(project, COMPANY, PARTNER)
-		self.quote = frappe.db.get_value("Project Quote", {"customer_project": project.name}, "name")
+		self.quote, self.lead = frappe.db.get_value("Project Quote", {"customer_project": project.name}, ["name", "lead"])
 		self.message = frappe.get_doc(
 			{"doctype": "Connect Message", "thread": self.thread, "sender": BUYER, "content": "We use Tally today"}
 		).insert(ignore_permissions=True)
@@ -64,7 +64,7 @@ class TestCustomerIdentity(IntegrationTestCase):
 
 		self.assertNotIn(BUYER, [m["user"] for m in get_thread_members(self.thread)])
 		self.assertNotIn(BUYER, [p["name"] for p in get_thread_member_profiles(self.thread)])
-		self.assertEqual(get_lead(self.quote)["lead"]["company"], anonymous_company())
+		self.assertEqual(get_lead(self.lead)["lead"]["company"], anonymous_company())
 
 	def test_the_partner_cannot_read_the_customer_through_generic_reads(self):
 		self.as_user(OWNER)
@@ -94,7 +94,7 @@ class TestCustomerIdentity(IntegrationTestCase):
 		self.as_user(OWNER)
 		self.assertEqual(self.my_thread()["customer_name"], COMPANY)
 		self.assertIn(BUYER, {m.sender for m in get_thread_messages(self.thread)})
-		self.assertEqual(get_lead(self.quote)["lead"]["contact"]["email"], BUYER)
+		self.assertEqual(get_lead(self.lead)["lead"]["contact"]["email"], BUYER)
 
 	def test_contacting_a_partner_directly_reveals_the_customer(self):
 		self.as_user(BUYER)

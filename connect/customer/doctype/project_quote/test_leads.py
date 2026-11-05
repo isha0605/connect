@@ -9,22 +9,24 @@ from frappe.tests import IntegrationTestCase
 from connect.customer.doctype.customer_project.brief import send_brief
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
 from connect.customer.doctype.project_quote.leads import get_lead, my_leads, update_lead
+from connect.partner.doctype.partner_lead.partner_lead import NotOnCRMError
 
 PARTNER = "_Test Leads Partner"
 OTHER_PARTNER = "_Test Leads Other Partner"
 OWNER = "leads.owner@example.test"
 SALES = "leads.sales@example.test"
+FINANCE = "leads.finance@example.test"
+MEMBER = "leads.member@example.test"
 OTHER_OWNER = "leads.other.owner@example.test"
 BUYER = "leads.buyer@example.test"
 
 
-def make_member(partner, email):
+def make_member(partner, email, access="Sales"):
 	if not frappe.db.exists("User", email):
-		frappe.get_doc({"doctype": "User", "email": email, "first_name": "Sales"}).insert(ignore_permissions=True)
+		frappe.get_doc({"doctype": "User", "email": email, "first_name": access}).insert(ignore_permissions=True)
 	if not frappe.db.exists("Connect Partner Member", {"partner": partner, "user": email}):
-		frappe.get_doc({"doctype": "Connect Partner Member", "partner": partner, "user": email}).insert(
-			ignore_permissions=True
-		)
+		member = {"doctype": "Connect Partner Member", "partner": partner, "user": email, "access": access}
+		frappe.get_doc(member).insert(ignore_permissions=True)
 
 
 class TestLeads(IntegrationTestCase):
@@ -40,15 +42,26 @@ class TestLeads(IntegrationTestCase):
 			make_partner(partner)
 			make_partner_admin(partner, owner)
 		make_member(PARTNER, SALES)
+		make_member(PARTNER, FINANCE, "Finance")
+		make_member(PARTNER, MEMBER, "Member")
 		make_buyer(BUYER, "Leads Buyer Co")
-		customer = frappe.db.get_value("Customer Team Member", {"user": BUYER}, "customer")
+		self.customer = frappe.db.get_value("Customer Team Member", {"user": BUYER}, "customer")
+		self.thread, self.quote = self.send("Batch tracking")
+		self.lead = frappe.db.get_value("Project Quote", self.quote, "lead")
 
+	def send(self, project_name):
+		"""The buyer sends the partner a brief; returns the thread and its Project Quote."""
 		project = frappe.get_doc(
-			{"doctype": "Customer Project", "project_name": "Batch tracking", "status": "Shared", "user": BUYER}
+			{"doctype": "Customer Project", "project_name": project_name, "status": "Shared", "user": BUYER}
 		).insert(ignore_permissions=True)
 		project.db_set("user", BUYER)
-		self.thread = send_brief(project, customer, PARTNER)
-		self.lead = frappe.db.get_value("Project Quote", {"customer_project": project.name}, "name")
+		thread = send_brief(project, self.customer, PARTNER)
+		return thread, frappe.db.get_value("Project Quote", {"customer_project": project.name}, "name")
+
+	def hire(self, quote):
+		doc = frappe.get_doc("Project Quote", quote)
+		doc.status = "Hired"
+		doc.save(ignore_permissions=True)
 
 	def as_user(self, user):
 		frappe.set_user(user)
@@ -63,11 +76,10 @@ class TestLeads(IntegrationTestCase):
 		self.assertEqual(lead["messages"][0]["kind"], "brief")
 		self.assertTrue(lead["needs_reply"])
 
-	def test_a_member_off_the_thread_cannot_see_the_lead(self):
+	def test_sales_sees_and_works_every_team_lead(self):
 		self.as_user(SALES)
-		self.assertNotIn(self.lead, [row["name"] for row in my_leads()["leads"]])
-		self.assertRaises(frappe.DoesNotExistError, get_lead, self.lead)
-		self.assertRaises(frappe.DoesNotExistError, update_lead, self.lead, probability="Hot")
+		self.assertIn(self.lead, [row["name"] for row in my_leads()["leads"]])
+		self.assertEqual(update_lead(self.lead, probability="Hot")["probability"], "Hot")
 
 	def test_another_partner_cannot_see_the_lead(self):
 		self.as_user(OTHER_OWNER)
@@ -99,10 +111,95 @@ class TestLeads(IntegrationTestCase):
 		self.assertIsNone(update_lead(self.lead, stage="Negotiation")["lost_reason"])
 
 	def test_hiring_the_partner_wins_the_lead(self):
-		quote = frappe.get_doc("Project Quote", self.lead)
-		quote.status = "Hired"
-		quote.save(ignore_permissions=True)
-		self.assertEqual(frappe.db.get_value("Project Quote", self.lead, "lead_stage"), "Won")
+		self.hire(self.quote)
+		self.assertEqual(frappe.db.get_value("Partner Lead", self.lead, "stage"), "Won")
 
 		self.as_user(OWNER)
 		self.assertRaises(frappe.ValidationError, update_lead, self.lead, stage="Open")
+
+	# ---- One lead per customer: every brief they send joins it ----
+
+	def test_a_second_brief_joins_the_customers_lead(self):
+		_thread, second = self.send("Payroll")
+		self.assertEqual(frappe.db.get_value("Project Quote", second, "lead"), self.lead)
+
+		self.as_user(OWNER)
+		rows = [row for row in my_leads()["leads"] if row["name"] == self.lead]
+		self.assertEqual(len(rows), 1)
+		self.assertEqual((rows[0]["project_name"], rows[0]["requirement_count"]), ("Payroll", 2))
+
+		lead = get_lead(self.lead)["lead"]
+		self.assertEqual([r["project_name"] for r in lead["requirements"]], ["Payroll", "Batch tracking"])
+		briefs = [m["title"] for m in lead["messages"] if m["kind"] == "brief"]
+		self.assertEqual(briefs, ["Batch tracking", "Payroll"])
+
+	def test_a_new_brief_reopens_a_lost_lead_with_its_owner(self):
+		self.as_user(OWNER)
+		update_lead(self.lead, owner=SALES)
+		update_lead(self.lead, stage="Lost", lost_reason="No budget")
+
+		self.as_user("Administrator")
+		self.send("Payroll")
+		lead = frappe.db.get_value("Partner Lead", self.lead, ["stage", "assigned_to", "lost_reason"], as_dict=True)
+		self.assertEqual((lead.stage, lead.assigned_to, lead.lost_reason), ("Open", SALES, None))
+
+	def test_a_won_lead_stays_won_when_a_new_brief_arrives(self):
+		self.hire(self.quote)
+		self.send("Payroll")
+		self.assertEqual(frappe.db.get_value("Partner Lead", self.lead, "stage"), "Won")
+
+	def test_status_is_open_until_the_partner_replies(self):
+		def status():
+			self.as_user(OWNER)
+			row = next(row for row in my_leads()["leads"] if row["name"] == self.lead)
+			self.as_user("Administrator")
+			return row["communication_status"]
+
+		def say(sender):
+			message = {"doctype": "Connect Message", "thread": self.thread, "sender": sender, "content": "Hi"}
+			frappe.get_doc(message).insert(ignore_permissions=True)
+
+		self.assertEqual(status(), "Open")
+		say(FINANCE)  # anyone on the partner's team replying counts
+		self.assertEqual(status(), "Replied")
+		say(BUYER)
+		self.assertEqual(status(), "Open")
+
+	def test_with_crm_sync_a_lead_needs_an_owner_on_the_crm(self):
+		frappe.db.set_value("Connect Partner Member", {"partner": PARTNER, "user": SALES}, "crm_user", SALES)
+		self.as_user(OWNER)
+		with patch("connect.crm_integration.crm_settings", return_value={"name": PARTNER}):
+			self.assertRaises(NotOnCRMError, update_lead, self.lead, owner=OWNER)
+			self.assertEqual(update_lead(self.lead, owner=SALES)["owner"], SALES)
+
+	def test_with_crm_sync_the_team_says_who_is_on_the_crm(self):
+		frappe.db.set_value("Connect Partner Member", {"partner": PARTNER, "user": SALES}, "crm_user", SALES)
+		self.as_user(OWNER)
+		with patch("connect.customer.doctype.project_quote.leads.crm_settings", return_value={"name": PARTNER}):
+			team = {member["user"]: member["in_crm"] for member in my_leads()["team"]}
+		self.assertEqual(team, {OWNER: False, SALES: True})
+		self.assertEqual({member["in_crm"] for member in my_leads()["team"]}, {None})
+
+	# ---- Access levels: Owner and Sales work leads; Finance and Member don't see them ----
+
+	def test_finance_and_members_cannot_open_leads(self):
+		for user in (FINANCE, MEMBER):
+			self.as_user(user)
+			self.assertRaises(frappe.PermissionError, my_leads)
+			self.assertRaises(frappe.PermissionError, get_lead, self.lead)
+
+	def test_only_owners_and_sales_are_offered_as_lead_owners(self):
+		self.as_user(OWNER)
+		team = {member["user"] for member in my_leads()["team"]}
+		self.assertEqual(team, {OWNER, SALES})
+
+	def test_a_lead_cannot_go_to_finance_or_a_member(self):
+		self.as_user(OWNER)
+		for user in (FINANCE, MEMBER):
+			self.assertRaises(frappe.ValidationError, update_lead, self.lead, owner=user)
+
+	def test_sales_can_assign_a_lead_they_work(self):
+		self.as_user(OWNER)
+		update_lead(self.lead, owner=SALES)
+		self.as_user(SALES)
+		self.assertEqual(update_lead(self.lead, owner=OWNER)["owner"], OWNER)

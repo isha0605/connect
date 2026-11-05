@@ -1,0 +1,136 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:PL-{#####}",
+ "creation": "2026-11-04 12:00:00.000000",
+ "description": "A customer's conversation with a partner, as the partner's sales team works it. Every requirement the customer sends in the conversation joins this one lead.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "partner",
+  "customer",
+  "thread",
+  "column_break_stage",
+  "stage",
+  "assigned_to",
+  "probability",
+  "lost_reason",
+  "crm_section",
+  "crm_owner"
+ ],
+ "fields": [
+  {
+   "fieldname": "partner",
+   "fieldtype": "Link",
+   "label": "Partner",
+   "options": "Partner",
+   "reqd": 1,
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer",
+   "reqd": 1,
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "thread",
+   "fieldtype": "Link",
+   "label": "Conversation",
+   "options": "Connect Thread",
+   "reqd": 1,
+   "read_only": 1,
+   "description": "The customer's chat with the partner. Its CRM Lead is this lead on the partner's CRM.",
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_stage",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Open",
+   "fieldname": "stage",
+   "fieldtype": "Select",
+   "label": "Stage",
+   "options": "Open\nQualification\nDemo/Making\nProposal/Quotation\nFollow Up\nNegotiation\nReady to Close\nWon\nLost\nJunk\nClosed",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Won is set when the customer hires the partner for any of their requirements, and stays. A new requirement opens a Lost, Junk or Closed lead again."
+  },
+  {
+   "fieldname": "assigned_to",
+   "fieldtype": "Link",
+   "label": "Assigned To",
+   "options": "User",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "The partner's team member working this lead. They are added to the conversation and own its Lead on the partner's CRM; with CRM sync on, they need a user on the CRM."
+  },
+  {
+   "fieldname": "probability",
+   "fieldtype": "Select",
+   "label": "Probability",
+   "options": "\nHot\nWarm\nCold"
+  },
+  {
+   "depends_on": "eval:doc.stage=='Lost'",
+   "fieldname": "lost_reason",
+   "fieldtype": "Select",
+   "label": "Lost Reason",
+   "options": "\nLost to competitor\nNo budget\nNot responding\nChose another product\nOther"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "crm_section",
+   "fieldtype": "Section Break",
+   "label": "CRM"
+  },
+  {
+   "fieldname": "crm_owner",
+   "fieldtype": "Data",
+   "label": "Assigned in CRM To",
+   "read_only": 1,
+   "description": "Set when the Lead was given, on the partner's CRM, to someone who can't take it on Connect: not on the partner's team, or not Owner or Sales. Cleared when the lead is assigned on Connect."
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [
+  {
+   "link_doctype": "Project Quote",
+   "link_fieldname": "lead",
+   "group": "Requirements"
+  }
+ ],
+ "modified": "2026-11-05 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Partner",
+ "name": "Partner Lead",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "customer",
+ "track_changes": 1
+}

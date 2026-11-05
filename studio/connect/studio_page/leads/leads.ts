@@ -1,29 +1,25 @@
 // The partner's Leads, styled as Frappe CRM's list: views in the breadcrumb, quick filters with
 // Refresh, Filter, Sort and Columns, a full-width table and a footer with page size and count.
-// A row opens the lead's page. No Create: every lead here is a brief a customer sent.
+// A row opens the lead's page. No Create: every lead here is a customer who sent the partner a
+// brief, with all the briefs they sent since.
 
 import { computed, ref } from "vue"
-import { PRM_STAGES, isClosed, lastAt, ownerOptions, stageColor } from "@app/utils/partnerLeads"
+import { PRM_STAGES, PROBABILITY, lastAt, leadTitle, ownerOptions, requirementBadge, requirementTooltip, stageColor } from "@app/utils/partnerLeads"
+import { matchesFilters } from "@app/utils/listFilters"
 import { clockOrDate } from "@app/utils/partnerRecords"
 import { startTracking } from "@app/utils/tracking"
 
-// "To reply" is the default: only what waits on the firm.
 const VIEWS = [
-	{ label: "To reply", value: "needs", icon: "lucide-reply" },
+	{ label: "All leads", value: "all", icon: "lucide-list" },
 	{ label: "Mine", value: "mine", icon: "lucide-user" },
-	{ label: "Open", value: "open", icon: "lucide-inbox" },
-	{ label: "Closed", value: "closed", icon: "lucide-archive" },
 ]
 const IN_VIEW = {
-	needs: (lead) => lead.needs_reply,
-	mine: (lead, me) => !isClosed(lead) && lead.owner === me,
-	open: (lead) => !isClosed(lead),
-	closed: (lead) => isClosed(lead),
+	all: () => true,
+	mine: (lead, me) => lead.owner === me,
 }
-const EMPTY_TITLES = { needs: "All caught up", mine: "None assigned to you", open: "No open leads", closed: "No closed leads" }
+const EMPTY_TITLES = { all: "No leads yet", mine: "None assigned to you" }
 
 const STAGE_OPTIONS = [{ label: "Any stage", value: "" }, ...PRM_STAGES.map((stage) => ({ label: stage, value: stage }))]
-const PROBABILITIES = ["", "Hot", "Warm", "Cold"]
 const PROBABILITY_ORDER = ["Hot", "Warm", "Cold", ""]
 const SORTS = [
 	{ value: "reply", label: "Last reply" },
@@ -34,10 +30,26 @@ const SORTS = [
 const COLUMNS = [
 	{ key: "company", label: "Company", width: "minmax(0,1fr)" },
 	{ key: "stage", label: "Stage", width: "11rem" },
+	{ key: "status", label: "Status", width: "7rem" },
 	{ key: "owner", label: "Assigned to", width: "11rem" },
 	{ key: "probability", label: "Probability", width: "7rem" },
 ]
 const PAGE_SIZES = [20, 50, 100].map((n) => ({ label: String(n), value: n }))
+const asOptions = (values) => values.map((value) => ({ label: value, value }))
+
+// What the Filter button can filter on, and each lead's value for it.
+function filterFields(team) {
+	return [
+		{ fieldname: "project_name", label: "Lead", type: "text" },
+		{ fieldname: "company", label: "Company", type: "text" },
+		{ fieldname: "stage", label: "Stage", type: "select", options: asOptions(PRM_STAGES) },
+		{ fieldname: "communication_status", label: "Status", type: "select", options: asOptions(["Open", "Replied"]) },
+		{ fieldname: "owner", label: "Assigned to", type: "select", options: ownerOptions(team).slice(1) },
+		{ fieldname: "probability", label: "Probability", type: "select", options: asOptions(PROBABILITY) },
+		{ fieldname: "updated", label: "Updated", type: "date" },
+	]
+}
+const filterValues = (lead) => ({ ...lead, updated: lead.last_message_at })
 
 export default function setup(context) {
 	startTracking(context)
@@ -49,11 +61,11 @@ export default function setup(context) {
 	const loading = ref(true)
 	const loadError = ref("")
 
-	const view = ref("needs")
+	const view = ref("all")
 	const query = ref("")
 	const stage = ref("")
 	const owner = ref("")
-	const probability = ref("")
+	const filters = ref([])
 	const sort = ref("reply")
 	const shownColumns = ref(COLUMNS.map((c) => c.key))
 	const pageSize = ref(20)
@@ -63,9 +75,6 @@ export default function setup(context) {
 	const currentView = computed(() => VIEWS.find((v) => v.value === view.value))
 	const viewMenu = VIEWS.map((v) => ({ label: v.label, icon: v.icon, onClick: () => (view.value = v.value) }))
 
-	const filterMenu = computed(() =>
-		PROBABILITIES.map((p) => ({ label: p || "Any probability", selected: probability.value === p, onClick: () => (probability.value = p) })),
-	)
 	const sortMenu = computed(() =>
 		SORTS.map((o) => ({ label: o.label, selected: sort.value === o.value, onClick: () => (sort.value = o.value) })),
 	)
@@ -89,8 +98,9 @@ export default function setup(context) {
 			team.value = data.team
 			me.value = data.me
 			loadError.value = ""
-		} catch {
-			loadError.value = "Couldn't load your leads. Refresh to try again."
+		} catch (err) {
+			// A Finance or Member login opening /leads by URL is told why.
+			loadError.value = err?.messages?.[0] || "Couldn't load your leads. Refresh to try again."
 		} finally {
 			loading.value = false
 		}
@@ -103,19 +113,19 @@ export default function setup(context) {
 		refreshing.value = false
 	}
 
-	// Only the business moves a row. "To reply" goes oldest waiting first, the order to answer in.
+	// Only the business moves a row: newest reply first unless another sort is picked.
 	function compare(a, b) {
 		if (sort.value === "stage") return PRM_STAGES.indexOf(a.stage) - PRM_STAGES.indexOf(b.stage)
 		if (sort.value === "probability") return PROBABILITY_ORDER.indexOf(a.probability) - PROBABILITY_ORDER.indexOf(b.probability)
 		if (sort.value === "name") return a.project_name.localeCompare(b.project_name)
-		return view.value === "needs" ? lastAt(a) - lastAt(b) : lastAt(b) - lastAt(a)
+		return lastAt(b) - lastAt(a)
 	}
 
 	function matches(lead, q) {
 		if (q && !lead.project_name.toLowerCase().includes(q) && !lead.company?.toLowerCase().includes(q)) return false
 		if (stage.value && lead.stage !== stage.value) return false
 		if (owner.value && (owner.value === "none" ? lead.owner : lead.owner !== owner.value)) return false
-		return !probability.value || lead.probability === probability.value
+		return matchesFilters(filterValues(lead), filters.value)
 	}
 
 	const rows = computed(() => {
@@ -127,17 +137,21 @@ export default function setup(context) {
 			.map(toRow)
 	})
 	const page = computed(() => rows.value.slice(0, pageSize.value))
-	const isFiltered = computed(() => Boolean(query.value.trim() || stage.value || owner.value || probability.value))
+	const isFiltered = computed(() => Boolean(query.value.trim() || stage.value || owner.value || filters.value.length))
 
 	// Bold while a reply waits on you, as CRM bolds an unseen row.
 	function toRow(lead) {
 		const waiting = lead.needs_reply
 		return {
 			...lead,
-			project: lead.project_name,
+			project: leadTitle(lead),
+			requirementBadge: requirementBadge(lead),
+			requirementTooltip: requirementTooltip(lead),
 			route: `/leads/${lead.name}`,
 			companyLabel: lead.company,
 			stageColor: stageColor(lead.stage),
+			// Open while the customer wrote last, as Frappe CRM shows it; Replied once you answered.
+			statusTheme: lead.communication_status === "Open" ? "amber" : "gray",
 			ownerName: lead.owner_name || lead.owner || "",
 			probabilityLabel: lead.probability || "—",
 			updated: clockOrDate(lastAt(lead)),
@@ -150,7 +164,7 @@ export default function setup(context) {
 		query.value = ""
 		stage.value = ""
 		owner.value = ""
-		probability.value = ""
+		filters.value = []
 	}
 
 	return {
@@ -162,8 +176,8 @@ export default function setup(context) {
 		owner,
 		stageOptions: STAGE_OPTIONS,
 		ownerOptions: computed(() => [{ label: "Anyone", value: "" }, ...ownerOptions(team.value)]),
-		filterMenu,
-		hasProbabilityFilter: computed(() => Boolean(probability.value)),
+		filters,
+		filterFields: computed(() => filterFields(team.value)),
 		sortMenu,
 		sortLabel: computed(() => SORTS.find((o) => o.value === sort.value).label),
 		columnsMenu,
@@ -182,7 +196,6 @@ export default function setup(context) {
 			if (loadError.value) return loadError.value
 			return isFiltered.value ? "No leads match" : EMPTY_TITLES[view.value]
 		}),
-		emptyIcon: computed(() => (view.value === "needs" && !isFiltered.value ? "lucide-check-check" : "lucide-inbox")),
-		showOpenLeads: () => (view.value = "open"),
+		emptyIcon: "lucide-inbox",
 	}
 }

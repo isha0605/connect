@@ -1,18 +1,24 @@
 // One lead, the same shape as a customer: tabs (Messages, Follow-ups, Activity, Notes) and a
-// docked panel of facts on the right. Messages is the customer's thread with the partner, the
-// same one Messaging shows, and a reply here goes into it. Notes and follow-ups are the team's own
-// about the customer (only the partner's team sees them); Activity is this lead's history.
+// docked panel of facts on the right. A lead is the customer's whole conversation with the
+// partner, with every requirement they sent in it; Messages is that thread, the same one
+// Messaging shows, and a reply here goes into it. Notes and follow-ups are the team's own about
+// the customer (only the partner's team sees them); Activity is this lead's history.
 
 import { computed, ref, watch } from "vue"
 import { toast } from "frappe-ui"
-import { LOST_REASONS, PRM_STAGES, PROBABILITY, isClosed, ownerOptions } from "@app/utils/partnerLeads"
+import { LOST_REASONS, PRM_STAGES, PROBABILITY, isClosed, leadTitle, ownerOptions } from "@app/utils/partnerLeads"
 import {
 	FOLLOW_UP_MODES,
+	MEETING_DURATIONS,
 	activityRows,
 	clockOrDate,
 	copyText,
 	emptyFollowUp,
+	emptyMeeting,
 	followUpValues,
+	isoDay,
+	meetingTimeLabel,
+	meetingValues,
 	toActivityEntries,
 	toFollowUpRows,
 	toNoteRows,
@@ -58,6 +64,7 @@ export default function setup(context) {
 	const data = ref(null)
 	const team = ref([])
 	const me = ref("")
+	const canInvite = ref(false)
 	const loading = ref(true)
 
 	async function load() {
@@ -68,6 +75,7 @@ export default function setup(context) {
 			data.value = result.lead
 			team.value = result.team
 			me.value = result.me
+			canInvite.value = result.can_invite
 		} catch {
 			data.value = null
 		} finally {
@@ -113,14 +121,55 @@ export default function setup(context) {
 		}
 	}
 
+	// With CRM sync on, a lead's CRM Lead goes to the same person, so they need a user there.
 	function setOwner(user) {
 		const next = user === "none" ? "" : user
 		if (next === (lead.value.owner || "")) return
+		const member = team.value.find((m) => m.user === next)
+		if (member?.in_crm === false) {
+			toast.error(`${nameOf(next)} isn't on your CRM. Create their account there, then match them in Settings → Users.`)
+			return
+		}
 		save({ owner: next })
 	}
 
 	function setProbability(probability) {
 		save({ probability })
+	}
+
+	// ── The CRM's owner ─────────────────────────────────────────────────────
+	// The lead's CRM Lead has one owner. Say when the two sides can't agree on who it is.
+	const crmNote = computed(() => {
+		const current = data.value
+		if (!current) return ""
+		if (current.crm_owner) {
+			const why = current.crm_owner_on_team ? "who can't take leads on Connect" : "who isn't on your Connect team"
+			return `Assigned in your CRM to ${current.crm_owner}, ${why}.`
+		}
+		const owner = team.value.find((member) => member.user === current.owner)
+		if (owner?.in_crm === false) {
+			return `${nameOf(owner.user)} isn't on your CRM, so its Lead there stays with whoever has it. Create their account there, then match them in Settings → Users.`
+		}
+		return ""
+	})
+	// A CRM user can be named without an email (Administrator); only an email can be invited.
+	const canInviteCrmOwner = computed(
+		() => canInvite.value && Boolean(data.value?.crm_owner?.includes("@")) && !data.value.crm_owner_on_team,
+	)
+	const inviting = ref(false)
+
+	// Brings the CRM's owner onto the team as Sales, then gives them the lead here too.
+	async function inviteCrmOwner() {
+		const email = data.value.crm_owner
+		inviting.value = true
+		try {
+			await call("connect.api.account.add_team_member", { email, access_level: "Sales" })
+			if (await save({ owner: email })) toast.success(`Invited ${email} to your team`)
+		} catch (error) {
+			toast.error(error?.messages?.[0] || "Couldn't invite them.")
+		} finally {
+			inviting.value = false
+		}
 	}
 
 	// ── Tabs ────────────────────────────────────────────────────────────────
@@ -131,20 +180,29 @@ export default function setup(context) {
 	const messages = computed(() => {
 		const current = data.value
 		if (!current) return []
+		const followUps = toFollowUpRows(current.follow_ups || [])
 		return current.messages.map((m) => ({
 			...m,
 			time: clockOrDate(toTime(m.at)),
 			isYou: m.from === "you",
-			avatarLabel: m.from === "you" ? current.partner_name : m.author,
-			// Until the customer is interested in your quote, they're an anonymous company.
-			isAnonymous: m.from === "them" && !current.is_customer_revealed,
+			// P for the partner's side, C for the customer's: who wrote is plain at a glance.
+			avatarLabel: m.from === "you" ? "P" : "C",
 			isWaiting: m.kind === "bid" && !current.is_customer_revealed,
+			...(m.kind === "meeting" ? meetingCard(m, followUps) : {}),
 			body: messageBody(m),
 			price: m.amount ? RUPEES.format(m.amount) : "",
 			weeksLabel: m.weeks ? `about ${m.weeks} weeks` : "",
 			menu: m.kind === "text" ? messageMenu(m) : [],
 		}))
 	})
+
+	function meetingCard(message, followUps) {
+		const invite = followUps.find((row) => row.id === message.follow_up)
+		return {
+			meetingTime: meetingTimeLabel(toTime(message.starts_at), message.duration_minutes),
+			canJoin: invite ? invite.canJoin : Boolean(message.link),
+		}
+	}
 
 	function messageBody(message) {
 		if (message.kind !== "text") return ""
@@ -219,6 +277,34 @@ export default function setup(context) {
 		}
 	}
 
+	// A meeting invite goes into the customer's thread as a card they accept or decline.
+	const meetingOpen = ref(false)
+	const meetingForm = ref(emptyMeeting())
+	const scheduling = ref(false)
+
+	function startMeeting() {
+		meetingForm.value = emptyMeeting()
+		meetingOpen.value = true
+	}
+
+	async function saveMeeting() {
+		if (scheduling.value) return
+		scheduling.value = true
+		try {
+			await call("connect.api.leads.log_lead_follow_up", { name: leadId.value, values: meetingValues(meetingForm.value) })
+			meetingOpen.value = false
+			toast.success("Meeting invite sent")
+			// The invite is a card in the thread too, so read the whole lead again.
+			await load()
+		} catch (error) {
+			toast.error(error?.messages?.[0] || "Couldn't schedule the meeting.")
+		} finally {
+			scheduling.value = false
+		}
+	}
+
+	const joinMeeting = (link) => link && window.open(link, "_blank", "noopener")
+
 	const expandedGroups = ref({})
 	function toggleGroup(id) {
 		expandedGroups.value = { ...expandedGroups.value, [id]: !expandedGroups.value[id] }
@@ -242,7 +328,7 @@ export default function setup(context) {
 	}
 
 	// ── The panel ───────────────────────────────────────────────────────────
-	const openSections = ref({ lead: true, project: true, company: true })
+	const openSections = ref({ lead: true, requirements: true, project: true, company: true })
 	function toggleSection(key) {
 		openSections.value = { ...openSections.value, [key]: !openSections.value[key] }
 	}
@@ -279,7 +365,7 @@ export default function setup(context) {
 		lead,
 		loading,
 		closed,
-		crumb: computed(() => lead.value?.project || (loading.value ? "" : "Not found")),
+		crumb: computed(() => lead.value?.title || (loading.value ? "" : "Not found")),
 		ownerName: computed(() => nameOf(lead.value?.owner) || "Assign"),
 		hasOwner: computed(() => Boolean(lead.value?.owner)),
 		ownerValue: computed(() => lead.value?.owner || "none"),
@@ -291,6 +377,12 @@ export default function setup(context) {
 		setStage,
 		setOwner,
 		setProbability,
+		crmNote,
+		canInviteCrmOwner,
+		inviting,
+		inviteCrmOwner,
+		requirementRows: computed(() => lead.value?.requirements || []),
+		requirementsTitle: computed(() => `Requirements (${lead.value?.requirements.length || 0})`),
 		tab,
 		tabs: TABS,
 		sideOpen,
@@ -311,6 +403,16 @@ export default function setup(context) {
 		startFollowUp,
 		saveFollowUp,
 		closeFollowUp: () => (followUpOpen.value = false),
+		meetingOpen,
+		meetingForm,
+		meetingDurations: MEETING_DURATIONS,
+		// A meeting is still to come: earlier days are greyed out.
+		meetingMinDate: isoDay(new Date()),
+		scheduling,
+		startMeeting,
+		saveMeeting,
+		closeMeeting: () => (meetingOpen.value = false),
+		joinMeeting,
 		activity: computed(() => activityRows(toActivityEntries(data.value?.activity || []), expandedGroups.value)),
 		toggleGroup,
 		noteDraft,
@@ -334,6 +436,7 @@ export default function setup(context) {
 function toLead(lead) {
 	return {
 		id: lead.name,
+		title: leadTitle(lead),
 		project: lead.project_name,
 		scope: lead.scope,
 		budget: lead.budget,
@@ -344,6 +447,7 @@ function toLead(lead) {
 		lostReason: lead.lost_reason,
 		probability: lead.probability || "",
 		owner: lead.owner || "",
+		requirements: lead.requirements.map((r) => ({ id: r.name, label: r.project_name, value: r.status_label })),
 		// No company until they're revealed: the panel says when their details will show.
 		company: lead.is_customer_revealed
 			? { name: lead.company, contact: lead.contact.name, email: lead.contact.email, phone: lead.contact.phone }

@@ -5,8 +5,12 @@ import frappe
 from frappe import _
 from frappe.utils import get_datetime
 
+from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import site_datetime
+
 # The changes Frappe's Version history records that the Activity tab shows, by DocType.
 TRACKED_FIELDS = {
+	"Partner Lead": {"stage": "Stage", "assigned_to": "Assigned to", "probability": "Probability"},
+	# A lead's history from when each brief was its own lead.
 	"Project Quote": {"lead_stage": "Stage", "lead_owner": "Assigned to", "probability": "Probability"},
 	"Partner Customer": {"stage": "Stage", "assigned_to": "Assigned to"},
 }
@@ -42,7 +46,10 @@ def follow_ups_of(partner: str, customer: str) -> list[dict]:
 	rows = frappe.get_all(
 		"Partner Follow Up",
 		filters={"partner": partner, "customer": customer},
-		fields=["name", "followed_up_on", "mode", "spoke_to", "notes", "owner", "quote"],
+		fields=[
+			"name", "followed_up_on", "mode", "spoke_to", "notes", "owner", "quote", "creation",
+			"title", "meeting_link", "duration_minutes",
+		],
 		order_by="followed_up_on desc",
 	)
 	names = _user_names({row.owner for row in rows})
@@ -56,24 +63,35 @@ def follow_ups_of(partner: str, customer: str) -> list[dict]:
 			"by": row.owner,
 			"by_name": names.get(row.owner),
 			"quote": row.quote,
+			"title": row.title,
+			"meeting_link": row.meeting_link,
+			"duration_minutes": row.duration_minutes,
+			"logged_at": row.creation,
 		}
 		for row in rows
 	]
 
 
-def log_follow_up(partner: str, customer: str, values: dict, quote: str | None = None) -> None:
-	"""Logs a follow-up from the dialog: when, how (Call, Demo, Email, Meeting), who picked up, notes."""
+def log_follow_up(
+	partner: str, customer: str, values: dict, quote: str | None = None, thread: str | None = None
+) -> None:
+	"""Logs a follow-up from the dialog: when, how (Call, Demo, Email, Meeting), who picked up,
+	notes. With a meeting link it is an invite to a meeting still to come, posted in `thread`."""
 	values = frappe._dict(values or {})
 	frappe.get_doc(
 		{
 			"doctype": "Partner Follow Up",
 			"partner": partner,
 			"customer": customer,
-			"followed_up_on": get_datetime(values.followed_up_on),
+			"followed_up_on": site_datetime(values.followed_up_on),
 			"mode": values.mode,
 			"spoke_to": (values.spoke_to or "").strip(),
 			"notes": (values.notes or "").strip(),
 			"quote": quote,
+			"title": (values.title or "").strip(),
+			"meeting_link": (values.meeting_link or "").strip(),
+			"duration_minutes": frappe.utils.cint(values.duration_minutes),
+			"thread": thread,
 		}
 	).insert(ignore_permissions=True)
 
@@ -97,7 +115,8 @@ def activity_of(records: dict[str, list[str]], briefs: list[dict], follow_ups: l
 	entries += [
 		{
 			"id": f"follow-up-{row['id']}",
-			"at": row["at"],
+			# A meeting's own time is still to come; the entry is for scheduling it.
+			"at": row["logged_at"] if row["meeting_link"] else row["at"],
 			"by": row["by_name"] or row["by"],
 			"kind": "note",
 			"text": _follow_up_text(row),
@@ -137,7 +156,8 @@ def _changes(doctype: str, names: list[str]) -> list[dict]:
 def _change_entries(change, tracked: dict, names: dict) -> list[dict]:
 	version, field, before, after = change
 	shown = (lambda value: names.get(value) or value) if field in USER_FIELDS else (lambda value: value)
-	by = names.get(version.owner) or version.owner
+	# Only the CRM's owner webhook changes a lead without a login.
+	by = _("CRM") if version.owner == "Guest" else names.get(version.owner) or version.owner
 	entry = {
 		"id": f"{version.name}-{field}",
 		"at": version.creation,
@@ -147,12 +167,14 @@ def _change_entries(change, tracked: dict, names: dict) -> list[dict]:
 		"from": shown(before) or _("Not set"),
 		"to": shown(after) or _("Not set"),
 	}
-	if field == "lead_stage" and after == "Won":
+	if field in ("stage", "lead_stage") and after == "Won":
 		return [entry, {**entry, "id": f"{version.name}-converted", "kind": "note", "text": _("converted the lead to a deal")}]
 	return [entry]
 
 
 def _follow_up_text(row: dict) -> str:
+	if row.get("meeting_link"):
+		return _("scheduled the meeting “{0}”").format(row["title"])
 	mode = (row["mode"] or "").lower()
 	if row["spoke_to"]:
 		return _("logged a {0} with {1}").format(mode, row["spoke_to"])
