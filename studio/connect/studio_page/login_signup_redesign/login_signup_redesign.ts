@@ -71,6 +71,20 @@ export default function setup(context) {
 	const resendIn = ref(0)
 	let resendTimer = null
 
+	// A team invitation link (connect.auth.invitations): its one-time token signs the person in.
+	// A used or expired one leaves them on Log in, told why.
+	const inviteToken = String(route.query.invite || "")
+	if (inviteToken) {
+		authStep.value = "login"
+		call("connect.api.auth.accept_invite", { token: inviteToken })
+			.then((res) => {
+				window.location.href = (res && res.redirect) || "/connect/messaging"
+			})
+			.catch((err) => {
+				authError.value = errorText(err, "This invitation link didn't work. Sign in with your email instead.")
+			})
+	}
+
 	const email = () => String(otpOrigin.value === "signup" ? signupEmail.value : loginEmail.value).trim()
 	const code = () => digits.map((d) => String(d.value || "").trim()).join("")
 

@@ -246,10 +246,12 @@ doc_events = {
 	},
 	"Connect Partner Member": {
 		"after_insert": "connect.roles.grant_company_role",
+		"on_update": "connect.auth.invitations.invite_member",
 		"on_trash": "connect.roles.revoke_company_role",
 	},
 	"Customer Team Member": {
 		"after_insert": "connect.roles.grant_company_role",
+		"on_update": "connect.auth.invitations.invite_member",
 		"on_trash": "connect.roles.revoke_company_role",
 	},
 	"Connect Thread Member": {

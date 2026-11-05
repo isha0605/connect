@@ -8,6 +8,7 @@ from frappe.utils import validate_email_address
 
 from connect.auth.accounts import BUYER, PARTNER, send_sign_in_code, sign_in_with_code
 from connect.auth.email_code import EmailCode
+from connect.auth.invitations import accept_invitation
 
 NAME_MAX_LENGTH = 140
 
@@ -43,6 +44,14 @@ def verify_code(
 	details = profile_details(full_name, company_name, country, flow)
 	details["next"] = next
 	return sign_in_with_code(email, code, details, visitor_id=visitor_id)
+
+
+# Open to guests: the emailed link's one-time token is what signs the person in.
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+@rate_limit(limit=20, seconds=EmailCode.TTL_SECONDS, methods="POST")
+def accept_invite(token):
+	"""Sign in from a team invitation link. Answers `redirect`: where to go next."""
+	return accept_invitation(token)
 
 
 def validated_email(email):
