@@ -8,7 +8,13 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from connect.crm_integration import set_up_reply_webhook, sync_thread
-from connect.crm_lead_owner import match_team, owner_webhook, record_crm_lead_owner, sync_lead_owner
+from connect.crm_lead_owner import (
+	match_team,
+	owner_webhook,
+	queue_consultant_owner_sync,
+	record_crm_lead_owner,
+	sync_lead_owner,
+)
 from connect.customer.doctype.customer_project.brief import send_brief
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
 from connect.customer.doctype.project_quote.leads import update_lead
@@ -91,12 +97,47 @@ class IntegrationTestCRMLeadOwner(IntegrationTestCase):
 		self.link(SALES, "sales@crm.example.test")
 		update_lead_as_owner(self.lead, SALES)
 
-		crm = FakeCRM()
+		crm = FakeCRM(lead_owners={CRM_LEAD: OWNER})
 		with on_crm(crm):
-			sync_lead_owner(self.thread, previous=OWNER)
+			sync_lead_owner(self.thread)
 		self.assertIn(
 			("PUT", f"/api/resource/CRM Lead/{CRM_LEAD}", {"lead_owner": "sales@crm.example.test"}), crm.calls
 		)
+
+	def test_whoever_owns_the_crm_lead_there_is_taken_off_it(self):
+		# The CRM gave the Lead to someone who isn't on the team; Connect then gives it to SALES.
+		self.on_crm_lead()
+		self.link(SALES, SALES)
+		frappe.db.set_value("Partner Lead", self.lead, "assigned_to", SALES)
+
+		crm = FakeCRM(lead_owners={CRM_LEAD: OUTSIDER})
+		with on_crm(crm):
+			sync_lead_owner(self.thread)
+		self.assertIn(
+			{"doctype": "CRM Lead", "name": CRM_LEAD, "assign_to": OUTSIDER},
+			crm.posted("/api/method/frappe.desk.form.assign_to.remove"),
+		)
+
+	def test_a_crm_lead_already_with_its_owner_is_left_alone(self):
+		self.on_crm_lead()
+		self.link(SALES, SALES)
+		frappe.db.set_value("Partner Lead", self.lead, "assigned_to", SALES)
+
+		crm = FakeCRM(lead_owners={CRM_LEAD: SALES})
+		with on_crm(crm):
+			sync_lead_owner(self.thread)
+		self.assertEqual([method for method, _path, _body in crm.calls], ["GET"])
+
+	def test_a_new_consultant_leaves_an_assigned_lead_with_its_owner(self):
+		self.on_crm_lead()
+		frappe.db.set_value("Partner Lead", self.lead, "assigned_to", OWNER)
+		# The thread as its on_update sees it when its consultant changed.
+		thread = MagicMock(partner=PARTNER)
+		thread.name = self.thread
+		thread.has_value_changed.return_value = True
+		with patch("frappe.enqueue") as enqueue:
+			queue_consultant_owner_sync(thread)
+		self.assertNotIn("connect.crm_lead_owner.sync_lead_owner", [c.args[0] for c in enqueue.call_args_list])
 
 	def test_an_owner_missing_from_the_crm_leaves_the_crm_lead_as_it_is(self):
 		# Assigned before CRM sync was on, when no CRM user was needed.

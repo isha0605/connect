@@ -344,16 +344,15 @@ class IntegrationTestCRMSync(IntegrationTestCase):
 				"queue": "short",
 				"enqueue_after_commit": True,
 				"thread": self.thread,
-				"previous": CONSULTANT_ONE,
 			},
 		)
 
-		crm = FakeCRM(users=[CONSULTANT_ONE, CONSULTANT_TWO])
+		crm = FakeCRM(users=[CONSULTANT_ONE, CONSULTANT_TWO], lead_owners={"CRM-LEAD-TEST-0002": CONSULTANT_ONE})
 		with (
 			patch(f"{SYNC_MODULE}.crm_request", side_effect=crm),
 			patch("connect.crm_lead_owner.crm_request", side_effect=crm),
 		):
-			sync_lead_owner(self.thread, previous=CONSULTANT_ONE)
+			sync_lead_owner(self.thread)
 		self.assertIn(
 			("PUT", "/api/resource/CRM Lead/CRM-LEAD-TEST-0002", {"lead_owner": CONSULTANT_TWO}), crm.calls
 		)
@@ -459,8 +458,9 @@ class StatusCRM:
 class FakeCRM:
 	"""Stands in for a partner's Frappe CRM: answers as it does, and keeps what it was sent."""
 
-	def __init__(self, users=(), files=None, fail_on=None, industries=(), sources=None):
+	def __init__(self, users=(), files=None, fail_on=None, industries=(), sources=None, lead_owners=None):
 		self.users = users
+		self.lead_owners = lead_owners or {}  # who owns each CRM Lead there now
 		self.files = files or {}
 		self.fail_on = fail_on
 		self.industries = industries
@@ -486,6 +486,8 @@ class FakeCRM:
 			data = [{"name": email, "email": email} for email in self.users if email in wanted]
 		elif path == "/api/resource/CRM Lead":
 			data = {"name": "CRM-LEAD-NEW"}
+		elif method == "GET" and doctype == "CRM Lead":
+			data = {"name": name, "lead_owner": self.lead_owners.get(name)}
 		elif path == "/api/resource/Communication":
 			self.emails += 1
 			data = {"name": f"_test_crm_email_{self.emails}"}

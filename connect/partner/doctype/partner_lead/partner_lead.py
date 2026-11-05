@@ -34,7 +34,7 @@ class PartnerLead(Document):
 		if not self.flags.from_crm:
 			from connect.crm_lead_owner import queue_lead_owner_sync
 
-			queue_lead_owner_sync(self.thread, self.partner, self._previous_owner())
+			queue_lead_owner_sync(self.thread, self.partner)
 
 	def reopen(self):
 		"""The customer sent a new requirement: a lead they were lost on is worked again."""
@@ -99,10 +99,6 @@ class PartnerLead(Document):
 		from connect.messaging.doctype.connect_thread.connect_thread import ensure_partner_member
 
 		ensure_partner_member(self.thread, self.assigned_to, frappe.session.user)
-
-	def _previous_owner(self) -> str | None:
-		before = self.get_doc_before_save()
-		return before and before.assigned_to
 
 	def _save_as_system(self):
 		# A system step on the customer's action; Activity reads the Version, so record it in tests too.

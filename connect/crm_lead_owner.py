@@ -8,30 +8,28 @@ from connect.partner.doctype.connect_partner_member.connect_partner_member impor
 from connect.permissions import _has_partner_access
 
 
-def queue_lead_owner_sync(thread: str, partner: str, previous: str | None = None) -> None:
+def queue_lead_owner_sync(thread: str, partner: str) -> None:
 	"""Gives the thread's CRM Lead to its owner on Connect, in the background. A thread without
 	a CRM Lead yet gets its owner when the Lead is made."""
 	if not frappe.db.get_value("Connect Thread", thread, "crm_lead_id") or not crm_settings(partner):
 		return
-	frappe.enqueue(
-		"connect.crm_lead_owner.sync_lead_owner",
-		queue="short",
-		enqueue_after_commit=True,
-		thread=thread,
-		previous=previous,
-	)
+	frappe.enqueue("connect.crm_lead_owner.sync_lead_owner", queue="short", enqueue_after_commit=True, thread=thread)
 
 
 def queue_consultant_owner_sync(doc, method=None):
-	"""on_update on Connect Thread: a new Starter Pack consultant takes over the Lead."""
-	if doc.has_value_changed("consultant"):
-		before = doc.get_doc_before_save()
-		queue_lead_owner_sync(doc.name, doc.partner, before and before.consultant)
+	"""on_update on Connect Thread: a new Starter Pack consultant takes over the Lead, unless
+	someone on the team has it: they stay its owner."""
+	if not doc.has_value_changed("consultant"):
+		return
+	if frappe.db.get_value("Partner Lead", {"thread": doc.name}, "assigned_to"):
+		return
+	queue_lead_owner_sync(doc.name, doc.partner)
 
 
-def sync_lead_owner(thread: str, previous: str | None = None) -> None:
+def sync_lead_owner(thread: str) -> None:
 	"""Background job: makes the thread's owner on Connect the owner of its CRM Lead, which
-	assigns it to them, and takes it off whoever had it before."""
+	assigns it to them, and takes it off whoever owns it on the CRM now. That is read from the
+	CRM, as it may have been given to someone there who isn't on Connect."""
 	thread_doc = frappe.get_doc("Connect Thread", thread)
 	settings = crm_settings(thread_doc.partner)
 	user = connect_owner(thread_doc)
@@ -50,8 +48,11 @@ def sync_lead_owner(thread: str, previous: str | None = None) -> None:
 			return
 
 		path = f"/api/resource/CRM Lead/{quote(thread_doc.crm_lead_id)}"
+		before = crm_request(settings, "GET", path).json()["data"].get("lead_owner")
+		if before == owner:
+			return
 		crm_request(settings, "PUT", path, json={"lead_owner": owner})
-		_unassign(settings, thread_doc.crm_lead_id, crm_user(settings, previous), owner)
+		_unassign(settings, thread_doc.crm_lead_id, before, owner)
 	except Exception:
 		frappe.log_error(title=f"CRM Lead owner change failed for Connect Thread {thread}")
 
