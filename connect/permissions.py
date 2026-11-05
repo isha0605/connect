@@ -30,21 +30,34 @@ def _get_partner_owners(partner) -> list[str]:
 	)
 
 
-def _is_active_partner_member(partner, user):
-	return bool(
-		frappe.db.exists("Connect Partner Member", {"partner": partner, "user": user, "is_removed": 0})
-	)
-
-
-def _my_active_partner(user):
-	"""The partner the user is on the team of, or a PermissionError: only a partner's team works
-	with its leads and customers."""
+def _my_partner_with_access(user, levels):
+	"""The partner the user is on the team of, if their access level is one of `levels`
+	(connect_partner_member.LEAD_ACCESS, say); else a PermissionError."""
 	from frappe import _
 
-	partner = frappe.db.get_value("Connect Partner Member", {"user": user, "is_removed": 0}, "partner")
-	if not partner:
+	from connect.partner.doctype.connect_partner_member.connect_partner_member import access_level_of
+
+	row = frappe.db.get_value(
+		"Connect Partner Member", {"user": user, "is_removed": 0}, ["partner", "is_admin", "access"], as_dict=True
+	)
+	if not row:
 		frappe.throw(_("Only a partner's team can see this."), frappe.PermissionError)
-	return partner
+	if access_level_of(row) not in levels:
+		frappe.throw(_("Your access doesn't include this page. Ask an owner of your firm."), frappe.PermissionError)
+	return row.partner
+
+
+def _has_partner_access(partner, user, levels) -> bool:
+	"""Whether the user is an active member of the partner with one of these access levels."""
+	from connect.partner.doctype.connect_partner_member.connect_partner_member import access_level_of
+
+	row = frappe.db.get_value(
+		"Connect Partner Member",
+		{"partner": partner, "user": user, "is_removed": 0},
+		["is_admin", "access"],
+		as_dict=True,
+	)
+	return bool(row) and access_level_of(row) in levels
 
 
 def _is_partner_reviewer(user):

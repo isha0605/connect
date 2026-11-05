@@ -7,8 +7,17 @@ from frappe.model.document import Document
 from frappe.utils import now_datetime
 
 # What a person can do at their partner firm. Owner is `is_admin`; the rest are `access`.
-OWNER = "Owner"
-ACCESS_LEVELS = (OWNER, "Sales", "Finance", "Member")
+OWNER, SALES, FINANCE, MEMBER = "Owner", "Sales", "Finance", "Member"
+ACCESS_LEVELS = (OWNER, SALES, FINANCE, MEMBER)
+# Who opens the Leads page, and so who a lead can be assigned to.
+LEAD_ACCESS = (OWNER, SALES)
+# Who opens the Customers page. A Member does neither: their work is in Messages.
+CUSTOMER_ACCESS = (OWNER, SALES, FINANCE)
+
+
+def access_level_of(row) -> str:
+	"""Owner, Sales, Finance or Member, from a member row or a dict with is_admin and access."""
+	return OWNER if row.get("is_admin") else (row.get("access") or MEMBER)
 
 
 class ConnectPartnerMember(Document):
@@ -36,7 +45,7 @@ class ConnectPartnerMember(Document):
 
 	@property
 	def access_level(self) -> str:
-		return OWNER if self.is_admin else (self.access or "Member")
+		return access_level_of(self)
 
 	def set_access_level(self, level: str, changed_by: str):
 		"""Makes this person an owner, or gives them Sales, Finance or Member access."""

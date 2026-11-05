@@ -4,6 +4,11 @@ from frappe.utils import cint
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.notifications import unread_notification_count
+from connect.partner.doctype.connect_partner_member.connect_partner_member import (
+	CUSTOMER_ACCESS,
+	LEAD_ACCESS,
+	access_level_of,
+)
 from connect.permissions import _my_company_membership
 
 
@@ -83,10 +88,10 @@ def get_my_context():
 		customer_name = frappe.db.get_value("Customer", customer, "customer_name")
 		customer_membership = {"customer": customer, "customer_name": customer_name, "is_admin": cint(is_admin)}
 	partner_membership = frappe.db.get_value(
-		"Connect Partner Member", {"user": user, "is_removed": 0}, ["partner", "is_admin"], as_dict=True
+		"Connect Partner Member", {"user": user, "is_removed": 0}, ["partner", "is_admin", "access"], as_dict=True
 	)
 	if partner_membership:
-		partner_membership["partner_name"] = frappe.db.get_value("Partner", partner_membership.partner, "partner_name")
+		partner_membership.update(partner_access(partner_membership))
 	signed_in = user != "Guest"
 	projects_route = get_projects_route(user, customer) if signed_in else None
 	return {
@@ -98,6 +103,18 @@ def get_my_context():
 		"has_projects": bool(projects_route),
 		"projects_route": projects_route,
 		"unread_notifications": unread_notification_count(user) if signed_in else 0,
+	}
+
+
+def partner_access(membership) -> dict:
+	"""What the partner's sidebar shows this person, by their access level."""
+	level = access_level_of(membership)
+	partner_name = frappe.db.get_value("Partner", membership.partner, "partner_name")
+	return {
+		"partner_name": partner_name,
+		"access_level": level,
+		"can_see_leads": level in LEAD_ACCESS,
+		"can_see_customers": level in CUSTOMER_ACCESS,
 	}
 
 
