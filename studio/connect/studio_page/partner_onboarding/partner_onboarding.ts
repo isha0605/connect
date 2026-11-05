@@ -1,14 +1,11 @@
 import { ref, watch } from "vue"
 import { toast, call, useFileUpload } from "frappe-ui"
 import { signOut } from "@app/utils/signIn"
+import { takeStashedRegistration, usePartnerRegistration } from "@app/utils/partnerRegistration"
 
 // Port of Press's dashboard/src/onboarding (PartnerOnboarding.vue + usePartnerOnboarding.ts and
 // its dialogs) onto connect's Partner Application API: Press's Team is connect's Partner, so every
 // call resolves the caller's partner server-side (_my_partner) instead of taking a team.
-
-// Written by the login/signup page's "Become a partner?" wizard when a logged-out visitor clicks
-// Proceed: they sign in on Connect's page and land here, where the stashed details are registered.
-const REGISTRATION_STASH_KEY = "connect_partner_registration"
 
 const API = "connect.api.partner"
 
@@ -92,23 +89,6 @@ function errorMessage(e, fallback) {
 
 function formatCurrency(amount, currency) {
 	return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount || 0)
-}
-
-function readStash() {
-	try {
-		const raw = window.sessionStorage.getItem(REGISTRATION_STASH_KEY)
-		return raw ? JSON.parse(raw) : null
-	} catch {
-		return null
-	}
-}
-
-function clearStash() {
-	try {
-		window.sessionStorage.removeItem(REGISTRATION_STASH_KEY)
-	} catch {
-		// storage blocked (private mode etc.) -- nothing was stashed then either
-	}
 }
 
 // Opens the OS file picker; a file input needn't be in the DOM to be clicked.
@@ -441,60 +421,22 @@ export default function setup(context) {
 			})
 	}
 
-	// ---- Registration wizard (same blocks as the messaging page's "Frappe partnerships") ----
-	const partnershipWizardOpen = ref(false)
-	const partnershipWizardStep = ref("partnerships")
-	const partnershipEditMode = ref(false)
-	const partnershipRegistered = ref(false)
-	const partnershipSubmitted = ref(false)
-	const partnershipSubmitError = ref("")
-	const partnershipSaving = ref(false)
-	const partnershipCompanyName = ref("")
-	const partnershipCountry = ref("")
-	const partnershipState = ref("")
-	const partnershipEmail = ref("")
-	const partnershipContact = ref("")
-	const partnershipIsdCountry = ref("")
-	const partnershipIsdSearch = ref("")
-
-	function countries() {
-		return context.partnershipCountries.data || []
-	}
-
-	// Stored contact is "<isd>-<number>", same as the messaging page's wizard writes it.
-	function fillRegistration(details) {
-		partnershipCompanyName.value = details.company_name || ""
-		partnershipCountry.value = details.registered_country || ""
-		partnershipState.value = details.registered_state || ""
-		partnershipEmail.value = details.company_email || ""
-		partnershipIsdCountry.value = ""
-		partnershipIsdSearch.value = ""
-		const contact = String(details.contact || "")
-		if (contact.includes("-")) {
-			const [isd, ...rest] = contact.split("-")
-			const match = countries().find((c) => c.isd === isd)
-			if (match) partnershipIsdCountry.value = match.name
-			partnershipContact.value = rest.join("-")
-		} else {
-			partnershipContact.value = contact
-		}
-	}
-
-	function registrationDetails() {
-		const match = countries().find((c) => c.name === (partnershipIsdCountry.value || partnershipCountry.value))
-		const number = String(partnershipContact.value || "").trim()
-		return {
-			company_name: String(partnershipCompanyName.value || "").trim(),
-			registered_country: partnershipCountry.value,
-			registered_state: partnershipCountry.value === "India" ? partnershipState.value : "",
-			company_email: String(partnershipEmail.value || "").trim(),
-			contact: match && number ? `${match.isd}-${number}` : number,
-		}
-	}
+	// ---- Registration wizard (the shared "Become a partner" form) ----
+	const registration = usePartnerRegistration(() => context.partnershipCountries.data || [])
+	const {
+		partnershipWizardOpen,
+		partnershipWizardStep,
+		partnershipEditMode,
+		partnershipRegistered,
+		partnershipSubmitted,
+		partnershipSubmitError,
+		partnershipSaving,
+		partnershipCompanyName,
+	} = registration
 
 	function openRegistration() {
 		if (!context.partnershipCountries.data) context.partnershipCountries.reload()
-		fillRegistration(app() || {})
+		registration.fillPartnership(app() || {})
 		partnershipEditMode.value = canEditDraft()
 		partnershipRegistered.value = false
 		partnershipSubmitted.value = false
@@ -507,7 +449,7 @@ export default function setup(context) {
 	function saveRegistration(details) {
 		const editing = partnershipEditMode.value
 		partnershipSaving.value = true
-		return call(`${API}.save_partner_application`, { details: details || registrationDetails() })
+		return call(`${API}.save_partner_application`, { details: details || registration.partnershipDetails() })
 			.then(() => reloadApplication())
 			.then(() => {
 				if (editing) {
@@ -525,16 +467,20 @@ export default function setup(context) {
 			})
 	}
 
+	// Proceed on the form: once it's valid, save it.
+	function proceedPartnership() {
+		if (registration.isPartnershipValid()) saveRegistration()
+	}
+
 	// A visitor who registered from the login page arrives here after logging in: register the
 	// details they already filled in, then show the same "thank you" screen Press shows.
 	watch(
 		() => !!context.myContext.fetched && !!context.partnerApplication.fetched && amPartner(),
 		(ready) => {
 			if (!ready || isRegistered()) return
-			const stash = readStash()
+			const stash = takeStashedRegistration()
 			if (!stash) return
-			clearStash()
-			fillRegistration(stash)
+			registration.fillPartnership(stash)
 			partnershipEditMode.value = false
 			partnershipRegistered.value = false
 			partnershipSubmitError.value = ""
@@ -879,22 +825,9 @@ export default function setup(context) {
 		unregistering,
 		unregisterMessage,
 		unregister,
-		partnershipWizardOpen,
-		partnershipWizardStep,
-		partnershipEditMode,
-		partnershipRegistered,
-		partnershipSubmitted,
-		partnershipSubmitError,
-		partnershipSaving,
-		partnershipCompanyName,
-		partnershipCountry,
-		partnershipState,
-		partnershipEmail,
-		partnershipContact,
-		partnershipIsdCountry,
-		partnershipIsdSearch,
+		...registration,
 		openRegistration,
-		saveRegistration,
+		proceedPartnership,
 		companyInfoOpen,
 		companyInfoStep,
 		companyInfoSaving,

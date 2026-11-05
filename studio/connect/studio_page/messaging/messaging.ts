@@ -4,6 +4,7 @@ import { avatarTheme } from "@app/utils/avatarTheme"
 import { installScrollFade } from "@app/utils/scrollFade"
 import { goToSignIn, signOut } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
+import { plainError, usePartnerRegistration } from "@app/utils/partnerRegistration"
 
 // connect.messaging.customer_identity.ANONYMOUS_USER: who the partner side sees in place of an
 // anonymous customer's people.
@@ -3861,7 +3862,51 @@ export default function setup(context) {
 		{ immediate: true },
 	)
 
+	// ---- "Become a partner": the shared registration form ----
+	const registration = usePartnerRegistration(() => context.partnershipCountries?.data || [])
+
+	// A partner who has already registered carries on in Partner Onboarding instead.
+	function openPartnership() {
+		if (context.partnerApplication?.data) {
+			context.router.push("/partner-onboarding")
+			return
+		}
+		registration.fillPartnership({})
+		registration.partnershipEditMode.value = false
+		registration.partnershipRegistered.value = false
+		registration.partnershipSubmitted.value = false
+		registration.partnershipSubmitError.value = ""
+		registration.partnershipWizardStep.value = "partnerships"
+		if (!context.partnershipCountries?.data) context.partnershipCountries?.reload()
+		registration.partnershipWizardOpen.value = true
+	}
+
+	function proceedPartnership() {
+		if (!registration.isPartnershipValid()) return
+		const editing = registration.partnershipEditMode.value
+		registration.partnershipSaving.value = true
+		call("connect.api.partner.save_partner_application", { details: registration.partnershipDetails() })
+			.then(() => {
+				context.partnerApplication?.reload()
+				if (editing) {
+					registration.partnershipWizardOpen.value = false
+					toast.success("Registration details updated")
+				} else {
+					registration.partnershipRegistered.value = true
+				}
+			})
+			.catch((error) => {
+				registration.partnershipSubmitError.value = plainError(error, "Could not save your registration.")
+			})
+			.finally(() => {
+				registration.partnershipSaving.value = false
+			})
+	}
+
 	return {
+		...registration,
+		openPartnership,
+		proceedPartnership,
 		selectedThread,
 		draftMessage,
 		onComposerInput,

@@ -6387,7 +6387,7 @@
         "click": {
          "action": "Run Script",
          "event": "click",
-         "script": "if (partnerApplication && partnerApplication.data) { router.push('/partner-onboarding'); return; } var app = (typeof partnerApplication !== 'undefined' && partnerApplication) ? partnerApplication.data : null; var isDraft = !!(app && app.docstatus === 0 && app.status === 'Draft'); partnershipCompanyName.value = (app && app.company_name) || ''; partnershipCountry.value = (app && app.registered_country) || ''; partnershipState.value = (app && app.registered_state) || ''; partnershipEmail.value = (app && app.company_email) || ''; var contact = String((app && app.contact) || ''); partnershipIsdCountry.value = ''; partnershipIsdSearch.value = ''; if (contact.indexOf('-') > -1) { var parts = contact.split('-'); var isd = parts[0]; var match = (partnershipCountries.data || []).find(function (c) { return c.isd === isd }); if (match) { partnershipIsdCountry.value = match.name; } partnershipContact.value = parts.slice(1).join('-'); } else { partnershipContact.value = contact; } partnershipEditMode.value = isDraft; partnershipRegistered.value = false; partnershipSubmitted.value = false; partnershipSubmitError.value = ''; partnershipWizardStep.value = 'partnerships'; if (typeof partnershipCountries !== 'undefined' && partnershipCountries && !partnershipCountries.data) { partnershipCountries.reload(); } partnershipWizardOpen.value = true;"
+         "script": "openPartnership();"
         }
        },
        "componentId": "mobile-tab-partnership",
@@ -13870,22 +13870,12 @@
                  },
                  "children": [
                   {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-5)",
-                    "display": "block",
-                    "fontSize": "12px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "1.15"
-                   },
                    "componentId": "pw-txt-109",
-                   "componentName": "TextBlock",
+                   "componentName": "FormLabel",
                    "componentProps": {
-                    "fontSize": "text-xs",
-                    "tag": "label",
-                    "text": "Company name"
-                   },
-                   "componentSlots": {}
+                    "label": "Company name",
+                    "required": true
+                   }
                   },
                   {
                    "componentId": "pw-fc-partnershipCompanyName-110",
@@ -13912,7 +13902,7 @@
                 {
                  "baseStyles": {
                   "color": "var(--ink-red-7)",
-                  "display": "{{ (partnershipSubmitted && (!String(partnershipCompanyName || '').trim() ? 'Company name is required.' : (String(partnershipCompanyName || '').trim().length < 2 ? 'Company name must be at least 2 characters.' : (String(partnershipCompanyName || '').trim().length > 140 ? 'Company name must be 140 characters or less.' : '')))) ? 'block' : 'none' }}",
+                  "display": "{{ partnershipErrors.company_name ? 'block' : 'none' }}",
                   "fontSize": "13px",
                   "fontWeight": "420",
                   "letterSpacing": "0.02em",
@@ -13924,7 +13914,7 @@
                  "componentProps": {
                   "fontSize": "text-sm",
                   "tag": "p",
-                  "text": "{{ (!String(partnershipCompanyName || '').trim() ? 'Company name is required.' : (String(partnershipCompanyName || '').trim().length < 2 ? 'Company name must be at least 2 characters.' : (String(partnershipCompanyName || '').trim().length > 140 ? 'Company name must be 140 characters or less.' : ''))) }}"
+                  "text": "{{ partnershipErrors.company_name }}"
                  },
                  "componentSlots": {}
                 },
@@ -13943,22 +13933,12 @@
                    },
                    "children": [
                     {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-5)",
-                      "display": "block",
-                      "fontSize": "12px",
-                      "fontWeight": "420",
-                      "letterSpacing": "0.02em",
-                      "lineHeight": "1.15"
-                     },
                      "componentId": "pw-txt-104",
-                     "componentName": "TextBlock",
+                     "componentName": "FormLabel",
                      "componentProps": {
-                      "fontSize": "text-xs",
-                      "tag": "label",
-                      "text": "Registered country"
-                     },
-                     "componentSlots": {}
+                      "label": "Registered country",
+                      "required": true
+                     }
                     },
                     {
                      "children": [
@@ -14015,7 +13995,7 @@
                 {
                  "baseStyles": {
                   "color": "var(--ink-red-7)",
-                  "display": "{{ (partnershipSubmitted && (partnershipCountry ? '' : 'Registered country is required.')) ? 'block' : 'none' }}",
+                  "display": "{{ partnershipErrors.country ? 'block' : 'none' }}",
                   "fontSize": "13px",
                   "fontWeight": "420",
                   "letterSpacing": "0.02em",
@@ -14027,7 +14007,7 @@
                  "componentProps": {
                   "fontSize": "text-sm",
                   "tag": "p",
-                  "text": "{{ (partnershipCountry ? '' : 'Registered country is required.') }}"
+                  "text": "{{ partnershipErrors.country }}"
                  },
                  "componentSlots": {}
                 },
@@ -14039,22 +14019,12 @@
                  },
                  "children": [
                   {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-5)",
-                    "display": "block",
-                    "fontSize": "12px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "1.15"
-                   },
                    "componentId": "pw-txt-116",
-                   "componentName": "TextBlock",
+                   "componentName": "FormLabel",
                    "componentProps": {
-                    "fontSize": "text-xs",
-                    "tag": "label",
-                    "text": "Registered state"
-                   },
-                   "componentSlots": {}
+                    "label": "Registered state",
+                    "required": true
+                   }
                   },
                   {
                    "componentId": "pw-fc-partnershipState-117",
@@ -14113,7 +14083,7 @@
                   {
                    "baseStyles": {
                     "color": "var(--ink-red-7)",
-                    "display": "{{ (partnershipSubmitted && ((partnershipCountry === 'India' && !partnershipState) ? 'Registered state is required.' : '')) ? 'block' : 'none' }}",
+                    "display": "{{ partnershipErrors.state ? 'block' : 'none' }}",
                     "fontSize": "13px",
                     "fontWeight": "420",
                     "letterSpacing": "0.02em",
@@ -14124,7 +14094,7 @@
                    "componentProps": {
                     "fontSize": "text-sm",
                     "tag": "p",
-                    "text": "{{ ((partnershipCountry === 'India' && !partnershipState) ? 'Registered state is required.' : '') }}"
+                    "text": "{{ partnershipErrors.state }}"
                    },
                    "componentSlots": {}
                   }
@@ -14143,22 +14113,12 @@
                  },
                  "children": [
                   {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-5)",
-                    "display": "block",
-                    "fontSize": "12px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "1.15"
-                   },
                    "componentId": "pw-txt-120",
-                   "componentName": "TextBlock",
+                   "componentName": "FormLabel",
                    "componentProps": {
-                    "fontSize": "text-xs",
-                    "tag": "label",
-                    "text": "Company email"
-                   },
-                   "componentSlots": {}
+                    "label": "Company email",
+                    "required": true
+                   }
                   },
                   {
                    "componentId": "pw-fc-partnershipEmail-122",
@@ -14205,7 +14165,7 @@
                 {
                  "baseStyles": {
                   "color": "var(--ink-red-7)",
-                  "display": "{{ (partnershipSubmitted && (!String(partnershipEmail || '').trim() ? 'Company email is required.' : (/^\\S+@\\S+\\.\\S+$/.test(String(partnershipEmail || '').trim()) ? '' : 'Enter a valid company email.'))) ? 'block' : 'none' }}",
+                  "display": "{{ partnershipErrors.email ? 'block' : 'none' }}",
                   "fontSize": "13px",
                   "fontWeight": "420",
                   "letterSpacing": "0.02em",
@@ -14217,7 +14177,7 @@
                  "componentProps": {
                   "fontSize": "text-sm",
                   "tag": "p",
-                  "text": "{{ (!String(partnershipEmail || '').trim() ? 'Company email is required.' : (/^\\S+@\\S+\\.\\S+$/.test(String(partnershipEmail || '').trim()) ? '' : 'Enter a valid company email.')) }}"
+                  "text": "{{ partnershipErrors.email }}"
                  },
                  "componentSlots": {}
                 },
@@ -14229,22 +14189,12 @@
                  },
                  "children": [
                   {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)",
-                    "display": "block",
-                    "fontSize": "12px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "1.15"
-                   },
                    "componentId": "pw-txt-141",
-                   "componentName": "TextBlock",
+                   "componentName": "FormLabel",
                    "componentProps": {
-                    "fontSize": "text-xs",
-                    "tag": "label",
-                    "text": "Contact"
-                   },
-                   "componentSlots": {}
+                    "label": "Contact",
+                    "required": true
+                   }
                   },
                   {
                    "baseStyles": {
@@ -14542,7 +14492,7 @@
                 {
                  "baseStyles": {
                   "color": "var(--ink-red-7)",
-                  "display": "{{ (partnershipSubmitted && (!String(partnershipContact || '').trim() ? 'Contact number is required.' : ((((((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)) && String(partnershipContact || '').trim() ? (((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)).isd + '-' + String(partnershipContact || '').trim() : String(partnershipContact || '').trim()).replace(/\\D/g, '').length < 7 || ((((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)) && String(partnershipContact || '').trim() ? (((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)).isd + '-' + String(partnershipContact || '').trim() : String(partnershipContact || '').trim()).replace(/\\D/g, '').length > 20) ? 'Contact number must be 7-20 digits.' : ''))) ? 'block' : 'none' }}",
+                  "display": "{{ partnershipErrors.contact ? 'block' : 'none' }}",
                   "fontSize": "13px",
                   "fontWeight": "420",
                   "letterSpacing": "0.02em",
@@ -14554,7 +14504,7 @@
                  "componentProps": {
                   "fontSize": "text-sm",
                   "tag": "p",
-                  "text": "{{ (!String(partnershipContact || '').trim() ? 'Contact number is required.' : ((((((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)) && String(partnershipContact || '').trim() ? (((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)).isd + '-' + String(partnershipContact || '').trim() : String(partnershipContact || '').trim()).replace(/\\D/g, '').length < 7 || ((((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)) && String(partnershipContact || '').trim() ? (((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)).isd + '-' + String(partnershipContact || '').trim() : String(partnershipContact || '').trim()).replace(/\\D/g, '').length > 20) ? 'Contact number must be 7-20 digits.' : '')) }}"
+                  "text": "{{ partnershipErrors.contact }}"
                  },
                  "componentSlots": {}
                 },
@@ -14668,7 +14618,7 @@
                 "click": {
                  "action": "Run Script",
                  "event": "click",
-                 "script": "partnershipSubmitted.value = true; partnershipSubmitError.value = ''; var errors = [(!String(partnershipCompanyName.value || '').trim() ? 'Company name is required.' : (String(partnershipCompanyName.value || '').trim().length < 2 ? 'Company name must be at least 2 characters.' : (String(partnershipCompanyName.value || '').trim().length > 140 ? 'Company name must be 140 characters or less.' : ''))), (partnershipCountry.value ? '' : 'Registered country is required.'), ((partnershipCountry.value === 'India' && !partnershipState.value) ? 'Registered state is required.' : ''), (!String(partnershipEmail.value || '').trim() ? 'Company email is required.' : (/^\\S+@\\S+\\.\\S+$/.test(String(partnershipEmail.value || '').trim()) ? '' : 'Enter a valid company email.')), (!String(partnershipContact.value || '').trim() ? 'Contact number is required.' : ((((((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry.value || partnershipCountry.value) }) || null)) && String(partnershipContact.value || '').trim() ? (((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry.value || partnershipCountry.value) }) || null)).isd + '-' + String(partnershipContact.value || '').trim() : String(partnershipContact.value || '').trim()).replace(/\\D/g, '').length < 7 || ((((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry.value || partnershipCountry.value) }) || null)) && String(partnershipContact.value || '').trim() ? (((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry.value || partnershipCountry.value) }) || null)).isd + '-' + String(partnershipContact.value || '').trim() : String(partnershipContact.value || '').trim()).replace(/\\D/g, '').length > 20) ? 'Contact number must be 7-20 digits.' : ''))]; if (errors.some(function (e) { return !!e; })) { return; } var editing = partnershipEditMode.value; partnershipSaving.value = true; call('connect.api.partner.save_partner_application', { details: { company_name: String(partnershipCompanyName.value || '').trim(), registered_country: partnershipCountry.value, registered_state: partnershipCountry.value === 'India' ? partnershipState.value : '', company_email: String(partnershipEmail.value || '').trim(), contact: ((((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry.value || partnershipCountry.value) }) || null)) && String(partnershipContact.value || '').trim() ? (((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry.value || partnershipCountry.value) }) || null)).isd + '-' + String(partnershipContact.value || '').trim() : String(partnershipContact.value || '').trim()) } }).then(function () { partnershipSaving.value = false; if (partnerApplication && partnerApplication.reload) { partnerApplication.reload(); } if (editing) { partnershipWizardOpen.value = false; toast({ title: 'Registration details updated', icon: 'check' }); } else { partnershipRegistered.value = true; } }).catch(function (err) { partnershipSaving.value = false; var m = (err && err.messages && err.messages[0]) || (err && err.message) || 'Could not save your registration.'; partnershipSubmitError.value = String(m).replace(/<[^>]*>/g, ''); });"
+                 "script": "proceedPartnership();"
                 }
                },
                "componentId": "pw-btn-151",
@@ -14920,22 +14870,12 @@
              },
              "children": [
               {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)",
-                "display": "block",
-                "fontSize": "12px",
-                "fontWeight": "420",
-                "letterSpacing": "0.02em",
-                "lineHeight": "1.15"
-               },
                "componentId": "pw-txt-171",
-               "componentName": "TextBlock",
+               "componentName": "FormLabel",
                "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "label",
-                "text": "Company name"
-               },
-               "componentSlots": {}
+                "label": "Company name",
+                "required": true
+               }
               },
               {
                "componentId": "pw-fc-partnershipCompanyName-172",
@@ -14962,7 +14902,7 @@
             {
              "baseStyles": {
               "color": "var(--ink-red-7)",
-              "display": "{{ (partnershipSubmitted && (!String(partnershipCompanyName || '').trim() ? 'Company name is required.' : (String(partnershipCompanyName || '').trim().length < 2 ? 'Company name must be at least 2 characters.' : (String(partnershipCompanyName || '').trim().length > 140 ? 'Company name must be 140 characters or less.' : '')))) ? 'block' : 'none' }}",
+              "display": "{{ partnershipErrors.company_name ? 'block' : 'none' }}",
               "fontSize": "13px",
               "fontWeight": "420",
               "letterSpacing": "0.02em",
@@ -14974,7 +14914,7 @@
              "componentProps": {
               "fontSize": "text-sm",
               "tag": "p",
-              "text": "{{ (!String(partnershipCompanyName || '').trim() ? 'Company name is required.' : (String(partnershipCompanyName || '').trim().length < 2 ? 'Company name must be at least 2 characters.' : (String(partnershipCompanyName || '').trim().length > 140 ? 'Company name must be 140 characters or less.' : ''))) }}"
+              "text": "{{ partnershipErrors.company_name }}"
              },
              "componentSlots": {}
             },
@@ -14993,22 +14933,12 @@
                },
                "children": [
                 {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-5)",
-                  "display": "block",
-                  "fontSize": "12px",
-                  "fontWeight": "420",
-                  "letterSpacing": "0.02em",
-                  "lineHeight": "1.15"
-                 },
                  "componentId": "pw-txt-166",
-                 "componentName": "TextBlock",
+                 "componentName": "FormLabel",
                  "componentProps": {
-                  "fontSize": "text-xs",
-                  "tag": "label",
-                  "text": "Registered country"
-                 },
-                 "componentSlots": {}
+                  "label": "Registered country",
+                  "required": true
+                 }
                 },
                 {
                  "children": [
@@ -15065,7 +14995,7 @@
             {
              "baseStyles": {
               "color": "var(--ink-red-7)",
-              "display": "{{ (partnershipSubmitted && (partnershipCountry ? '' : 'Registered country is required.')) ? 'block' : 'none' }}",
+              "display": "{{ partnershipErrors.country ? 'block' : 'none' }}",
               "fontSize": "13px",
               "fontWeight": "420",
               "letterSpacing": "0.02em",
@@ -15077,7 +15007,7 @@
              "componentProps": {
               "fontSize": "text-sm",
               "tag": "p",
-              "text": "{{ (partnershipCountry ? '' : 'Registered country is required.') }}"
+              "text": "{{ partnershipErrors.country }}"
              },
              "componentSlots": {}
             },
@@ -15089,22 +15019,12 @@
              },
              "children": [
               {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)",
-                "display": "block",
-                "fontSize": "12px",
-                "fontWeight": "420",
-                "letterSpacing": "0.02em",
-                "lineHeight": "1.15"
-               },
                "componentId": "pw-txt-178",
-               "componentName": "TextBlock",
+               "componentName": "FormLabel",
                "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "label",
-                "text": "Registered state"
-               },
-               "componentSlots": {}
+                "label": "Registered state",
+                "required": true
+               }
               },
               {
                "componentId": "pw-fc-partnershipState-179",
@@ -15163,7 +15083,7 @@
               {
                "baseStyles": {
                 "color": "var(--ink-red-7)",
-                "display": "{{ (partnershipSubmitted && ((partnershipCountry === 'India' && !partnershipState) ? 'Registered state is required.' : '')) ? 'block' : 'none' }}",
+                "display": "{{ partnershipErrors.state ? 'block' : 'none' }}",
                 "fontSize": "13px",
                 "fontWeight": "420",
                 "letterSpacing": "0.02em",
@@ -15174,7 +15094,7 @@
                "componentProps": {
                 "fontSize": "text-sm",
                 "tag": "p",
-                "text": "{{ ((partnershipCountry === 'India' && !partnershipState) ? 'Registered state is required.' : '') }}"
+                "text": "{{ partnershipErrors.state }}"
                },
                "componentSlots": {}
               }
@@ -15193,22 +15113,12 @@
              },
              "children": [
               {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)",
-                "display": "block",
-                "fontSize": "12px",
-                "fontWeight": "420",
-                "letterSpacing": "0.02em",
-                "lineHeight": "1.15"
-               },
                "componentId": "pw-txt-182",
-               "componentName": "TextBlock",
+               "componentName": "FormLabel",
                "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "label",
-                "text": "Company email"
-               },
-               "componentSlots": {}
+                "label": "Company email",
+                "required": true
+               }
               },
               {
                "componentId": "pw-fc-partnershipEmail-184",
@@ -15255,7 +15165,7 @@
             {
              "baseStyles": {
               "color": "var(--ink-red-7)",
-              "display": "{{ (partnershipSubmitted && (!String(partnershipEmail || '').trim() ? 'Company email is required.' : (/^\\S+@\\S+\\.\\S+$/.test(String(partnershipEmail || '').trim()) ? '' : 'Enter a valid company email.'))) ? 'block' : 'none' }}",
+              "display": "{{ partnershipErrors.email ? 'block' : 'none' }}",
               "fontSize": "13px",
               "fontWeight": "420",
               "letterSpacing": "0.02em",
@@ -15267,7 +15177,7 @@
              "componentProps": {
               "fontSize": "text-sm",
               "tag": "p",
-              "text": "{{ (!String(partnershipEmail || '').trim() ? 'Company email is required.' : (/^\\S+@\\S+\\.\\S+$/.test(String(partnershipEmail || '').trim()) ? '' : 'Enter a valid company email.')) }}"
+              "text": "{{ partnershipErrors.email }}"
              },
              "componentSlots": {}
             },
@@ -15279,22 +15189,12 @@
              },
              "children": [
               {
-               "baseStyles": {
-                "color": "var(--ink-gray-6)",
-                "display": "block",
-                "fontSize": "12px",
-                "fontWeight": "420",
-                "letterSpacing": "0.02em",
-                "lineHeight": "1.15"
-               },
                "componentId": "pw-txt-203",
-               "componentName": "TextBlock",
+               "componentName": "FormLabel",
                "componentProps": {
-                "fontSize": "text-xs",
-                "tag": "label",
-                "text": "Contact"
-               },
-               "componentSlots": {}
+                "label": "Contact",
+                "required": true
+               }
               },
               {
                "baseStyles": {
@@ -15592,7 +15492,7 @@
             {
              "baseStyles": {
               "color": "var(--ink-red-7)",
-              "display": "{{ (partnershipSubmitted && (!String(partnershipContact || '').trim() ? 'Contact number is required.' : ((((((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)) && String(partnershipContact || '').trim() ? (((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)).isd + '-' + String(partnershipContact || '').trim() : String(partnershipContact || '').trim()).replace(/\\D/g, '').length < 7 || ((((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)) && String(partnershipContact || '').trim() ? (((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)).isd + '-' + String(partnershipContact || '').trim() : String(partnershipContact || '').trim()).replace(/\\D/g, '').length > 20) ? 'Contact number must be 7-20 digits.' : ''))) ? 'block' : 'none' }}",
+              "display": "{{ partnershipErrors.contact ? 'block' : 'none' }}",
               "fontSize": "13px",
               "fontWeight": "420",
               "letterSpacing": "0.02em",
@@ -15604,7 +15504,7 @@
              "componentProps": {
               "fontSize": "text-sm",
               "tag": "p",
-              "text": "{{ (!String(partnershipContact || '').trim() ? 'Contact number is required.' : ((((((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)) && String(partnershipContact || '').trim() ? (((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)).isd + '-' + String(partnershipContact || '').trim() : String(partnershipContact || '').trim()).replace(/\\D/g, '').length < 7 || ((((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)) && String(partnershipContact || '').trim() ? (((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry || partnershipCountry) }) || null)).isd + '-' + String(partnershipContact || '').trim() : String(partnershipContact || '').trim()).replace(/\\D/g, '').length > 20) ? 'Contact number must be 7-20 digits.' : '')) }}"
+              "text": "{{ partnershipErrors.contact }}"
              },
              "componentSlots": {}
             },
@@ -15652,7 +15552,7 @@
             "click": {
              "action": "Run Script",
              "event": "click",
-             "script": "partnershipSubmitted.value = true; partnershipSubmitError.value = ''; var errors = [(!String(partnershipCompanyName.value || '').trim() ? 'Company name is required.' : (String(partnershipCompanyName.value || '').trim().length < 2 ? 'Company name must be at least 2 characters.' : (String(partnershipCompanyName.value || '').trim().length > 140 ? 'Company name must be 140 characters or less.' : ''))), (partnershipCountry.value ? '' : 'Registered country is required.'), ((partnershipCountry.value === 'India' && !partnershipState.value) ? 'Registered state is required.' : ''), (!String(partnershipEmail.value || '').trim() ? 'Company email is required.' : (/^\\S+@\\S+\\.\\S+$/.test(String(partnershipEmail.value || '').trim()) ? '' : 'Enter a valid company email.')), (!String(partnershipContact.value || '').trim() ? 'Contact number is required.' : ((((((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry.value || partnershipCountry.value) }) || null)) && String(partnershipContact.value || '').trim() ? (((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry.value || partnershipCountry.value) }) || null)).isd + '-' + String(partnershipContact.value || '').trim() : String(partnershipContact.value || '').trim()).replace(/\\D/g, '').length < 7 || ((((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry.value || partnershipCountry.value) }) || null)) && String(partnershipContact.value || '').trim() ? (((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry.value || partnershipCountry.value) }) || null)).isd + '-' + String(partnershipContact.value || '').trim() : String(partnershipContact.value || '').trim()).replace(/\\D/g, '').length > 20) ? 'Contact number must be 7-20 digits.' : ''))]; if (errors.some(function (e) { return !!e; })) { return; } var editing = partnershipEditMode.value; partnershipSaving.value = true; call('connect.api.partner.save_partner_application', { details: { company_name: String(partnershipCompanyName.value || '').trim(), registered_country: partnershipCountry.value, registered_state: partnershipCountry.value === 'India' ? partnershipState.value : '', company_email: String(partnershipEmail.value || '').trim(), contact: ((((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry.value || partnershipCountry.value) }) || null)) && String(partnershipContact.value || '').trim() ? (((partnershipCountries.data || []).find(function (c) { return c.name === (partnershipIsdCountry.value || partnershipCountry.value) }) || null)).isd + '-' + String(partnershipContact.value || '').trim() : String(partnershipContact.value || '').trim()) } }).then(function () { partnershipSaving.value = false; if (partnerApplication && partnerApplication.reload) { partnerApplication.reload(); } if (editing) { partnershipWizardOpen.value = false; toast({ title: 'Registration details updated', icon: 'check' }); } else { partnershipRegistered.value = true; } }).catch(function (err) { partnershipSaving.value = false; var m = (err && err.messages && err.messages[0]) || (err && err.message) || 'Could not save your registration.'; partnershipSubmitError.value = String(m).replace(/<[^>]*>/g, ''); });"
+             "script": "proceedPartnership();"
             }
            },
            "componentId": "pw-btn-209",
@@ -18217,76 +18117,6 @@
    "initial_value": "false",
    "variable_name": "settingsSaving",
    "variable_type": "Boolean"
-  },
-  {
-   "initial_value": "false",
-   "variable_name": "partnershipWizardOpen",
-   "variable_type": "Boolean"
-  },
-  {
-   "initial_value": "\"partnerships\"",
-   "variable_name": "partnershipWizardStep",
-   "variable_type": "String"
-  },
-  {
-   "initial_value": "false",
-   "variable_name": "partnershipEditMode",
-   "variable_type": "Boolean"
-  },
-  {
-   "initial_value": "false",
-   "variable_name": "partnershipRegistered",
-   "variable_type": "Boolean"
-  },
-  {
-   "initial_value": "false",
-   "variable_name": "partnershipSubmitted",
-   "variable_type": "Boolean"
-  },
-  {
-   "initial_value": "\"\"",
-   "variable_name": "partnershipSubmitError",
-   "variable_type": "String"
-  },
-  {
-   "initial_value": "false",
-   "variable_name": "partnershipSaving",
-   "variable_type": "Boolean"
-  },
-  {
-   "initial_value": "\"\"",
-   "variable_name": "partnershipCompanyName",
-   "variable_type": "String"
-  },
-  {
-   "initial_value": "\"\"",
-   "variable_name": "partnershipCountry",
-   "variable_type": "String"
-  },
-  {
-   "initial_value": "\"\"",
-   "variable_name": "partnershipState",
-   "variable_type": "String"
-  },
-  {
-   "initial_value": "\"\"",
-   "variable_name": "partnershipEmail",
-   "variable_type": "String"
-  },
-  {
-   "initial_value": "\"\"",
-   "variable_name": "partnershipContact",
-   "variable_type": "String"
-  },
-  {
-   "initial_value": "\"\"",
-   "variable_name": "partnershipIsdCountry",
-   "variable_type": "String"
-  },
-  {
-   "initial_value": "\"\"",
-   "variable_name": "partnershipIsdSearch",
-   "variable_type": "String"
   }
  ]
 }

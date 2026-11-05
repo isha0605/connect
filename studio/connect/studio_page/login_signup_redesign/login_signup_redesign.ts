@@ -1,6 +1,7 @@
 import { onScopeDispose, ref } from "vue"
 import { call, toast } from "frappe-ui"
 import { startTracking, visitorId } from "@app/utils/tracking"
+import { stashRegistration, usePartnerRegistration } from "@app/utils/partnerRegistration"
 
 const OTP_PREFIX = "otp-digit-"
 const STYLE_ID = "connect-otp-input-style"
@@ -40,10 +41,9 @@ export default function setup(context) {
 		otp4,
 		otp5,
 		otp6,
-		partnershipWizardOpen,
-		partnershipEmail,
-		partnershipCountry,
 	} = context
+	const registration = usePartnerRegistration(() => context.partnershipCountries?.data || [])
+	const { partnershipWizardOpen, partnershipEmail, partnershipCountry } = registration
 	const digits = [otp1, otp2, otp3, otp4, otp5, otp6]
 
 	// Where to go afterwards. Pages hand over their own path (the app's router path, or the
@@ -242,6 +242,17 @@ export default function setup(context) {
 		showScreen("signup")
 	}
 
+	// Proceed on the "Become a partner" form: Partner Onboarding registers the details, straight
+	// away for someone signed in, after signing up for anyone else.
+	function proceedPartnership() {
+		if (!registration.isPartnershipValid()) return
+		stashRegistration(registration.partnershipDetails())
+		const target = window.location.pathname.replace(/[^/]*\/?$/, "partner-onboarding")
+		const user = context.myContext.data?.user
+		if (user && user !== "Guest") window.location.href = target
+		else startPartnerSignup(target)
+	}
+
 	// frappe-ui's TextInput puts `class` and `style` on its wrapper div and forwards every
 	// *other* attr to the inner <input> (see attrsWithoutClassStyle in TextInput.vue). So a
 	// block's textAlign can never reach the input, and text-align isn't inherited into form
@@ -323,5 +334,7 @@ export default function setup(context) {
 		useDifferentEmail,
 		showScreen,
 		startPartnerSignup,
+		...registration,
+		proceedPartnership,
 	}
 }
