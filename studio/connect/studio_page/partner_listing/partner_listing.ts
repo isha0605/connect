@@ -137,8 +137,6 @@ export default function setup(context) {
 		const rows = [
 			{ key: "why_choose_them", icon: "/assets/connect/images/why-work-with-us-icon.svg", label: "Why work with us?" },
 			{ key: "how_we_work", icon: "/assets/connect/images/how-we-work-icon.svg", label: "How we'll work together" },
-			{ key: "successful_implementation", icon: "/assets/connect/images/successful-implementation-icon.svg",
-				label: "How we define a\nsuccessful implementation" },
 		]
 		return rows.map((row, index) => ({
 			...row,

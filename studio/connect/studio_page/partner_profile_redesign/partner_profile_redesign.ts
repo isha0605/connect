@@ -222,9 +222,6 @@ export default function setup(context) {
 		showStoriesFor,
 		origin,
 		howWeWork: computed(() => partner.data?.how_we_work || DEFAULT_ANSWERS.how_we_work),
-		successfulImplementation: computed(
-			() => partner.data?.successful_implementation || DEFAULT_ANSWERS.successful_implementation,
-		),
 		pmmLevel,
 		pmmLabel,
 		openPmmGuide,
