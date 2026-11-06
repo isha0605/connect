@@ -23,7 +23,7 @@ from connect.partner.industries import (
 )
 from connect.partner.logo import attach_normalized_logos
 from connect.partner.story_image import queue_missing_story_images
-from connect.permissions import _is_partner_admin, _my_company_membership
+from connect.permissions import _is_partner_admin
 
 COUNTRY_TO_REGION = {
 	"united states": "North America",
@@ -908,9 +908,11 @@ def get_partner_document(partner):
 
 
 def _my_partner():
-	"""Resolves the caller's own Partner, throwing if they aren't on a partner's roster."""
-	doctype, partner, _row = _my_company_membership(frappe.session.user)
-	if doctype != "Connect Partner Member":
+	"""Resolves the caller's own Partner, throwing if they aren't on a partner's roster. Read from
+	their partner membership alone, as the sidebar does: someone who is also on a customer's team
+	still works for their partner."""
+	partner = frappe.db.get_value("Connect Partner Member", {"user": frappe.session.user, "is_removed": 0}, "partner")
+	if not partner:
 		frappe.throw(_("You are not a member of any partner company"), frappe.PermissionError)
 	return partner
 

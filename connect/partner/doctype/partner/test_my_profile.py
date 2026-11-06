@@ -101,6 +101,17 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 		with self.assertRaises(frappe.PermissionError):
 			get_my_profile()
 
+	def test_member_also_on_a_customer_team_gets_their_partner(self):
+		make_buyer(MEMBER, "_Test Profile Buyer Co")
+		frappe.set_user(MEMBER)
+		self.assertEqual(get_my_profile()["partner"], PARTNER)
+
+	def test_removed_member_is_refused(self):
+		frappe.db.set_value("Connect Partner Member", {"partner": PARTNER, "user": MEMBER}, "is_removed", 1)
+		frappe.set_user(MEMBER)
+		with self.assertRaises(frappe.PermissionError):
+			get_my_profile()
+
 	def test_admin_saves_gallery_and_keeps_story_covers(self):
 		frappe.set_user(ADMIN)
 		stories = get_my_profile()["success_stories"]

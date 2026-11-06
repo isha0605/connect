@@ -65,14 +65,15 @@ def _is_partner_reviewer(user):
 
 
 def _my_company_membership(user):
-	"""Returns which company (and doctype/row) this user belongs to, or Nones if neither."""
+	"""Returns which company (and doctype/row) this user belongs to, or Nones if neither. Someone
+	removed from a team no longer belongs to it."""
 	customer_row = frappe.db.get_value(
-		"Customer Team Member", {"user": user}, ["name", "customer", "is_admin"], as_dict=True
+		"Customer Team Member", {"user": user, "is_removed": 0}, ["name", "customer", "is_admin"], as_dict=True
 	)
 	if customer_row:
 		return "Customer Team Member", customer_row.customer, customer_row
 	partner_row = frappe.db.get_value(
-		"Connect Partner Member", {"user": user}, ["name", "partner", "is_admin"], as_dict=True
+		"Connect Partner Member", {"user": user, "is_removed": 0}, ["name", "partner", "is_admin"], as_dict=True
 	)
 	if partner_row:
 		return "Connect Partner Member", partner_row.partner, partner_row

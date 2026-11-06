@@ -48,3 +48,17 @@ class IntegrationTestStudioComponentPermission(IntegrationTestCase):
 		names = frappe.get_list("Studio Component", pluck="name")
 		self.assertIn("appsidebar", names)
 		self.assertNotIn(OTHER_COMPONENT, names)
+
+
+class IntegrationTestCompanyMembership(IntegrationTestCase):
+	"""Which company a user belongs to: someone removed from a team no longer does."""
+
+	def test_removed_customer_member_has_no_company(self):
+		from connect.customer.doctype.customer_project.test_hiring import make_buyer
+		from connect.permissions import _my_company_membership
+
+		buyer = make_buyer("_test_removed_buyer@example.com", "_Test Removed Buyer Co")
+		self.assertEqual(_my_company_membership(buyer)[1], "_Test Removed Buyer Co")
+
+		frappe.db.set_value("Customer Team Member", {"user": buyer}, "is_removed", 1)
+		self.assertEqual(_my_company_membership(buyer), (None, None, None))
