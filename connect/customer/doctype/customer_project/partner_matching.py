@@ -10,6 +10,7 @@ from connect.partner.doctype.partner.partner import (
 	BASE_PARTNER_FILTERS,
 	_child_values_by_partner,
 	_partners_matching_child,
+	tier_order,
 )
 from connect.partner.industries import partners_in_industries
 
@@ -48,11 +49,10 @@ def _criteria_facets(criteria: dict) -> dict:
 
 	cities = Counter(p.city for p in partners if p.city)
 	tiers = Counter(p.tier for p in partners if p.tier)
-	tier_order = frappe.get_meta("Partner").get_options("tier").split("\n")
 
 	return {
 		"cities": [{"value": city, "count": count} for city, count in sorted(cities.items())],
-		"tiers": [{"value": tier, "count": tiers[tier]} for tier in tier_order if tier in tiers],
+		"tiers": [{"value": tier, "count": tiers[tier]} for tier in tier_order() if tier in tiers],
 		"work": [
 			{
 				"value": key,
