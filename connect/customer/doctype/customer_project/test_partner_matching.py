@@ -28,7 +28,7 @@ def make_listed_partner(partner_name):
 				"country": "India",
 				"city": CITY,
 				"enabled": 1,
-				"is_featured": 1,
+				"show_in_website": 1,
 			}
 		).insert(ignore_permissions=True)
 	# Only an approved partner is listed and sent briefs.

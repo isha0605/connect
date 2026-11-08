@@ -14,6 +14,7 @@ from connect.partner.doctype.partner.partner import (
 	save_imported_partner,
 )
 from connect.partner.doctype.partner_review.partner_review import list_partner_reviews
+from connect.patches.rename_partner_is_featured_to_show_in_website import execute as rename_is_featured
 
 LISTED = "_Test Visibility Listed Partner"
 PENDING = "_Test Visibility Pending Partner"
@@ -29,7 +30,7 @@ def make_partner(partner_name, verification_status):
 	frappe.db.set_value(
 		"Partner",
 		partner_name,
-		{"verification_status": verification_status, "is_featured": 1, "profile_draft": '{"tagline": "Draft"}'},
+		{"verification_status": verification_status, "show_in_website": 1, "profile_draft": '{"tagline": "Draft"}'},
 	)
 
 
@@ -155,13 +156,35 @@ class IntegrationTestPartnerTier(IntegrationTestCase):
 
 	def test_beginner_comes_last_in_the_tier_filter(self):
 		remove_partners("_Test Beginner Partner LLP")
-		listed = {"tier": "Beginner", "enabled": 1, "is_featured": 1, "verification_status": VERIFIED}
+		listed = {"tier": "Beginner", "enabled": 1, "show_in_website": 1, "verification_status": VERIFIED}
 		save_imported_partner("_Test Beginner Partner LLP", {**partner_values("_Test Beginner"), **listed})
 
 		tiers = list_partner_tiers()
 
 		self.assertEqual(tiers[-1], "Beginner")
 		self.assertEqual(tiers, [t for t in ("Gold", "Silver", "Bronze", "Beginner") if t in tiers])
+
+
+class IntegrationTestShowInWebsitePatch(IntegrationTestCase):
+	"""The rename patch moves each partner's listing switch before it drops the old column."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		remove_partners("_Test Patch Listed LLP")
+		save_imported_partner("_Test Patch Listed LLP", {**partner_values("_Test Patch Listed"), "show_in_website": 0})
+		self.addCleanup(remove_test_column_and_partner)
+
+	def test_patch_moves_the_listing_switch_and_drops_the_old_column(self):
+		frappe.db.sql_ddl("alter table `tabPartner` add column `is_featured` int(1) not null default 0")
+		frappe.client_cache.delete_value("table_columns::tabPartner")
+		# Every partner keeps its current value, so the copy in the patch changes only the test partner.
+		frappe.db.sql("update `tabPartner` set is_featured = show_in_website")
+		frappe.db.sql("update `tabPartner` set is_featured = 1 where name = %s", "_Test Patch Listed LLP")
+
+		rename_is_featured()
+
+		self.assertEqual(frappe.db.get_value("Partner", "_Test Patch Listed LLP", "show_in_website"), 1)
+		self.assertFalse(frappe.db.has_column("Partner", "is_featured"))
 
 
 def partner_values(partner_name):
@@ -177,3 +200,12 @@ def insert_signup_partner(partner_name):
 def remove_partners(*names):
 	for name in names:
 		frappe.delete_doc("Partner", name, force=True, ignore_missing=True)
+
+
+def remove_test_column_and_partner():
+	# Adding and dropping a column commits, so this test cleans up and commits by itself.
+	if frappe.db.has_column("Partner", "is_featured"):
+		frappe.db.sql_ddl("alter table `tabPartner` drop column `is_featured`")
+		frappe.client_cache.delete_value("table_columns::tabPartner")
+	remove_partners("_Test Patch Listed LLP")
+	frappe.db.commit()  # nosemgrep: the DDL above already committed this test's rows
