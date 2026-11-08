@@ -218,13 +218,13 @@ PARTNER_FIELDS = [
 # decide what is public.
 VERIFIED = "Verified"
 BASE_PARTNER_FILTERS = [
-	["Partner", "is_featured", "=", 1],
+	["Partner", "show_in_website", "=", 1],
 	["Partner", "enabled", "=", 1],
 	["Partner", "verification_status", "=", VERIFIED],
 ]
 # Workflow state the public profile never shows: unpublished edits and Frappe-side flags.
 PRIVATE_PROFILE_FIELDS = (
-	"profile_draft", "cloud_registration", "cloud_registration_sent_on", "is_featured", "starter_pack_sequence",
+	"profile_draft", "cloud_registration", "cloud_registration_sent_on", "show_in_website", "starter_pack_sequence",
 )
 
 
@@ -370,10 +370,6 @@ def search_partners(
 	sort=None, limit=100,
 ):
 	"""Searches partners for the Find Partners page, combining structured filters with full-text and fuzzy search."""
-	# TEMPORARY: only surface the original curated (fully-profiled) partners
-	# while the rest of the bulk-imported directory is still bare (name/tier/
-	# country only, no logo/description/team). Remove this filter to bring the
-	# full directory back — is_featured stays set on the underlying records.
 	industry = _normalize_multi(industry)
 	country = _normalize_multi(country)
 	category = _normalize_multi(category)
@@ -532,8 +528,8 @@ REQUIREMENT_MIGRATION_TAGS = {"SAP Migration", "Data Migration"}
 def count_matching_partners(answers=None):
 	"""Returns a live count of partners matching the finder wizard's answers so far, for the wizard's dot-grid."""
 	answers = _parse_answers(answers)
-	# Same temporary is_featured scope as search_partners, so the wizard's live
-	# count never exceeds what the directory actually shows right now.
+	# Same listing scope as search_partners, so the wizard's live count never
+	# exceeds what the directory shows.
 	filters = list(BASE_PARTNER_FILTERS)
 
 	# Same membership-subquery approach as search_partners — see _partners_matching_child.
@@ -581,7 +577,7 @@ def count_matching_partners(answers=None):
 
 
 def _score_partners_by_requirements(answers):
-	"""Scores every featured partner by how many of the wizard's answered questions they fail to match, shared by wizard_match_state and list_matching_partners."""
+	"""Scores every directory-listed partner by how many of the wizard's answered questions they fail to match, shared by wizard_match_state and list_matching_partners."""
 	names = [n.name for n in frappe.get_all(
 		"Partner", filters=BASE_PARTNER_FILTERS, fields=["name"], limit_page_length=0,
 	)]
@@ -620,7 +616,7 @@ def _score_partners_by_requirements(answers):
 	# How many of the (up to 6) scored dimensions were actually answered — used by
 	# list_matching_partners to scale its near-match tolerance. A flat "missing <= 2"
 	# cap is generous when 8 questions were answered but makes almost the entire
-	# featured pool look like a "near match" when only 2-3 were, which is exactly
+	# listed pool look like a "near match" when only 2-3 were, which is exactly
 	# the sparse-answers case a wizard reopen tends to produce (unset fields stay
 	# unset unless the visitor deliberately fills them in).
 	answered_dims = sum([
@@ -700,10 +696,12 @@ def list_matching_partners(answers=None, limit=8):
 def region_presence_counts():
 	"""Returns partner counts for the Find Partners redesign's region map, bucketed into the
 	map's 6 regions (finer-grained than the Region select field — India is split out of Asia
-	Pacific to match the map's own regions). Counts the full enabled directory, not just the
-	is_featured-curated subset search_partners currently scopes to, since this is a presence
-	overview rather than a list of profiles to show."""
-	rows = frappe.get_all("Partner", fields=["country", "region"], filters={"enabled": 1})
+	Pacific to match the map's own regions). Counts every enabled, Verified partner, not just the
+	ones shown in the directory (show_in_website), since this is a presence overview rather than a
+	list of profiles to show."""
+	rows = frappe.get_all(
+		"Partner", fields=["country", "region"], filters={"enabled": 1, "verification_status": VERIFIED}
+	)
 
 	counts = {"india": 0, "asia": 0, "middle_east": 0, "africa": 0, "europe": 0, "americas": 0}
 	for row in rows:
@@ -763,7 +761,7 @@ def list_directory_partners(
 	business_process=None, implementation_type=None, language=None,
 	min_rating=None, max_response_time=None, exclude=None,
 ):
-	"""Returns featured partners (name, logo, tier, rating, rate, response time, success stories)
+	"""Returns directory-listed partners (name, logo, tier, rating, rate, response time, success stories)
 	for the Partner Directory redesign's card list and its filter row. Filtering/search/ordering is
 	delegated to search_partners — the same engine behind the Find Partners page — so both stay
 	consistent; this only adds the review_count/success-story preview fields the card list needs on
@@ -859,7 +857,7 @@ def list_directory_filter_facets(search=None, tier=None, industry=None, country=
 
 
 def list_partner_tiers():
-	"""Returns the tiers actually in use among directory-listed partners (same is_featured/enabled
+	"""Returns the tiers actually in use among directory-listed partners (same show_in_website/enabled
 	scope as list_directory_partners), highest first as the Tier field lists them, for the Tier filter dropdown."""
 	rows = frappe.get_all("Partner", fields=["tier"], filters=BASE_PARTNER_FILTERS, distinct=True)
 	present = {row.tier for row in rows if row.tier}
@@ -872,16 +870,15 @@ def tier_order() -> list[str]:
 
 
 def list_partner_countries():
-	"""Returns distinct countries with at least one partner, for the Country filter dropdown."""
-	rows = frappe.get_all(
-		"Partner", fields=["country"], filters={"country": ["is", "set"], "is_featured": 1, "enabled": 1}, distinct=True
-	)
+	"""Returns distinct countries of directory-listed partners, for the Country filter dropdown."""
+	filters = [*BASE_PARTNER_FILTERS, ["Partner", "country", "is", "set"]]
+	rows = frappe.get_all("Partner", fields=["country"], filters=filters, distinct=True)
 	return sorted({row.country for row in rows if row.country})
 
 
 def list_partner_industries():
 	"""Returns distinct industries actually picked among directory-listed partners (same
-	is_featured/enabled scope as list_directory_partners), for the Industry filter dropdown —
+	show_in_website/enabled scope as list_directory_partners), for the Industry filter dropdown —
 	deliberately not the full Industry list, so a value with zero partners behind it doesn't show
 	up as a dead-end filter."""
 	listed = frappe.get_all("Partner", filters=BASE_PARTNER_FILTERS, pluck="name")

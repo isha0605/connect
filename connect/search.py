@@ -17,9 +17,8 @@ class PartnerSearch(SQLiteSearch):
 	INDEX_SCHEMA = {
 		# "content" is aliased to partner_name (see INDEXABLE_DOCTYPES below) rather
 		# than description, because SQLiteSearch silently drops a document from the
-		# index if its content field is empty — and part of the Partner directory is
-		# bulk-imported with no description yet (see the is_featured comment in
-		# search_partners). partner_name is never empty, so no partner can vanish
+		# index if its content field is empty — and some partners have no description
+		# yet. partner_name is never empty, so no partner can vanish
 		# from search purely for being sparsely profiled; tagline/description/
 		# industry/city/country are still indexed as plain (empty-safe) text fields.
 		"text_fields": ["title", "content", "tagline", "description", "industry", "city", "country"],
