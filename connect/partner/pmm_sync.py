@@ -44,7 +44,7 @@ def sync_pmm_levels(dry_run=False):
 	"""Read every partner's PMM level from frappe.io and update the ones that changed.
 	Returns what happened, for the person running it."""
 	pages = [read_page(url) for url in listing_urls()]
-	partners = frappe.get_all("Partner", fields=["name", "country", "pmm_level", "pmm_listing_url"])
+	partners = frappe.get_all("Partner", fields=["name", "partner_name", "country", "pmm_level", "pmm_listing_url"])
 	matches = match_partners(partners, pages)
 
 	report = frappe._dict(updated=[], unchanged=0, unreadable=[], not_on_frappe_io=[], not_on_connect=[])
@@ -108,7 +108,7 @@ def parse_page(url, html):
 
 def match_partners(partners, pages):
 	"""{partner name: page}. A partner keeps the page it was matched to before; otherwise
-	its name is compared with the page's names, and the country decides between two."""
+	its display name is compared with the page's names, and the country decides between two."""
 	by_url = {p.url: p for p in pages}
 	by_name = {}
 	for page in pages:
@@ -120,7 +120,7 @@ def match_partners(partners, pages):
 		if partner.pmm_listing_url in by_url:
 			matches[partner.name] = by_url[partner.pmm_listing_url]
 			continue
-		candidates = list(by_name.get(comparable(partner.name), {}).values())
+		candidates = list(by_name.get(comparable(partner.get("partner_name") or partner.name), {}).values())
 		if len(candidates) > 1:
 			country = (partner.country or "").lower()
 			candidates = [p for p in candidates if p.country in country or country in p.country] or candidates

@@ -55,6 +55,13 @@ class UnitTestPMMPages(IntegrationTestCase):
 		partner = frappe._dict(name="Renamed Partner", country="India", pmm_listing_url="u-1")
 		self.assertEqual(match_partners([partner], pages)["Renamed Partner"].url, "u-1")
 
+	def test_a_partner_is_matched_by_its_display_name_not_its_id(self):
+		pages = [frappe._dict(url="u-1", country="india", names=["Brightbridge"], level=3)]
+		partner = frappe._dict(
+			name="Northstar Holdings Private Limited", partner_name="Brightbridge", country="India", pmm_listing_url=None
+		)
+		self.assertEqual(match_partners([partner], pages)["Northstar Holdings Private Limited"].url, "u-1")
+
 
 class IntegrationTestPMMSync(IntegrationTestCase):
 	def setUp(self):
