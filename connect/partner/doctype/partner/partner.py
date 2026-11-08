@@ -696,10 +696,12 @@ def list_matching_partners(answers=None, limit=8):
 def region_presence_counts():
 	"""Returns partner counts for the Find Partners redesign's region map, bucketed into the
 	map's 6 regions (finer-grained than the Region select field — India is split out of Asia
-	Pacific to match the map's own regions). Counts every enabled partner, not just the ones
-	shown in the directory (show_in_website), since this is a presence overview rather than a
+	Pacific to match the map's own regions). Counts every enabled, Verified partner, not just the
+	ones shown in the directory (show_in_website), since this is a presence overview rather than a
 	list of profiles to show."""
-	rows = frappe.get_all("Partner", fields=["country", "region"], filters={"enabled": 1})
+	rows = frappe.get_all(
+		"Partner", fields=["country", "region"], filters={"enabled": 1, "verification_status": VERIFIED}
+	)
 
 	counts = {"india": 0, "asia": 0, "middle_east": 0, "africa": 0, "europe": 0, "americas": 0}
 	for row in rows:
@@ -868,10 +870,9 @@ def tier_order() -> list[str]:
 
 
 def list_partner_countries():
-	"""Returns distinct countries with at least one partner, for the Country filter dropdown."""
-	rows = frappe.get_all(
-		"Partner", fields=["country"], filters={"country": ["is", "set"], "show_in_website": 1, "enabled": 1}, distinct=True
-	)
+	"""Returns distinct countries of directory-listed partners, for the Country filter dropdown."""
+	filters = [*BASE_PARTNER_FILTERS, ["Partner", "country", "is", "set"]]
+	rows = frappe.get_all("Partner", fields=["country"], filters=filters, distinct=True)
 	return sorted({row.country for row in rows if row.country})
 
 
