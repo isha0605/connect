@@ -6,6 +6,7 @@ from frappe.tests import IntegrationTestCase
 
 from connect.partner.doctype.partner.partner import (
 	PRIVATE_PROFILE_FIELDS,
+	VERIFIED,
 	get_partner_document,
 	get_partner_preview,
 	list_directory_partners,
@@ -146,23 +147,22 @@ class IntegrationTestPartnerID(IntegrationTestCase):
 		self.assertEqual(frappe.db.count("Partner", {"partner_name": "_Test Shared Apex"}), 2)
 
 
-
 class IntegrationTestPartnerTier(IntegrationTestCase):
-	"""Beginner is the tier for frappe.io's Entry and Emerging partners, below Bronze."""
+	"""Beginner is the lowest tier, below Bronze."""
 
 	def setUp(self):
 		frappe.set_user("Administrator")
 
 	def test_beginner_comes_last_in_the_tier_filter(self):
-		save_imported_partner(
-			"_Test Beginner Partner LLP",
-			{**partner_values("_Test Beginner"), "tier": "Beginner", "enabled": 1, "is_featured": 1, "verification_status": "Verified"},
-		)
+		remove_partners("_Test Beginner Partner LLP")
+		listed = {"tier": "Beginner", "enabled": 1, "is_featured": 1, "verification_status": VERIFIED}
+		save_imported_partner("_Test Beginner Partner LLP", {**partner_values("_Test Beginner"), **listed})
 
 		tiers = list_partner_tiers()
 
 		self.assertEqual(tiers[-1], "Beginner")
 		self.assertEqual(tiers, [t for t in ("Gold", "Silver", "Bronze", "Beginner") if t in tiers])
+
 
 def partner_values(partner_name):
 	tier = next(t for t in frappe.get_meta("Partner").get_field("tier").options.split("\n") if t)
