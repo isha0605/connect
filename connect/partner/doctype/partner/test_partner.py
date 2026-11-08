@@ -9,6 +9,7 @@ from connect.partner.doctype.partner.partner import (
 	get_partner_document,
 	get_partner_preview,
 	list_directory_partners,
+	save_imported_partner,
 )
 from connect.partner.doctype.partner_review.partner_review import list_partner_reviews
 
@@ -90,3 +91,70 @@ class IntegrationTestPartner(IntegrationTestCase):
 
 		frappe.set_user("Administrator")
 		self.assertEqual(get_partner_preview(PENDING)["name"], PENDING)
+
+
+class IntegrationTestPartnerID(IntegrationTestCase):
+	"""Partners who sign up are named by their display name. Imported partners keep their frappe.io ID,
+	so only they may share a display name."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+
+	def test_signup_partner_is_named_by_its_trimmed_display_name(self):
+		remove_partners("_Test Signup Partner")
+
+		self.assertEqual(insert_signup_partner("  _Test Signup Partner  "), "_Test Signup Partner")
+
+	def test_signup_partner_needs_a_display_name(self):
+		for partner_name in (None, "   "):
+			with self.assertRaises(frappe.MandatoryError):
+				insert_signup_partner(partner_name)
+
+	def test_signup_partner_cannot_take_a_used_name(self):
+		remove_partners("_Test Taken Name", "_Test Imported Taken LLP")
+		insert_signup_partner("_Test Taken Name")
+		save_imported_partner("_Test Imported Taken LLP", partner_values("_Test Other"))
+
+		for taken in ("_Test Taken Name", "_Test Imported Taken LLP"):
+			with self.assertRaises(frappe.DuplicateEntryError):
+				insert_signup_partner(taken)
+
+	def test_imported_partner_keeps_its_frappe_io_id(self):
+		remove_partners("_Test Apex Softnet Private Limited")
+
+		name = save_imported_partner("_Test Apex Softnet Private Limited", partner_values("_Test Apex"))
+
+		self.assertEqual(name, "_Test Apex Softnet Private Limited")
+		self.assertEqual(frappe.db.get_value("Partner", name, "partner_name"), "_Test Apex")
+
+	def test_importing_again_updates_the_same_partner(self):
+		remove_partners("_Test Rerun Private Limited")
+		save_imported_partner("_Test Rerun Private Limited", partner_values("_Test Rerun"))
+
+		save_imported_partner("_Test Rerun Private Limited", partner_values("_Test Rerun Renamed"))
+
+		self.assertEqual(frappe.db.count("Partner", {"name": "_Test Rerun Private Limited"}), 1)
+		self.assertEqual(frappe.db.get_value("Partner", "_Test Rerun Private Limited", "partner_name"), "_Test Rerun Renamed")
+
+	def test_imported_partners_can_share_a_display_name(self):
+		remove_partners("_Test Shared Apex Softnet Private Limited", "_Test Shared Apex Enterprise LLP")
+
+		save_imported_partner("_Test Shared Apex Softnet Private Limited", partner_values("_Test Shared Apex"))
+		save_imported_partner("_Test Shared Apex Enterprise LLP", partner_values("_Test Shared Apex"))
+
+		self.assertEqual(frappe.db.count("Partner", {"partner_name": "_Test Shared Apex"}), 2)
+
+
+def partner_values(partner_name):
+	tier = next(t for t in frappe.get_meta("Partner").get_field("tier").options.split("\n") if t)
+	return {"partner_name": partner_name, "tier": tier, "country": "India"}
+
+
+def insert_signup_partner(partner_name):
+	doc = frappe.get_doc({"doctype": "Partner", **partner_values(partner_name)})
+	return doc.insert(ignore_permissions=True).name
+
+
+def remove_partners(*names):
+	for name in names:
+		frappe.delete_doc("Partner", name, force=True, ignore_missing=True)

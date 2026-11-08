@@ -77,6 +77,16 @@ DIMENSION_SCORE_FIELDS = (
 
 
 class Partner(Document):
+	def autoname(self):
+		"""A partner who signs up in Connect is named by their display name. Partners from frappe.io
+		keep their frappe.io ID instead, so they may share a display name (see save_imported_partner)."""
+		name = (self.partner_name or "").strip()
+		if not name:
+			frappe.throw(_("Partner Name is required."), frappe.MandatoryError)
+		if frappe.db.exists("Partner", name):
+			frappe.throw(_("A partner named {0} already exists.").format(frappe.bold(name)), frappe.DuplicateEntryError)
+		self.name = name
+
 	def validate(self):
 		self.validate_hourly_rate()
 		validate_industries(self)
@@ -121,6 +131,20 @@ class Partner(Document):
 		# background-fetches each success story's own frappe.io cover photo —
 		# never blocks this save, and no-ops for rows that already have one
 		queue_missing_story_images(self.get("success_stories"))
+
+
+def save_imported_partner(frappe_io_id: str, values: dict) -> str:
+	"""Creates or updates the partner whose ID is its frappe.io ID, and returns that ID. The ID
+	never changes, so running the import again updates partners instead of duplicating them."""
+	# The import is a system job, not a user, so it writes without the caller's permissions.
+	if frappe.db.exists("Partner", frappe_io_id):
+		doc = frappe.get_doc("Partner", frappe_io_id)
+		doc.update(values)
+		doc.save(ignore_permissions=True)
+	else:
+		doc = frappe.get_doc({"doctype": "Partner", **values})
+		doc.insert(ignore_permissions=True, set_name=frappe_io_id)
+	return doc.name
 
 
 def recompute_rating_from_reviews(partner_name, exclude=None):
@@ -1046,10 +1070,8 @@ _PROFILE_ROW_FIELDS = {
 }
 
 _PROFILE_SIMPLE_FIELDS = (
-	# partner_name is deliberately excluded — it's the doc's autoname source (see
-	# "autoname": "field:partner_name" in partner.json), so letting partners edit it here
-	# would rename the document and break every Connect Partner Member row that references
-	# it by name. Renaming a partner is an admin-only operation done from the desk.
+	# partner_name is deliberately excluded: the name customers see is set by Frappe, from the
+	# partner's application or frappe.io, not by the partner.
 	# starter_pack is excluded too: it decides who Frappe may assign paid Starter Pack
 	# orders to, so a partner must not be able to enrol themselves. So are certs_erpnext and
 	# certs_frappe_framework: they're counted from linked certificates (recount_certificates).
