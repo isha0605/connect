@@ -860,10 +860,10 @@ def list_directory_filter_facets(search=None, tier=None, industry=None, country=
 
 def list_partner_tiers():
 	"""Returns the tiers actually in use among directory-listed partners (same is_featured/enabled
-	scope as list_directory_partners), in Gold/Silver/Bronze order, for the Tier filter dropdown."""
+	scope as list_directory_partners), highest first as the Tier field lists them, for the Tier filter dropdown."""
 	rows = frappe.get_all("Partner", fields=["tier"], filters=BASE_PARTNER_FILTERS, distinct=True)
 	present = {row.tier for row in rows if row.tier}
-	tier_order = ["Gold", "Silver", "Bronze"]
+	tier_order = frappe.get_meta("Partner").get_options("tier").split("\n")
 	return [t for t in tier_order if t in present]
 
 
