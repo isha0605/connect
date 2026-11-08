@@ -81,7 +81,7 @@ def list_my_shortlist():
 	if not names:
 		return []
 
-	partners = frappe.get_list("Partner", fields=PARTNER_FIELDS, filters={"name": ["in", names]})
+	partners = frappe.get_all("Partner", fields=PARTNER_FIELDS, filters={"name": ["in", names]})
 	by_name = {p.name: p for p in partners}
 	ordered = [by_name[n] for n in names if n in by_name]
 

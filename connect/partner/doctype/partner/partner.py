@@ -23,7 +23,7 @@ from connect.partner.industries import (
 )
 from connect.partner.logo import attach_normalized_logos
 from connect.partner.story_image import queue_missing_story_images
-from connect.permissions import _is_partner_admin
+from connect.permissions import _has_full_access, _is_partner_admin
 
 COUNTRY_TO_REGION = {
 	"united states": "North America",
@@ -190,12 +190,18 @@ PARTNER_FIELDS = [
 # else a caller filters on. Callers that append more filters must copy this
 # (list(BASE_PARTNER_FILTERS)) rather than mutate it in place.
 # Only a partner Frappe has approved (their Partner Application) is listed and can be sent work.
+# Guests have no read on Partner, so the directory reads with frappe.get_all and these filters
+# decide what is public.
 VERIFIED = "Verified"
 BASE_PARTNER_FILTERS = [
 	["Partner", "is_featured", "=", 1],
 	["Partner", "enabled", "=", 1],
 	["Partner", "verification_status", "=", VERIFIED],
 ]
+# Workflow state the public profile never shows: unpublished edits and Frappe-side flags.
+PRIVATE_PROFILE_FIELDS = (
+	"profile_draft", "cloud_registration", "cloud_registration_sent_on", "is_featured", "starter_pack_sequence",
+)
 
 
 def _child_values_by_partner(child_doctype, value_field, names, parentfield=None):
@@ -407,14 +413,12 @@ def search_partners(
 		if sort in SORT_OPTIONS:
 			field, desc = SORT_OPTIONS[sort]
 			order_by = f"{field} {'desc' if desc else 'asc'}"
-		partners = frappe.get_list(
+		partners = frappe.get_all(
 			"Partner", fields=PARTNER_FIELDS, filters=filters, order_by=order_by, limit_page_length=limit
 		)
 	else:
 		# Candidates passing the structured filters — unranked, no text match yet.
-		# limit_page_length=0 is required here: frappe.get_list defaults to a page
-		# size of 20 when omitted, which would silently truncate ranking input.
-		candidates = frappe.get_list("Partner", fields=PARTNER_FIELDS, filters=filters, limit_page_length=0)
+		candidates = frappe.get_all("Partner", fields=PARTNER_FIELDS, filters=filters)
 		by_name = {c.name: c for c in candidates}
 
 		ranked_names = _sqlite_rank(search, list(by_name))
@@ -548,20 +552,19 @@ def count_matching_partners(answers=None):
 	if child_matches:
 		filters.append(["Partner", "name", "in", list(set.intersection(*child_matches))])
 
-	# limit_page_length=0: frappe.get_list defaults to page size 20 when omitted.
-	partners = frappe.get_list("Partner", filters=filters, fields=["name"], limit_page_length=0)
+	partners = frappe.get_all("Partner", filters=filters, fields=["name"])
 	return len(partners)
 
 
 def _score_partners_by_requirements(answers):
 	"""Scores every featured partner by how many of the wizard's answered questions they fail to match, shared by wizard_match_state and list_matching_partners."""
-	names = [n.name for n in frappe.get_list(
+	names = [n.name for n in frappe.get_all(
 		"Partner", filters=BASE_PARTNER_FILTERS, fields=["name"], limit_page_length=0,
 	)]
 	if not names:
 		return [], {}
 
-	rows = frappe.get_list("Partner", filters=[["Partner", "name", "in", names]], fields=PARTNER_FIELDS)
+	rows = frappe.get_all("Partner", filters=[["Partner", "name", "in", names]], fields=PARTNER_FIELDS)
 	by_name = {r.name: r for r in rows}
 
 	apps_by_partner = _apps_by_partner(names)
@@ -653,7 +656,7 @@ def list_matching_partners(answers=None, limit=8):
 	scored = [s for s in all_scored if s[0] <= display_cap]
 
 	names = [name for *_rest, name, _missing in scored]
-	rows = frappe.get_list("Partner", filters=[["Partner", "name", "in", names]], fields=PARTNER_FIELDS)
+	rows = frappe.get_all("Partner", filters=[["Partner", "name", "in", names]], fields=PARTNER_FIELDS)
 	by_name = {r.name: r for r in rows}
 
 	scored = scored[:limit]
@@ -724,7 +727,7 @@ def list_partners_by_names(names):
 	if not names:
 		return []
 	filters = list(BASE_PARTNER_FILTERS) + [["Partner", "name", "in", names]]
-	rows = frappe.get_list("Partner", fields=PARTNER_FIELDS, filters=filters)
+	rows = frappe.get_all("Partner", fields=PARTNER_FIELDS, filters=filters)
 	apps_by_partner = _apps_by_partner([r.name for r in rows])
 	for r in rows:
 		r["apps_preview"] = apps_by_partner.get(r.name, [])[:2]
@@ -875,9 +878,8 @@ def get_partner_preview(partner):
 		"rating", "city", "country", "pmm_level", "hourly_rate", "response_time_hours",
 		"certs_erpnext", "certs_frappe_framework", "address",
 	]
+	check_profile_visible(partner)
 	doc = frappe.db.get_value("Partner", partner, fields, as_dict=True)
-	if not doc:
-		frappe.throw(_("Partner not found"), frappe.DoesNotExistError)
 
 	doc["apps"] = _apps_by_partner([partner]).get(partner, [])
 	attach_industries([doc])
@@ -889,9 +891,10 @@ def get_partner_preview(partner):
 
 def get_partner_document(partner):
 	"""Returns the full Partner record as a plain API call, since Studio's Document resource isn't guest-accessible."""
-	if not frappe.db.exists("Partner", partner):
-		frappe.throw(_("Partner not found"), frappe.DoesNotExistError)
+	check_profile_visible(partner)
 	doc = frappe.get_doc("Partner", partner).as_dict()
+	for fieldname in PRIVATE_PROFILE_FIELDS:
+		doc.pop(fieldname, None)
 	# computed, not stored — "founded_years_ago" would silently go stale every
 	# year if we persisted it instead of deriving it from year_founded on read
 	doc["founded_years_ago"] = (
@@ -905,6 +908,22 @@ def get_partner_document(partner):
 	# the client logo where one has been built, else the original URL
 	attach_normalized_logos(doc.get("success_stories"))
 	return doc
+
+
+def check_profile_visible(partner: str) -> None:
+	"""A listed partner's profile is public. An unlisted one opens only for its own members
+	(to preview it) and Frappe staff; for anyone else it does not exist."""
+	is_listed = frappe.db.exists("Partner", {"name": partner, "enabled": 1, "verification_status": VERIFIED})
+	if is_listed or _can_see_unlisted_partner(partner):
+		return
+	frappe.throw(_("Partner not found"), frappe.DoesNotExistError)
+
+
+def _can_see_unlisted_partner(partner: str) -> bool:
+	user = frappe.session.user
+	if _has_full_access(user) or "Partner Reviewer" in frappe.get_roles(user):
+		return True
+	return bool(frappe.db.exists("Connect Partner Member", {"partner": partner, "user": user, "is_removed": 0}))
 
 
 def _my_partner():
