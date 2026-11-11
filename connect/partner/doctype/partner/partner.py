@@ -1078,6 +1078,7 @@ def get_my_profile(with_draft=False) -> dict:
 def _profile_options() -> dict:
 	return {
 		"apps": frappe.get_all("App", pluck="name", order_by="name asc"),
+		"countries": frappe.get_all("Country", pluck="name", order_by="name asc"),
 		"migrations": frappe.get_all("Migration Path", pluck="name", order_by="name asc"),
 		"industries": frappe.get_all("Industry", pluck="name", order_by="name asc"),
 		"categories": sorted(set(frappe.get_all("Partner Success Story", filters={"category": ["is", "set"]}, pluck="category"))),

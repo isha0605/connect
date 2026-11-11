@@ -64,7 +64,7 @@ export const SAMPLE_PROFILE = {
 	is_verified: true,
 	can_edit: true,
 	has_unpublished_changes: true,
-	options: { apps: ["ERPNext", "Frappe HR"], migrations: ["Tally to ERPNext"], industries: ["Agriculture", "Manufacturing", "Retail", "Textile Manufacturing"], categories: ["Manufacturing"] },
+	options: { apps: ["ERPNext", "Frappe HR"], countries: ["India", "United States"], migrations: ["Tally to ERPNext"], industries: ["Agriculture", "Manufacturing", "Retail", "Textile Manufacturing"], categories: ["Manufacturing"] },
 }
 
 // The same limits update_my_partner_profile enforces, with the label and builder tab to point at.
