@@ -208,6 +208,20 @@ def discard_my_profile_draft():
 
 
 @frappe.whitelist()
+def list_my_partners():
+	from connect.partner.doctype.connect_partner_member.connect_partner_member import list_my_partners
+	return list_my_partners(frappe.session.user)
+
+
+@frappe.whitelist(methods=["POST"])
+def switch_partner(partner: str):
+	from connect.account import get_my_context
+	from connect.partner.doctype.connect_partner_member.connect_partner_member import switch_partner
+	switch_partner(frappe.session.user, partner)
+	return get_my_context()
+
+
+@frappe.whitelist()
 def get_my_profile(with_draft=False):
 	from connect.partner.doctype.partner.partner import get_my_profile
 	return get_my_profile(with_draft=with_draft)

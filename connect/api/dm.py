@@ -4,6 +4,7 @@ from frappe.utils import now_datetime
 
 from connect.api.attachments import _attach_file_to_message, _claim_staged_attachment
 from connect.api.messages import PINNED_MESSAGE_FIELDS
+from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_partners
 from connect.permissions import _dm_thread_pair, _dm_thread_pair_or_none
 
 
@@ -50,10 +51,7 @@ def get_my_dm_threads():
 		for p in frappe.get_all("User", filters={"name": ["in", others]}, fields=["name", "full_name", "user_image"])
 	}
 	# batched partner lookup for the response-time badge; usually empty since most DMs are user-to-user
-	other_partners = {
-		m.user: m.partner
-		for m in frappe.get_all("Connect Partner Member", filters={"user": ["in", others]}, fields=["user", "partner"])
-	}
+	other_partners = get_current_partners(others)
 
 	result = []
 	for t in threads:

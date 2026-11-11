@@ -24,6 +24,12 @@
          "onClick": "() => { window.dispatchEvent(new CustomEvent('connect:open-settings')); }"
         },
         {
+         "condition": "() => !!(myContext.data && myContext.data.partner && myContext.data.partner.can_switch)",
+         "icon": "lucide-repeat",
+         "label": "Switch company",
+         "onClick": "() => { window.dispatchEvent(new CustomEvent('connect:switch-company')); }"
+        },
+        {
          "icon": "lucide-log-out",
          "label": "Log out",
          "onClick": "() => { call('logout').then(() => { window.location.href = '/connect/partner-directory-redesign'; }); }"
@@ -346,6 +352,14 @@
     "isCustomVueComponent": true
    },
    {
+    "blockName": "SwitchCompanyDialog",
+    "componentId": "SwitchCompanyDialog-fpr",
+    "componentName": "SwitchCompanyDialog",
+    "componentProps": {},
+    "componentSlots": {},
+    "isCustomVueComponent": true
+   },
+   {
     "blockName": "ConnectNotifications",
     "componentId": "ConnectNotifications-fpr",
     "componentName": "ConnectNotifications",
@@ -371,7 +385,7 @@
  "idx": 0,
  "is_disabled": 0,
  "is_standard": 1,
- "modified": "2026-11-06 15:07:22.211575",
+ "modified": "2026-11-11 13:00:00.000000",
  "modified_by": "Administrator",
  "name": "appsidebar",
  "owner": "Administrator"

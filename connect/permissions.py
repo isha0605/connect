@@ -3,6 +3,12 @@ from pathlib import Path
 
 import frappe
 
+from connect.partner.doctype.connect_partner_member.connect_partner_member import (
+	access_level_of,
+	get_active_memberships,
+	get_current_membership,
+)
+
 
 def _has_full_access(user):
 	return user == "Administrator" or "System Manager" in frappe.get_roles(user)
@@ -15,9 +21,24 @@ def _is_customer_admin(customer, user):
 
 
 def _is_partner_admin(partner, user):
-	return bool(
-		frappe.db.exists("Connect Partner Member", {"partner": partner, "user": user, "is_admin": 1})
-	)
+	"""Whether the user owns `partner` and works for it now. An owner of two firms acts for one
+	at a time, so a link to the other firm's records does nothing until they switch."""
+	membership = get_current_membership(user)
+	return bool(membership) and membership.partner == partner and bool(membership.is_admin)
+
+
+def _current_partner(user) -> str | None:
+	"""The partner the user works for now (see get_current_membership), or None."""
+	membership = get_current_membership(user)
+	return membership.partner if membership else None
+
+
+def _switched_away_partners(user) -> list[str]:
+	"""Firms the user is an active member of but not working for now: their chats stay closed
+	until the user switches. A guest in another firm's chat, or someone who left a firm, is not
+	a member of it, so their access is unchanged."""
+	current = _current_partner(user)
+	return [row.partner for row in get_active_memberships(user) if row.partner != current]
 
 
 def _get_partner_owners(partner) -> list[str]:
@@ -35,11 +56,7 @@ def _my_partner_with_access(user, levels):
 	(connect_partner_member.LEAD_ACCESS, say); else a PermissionError."""
 	from frappe import _
 
-	from connect.partner.doctype.connect_partner_member.connect_partner_member import access_level_of
-
-	row = frappe.db.get_value(
-		"Connect Partner Member", {"user": user, "is_removed": 0}, ["partner", "is_admin", "access"], as_dict=True
-	)
+	row = get_current_membership(user)
 	if not row:
 		frappe.throw(_("Only a partner's team can see this."), frappe.PermissionError)
 	if access_level_of(row) not in levels:
@@ -49,8 +66,6 @@ def _my_partner_with_access(user, levels):
 
 def _has_partner_access(partner, user, levels) -> bool:
 	"""Whether the user is an active member of the partner with one of these access levels."""
-	from connect.partner.doctype.connect_partner_member.connect_partner_member import access_level_of
-
 	row = frappe.db.get_value(
 		"Connect Partner Member",
 		{"partner": partner, "user": user, "is_removed": 0},
@@ -72,9 +87,7 @@ def _my_company_membership(user):
 	)
 	if customer_row:
 		return "Customer Team Member", customer_row.customer, customer_row
-	partner_row = frappe.db.get_value(
-		"Connect Partner Member", {"user": user, "is_removed": 0}, ["name", "partner", "is_admin"], as_dict=True
-	)
+	partner_row = get_current_membership(user)
 	if partner_row:
 		return "Connect Partner Member", partner_row.partner, partner_row
 	return None, None, None
@@ -91,12 +104,34 @@ def _my_side(user):
 
 
 def _thread_membership(thread, user):
-	return frappe.db.get_value(
-		"Connect Thread Member",
-		{"thread": thread, "user": user},
-		["permission", "is_removed", "removed_on"],
-		as_dict=True,
-	)
+	"""The user's membership of the thread. A partner-side member has none while they work for
+	another partner, so a firm's chats close when they switch firm (see get_current_membership)."""
+	member = frappe.qb.DocType("Connect Thread Member")
+	thread_doc = frappe.qb.DocType("Connect Thread")
+	rows = (
+		frappe.qb.from_(member)
+		.left_join(thread_doc)
+		.on(thread_doc.name == member.thread)
+		.select(member.permission, member.is_removed, member.removed_on, member.side, thread_doc.partner)
+		.where((member.thread == thread) & (member.user == user))
+		.limit(1)
+	).run(as_dict=True)
+	membership = rows[0] if rows else None
+	if membership and membership.side == "Partner" and membership.partner in _switched_away_partners(user):
+		return None
+	return membership
+
+
+def _visible_thread_member_sql(user, member_table) -> str:
+	"""SQL for the rows of `member_table` (Connect Thread Member, by alias) that _thread_membership
+	allows: all but partner-side rows in chats of a firm the user has switched away from."""
+	away = _switched_away_partners(user)
+	if not away:
+		return "1 = 1"
+	partners = ", ".join(frappe.db.escape(partner) for partner in away)
+	return f"""({member_table}.side != 'Partner' or {member_table}.thread not in (
+		select name from `tabConnect Thread` where partner in ({partners})
+	))"""
 
 
 def _check_can_write(thread, user):
@@ -125,8 +160,16 @@ def _check_can_read(thread, user):
 
 	if _has_full_access(user):
 		return
-	if not _thread_membership(thread, user):
-		frappe.throw(_("You don't have access to this thread"), frappe.PermissionError)
+	if _thread_membership(thread, user):
+		return
+	partner = frappe.db.get_value("Connect Thread", thread, "partner")
+	if partner in _switched_away_partners(user):
+		partner_name = frappe.db.get_value("Partner", partner, "partner_name") or partner
+		frappe.throw(
+			_("This chat belongs to {0}. Switch to that company to open it.").format(partner_name),
+			frappe.PermissionError,
+		)
+	frappe.throw(_("You don't have access to this thread"), frappe.PermissionError)
 
 
 def _dm_thread_pair_or_none(thread, user):
@@ -156,10 +199,7 @@ def has_partner_crm_settings_permission(doc, ptype="read", user=None, **kwargs):
 def get_partner_crm_settings_permission_query_conditions(user, doctype=None):
 	if _has_full_access(user):
 		return ""
-	user = frappe.db.escape(user)
-	return f"""`tabPartner CRM Settings`.partner in (
-		select partner from `tabConnect Partner Member` where user = {user} and is_admin = 1
-	)"""
+	return _current_admin_partner_sql(user, "tabPartner CRM Settings")
 
 
 def has_partner_application_permission(doc, ptype="read", user=None, **kwargs):
@@ -175,10 +215,15 @@ def has_partner_application_permission(doc, ptype="read", user=None, **kwargs):
 def get_partner_application_permission_query_conditions(user, doctype=None):
 	if _has_full_access(user) or _is_partner_reviewer(user):
 		return ""
-	user = frappe.db.escape(user)
-	return f"""`tabPartner Application`.partner in (
-		select partner from `tabConnect Partner Member` where user = {user} and is_admin = 1
-	)"""
+	return _current_admin_partner_sql(user, "tabPartner Application")
+
+
+def _current_admin_partner_sql(user, table) -> str:
+	"""SQL for rows of `table` that belong to the partner the user works for now and owns."""
+	membership = get_current_membership(user)
+	if not membership or not membership.is_admin:
+		return "1 = 0"
+	return f"`{table}`.partner = {frappe.db.escape(membership.partner)}"
 
 
 def has_thread_permission(doc, ptype="read", user=None, **kwargs):
@@ -194,7 +239,7 @@ def has_thread_permission(doc, ptype="read", user=None, **kwargs):
 	if ptype == "create":
 		return bool(
 			frappe.db.exists("Customer Team Member", {"customer": doc.customer, "user": user})
-			or frappe.db.exists("Connect Partner Member", {"partner": doc.partner, "user": user})
+			or _current_partner(user) == doc.partner
 		)
 
 	membership = _thread_membership(doc.name, user)
@@ -211,9 +256,9 @@ def has_thread_permission(doc, ptype="read", user=None, **kwargs):
 def get_thread_permission_query_conditions(user, doctype=None):
 	if _has_full_access(user):
 		return ""
-	user = frappe.db.escape(user)
 	return f"""`tabConnect Thread`.name in (
-		select thread from `tabConnect Thread Member` where user = {user}
+		select own.thread from `tabConnect Thread Member` own
+		where own.user = {frappe.db.escape(user)} and {_visible_thread_member_sql(user, "own")}
 	)"""
 
 
@@ -284,6 +329,7 @@ def get_message_permission_query_conditions(user, doctype=None):
 		where ctm.thread = `tabConnect Message`.thread
 		and ctm.user = {escaped_user}
 		and (ctm.is_removed = 0 or `tabConnect Message`.creation <= ctm.removed_on)
+		and {_visible_thread_member_sql(user, "ctm")}
 	) and not {_anonymous_customer_sql(escaped_user, "tabConnect Message", "sender")}"""
 
 
@@ -316,10 +362,11 @@ def has_thread_member_permission(doc, ptype="read", user=None, **kwargs):
 def get_thread_member_permission_query_conditions(user, doctype=None):
 	if _has_full_access(user):
 		return ""
-	user = frappe.db.escape(user)
+	escaped_user = frappe.db.escape(user)
 	return f"""`tabConnect Thread Member`.thread in (
-		select thread from `tabConnect Thread Member` where user = {user}
-	) and not {_anonymous_customer_sql(user, "tabConnect Thread Member", "user")}"""
+		select own.thread from `tabConnect Thread Member` own
+		where own.user = {escaped_user} and {_visible_thread_member_sql(user, "own")}
+	) and not {_anonymous_customer_sql(escaped_user, "tabConnect Thread Member", "user")}"""
 
 
 def has_dm_thread_permission(doc, ptype="read", user=None, **kwargs):
