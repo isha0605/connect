@@ -247,6 +247,8 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 		frappe.set_user(ADMIN)
 		with self.assertRaises(frappe.ValidationError):
 			self.save_listing_section(tagline="x" * 81)
+		with self.assertRaises(frappe.ValidationError):
+			self.save_listing_section(country="Atlantis")
 		self.assertIsNone(frappe.db.get_value("Partner", PARTNER, "profile_draft"))
 		self.save_listing_section(tagline="A drafted tagline")
 
