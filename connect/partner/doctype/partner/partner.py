@@ -24,48 +24,8 @@ from connect.partner.industries import (
 from connect.partner.logo import attach_normalized_logos
 from connect.partner.story_image import queue_missing_story_images
 from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_membership
+from connect.partner.doctype.region.region import get_filter_countries, get_region_of_country
 from connect.permissions import _has_full_access, _is_partner_admin
-
-COUNTRY_TO_REGION = {
-	"united states": "North America",
-	"usa": "North America",
-	"canada": "North America",
-	"mexico": "North America",
-	"united kingdom": "Europe",
-	"uk": "Europe",
-	"germany": "Europe",
-	"france": "Europe",
-	"netherlands": "Europe",
-	"spain": "Europe",
-	"italy": "Europe",
-	"ireland": "Europe",
-	"sweden": "Europe",
-	"switzerland": "Europe",
-	"india": "Asia Pacific",
-	"china": "Asia Pacific",
-	"japan": "Asia Pacific",
-	"singapore": "Asia Pacific",
-	"australia": "Asia Pacific",
-	"new zealand": "Oceania",
-	"indonesia": "Asia Pacific",
-	"philippines": "Asia Pacific",
-	"vietnam": "Asia Pacific",
-	"malaysia": "Asia Pacific",
-	"uae": "Middle East",
-	"united arab emirates": "Middle East",
-	"saudi arabia": "Middle East",
-	"qatar": "Middle East",
-	"israel": "Middle East",
-	"south africa": "Africa",
-	"nigeria": "Africa",
-	"kenya": "Africa",
-	"egypt": "Africa",
-	"brazil": "Latin America",
-	"argentina": "Latin America",
-	"colombia": "Latin America",
-	"chile": "Latin America",
-}
-
 
 DIMENSION_SCORE_FIELDS = (
 	"business_understanding",
@@ -125,8 +85,12 @@ class Partner(Document):
 				)
 			)
 
+	def validate_country(self):
+		if self.country and not frappe.db.exists("Country", self.country):
+			frappe.throw(_("{0} is not in the Country list.").format(self.country))
+
 	def before_save(self):
-		self.region = COUNTRY_TO_REGION.get((self.country or "").strip().lower(), "Other")
+		self.region = get_region_of_country(self.country)
 
 	def on_update(self):
 		# background-fetches each success story's own frappe.io cover photo —
@@ -166,26 +130,6 @@ def recompute_rating_from_reviews(partner_name, exclude=None):
 		values[f"{dimension}_score"] = sum(dim_values) / len(dim_values) if dim_values else 0
 
 	frappe.db.set_value("Partner", partner_name, values, update_modified=False)
-
-
-# Frappe's own /partners/regions taxonomy — used to group the directory's Country filter and to
-# guarantee every country shows up (even at count 0), not just ones with a matching partner today.
-REGION_COUNTRIES = {
-	"Asia Pacific": [
-		"India", "Philippines", "Indonesia", "Myanmar", "Pakistan", "Singapore",
-		"Australia", "Bangladesh", "China", "Sri Lanka", "Thailand", "Vietnam",
-	],
-	"Middle East": [
-		"Saudi Arabia", "UAE", "Egypt", "Qatar", "Kuwait", "Oman", "Bahrain", "Iraq", "Jordan", "Libya", "Yemen",
-	],
-	"Africa": [
-		"Kenya", "Tanzania", "Congo - Kinshasa", "Ghana", "Mauritius", "Nigeria", "South Africa", "Uganda",
-	],
-	"Europe": [
-		"Germany", "France", "Italy", "Malta", "Netherlands", "Spain", "Switzerland", "United Kingdom",
-	],
-	"Americas": ["United States", "Canada"],
-}
 
 
 def _normalize_multi(value):
@@ -694,32 +638,25 @@ def list_matching_partners(answers=None, limit=8):
 	return result
 
 
+# The region map's shapes, keyed by Region. India has its own shape, apart from Asia Pacific.
+MAP_REGION_KEYS = {
+	"India": "india",
+	"Asia Pacific": "asia",
+	"Middle East": "middle_east",
+	"Africa": "africa",
+	"Europe": "europe",
+	"Americas": "americas",
+}
+
+
 def region_presence_counts():
-	"""Returns partner counts for the Find Partners redesign's region map, bucketed into the
-	map's 6 regions (finer-grained than the Region select field — India is split out of Asia
-	Pacific to match the map's own regions). Counts every enabled, Verified partner, not just the
-	ones shown in the directory (show_in_website), since this is a presence overview rather than a
-	list of profiles to show."""
+	"""Partner counts for the Find Partners region map. Counts every enabled, Verified partner,
+	not only the ones listed in the directory, since the map shows presence, not profiles."""
 	rows = frappe.get_all(
 		"Partner", fields=["country", "region"], filters={"enabled": 1, "verification_status": VERIFIED}
 	)
-
-	counts = {"india": 0, "asia": 0, "middle_east": 0, "africa": 0, "europe": 0, "americas": 0}
-	for row in rows:
-		if (row.country or "").strip().lower() == "india":
-			counts["india"] += 1
-		elif row.region == "Asia Pacific":
-			counts["asia"] += 1
-		elif row.region == "Middle East":
-			counts["middle_east"] += 1
-		elif row.region == "Africa":
-			counts["africa"] += 1
-		elif row.region == "Europe":
-			counts["europe"] += 1
-		elif row.region in ("North America", "Latin America"):
-			counts["americas"] += 1
-		# region "Oceania"/"Other" partners aren't represented in any of the map's 6 regions
-	return counts
+	counts = Counter("India" if row.country == "India" else row.region for row in rows)
+	return {key: counts.get(region, 0) for region, key in MAP_REGION_KEYS.items()}
 
 
 def _decorate_directory_rows(rows):
@@ -784,18 +721,17 @@ def list_country_facets(search=None, tier=None, industry=None, category=None,
 	min_rating=None, max_response_time=None):
 	"""Country counts for the Directory's Region>Country multi-select, computed with every OTHER
 	active filter applied but NOT country itself — so checking a country never shrinks its own
-	sibling counts, only what the other facets (industry, tier, ...) show. Grouped under
-	REGION_COUNTRIES so every real country appears (even at 0), not just ones a partner happens to
-	be in today."""
+	sibling counts, only what the other facets (industry, tier, ...) show. Lists the countries each
+	Region marks Show in Directory Filter, even at 0, not just ones a partner happens to be in today."""
 	rows = search_partners(
 		search=search, tier=tier, industry=industry, category=category,
 		business_process=business_process, implementation_type=implementation_type, language=language,
 		min_rating=min_rating, max_response_time=max_response_time, limit=10000,
 	)
-	counts = Counter((r.country or "").strip() for r in rows)
+	counts = Counter(r.country for r in rows)
 	return [
 		{"region": region, "options": [{"value": c, "count": counts.get(c, 0)} for c in countries]}
-		for region, countries in REGION_COUNTRIES.items()
+		for region, countries in get_filter_countries().items()
 	]
 
 
@@ -1142,6 +1078,7 @@ def get_my_profile(with_draft=False) -> dict:
 def _profile_options() -> dict:
 	return {
 		"apps": frappe.get_all("App", pluck="name", order_by="name asc"),
+		"countries": frappe.get_all("Country", pluck="name", order_by="name asc"),
 		"migrations": frappe.get_all("Migration Path", pluck="name", order_by="name asc"),
 		"industries": frappe.get_all("Industry", pluck="name", order_by="name asc"),
 		"categories": sorted(set(frappe.get_all("Partner Success Story", filters={"category": ["is", "set"]}, pluck="category"))),
@@ -1223,8 +1160,9 @@ def update_my_partner_profile(
 		doc.save(ignore_permissions=True)
 		return {"partner": doc.name}
 
-	# The draft isn't saved, so run the checks Partner.validate would.
+	# The draft isn't saved, so run the checks Partner.validate and link validation would.
 	doc.validate_hourly_rate()
+	doc.validate_country()
 	validate_industries(doc)
 	_save_profile_draft(live, doc)
 	return {"partner": doc.name}

@@ -231,6 +231,7 @@ export default function setup(context) {
 		industryOptions: computed(() => toOptions(options.value.industries)),
 		industryCount: computed(() => `${(draft.value.industries || []).length} of ${MAX_INDUSTRIES}`),
 		tooManyIndustries: computed(() => (draft.value.industries || []).length > MAX_INDUSTRIES),
+		countryOptions: computed(() => toOptions(options.value.countries)),
 		appOptions: computed(() => toOptions(options.value.apps)),
 		migrationOptions: computed(() => toOptions(options.value.migrations)),
 		categoryOptions: computed(() => options.value.categories || []),
