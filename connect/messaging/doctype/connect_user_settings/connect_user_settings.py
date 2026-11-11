@@ -6,6 +6,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import get_time
 
+from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_partners
+
 WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 AFTER_HOURS_BEHAVIORS = ("Do nothing", "Suggest sending silently", "Always send silently")
 
@@ -59,12 +61,7 @@ def update_my_settings(work_start, work_end, work_days, after_hours_behavior):
 	if after_hours_behavior not in AFTER_HOURS_BEHAVIORS:
 		frappe.throw(_("Unknown after-hours behavior"))
 
-	if frappe.db.exists("Connect User Settings", user):
-		doc = frappe.get_doc("Connect User Settings", user)
-	else:
-		doc = frappe.new_doc("Connect User Settings")
-		doc.user = user
-
+	doc = settings_for_edit(user)
 	doc.work_start = work_start
 	doc.work_end = work_end
 	for day in WEEKDAYS:
@@ -72,6 +69,23 @@ def update_my_settings(work_start, work_end, work_days, after_hours_behavior):
 	doc.after_hours_behavior = after_hours_behavior
 	doc.save(ignore_permissions=True)
 	return _as_dict(doc)
+
+
+def set_current_partner(user: str, partner: str) -> None:
+	"""Saves the partner company `user` works for now. The caller checks they are on its team."""
+	doc = settings_for_edit(user)
+	doc.current_partner = partner
+	# Only the settings owner changes this, through switch_partner; users have no Desk write here.
+	doc.save(ignore_permissions=True)
+
+
+def settings_for_edit(user: str) -> Document:
+	"""The user's settings to change, or new ones with the default hours if they have none yet."""
+	if frappe.db.exists("Connect User Settings", user):
+		return frappe.get_doc("Connect User Settings", user)
+	doc = frappe.new_doc("Connect User Settings")
+	doc.user = user
+	return doc
 
 
 def get_partner_hours_for_thread(thread=None, dm_thread=None):
@@ -97,7 +111,7 @@ def get_partner_hours_for_thread(thread=None, dm_thread=None):
 	elif dm_thread:
 		user_a, user_b = frappe.db.get_value("Connect DM Thread", dm_thread, ["user_a", "user_b"])
 		other = user_b if user_a == frappe.session.user else user_a
-		partner = frappe.db.get_value("Connect Partner Member", {"user": other}, "partner")
+		partner = get_current_partners([other]).get(other)
 		if partner:
 			partner_users = [other]
 			partner_name = frappe.db.get_value("Partner", partner, "partner_name")

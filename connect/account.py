@@ -8,6 +8,8 @@ from connect.partner.doctype.connect_partner_member.connect_partner_member impor
 	CUSTOMER_ACCESS,
 	LEAD_ACCESS,
 	access_level_of,
+	get_active_memberships,
+	get_current_membership,
 )
 from connect.partner.doctype.partner.partner import VERIFIED
 from connect.permissions import _my_company_membership
@@ -88,11 +90,11 @@ def get_my_context():
 		is_admin = frappe.db.get_value("Customer Team Member", {"customer": customer, "user": user}, "is_admin")
 		customer_name = frappe.db.get_value("Customer", customer, "customer_name")
 		customer_membership = {"customer": customer, "customer_name": customer_name, "is_admin": cint(is_admin)}
-	partner_membership = frappe.db.get_value(
-		"Connect Partner Member", {"user": user, "is_removed": 0}, ["partner", "is_admin", "access"], as_dict=True
-	)
+	partner_membership = get_current_membership(user)
 	if partner_membership:
 		partner_membership.update(partner_access(partner_membership))
+		# The sidebar offers "Switch company" only to someone on more than one partner's team.
+		partner_membership["can_switch"] = len(get_active_memberships(user)) > 1
 	signed_in = user != "Guest"
 	projects_route = get_projects_route(user, customer) if signed_in else None
 	return {

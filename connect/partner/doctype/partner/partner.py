@@ -23,6 +23,7 @@ from connect.partner.industries import (
 )
 from connect.partner.logo import attach_normalized_logos
 from connect.partner.story_image import queue_missing_story_images
+from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_membership
 from connect.permissions import _has_full_access, _is_partner_admin
 
 COUNTRY_TO_REGION = {
@@ -952,13 +953,13 @@ def _can_see_unlisted_partner(partner: str) -> bool:
 
 
 def _my_partner():
-	"""Resolves the caller's own Partner, throwing if they aren't on a partner's roster. Read from
-	their partner membership alone, as the sidebar does: someone who is also on a customer's team
-	still works for their partner."""
-	partner = frappe.db.get_value("Connect Partner Member", {"user": frappe.session.user, "is_removed": 0}, "partner")
-	if not partner:
+	"""Resolves the partner the caller works for now, throwing if they aren't on a partner's roster.
+	Read from their partner membership alone, as the sidebar does: someone who is also on a
+	customer's team still works for their partner."""
+	membership = get_current_membership(frappe.session.user)
+	if not membership:
 		frappe.throw(_("You are not a member of any partner company"), frappe.PermissionError)
-	return partner
+	return membership.partner
 
 
 def _parse_json_arg(value, default):

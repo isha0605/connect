@@ -267,8 +267,9 @@ def _search_thread_messages(filters):
 	masked rather than left out, and the ones they were removed from, up to their removal."""
 	user = frappe.session.user
 	fields = [*SEARCH_FIELDS, "thread"]
-	active = frappe.get_all(
-		"Connect Thread Member", filters={"user": user, "is_removed": 0}, pluck="thread"
+	# get_list, so the permission rules leave out the chats of a firm the caller switched away from.
+	active = frappe.get_list(
+		"Connect Thread Member", filters={"user": user, "is_removed": 0}, pluck="thread", limit_page_length=0
 	)
 	# Read without permission checks: scoped to the caller's own active threads.
 	rows = frappe.get_all(
