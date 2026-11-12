@@ -5,7 +5,11 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
-from connect.partner.doctype.partner_application.partner_application import get_mrr_status, unregister
+from connect.partner.doctype.partner_application.partner_application import (
+	get_mrr_status,
+	save_partner_application,
+	unregister,
+)
 from connect.partner.doctype.partner_certificate.partner_certificate import recount_certificates
 
 PARTNER = "_Test Application Partner"
@@ -18,6 +22,8 @@ PATCH_BUYER = "patch.buyer@example.test"
 UNREGISTER_PARTNER = "_Test Unregister Partner"
 ADMIN = "unregister.admin@example.test"
 MEMBER = "unregister.member@example.test"
+APPLICANT = "new.applicant@example.test"
+NEW_COMPANY = "_Test Newly Registered Partner"
 
 
 class TestPartnerApplicationMRR(IntegrationTestCase):
@@ -173,3 +179,50 @@ class IntegrationTestPartnerApplication(IntegrationTestCase):
 			unregister()
 		self.assertEqual(frappe.db.get_value("Partner Certificate", self.certificate.name, "partner"), UNREGISTER_PARTNER)
 		self.assertEqual(frappe.db.get_value("Partner Application", self.application.name, "status"), "Approved")
+
+
+class TestRegisterPartner(IntegrationTestCase):
+	"""Registering from "Become a partner": someone on no partner's team gets a new partner they own."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		self.addCleanup(frappe.set_user, "Administrator")
+		self.addCleanup(frappe.db.rollback)
+		if not frappe.db.exists("User", APPLICANT):
+			frappe.get_doc({"doctype": "User", "email": APPLICANT, "first_name": "Applicant"}).insert(
+				ignore_permissions=True
+			)
+
+	def register(self, company_name=NEW_COMPANY):
+		frappe.set_user(APPLICANT)
+		return save_partner_application(
+			{
+				"company_name": company_name,
+				"registered_country": "Germany",
+				"company_email": "hello@newpartner.example.test",
+				"contact": "+49-1234567890",
+			}
+		)
+
+	def test_a_new_applicant_owns_an_unlisted_partner(self):
+		application = self.register()
+
+		partner = frappe.db.get_value("Partner", NEW_COMPANY, ["country", "verification_status"], as_dict=True)
+		self.assertEqual((partner.country, partner.verification_status), ("Germany", "Pending Review"))
+		self.assertTrue(
+			frappe.db.exists("Connect Partner Member", {"partner": NEW_COMPANY, "user": APPLICANT, "is_admin": 1})
+		)
+		self.assertEqual((application["partner"], application["status"]), (NEW_COMPANY, "Draft"))
+
+	def test_saving_again_keeps_the_same_partner(self):
+		self.register()
+		application = self.register(company_name="Renamed Company")
+
+		self.assertEqual(application["partner"], NEW_COMPANY)
+		self.assertFalse(frappe.db.exists("Partner", "Renamed Company"))
+
+	def test_a_taken_company_name_is_refused(self):
+		make_partner(PARTNER)
+		with self.assertRaises(frappe.DuplicateEntryError):
+			self.register(company_name=PARTNER)
+		self.assertFalse(frappe.db.exists("Connect Partner Member", {"user": APPLICANT}))
