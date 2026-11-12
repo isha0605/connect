@@ -6,9 +6,13 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, now_datetime
 
+from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_membership
 from connect.partner.doctype.partner.partner import VERIFIED
 from connect.permissions import _is_partner_admin
 from connect.roles import REVIEWER_ROLE
+
+# A partner who registers in Connect starts at the lowest tier until Frappe sets theirs.
+NEW_PARTNER_TIER = "Beginner"
 
 # The monthly revenue on Frappe Cloud a partner needs before applying, in the currency Frappe Cloud
 # bills their team in: rupees for an Indian partner, dollars for everyone else. As Press has it.
@@ -184,10 +188,8 @@ def get_partner_application():
 
 @frappe.whitelist(methods=["POST"])
 def save_partner_application(details=None):
-	from connect.partner.doctype.partner.partner import _my_partner
-
-	partner = _my_partner()
 	details = frappe._dict(frappe.parse_json(details) or {})
+	partner = _partner_to_apply_for(details)
 	doc = _get_partner_application(partner)
 
 	if not doc:
@@ -210,6 +212,33 @@ def save_partner_application(details=None):
 		doc.save()
 
 	return doc.as_dict()
+
+
+def _partner_to_apply_for(details: frappe._dict) -> str:
+	"""The caller's partner. Someone on no partner's team registers a new one with these details."""
+	from connect.partner.doctype.partner.partner import _my_partner
+
+	if get_current_membership(frappe.session.user):
+		return _my_partner()
+	return _register_partner(details)
+
+
+def _register_partner(details: frappe._dict) -> str:
+	"""A new partner, owned by the caller. It stays off the directory until its application is
+	approved (verification_status starts at Pending Review)."""
+	# A new applicant has no partner yet, so no permission can let them create one or join it.
+	partner = frappe.get_doc(
+		{
+			"doctype": "Partner",
+			"partner_name": details.company_name,
+			"country": details.registered_country,
+			"tier": NEW_PARTNER_TIER,
+		}
+	).insert(ignore_permissions=True)
+	frappe.get_doc(
+		{"doctype": "Connect Partner Member", "partner": partner.name, "user": frappe.session.user, "is_admin": 1}
+	).insert(ignore_permissions=True)
+	return partner.name
 
 
 @frappe.whitelist(methods=["POST"])
