@@ -204,7 +204,7 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 	def save_listing_section(self, **changes):
 		"""Saves like a Listing dialog: the whole profile as the page shows it, with `changes`."""
 		profile = get_my_profile(with_draft=True)
-		fields = ("tagline", "description", "website", "address", "year_founded", "rollouts", "hourly_rate")
+		fields = ("tagline", "description", "website", "address", "year_founded", "hourly_rate")
 		payload = {field: profile[field] for field in fields}
 		for field in ("apps", "migrations", "industries", "founder", "photos", "success_stories"):
 			payload[field] = frappe.as_json(profile[field])
@@ -258,8 +258,18 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 				action()
 		self.assertTrue(frappe.db.get_value("Partner", PARTNER, "profile_draft"))
 
-	def test_certificate_counts_are_not_typed_in(self):
-		frappe.db.set_value("Partner", PARTNER, "certs_erpnext", 0)
+	def test_partners_cannot_type_numbers_frappe_owns(self):
+		owned = {"certs_erpnext": 0, "rollouts": 12, "sites_deployed": 30, "certified_experts": 4, "references_count": 5}
+		frappe.db.set_value("Partner", PARTNER, dict(owned))
 		frappe.set_user(ADMIN)
-		update_my_partner_profile(certs_erpnext=9, tagline="Counts come from certificates")
-		self.assertEqual(frappe.db.get_value("Partner", PARTNER, ["tagline", "certs_erpnext"]), ("Counts come from certificates", 0))
+
+		# Through frappe.call, as the browser sends it, which drops arguments the API doesn't take.
+		for as_draft in (0, 1):
+			frappe.call(
+				"connect.api.partner.update_my_partner_profile",
+				**{field: 999 for field in owned}, tagline=f"Numbers come from Frappe {as_draft}", as_draft=as_draft,
+			)
+		publish_my_profile_draft()
+
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER, "tagline"), "Numbers come from Frappe 1")
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER, list(owned), as_dict=True), owned)
