@@ -9,6 +9,8 @@ from connect.partner.doctype.connect_partner_member.connect_partner_member impor
 from connect.permissions import _has_partner_access
 
 CLOSED_STAGES = ("Won", "Lost", "Junk", "Closed")
+# What Frappe's sales CRM shows of the lead, in the partner's note on the customer's Lead there.
+FRAPPE_CRM_FIELDS = ("stage", "assigned_to", "probability", "lost_reason")
 # A new requirement brings these back to Open. A won customer stays won.
 REOPENED_STAGES = ("Lost", "Junk", "Closed")
 
@@ -27,6 +29,11 @@ class PartnerLead(Document):
 		self._validate_assigned_to()
 
 	def on_update(self):
+		if any(self.has_value_changed(field) for field in FRAPPE_CRM_FIELDS):
+			from connect.crm_partner_leads import queue_partner_lead_sync
+
+			queue_partner_lead_sync(self.name)
+
 		# Unassigning leaves the CRM Lead with whoever has it there.
 		if not self.assigned_to or not self.has_value_changed("assigned_to"):
 			return

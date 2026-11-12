@@ -15,7 +15,11 @@
   "section_break_location",
   "country",
   "column_break_location",
-  "city"
+  "city",
+  "frappe_crm_section",
+  "frappe_crm_lead",
+  "frappe_crm_sync_status",
+  "frappe_crm_sync_error"
  ],
  "fields": [
   {
@@ -61,6 +65,41 @@
    "fieldname": "city",
    "fieldtype": "Data",
    "label": "City"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "frappe_crm_section",
+   "fieldtype": "Section Break",
+   "label": "Frappe CRM",
+   "permlevel": 1
+  },
+  {
+   "description": "The Lead on Frappe's sales CRM for this customer. Every partner working with them has a note on it.",
+   "fieldname": "frappe_crm_lead",
+   "fieldtype": "Data",
+   "label": "Frappe CRM Lead",
+   "no_copy": 1,
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "frappe_crm_sync_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Frappe CRM Sync Status",
+   "no_copy": 1,
+   "options": "\nQueued\nSynced\nFailed",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "frappe_crm_sync_error",
+   "fieldname": "frappe_crm_sync_error",
+   "fieldtype": "Small Text",
+   "label": "Frappe CRM Sync Error",
+   "no_copy": 1,
+   "permlevel": 1,
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -82,7 +121,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2026-10-07 15:00:00.000000",
+ "modified": "2026-11-12 13:00:00.000000",
  "modified_by": "Administrator",
  "module": "Customer",
  "name": "Customer",
@@ -111,6 +150,12 @@
    "report": 1,
    "role": "Customer",
    "share": 1,
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "System Manager",
    "write": 1
   }
  ],

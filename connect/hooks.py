@@ -289,6 +289,8 @@ scheduler_events = {
 		"connect.crm_integration.retry_crm_sync",
 		# Contact us enquiries Frappe's CRM didn't get.
 		"connect.crm_enquiries.retry_enquiry_sync",
+		# Partners' leads Frappe's CRM didn't get.
+		"connect.crm_partner_leads.retry_partner_lead_sync",
 	],
 	"daily": [
 		"connect.customer.doctype.customer_project.hiring.expire_hire_requests",
