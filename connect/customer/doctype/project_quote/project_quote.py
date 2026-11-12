@@ -8,6 +8,8 @@ from connect.customer.doctype.customer_project.project_notifications import noti
 
 # Once the customer shows interest in the partner's quote, the partner learns who they are.
 REVEALING_STATUSES = ("Interested", "Hire Requested", "Hired")
+# What Frappe's sales CRM shows of the brief, on its partner's note there.
+FRAPPE_CRM_FIELDS = ("status", "amount", "timeline_weeks")
 
 
 class ProjectQuote(Document):
@@ -29,6 +31,10 @@ class ProjectQuote(Document):
 		self._reveal_customer()
 		if self.status == "Hired" and self.has_value_changed("status"):
 			self._win_lead()
+		if self.lead and any(self.has_value_changed(field) for field in FRAPPE_CRM_FIELDS):
+			from connect.crm_partner_leads import queue_partner_lead_sync
+
+			queue_partner_lead_sync(self.lead)
 
 	def _reveal_customer(self):
 		if self.thread and self.status in REVEALING_STATUSES and self.has_value_changed("status"):
