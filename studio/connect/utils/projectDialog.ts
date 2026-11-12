@@ -9,6 +9,7 @@ import {
 	GO_LIVE_OPTIONS,
 	OPERATION_OPTIONS,
 	PROBLEM_OPTIONS,
+	STARTER_PACKS_ENABLED,
 	SYSTEM_OPTIONS,
 	recommend,
 } from "@app/utils/recommendation"
@@ -33,7 +34,7 @@ export function isProjectSent(status) {
 // page (its chats and quotes), a draft whichever page its answers recommended.
 export function projectPath(row) {
 	if (row.kind === "order") return { path: "/starter-pack-implementation", query: { order: row.order } }
-	const custom = row.verdict === "custom" || isProjectSent(row.status)
+	const custom = !STARTER_PACKS_ENABLED || row.verdict === "custom" || isProjectSent(row.status)
 	const path = custom ? "/custom-implementation" : "/starter-pack-recommendation"
 	return { path, query: { project: row.project } }
 }

@@ -186,6 +186,10 @@ function normalize(answers) {
 	}
 }
 
+// Starter Packs are paused while Connect focuses on custom implementations: every answer gets
+// the custom verdict, and nothing links to the Starter Pack pages. Paid orders still open.
+export const STARTER_PACKS_ENABLED = false
+
 // { verdict: "packs" | "custom", reasons: [...], packs: [{ key, reason }] }
 export function recommend(answers) {
 	const a = normalize(answers)
@@ -193,7 +197,7 @@ export function recommend(answers) {
 		.map((key) => ({ key, reason: PACK_REASONS[key](a) }))
 		.filter((p) => p.reason)
 	const triggers = CUSTOM_TRIGGERS.filter((t) => t.test(a))
-	if (triggers.length) {
+	if (triggers.length || !STARTER_PACKS_ENABLED) {
 		return { verdict: "custom", reasons: triggers.map((t) => t.reason(a)), packs }
 	}
 	return {

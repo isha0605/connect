@@ -139,10 +139,6 @@ export default function setup(context) {
 		router.push("/projects")
 	}
 
-	function browseStarterPacks() {
-		router.push("/starter-pack-landing")
-	}
-
 	// ---- Saved partners ----
 	const savedPartners = computed(() => (myShortlist.data || []).slice(0, 3))
 
@@ -198,7 +194,6 @@ export default function setup(context) {
 		timeAgo,
 		openProject,
 		viewAllProjects,
-		browseStarterPacks,
 		savedPartners,
 		partnerLocation,
 		partnerRate,
