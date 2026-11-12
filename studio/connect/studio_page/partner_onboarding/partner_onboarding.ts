@@ -460,9 +460,11 @@ export default function setup(context) {
 	// Called from the wizard's Proceed / Save buttons after their field validation passes.
 	function saveRegistration(details) {
 		const editing = partnershipEditMode.value
+		const registersPartner = !amPartner()
 		partnershipSaving.value = true
 		return call(`${API}.save_partner_application`, { details: details || registration.partnershipDetails() })
-			.then(() => reloadApplication())
+			// A first registration makes the partner: myContext now names it, so the checklist shows.
+			.then(() => (registersPartner ? context.myContext.reload() : reloadApplication()))
 			.then(() => {
 				if (editing) {
 					partnershipWizardOpen.value = false
@@ -485,9 +487,10 @@ export default function setup(context) {
 	}
 
 	// A visitor who registered from the login page arrives here after logging in: register the
-	// details they already filled in, then show the same "thank you" screen Press shows.
+	// details they already filled in, then show the same "thank you" screen Press shows. Someone
+	// new is on no partner's team yet, so only an existing partner waits for its application.
 	watch(
-		() => !!context.myContext.fetched && !!context.partnerApplication.fetched && amPartner(),
+		() => !!context.myContext.fetched && (!amPartner() || !!context.partnerApplication.fetched),
 		(ready) => {
 			if (!ready || isRegistered()) return
 			const stash = takeStashedRegistration()
