@@ -50,6 +50,7 @@ class Partner(Document):
 
 	def validate(self):
 		self.validate_hourly_rate()
+		self.validate_served_countries()
 		validate_industries(self)
 		self.set_starter_pack_sequence()
 
@@ -89,8 +90,15 @@ class Partner(Document):
 		if self.country and not frappe.db.exists("Country", self.country):
 			frappe.throw(_("{0} is not in the Country list.").format(self.country))
 
+	def validate_served_countries(self):
+		counts = Counter(row.country for row in self.served_countries)
+		repeated = {country for country, count in counts.items() if count > 1}
+		if repeated:
+			frappe.throw(_("{0} is listed more than once in Countries Served.").format(", ".join(sorted(repeated))))
+
 	def before_save(self):
 		self.region = get_region_of_country(self.country)
+		self.countries_served = len(self.served_countries)
 
 	def on_update(self):
 		# background-fetches each success story's own frappe.io cover photo —
@@ -309,7 +317,7 @@ FILTER_OPERATORS = {"is", "is not", "in", "not in", "=", "!=", "like", "not like
 def search_partners(
 	search=None, industry=None, product=None, region=None, delivery_mode=None, country=None,
 	tier=None, business_process=None, implementation_type=None, language=None,
-	category=None, exclude=None,
+	category=None, exclude=None, served_country=None,
 	min_rating=None, min_pmm_level=None, max_response_time=None,
 	extra_filters=None,
 	sort=None, limit=100,
@@ -319,6 +327,7 @@ def search_partners(
 	country = _normalize_multi(country)
 	category = _normalize_multi(category)
 	product = _normalize_multi(product)
+	served_country = _normalize_multi(served_country)
 
 	filters = list(BASE_PARTNER_FILTERS)
 	for value, field in [
@@ -338,6 +347,7 @@ def search_partners(
 		(implementation_type, "Partner Implementation Type", "implementation_type", None),
 		(language, "Partner Language", "language", None),
 		(category, "Partner Success Story", "category", "success_stories"),
+		(served_country, "Partner Served Country", "country", "served_countries"),
 	]:
 		if value:
 			op = "in" if isinstance(value, list) else "="
@@ -1012,11 +1022,12 @@ _PROFILE_SIMPLE_FIELDS = (
 	# partner's application or frappe.io, not by the partner.
 	# starter_pack is excluded too: it decides who Frappe may assign paid Starter Pack
 	# orders to, so a partner must not be able to enrol themselves. So are certs_erpnext and
-	# certs_frappe_framework: they're counted from linked certificates (recount_certificates).
+	# certs_frappe_framework: they're counted from linked certificates (recount_certificates),
+	# and countries_served, counted from served_countries.
 	"tagline", "description", "country", "city", "address", "website",
 	"year_founded", "rollouts", "hourly_rate",
 	"sites_deployed", "typical_project_size", "proposal_timeline", "certified_experts",
-	"countries_served", "references_count",
+	"references_count",
 	"demo_available", "logo_position_x", "logo_position_y", "phone", "team_size", "journey_blog_url",
 	"logo", "logo_icon", "why_choose_them", "how_we_work", "successful_implementation", "origin_story",
 )
@@ -1059,6 +1070,7 @@ def get_my_profile(with_draft=False) -> dict:
 		**{fieldname: doc.get(fieldname) for fieldname in _BUILDER_FIELDS},
 		"apps": [row.app for row in doc.apps],
 		"migrations": [row.migration_path for row in doc.migrations],
+		"served_countries": [row.country for row in doc.served_countries],
 		"founder": {field: founder.get(field) for field in _FOUNDER_FIELDS} if founder else {},
 		"photos": [{"image": row.image, "video": row.video} for row in doc.photos],
 		"success_stories": stories,
@@ -1119,7 +1131,7 @@ def update_my_partner_profile(
 	address=None, website=None, year_founded=None, rollouts=None,
 	hourly_rate=None, sites_deployed=None,
 	typical_project_size=None, proposal_timeline=None, certified_experts=None,
-	certs_erpnext=None, certs_frappe_framework=None, countries_served=None,
+	certs_erpnext=None, certs_frappe_framework=None,
 	references_count=None, starter_pack=None, demo_available=None,
 	logo_position_x=None, logo_position_y=None,
 	apps=None, migrations=None, business_processes=None, implementation_types=None, languages=None,
@@ -1143,7 +1155,7 @@ def update_my_partner_profile(
 		rollouts=rollouts, hourly_rate=hourly_rate,
 		sites_deployed=sites_deployed, typical_project_size=typical_project_size,
 		proposal_timeline=proposal_timeline, certified_experts=certified_experts,
-		countries_served=countries_served, references_count=references_count, demo_available=demo_available,
+		references_count=references_count, demo_available=demo_available,
 		logo_position_x=logo_position_x, logo_position_y=logo_position_y,
 		phone=phone, team_size=team_size, journey_blog_url=journey_blog_url,
 		logo=logo, logo_icon=logo_icon, why_choose_them=why_choose_them, origin_story=origin_story,

@@ -13,7 +13,7 @@ def search_partners(
 	search=None, industry=None, product=None, region=None, delivery_mode=None, country=None,
 	tier=None, business_process=None, implementation_type=None, language=None,
 	min_rating=None, min_pmm_level=None, max_response_time=None,
-	extra_filters=None,
+	extra_filters=None, served_country=None,
 	sort=None, limit=100,
 ):
 	from connect.partner.doctype.partner.partner import search_partners
@@ -21,7 +21,7 @@ def search_partners(
 		search=search, industry=industry, product=product, region=region, delivery_mode=delivery_mode,
 		country=country, tier=tier, business_process=business_process, implementation_type=implementation_type,
 		language=language, min_rating=min_rating, min_pmm_level=min_pmm_level, max_response_time=max_response_time,
-		extra_filters=extra_filters, sort=sort, limit=limit,
+		extra_filters=extra_filters, served_country=served_country, sort=sort, limit=limit,
 	)
 
 
@@ -165,7 +165,7 @@ def update_my_partner_profile(
 	address=None, website=None, year_founded=None, rollouts=None,
 	hourly_rate=None, sites_deployed=None,
 	typical_project_size=None, proposal_timeline=None, certified_experts=None,
-	certs_erpnext=None, certs_frappe_framework=None, countries_served=None,
+	certs_erpnext=None, certs_frappe_framework=None,
 	references_count=None, starter_pack=None, demo_available=None,
 	logo_position_x=None, logo_position_y=None,
 	apps=None, migrations=None, business_processes=None, implementation_types=None, languages=None,
@@ -182,7 +182,7 @@ def update_my_partner_profile(
 		sites_deployed=sites_deployed, typical_project_size=typical_project_size,
 		proposal_timeline=proposal_timeline, certified_experts=certified_experts,
 		certs_erpnext=certs_erpnext, certs_frappe_framework=certs_frappe_framework,
-		countries_served=countries_served, references_count=references_count,
+		references_count=references_count,
 		starter_pack=starter_pack, demo_available=demo_available,
 		logo_position_x=logo_position_x, logo_position_y=logo_position_y,
 		apps=apps, migrations=migrations, business_processes=business_processes,
