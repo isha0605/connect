@@ -684,7 +684,7 @@
            "componentProps": {
             "fontSize": "text-sm",
             "tag": "span",
-            "text": "{{ (directoryPartners.data || []).length + ' partners' }}"
+            "text": "{{ (directoryPartners.data || []).length === 1 ? '1 partner' : (directoryPartners.data || []).length + ' partners' }}"
            }
           },
           {
@@ -1761,6 +1761,47 @@
           ],
           "divider": "full"
          }
+        },
+        {
+         "baseStyles": {
+          "alignItems": "center",
+          "display": "{{ directoryPartners.data && !directoryPartners.data.length ? 'flex' : 'none' }}",
+          "flexDirection": "column",
+          "gap": "4px",
+          "justifyContent": "center",
+          "padding": "60px 0px",
+          "textAlign": "center"
+         },
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-8)",
+            "fontWeight": "500"
+           },
+           "componentId": "empty-title-pd",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-base",
+            "tag": "p",
+            "text": "No partners found"
+           }
+          },
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-6)"
+           },
+           "componentId": "empty-text-pd",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "fontSize": "text-sm",
+            "tag": "p",
+            "text": "Try removing a filter or searching for something else."
+           }
+          }
+         ],
+         "componentId": "container-empty-pd",
+         "componentName": "container",
+         "originalElement": "div"
         },
         {
          "baseStyles": {
@@ -3479,7 +3520,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-11 12:00:00.000000",
+ "modified": "2026-11-12 15:30:00.000000",
  "modified_by": "Administrator",
  "name": "partner_directory_redesign",
  "owner": "Administrator",
