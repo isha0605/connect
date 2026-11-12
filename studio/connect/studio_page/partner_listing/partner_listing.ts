@@ -123,7 +123,8 @@ export default function setup(context) {
 			certified,
 			address: p.address || "Not added yet",
 			rate: p.hourly_rate ? `From ₹${Number(p.hourly_rate).toLocaleString("en-IN")}/hr` : "Not added yet",
-			countries: p.country ? [p.country] : [],
+			// Until a partner lists the countries it serves, show its own country.
+			countries: p.served_countries?.length ? p.served_countries : p.country ? [p.country] : [],
 			industries: p.industry_badges || [],
 			apps: p.apps || [],
 			migrations: p.migrations || [],

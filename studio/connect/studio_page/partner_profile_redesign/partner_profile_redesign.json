@@ -1530,17 +1530,48 @@
                 },
                 {
                  "baseStyles": {
-                  "alignSelf": "flex-start"
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "flexWrap": "wrap",
+                  "gap": "8px",
+                  "width": "100%"
                  },
-                 "componentId": "country-pill",
-                 "componentName": "Badge",
-                 "componentProps": {
-                  "label": "{{ partner.data ? partner.data.country : '' }}",
-                  "size": "sm",
-                  "theme": "gray",
-                  "variant": "subtle"
-                 },
-                 "componentSlots": {}
+                 "children": [
+                  {
+                   "componentId": "served-countries-list",
+                   "componentName": "ListRows",
+                   "componentProps": {
+                    "items": "{{ partner.data ? ((partner.data.served_countries || []).length ? partner.data.served_countries : partner.data.country ? [{ country: partner.data.country }] : []) : [] }}",
+                    "rowKey": "country"
+                   },
+                   "componentSlots": {
+                    "default": {
+                     "parentBlockId": "served-countries-list",
+                     "slotContent": [
+                      {
+                       "componentId": "country-pill",
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ item.country }}",
+                        "size": "sm",
+                        "theme": "gray",
+                        "variant": "subtle"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "slotId": "served-countries-list:default",
+                     "slotName": "default"
+                    }
+                   }
+                  }
+                 ],
+                 "componentId": "served-countries-row",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "originalElement": "div"
                 }
                ],
                "componentId": "field-countries-served",
@@ -6706,17 +6737,48 @@
                 },
                 {
                  "baseStyles": {
-                  "alignSelf": "flex-start"
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "flexWrap": "wrap",
+                  "gap": "8px",
+                  "width": "100%"
                  },
-                 "componentId": "country-pill",
-                 "componentName": "Badge",
-                 "componentProps": {
-                  "label": "{{ partner.data ? partner.data.country : '' }}",
-                  "size": "sm",
-                  "theme": "gray",
-                  "variant": "subtle"
-                 },
-                 "componentSlots": {}
+                 "children": [
+                  {
+                   "componentId": "served-countries-list",
+                   "componentName": "ListRows",
+                   "componentProps": {
+                    "items": "{{ partner.data ? ((partner.data.served_countries || []).length ? partner.data.served_countries : partner.data.country ? [{ country: partner.data.country }] : []) : [] }}",
+                    "rowKey": "country"
+                   },
+                   "componentSlots": {
+                    "default": {
+                     "parentBlockId": "served-countries-list",
+                     "slotContent": [
+                      {
+                       "componentId": "country-pill",
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ item.country }}",
+                        "size": "sm",
+                        "theme": "gray",
+                        "variant": "subtle"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "slotId": "served-countries-list:default",
+                     "slotName": "default"
+                    }
+                   }
+                  }
+                 ],
+                 "componentId": "served-countries-row",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "originalElement": "div"
                 }
                ],
                "componentId": "field-countries-served",
@@ -10212,7 +10274,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-06 15:07:21.528905",
+ "modified": "2026-11-11 14:00:00.000000",
  "modified_by": "Administrator",
  "name": "partner_profile_redesign",
  "owner": "Administrator",
