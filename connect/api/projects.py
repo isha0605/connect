@@ -79,7 +79,7 @@ def set_quote_status(quote, status):
 	return set_quote_status(quote, status)
 
 
-# Demo only: partners can't send quotes yet. See simulate_quotes.
+# Demo only: every partner still Awaiting replies with a made-up quote. See simulate_quotes.
 @frappe.whitelist(methods=["POST"])
 def simulate_quotes(name):
 	from connect.customer.doctype.customer_project.demo_quotes import simulate_quotes
@@ -102,6 +102,18 @@ def cancel_hire_request(name):
 def hire_request_statuses(thread):
 	from connect.customer.doctype.customer_project.hiring import hire_request_statuses
 	return hire_request_statuses(thread)
+
+
+# The partner's side: their owners and sales quote on a brief from the chat.
+@frappe.whitelist()
+def quotable_briefs(thread):
+	from connect.customer.doctype.project_quote.project_quote import quotable_briefs
+	return quotable_briefs(thread)
+
+
+@frappe.whitelist(methods=["POST"])
+def send_quote(quote, amount, weeks, note=None):
+	return {"message": frappe.get_doc("Project Quote", quote).send_quote(amount, weeks, note)}
 
 
 # The partner's side: their admin answers the request from the card in the thread.

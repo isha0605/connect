@@ -1388,6 +1388,145 @@ export default function setup(context) {
 			})
 	}
 
+	// ---- Quote card in the composer (partner side) ----
+	// A partner's owners and sales quote on the customer's brief from the chat: the card holds the
+	// amount and timeline, the composer's text is the note, and Send sends the quote (send_quote).
+	// Sending again before the customer answers replaces the quote; older cards say so.
+	const MAX_QUOTE_WEEKS = 104
+	const QUOTE_NOTE_LIMIT = 300
+	const quotableBriefs = ref([])
+	const quoteOpen = ref(false)
+	const quoteBrief = ref("")
+	const quoteAmount = ref("")
+	const quoteWeeks = ref("")
+	const quoteSendError = ref("")
+	const sendingQuote = ref(false)
+
+	function loadQuotableBriefs() {
+		quotableBriefs.value = []
+		const thread = selectedThread.value
+		if (!thread || !amPartner() || selectedThreadType.value !== "company") return
+		call("connect.api.projects.quotable_briefs", { thread })
+			.then((rows) => {
+				if (selectedThread.value === thread) quotableBriefs.value = rows || []
+			})
+			.catch(() => {
+				quotableBriefs.value = []
+			})
+	}
+
+	watch(
+		[selectedThread, selectedThreadType, amPartner],
+		() => {
+			quoteOpen.value = false
+			loadQuotableBriefs()
+		},
+		{ immediate: true },
+	)
+
+	function canQuote() {
+		return quotableBriefs.value.length > 0 && !messageToEdit.value
+	}
+
+	function chosenBrief() {
+		return quotableBriefs.value.find((brief) => brief.name === quoteBrief.value) || {}
+	}
+
+	function openQuoteCard() {
+		const brief = quotableBriefs.value[0]
+		if (!brief) return
+		quoteOpen.value = true
+		selectQuoteBrief(brief.name)
+	}
+
+	// An already quoted brief opens with its quote, so the partner changes only what's new.
+	function selectQuoteBrief(name) {
+		quoteBrief.value = name
+		const brief = chosenBrief()
+		quoteAmount.value = brief.amount ? String(brief.amount) : ""
+		quoteWeeks.value = brief.weeks ? String(brief.weeks) : ""
+		quoteSendError.value = ""
+		if (brief.note && !currentDraft().trim()) setDraft(brief.note)
+	}
+
+	function closeQuoteCard() {
+		quoteOpen.value = false
+		quoteSendError.value = ""
+	}
+
+	function quoteCardTitle() {
+		const brief = chosenBrief()
+		const verb = brief.status === "Quoted" ? "Update quote" : "Quote"
+		return quotableBriefs.value.length > 1 ? verb : `${verb} for ${brief.project_name || "this brief"}`
+	}
+
+	function quoteBriefOptions() {
+		return quotableBriefs.value.map((brief) => ({ label: brief.project_name, value: brief.name }))
+	}
+
+	function quoteAmountError() {
+		if (quoteAmount.value === "" || quoteAmount.value === null) return ""
+		return Number(quoteAmount.value) > 0 ? "" : "Enter an amount above 0"
+	}
+
+	function quoteWeeksError() {
+		if (quoteWeeks.value === "" || quoteWeeks.value === null) return ""
+		const weeks = Number(quoteWeeks.value)
+		return Number.isInteger(weeks) && weeks >= 1 && weeks <= MAX_QUOTE_WEEKS
+			? ""
+			: `Enter whole weeks, 1 to ${MAX_QUOTE_WEEKS}`
+	}
+
+	function quoteNoteError() {
+		return draftMessage.value.trim().length > QUOTE_NOTE_LIMIT ? `Keep the note to ${QUOTE_NOTE_LIMIT} characters` : ""
+	}
+
+	function quoteFieldError() {
+		return quoteAmountError() || quoteWeeksError() || quoteNoteError() || quoteSendError.value
+	}
+
+	function isQuoteReady() {
+		return (
+			Number(quoteAmount.value) > 0 && Number(quoteWeeks.value) > 0 && !quoteFieldError() && !sendingQuote.value
+		)
+	}
+
+	async function sendQuote() {
+		if (!isQuoteReady()) return
+		sendingQuote.value = true
+		quoteSendError.value = ""
+		try {
+			await call("connect.api.projects.send_quote", {
+				quote: quoteBrief.value,
+				amount: Number(quoteAmount.value),
+				weeks: Number(quoteWeeks.value),
+				note: currentDraft().trim(),
+			})
+			quoteOpen.value = false
+			setDraft("")
+			context.messages.reload()
+			context.myThreads.reload()
+			loadQuotableBriefs()
+		} catch (e) {
+			quoteSendError.value = e.messages ? e.messages[0] : "Could not send the quote. Try again."
+		} finally {
+			sendingQuote.value = false
+		}
+	}
+
+	// The partner sent a newer quote for the same brief.
+	function isQuoteReplaced(item) {
+		const quote = parseRequirementContent(item).quote
+		if (!quote) return false
+		return currentMessages().some(
+			(m) =>
+				m.message_type === "Quote" &&
+				m.name !== item.name &&
+				m.creation > item.creation &&
+				parseRequirementContent(m).quote === quote,
+		)
+	}
+
 	// ---- Requirement card (a customer's brief), as Pragati's design shows it ----
 	// Title, the start of what they need built, budget and industry; View details opens the
 	// whole brief. Share requirements cards carry "Custom implementation: <what they need>";
@@ -2436,6 +2575,10 @@ export default function setup(context) {
 		const silentFlag = sendSilently ? 1 : 0
 		if (messageToEdit.value) {
 			await saveEditedMessage()
+			return
+		}
+		if (quoteOpen.value) {
+			await sendQuote()
 			return
 		}
 		if (selectedThreadType.value === "dm") {
@@ -4063,6 +4206,20 @@ export default function setup(context) {
 		sharingMeeting,
 		openMeetingDialog,
 		shareMeeting,
+		quoteOpen,
+		quoteBrief,
+		quoteAmount,
+		quoteWeeks,
+		sendingQuote,
+		canQuote,
+		openQuoteCard,
+		selectQuoteBrief,
+		closeQuoteCard,
+		quoteCardTitle,
+		quoteBriefOptions,
+		quoteFieldError,
+		isQuoteReady,
+		isQuoteReplaced,
 		isPartnerAdmin,
 		isCustomerAdmin,
 		isAnyAdmin,

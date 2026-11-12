@@ -7,9 +7,10 @@ import frappe
 from frappe import _
 
 from connect.customer.doctype.customer_project.customer_project import get_own_project, quote_counts
+from connect.customer.doctype.project_quote.project_quote import post_quote
 
-# Partners have no way to send a quote yet, so the project page has a button that makes
-# every partner still Awaiting reply with one, posted in their thread as a Quote message.
+# For demos, the project page has a button that makes every partner still Awaiting reply with a
+# quote, posted in their thread as a Quote message the way a partner's own quote is (post_quote).
 # Amounts fall within the customer's budget range; the same quote always gets the same numbers.
 BUDGET_RANGES = {
 	"Under ₹5 lakh": (250000, 500000),
@@ -49,32 +50,8 @@ def simulate_quotes(name: str) -> dict:
 def _reply_with_quote(quote, project: str, sender: str, budget_range: tuple[int, int]):
 	low, high = budget_range
 	rng = random.Random(quote.name)
-	quote.amount = round((low + rng.random() * (high - low)) / 12500) * 12500
-	quote.timeline_weeks = rng.randint(6, 10)
-	quote.note = rng.choice(QUOTE_NOTES)
-
-	message = frappe.get_doc(
-		{
-			"doctype": "Connect Message",
-			"thread": quote.thread,
-			"sender": sender,
-			"message_type": "Quote",
-			"content": frappe.as_json(
-				{
-					"quote": quote.name,
-					"project": project,
-					"amount": quote.amount,
-					"weeks": quote.timeline_weeks,
-					"note": quote.note,
-				}
-			),
-		}
-	).insert(ignore_permissions=True)
-
-	quote.quote_message = message.name
-	quote.status = "Quoted"
-	quote.quoted_on = frappe.utils.now_datetime()
-	quote.save(ignore_permissions=True)
+	amount = round((low + rng.random() * (high - low)) / 12500) * 12500
+	post_quote(quote, sender, amount, rng.randint(6, 10), rng.choice(QUOTE_NOTES))
 
 
 def _partner_sender(quote) -> str | None:

@@ -2270,11 +2270,11 @@
                          "componentName": "container",
                          "componentProps": {},
                          "componentSlots": {},
-                         "originalElement": "div",
-                         "visibilityCondition": "dataItem.message_type === 'Requirement'",
                          "mobileStyles": {
                           "width": "100%"
-                         }
+                         },
+                         "originalElement": "div",
+                         "visibilityCondition": "dataItem.message_type === 'Requirement'"
                         },
                         {
                          "baseStyles": {
@@ -2286,6 +2286,7 @@
                           "flexDirection": "column",
                           "gap": "10px",
                           "maxWidth": "100%",
+                          "opacity": "{{ isQuoteReplaced(dataItem) ? '0.6' : '1' }}",
                           "padding": "14px 16px",
                           "width": "480px"
                          },
@@ -2293,8 +2294,8 @@
                           {
                            "baseStyles": {
                             "alignItems": "baseline",
-                            "display": "flex",
                             "columnGap": "12px",
+                            "display": "flex",
                             "flexWrap": "wrap",
                             "rowGap": "0px"
                            },
@@ -2349,6 +2350,19 @@
                             "text": "{{ quoteNoteText(dataItem) }}"
                            },
                            "componentSlots": {}
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)"
+                           },
+                           "componentId": "message-quote-replaced",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-xs",
+                            "tag": "span",
+                            "text": "Replaced by a newer quote"
+                           },
+                           "visibilityCondition": "isQuoteReplaced(dataItem)"
                           }
                          ],
                          "componentId": "message-quote-card",
@@ -2559,6 +2573,10 @@
                            "componentSlots": {}
                           },
                           {
+                           "classes": [
+                            "whitespace-pre-line",
+                            "text-ink-gray-7"
+                           ],
                            "componentId": "message-meeting-agenda",
                            "componentName": "TextBlock",
                            "componentProps": {
@@ -2567,11 +2585,7 @@
                             "text": "{{ meetingCardAgenda(dataItem) }}"
                            },
                            "componentSlots": {},
-                           "visibilityCondition": "meetingCardAgenda(dataItem)",
-                           "classes": [
-                            "whitespace-pre-line",
-                            "text-ink-gray-7"
-                           ]
+                           "visibilityCondition": "meetingCardAgenda(dataItem)"
                           },
                           {
                            "baseStyles": {
@@ -2823,10 +2837,10 @@
                         "options": "{{ messageMoreOptions(dataItem) }}"
                        },
                        "componentSlots": {},
-                       "visibilityCondition": "isMine(dataItem.sender)",
                        "mobileStyles": {
                         "width": "{{ isFullWidthCard(dataItem) ? '100%' : 'auto' }}"
-                       }
+                       },
+                       "visibilityCondition": "isMine(dataItem.sender)"
                       },
                       {
                        "baseStyles": {
@@ -3100,11 +3114,11 @@
                          "componentName": "container",
                          "componentProps": {},
                          "componentSlots": {},
-                         "originalElement": "div",
-                         "visibilityCondition": "dataItem.message_type === 'Requirement'",
                          "mobileStyles": {
                           "width": "100%"
-                         }
+                         },
+                         "originalElement": "div",
+                         "visibilityCondition": "dataItem.message_type === 'Requirement'"
                         },
                         {
                          "baseStyles": {
@@ -3116,6 +3130,7 @@
                           "flexDirection": "column",
                           "gap": "10px",
                           "maxWidth": "100%",
+                          "opacity": "{{ isQuoteReplaced(dataItem) ? '0.6' : '1' }}",
                           "padding": "14px 16px",
                           "width": "480px"
                          },
@@ -3123,8 +3138,8 @@
                           {
                            "baseStyles": {
                             "alignItems": "baseline",
-                            "display": "flex",
                             "columnGap": "12px",
+                            "display": "flex",
                             "flexWrap": "wrap",
                             "rowGap": "0px"
                            },
@@ -3179,6 +3194,19 @@
                             "text": "{{ quoteNoteText(dataItem) }}"
                            },
                            "componentSlots": {}
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)"
+                           },
+                           "componentId": "message-quote-replaced-o",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-xs",
+                            "tag": "span",
+                            "text": "Replaced by a newer quote"
+                           },
+                           "visibilityCondition": "isQuoteReplaced(dataItem)"
                           }
                          ],
                          "componentId": "message-quote-card-o",
@@ -3438,6 +3466,10 @@
                            "componentSlots": {}
                           },
                           {
+                           "classes": [
+                            "whitespace-pre-line",
+                            "text-ink-gray-7"
+                           ],
                            "componentId": "message-meeting-agenda-o",
                            "componentName": "TextBlock",
                            "componentProps": {
@@ -3446,11 +3478,7 @@
                             "text": "{{ meetingCardAgenda(dataItem) }}"
                            },
                            "componentSlots": {},
-                           "visibilityCondition": "meetingCardAgenda(dataItem)",
-                           "classes": [
-                            "whitespace-pre-line",
-                            "text-ink-gray-7"
-                           ]
+                           "visibilityCondition": "meetingCardAgenda(dataItem)"
                           },
                           {
                            "baseStyles": {
@@ -3702,10 +3730,10 @@
                         "options": "{{ messageMoreOptions(dataItem) }}"
                        },
                        "componentSlots": {},
-                       "visibilityCondition": "!isMine(dataItem.sender)",
                        "mobileStyles": {
                         "width": "{{ isFullWidthCard(dataItem) ? '100%' : 'auto' }}"
-                       }
+                       },
+                       "visibilityCondition": "!isMine(dataItem.sender)"
                       }
                      ],
                      "componentId": "message-body",
@@ -5553,6 +5581,192 @@
             },
             {
              "baseStyles": {
+              "borderBottom": "1px solid var(--outline-gray-2)",
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "10px",
+              "padding": "10px 14px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "8px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "backgroundColor": "var(--surface-gray-2)",
+                  "borderRadius": "6px",
+                  "display": "flex",
+                  "flexShrink": "0",
+                  "height": "28px",
+                  "justifyContent": "center",
+                  "width": "28px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-6)",
+                    "height": "15px",
+                    "width": "15px"
+                   },
+                   "componentId": "quote-draft-icon",
+                   "componentName": "Icon",
+                   "componentProps": {
+                    "icon": "lucide-indian-rupee"
+                   }
+                  }
+                 ],
+                 "componentId": "quote-draft-icon-box",
+                 "componentName": "container",
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "flex": "1",
+                  "fontWeight": "500",
+                  "minWidth": "0px",
+                  "overflow": "hidden",
+                  "textOverflow": "ellipsis",
+                  "whiteSpace": "nowrap"
+                 },
+                 "componentId": "quote-draft-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "{{ quoteCardTitle() }}"
+                 }
+                },
+                {
+                 "attributes": {
+                  "aria-label": "Close the quote"
+                 },
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "closeQuoteCard();"
+                  }
+                 },
+                 "componentId": "quote-draft-close",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "icon": "lucide-x",
+                  "theme": "gray",
+                  "tooltip": "Back to a message",
+                  "variant": "ghost"
+                 }
+                }
+               ],
+               "componentId": "quote-draft-head",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "flex-end",
+                "display": "flex",
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": "12px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "maxWidth": "100%",
+                  "width": "220px"
+                 },
+                 "componentEvents": {
+                  "update:modelValue": {
+                   "action": "Run Script",
+                   "event": "update:modelValue",
+                   "script": "selectQuoteBrief(eventArgs[0]);"
+                  }
+                 },
+                 "componentId": "quote-draft-brief",
+                 "componentName": "FormControl",
+                 "componentProps": {
+                  "label": "Brief",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "quoteBrief"
+                  },
+                  "options": "{{ quoteBriefOptions() }}",
+                  "type": "select"
+                 },
+                 "componentSlots": {},
+                 "visibilityCondition": "quoteBriefOptions().length > 1"
+                },
+                {
+                 "baseStyles": {
+                  "maxWidth": "100%",
+                  "width": "180px"
+                 },
+                 "componentId": "quote-draft-amount",
+                 "componentName": "FormControl",
+                 "componentProps": {
+                  "label": "Amount (\u20b9)",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "quoteAmount"
+                  },
+                  "placeholder": "400000",
+                  "type": "number"
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "baseStyles": {
+                  "maxWidth": "100%",
+                  "width": "140px"
+                 },
+                 "componentId": "quote-draft-weeks",
+                 "componentName": "FormControl",
+                 "componentProps": {
+                  "label": "Timeline (weeks)",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "quoteWeeks"
+                  },
+                  "placeholder": "6",
+                  "type": "number"
+                 },
+                 "componentSlots": {}
+                }
+               ],
+               "componentId": "quote-draft-fields",
+               "componentName": "container",
+               "originalElement": "div"
+              },
+              {
+               "attributes": {
+                "role": "alert"
+               },
+               "baseStyles": {
+                "color": "var(--ink-red-7)"
+               },
+               "componentId": "quote-draft-error",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-xs",
+                "tag": "p",
+                "text": "{{ quoteFieldError() }}"
+               },
+               "visibilityCondition": "quoteFieldError()"
+              }
+             ],
+             "componentId": "quote-draft-preview",
+             "componentName": "container",
+             "originalElement": "div",
+             "visibilityCondition": "quoteOpen"
+            },
+            {
+             "baseStyles": {
               "alignItems": "center",
               "backgroundColor": "var(--surface-gray-1)",
               "borderBottom": "1px solid var(--outline-gray-2)",
@@ -5755,7 +5969,7 @@
                  "componentId": "message-input",
                  "componentName": "Textarea",
                  "componentProps": {
-                  "placeholder": "Type a message...",
+                  "placeholder": "{{ quoteOpen ? 'Add a note for the customer (optional)\u2026' : 'Type a message...' }}",
                   "rows": 1,
                   "variant": "ghost"
                  },
@@ -5806,7 +6020,8 @@
                     "tooltip": "Attach a file",
                     "variant": "ghost"
                    },
-                   "componentSlots": {}
+                   "componentSlots": {},
+                   "visibilityCondition": "!quoteOpen"
                   },
                   {
                    "attributes": {
@@ -5858,6 +6073,27 @@
                    },
                    "componentSlots": {},
                    "visibilityCondition": "canShareMeeting()"
+                  },
+                  {
+                   "attributes": {
+                    "aria-label": "Send a quote"
+                   },
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "openQuoteCard();"
+                    }
+                   },
+                   "componentId": "quote-trigger-btn",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "icon": "lucide-indian-rupee",
+                    "theme": "gray",
+                    "tooltip": "Send a quote",
+                    "variant": "ghost"
+                   },
+                   "visibilityCondition": "canQuote() && !quoteOpen"
                   }
                  ],
                  "componentId": "container-w3gfltv9s",
@@ -5889,11 +6125,12 @@
                    "componentId": "send-btn",
                    "componentName": "Button",
                    "componentProps": {
-                    "disabled": "{{ (!draftMessage && !draftAttachments.length && !draftRequirement) || uploadingFile }}",
+                    "disabled": "{{ quoteOpen ? !isQuoteReady() : ((!draftMessage && !draftAttachments.length && !draftRequirement) || uploadingFile) }}",
                     "iconLeft": "{{ messageToEdit ? 'lucide-check' : 'lucide-send' }}",
-                    "label": "{{ messageToEdit ? 'Save' : 'Send' }}",
+                    "label": "{{ messageToEdit ? 'Save' : (quoteOpen ? 'Send quote' : 'Send') }}",
+                    "loading": "{{ sendingQuote }}",
                     "theme": "gray",
-                    "tooltip": "{{ uploadingFile ? 'Wait for the file to finish uploading' : ((!draftMessage && !draftAttachments.length && !draftRequirement) ? 'Type a message first' : '') }}",
+                    "tooltip": "{{ quoteOpen ? (isQuoteReady() ? '' : 'Enter the amount and timeline') : uploadingFile ? 'Wait for the file to finish uploading' : ((!draftMessage && !draftAttachments.length && !draftRequirement) ? 'Type a message first' : '') }}",
                     "variant": "solid"
                    },
                    "componentSlots": {}
@@ -17880,8 +18117,8 @@
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-11-05 20:00:00.000000",
- "modified_by": "Administrator",
+ "modified": "2026-11-12 12:54:56.002652",
+ "modified_by": "tridots@example.com",
  "name": "messaging",
  "owner": "Administrator",
  "page_name": "messaging",
@@ -17951,20 +18188,20 @@
   {
    "auto": 0,
    "fetch_document_using_filters": 0,
+   "limit": 0,
    "method": "GET",
    "resource_name": "messages",
    "resource_type": "API Resource",
-   "url": "connect.api.threads.get_thread_messages",
-   "limit": 0
+   "url": "connect.api.threads.get_thread_messages"
   },
   {
    "auto": 0,
    "fetch_document_using_filters": 0,
+   "limit": 0,
    "method": "GET",
    "resource_name": "threadMembers",
    "resource_type": "API Resource",
-   "url": "connect.api.threads.get_thread_members",
-   "limit": 0
+   "url": "connect.api.threads.get_thread_members"
   },
   {
    "auto": 0,
