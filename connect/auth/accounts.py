@@ -154,11 +154,12 @@ def made_by(doc, user):
 
 
 def check_company_is_free(company_name):
-	"""One Customer per company: someone joining a company already here is added by its admin."""
+	"""One Customer per company: someone joining a company already here is added by its admin.
+	The message is plain text, since the sign-up form shows it as text, not HTML."""
 	company_name = (company_name or "").strip()
 	if frappe.db.exists("Customer", {"customer_name": company_name}):
 		frappe.throw(
-			_("{0} is already registered. Ask your team admin to add you instead.").format(frappe.bold(company_name)),
+			_("{0} is already registered. Ask your team admin to add you instead.").format(company_name),
 			frappe.ValidationError,
 		)
 

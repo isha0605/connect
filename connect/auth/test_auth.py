@@ -162,7 +162,8 @@ class IntegrationTestEmailCodeSignIn(IntegrationTestCase):
 	def test_a_company_already_here_is_refused(self):
 		company = f"_Test Auth Taken {frappe.generate_hash(length=6)}"
 		frappe.get_doc({"doctype": "Customer", "customer_name": company}).insert(ignore_permissions=True)
-		with self.assertRaisesRegex(frappe.ValidationError, "already registered"):
+		# Plain text: the sign-up form shows the message as text, so markup would show as tags.
+		with self.assertRaisesRegex(frappe.ValidationError, f"^{company} is already registered"):
 			send_code(new_email("taken"), full_name="A B", company_name=company)
 
 	def test_a_company_already_here_is_refused_before_any_account_is_made(self):
