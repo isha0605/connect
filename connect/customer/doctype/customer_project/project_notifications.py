@@ -5,11 +5,17 @@ from frappe.desk.doctype.notification_log.notification_log import enqueue_create
 # What the customer is told when their project reaches each status. Shared is announced only
 # the first time, since a declined or withdrawn hire also puts the project back to Shared.
 STATUS_SUBJECTS = {
-	"Shared": lambda doc: _("Requirements sent to {0} partners").format(doc.shared_count or 0),
+	"Shared": lambda doc: shared_subject(doc.shared_count or 0),
 	"Hiring": lambda doc: _("Hire request sent to {0}").format(partner_name(doc.partner)),
 	"Hired": lambda doc: _("{0} accepted your project").format(partner_name(doc.partner)),
 	"Completed": lambda doc: _("Project completed"),
 }
+
+
+def shared_subject(count: int) -> str:
+	if count == 1:
+		return _("Requirements sent to 1 partner")
+	return _("Requirements sent to {0} partners").format(count)
 
 
 def notify_project_created(doc) -> None:

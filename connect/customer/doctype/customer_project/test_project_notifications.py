@@ -64,6 +64,11 @@ class TestProjectNotifications(IntegrationTestCase):
 			["Project created", "Requirements sent to 3 partners", f"Hire request sent to {PARTNER}"],
 		)
 
+	def test_sharing_with_one_partner_says_partner(self):
+		self.project.update({"status": "Shared", "shared_count": 1})
+		self.project.save(ignore_permissions=True)
+		self.assertEqual(self.subjects(), ["Project created", "Requirements sent to 1 partner"])
+
 	def test_a_saved_project_without_a_new_status_stays_quiet(self):
 		self.project.project_name = "Warehouse and retail rollout"
 		self.project.save(ignore_permissions=True)
