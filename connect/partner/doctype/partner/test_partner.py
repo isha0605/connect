@@ -12,6 +12,7 @@ from connect.partner.doctype.partner.partner import (
 	list_directory_partners,
 	list_partner_tiers,
 	save_imported_partner,
+	search_partners,
 )
 from connect.partner.doctype.partner_review.partner_review import list_partner_reviews
 from connect.patches.rename_partner_is_featured_to_show_in_website import execute as rename_is_featured
@@ -185,6 +186,34 @@ class IntegrationTestShowInWebsitePatch(IntegrationTestCase):
 
 		self.assertEqual(frappe.db.get_value("Partner", "_Test Patch Listed LLP", "show_in_website"), 1)
 		self.assertFalse(frappe.db.has_column("Partner", "is_featured"))
+
+
+SERVING = "_Test Serving Partner LLP"
+
+
+class IntegrationTestServedCountries(IntegrationTestCase):
+	"""Countries Served is a list of countries. The count and the directory search follow the list."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		remove_partners(SERVING)
+		served = [{"country": "Kenya"}, {"country": "United Arab Emirates"}]
+		save_imported_partner(SERVING, {**partner_values("_Test Serving Partner"), "served_countries": served})
+		frappe.db.set_value("Partner", SERVING, {"verification_status": VERIFIED, "show_in_website": 1})
+		self.addCleanup(remove_partners, SERVING)
+
+	def test_count_follows_the_list(self):
+		self.assertEqual(frappe.db.get_value("Partner", SERVING, "countries_served"), 2)
+
+	def test_a_country_is_listed_once(self):
+		partner = frappe.get_doc("Partner", SERVING)
+		partner.append("served_countries", {"country": "Kenya"})
+		with self.assertRaises(frappe.ValidationError):
+			partner.save(ignore_permissions=True)
+
+	def test_directory_finds_partners_by_a_served_country(self):
+		self.assertIn(SERVING, [p.name for p in search_partners(served_country="Kenya")])
+		self.assertNotIn(SERVING, [p.name for p in search_partners(served_country="Japan")])
 
 
 def partner_values(partner_name):
