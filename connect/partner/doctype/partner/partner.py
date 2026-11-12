@@ -1023,11 +1023,10 @@ _PROFILE_SIMPLE_FIELDS = (
 	# starter_pack is excluded too: it decides who Frappe may assign paid Starter Pack
 	# orders to, so a partner must not be able to enrol themselves. So are certs_erpnext and
 	# certs_frappe_framework: they're counted from linked certificates (recount_certificates),
-	# and countries_served, counted from served_countries.
+	# and countries_served, counted from served_countries. rollouts, sites_deployed, certified_experts
+	# and references_count come from frappe.io's import, so partners can't overwrite them.
 	"tagline", "description", "country", "city", "address", "website",
-	"year_founded", "rollouts", "hourly_rate",
-	"sites_deployed", "typical_project_size", "proposal_timeline", "certified_experts",
-	"references_count",
+	"year_founded", "hourly_rate", "typical_project_size", "proposal_timeline",
 	"demo_available", "logo_position_x", "logo_position_y", "phone", "team_size", "journey_blog_url",
 	"logo", "logo_icon", "why_choose_them", "how_we_work", "successful_implementation", "origin_story",
 )
@@ -1035,7 +1034,7 @@ _PROFILE_SIMPLE_FIELDS = (
 # What the partner's Profile builder edits, beyond the lists below.
 _BUILDER_FIELDS = (
 	"tagline", "website", "phone", "journey_blog_url", "logo", "logo_icon", "description", "year_founded",
-	"team_size", "rollouts", "certs_erpnext", "certs_frappe_framework", "address", "city", "country",
+	"team_size", "certs_erpnext", "certs_frappe_framework", "address", "city", "country",
 	"hourly_rate", "why_choose_them", "how_we_work", "successful_implementation", "origin_story",
 )
 # Longest text each profile field may hold, so every partner's profile lays out the same way.
@@ -1127,15 +1126,14 @@ def _check_profile_media(doc) -> None:
 
 
 def update_my_partner_profile(
-	partner_name=None, tagline=None, description=None, country=None, city=None,
-	address=None, website=None, year_founded=None, rollouts=None,
-	hourly_rate=None, sites_deployed=None,
-	typical_project_size=None, proposal_timeline=None, certified_experts=None,
-	certs_erpnext=None, certs_frappe_framework=None,
-	references_count=None, starter_pack=None, demo_available=None,
+	tagline=None, description=None, country=None, city=None,
+	address=None, website=None, year_founded=None,
+	hourly_rate=None,
+	typical_project_size=None, proposal_timeline=None,
+	demo_available=None,
 	logo_position_x=None, logo_position_y=None,
 	apps=None, migrations=None, business_processes=None, implementation_types=None, languages=None,
-	founder=None, success_stories=None, packs=None, addons=None,
+	founder=None, success_stories=None, addons=None,
 	phone=None, team_size=None, journey_blog_url=None,
 	logo=None, logo_icon=None, why_choose_them=None, origin_story=None, photos=None,
 	how_we_work=None, successful_implementation=None, industries=None, as_draft=False,
@@ -1146,16 +1144,14 @@ def update_my_partner_profile(
 	changes wait in the partner's unpublished changes until publish_my_profile_draft."""
 	partner = _my_admin_partner()
 
-	# partner_name, starter_pack and the certificate counts are ignored (see _PROFILE_SIMPLE_FIELDS).
-	# So is `packs`: Starter Pack prices are Frappe's (see the Starter Pack doctype), so partners no
-	# longer set their own. They stay in the signature so an older client that sends them doesn't fail.
+	# Fields Frappe or the frappe.io import own (partner_name, starter_pack, certificate counts, Starter
+	# Pack prices, the imported numbers) are not parameters; frappe.call drops what a caller sends for them.
 	changes = dict(
 		tagline=tagline, description=description, country=country,
 		city=city, address=address, website=website, year_founded=year_founded,
-		rollouts=rollouts, hourly_rate=hourly_rate,
-		sites_deployed=sites_deployed, typical_project_size=typical_project_size,
-		proposal_timeline=proposal_timeline, certified_experts=certified_experts,
-		references_count=references_count, demo_available=demo_available,
+		hourly_rate=hourly_rate, typical_project_size=typical_project_size,
+		proposal_timeline=proposal_timeline,
+		demo_available=demo_available,
 		logo_position_x=logo_position_x, logo_position_y=logo_position_y,
 		phone=phone, team_size=team_size, journey_blog_url=journey_blog_url,
 		logo=logo, logo_icon=logo_icon, why_choose_them=why_choose_them, origin_story=origin_story,

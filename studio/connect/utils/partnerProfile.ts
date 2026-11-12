@@ -17,7 +17,6 @@ const DRAFT_FIELDS = [
 	"description",
 	"year_founded",
 	"team_size",
-	"rollouts",
 	"address",
 	"city",
 	"country",
@@ -38,7 +37,6 @@ export const SAMPLE_PROFILE = {
 	description: "Sample Partner builds custom ERPNext solutions for businesses of all sizes.",
 	year_founded: 2015,
 	team_size: "51-200",
-	rollouts: 120,
 	certs_erpnext: 8,
 	certs_frappe_framework: 3,
 	address: "No. 100, Lake View Estate, Main Road\nChennai, Tamil Nadu 600116, India",
@@ -160,7 +158,6 @@ export function toSavePayload(draft) {
 		...fields,
 		// number fields: an empty box saves as 0, which the profile shows as unset
 		year_founded: String(fields.year_founded || "").trim() || 0,
-		rollouts: fields.rollouts || 0,
 		hourly_rate: fields.hourly_rate || 0,
 		apps: JSON.stringify(apps),
 		migrations: JSON.stringify(migrations),
