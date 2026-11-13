@@ -43,7 +43,7 @@ def my_leads() -> dict:
 	"""The partner's Leads page: one lead per customer conversation, newest reply first. Owners
 	and Sales see all of the team's leads."""
 	partner = _my_partner_with_access(frappe.session.user, LEAD_ACCESS)
-	partner_side = _partner_side(partner)
+	partner_side = partner_side_users(partner)
 	rows = _lead_query(partner).limit(LEAD_LIMIT).run(as_dict=True)
 	requirements = _requirements_by_lead([row.name for row in rows])
 	return {
@@ -64,7 +64,7 @@ def get_lead(name: str) -> dict:
 	latest = requirements[0]
 	# Everyone who writes for the partner, not only who can take the lead: a Member's reply in
 	# the thread is still the partner's.
-	partner_side = _partner_side(row.partner)
+	partner_side = partner_side_users(row.partner)
 	return {
 		"me": frappe.session.user,
 		"team": lead_team(row.partner),
@@ -79,7 +79,7 @@ def get_lead(name: str) -> dict:
 			"contact": _contact(latest.customer_user) if row.is_customer_revealed else {},
 			"requirements": [_requirement_row(requirement) for requirement in requirements],
 			**_crm_owner(row),
-			"messages": _lead_messages(row, partner_side),
+			"messages": lead_messages(row.thread, partner_side, requirements, row.is_customer_revealed),
 			**_lead_records(row, requirements),
 		},
 	}
@@ -256,7 +256,7 @@ def _check_stage_change(doc, stage: str):
 		frappe.throw(_("A lead is won when the customer hires you."))
 
 
-def _partner_side(partner: str) -> set[str]:
+def partner_side_users(partner: str) -> set[str]:
 	"""Everyone who writes for the partner, people since removed included: a message from any of
 	them is the partner's reply."""
 	return set(frappe.get_all("Connect Partner Member", filters={"partner": partner}, pluck="user"))
@@ -349,13 +349,22 @@ def _contact(user: str) -> dict:
 	return {"name": contact.get("full_name"), "email": contact.get("email"), "phone": contact.get("mobile_no")}
 
 
-def _lead_messages(row, partner_side: set[str]) -> list[dict]:
+def lead_messages(
+	thread: str, partner_side: set[str], requirements: list, is_customer_revealed: bool
+) -> list[dict]:
 	"""The customer's whole conversation with the partner: the lead is all of it. Read without
-	permission checks: _get_lead_row has scoped the thread."""
+	permission checks: the caller has scoped the thread to the user's partner."""
+	from connect.customer.doctype.customer_project.hiring import hire_card_statuses
+
+	briefs = {requirement.brief_message: requirement for requirement in requirements}
+	hires = hire_card_statuses(thread)
 	messages = frappe.get_all(
 		"Connect Message",
-		filters={"thread": row.thread},
-		fields=["name", "sender", "message_type", "content", "file_name", "attachment", "reply_to", "creation"],
+		filters={"thread": thread},
+		fields=[
+			"name", "sender", "message_type", "content", "file_name", "file_type", "file_size", "attachment",
+			"reply_to", "creation",
+		],
 		order_by="creation asc",
 	)
 	names = _user_names({message.sender for message in messages})
@@ -363,17 +372,18 @@ def _lead_messages(row, partner_side: set[str]) -> list[dict]:
 		{
 			"id": message.name,
 			"from": "you" if message.sender in partner_side else "them",
-			"author": _author(message.sender, names, partner_side, row.is_customer_revealed),
+			"author": _author(message.sender, names, partner_side, is_customer_revealed),
 			"at": message.creation,
 			"reply_to": message.reply_to,
 			**_message_body(message),
+			**_card_answer(message, briefs, hires),
 		}
 		for message in messages
 	]
 
 
 def _message_body(message) -> dict:
-	"""What a message shows on the lead: each brief and quote as a card, the rest as text."""
+	"""What a message shows on the lead: each brief, quote and file as a card, the rest as text."""
 	if message.message_type == "Requirement":
 		card = frappe.parse_json(message.content or "{}") or {}
 		return {
@@ -392,6 +402,15 @@ def _message_body(message) -> dict:
 			"weeks": quote.get("weeks"),
 			"note": quote.get("note"),
 		}
+	if message.message_type == "Hire Request":
+		request = frappe.parse_json(message.content or "{}") or {}
+		return {
+			"kind": "hire",
+			"title": request.get("project_name") or _("Hire request"),
+			"quote": request.get("quote"),
+			"amount": request.get("amount"),
+			"weeks": request.get("weeks"),
+		}
 	if message.message_type == "Meeting":
 		meeting = frappe.parse_json(message.content or "{}") or {}
 		return {
@@ -404,10 +423,30 @@ def _message_body(message) -> dict:
 			"follow_up": meeting.get("follow_up"),
 		}
 	if message.message_type == "File":
-		return {"kind": "text", "text": message.content or message.file_name, "file_url": message.attachment}
+		return {
+			"kind": "file",
+			"attachment": message.attachment,
+			"file_name": message.file_name,
+			"file_type": message.file_type,
+			"file_size": message.file_size,
+		}
 	if message.message_type == "Text":
 		return {"kind": "text", "text": message.content}
 	return {"kind": "text", "text": _message_preview_text(message)}
+
+
+def _card_answer(message, briefs: dict, hires: dict) -> dict:
+	"""What the partner can still do on a card: answer the brief, or the hire request."""
+	if message.message_type == "Requirement" and message.name in briefs:
+		requirement = briefs[message.name]
+		return {
+			"quote": requirement.name,
+			"can_answer": requirement.status == "Awaiting",
+			"is_declined": requirement.status == "Partner Declined",
+		}
+	if message.message_type == "Hire Request":
+		return hires.get(message.name) or {}
+	return {}
 
 
 def _author(sender: str, names: dict, partner_side: set[str], is_customer_revealed: bool) -> str:

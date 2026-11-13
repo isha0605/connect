@@ -9,21 +9,15 @@ import { toast } from "frappe-ui"
 import { LOST_REASONS, PRM_STAGES, PROBABILITY, isClosed, leadTitle, ownerOptions } from "@app/utils/partnerLeads"
 import {
 	FOLLOW_UP_MODES,
-	MEETING_DURATIONS,
 	activityRows,
-	clockOrDate,
 	copyText,
 	emptyFollowUp,
-	emptyMeeting,
 	followUpValues,
-	isoDay,
-	meetingTimeLabel,
-	meetingValues,
 	toActivityEntries,
 	toFollowUpRows,
 	toNoteRows,
-	toTime,
 } from "@app/utils/partnerRecords"
+import { useConversation } from "@app/utils/partnerConversation"
 import { startTracking } from "@app/utils/tracking"
 
 const TABS = [
@@ -35,26 +29,6 @@ const TABS = [
 const STAGE_OPTIONS = PRM_STAGES.filter((stage) => stage !== "Won").map((stage) => ({ label: stage, value: stage }))
 const PROBABILITY_OPTIONS = PROBABILITY.map((p) => ({ label: p, value: p }))
 const REASON_OPTIONS = LOST_REASONS.map((r) => ({ label: r, value: r }))
-const RUPEES = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
-
-const escapeHtml = (text) => String(text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-const paragraphs = (text) => escapeHtml(text).split("\n").map((line) => `<p>${line}</p>`).join("")
-
-function plainText(html) {
-	const element = document.createElement("div")
-	element.innerHTML = html || ""
-	return element.textContent.trim()
-}
-
-// Messaging stores plain text: one line per paragraph, without the quoted reply.
-function composerText(html) {
-	const element = document.createElement("div")
-	element.innerHTML = html || ""
-	element.querySelectorAll("blockquote").forEach((quote) => quote.remove())
-	const blocks = [...element.querySelectorAll("p, li")]
-	const lines = blocks.length ? blocks.map((block) => block.textContent) : [element.textContent]
-	return lines.join("\n").trim()
-}
 
 export default function setup(context) {
 	startTracking(context)
@@ -177,82 +151,15 @@ export default function setup(context) {
 	const sideOpen = ref(false)
 
 	// ── Messages ────────────────────────────────────────────────────────────
-	const messages = computed(() => {
-		const current = data.value
-		if (!current) return []
-		const followUps = toFollowUpRows(current.follow_ups || [])
-		return current.messages.map((m) => ({
-			...m,
-			time: clockOrDate(toTime(m.at)),
-			isYou: m.from === "you",
-			// P for the partner's side, C for the customer's: who wrote is plain at a glance.
-			avatarLabel: m.from === "you" ? "P" : "C",
-			isWaiting: m.kind === "bid" && !current.is_customer_revealed,
-			...(m.kind === "meeting" ? meetingCard(m, followUps) : {}),
-			body: messageBody(m),
-			price: m.amount ? RUPEES.format(m.amount) : "",
-			weeksLabel: m.weeks ? `about ${m.weeks} weeks` : "",
-			menu: m.kind === "text" ? messageMenu(m) : [],
-		}))
+	const conversation = useConversation({
+		call,
+		toast,
+		record: data,
+		reload: load,
+		followUpMethod: "connect.api.leads.log_lead_follow_up",
+		me,
+		socket: context.socket,
 	})
-
-	function meetingCard(message, followUps) {
-		const invite = followUps.find((row) => row.id === message.follow_up)
-		return {
-			meetingTime: meetingTimeLabel(toTime(message.starts_at), message.duration_minutes),
-			canJoin: invite ? invite.canJoin : Boolean(message.link),
-		}
-	}
-
-	function messageBody(message) {
-		if (message.kind !== "text") return ""
-		if (!message.file_url) return paragraphs(message.text)
-		return `<p><a href="${encodeURI(message.file_url)}" target="_blank" rel="noopener">${escapeHtml(message.text)}</a></p>`
-	}
-
-	function messageMenu(message) {
-		return [
-			{ label: "Copy text", icon: "lucide-copy", onClick: () => copyText(message.text || "", toast, "Copied") },
-			{ label: "Copy link", icon: "lucide-link", onClick: () => copyText(`${window.location.href.split("#")[0]}#msg-${message.id}`, toast, "Link copied") },
-		]
-	}
-
-	// Connect messages are short, so the reply box is always open. It posts into the thread.
-	const reply = ref("")
-	const replyTo = ref(null)
-	const sending = ref(false)
-	const isReplyEmpty = computed(() => !composerText(reply.value))
-
-	async function send() {
-		if (isReplyEmpty.value || sending.value) return
-		sending.value = true
-		try {
-			await call("connect.api.messages.send_message", {
-				thread: data.value.thread,
-				content: composerText(reply.value),
-				reply_to: replyTo.value,
-			})
-			reply.value = ""
-			replyTo.value = null
-			await load()
-		} catch (error) {
-			toast.error(error?.messages?.[0] || "Couldn't send the message.")
-		} finally {
-			sending.value = false
-		}
-	}
-
-	// A card's own Reply quotes it into the box, as Helpdesk does, and sends as a reply to it.
-	function quoteReply(message) {
-		replyTo.value = message.id
-		reply.value = `<blockquote><p>${escapeHtml(message.text)}</p></blockquote><p></p>`
-	}
-
-	function onComposerKey(event) {
-		if (event.key !== "Enter" || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return
-		event.preventDefault()
-		send()
-	}
 
 	// ── Follow-ups and activity ─────────────────────────────────────────────
 	const followUpOpen = ref(false)
@@ -276,34 +183,6 @@ export default function setup(context) {
 			toast.error(error?.messages?.[0] || "Couldn't add the follow-up.")
 		}
 	}
-
-	// A meeting invite goes into the customer's thread as a card they accept or decline.
-	const meetingOpen = ref(false)
-	const meetingForm = ref(emptyMeeting())
-	const scheduling = ref(false)
-
-	function startMeeting() {
-		meetingForm.value = emptyMeeting()
-		meetingOpen.value = true
-	}
-
-	async function saveMeeting() {
-		if (scheduling.value) return
-		scheduling.value = true
-		try {
-			await call("connect.api.leads.log_lead_follow_up", { name: leadId.value, values: meetingValues(meetingForm.value) })
-			meetingOpen.value = false
-			toast.success("Meeting invite sent")
-			// The invite is a card in the thread too, so read the whole lead again.
-			await load()
-		} catch (error) {
-			toast.error(error?.messages?.[0] || "Couldn't schedule the meeting.")
-		} finally {
-			scheduling.value = false
-		}
-	}
-
-	const joinMeeting = (link) => link && window.open(link, "_blank", "noopener")
 
 	const expandedGroups = ref({})
 	function toggleGroup(id) {
@@ -352,8 +231,7 @@ export default function setup(context) {
 		() => {
 			tab.value = "messages"
 			sideOpen.value = false
-			reply.value = ""
-			replyTo.value = null
+			conversation.resetDraft()
 			noteDraft.value = ""
 			loading.value = true
 			load()
@@ -389,13 +267,7 @@ export default function setup(context) {
 		openSide: () => (sideOpen.value = true),
 		closeSide: () => (sideOpen.value = false),
 		companyLabel: computed(() => lead.value?.company?.name || data.value?.company || ""),
-		messages,
-		reply,
-		setReply: (html) => (reply.value = html),
-		isReplyEmpty,
-		send,
-		quoteReply,
-		onComposerKey,
+		...conversation,
 		followUps: computed(() => toFollowUpRows(data.value?.follow_ups || [])),
 		followUpOpen,
 		followUpForm,
@@ -403,16 +275,6 @@ export default function setup(context) {
 		startFollowUp,
 		saveFollowUp,
 		closeFollowUp: () => (followUpOpen.value = false),
-		meetingOpen,
-		meetingForm,
-		meetingDurations: MEETING_DURATIONS,
-		// A meeting is still to come: earlier days are greyed out.
-		meetingMinDate: isoDay(new Date()),
-		scheduling,
-		startMeeting,
-		saveMeeting,
-		closeMeeting: () => (meetingOpen.value = false),
-		joinMeeting,
 		activity: computed(() => activityRows(toActivityEntries(data.value?.activity || []), expandedGroups.value)),
 		toggleGroup,
 		noteDraft,

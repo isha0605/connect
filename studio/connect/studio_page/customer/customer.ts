@@ -1,5 +1,5 @@
 // One customer, laid out like a deal in Frappe CRM: owner and stage in the top bar, the record in
-// tabs, and a side panel of facts. The same tabs a lead has (Follow-ups, Activity, Notes), so a
+// tabs, and a side panel of facts. The same tabs a lead has (Messages, Follow-ups, Activity, Notes), so a
 // lead that's won keeps its history. Read from connect.api.partner_customers. A customer who wants
 // to link waits on the team's Approve link; sites and MRR are demo data until they come from
 // Frappe Cloud.
@@ -26,6 +26,7 @@ import {
 	toFollowUpRows,
 	toNoteRows,
 } from "@app/utils/partnerRecords"
+import { useConversation } from "@app/utils/partnerConversation"
 import { startTracking } from "@app/utils/tracking"
 
 const CONTACT_FIELDS = [
@@ -48,6 +49,7 @@ export default function setup(context) {
 	// The customer as get_customer returns it, with its notes, follow-ups and activity.
 	const record = ref(null)
 	const team = ref([])
+	const me = ref("")
 	const loading = ref(false)
 	const customer = computed(() => (record.value ? toCustomer(record.value) : null))
 
@@ -60,6 +62,7 @@ export default function setup(context) {
 			const result = await call("connect.api.partner_customers.get_customer", { name: customerId.value })
 			record.value = result.customer
 			team.value = result.team
+			me.value = result.me
 		} catch {
 			record.value = null
 		} finally {
@@ -109,10 +112,26 @@ export default function setup(context) {
 
 	// ── Tabs ────────────────────────────────────────────────────────────────
 	const tab = ref("sites")
-	watch(customerId, () => (tab.value = "sites"))
+
+	// ── Messages: their chat with the partner, the same one their lead showed ──
+	const conversation = useConversation({
+		call,
+		toast,
+		record,
+		reload: load,
+		followUpMethod: "connect.api.partner_customers.log_customer_follow_up",
+		me,
+		socket: context.socket,
+	})
+	const hasThread = computed(() => Boolean(record.value?.thread))
+	watch(customerId, () => {
+		tab.value = "sites"
+		conversation.resetDraft()
+	})
 	const tabs = computed(() =>
 		[
 			{ value: "sites", label: "Sites", iconLeft: "lucide-globe" },
+			{ value: "messages", label: "Messages", iconLeft: "lucide-message-square" },
 			{ value: "followups", label: "Follow-ups", iconLeft: "lucide-phone" },
 			{ value: "activity", label: "Activity", iconLeft: "lucide-history" },
 			{ value: "notes", label: "Notes", iconLeft: "lucide-notebook-pen" },
@@ -214,6 +233,10 @@ export default function setup(context) {
 		approve,
 		tab,
 		tabs,
+		...conversation,
+		hasThread,
+		// The blocks are the lead's, which call a chat nobody can write in "closed".
+		closed: computed(() => !hasThread.value || Boolean(record.value?.thread_closed)),
 		sites,
 		isPartnerPays,
 		sitesEmptyTitle: computed(() => (isWaiting.value ? "Not linked yet" : "No sites yet")),
