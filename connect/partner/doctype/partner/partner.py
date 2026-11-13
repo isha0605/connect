@@ -25,6 +25,7 @@ from connect.partner.logo import attach_normalized_logos
 from connect.partner.story_image import queue_missing_story_images
 from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_membership
 from connect.partner.doctype.region.region import get_filter_countries, get_region_of_country
+from connect.starter_packs.doctype.starter_pack.starter_pack import get_hours_range
 from connect.permissions import _has_full_access, _is_partner_admin
 
 DIMENSION_SCORE_FIELDS = (
@@ -872,6 +873,8 @@ def get_partner_document(partner):
 	doc["founded_years_ago"] = (
 		now_datetime().year - doc["year_founded"] if doc.get("year_founded") else None
 	)
+	# Frappe sets pack hours, the same for every partner, so the pricing card reads them from Starter Pack
+	doc["starter_pack_hours"] = get_hours_range() if doc.get("starter_pack") else None
 	industries = [row.industry for row in doc.get("industries") or []]
 	# the picked industries, each with the verified tick its success stories earn
 	doc["industry_badges"] = industry_badges(industries, doc.get("success_stories"))

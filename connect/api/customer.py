@@ -2,7 +2,7 @@ import frappe
 from frappe.rate_limiter import rate_limit
 
 # Whitelisted entry points only — the actual logic lives next to the doctype it
-# belongs to (Customer, Requirement, Shortlist, Price Estimate). Kept here as
+# belongs to (Customer, Requirement, Shortlist). Kept here as
 # thin wrappers because the frontend calls these dotted paths
 # (connect.api.customer.<name>) directly, and frappe.whitelist() has to
 # decorate the function actually reached by that path.
@@ -12,18 +12,6 @@ from frappe.rate_limiter import rate_limit
 def get_my_customer():
 	from connect.customer.doctype.customer.customer import get_my_customer
 	return get_my_customer()
-
-
-@frappe.whitelist(allow_guest=True)
-def get_pricing_view(partner, requirement=None):
-	from connect.customer.doctype.price_estimate.price_estimate import get_pricing_view
-	return get_pricing_view(partner, requirement=requirement)
-
-
-@frappe.whitelist()
-def save_price_estimate(partner, selected_addons, total, requirement=None, pack_type=None):
-	from connect.customer.doctype.price_estimate.price_estimate import save_price_estimate
-	return save_price_estimate(partner, selected_addons, total, requirement=requirement, pack_type=pack_type)
 
 
 @frappe.whitelist(allow_guest=True)

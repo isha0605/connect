@@ -3,6 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
+from frappe.query_builder.functions import Max, Min
 
 
 class StarterPack(Document):
@@ -36,3 +37,18 @@ def get_catalog():
 			}
 		)
 	return {"packs": packs, "gst_rate": settings.gst_rate, "currency": settings.currency}
+
+
+def get_hours_range() -> dict | None:
+	"""The fewest and most hours across active packs, or None when no pack is active."""
+	pack = frappe.qb.DocType("Starter Pack")
+	fewest, most = (
+		frappe.qb.from_(pack)
+		.select(Min(pack.total_hours), Max(pack.total_hours))
+		.where(pack.is_active == 1)
+		.run()[0]
+	)
+	if most is None:
+		return None
+
+	return {"min": fewest, "max": most}
