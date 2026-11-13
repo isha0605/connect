@@ -546,13 +546,15 @@ def reset_reply_webhook(partner: str) -> None:
 
 
 def sync_reply_webhook(doc, method=None):
-	"""on_update on Partner CRM Settings: sets up the Webhook on the partner's CRM that brings
-	their replies into Connect, and again when the CRM's address or API key changes."""
+	"""on_update on Partner CRM Settings: sets up the Webhooks on the partner's CRM that bring
+	their replies, owners and stages into Connect, and again when the CRM's address or API key
+	changes. A partner connected before stage sync gets them when its statuses are first read."""
 	if doc.crm_type != "Frappe CRM" or not doc.enabled or not (doc.site_url and doc.api_key):
 		return
 	before = doc.get_doc_before_save()
 	moved = before and (before.site_url != doc.site_url or before.api_key != doc.api_key)
-	if doc.crm_reply_webhook_id and not moved:
+	first_status_map = bool(doc.status_map) and not (before and before.status_map)
+	if doc.crm_reply_webhook_id and not moved and not first_status_map:
 		return
 	set_up_reply_webhook(doc)
 
@@ -612,13 +614,15 @@ def set_up_reply_webhook(doc) -> None:
 
 
 def _register_reply_webhook(settings, secret) -> str:
-	"""Both webhooks share the secret, so the one stored checks either. Returns the reply one."""
+	"""The webhooks share the secret, so the one stored checks any of them. Returns the reply one."""
 	from connect.crm_lead_owner import owner_webhook
+	from connect.crm_stage_sync import stage_webhooks
 
 	login = crm_request(settings, "GET", "/api/method/frappe.auth.get_logged_user")
 	integration_user = login.json()["message"]
 	reply = reply_webhook(settings.partner, integration_user, secret)
-	for payload in (reply, owner_webhook(settings.partner, integration_user, secret)):
+	payloads = [reply, owner_webhook(settings.partner, integration_user, secret)]
+	for payload in payloads + stage_webhooks(settings.partner, integration_user, secret):
 		_put_webhook(settings, payload)
 	return reply["name"]
 

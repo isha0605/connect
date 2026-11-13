@@ -231,10 +231,10 @@ def get_my_crm_settings():
 
 
 @frappe.whitelist()
-def save_my_crm_settings(site_url, api_key, default_lead_status, api_secret=None, enabled=0):
+def save_my_crm_settings(site_url, api_key, default_lead_status, api_secret=None, enabled=0, status_map=None):
 	from connect.partner.doctype.partner_crm_settings.partner_crm_settings import save_my_settings
 
-	return save_my_settings(site_url, api_key, default_lead_status, api_secret, enabled)
+	return save_my_settings(site_url, api_key, default_lead_status, api_secret, enabled, status_map)
 
 
 @frappe.whitelist()

@@ -29,6 +29,11 @@ class PartnerLead(Document):
 		self._validate_assigned_to()
 
 	def on_update(self):
+		# A stage the partner's own CRM set has nothing to send back there.
+		if self.has_value_changed("stage") and not self.flags.from_crm:
+			from connect.crm_stage_sync import queue_stage_sync
+
+			queue_stage_sync(self)
 		if any(self.has_value_changed(field) for field in FRAPPE_CRM_FIELDS):
 			from connect.crm_partner_leads import queue_partner_lead_sync
 

@@ -52,3 +52,26 @@ def receive_crm_lead_owner(name=None, lead_owner=None):
 	_verify_signature(partner)
 
 	record_crm_lead_owner(partner, name, lead_owner)
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def receive_crm_lead_status(name=None, status=None):
+	"""Called by the partner's CRM when a Lead's status changes, so the Connect lead's stage
+	follows. `partner` is read from the query string, as for replies."""
+	from connect.crm_stage_sync import CRM_LEAD, record_crm_status
+
+	partner = frappe.local.request.args.get("partner")
+	_verify_signature(partner)
+
+	record_crm_status(partner, CRM_LEAD, name, status)
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def receive_crm_deal_status(name=None, status=None, lead=None, lost_reason=None):
+	"""Called by the partner's CRM when a Deal is made from a Lead or its status changes."""
+	from connect.crm_stage_sync import CRM_DEAL, record_crm_status
+
+	partner = frappe.local.request.args.get("partner")
+	_verify_signature(partner)
+
+	record_crm_status(partner, CRM_DEAL, name, status, crm_lead=lead, lost_reason=lost_reason)

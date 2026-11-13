@@ -1,7 +1,7 @@
 # Copyright (c) 2026
 # For license information, please see license.txt
 
-from connect.patches import seed_regions, seed_starter_packs
+from connect.patches import seed_crm_status_defaults, seed_regions, seed_starter_packs
 
 
 def after_install():
@@ -9,3 +9,4 @@ def after_install():
 	# seed data that lives in a patch has to be loaded here as well.
 	seed_starter_packs.execute()
 	seed_regions.execute()
+	seed_crm_status_defaults.seed()

@@ -196,12 +196,21 @@ class IntegrationTestCRMLeadOwner(IntegrationTestCase):
 		self.assertEqual((webhook["webhook_doctype"], webhook["webhook_docevent"]), ("CRM Lead", "on_change"))
 		self.assertIn("doc.modified_by!='connect-api@crm.example.com'", webhook["condition"])
 
-	def test_setting_up_sync_registers_both_webhooks(self):
+	def test_setting_up_sync_registers_every_webhook(self):
 		crm = WebhookCRM()
 		settings = frappe.get_doc("Partner CRM Settings", PARTNER)
 		with patch("connect.crm_integration.crm_request", side_effect=crm):
 			set_up_reply_webhook(settings)
-		self.assertEqual(crm.webhooks, [f"Connect Reply Sync - {PARTNER}", f"Connect Owner Sync - {PARTNER}"])
+		self.assertEqual(
+			crm.webhooks,
+			[
+				f"Connect Reply Sync - {PARTNER}",
+				f"Connect Owner Sync - {PARTNER}",
+				f"Connect Lead Stage Sync - {PARTNER}",
+				f"Connect Deal Stage Sync - {PARTNER}",
+				f"Connect Deal Conversion Sync - {PARTNER}",
+			],
+		)
 
 	# ---- Who on the team is on the CRM ----
 

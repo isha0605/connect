@@ -394,7 +394,10 @@ class IntegrationTestCRMConnectionCheck(IntegrationTestCase):
 				**values,
 			}
 		)
-		with patch(f"{SETTINGS_MODULE}.crm_request", side_effect=crm):
+		# The check also reads the CRM's lead and deal statuses, for the stage map.
+		with patch(f"{SETTINGS_MODULE}.crm_request", side_effect=crm), patch(
+			"connect.crm_stage_sync.crm_request", side_effect=crm
+		):
 			doc.validate()
 
 	def assert_refused(self, crm, message, **values):
@@ -442,6 +445,7 @@ class StatusCRM:
 
 	def __call__(self, settings, method, path, **kwargs):
 		response = MagicMock()
+		path = unquote(path)
 		if path.endswith("get_logged_user"):
 			if self.fail:
 				raise self.fail
