@@ -3,18 +3,18 @@
 
 """Normalizes partner client logos into a consistent greyscale form.
 
-Client logos are whatever files partners happened to upload, and they come in
-four incompatible shapes: dark artwork on transparency, dark artwork baked onto
-an opaque white box, artwork on an opaque dark box, and *light* artwork on
-transparency. A plain CSS `grayscale()` filter only works for the first two —
-light-on-transparent artwork stays white and renders invisible on the white
-profile page, and dark-box logos turn into grey slabs.
+Client logos are whatever files partners happened to upload: dark artwork on
+transparency, artwork baked onto a box of any colour (sometimes a box inside a
+white margin), and *light* artwork on transparency. A plain CSS `grayscale()`
+filter only works for the first — light artwork stays white and renders
+invisible on the white profile page, and boxed logos turn into grey slabs.
 
 There is no CSS-only fix: `mask-image` would rescue the transparent logos but
 turn every opaque one into a solid rectangle. So the images themselves get
-normalized here — inverted when they're light, background-stripped when they're
-boxed, desaturated, and trimmed — and cached as PNGs under
-`public/files/partner-logos/`, keyed by a hash of the source URL.
+normalized here — boxes stripped, light artwork inverted, desaturated, and
+trimmed — and cached as PNGs under `public/files/partner-logos-v2/`, keyed by a
+hash of the source URL. Each PNG records its ink weight, which the page uses to
+size the logos optically.
 
 Anything that can't be processed (SVG, an unreachable URL, a corrupt file)
 falls back to the original URL, which the page still renders behind its own
@@ -27,7 +27,8 @@ import os
 
 import frappe
 
-CACHE_FOLDER = "partner-logos"
+# Renamed whenever normalizing changes, so every logo is rebuilt the new way.
+CACHE_FOLDER = "partner-logos-v2"
 CACHE_URL_PREFIX = f"/files/{CACHE_FOLDER}"
 
 DOWNLOAD_TIMEOUT = 15
@@ -39,11 +40,15 @@ OPAQUE_ALPHA = 25
 # Sampled against the real logo set: genuine light logos measure 185-227,
 # while dark artwork sits far below this.
 LIGHT_ARTWORK_LUMA = 170
-# luminance bands for classifying an opaque image's background colour
-WHITE_BG_LUMA = 225
-DARK_BG_LUMA = 90
 # how close a pixel must be to the detected background colour to be knocked out
 BG_COLOR_TOLERANCE = 32
+# a box is a border mostly visible (not transparent) and mostly one colour
+BOX_VISIBLE_SHARE = 0.5
+BOX_COLOR_SHARE = 0.8
+# a white margin around a coloured box takes two passes
+MAX_BOXES = 2
+# the PNG text key holding the share of the trimmed logo that is artwork
+INK_KEY = "ink"
 
 
 def _cache_key(source_url: str) -> str:
@@ -101,89 +106,94 @@ def _luma(pixel) -> float:
 	return 0.299 * pixel[0] + 0.587 * pixel[1] + 0.114 * pixel[2]
 
 
-def _background_color(image):
-	"""Guesses an opaque image's background from its four border strips."""
+def _border_points(image) -> list:
 	width, height = image.size
-	edge = []
-	for x in range(width):
-		edge.append(image.getpixel((x, 0)))
-		edge.append(image.getpixel((x, height - 1)))
-	for y in range(height):
-		edge.append(image.getpixel((0, y)))
-		edge.append(image.getpixel((width - 1, y)))
+	return [(x, y) for x in range(width) for y in (0, height - 1)] + [
+		(x, y) for y in range(height) for x in (0, width - 1)
+	]
 
-	# the modal edge colour, so a logo that bleeds into one edge doesn't win
+
+def _modal_color(pixels):
+	"""The commonest colour, so a logo that bleeds into one edge doesn't win."""
 	counts = {}
-	for pixel in edge:
+	for pixel in pixels:
 		key = (pixel[0] // 8, pixel[1] // 8, pixel[2] // 8)
 		counts[key] = counts.get(key, 0) + 1
 	modal = max(counts, key=counts.get)
 	return (modal[0] * 8 + 4, modal[1] * 8 + 4, modal[2] * 8 + 4)
 
 
-def _knock_out_background(image, bg_color):
-	"""Makes pixels within tolerance of bg_color transparent."""
-	from PIL import Image
+def _is_near(pixel, color) -> bool:
+	return all(abs(pixel[channel] - color[channel]) <= BG_COLOR_TOLERANCE for channel in range(3))
 
-	width, height = image.size
-	pixels = list(image.getdata())
-	out = []
-	br, bg, bb = bg_color
-	for r, g, b, a in pixels:
-		if abs(r - br) <= BG_COLOR_TOLERANCE and abs(g - bg) <= BG_COLOR_TOLERANCE and abs(b - bb) <= BG_COLOR_TOLERANCE:
-			out.append((r, g, b, 0))
-		else:
-			out.append((r, g, b, a))
-	result = Image.new("RGBA", (width, height))
-	result.putdata(out)
-	return result
+
+def _strip_box(image):
+	"""Makes a solid box transparent and trims to what's left. Returns the image and
+	whether there was a box: a border mostly visible and mostly one colour, with
+	artwork inside (a logo that is only a solid shape stays). Only the box reached
+	from the edge goes, so artwork of the same colour inside it stays."""
+	from PIL import ImageDraw
+
+	points = _border_points(image)
+	border = [image.getpixel(point) for point in points]
+	visible = [pixel for pixel in border if pixel[3] > OPAQUE_ALPHA]
+	if len(visible) < BOX_VISIBLE_SHARE * len(border):
+		return image, False
+
+	box = _modal_color(visible)
+	if sum(_is_near(pixel, box) for pixel in visible) < BOX_COLOR_SHARE * len(visible):
+		return image, False
+
+	result = image.copy()
+	for point in points:
+		pixel = result.getpixel(point)
+		if pixel[3] > OPAQUE_ALPHA and _is_near(pixel, box):
+			ImageDraw.floodfill(result, point, (0, 0, 0, 0), thresh=3 * BG_COLOR_TOLERANCE)
+	if not result.getbbox():
+		return image, False
+	return _trim(result), True
+
+
+def _trim(image):
+	"""Crops transparent padding, so every logo has the same optical weight in the row
+	instead of inheriting whatever whitespace was baked into the upload."""
+	bbox = image.getbbox()
+	return image.crop(bbox) if bbox else image
+
+
+def _ink(image) -> float:
+	alpha = image.split()[3].getdata()
+	return sum(1 for value in alpha if value > OPAQUE_ALPHA) / len(alpha)
 
 
 def _normalize(raw: bytes):
 	"""Returns normalized PNG bytes, or None if the image can't be processed."""
-	from PIL import Image, ImageOps
+	from PIL import Image, ImageOps, PngImagePlugin
 
-	image = Image.open(io.BytesIO(raw))
-	image = image.convert("RGBA")
+	image = _trim(Image.open(io.BytesIO(raw)).convert("RGBA"))
+	for _pass in range(MAX_BOXES):
+		image, has_box = _strip_box(image)
+		if not has_box:
+			break
 
-	pixels = list(image.getdata())
-	has_alpha = any(p[3] < 250 for p in pixels)
-	artwork = [p for p in pixels if p[3] > OPAQUE_ALPHA]
+	artwork = [pixel for pixel in image.getdata() if pixel[3] > OPAQUE_ALPHA]
 	if not artwork:
 		return None
 
-	if has_alpha:
-		# transparent-backed: invert only if the artwork itself is light, so it
-		# stops being white-on-white
-		if sum(_luma(p) for p in artwork) / len(artwork) > LIGHT_ARTWORK_LUMA:
-			rgb = ImageOps.invert(image.convert("RGB"))
-			image = Image.merge("RGBA", (*rgb.split(), image.split()[3]))
-	else:
-		# opaque: strip the box so it sits on the page like the others do
-		bg = _background_color(image)
-		bg_luma = _luma(bg)
-		if bg_luma < DARK_BG_LUMA:
-			# dark box — invert so the artwork goes dark and the box goes light,
-			# then knock the (now light) box out
-			image = ImageOps.invert(image.convert("RGB")).convert("RGBA")
-			bg = tuple(255 - c for c in bg)
-			image = _knock_out_background(image, bg)
-		elif bg_luma > WHITE_BG_LUMA:
-			image = _knock_out_background(image, bg)
+	# light artwork (often what a dark box held) is inverted, so it isn't white-on-white
+	if sum(_luma(pixel) for pixel in artwork) / len(artwork) > LIGHT_ARTWORK_LUMA:
+		rgb = ImageOps.invert(image.convert("RGB"))
+		image = Image.merge("RGBA", (*rgb.split(), image.split()[3]))
 
 	# desaturate, keeping the alpha channel intact
 	alpha = image.split()[3]
 	grey = image.convert("L").convert("RGB")
-	image = Image.merge("RGBA", (*grey.split(), alpha))
+	image = _trim(Image.merge("RGBA", (*grey.split(), alpha)))
 
-	# trim transparent padding so every logo has the same optical weight in the
-	# row instead of inheriting whatever whitespace was baked into the upload
-	bbox = image.getbbox()
-	if bbox:
-		image = image.crop(bbox)
-
+	info = PngImagePlugin.PngInfo()
+	info.add_text(INK_KEY, f"{_ink(image):.3f}")
 	buffer = io.BytesIO()
-	image.save(buffer, format="PNG", optimize=True)
+	image.save(buffer, format="PNG", optimize=True, pnginfo=info)
 	return buffer.getvalue()
 
 
@@ -216,8 +226,25 @@ def build_logo(source_url: str) -> str | None:
 		return None
 
 
+def get_logo_shape(source_url: str) -> dict:
+	"""A built logo's width-to-height ratio and ink weight, which the page sizes it by.
+	Reads only the PNG's header. Empty for a logo not built yet."""
+	from PIL import Image
+
+	path, _url = _cache_paths(source_url)
+	try:
+		with Image.open(path) as image:
+			return {
+				"client_logo_ratio": round(image.width / image.height, 3),
+				"client_logo_ink": float(image.info[INK_KEY]),
+			}
+	except (OSError, KeyError, ValueError):
+		return {}
+
+
 def attach_normalized_logos(success_stories) -> None:
-	"""Adds `client_logo_display` to each success story row, in place.
+	"""Adds `client_logo_display` to each success story row, in place, and the
+	logo's shape (see get_logo_shape) once it's built.
 
 	Uses the cache only. A logo that hasn't been built yet falls back to its
 	original URL and is queued for background normalization, so page loads stay
@@ -229,13 +256,16 @@ def attach_normalized_logos(success_stories) -> None:
 		if not source:
 			continue
 		display = cached_logo_url(source)
+		shape = get_logo_shape(source) if display else {}
 		if not display:
 			display = source
 			pending.append(source)
+		values = {"client_logo_display": display, **shape}
 		if isinstance(row, dict):
-			row["client_logo_display"] = display
+			row.update(values)
 		else:
-			row.client_logo_display = display
+			for key, value in values.items():
+				setattr(row, key, value)
 
 	for source in dict.fromkeys(pending):
 		try:
