@@ -1202,18 +1202,19 @@
        "baseStyles": {
         "display": "{{ isShared ? 'flex' : 'none' }}",
         "flex": "1",
-        "flexDirection": "row",
+        "flexDirection": "{{ isCompact ? 'column' : 'row' }}",
         "minHeight": "0px",
-        "width": "100%"
+        "width": "100%",
+        "overflowY": "{{ isCompact ? 'auto' : '' }}"
        },
        "children": [
         {
          "baseStyles": {
           "boxSizing": "border-box",
-          "flex": "1",
+          "flex": "{{ isCompact ? '0 0 auto' : '1' }}",
           "minWidth": "0px",
-          "overflowY": "{{ inEditor ? 'visible' : pinsQuoteList ? 'hidden' : 'auto' }}",
-          "padding": "{{ pinsQuoteList && !inEditor ? '30px 24px 0px' : '30px 24px 48px' }}",
+          "overflowY": "{{ isCompact ? 'visible' : (inEditor ? 'visible' : pinsQuoteList ? 'hidden' : 'auto') }}",
+          "padding": "{{ isCompact ? '24px 16px 32px' : (pinsQuoteList && !inEditor ? '30px 24px 0px' : '30px 24px 48px') }}",
           "scrollbarColor": "var(--outline-gray-3) transparent",
           "scrollbarWidth": "thin",
           "display": "flex",
@@ -1227,7 +1228,7 @@
             "margin": "0px auto",
             "maxWidth": "700px",
             "width": "100%",
-            "flex": "{{ pinsQuoteList && !inEditor ? '1 1 0px' : '0 0 auto' }}",
+            "flex": "{{ isCompact ? '0 0 auto' : (pinsQuoteList && !inEditor ? '1 1 0px' : '0 0 auto') }}",
             "minHeight": "0px"
            },
            "children": [
@@ -1236,7 +1237,8 @@
               "alignItems": "baseline",
               "display": "flex",
               "justifyContent": "space-between",
-              "width": "100%"
+              "width": "100%",
+              "gap": "{{ isCompact ? '12px' : '' }}"
              },
              "children": [
               {
@@ -1260,7 +1262,9 @@
                 "color": "var(--ink-gray-5)",
                 "fontSize": "14px",
                 "letterSpacing": "0.28px",
-                "lineHeight": "20.6px"
+                "lineHeight": "20.6px",
+                "flexShrink": "{{ isCompact ? '0' : '' }}",
+                "whiteSpace": "{{ isCompact ? 'nowrap' : '' }}"
                },
                "componentId": "cs-step",
                "componentName": "TextBlock",
@@ -1472,7 +1476,9 @@
                "baseStyles": {
                 "display": "flex",
                 "gap": "8px",
-                "marginTop": "16px"
+                "marginTop": "16px",
+                "flexWrap": "{{ isCompact ? 'wrap' : '' }}",
+                "justifyContent": "{{ isCompact ? 'center' : '' }}"
                },
                "children": [
                 {
@@ -1584,7 +1590,7 @@
               "display": "{{ hasQuotes && !isHired && !isAwaitingPartner ? 'flex' : 'none' }}",
               "flexDirection": "column",
               "width": "100%",
-              "flex": "1",
+              "flex": "{{ isCompact ? '0 0 auto' : '1' }}",
               "minHeight": "0px"
              },
              "children": [
@@ -1665,14 +1671,14 @@
                 "flexDirection": "column",
                 "marginTop": "18px",
                 "width": "100%",
-                "flex": "1",
+                "flex": "{{ isCompact ? '0 0 auto' : '1' }}",
                 "minHeight": "0px"
                },
                "children": [
                 {
                  "baseStyles": {
                   "alignItems": "center",
-                  "display": "grid",
+                  "display": "{{ isCompact ? 'none' : (showQuoteHead ? 'grid' : 'none') }}",
                   "gridTemplateColumns": "316px 120px 147px minmax(0, 1fr)",
                   "paddingBottom": "5px"
                  },
@@ -1754,10 +1760,10 @@
                   "gap": "0px",
                   "rowGap": "0px",
                   "width": "100%",
-                  "flex": "1",
+                  "flex": "{{ isCompact ? '0 0 auto' : '1' }}",
                   "minHeight": "0px",
-                  "paddingBottom": "48px",
-                  "overflowY": "{{ inEditor ? 'visible' : 'auto' }}",
+                  "paddingBottom": "{{ isCompact ? '0px' : '48px' }}",
+                  "overflowY": "{{ isCompact ? 'visible' : (inEditor ? 'visible' : 'auto') }}",
                   "scrollbarWidth": "none",
                   "flexWrap": "nowrap"
                  },
@@ -1776,10 +1782,12 @@
                      "baseStyles": {
                       "alignItems": "center",
                       "borderTop": "1px solid var(--outline-gray-1)",
-                      "display": "grid",
-                      "gridTemplateColumns": "316px 120px 147px minmax(0, 1fr)",
-                      "padding": "9.5px 0px",
-                      "flexShrink": "0"
+                      "display": "{{ dataItem.isHeading ? 'none' : 'grid' }}",
+                      "gridTemplateColumns": "{{ isCompact ? 'auto minmax(0, 1fr) auto' : '316px 120px 147px minmax(0, 1fr)' }}",
+                      "padding": "{{ isCompact ? '12px 0px' : '9.5px 0px' }}",
+                      "flexShrink": "0",
+                      "columnGap": "{{ isCompact ? '12px' : '' }}",
+                      "rowGap": "{{ isCompact ? '10px' : '' }}"
                      },
                      "children": [
                       {
@@ -1787,7 +1795,9 @@
                         "display": "flex",
                         "flexDirection": "column",
                         "gap": "0px",
-                        "minWidth": "0px"
+                        "minWidth": "0px",
+                        "gridColumn": "{{ isCompact ? '1 / 3' : '' }}",
+                        "gridRow": "{{ isCompact ? '1' : '' }}"
                        },
                        "children": [
                         {
@@ -1864,7 +1874,7 @@
                          "componentName": "TextBlock",
                          "componentProps": {
                           "tag": "p",
-                          "text": "{{ dataItem.city || '' }}"
+                          "text": "{{ dataItem.statusLabel || dataItem.city || '' }}"
                          },
                          "componentSlots": {}
                         }
@@ -1890,7 +1900,9 @@
                         "fontVariantNumeric": "tabular-nums",
                         "letterSpacing": "0.12px",
                         "lineHeight": "20px",
-                        "textAlign": "right"
+                        "textAlign": "{{ isCompact ? 'left' : 'right' }}",
+                        "gridColumn": "{{ isCompact ? '1' : '' }}",
+                        "gridRow": "{{ isCompact ? '2' : '' }}"
                        },
                        "componentId": "cs-quote-amount",
                        "componentName": "TextBlock",
@@ -1916,7 +1928,9 @@
                         "fontSize": "14px",
                         "letterSpacing": "0.12px",
                         "lineHeight": "20px",
-                        "paddingLeft": "60px"
+                        "paddingLeft": "{{ isCompact ? '0px' : '60px' }}",
+                        "gridColumn": "{{ isCompact ? '2' : '' }}",
+                        "gridRow": "{{ isCompact ? '2' : '' }}"
                        },
                        "componentId": "cs-quote-timeline",
                        "componentName": "TextBlock",
@@ -1938,14 +1952,14 @@
                       },
                       {
                        "baseStyles": {
-                        "display": "flex",
+                        "display": "{{ isCompact ? 'contents' : 'flex' }}",
                         "justifyContent": "flex-end"
                        },
                        "children": [
                         {
                          "baseStyles": {
                           "alignItems": "center",
-                          "display": "{{ quoteTab === 'others' ? 'flex' : 'none' }}",
+                          "display": "{{ isCompact ? (quoteTab === 'others' && !dataItem.isInvited ? 'contents' : 'none') : (quoteTab === 'others' && !dataItem.isInvited ? 'flex' : 'none') }}",
                           "gap": "8px"
                          },
                          "children": [
@@ -1972,6 +1986,10 @@
                            "tabletStyles": {
                             "gridColumn": "3",
                             "gridRow": "2"
+                           },
+                           "baseStyles": {
+                            "gridColumn": "{{ isCompact ? '3' : '' }}",
+                            "gridRow": "{{ isCompact ? '2' : '' }}"
                            }
                           },
                           {
@@ -2000,6 +2018,12 @@
                               "gridColumn": "3",
                               "gridRow": "1",
                               "justifySelf": "end"
+                             },
+                             "baseStyles": {
+                              "alignSelf": "{{ isCompact ? 'start' : '' }}",
+                              "gridColumn": "{{ isCompact ? '3' : '' }}",
+                              "gridRow": "{{ isCompact ? '1' : '' }}",
+                              "justifySelf": "{{ isCompact ? 'end' : '' }}"
                              }
                             }
                            ],
@@ -2018,16 +2042,16 @@
                          "componentSlots": {},
                          "originalElement": "div",
                          "mobileStyles": {
-                          "display": "{{ quoteTab === 'others' ? 'contents' : 'none' }}"
+                          "display": "{{ quoteTab === 'others' && !dataItem.isInvited ? 'contents' : 'none' }}"
                          },
                          "tabletStyles": {
-                          "display": "{{ quoteTab === 'others' ? 'contents' : 'none' }}"
+                          "display": "{{ quoteTab === 'others' && !dataItem.isInvited ? 'contents' : 'none' }}"
                          }
                         },
                         {
                          "baseStyles": {
                           "alignItems": "center",
-                          "display": "{{ quoteTab === 'interested' ? 'flex' : 'none' }}",
+                          "display": "{{ isCompact ? (quoteTab === 'interested' ? 'contents' : 'none') : (quoteTab === 'interested' ? 'flex' : 'none') }}",
                           "gap": "8px"
                          },
                          "children": [
@@ -2062,6 +2086,12 @@
                             "gridColumn": "3",
                             "gridRow": "1",
                             "justifySelf": "end"
+                           },
+                           "baseStyles": {
+                            "alignSelf": "{{ isCompact ? 'start' : '' }}",
+                            "gridColumn": "{{ isCompact ? '3' : '' }}",
+                            "gridRow": "{{ isCompact ? '1' : '' }}",
+                            "justifySelf": "{{ isCompact ? 'end' : '' }}"
                            }
                           },
                           {
@@ -2089,6 +2119,11 @@
                             "gridColumn": "3",
                             "gridRow": "2",
                             "justifySelf": "end"
+                           },
+                           "baseStyles": {
+                            "gridColumn": "{{ isCompact ? '3' : '' }}",
+                            "gridRow": "{{ isCompact ? '2' : '' }}",
+                            "justifySelf": "{{ isCompact ? 'end' : '' }}"
                            }
                           }
                          ],
@@ -2102,6 +2137,65 @@
                          },
                          "tabletStyles": {
                           "display": "{{ quoteTab === 'interested' ? 'contents' : 'none' }}"
+                         }
+                        },
+                        {
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "{{ isCompact ? (dataItem.isInvited ? 'contents' : 'none') : (dataItem.isInvited ? 'flex' : 'none') }}",
+                          "gap": "8px"
+                         },
+                         "children": [
+                          {
+                           "componentEvents": {
+                            "click": {
+                             "action": "Run Script",
+                             "event": "click",
+                             "script": "readThread(dataItem);"
+                            }
+                           },
+                           "componentId": "cs-quote-invited-message",
+                           "componentName": "Button",
+                           "componentProps": {
+                            "icon": "lucide-message-square",
+                            "size": "sm",
+                            "variant": "ghost",
+                            "tooltip": "Open chat"
+                           },
+                           "componentSlots": {},
+                           "attributes": {
+                            "aria-label": "Open chat"
+                           },
+                           "mobileStyles": {
+                            "alignSelf": "start",
+                            "gridColumn": "3",
+                            "gridRow": "1",
+                            "justifySelf": "end"
+                           },
+                           "tabletStyles": {
+                            "alignSelf": "start",
+                            "gridColumn": "3",
+                            "gridRow": "1",
+                            "justifySelf": "end"
+                           },
+                           "baseStyles": {
+                            "alignSelf": "{{ isCompact ? 'start' : '' }}",
+                            "gridColumn": "{{ isCompact ? '3' : '' }}",
+                            "gridRow": "{{ isCompact ? '1' : '' }}",
+                            "justifySelf": "{{ isCompact ? 'end' : '' }}"
+                           }
+                          }
+                         ],
+                         "componentId": "cs-quote-invited-actions",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "originalElement": "div",
+                         "mobileStyles": {
+                          "display": "{{ dataItem.isInvited ? 'contents' : 'none' }}"
+                         },
+                         "tabletStyles": {
+                          "display": "{{ dataItem.isInvited ? 'contents' : 'none' }}"
                          }
                         }
                        ],
@@ -2135,6 +2229,55 @@
                       "padding": "12px 0px",
                       "rowGap": "10px"
                      }
+                    },
+                    {
+                     "baseStyles": {
+                      "borderTop": "{{ showQuoteHead ? '1px solid var(--outline-gray-1)' : 'none' }}",
+                      "display": "{{ dataItem.isHeading ? 'flex' : 'none' }}",
+                      "flexDirection": "column",
+                      "flexShrink": "0",
+                      "gap": "2px",
+                      "padding": "{{ showQuoteHead ? '48px 0px 8px' : '0px 0px 8px' }}"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-8)",
+                        "fontSize": "14px",
+                        "fontWeight": "500",
+                        "letterSpacing": "0.12px",
+                        "lineHeight": "20px"
+                       },
+                       "componentId": "cs-invited-title",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "{{ dataItem.label }}"
+                       },
+                       "componentSlots": {}
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-5)",
+                        "fontSize": "13px",
+                        "letterSpacing": "0.12px",
+                        "lineHeight": "20px"
+                       },
+                       "componentId": "cs-invited-text",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "",
+                        "tag": "p",
+                        "text": "Partners who got your brief and have not sent a quote."
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "componentId": "cs-invited-heading",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
                     }
                    ],
                    "slotId": "cs-quote-rows:default",
@@ -2269,7 +2412,9 @@
                 {
                  "baseStyles": {
                   "display": "flex",
-                  "justifyContent": "flex-end"
+                  "justifyContent": "{{ isCompact ? 'flex-start' : 'flex-end' }}",
+                  "gridColumn": "{{ isCompact ? '2' : '' }}",
+                  "marginTop": "{{ isCompact ? '12px' : '' }}"
                  },
                  "children": [
                   {
@@ -2385,15 +2530,17 @@
         },
         {
          "baseStyles": {
-          "borderLeft": "1px solid var(--outline-gray-1)",
+          "borderLeft": "{{ isCompact ? 'none' : '1px solid var(--outline-gray-1)' }}",
           "display": "flex",
           "flexDirection": "column",
-          "flexShrink": "0",
+          "flexShrink": "{{ isCompact ? '0' : '0' }}",
           "marginRight": "0px",
-          "overflowY": "{{ inEditor ? 'visible' : 'auto' }}",
+          "overflowY": "{{ isCompact ? 'visible' : (inEditor ? 'visible' : 'auto') }}",
           "scrollbarColor": "var(--outline-gray-3) transparent",
           "scrollbarWidth": "thin",
-          "width": "350px"
+          "width": "{{ isCompact ? '100%' : '350px' }}",
+          "borderTop": "{{ isCompact ? '1px solid var(--outline-gray-1)' : '' }}",
+          "paddingBottom": "{{ isCompact ? '32px' : '' }}"
          },
          "children": [
           {
@@ -5045,7 +5192,7 @@
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-11-12 14:00:00.000000",
+ "modified": "2026-11-13 00:10:00.000000",
  "modified_by": "Administrator",
  "name": "custom_implementation",
  "owner": "Administrator",
