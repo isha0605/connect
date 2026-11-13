@@ -19,8 +19,10 @@ import frappe
 from frappe import _
 from frappe.utils import cint, escape_html, random_string
 
+from connect.account import partner_access
 from connect.analytics import record_signup
 from connect.auth.email_code import EmailCode
+from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_membership
 from connect.roles import CONSULTANT_ROLE
 
 BUYER, PARTNER = "buyer", "partner"
@@ -177,16 +179,18 @@ def enforce_signup_limit():
 
 
 def landing_page(user, next_path=None):
-	"""The page asked for, if it's one of ours; else by who they are: a Frappe consultant or a
-	partner to Messaging (a partner still applying to Partner Onboarding), anyone else Home."""
+	"""The page asked for, if it's one of ours; else by who they are: a Frappe consultant to
+	Messaging, a partner to their partner home (a partner still applying to Partner Onboarding),
+	anyone else Home."""
 	if is_own_path(next_path):
 		return next_path
 	if CONSULTANT_ROLE in frappe.get_roles(user):
 		return "/connect/messaging"
 	if frappe.db.exists("Partner Application", {"owner": user, "status": "Draft"}):
 		return "/connect/partner-onboarding"
-	if frappe.db.exists("Connect Partner Member", {"user": user, "is_removed": 0}):
-		return "/connect/messaging"
+	membership = get_current_membership(user)
+	if membership:
+		return "/connect" + partner_access(membership)["home_route"]
 	return "/connect/home" if home_is_published() else "/connect/partner-directory-redesign"
 
 

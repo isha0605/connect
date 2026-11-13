@@ -11,6 +11,7 @@ from connect.messaging.customer_identity import anonymous_company
 from connect.notifications import _message_preview_text
 from connect.partner.doctype.connect_partner_member.connect_partner_member import (
 	ACCESS_LEVELS,
+	CUSTOMER_ACCESS,
 	LEAD_ACCESS,
 	access_level_of,
 )
@@ -106,6 +107,32 @@ def log_lead_follow_up(name: str, values: dict) -> dict:
 		_check_can_write(row.thread, frappe.session.user)
 	log_follow_up(row.partner, row.customer, values, thread=row.thread)
 	return _lead_records(row, _requirements_by_lead([row.name]).get(row.name, []))
+
+
+def partner_page_for_thread(thread: str) -> str | None:
+	"""The page where the caller's team writes in this customer thread. None when the caller can
+	open none of them."""
+	partner = frappe.db.get_value("Connect Thread", thread, "partner")
+	user = frappe.session.user
+	return next((route for route, access in _thread_pages(thread) if _has_partner_access(partner, user, access)), None)
+
+
+def thread_page(thread: str) -> str | None:
+	"""Where the partner's team writes in this customer thread, for a link anyone on the team
+	follows (a CRM email). The page itself checks who opens it."""
+	return next((route for route, _access in _thread_pages(thread)), None)
+
+
+def _thread_pages(thread: str) -> list[tuple[str, tuple]]:
+	"""The partner pages that hold this thread, best first, with who may open each: the
+	customer's page once they hired the partner (their lead is then closed), and their lead."""
+	partner, customer = frappe.db.get_value("Connect Thread", thread, ["partner", "customer"]) or (None, None)
+	if not partner:
+		return []
+	won = frappe.db.get_value("Partner Customer", {"partner": partner, "customer": customer}, "name")
+	lead = frappe.db.get_value("Partner Lead", {"thread": thread}, "name")
+	pages = [(f"/customers/{won}", CUSTOMER_ACCESS)] if won else []
+	return pages + ([(f"/leads/{lead}", LEAD_ACCESS)] if lead else [])
 
 
 def update_lead(name: str, stage=None, owner=None, probability=None, lost_reason=None) -> dict:

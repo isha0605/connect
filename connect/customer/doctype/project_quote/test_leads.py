@@ -8,7 +8,8 @@ from frappe.tests import IntegrationTestCase
 
 from connect.customer.doctype.customer_project.brief import send_brief
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
-from connect.customer.doctype.project_quote.leads import get_lead, my_leads, update_lead
+from connect.auth.accounts import landing_page
+from connect.customer.doctype.project_quote.leads import get_lead, my_leads, partner_page_for_thread, update_lead
 from connect.partner.doctype.partner_lead.partner_lead import NotOnCRMError
 
 PARTNER = "_Test Leads Partner"
@@ -232,3 +233,32 @@ class TestLeads(IntegrationTestCase):
 		update_lead(self.lead, owner=SALES)
 		self.as_user(SALES)
 		self.assertEqual(update_lead(self.lead, owner=OWNER)["owner"], OWNER)
+
+	# Partners write from a lead or a customer page, so a link to a chat takes them there.
+	def page_as(self, user):
+		frappe.set_user(user)
+		try:
+			return partner_page_for_thread(self.thread)
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_a_chat_opens_on_its_lead(self):
+		self.assertEqual(self.page_as(SALES), f"/leads/{self.lead}")
+
+	def test_a_hired_partners_chat_opens_on_the_customer(self):
+		self.hire(self.quote)
+		customer = frappe.db.get_value("Partner Customer", {"partner": PARTNER, "customer": self.customer}, "name")
+
+		self.assertEqual(self.page_as(OWNER), f"/customers/{customer}")
+		# Finance sees customers but not leads.
+		self.assertEqual(self.page_as(FINANCE), f"/customers/{customer}")
+
+	def test_no_page_for_someone_who_cannot_open_it(self):
+		for user in (MEMBER, FINANCE, OTHER_OWNER, BUYER):
+			self.assertIsNone(self.page_as(user), user)
+
+	def test_partners_land_on_their_home_not_messaging(self):
+		self.assertEqual(landing_page(SALES), "/connect/leads")
+		self.assertEqual(landing_page(FINANCE), "/connect/customers")
+		self.assertEqual(landing_page(MEMBER), "/connect/partner-listing")
+

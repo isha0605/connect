@@ -6,7 +6,6 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 import { Alert, Avatar, Badge, Button, Dialog, LoadingIndicator, TextInput, call, toast } from "frappe-ui"
 
 // Where a partner lands after signing in (see connect.auth.accounts): Messaging.
-const HOME_ROUTE = "/connect/messaging"
 // Below this many companies the list fits without a search box.
 const SEARCH_FROM = 6
 
@@ -50,10 +49,10 @@ async function switchTo(company) {
 	if (switchingTo.value) return
 	switchingTo.value = company.partner
 	try {
-		await call("connect.api.partner.switch_partner", { partner: company.partner })
+		const context = await call("connect.api.partner.switch_partner", { partner: company.partner })
 		toast.success(`Now working for ${company.partner_name}`)
-		// Pages hold the old company's data, so start again from the partner home.
-		window.location.assign(HOME_ROUTE)
+		// Pages hold the old company's data, so start again from the new company's partner home.
+		window.location.assign(`/connect${context?.partner?.home_route || "/partner-listing"}`)
 	} catch (e) {
 		toast.error(errorText(e, "Could not switch company"))
 		switchingTo.value = ""

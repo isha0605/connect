@@ -60,10 +60,36 @@ const FILE_TYPE_TILES = [
 ]
 const DEFAULT_FILE_TILE = { bg: "var(--gray-500)", glyph: lucideSvg("file") }
 
+// Partners write to a customer from that customer's lead or customer page, so Messaging is
+// for customers only. A partner who still lands here (an old link, an email, a notification)
+// goes to the page that holds that chat, or else to their partner home.
+function sendPartnersToTheirPages(context) {
+	let checked = false
+	watch(
+		() => context.myContext.data,
+		async (data) => {
+			if (!data || checked) return
+			checked = true
+			if (!data.partner) return
+			// From the address bar: on the first load the router hasn't parsed the query yet.
+			const query = new URLSearchParams(window.location.search)
+			const thread = query.get("thread")
+			const type = query.get("type")
+			const page =
+				thread && type !== "dm"
+					? await call("connect.api.leads.partner_page_for_thread", { thread }).catch(() => null)
+					: null
+			context.router.replace(page || data.partner.home_route || "/partner-listing")
+		},
+		{ immediate: true },
+	)
+}
+
 export default function setup(context) {
 	startTracking(context)
 	// the thread list's thin scrollbar that fades when idle (see @app/utils/scrollFade)
 	installScrollFade()
+	sendPartnersToTheirPages(context)
 	// ---- State ----
 	const selectedThread = ref("")
 	const draftMessage = ref("")
