@@ -55,6 +55,13 @@ class PartnerLead(Document):
 			self.stage = "Won"
 			self._save_as_system()
 
+	def lose(self, reason: str):
+		"""The partner declined the customer's brief. A lead already won or closed stays as it is."""
+		if self.stage not in CLOSED_STAGES:
+			self.stage = "Lost"
+			self.lost_reason = reason
+			self._save_as_system()
+
 	def _validate_lost_reason(self):
 		if self.stage != "Lost":
 			self.lost_reason = None

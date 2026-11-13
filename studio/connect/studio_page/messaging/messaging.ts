@@ -1514,6 +1514,51 @@ export default function setup(context) {
 		}
 	}
 
+	// ---- A brief's answer, on its Requirement card ----
+	// Until the partner quotes: Interested opens the quote for that brief, and Not interested
+	// is final. The customer is told the partner isn't available, and can still write.
+	function briefOfCard(item) {
+		return quotableBriefs.value.find((brief) => brief.brief_message === item.name)
+	}
+
+	function canAnswerBrief(item) {
+		return briefOfCard(item)?.status === "Awaiting"
+	}
+
+	function answerInterested(item) {
+		const brief = briefOfCard(item)
+		if (!brief) return
+		quoteOpen.value = true
+		selectQuoteBrief(brief.name)
+	}
+
+	const showDeclineBriefDialog = ref(false)
+	const declineBriefQuote = ref("")
+	const decliningBrief = ref(false)
+	function openDeclineBrief(item) {
+		declineBriefQuote.value = briefOfCard(item)?.name || ""
+		showDeclineBriefDialog.value = Boolean(declineBriefQuote.value)
+	}
+
+	function declineBrief() {
+		if (decliningBrief.value) return
+		decliningBrief.value = true
+		call("connect.api.projects.decline_brief", { quote: declineBriefQuote.value })
+			.then(() => {
+				showDeclineBriefDialog.value = false
+				toast.success("The customer has been told")
+				context.messages.reload()
+				context.myThreads.reload()
+				loadQuotableBriefs()
+			})
+			.catch((error) => {
+				toast.error(error?.messages?.[0] || "Couldn't save your answer. Try again.")
+			})
+			.finally(() => {
+				decliningBrief.value = false
+			})
+	}
+
 	// The partner sent a newer quote for the same brief.
 	function isQuoteReplaced(item) {
 		const quote = parseRequirementContent(item).quote
@@ -4270,6 +4315,12 @@ export default function setup(context) {
 		showDeclineHireDialog,
 		declineHireReason,
 		declineHire,
+		canAnswerBrief,
+		answerInterested,
+		openDeclineBrief,
+		showDeclineBriefDialog,
+		decliningBrief,
+		declineBrief,
 		messageToDelete,
 		deletingMessage,
 		deleteMessage,

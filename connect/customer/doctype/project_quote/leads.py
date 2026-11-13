@@ -29,6 +29,7 @@ LEAD_LIMIT = 500
 # A requirement's quote status, as the partner reads it on their lead.
 REQUIREMENT_STATUSES = {
 	"Awaiting": "Waiting for your quote",
+	"Partner Declined": "You declined",
 	"Quoted": "Quoted",
 	"Interested": "Interested",
 	"Not Interested": "Not interested",
