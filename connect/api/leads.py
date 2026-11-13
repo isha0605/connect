@@ -18,6 +18,13 @@ def get_lead(name):
 	return get_lead(name)
 
 
+@frappe.whitelist()
+def partner_page_for_thread(thread):
+	from connect.customer.doctype.project_quote.leads import partner_page_for_thread
+
+	return partner_page_for_thread(thread)
+
+
 @frappe.whitelist(methods=["POST"])
 def update_lead(name, stage=None, owner=None, probability=None, lost_reason=None):
 	from connect.customer.doctype.project_quote.leads import update_lead

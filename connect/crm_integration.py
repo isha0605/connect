@@ -25,6 +25,10 @@ CRM_REQUEST_TIMEOUT = 30
 # email, so they stay out of the CRM.
 SKIPPED_MESSAGE_TYPES = ("System",)
 
+# Cards the partner answers with buttons on Connect: the brief (Interested / Not interested)
+# and the hire request (Accept / Decline). Their CRM email links back there.
+ANSWERED_IN_CONNECT = ("Requirement", "Hire Request")
+
 # Marks the messages of threads that had a Lead before Connect noted which messages it sent, so
 # they aren't sent again.
 SENT_BEFORE_TRACKING = "sent before tracking"
@@ -400,7 +404,21 @@ def email_body(message):
 	title, fields = _card_fields(message.message_type, card)
 	lines = [f"<b>{escape_html(title)}</b>"]
 	lines += [f"{escape_html(label)}: {escape_html(str(value))}" for label, value in fields if value]
+	if message.message_type in ANSWERED_IN_CONNECT:
+		lines += _answer_link(message.thread)
 	return "<br>".join(lines)
+
+
+def _answer_link(thread) -> list[str]:
+	"""A link to where the partner answers the card: its buttons are on Connect, not the CRM.
+	Only a link, never the answer itself, since mail scanners open the links in an email."""
+	from connect.customer.doctype.project_quote.leads import thread_page
+
+	page = thread_page(thread)
+	if not page:
+		return []
+	url = escape_html(frappe.utils.get_url(f"/connect{page}"))
+	return ["", f'<a href="{url}">{escape_html(_("Answer in Connect →"))}</a>']
 
 
 def _card_fields(message_type, card):

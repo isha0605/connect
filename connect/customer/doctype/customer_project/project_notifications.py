@@ -34,7 +34,7 @@ def notify_project_step(doc) -> None:
 
 
 def notify_quote_update(quote) -> None:
-	"""Tells the customer when a partner quotes or declines their hire request."""
+	"""Tells the customer when a partner quotes, declines the brief, or declines their hire request."""
 	before = quote.get_doc_before_save()
 	if not before or before.status == quote.status:
 		return
@@ -42,6 +42,12 @@ def notify_quote_update(quote) -> None:
 	project = frappe.get_doc("Customer Project", quote.customer_project)
 	if quote.status == "Quoted" and before.status == "Awaiting":
 		notify_customer(project, _("New quote from {0}").format(partner_name(quote.partner)), quote_summary(project, quote))
+	elif quote.status == "Partner Declined":
+		notify_customer(
+			project,
+			_("{0} is not available to take on new clients").format(partner_name(quote.partner)),
+			project.project_name,
+		)
 	elif quote.status == "Hire Declined":
 		notify_customer(
 			project,

@@ -3105,6 +3105,58 @@
                             "variant": "subtle"
                            },
                            "componentSlots": {}
+                          },
+                          {
+                           "baseStyles": {
+                            "display": "flex",
+                            "flexWrap": "wrap",
+                            "gap": "8px",
+                            "marginTop": "12px"
+                           },
+                           "children": [
+                            {
+                             "componentEvents": {
+                              "click": {
+                               "action": "Run Script",
+                               "event": "click",
+                               "script": "answerInterested(dataItem);"
+                              }
+                             },
+                             "componentId": "message-brief-interested-o",
+                             "componentName": "Button",
+                             "componentProps": {
+                              "label": "Interested",
+                              "disabled": "{{ decliningBrief }}",
+                              "size": "sm",
+                              "variant": "solid"
+                             },
+                             "componentSlots": {}
+                            },
+                            {
+                             "componentEvents": {
+                              "click": {
+                               "action": "Run Script",
+                               "event": "click",
+                               "script": "openDeclineBrief(dataItem);"
+                              }
+                             },
+                             "componentId": "message-brief-decline-o",
+                             "componentName": "Button",
+                             "componentProps": {
+                              "label": "Not interested",
+                              "disabled": "{{ decliningBrief }}",
+                              "size": "sm",
+                              "variant": "subtle"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "message-brief-actions-o",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div",
+                           "visibilityCondition": "canAnswerBrief(dataItem)"
                           }
                          ],
                          "classes": [
@@ -17984,6 +18036,99 @@
      "componentSlots": {}
     },
     {
+     "blockName": "Decline Brief Dialog",
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "14px"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)"
+         },
+         "componentId": "decline-brief-description",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-sm",
+          "tag": "span",
+          "text": "The customer is told you are not available to take on new clients. You cannot change this answer later."
+         },
+         "componentSlots": {}
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "row",
+          "gap": "8px",
+          "justifyContent": "flex-end"
+         },
+         "children": [
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "showDeclineBriefDialog.value = false;"
+            }
+           },
+           "componentId": "decline-brief-cancel-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "theme": "gray",
+            "variant": "outline"
+           },
+           "componentSlots": {}
+          },
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "declineBrief();"
+            }
+           },
+           "componentId": "decline-brief-confirm-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Not interested",
+            "loading": "{{ decliningBrief }}",
+            "theme": "red",
+            "variant": "solid"
+           },
+           "componentSlots": {}
+          }
+         ],
+         "componentId": "decline-brief-actions",
+         "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
+         "originalElement": "div"
+        }
+       ],
+       "componentId": "decline-brief-body",
+       "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
+       "originalElement": "div"
+      }
+     ],
+     "componentId": "decline-brief-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "showDeclineBriefDialog"
+      },
+      "size": "sm",
+      "title": "Not interested in this brief?"
+     },
+     "componentSlots": {}
+    },
+    {
      "blockName": "Share Meeting Dialog",
      "children": [
       {
@@ -18117,7 +18262,7 @@
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-11-12 12:54:56.002652",
+ "modified": "2026-11-12 18:30:00.000000",
  "modified_by": "tridots@example.com",
  "name": "messaging",
  "owner": "Administrator",

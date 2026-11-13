@@ -105,6 +105,11 @@ def hire_request_statuses(thread):
 
 
 # The partner's side: their owners and sales quote on a brief from the chat.
+@frappe.whitelist(methods=["POST"])
+def decline_brief(quote):
+	frappe.get_doc("Project Quote", quote).decline_brief()
+
+
 @frappe.whitelist()
 def quotable_briefs(thread):
 	from connect.customer.doctype.project_quote.project_quote import quotable_briefs

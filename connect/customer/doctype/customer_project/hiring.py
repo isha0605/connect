@@ -81,8 +81,13 @@ def hire_request_statuses(thread: str) -> dict:
 	reason when the partner declined, and whether the caller can still answer it. A customer
 	can ask the same partner again after cancelling, so only the newest card for a quote
 	follows it; the older ones were withdrawn."""
+	_check_can_read(thread, frappe.session.user)
+	return hire_card_statuses(thread)
+
+
+def hire_card_statuses(thread: str) -> dict:
+	"""hire_request_statuses for a caller that has already scoped the thread to the user."""
 	user = frappe.session.user
-	_check_can_read(thread, user)
 	quotes = {
 		row.name: row
 		for row in frappe.get_all(

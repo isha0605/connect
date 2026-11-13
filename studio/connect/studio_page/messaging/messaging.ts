@@ -60,10 +60,36 @@ const FILE_TYPE_TILES = [
 ]
 const DEFAULT_FILE_TILE = { bg: "var(--gray-500)", glyph: lucideSvg("file") }
 
+// Partners write to a customer from that customer's lead or customer page, so Messaging is
+// for customers only. A partner who still lands here (an old link, an email, a notification)
+// goes to the page that holds that chat, or else to their partner home.
+function sendPartnersToTheirPages(context) {
+	let checked = false
+	watch(
+		() => context.myContext.data,
+		async (data) => {
+			if (!data || checked) return
+			checked = true
+			if (!data.partner) return
+			// From the address bar: on the first load the router hasn't parsed the query yet.
+			const query = new URLSearchParams(window.location.search)
+			const thread = query.get("thread")
+			const type = query.get("type")
+			const page =
+				thread && type !== "dm"
+					? await call("connect.api.leads.partner_page_for_thread", { thread }).catch(() => null)
+					: null
+			context.router.replace(page || data.partner.home_route || "/partner-listing")
+		},
+		{ immediate: true },
+	)
+}
+
 export default function setup(context) {
 	startTracking(context)
 	// the thread list's thin scrollbar that fades when idle (see @app/utils/scrollFade)
 	installScrollFade()
+	sendPartnersToTheirPages(context)
 	// ---- State ----
 	const selectedThread = ref("")
 	const draftMessage = ref("")
@@ -1514,6 +1540,51 @@ export default function setup(context) {
 		}
 	}
 
+	// ---- A brief's answer, on its Requirement card ----
+	// Until the partner quotes: Interested opens the quote for that brief, and Not interested
+	// is final. The customer is told the partner isn't available, and can still write.
+	function briefOfCard(item) {
+		return quotableBriefs.value.find((brief) => brief.brief_message === item.name)
+	}
+
+	function canAnswerBrief(item) {
+		return briefOfCard(item)?.status === "Awaiting"
+	}
+
+	function answerInterested(item) {
+		const brief = briefOfCard(item)
+		if (!brief) return
+		quoteOpen.value = true
+		selectQuoteBrief(brief.name)
+	}
+
+	const showDeclineBriefDialog = ref(false)
+	const declineBriefQuote = ref("")
+	const decliningBrief = ref(false)
+	function openDeclineBrief(item) {
+		declineBriefQuote.value = briefOfCard(item)?.name || ""
+		showDeclineBriefDialog.value = Boolean(declineBriefQuote.value)
+	}
+
+	function declineBrief() {
+		if (decliningBrief.value) return
+		decliningBrief.value = true
+		call("connect.api.projects.decline_brief", { quote: declineBriefQuote.value })
+			.then(() => {
+				showDeclineBriefDialog.value = false
+				toast.success("The customer has been told")
+				context.messages.reload()
+				context.myThreads.reload()
+				loadQuotableBriefs()
+			})
+			.catch((error) => {
+				toast.error(error?.messages?.[0] || "Couldn't save your answer. Try again.")
+			})
+			.finally(() => {
+				decliningBrief.value = false
+			})
+	}
+
 	// The partner sent a newer quote for the same brief.
 	function isQuoteReplaced(item) {
 		const quote = parseRequirementContent(item).quote
@@ -2112,9 +2183,9 @@ export default function setup(context) {
 	const uploadingFile = computed(() => draftAttachments.value.some((a) => a.uploading))
 
 	// Right-click on a group of files you sent: the files are deleted together. Each file's own
-	// actions live on its card (see messageMoreOptions).
+	// actions live on its card (see messageMoreOptions). Customers don't delete what they sent.
 	function clusterMenuOptions(cluster) {
-		if (!cluster || !isMine(cluster.sender)) return []
+		if (!cluster || !isMine(cluster.sender) || !amPartner()) return []
 		return [{ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick: () => confirmDeleteCluster(cluster) }]
 	}
 
@@ -2164,10 +2235,11 @@ export default function setup(context) {
 			icon: isPinned(item) ? "lucide-pin-off" : "lucide-pin",
 			onClick: () => togglePinMessage(item),
 		})
-		if (mine) {
-			if (item.message_type === "Text") {
-				options.push({ label: "Edit", icon: "lucide-pencil", onClick: () => confirmEditMessage(item) })
-			}
+		if (mine && item.message_type === "Text") {
+			options.push({ label: "Edit", icon: "lucide-pencil", onClick: () => confirmEditMessage(item) })
+		}
+		// Customers don't delete what they sent: a partner may already have read or acted on it.
+		if (mine && amPartner()) {
 			options.push({ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick: () => confirmDeleteMessage(item) })
 			// Files sent together are grouped into one cluster; deleting several at once lives here now that the
 			// cluster row has no toolbar of its own.
@@ -4270,6 +4342,12 @@ export default function setup(context) {
 		showDeclineHireDialog,
 		declineHireReason,
 		declineHire,
+		canAnswerBrief,
+		answerInterested,
+		openDeclineBrief,
+		showDeclineBriefDialog,
+		decliningBrief,
+		declineBrief,
 		messageToDelete,
 		deletingMessage,
 		deleteMessage,

@@ -5,7 +5,7 @@
 // The partner count is live (count_matching_partners). "Share requirements" keeps the
 // budget and brief on the project — nothing messages partners yet, and the page says so.
 
-import { computed, ref } from "vue"
+import { computed, onScopeDispose, ref } from "vue"
 import {
 	BUDGET_OPTIONS,
 	CUSTOM_HOW_IT_WORKS,
@@ -28,6 +28,14 @@ export default function setup(context) {
 	// so there the page shows the newest custom-implementation project instead, and lets
 	// itself grow to its full height (see `inEditor` in the blocks) so the canvas shows it all.
 	const inEditor = window.location.pathname.startsWith("/studio/")
+
+	// Studio's tablet styles stop at 768px, but beside the sidebar and the side panel the quote
+	// table needs 1280px. Below that the blocks take their stacked (tablet) layout through this flag.
+	const compactQuery = window.matchMedia("(max-width: 1279px)")
+	const isCompact = ref(compactQuery.matches)
+	const onCompactChange = (event) => (isCompact.value = event.matches)
+	compactQuery.addEventListener("change", onCompactChange)
+	onScopeDispose(() => compactQuery.removeEventListener("change", onCompactChange))
 
 	let projectName = String(route.query.project || "")
 	const project = ref(null)
@@ -54,35 +62,62 @@ export default function setup(context) {
 
 	// ---- Quotes: partners' replies to the shared brief ----
 	// Others are replies not decided on yet; Interested is the shortlist. Not interested
-	// drops a partner from both, with an Undo.
+	// drops a partner from both, with an Undo. Below Others, Invited lists the partners who
+	// got the brief and have no quote to show: still to answer, or not available.
+	const INVITED_STATUS_LABELS = {
+		// The heading already says they have not quoted, so their row shows their city instead.
+		Awaiting: "",
+		"Partner Declined": "Not available to take on new clients",
+	}
 	const quotes = ref([])
 	const quoteTab = ref("interested")
+	let hasChosenTab = false
 	function loadQuotes() {
 		if (!projectName) return
 		call("connect.api.projects.list_quotes", { name: projectName })
 			.then((rows) => {
 				quotes.value = rows || []
+				// With nobody shortlisted yet, Others is where there is something to read.
+				if (!hasChosenTab && !interestedQuotes.value.length) quoteTab.value = "others"
+				hasChosenTab = true
 			})
 			.catch(() => {})
 	}
 	const interestedQuotes = computed(() => quotes.value.filter((q) => q.status === "Interested"))
 	const otherQuotes = computed(() => quotes.value.filter((q) => q.status === "Quoted"))
+	const invitedPartners = computed(() =>
+		quotes.value
+			.filter((q) => q.status in INVITED_STATUS_LABELS)
+			.map((q) => ({ ...q, isInvited: true, statusLabel: INVITED_STATUS_LABELS[q.status] })),
+	)
+	const othersRows = computed(() => {
+		const invited = invitedPartners.value
+		if (!invited.length) return otherQuotes.value
+		const label = `${invited.length} partner${invited.length === 1 ? "" : "s"} invited`
+		const heading = { name: "invited-heading", isHeading: true, label }
+		return [...otherQuotes.value, heading, ...invited]
+	})
 	const hasQuotes = computed(() => quotes.value.length > 0)
 	const quoteTabs = computed(() => [
 		{ label: `Interested ${interestedQuotes.value.length}`, value: "interested" },
 		{ label: `Others ${otherQuotes.value.length}`, value: "others" },
 	])
-	const shownQuotes = computed(() => (quoteTab.value === "interested" ? interestedQuotes.value : otherQuotes.value))
+	const shownQuotes = computed(() => (quoteTab.value === "interested" ? interestedQuotes.value : othersRows.value))
+	// The Partner / Quote / Timeline header is for quotes: with only invited partners it stays hidden.
+	const showQuoteHead = computed(() => shownQuotes.value.some((row) => !row.isHeading && !row.isInvited))
 	const showInterestedEmpty = computed(
 		() => hasQuotes.value && quoteTab.value === "interested" && !interestedQuotes.value.length,
 	)
 
+	// An invited partner has no quote yet, so their row shows no amount or timeline.
 	function quoteAmount(row) {
+		if (row?.isInvited) return ""
 		return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(
 			row?.amount || 0,
 		)
 	}
 	function quoteTimeline(row) {
+		if (row?.isInvited) return ""
 		const weeks = row?.timeline_weeks || 0
 		return `${weeks} week${weeks === 1 ? "" : "s"}`
 	}
@@ -168,8 +203,8 @@ export default function setup(context) {
 
 	function quoteMenu(row) {
 		return [
+			{ label: "Messages", icon: "lucide-message-square", onClick: () => readThread(row) },
 			{ label: "Not interested", icon: "lucide-ban", onClick: () => notInterested(row) },
-			{ label: "Read the thread", icon: "lucide-message-square", onClick: () => readThread(row) },
 		]
 	}
 
@@ -529,6 +564,8 @@ export default function setup(context) {
 		quoteTab,
 		quoteTabs,
 		hasQuotes,
+		showQuoteHead,
+		isCompact,
 		shownQuotes,
 		showInterestedEmpty,
 		quoteAmount,

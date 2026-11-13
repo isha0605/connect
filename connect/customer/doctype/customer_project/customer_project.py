@@ -29,6 +29,8 @@ PAID = ("Paid", "Partially Refunded", "Refunded")
 # shortlisted, and Not Interested drops out of both lists (Undo puts it back).
 QUOTE_STATUSES = ("Quoted", "Interested", "Not Interested")
 OPEN_QUOTE_STATUSES = ("Quoted", "Interested")
+# Partners the brief went to who have no quote to show: still to answer, or not available.
+INVITED_QUOTE_STATUSES = ("Awaiting", "Partner Declined")
 
 # The quote statuses a hire request moves through, which only hiring.py sets.
 HIRE_QUOTE_STATUSES = ("Hire Requested", "Hire Declined", "Hired")
@@ -291,7 +293,8 @@ def quote_counts(project: str) -> dict:
 
 
 def list_quotes(name: str) -> list[dict]:
-	"""The project's quotes for the Interested / Others lists, cheapest first."""
+	"""The project's quotes for the Interested / Others lists, cheapest first, and the invited
+	partners who have not quoted, for the Invited list below Others."""
 	doc = get_own_project(name)
 	Quote = frappe.qb.DocType("Project Quote")
 	Partner = frappe.qb.DocType("Partner")
@@ -304,7 +307,7 @@ def list_quotes(name: str) -> list[dict]:
 			Partner.partner_name, Partner.tier, Partner.city, Partner.logo, Partner.verification_status,
 		)
 		.where(Quote.customer_project == doc.name)
-		.where(Quote.status.isin(OPEN_QUOTE_STATUSES))
+		.where(Quote.status.isin(OPEN_QUOTE_STATUSES + INVITED_QUOTE_STATUSES))
 		.orderby(Quote.amount, order=Order.asc)
 		.run(as_dict=True)
 	)

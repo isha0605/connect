@@ -5,7 +5,7 @@ import frappe
 from frappe import _
 from frappe.query_builder import Order
 
-from connect.customer.doctype.project_quote.leads import partner_team
+from connect.customer.doctype.project_quote.leads import lead_messages, partner_side_users, partner_team
 from connect.partner.central_billing import customer_billing
 from connect.partner.doctype.partner_customer.customer_records import (
 	activity_of,
@@ -15,7 +15,7 @@ from connect.partner.doctype.partner_customer.customer_records import (
 	notes_of,
 )
 from connect.partner.doctype.connect_partner_member.connect_partner_member import CUSTOMER_ACCESS
-from connect.permissions import _my_partner_with_access
+from connect.permissions import _check_can_write, _my_partner_with_access
 
 
 def my_customers() -> dict:
@@ -37,7 +37,7 @@ def get_customer(name: str) -> dict:
 	quotes = frappe.get_all(
 		"Project Quote",
 		filters={"partner": row.partner, "thread": ["in", threads]},
-		fields=["name", "creation", "customer_project.project_name"],
+		fields=["name", "creation", "status", "brief_message", "customer_project.project_name"],
 	)
 	follow_ups = follow_ups_of(row.partner, row.customer)
 	briefs = [
@@ -58,7 +58,23 @@ def get_customer(name: str) -> dict:
 			"notes": notes_of(row.partner, row.customer),
 			"follow_ups": follow_ups,
 			"activity": activity_of(records, briefs, follow_ups),
+			**_conversation(row, threads, quotes),
 		},
+	}
+
+
+def _conversation(row, threads: list[str], quotes: list) -> dict:
+	"""The customer's chat with the partner, as their lead showed it. A customer the partner
+	added on their own has none."""
+	if not threads:
+		return {"thread": None, "thread_closed": True, "is_customer_revealed": True, "messages": []}
+	thread = threads[0]
+	return {
+		"thread": thread,
+		"thread_closed": frappe.db.get_value("Connect Thread", thread, "status") == "Closed",
+		# A customer has hired the partner, so the partner knows who they are.
+		"is_customer_revealed": True,
+		"messages": lead_messages(thread, partner_side_users(row.partner), quotes, is_customer_revealed=True),
 	}
 
 
@@ -84,9 +100,27 @@ def add_customer_note(name: str, content: str) -> list[dict]:
 
 
 def log_customer_follow_up(name: str, values: dict) -> dict:
+	"""Logs a follow-up on the customer, or with a meeting link, invites them to a meeting in
+	their thread."""
 	row = _get_customer_row(name)
-	log_follow_up(row.partner, row.customer, frappe.parse_json(values))
+	values = frappe.parse_json(values)
+	thread = None
+	if values.get("meeting_link"):
+		thread = _thread_to_invite_in(row)
+	log_follow_up(row.partner, row.customer, values, thread=thread)
 	return get_customer(name)["customer"]
+
+
+def _thread_to_invite_in(row) -> str:
+	"""The customer's thread, with the caller in it: the invite is posted there as this person."""
+	from connect.messaging.doctype.connect_thread.connect_thread import ensure_partner_member
+
+	threads = _customer_threads(row)
+	if not threads:
+		frappe.throw(_("This customer has no chat on Connect to send an invite in."))
+	ensure_partner_member(threads[0], frappe.session.user, frappe.session.user)
+	_check_can_write(threads[0], frappe.session.user)
+	return threads[0]
 
 
 def _customer_query(partner: str):
@@ -128,7 +162,13 @@ def _get_customer_row(name: str):
 
 
 def _customer_threads(row) -> list[str]:
-	return frappe.get_all("Connect Thread", filters={"partner": row.partner, "customer": row.customer}, pluck="name")
+	"""The customer's threads with the partner, the one written in last first."""
+	return frappe.get_all(
+		"Connect Thread",
+		filters={"partner": row.partner, "customer": row.customer},
+		pluck="name",
+		order_by="last_message_at desc",
+	)
 
 
 def _customer_dict(row, billing: dict) -> dict:

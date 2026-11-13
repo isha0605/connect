@@ -115,15 +115,29 @@ def partner_access(membership) -> dict:
 	partner_name, verification_status = frappe.db.get_value(
 		"Partner", membership.partner, ["partner_name", "verification_status"]
 	)
+	is_approved = verification_status == VERIFIED
 	return {
 		"partner_name": partner_name,
 		# Approving the partner's application verifies the partner. Until then the sidebar has only
 		# Overview, the onboarding checklist; after, the partner pages and no checklist.
-		"is_approved": verification_status == VERIFIED,
+		"is_approved": is_approved,
 		"access_level": level,
 		"can_see_leads": level in LEAD_ACCESS,
 		"can_see_customers": level in CUSTOMER_ACCESS,
+		"home_route": partner_home_route(level, is_approved),
 	}
+
+
+def partner_home_route(level: str, is_approved: bool) -> str:
+	"""Where a partner's team member starts: their leads, else their customers, else the
+	listing. Partners write to customers from a lead or a customer, not from Messaging."""
+	if not is_approved:
+		return "/partner-onboarding"
+	if level in LEAD_ACCESS:
+		return "/leads"
+	if level in CUSTOMER_ACCESS:
+		return "/customers"
+	return "/partner-listing"
 
 
 def get_projects_route(user, customer=None):
