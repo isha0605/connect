@@ -9,6 +9,7 @@ from frappe.tests import IntegrationTestCase
 from connect.customer.doctype.customer_project.brief import send_brief
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
 from connect.auth.accounts import landing_page
+from connect.crm_integration import email_body
 from connect.customer.doctype.project_quote.leads import get_lead, my_leads, partner_page_for_thread, update_lead
 from connect.partner.doctype.partner_lead.partner_lead import NotOnCRMError
 
@@ -262,3 +263,20 @@ class TestLeads(IntegrationTestCase):
 		self.assertEqual(landing_page(FINANCE), "/connect/customers")
 		self.assertEqual(landing_page(MEMBER), "/connect/partner-listing")
 
+	# A card the partner answers on Connect links back there from their CRM.
+	def crm_body(self, message_type):
+		message = frappe.get_last_doc("Connect Message", {"thread": self.thread, "message_type": "Requirement"})
+		return email_body(frappe._dict(message.as_dict(), message_type=message_type))
+
+	def test_a_brief_in_the_crm_links_to_its_lead(self):
+		body = self.crm_body("Requirement")
+		self.assertIn(frappe.utils.get_url(f"/connect/leads/{self.lead}"), body)
+		self.assertIn("Answer in Connect", body)
+
+	def test_a_hire_request_in_the_crm_links_to_the_customer_once_hired(self):
+		self.hire(self.quote)
+		customer = frappe.db.get_value("Partner Customer", {"partner": PARTNER, "customer": self.customer}, "name")
+		self.assertIn(frappe.utils.get_url(f"/connect/customers/{customer}"), self.crm_body("Hire Request"))
+
+	def test_other_messages_in_the_crm_have_no_link(self):
+		self.assertNotIn("Answer in Connect", self.crm_body("Quote"))
