@@ -191,17 +191,35 @@ class IntegrationTestCRMLeadOwner(IntegrationTestCase):
 		record_crm_lead_owner(PARTNER, "CRM-LEAD-ELSEWHERE", SALES)
 		self.assertIsNone(self.lead_doc().assigned_to)
 
-	def test_the_owner_webhook_skips_what_connect_changed(self):
-		webhook = owner_webhook(PARTNER, "connect-api@crm.example.com", "secret")
-		self.assertEqual((webhook["webhook_doctype"], webhook["webhook_docevent"]), ("CRM Lead", "on_change"))
-		self.assertIn("doc.modified_by!='connect-api@crm.example.com'", webhook["condition"])
+	def test_connects_own_owner_change_coming_back_changes_nothing(self):
+		self.on_crm_lead()
+		self.link(SALES, SALES)
+		update_lead_as_owner(self.lead, SALES)
+		before = self.lead_doc().modified
+		record_crm_lead_owner(PARTNER, CRM_LEAD, SALES)
+		self.assertEqual((self.lead_doc().assigned_to, self.lead_doc().modified), (SALES, before))
 
-	def test_setting_up_sync_registers_both_webhooks(self):
+	def test_the_owner_webhook_sends_every_owner_change(self):
+		webhook = owner_webhook(PARTNER, "secret")
+		self.assertEqual((webhook["webhook_doctype"], webhook["webhook_docevent"]), ("CRM Lead", "on_change"))
+		# Sent whoever changed it: Connect's own change comes back as the owner the lead has.
+		self.assertEqual(webhook["condition"], "doc.has_value_changed('lead_owner')")
+
+	def test_setting_up_sync_registers_every_webhook(self):
 		crm = WebhookCRM()
 		settings = frappe.get_doc("Partner CRM Settings", PARTNER)
 		with patch("connect.crm_integration.crm_request", side_effect=crm):
 			set_up_reply_webhook(settings)
-		self.assertEqual(crm.webhooks, [f"Connect Reply Sync - {PARTNER}", f"Connect Owner Sync - {PARTNER}"])
+		self.assertEqual(
+			crm.webhooks,
+			[
+				f"Connect Reply Sync - {PARTNER}",
+				f"Connect Owner Sync - {PARTNER}",
+				f"Connect Lead Stage Sync - {PARTNER}",
+				f"Connect Deal Stage Sync - {PARTNER}",
+				f"Connect Deal Conversion Sync - {PARTNER}",
+			],
+		)
 
 	# ---- Who on the team is on the CRM ----
 

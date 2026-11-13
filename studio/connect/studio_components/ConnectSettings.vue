@@ -440,6 +440,8 @@ const crm = ref({ site_url: "", api_key: "", api_secret: "", default_lead_status
 const crmSaved = ref(null)
 const crmSaving = ref(false)
 const crmError = ref("")
+// Each status on the partner's CRM and the Connect stage it becomes, read from their CRM on save.
+const crmMap = ref([])
 
 function applyCrm(s) {
 	crmSaved.value = s || {}
@@ -450,7 +452,26 @@ function applyCrm(s) {
 		default_lead_status: crmSaved.value.default_lead_status || "",
 		enabled: !!crmSaved.value.enabled,
 	}
+	crmMap.value = (crmSaved.value.status_map || []).map((row) => ({ ...row }))
 }
+
+// An empty stage leaves that status out of the sync, both ways.
+const crmStageOptions = computed(() => [
+	{ label: "Don't sync", value: "" },
+	...(crmSaved.value?.stages || []).map((stage) => ({ label: stage, value: stage })),
+])
+const crmStatusGroups = computed(() =>
+	[
+		{ key: "CRM Lead", title: "Lead statuses" },
+		{ key: "CRM Deal", title: "Deal statuses" },
+	]
+		.map((group) => ({ ...group, rows: crmMap.value.filter((row) => row.crm_doctype === group.key) }))
+		.filter((group) => group.rows.length),
+)
+const crmMapChanged = computed(() => {
+	const saved = crmSaved.value?.status_map || []
+	return crmMap.value.some((row, index) => row.stage !== (saved[index]?.stage || ""))
+})
 
 async function loadCrm() {
 	crmError.value = ""
@@ -478,7 +499,10 @@ const crmChanged = computed(() => {
 		c.api_key !== (s.api_key || "") ||
 		c.default_lead_status !== (s.default_lead_status || "") ||
 		c.enabled !== !!s.enabled ||
-		!!c.api_secret
+		!!c.api_secret ||
+		crmMapChanged.value ||
+		// Connected before stage sync: saving reads the CRM's statuses for the first time.
+		(!!s.api_secret_set && !(s.status_map || []).length)
 	)
 })
 
@@ -502,6 +526,7 @@ async function saveCrm() {
 				api_secret: c.api_secret,
 				default_lead_status: c.default_lead_status,
 				enabled: c.enabled ? 1 : 0,
+				status_map: JSON.stringify(crmMap.value),
 			}),
 		)
 		toast.success("CRM settings saved")
@@ -810,6 +835,35 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 						</div>
 						<FormControl v-model="crm.default_lead_status" class="mb-[14px]" label="Default lead status" placeholder="New" size="md" variant="outline" />
 						<Checkbox v-model="crm.enabled" label="Create leads from new conversations" />
+						<!-- Stage sync: Pragati's CRM sync panel, one list per CRM record -->
+						<section class="mt-6 border-t border-outline-gray-1 pt-5" aria-labelledby="crm-stages-title">
+							<h3 id="crm-stages-title" class="text-base font-medium text-ink-gray-8">Stages</h3>
+							<p class="mt-1 text-p-sm text-ink-gray-5">
+								Your CRM's statuses, and the Connect stage each one becomes. A lead becomes a deal on your CRM when its
+								stage matches only a deal status.
+							</p>
+							<p v-if="!crmStatusGroups.length" class="mt-3 text-p-sm text-ink-gray-5">
+								Save to load your CRM's statuses here.
+							</p>
+							<div v-for="group in crmStatusGroups" :key="group.key" class="mt-4">
+								<p class="mb-1 text-sm font-medium text-ink-gray-5">{{ group.title }}</p>
+								<div
+									v-for="row in group.rows"
+									:key="row.crm_status"
+									class="flex flex-col gap-1.5 py-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+								>
+									<label :for="`crm-stage-${group.key}-${row.crm_status}`" class="text-base text-ink-gray-8">{{ row.crm_status }}</label>
+									<FormControl
+										:id="`crm-stage-${group.key}-${row.crm_status}`"
+										v-model="row.stage"
+										class="w-full sm:w-56"
+										type="select"
+										:options="crmStageOptions"
+										:aria-label="`Connect stage for ${row.crm_status}`"
+									/>
+								</div>
+							</div>
+						</section>
 						<p v-if="crmError" class="mt-3 text-p-sm text-ink-red-6">{{ crmError }}</p>
 						<div class="mt-5 flex justify-end">
 							<Button label="Save" icon-left="lucide-check" :disabled="!crmChanged" :loading="crmSaving" @click="saveCrm" />

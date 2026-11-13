@@ -5,7 +5,7 @@ import hmac
 import frappe
 from frappe import _
 
-from connect.crm_integration import WEBHOOK_SECRET_HEADER
+from connect.crm_integration import WEBHOOK_SECRET_HEADER, is_from_connect
 from connect.crm_reply import record_crm_reply
 
 
@@ -30,7 +30,7 @@ def _verify_signature(partner):
 @frappe.whitelist(allow_guest=True)
 def receive_crm_reply(
 	reference_doctype=None, reference_name=None, sent_or_received=None, content=None, name=None,
-	creation=None, sender=None,
+	creation=None, sender=None, message_id=None,
 ):
 	"""Called by the partner's CRM when they send a reply, so the reply also shows up in the Connect thread."""
 	# Not read from the whitelisted kwargs above: the webhook sends a JSON body, and Frappe's
@@ -39,6 +39,8 @@ def receive_crm_reply(
 	partner = frappe.local.request.args.get("partner")
 	_verify_signature(partner)
 
+	if is_from_connect(message_id):
+		return  # Connect's own copy of a chat message: it is in the chat already
 	record_crm_reply(partner, name, reference_doctype, reference_name, sent_or_received, content, sender)
 
 
@@ -52,3 +54,26 @@ def receive_crm_lead_owner(name=None, lead_owner=None):
 	_verify_signature(partner)
 
 	record_crm_lead_owner(partner, name, lead_owner)
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def receive_crm_lead_status(name=None, status=None):
+	"""Called by the partner's CRM when a Lead's status changes, so the Connect lead's stage
+	follows. `partner` is read from the query string, as for replies."""
+	from connect.crm_stage_sync import CRM_LEAD, record_crm_status
+
+	partner = frappe.local.request.args.get("partner")
+	_verify_signature(partner)
+
+	record_crm_status(partner, CRM_LEAD, name, status)
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def receive_crm_deal_status(name=None, status=None, lead=None, lost_reason=None):
+	"""Called by the partner's CRM when a Deal is made from a Lead or its status changes."""
+	from connect.crm_stage_sync import CRM_DEAL, record_crm_status
+
+	partner = frappe.local.request.args.get("partner")
+	_verify_signature(partner)
+
+	record_crm_status(partner, CRM_DEAL, name, status, crm_lead=lead, lost_reason=lost_reason)

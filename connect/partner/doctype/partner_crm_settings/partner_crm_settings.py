@@ -7,15 +7,18 @@ from frappe import _
 from frappe.model.document import Document
 
 from connect.crm_integration import CRMRequestError, crm_request, crm_settings
+from connect.crm_stage_sync import lead_stages, refresh_status_map, validate_status_map
 
 
 class PartnerCRMSettings(Document):
 	def validate(self):
 		if self.enabled and self.crm_type == "Frappe CRM":
 			self.check_crm_connection()
+		validate_status_map(self)
 
 	def check_crm_connection(self) -> None:
-		"""Fails the save with a reason the partner can fix, instead of every Lead failing later."""
+		"""Fails the save with a reason the partner can fix, instead of every Lead failing later.
+		Reads the CRM's lead and deal statuses again, for the partner to match to stages."""
 		settings = frappe._dict(
 			name=self.name,
 			site_url=self.site_url,
@@ -24,6 +27,7 @@ class PartnerCRMSettings(Document):
 		)
 		self._check_login(settings)
 		self._check_lead_status(settings)
+		refresh_status_map(self, settings)
 
 	def _check_login(self, settings) -> None:
 		try:
@@ -86,6 +90,8 @@ def get_my_settings():
 			"default_lead_status": "",
 			"api_secret_set": 0,
 			"reply_webhook_connected": 0,
+			"status_map": [],
+			"stages": lead_stages(),
 		}
 
 	doc = frappe.get_doc("Partner CRM Settings", name)
@@ -100,11 +106,18 @@ def get_my_settings():
 		"api_secret_set": 1 if doc.get_password("api_secret", raise_exception=False) else 0,
 		# written by crm_integration.sync_reply_webhook once the remote Webhook is registered
 		"reply_webhook_connected": 1 if doc.crm_reply_webhook_id else 0,
+		"status_map": [
+			{"crm_doctype": row.crm_doctype, "crm_status": row.crm_status, "stage": row.stage or ""}
+			for row in doc.status_map
+		],
+		"stages": lead_stages(),
 	}
 
 
-def save_my_settings(site_url, api_key, default_lead_status, api_secret=None, enabled=0):
-	"""Creates or updates the partner's CRM credentials, keeping api_secret write-only so a URL edit doesn't force re-entering it."""
+def save_my_settings(site_url, api_key, default_lead_status, api_secret=None, enabled=0, status_map=None):
+	"""Creates or updates the partner's CRM credentials, keeping api_secret write-only so a URL edit doesn't force re-entering it.
+	`status_map` is the stage the partner picked for each CRM status; the statuses themselves
+	are read from the CRM on save."""
 	partner = _my_partner_as_admin()
 
 	site_url = (site_url or "").strip().rstrip("/")
@@ -134,9 +147,18 @@ def save_my_settings(site_url, api_key, default_lead_status, api_secret=None, en
 	doc.enabled = enabled
 	if api_secret:
 		doc.api_secret = api_secret
+	_apply_stage_choices(doc, frappe.parse_json(status_map) or [])
 
 	doc.save(ignore_permissions=True)
 	return get_my_settings()
+
+
+def _apply_stage_choices(doc, choices: list) -> None:
+	stage_by_status = {(row.get("crm_doctype"), row.get("crm_status")): row.get("stage") for row in choices}
+	for row in doc.status_map:
+		key = (row.crm_doctype, row.crm_status)
+		if key in stage_by_status:
+			row.stage = stage_by_status[key] or None
 
 
 def disconnect_my_crm():

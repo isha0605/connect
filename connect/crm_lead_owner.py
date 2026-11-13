@@ -67,9 +67,10 @@ def _unassign(settings, crm_lead: str, before: str | None, owner: str) -> None:
 		)
 
 
-def owner_webhook(partner: str, integration_user: str, secret: str) -> dict:
+def owner_webhook(partner: str, secret: str) -> dict:
 	"""The Webhook that tells Connect when someone on the partner's CRM gives a Lead to someone
-	else. Changes Connect itself made as its API user are left out, so they don't come back."""
+	else, whoever did it: the partner's CRM user can be the API user Connect signs in as. A
+	change Connect made comes back as the owner the lead already has, which changes nothing."""
 	callback_url = frappe.utils.get_url(
 		f"/api/method/connect.api.crm_webhook.receive_crm_lead_owner?partner={quote(partner)}"
 	)
@@ -78,7 +79,7 @@ def owner_webhook(partner: str, integration_user: str, secret: str) -> dict:
 		"webhook_doctype": "CRM Lead",
 		# on_change runs only for a saved Lead's changes, never when one is made.
 		"webhook_docevent": "on_change",
-		"condition": f"doc.has_value_changed('lead_owner') and doc.modified_by!={integration_user!r}",
+		"condition": "doc.has_value_changed('lead_owner')",
 		"request_url": callback_url,
 		"request_method": "POST",
 		"request_structure": "Form URL-Encoded",

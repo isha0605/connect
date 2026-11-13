@@ -116,6 +116,8 @@ export default function setup(context) {
 	const crmNote = computed(() => {
 		const current = data.value
 		if (!current) return ""
+		// Why the last stage change didn't reach the CRM: the partner fixes it in Settings → CRM.
+		if (current.crm_stage_note) return current.crm_stage_note
 		if (current.crm_owner) {
 			const why = current.crm_owner_on_team ? "who can't take leads on Connect" : "who isn't on your Connect team"
 			return `Assigned in your CRM to ${current.crm_owner}, ${why}.`

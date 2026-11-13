@@ -53,7 +53,21 @@ REPLY_WEBHOOK_FIELDS = [
 	"content",
 	"creation",
 	"sender",
+	"message_id",
 ]
+
+# Marks the emails Connect itself puts on a CRM Lead, in their Message-ID, so the reply webhook
+# leaves them out. Marking the email, not its author, lets the partner's own CRM user also be
+# the API user Connect signs in as: their replies still come into Connect.
+CONNECT_MESSAGE_ID = "connect-message-"
+
+
+def connect_message_id(message: str) -> str:
+	return f"<{CONNECT_MESSAGE_ID}{message}@connect>"
+
+
+def is_from_connect(message_id: str | None) -> bool:
+	return CONNECT_MESSAGE_ID in (message_id or "")
 
 
 class CRMRequestError(Exception):
@@ -380,6 +394,7 @@ def _add_email(thread_doc, message, settings, customer, partner_side):
 		"communication_date": str(message.creation),
 		"reference_doctype": "CRM Lead",
 		"reference_name": thread_doc.crm_lead_id,
+		"message_id": connect_message_id(message.name),
 	}
 	communication = crm_request(
 		settings, "POST", "/api/resource/Communication", json={k: v for k, v in payload.items() if v}
@@ -536,6 +551,15 @@ def send_all_chats(partner: str) -> int:
 
 
 @frappe.whitelist(methods=["POST"])
+def refresh_partner_webhooks(partner: str) -> None:
+	"""Background job: sets up a partner's webhooks again after Connect changed what they send.
+	A CRM that can't be reached is logged, for a System Manager to retry from Desk."""
+	try:
+		set_up_reply_webhook(frappe.get_doc("Partner CRM Settings", partner))
+	except Exception:
+		frappe.log_error(title=f"Couldn't set up CRM webhooks again for {partner}")
+
+
 def reset_reply_webhook(partner: str) -> None:
 	"""Desk: sets up the webhooks on the partner's CRM again, with Connect's current settings."""
 	frappe.only_for("System Manager")
@@ -546,20 +570,22 @@ def reset_reply_webhook(partner: str) -> None:
 
 
 def sync_reply_webhook(doc, method=None):
-	"""on_update on Partner CRM Settings: sets up the Webhook on the partner's CRM that brings
-	their replies into Connect, and again when the CRM's address or API key changes."""
+	"""on_update on Partner CRM Settings: sets up the Webhooks on the partner's CRM that bring
+	their replies, owners and stages into Connect, and again when the CRM's address or API key
+	changes. A partner connected before stage sync gets them when its statuses are first read."""
 	if doc.crm_type != "Frappe CRM" or not doc.enabled or not (doc.site_url and doc.api_key):
 		return
 	before = doc.get_doc_before_save()
 	moved = before and (before.site_url != doc.site_url or before.api_key != doc.api_key)
-	if doc.crm_reply_webhook_id and not moved:
+	first_status_map = bool(doc.status_map) and not (before and before.status_map)
+	if doc.crm_reply_webhook_id and not moved and not first_status_map:
 		return
 	set_up_reply_webhook(doc)
 
 
-def reply_webhook(partner, integration_user, secret):
+def reply_webhook(partner, secret):
 	"""The Webhook that brings the partner's replies into Connect: every email sent from a Lead,
-	except those Connect itself posted there as its API user."""
+	except those Connect itself posted there (marked by their Message-ID)."""
 	callback_url = frappe.utils.get_url(
 		f"/api/method/connect.api.crm_webhook.receive_crm_reply?partner={quote(partner)}"
 	)
@@ -570,7 +596,7 @@ def reply_webhook(partner, integration_user, secret):
 		"webhook_docevent": "after_insert",
 		"condition": (
 			"doc.reference_doctype=='CRM Lead' and doc.sent_or_received=='Sent'"
-			f" and doc.owner!={integration_user!r}"
+			f" and {CONNECT_MESSAGE_ID!r} not in (doc.message_id or '')"
 		),
 		"request_url": callback_url,
 		"request_method": "POST",
@@ -612,13 +638,15 @@ def set_up_reply_webhook(doc) -> None:
 
 
 def _register_reply_webhook(settings, secret) -> str:
-	"""Both webhooks share the secret, so the one stored checks either. Returns the reply one."""
+	"""The webhooks share the secret, so the one stored checks any of them. Returns the reply one."""
 	from connect.crm_lead_owner import owner_webhook
+	from connect.crm_stage_sync import stage_webhooks
 
 	login = crm_request(settings, "GET", "/api/method/frappe.auth.get_logged_user")
 	integration_user = login.json()["message"]
-	reply = reply_webhook(settings.partner, integration_user, secret)
-	for payload in (reply, owner_webhook(settings.partner, integration_user, secret)):
+	reply = reply_webhook(settings.partner, secret)
+	payloads = [reply, owner_webhook(settings.partner, secret)]
+	for payload in payloads + stage_webhooks(settings.partner, integration_user, secret):
 		_put_webhook(settings, payload)
 	return reply["name"]
 

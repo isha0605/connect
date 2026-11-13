@@ -80,6 +80,7 @@ def get_lead(name: str) -> dict:
 			"contact": _contact(latest.customer_user) if row.is_customer_revealed else {},
 			"requirements": [_requirement_row(requirement) for requirement in requirements],
 			**_crm_owner(row),
+			"crm_stage_note": row.crm_stage_note,
 			"messages": lead_messages(row.thread, partner_side, requirements, row.is_customer_revealed),
 			**_lead_records(row, requirements),
 		},
@@ -209,7 +210,7 @@ def _lead_query(partner: str):
 		.on(Owner.name == Lead.assigned_to)
 		.select(
 			Lead.name, Lead.partner, Lead.thread, Lead.customer, Lead.stage, Lead.assigned_to,
-			Lead.probability, Lead.lost_reason, Lead.crm_owner, Lead.creation,
+			Lead.probability, Lead.lost_reason, Lead.crm_owner, Lead.crm_stage_note, Lead.creation,
 			Customer.customer_name,
 			Thread.status.as_("thread_status"), Thread.last_message_at, Thread.last_message_sender,
 			Thread.is_customer_revealed,
