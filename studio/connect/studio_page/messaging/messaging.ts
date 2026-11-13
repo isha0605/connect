@@ -2157,9 +2157,9 @@ export default function setup(context) {
 	const uploadingFile = computed(() => draftAttachments.value.some((a) => a.uploading))
 
 	// Right-click on a group of files you sent: the files are deleted together. Each file's own
-	// actions live on its card (see messageMoreOptions).
+	// actions live on its card (see messageMoreOptions). Customers don't delete what they sent.
 	function clusterMenuOptions(cluster) {
-		if (!cluster || !isMine(cluster.sender)) return []
+		if (!cluster || !isMine(cluster.sender) || !amPartner()) return []
 		return [{ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick: () => confirmDeleteCluster(cluster) }]
 	}
 
@@ -2209,10 +2209,11 @@ export default function setup(context) {
 			icon: isPinned(item) ? "lucide-pin-off" : "lucide-pin",
 			onClick: () => togglePinMessage(item),
 		})
-		if (mine) {
-			if (item.message_type === "Text") {
-				options.push({ label: "Edit", icon: "lucide-pencil", onClick: () => confirmEditMessage(item) })
-			}
+		if (mine && item.message_type === "Text") {
+			options.push({ label: "Edit", icon: "lucide-pencil", onClick: () => confirmEditMessage(item) })
+		}
+		// Customers don't delete what they sent: a partner may already have read or acted on it.
+		if (mine && amPartner()) {
 			options.push({ label: "Delete", icon: "lucide-trash-2", theme: "red", onClick: () => confirmDeleteMessage(item) })
 			// Files sent together are grouped into one cluster; deleting several at once lives here now that the
 			// cluster row has no toolbar of its own.
