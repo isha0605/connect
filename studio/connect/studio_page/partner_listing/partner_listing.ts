@@ -1,37 +1,37 @@
-// The partner's Listing: their profile laid out the way businesses see it in the directory,
-// one section at a time, each with an Edit dialog. Only the partner's admin may edit. Edits wait as
-// unpublished changes until Publish makes them live. Reviews come from customers, and success
-// stories (with their client logos) are submitted on frappe.io, so those only show.
+// The partner's Listing: their profile laid out the way businesses see it in the directory. The
+// partner's admin edits it in place (Edit), or sees it as businesses will (Preview). Edits save as
+// they type, as unpublished changes, until Publish makes them live. Reviews come from customers, and
+// success stories (with their client logos) are submitted on frappe.io, so those only show.
 
-import { computed, ref } from "vue"
+import { computed, ref, watch } from "vue"
 import {
 	DEFAULT_ANSWERS,
 	MAX_INDUSTRIES,
+	MIN_CLIENT_LOGOS,
 	PROFILE_API,
 	SAMPLE_PROFILE,
-	draftProblem,
+	clientLogoCount,
+	clientLogoRow,
 	imageTile,
 	isOverLimit,
 	limitCounter,
+	storyIndustryOptions,
+	storyLogo,
+	storyView,
 	toDraft,
 	toOptions,
-	toSavePayload,
 	uploadImage,
 } from "@app/utils/partnerProfile"
+import { useProfileAutosave } from "@app/utils/profileAutosave"
 import { startTracking } from "@app/utils/tracking"
 
 const SUBMIT_STORY_URL = "https://frappe.io/partners"
 const REVIEWS_SHOWN = 4
-// The public profile shows this many client logos, in one row.
-const CLIENT_LOGOS_SHOWN = 6
 const STORIES_SECTION = "stories-section"
-const SECTION_TITLES = {
-	name: "Edit name and tagline",
-	photos: "Edit photos",
-	details: "Edit details",
-	vision: "Edit partner vision",
-	answers: "Edit how you work",
-}
+const ANSWER_ICONS = "/assets/connect/images"
+// Delivery Mode records as the Listing words them.
+const DELIVERY_LABELS = { Onsite: "On site" }
+const deliveryLabel = (mode) => DELIVERY_LABELS[mode] || mode
 
 // What the editor shows for reviews, since the sample profile has none.
 const SAMPLE_REVIEWS = [
@@ -58,7 +58,7 @@ function openInNewTab(url) {
 
 export default function setup(context) {
 	startTracking(context)
-	const { call, toast, router, editSection, selectedStoryIndustry } = context
+	const { call, toast, listingMode, selectedStoryIndustry } = context
 
 	const profile = ref(null)
 	const reviews = ref([])
@@ -74,6 +74,8 @@ export default function setup(context) {
 			})
 			.then((data) => {
 				profile.value = data
+				draft.value = toDraft(data)
+				autosave.reset()
 				return call(`${PROFILE_API}.list_partner_reviews`, { partner: data.partner })
 			})
 			.then((rows) => {
@@ -83,17 +85,28 @@ export default function setup(context) {
 				loadError.value = !profile.value
 			})
 	}
+
+	// ---- Editing in place: the draft is the whole profile, saved as the partner types ----
+	const draft = ref({})
+	const uploading = ref("")
+	const autosave = useProfileAutosave({
+		call,
+		draft,
+		profile,
+		uploading,
+		// The page shows the saved draft; the fields keep what the partner is typing.
+		onSaved: () => call(`${PROFILE_API}.get_my_profile`, { with_draft: 1 }).then((data) => (profile.value = data)),
+	})
 	load()
 
 	const canEdit = computed(() => !!profile.value?.can_edit)
+	const isEditing = computed(() => canEdit.value && listingMode.value === "edit")
+	// Preview shows what's saved, so save what's waiting first.
+	watch(listingMode, (mode) => mode === "preview" && autosave.flush())
 	const stories = computed(() => profile.value?.success_stories || [])
 
 	// ---- Name and tagline ----
 	const listingName = computed(() => profile.value?.partner_name || "")
-
-	function openDirectory() {
-		openInNewTab(router.resolve({ path: `/partner-profile-redesign/${profile.value.partner}` }).href)
-	}
 
 	// ---- Photos and video: one large tile, up to two beside it, "+N" for the rest ----
 	const photos = computed(() => (profile.value?.photos || []).map((photo, index) => ({ ...photo, index })))
@@ -103,12 +116,13 @@ export default function setup(context) {
 	})
 
 	// ---- Client logos, from the success stories, as the public profile shows them ----
-	const clientLogos = computed(() =>
-		stories.value
-			.filter((story) => story.client_logo)
-			.slice(0, CLIENT_LOGOS_SHOWN)
-			.map((story) => ({ ...story, logo: story.client_logo_display || story.client_logo })),
-	)
+	const clientLogos = computed(() => clientLogoRow(stories.value))
+	// Shown instead of the row: why the public profile has no logos yet.
+	const clientLogosNote = computed(() => {
+		const count = clientLogoCount(stories.value)
+		if (!count) return "No client logos yet. They come from your success stories."
+		return `Your client logos show on your profile once ${MIN_CLIENT_LOGOS} success stories have a logo. You have ${count}.`
+	})
 
 	// ---- Details ----
 	const details = computed(() => {
@@ -128,6 +142,7 @@ export default function setup(context) {
 			industries: p.industry_badges || [],
 			apps: p.apps || [],
 			migrations: p.migrations || [],
+			works: (p.delivery_options || []).map(deliveryLabel),
 		}
 	})
 
@@ -136,13 +151,16 @@ export default function setup(context) {
 	const answers = computed(() => {
 		const p = profile.value || {}
 		const rows = [
-			{ key: "why_choose_them", icon: "/assets/connect/images/why-work-with-us-icon.svg", label: "Why work with us?" },
-			{ key: "how_we_work", icon: "/assets/connect/images/how-we-work-icon.svg", label: "How we'll work together" },
+			{ key: "origin_story", icon: `${ANSWER_ICONS}/how-we-got-here-icon.svg`, label: "How we got here" },
+			{ key: "why_choose_them", icon: `${ANSWER_ICONS}/why-work-with-us-icon.svg`, label: "Why work with us and who should work with us" },
+			{ key: "how_we_work", icon: `${ANSWER_ICONS}/how-we-work-icon.svg`, label: "How we'll work together" },
 		]
 		return rows.map((row, index) => ({
 			...row,
-			text: p[row.key] || DEFAULT_ANSWERS[row.key],
+			text: p[row.key] || DEFAULT_ANSWERS[row.key] || "Not added yet.",
 			empty: !p[row.key],
+			// an empty answer shows Frappe's default text where there is one
+			defaulted: !p[row.key] && !!DEFAULT_ANSWERS[row.key],
 			last: index === rows.length - 1,
 		}))
 	})
@@ -163,61 +181,16 @@ export default function setup(context) {
 		})),
 	)
 
-	// ---- Case studies: one large, the rest three to a row, filtered by industry as on the public profile ----
-	const storyCards = computed(() =>
-		stories.value
-			.filter((story) => !selectedStoryIndustry.value || story.category === selectedStoryIndustry.value)
-			.map((story, index) => ({ ...story, index })),
-	)
-	const storyIndustryOptions = computed(() => [
-		{ label: "All Industries", value: "" },
-		...[...new Set(stories.value.map((story) => story.category).filter(Boolean))].map((category) => ({
-			label: category,
-			value: category,
-		})),
-	])
+	// ---- Success stories: one featured, then a list, filtered by industry as on the public profile ----
+	const showAllStories = ref(false)
+	// Hide folds the section away while editing; the public profile always shows it.
+	const storiesCollapsed = ref(false)
 
 	// A verified industry has stories behind it: show only those, where the stories are.
 	function showStoriesFor(industry) {
 		selectedStoryIndustry.value = industry
+		storiesCollapsed.value = false
 		document.querySelector(`[data-component-id="${STORIES_SECTION}"]`)?.scrollIntoView({ behavior: "smooth" })
-	}
-
-	// ---- Edit dialog: editSection is a page variable, so the editor can show any section's form ----
-	const editOpen = ref(false)
-	const draft = ref({})
-	const saving = ref(false)
-	const saveError = ref("")
-	const uploading = ref("")
-
-	function openEdit(section) {
-		draft.value = toDraft(profile.value)
-		editSection.value = section
-		saveError.value = ""
-		editOpen.value = true
-	}
-
-	function saveSection() {
-		if (saving.value) return
-		const problem = draftProblem(draft.value, toDraft(profile.value))
-		if (problem) {
-			saveError.value = problem
-			return
-		}
-		saving.value = true
-		saveError.value = ""
-		call(`${PROFILE_API}.update_my_partner_profile`, { ...toSavePayload(draft.value), as_draft: 1 })
-			.then(() => load())
-			.then(() => {
-				editOpen.value = false
-				toast.success("Saved. Publish to show it to businesses.")
-			})
-			.catch((error) => {
-				saveError.value = error?.messages?.[0] || "Couldn't save your listing. Try again."
-			})
-			.finally(() => {
-				saving.value = false
-			})
 	}
 
 	const upload = (target, onUploaded) => uploadImage({ toast, uploading, target, onUploaded })
@@ -231,7 +204,12 @@ export default function setup(context) {
 	function publishListing() {
 		if (publishing.value) return
 		publishing.value = true
-		call(`${PROFILE_API}.publish_my_profile_draft`)
+		autosave
+			.flush()
+			.then(() => {
+				if (!autosave.isSaved()) throw { messages: [autosave.status.value || "Wait for your changes to save, then publish."] }
+				return call(`${PROFILE_API}.publish_my_profile_draft`)
+			})
 			.then(() => load())
 			.then(() => toast.success("Published. Businesses now see your changes."))
 			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't publish your listing. Try again."))
@@ -273,12 +251,15 @@ export default function setup(context) {
 		discarding,
 		discardChanges,
 		listingName,
-		openDirectory,
+		isEditing,
+		saveStatus: autosave.status,
+		hasSaveProblem: autosave.hasProblem,
 		mainPhoto: computed(() => photos.value[0] || null),
 		sidePhotos,
 		photoColumns: computed(() => (sidePhotos.value.length ? "minmax(0, 2fr) minmax(0, 1fr)" : "minmax(0, 1fr)")),
 		openMedia: (photo) => openInNewTab(photo.video || photo.image),
 		clientLogos,
+		clientLogosNote,
 		details,
 		founder,
 		answers,
@@ -288,22 +269,18 @@ export default function setup(context) {
 		shownReviews,
 		showAllReviews,
 		hasMoreReviews: computed(() => reviews.value.length > REVIEWS_SHOWN),
-		featuredStory: computed(() => storyCards.value[0] || null),
-		otherStories: computed(() => storyCards.value.slice(1)),
+		storyView: computed(() => storyView(stories.value, selectedStoryIndustry.value, showAllStories.value)),
 		storyCount: computed(() => String(stories.value.length)),
-		storyIndustryOptions,
+		storyIndustryOptions: computed(() => storyIndustryOptions(stories.value)),
+		storyLogo,
+		showAllStories,
+		storiesCollapsed,
 		showStoriesFor,
 		openStory: (story) => openInNewTab(story.url),
 		submitStory: () => openInNewTab(SUBMIT_STORY_URL),
 		imageTile,
-		// edit dialog
-		editOpen,
-		editTitle: computed(() => SECTION_TITLES[editSection.value] || "Edit listing"),
-		openEdit,
+		// editing in place
 		draft,
-		saving,
-		saveError,
-		saveSection,
 		counter: (path) => limitCounter(draft.value, path),
 		isOver: (path) => isOverLimit(draft.value, path),
 		uploading,
@@ -311,9 +288,9 @@ export default function setup(context) {
 		uploadLogo: () => upload("logo", (url) => (draft.value.logo = url)),
 		uploadMark: () => upload("logo_icon", (url) => (draft.value.logo_icon = url)),
 		uploadFounderPhoto: () => upload("founder", (url) => (draft.value.founder.photo = url)),
-		addPhoto: () => upload("gallery", (url) => draft.value.photos.push({ image: url, video: "" })),
-		removePhoto: (index) => draft.value.photos.splice(index, 1),
-		draftPhotos: computed(() => (draft.value.photos || []).map((photo, index) => ({ ...photo, index }))),
+		// the gallery editor (GalleryEditor.vue) hands back the whole list after each change
+		setDraftPhotos: (photos) => (draft.value.photos = photos),
+		setGalleryUploading: (busy) => (uploading.value = busy ? "gallery" : ""),
 		industryOptions: computed(() => toOptions(options.value.industries)),
 		industryCount: computed(() => `${(draft.value.industries || []).length} of ${MAX_INDUSTRIES}`),
 		tooManyIndustries: computed(() => (draft.value.industries || []).length > MAX_INDUSTRIES),
@@ -329,5 +306,8 @@ export default function setup(context) {
 		},
 		appOptions: computed(() => toOptions(options.value.apps)),
 		migrationOptions: computed(() => toOptions(options.value.migrations)),
+		deliveryOptions: computed(() =>
+			(options.value.delivery_modes || []).map((mode) => ({ label: deliveryLabel(mode), value: mode })),
+		),
 	}
 }

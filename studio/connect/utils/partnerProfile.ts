@@ -6,7 +6,12 @@ import { useFileUpload } from "frappe-ui"
 
 export const PROFILE_API = "connect.api.partner"
 export const MAX_INDUSTRIES = 6
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+// The gallery's limits, as connect.partner.doctype.partner.partner checks them on save.
+export const MAX_GALLERY_PHOTOS = 6
+export const MAX_GALLERY_VIDEOS = 2
+// Frappe's own upload limit (System Settings leaves it at the default).
+export const MAX_VIDEO_BYTES = 25 * 1024 * 1024
 const DRAFT_FIELDS = [
 	"tagline",
 	"website",
@@ -70,13 +75,13 @@ export const LIMITS = {
 	tagline: { limit: 80, label: "Tagline", tab: "basics" },
 	description: { limit: 500, label: "Introduction", tab: "about" },
 	address: { limit: 200, label: "Address", tab: "about" },
-	why_choose_them: { limit: 300, label: "Why work with us?", tab: "vision" },
+	why_choose_them: { limit: 300, label: "Why work with us and who should work with us", tab: "vision" },
 	how_we_work: { limit: 300, label: "How we'll work together", tab: "vision" },
 	successful_implementation: { limit: 300, label: "Successful implementation", tab: "vision" },
 	"founder.member_name": { limit: 60, label: "Founder name", tab: "founder" },
 	"founder.designation": { limit: 40, label: "Founder role", tab: "founder" },
 	"founder.bio": { limit: 280, label: "Founder bio", tab: "founder" },
-	origin_story: { limit: 1000, label: "How you got started", tab: "story" },
+	origin_story: { limit: 400, label: "How we got here", tab: "story" },
 }
 export const STORY_LIMITS = { client_name: 40, headline: 90 }
 
@@ -110,17 +115,18 @@ export function toDraft(data) {
 		apps: [...(data.apps || [])],
 		migrations: [...(data.migrations || [])],
 		industries: [...(data.industries || [])],
+		delivery_options: [...(data.delivery_options || [])],
 		founder: { member_name: "", designation: "", bio: "", photo: "", ...(data.founder || {}) },
 		photos: (data.photos || []).map((photo) => ({ ...photo })),
 		success_stories: (data.success_stories || []).map((story) => ({ ...story })),
 	}
 }
 
-// "12 over" or "68 / 80": counted, never cut, so pasted text is kept for the partner to trim.
+// "12 over" or "68/80": counted, never cut, so pasted text is kept for the partner to trim.
 export function limitCounter(draft, path) {
 	const { limit } = LIMITS[path]
 	const used = String(valueAt(draft, path) ?? "").length
-	return used > limit ? `${used - limit} over` : `${used} / ${limit}`
+	return used > limit ? `${used - limit} over` : `${used}/${limit}`
 }
 
 export function isOverLimit(draft, path) {
@@ -134,6 +140,46 @@ export function storyCounter(story, field) {
 
 export function isStoryOver(story, field) {
 	return String(story[field] || "").length > STORY_LIMITS[field]
+}
+
+// ---- Client logos: one row of them, from the success stories ----
+
+// Fewer logos than this make a sparse row, so the profile leaves it out.
+export const MIN_CLIENT_LOGOS = 4
+const CLIENT_LOGOS_SHOWN = 6
+// Each logo covers about the same area, so a tall mark isn't dwarfed by a wide wordmark. Heavy
+// artwork (more of it inked, measured by connect.partner.logo) gets a little less, light artwork
+// a little more, so no logo looks louder than the rest.
+const LOGO_AREA = 2600
+const TYPICAL_INK = 0.3
+const LOGO_MAX = { width: 130, height: 40 }
+// A logo not measured yet (still being cleaned) fits this box, as all logos did before.
+const UNMEASURED_LOGO = { width: "100px", height: "28px" }
+
+export function clientLogoCount(stories) {
+	return (stories || []).filter((story) => story.client_logo).length
+}
+
+// The row's logos with their sizes, or none when there are too few for a row.
+export function clientLogoRow(stories) {
+	if (clientLogoCount(stories) < MIN_CLIENT_LOGOS) return []
+	return stories
+		.filter((story) => story.client_logo)
+		.slice(0, CLIENT_LOGOS_SHOWN)
+		.map((story) => ({ ...story, logo: story.client_logo_display || story.client_logo, ...clientLogoSize(story) }))
+}
+
+function clientLogoSize(story) {
+	const ratio = Number(story.client_logo_ratio)
+	if (!ratio) return UNMEASURED_LOGO
+
+	const ink = Number(story.client_logo_ink) || TYPICAL_INK
+	const area = LOGO_AREA * Math.min(1.25, Math.max(0.8, Math.sqrt(TYPICAL_INK / ink)))
+	let width = Math.sqrt(area * ratio)
+	let height = Math.sqrt(area / ratio)
+	if (height > LOGO_MAX.height) [height, width] = [LOGO_MAX.height, LOGO_MAX.height * ratio]
+	if (width > LOGO_MAX.width) [width, height] = [LOGO_MAX.width, LOGO_MAX.width / ratio]
+	return { width: `${Math.round(width)}px`, height: `${Math.round(height)}px` }
 }
 
 // Why the draft can't be saved yet, or "". Only text changed since `saved` must fit its limit, as on
@@ -153,7 +199,7 @@ export function draftProblem(draft, saved) {
 }
 
 export function toSavePayload(draft) {
-	const { apps, migrations, industries, founder, photos, success_stories, ...fields } = draft
+	const { apps, migrations, industries, delivery_options, founder, photos, success_stories, ...fields } = draft
 	return {
 		...fields,
 		// number fields: an empty box saves as 0, which the profile shows as unset
@@ -162,6 +208,7 @@ export function toSavePayload(draft) {
 		apps: JSON.stringify(apps),
 		migrations: JSON.stringify(migrations),
 		industries: JSON.stringify(industries || []),
+		delivery_options: JSON.stringify(delivery_options || []),
 		founder: JSON.stringify(founder),
 		photos: JSON.stringify(photos),
 		success_stories: JSON.stringify(success_stories),
@@ -195,4 +242,32 @@ export function uploadImage({ toast, uploading, target, onUploaded }) {
 			})
 	}
 	input.click()
+}
+
+// ---- Success stories: the first featured, then a list, filtered by industry ----
+
+// Stories listed under the featured one before "Show all".
+const STORIES_LISTED = 4
+
+export function storyIndustryOptions(stories) {
+	const industries = [...new Set((stories || []).map((story) => story.category).filter(Boolean))]
+	return [{ label: "All Industries", value: "" }, ...industries.map((industry) => ({ label: industry, value: industry }))]
+}
+
+export function storyView(stories, industry, showAll) {
+	const shown = (stories || []).filter((story) => !industry || story.category === industry)
+	const [featured = null, ...rest] = shown
+	const listed = showAll ? rest : rest.slice(0, STORIES_LISTED)
+	let moreLabel = ""
+	if (rest.length > STORIES_LISTED) moreLabel = showAll ? "Show fewer" : `Show all ${shown.length}`
+	return {
+		featured,
+		rows: listed.map((story, index) => ({ ...story, index, last: index === listed.length - 1 })),
+		moreLabel,
+	}
+}
+
+// A story's client logo, in colour as the client made it.
+export function storyLogo(story) {
+	return story?.client_logo ? `url("${story.client_logo}")` : "none"
 }
