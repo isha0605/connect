@@ -142,7 +142,7 @@ def update_lead(name: str, stage=None, owner=None, probability=None, lost_reason
 	row = _get_lead_row(name)
 	doc = frappe.get_doc("Partner Lead", row.name)
 	if stage is not None:
-		_check_stage_change(doc, stage)
+		# PartnerLead.validate keeps Won to the hire.
 		doc.stage = stage
 		doc.lost_reason = lost_reason
 	if owner is not None:
@@ -275,13 +275,6 @@ def _lead_records(row, requirements: list) -> dict:
 		"follow_ups": follow_ups,
 		"activity": activity_of(records, briefs, follow_ups),
 	}
-
-
-def _check_stage_change(doc, stage: str):
-	if doc.stage == "Won":
-		frappe.throw(_("The customer hired you, so this lead stays Won."))
-	if stage == "Won":
-		frappe.throw(_("A lead is won when the customer hires you."))
 
 
 def partner_side_users(partner: str) -> set[str]:

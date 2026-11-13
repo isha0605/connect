@@ -60,9 +60,12 @@ class TestCloudLink(IntegrationTestCase):
 
 		# Records stay until the class ends, so each test hires on its own project.
 		self.project = frappe.get_doc(
-			{"doctype": "Customer Project", "project_name": "ERP rollout", "status": "Hired", "user": BUYER}
+			{"doctype": "Customer Project", "project_name": "ERP rollout", "user": BUYER}
 		).insert(ignore_permissions=True)
-		self.project.db_set({"user": BUYER, "partner": PARTNER, "cloud_link_status": "Pending"})
+		# The link only needs a hired project; how it was hired is test_hire's.
+		self.project.db_set(
+			{"status": "Hired", "user": BUYER, "partner": PARTNER, "cloud_link_status": "Pending"}
+		)
 		self.email = patch("connect.partner.cloud_integration._send_registration_email").start()
 		# The jobs commit per project; a test's records must still roll back.
 		patch("connect.partner.cloud_integration.frappe.db.commit").start()

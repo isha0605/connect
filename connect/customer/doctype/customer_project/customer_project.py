@@ -6,9 +6,11 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.query_builder import Case, Order
 from frappe.query_builder.functions import Sum
+from frappe.utils import now_datetime
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.customer.doctype.customer_project.partner_matching import normalize_criteria
+from connect.partner.cloud_integration import queue_cloud_link
 from connect.customer.doctype.customer_project.project_notifications import (
 	notify_project_created,
 	notify_project_step,
@@ -36,6 +38,11 @@ INVITED_QUOTE_STATUSES = ("Awaiting", "Partner Declined")
 HIRE_QUOTE_STATUSES = ("Hire Requested", "Hire Declined", "Hired")
 
 # Step 2's tasks after hiring, all optional; the page knows their labels and links.
+# The project's status while its hire quote (Project Quote, which owns the hire) is in each state.
+HIRE_PROJECT_STATUSES = {"Hire Requested": "Hiring", "Hired": "Hired"}
+# What a freed project forgets about the hire it had.
+NO_HIRE = {"status": "Shared", "partner": None, "hired_quote": None, "hire_reason": "", "hire_requested_on": None}
+
 HOSTING_TASKS = ("fc-login", "fc-code", "fc-link")
 
 
@@ -49,6 +56,7 @@ class CustomerProject(Document):
 		self.user = frappe.session.user
 
 	def validate(self):
+		self._check_hire_change()
 		self._stamp_status_change()
 
 	def after_insert(self):
@@ -56,6 +64,38 @@ class CustomerProject(Document):
 
 	def on_update(self):
 		notify_project_step(self)
+		if self.status == "Hired" and self.has_value_changed("status"):
+			queue_cloud_link(self)
+
+	def follow_hire(self, quote):
+		"""Called by Project Quote, which owns the hire: Hiring while `quote` waits for the
+		partner's answer, Hired once they accept, and Shared again when the request ends without
+		a hire (declined, cancelled or expired)."""
+		if quote.status in HIRE_PROJECT_STATUSES:
+			values = {"status": HIRE_PROJECT_STATUSES[quote.status], "partner": quote.partner, "hired_quote": quote.name}
+			if quote.status == "Hire Requested":
+				values["hire_requested_on"] = now_datetime()
+		elif self.hired_quote == quote.name:
+			values = NO_HIRE
+		else:
+			return
+
+		self.update(values)
+		self.flags.from_hire_quote = True
+		# A system step of the quote's change; whoever changed the quote was checked there.
+		self.save(ignore_permissions=True)
+
+	def _check_hire_change(self):
+		"""Only the hire quote moves a project into or out of Hiring and Hired; a hired project
+		finishing (Completed) is the project's own step."""
+		if self.flags.from_hire_quote:
+			return
+		before = self.get_doc_before_save()
+		old = before.status if before else None
+		hire = HIRE_PROJECT_STATUSES.values()
+		leaving_hire = old in hire and self.status not in hire and not (old == "Hired" and self.status == "Completed")
+		if self.status != old and (self.status in hire or leaving_hire):
+			frappe.throw(_("A project is hired through its partner's quote. Change the Project Quote instead."))
 
 	def _stamp_status_change(self):
 		# Only the first time: a declined or withdrawn hire puts the project back to Shared.

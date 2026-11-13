@@ -12,6 +12,8 @@ from connect.permissions import _has_partner_access
 
 # Once the customer shows interest in the partner's quote, the partner learns who they are.
 REVEALING_STATUSES = ("Interested", "Hire Requested", "Hired")
+# A hire request waiting for the partner's answer, and the hire itself. A project has one at most.
+HIRE_STATUSES = ("Hire Requested", "Hired")
 # What Frappe's sales CRM shows of the brief, on its partner's note there.
 FRAPPE_CRM_FIELDS = ("status", "amount", "timeline_weeks")
 # A partner quotes, or changes their quote, until the customer answers it.
@@ -30,7 +32,10 @@ class ProjectQuote(Document):
 	The quote itself is also a Quote message in their thread, which Messaging shows.
 
 	For the partner's sales team it is one requirement on their lead for the customer (the
-	Partner Lead), which holds the stage and owner of all the customer's requirements."""
+	Partner Lead), which holds the stage and owner of all the customer's requirements.
+
+	The quote owns the hire. Its project (Hiring, Hired), its lead (Won) and the partner's
+	customer record follow from its status here, and nowhere else sets them."""
 
 	def before_insert(self):
 		if self.thread and not self.lead:
@@ -38,9 +43,15 @@ class ProjectQuote(Document):
 
 			self.lead = lead_for_requirement(self.partner, self.thread)
 
+	def validate(self):
+		if self.has_value_changed("status"):
+			self._check_hire_change()
+
 	def on_update(self):
 		notify_quote_update(self)
 		self._reveal_customer()
+		if self.has_value_changed("status"):
+			self._update_project_hire()
 		if self.status == "Hired" and self.has_value_changed("status"):
 			self._win_lead()
 		if self.status == "Partner Declined" and self.has_value_changed("status"):
@@ -105,6 +116,24 @@ class ProjectQuote(Document):
 		)
 		if not has_open_brief:
 			frappe.get_doc("Partner Lead", self.lead).lose(DECLINED_LOST_REASON)
+
+	def _check_hire_change(self):
+		"""One hire per project, and a completed project's hire is final."""
+		before = self.get_doc_before_save()
+		project_status = frappe.db.get_value("Customer Project", self.customer_project, "status")
+		if before and before.status == "Hired" and project_status == "Completed":
+			frappe.throw(_("This project is completed, so its hire can't change."))
+		if self.status in HIRE_STATUSES and frappe.db.exists(
+			"Project Quote",
+			{"customer_project": self.customer_project, "status": ["in", HIRE_STATUSES], "name": ["!=", self.name]},
+		):
+			frappe.throw(_("This project already has a partner, or is waiting for one to answer."))
+
+	def _update_project_hire(self):
+		before = self.get_doc_before_save()
+		was_hire = bool(before) and before.status in HIRE_STATUSES
+		if self.status in HIRE_STATUSES or was_hire:
+			frappe.get_doc("Customer Project", self.customer_project).follow_hire(self)
 
 	def _reveal_customer(self):
 		if self.thread and self.status in REVEALING_STATUSES and self.has_value_changed("status"):

@@ -13,7 +13,6 @@ from connect.customer.doctype.customer_project.customer_project import (
 	get_own_project,
 	project_dict,
 )
-from connect.partner.cloud_integration import queue_cloud_link
 from connect.permissions import _check_can_read, _get_partner_owners, _is_partner_admin
 
 # A request the partner hasn't answered by then is withdrawn, so the customer can hire someone else.
@@ -32,16 +31,9 @@ def hire_partner(quote: str) -> dict:
 
 	row.update({"status_before_hire": row.status, "status": "Hire Requested", "decline_reason": None})
 	# Only System Managers write projects and quotes; get_own_project checked the caller owns this one.
+	# The quote owns the hire: saving it puts the project in Hiring.
 	row.save(ignore_permissions=True)
-	doc.update(
-		{
-			"status": "Hiring",
-			"partner": row.partner,
-			"hired_quote": row.name,
-			"hire_requested_on": now_datetime(),
-		}
-	)
-	doc.save(ignore_permissions=True)
+	doc.reload()
 
 	_post_hire_request(doc, row)
 	_email_partner_owners(doc, row)
@@ -73,6 +65,7 @@ def cancel_hire_request(name: str) -> dict:
 
 	partner_name = _partner_name(doc.partner)
 	_withdraw(doc, _("The hire request for {0} was cancelled.").format(doc.project_name))
+	doc.reload()
 	return {"partner_name": partner_name, **project_dict(doc)}
 
 
@@ -148,10 +141,8 @@ def get_hire_days_left(requested_on) -> int:
 def _accept(doc, row):
 	row.update({"status": "Hired", "responded_on": now_datetime()})
 	# Only System Managers write projects and quotes; respond_to_hire checked the caller is the partner's admin.
+	# Saving the quote hires the project, wins the lead and adds the partner's customer.
 	row.save(ignore_permissions=True)
-	doc.status = "Hired"
-	doc.save(ignore_permissions=True)
-	queue_cloud_link(doc)
 	_post_system_message(
 		row.thread,
 		_("{0} accepted the hire for {1}.").format(_partner_name(row.partner), doc.project_name),
@@ -163,9 +154,8 @@ def _decline(doc, row, reason: str):
 		frappe.throw(_("Tell the customer why you're declining."))
 
 	row.update({"status": "Hire Declined", "responded_on": now_datetime(), "decline_reason": reason})
-	# As in _accept: respond_to_hire checked the caller is the partner's admin.
+	# As in _accept: respond_to_hire checked the caller is the partner's admin. The project is freed.
 	row.save(ignore_permissions=True)
-	_free_project(doc)
 	_post_system_message(
 		row.thread,
 		_("{0} declined the hire for {1}: {2}").format(_partner_name(row.partner), doc.project_name, reason),
@@ -176,24 +166,9 @@ def _withdraw(doc, message: str):
 	"""Puts the quote back where it was before the request, and the project back to Shared."""
 	row = frappe.get_doc("Project Quote", doc.hired_quote)
 	row.update({"status": row.status_before_hire or "Quoted", "status_before_hire": None})
-	# The customer's own cancel (get_own_project checked) or the daily expiry job.
+	# The customer's own cancel (get_own_project checked) or the daily expiry job. The project is freed.
 	row.save(ignore_permissions=True)
-	_free_project(doc)
 	_post_system_message(row.thread, message)
-
-
-def _free_project(doc):
-	doc.update(
-		{
-			"status": "Shared",
-			"partner": None,
-			"hired_quote": None,
-			"hire_reason": "",
-			"hire_requested_on": None,
-		}
-	)
-	# Every caller checked who may free the project: the customer, the partner's admin, or the expiry job.
-	doc.save(ignore_permissions=True)
 
 
 def _post_hire_request(doc, row):

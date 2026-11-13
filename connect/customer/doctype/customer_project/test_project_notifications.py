@@ -53,11 +53,12 @@ class TestProjectNotifications(IntegrationTestCase):
 	def test_sharing_is_announced_only_the_first_time(self):
 		self.project.update({"status": "Shared", "shared_count": 3})
 		self.project.save(ignore_permissions=True)
-		self.project.update({"status": "Hiring", "partner": PARTNER})
-		self.project.save(ignore_permissions=True)
-		# A declined hire puts the project back to Shared; that isn't a new share.
-		self.project.update({"status": "Shared", "partner": None})
-		self.project.save(ignore_permissions=True)
+		quote = self.make_quote(status="Quoted")
+		quote.status = "Hire Requested"
+		quote.save(ignore_permissions=True)
+		# A cancelled hire puts the project back to Shared; that isn't a new share.
+		quote.status = "Quoted"
+		quote.save(ignore_permissions=True)
 
 		self.assertEqual(
 			self.subjects(),

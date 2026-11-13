@@ -25,6 +25,7 @@ class PartnerLead(Document):
 	partner's CRM, where the thread is one CRM Lead."""
 
 	def validate(self):
+		self._validate_won()
 		self._validate_lost_reason()
 		self._validate_assigned_to()
 
@@ -58,6 +59,7 @@ class PartnerLead(Document):
 		"""The customer hired the partner. Only hiring wins a lead, and a won lead stays won."""
 		if self.stage != "Won":
 			self.stage = "Won"
+			self.flags.won_by_hire = True
 			self._save_as_system()
 
 	def lose(self, reason: str):
@@ -66,6 +68,16 @@ class PartnerLead(Document):
 			self.stage = "Lost"
 			self.lost_reason = reason
 			self._save_as_system()
+
+	def _validate_won(self):
+		"""Won belongs to the hire (Project Quote owns it), so nobody sets or undoes it by hand."""
+		if not self.has_value_changed("stage"):
+			return
+		before = self.get_doc_before_save()
+		if before and before.stage == "Won":
+			frappe.throw(_("The customer hired you, so this lead stays Won."))
+		if self.stage == "Won" and not self.flags.won_by_hire:
+			frappe.throw(_("A lead is won when the customer hires you."))
 
 	def _validate_lost_reason(self):
 		if self.stage != "Lost":
