@@ -89,6 +89,17 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 		self.assertEqual(saved.team_size, "11-50")
 		self.assertEqual(saved.journey_blog_url, "https://blog.example.test/journey")
 
+	def test_admin_picks_how_they_work(self):
+		for mode in ("Remote", "Onsite"):
+			if not frappe.db.exists("Delivery Mode", mode):
+				frappe.get_doc({"doctype": "Delivery Mode", "title": mode}).insert(ignore_permissions=True)
+		frappe.set_user(ADMIN)
+		update_my_partner_profile(delivery_options=["Remote", "Onsite"])
+
+		profile = get_my_profile()
+		self.assertEqual(profile["delivery_options"], ["Remote", "Onsite"])
+		self.assertIn("Onsite", profile["options"]["delivery_modes"])
+
 	def test_admin_edits_only_own_partner(self):
 		frappe.set_user(OTHER_ADMIN)
 		update_my_partner_profile(website="https://other.example.test")
@@ -188,6 +199,17 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 			update_my_partner_profile(industries=INDUSTRY_NAMES[:7])
 		update_my_partner_profile(industries=INDUSTRY_NAMES[:6])
 		self.assertEqual(len(get_my_profile()["industries"]), 6)
+
+	def test_gallery_holds_six_photos_and_two_videos(self):
+		frappe.set_user(ADMIN)
+		photos = [{"image": f"/files/photo-{n}.png"} for n in range(6)]
+		videos = [{"image": f"/files/poster-{n}.png", "video": f"/files/video-{n}.mp4"} for n in range(3)]
+		for too_many in (photos + [{"image": "/files/photo-6.png"}], photos[:1] + videos):
+			with self.subTest(rows=len(too_many)), self.assertRaises(frappe.ValidationError):
+				update_my_partner_profile(photos=too_many)
+
+		update_my_partner_profile(photos=photos + videos[:2])
+		self.assertEqual(len(get_my_profile()["photos"]), 8)
 
 	def test_older_text_over_a_limit_does_not_block_other_changes(self):
 		frappe.set_user(ADMIN)

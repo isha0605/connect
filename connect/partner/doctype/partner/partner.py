@@ -1005,6 +1005,7 @@ _PROFILE_MULTISELECT_FIELDS = {
 	"implementation_types": "implementation_type",
 	"languages": "language",
 	"industries": "industry",
+	"delivery_options": "delivery_mode",
 }
 
 # cover_image too: a story without a frappe.io cover keeps the one it was given
@@ -1041,13 +1042,16 @@ _BUILDER_FIELDS = (
 # The Profile builder shows the same limits as it counts.
 _TEXT_LIMITS = {
 	"tagline": 80, "address": 200, "description": 500, "why_choose_them": 300, "how_we_work": 300,
-	"successful_implementation": 300, "origin_story": 1000,
+	"successful_implementation": 300, "origin_story": 400,
 }
 _FOUNDER_LIMITS = {"member_name": 60, "designation": 40, "bio": 280}
 _STORY_LIMITS = {"client_name": 40, "headline": 90}
 
 # Shown on the public profile, so a link must be an upload, an app asset or an https page.
 _MEDIA_PREFIXES = ("/files/", "/assets/", "https://")
+# Most photos and videos a gallery holds. A video row also has an image: its poster.
+_MAX_GALLERY_PHOTOS = 6
+_MAX_GALLERY_VIDEOS = 2
 
 
 def get_my_profile(with_draft=False) -> dict:
@@ -1070,6 +1074,7 @@ def get_my_profile(with_draft=False) -> dict:
 		"apps": [row.app for row in doc.apps],
 		"migrations": [row.migration_path for row in doc.migrations],
 		"served_countries": [row.country for row in doc.served_countries],
+		"delivery_options": [row.delivery_mode for row in doc.delivery_options],
 		"founder": {field: founder.get(field) for field in _FOUNDER_FIELDS} if founder else {},
 		"photos": [{"image": row.image, "video": row.video} for row in doc.photos],
 		"success_stories": stories,
@@ -1092,6 +1097,7 @@ def _profile_options() -> dict:
 		"countries": frappe.get_all("Country", pluck="name", order_by="name asc"),
 		"migrations": frappe.get_all("Migration Path", pluck="name", order_by="name asc"),
 		"industries": frappe.get_all("Industry", pluck="name", order_by="name asc"),
+		"delivery_modes": frappe.get_all("Delivery Mode", pluck="name", order_by="name asc"),
 		"categories": sorted(set(frappe.get_all("Partner Success Story", filters={"category": ["is", "set"]}, pluck="category"))),
 	}
 
@@ -1125,6 +1131,19 @@ def _check_profile_media(doc) -> None:
 			frappe.throw(_("Images and videos must be uploaded files or https links: {0}").format(link))
 
 
+def _check_gallery_size(doc, live) -> None:
+	"""A gallery the partner changed must keep to the limits; one saved before them still saves."""
+	rows = [(row.image or "", row.video or "") for row in doc.photos]
+	if rows == [(row.image or "", row.video or "") for row in live.photos]:
+		return
+
+	videos = sum(1 for _image, video in rows if video)
+	if videos > _MAX_GALLERY_VIDEOS:
+		frappe.throw(_("Add up to {0} videos.").format(_MAX_GALLERY_VIDEOS))
+	if len(rows) - videos > _MAX_GALLERY_PHOTOS:
+		frappe.throw(_("Add up to {0} photos.").format(_MAX_GALLERY_PHOTOS))
+
+
 def update_my_partner_profile(
 	tagline=None, description=None, country=None, city=None,
 	address=None, website=None, year_founded=None,
@@ -1136,7 +1155,7 @@ def update_my_partner_profile(
 	founder=None, success_stories=None, addons=None,
 	phone=None, team_size=None, journey_blog_url=None,
 	logo=None, logo_icon=None, why_choose_them=None, origin_story=None, photos=None,
-	how_we_work=None, successful_implementation=None, industries=None, as_draft=False,
+	how_we_work=None, successful_implementation=None, industries=None, delivery_options=None, as_draft=False,
 ):
 	"""Lets the admin of the caller's own partner company edit their public profile —
 	the same fields (and the same About / Success Stories / Pricing grouping) shown on the
@@ -1158,7 +1177,7 @@ def update_my_partner_profile(
 		how_we_work=how_we_work, successful_implementation=successful_implementation,
 		apps=apps, migrations=migrations, business_processes=business_processes,
 		implementation_types=implementation_types, languages=languages, industries=industries,
-		founder=founder, success_stories=success_stories, photos=photos, addons=addons,
+		delivery_options=delivery_options, founder=founder, success_stories=success_stories, photos=photos, addons=addons,
 	)
 	changes = {key: value for key, value in changes.items() if value is not None}
 
@@ -1213,6 +1232,7 @@ def _edited_profile(partner: str, changes: dict, with_draft: bool) -> tuple:
 	_apply_profile_values(doc, changes)
 	_check_profile_lengths(doc, live)
 	_check_profile_media(doc)
+	_check_gallery_size(doc, live)
 	return doc, live
 
 

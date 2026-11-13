@@ -171,7 +171,7 @@ def update_my_partner_profile(
 	founder=None, success_stories=None, addons=None,
 	phone=None, team_size=None, journey_blog_url=None,
 	logo=None, logo_icon=None, why_choose_them=None, origin_story=None, photos=None,
-	how_we_work=None, successful_implementation=None, industries=None, as_draft=False,
+	how_we_work=None, successful_implementation=None, industries=None, delivery_options=None, as_draft=False,
 ):
 	from connect.partner.doctype.partner.partner import update_my_partner_profile
 	return update_my_partner_profile(
@@ -187,7 +187,7 @@ def update_my_partner_profile(
 		phone=phone, team_size=team_size, journey_blog_url=journey_blog_url,
 		logo=logo, logo_icon=logo_icon, why_choose_them=why_choose_them, origin_story=origin_story, photos=photos,
 		how_we_work=how_we_work, successful_implementation=successful_implementation, industries=industries,
-		as_draft=as_draft,
+		delivery_options=delivery_options, as_draft=as_draft,
 	)
 
 
