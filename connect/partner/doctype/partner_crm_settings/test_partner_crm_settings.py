@@ -14,8 +14,11 @@ from werkzeug.wrappers import Request
 from connect.api.attachments import _copy_message_attachment
 from connect.api.crm_webhook import receive_crm_reply
 from connect.crm_integration import (
+	CONNECT_MESSAGE_ID,
 	CRMRequestError,
+	connect_message_id,
 	email_body,
+	is_from_connect,
 	queue_crm_lead_sync,
 	reply_webhook,
 	set_up_reply_webhook,
@@ -272,6 +275,8 @@ class IntegrationTestCRMSync(IntegrationTestCase):
 		self.assertEqual(emails[0]["sender"], BUYER)
 		self.assertEqual((emails[1]["sender"], emails[1]["recipients"]), (CONSULTANT_ONE, BUYER))
 		self.assertEqual(emails[1]["content"], "Welcome!<br>Calls &amp; visits soon")
+		# Each is marked as Connect's own, so the reply webhook doesn't bring it back.
+		self.assertTrue(all(is_from_connect(email["message_id"]) for email in emails))
 
 	def test_a_consultant_missing_from_the_crm_leaves_the_lead_for_the_sales_team(self):
 		self.say(BUYER, "Hello")
@@ -365,10 +370,14 @@ class IntegrationTestCRMSync(IntegrationTestCase):
 			crm.calls,
 		)
 
-	def test_the_reply_webhook_skips_what_connect_posted(self):
-		webhook = reply_webhook("Frappe", "connect-api@crm.example.com", "secret")
-		self.assertIn("doc.owner!='connect-api@crm.example.com'", webhook["condition"])
-		self.assertIn("sender", [row["key"] for row in webhook["webhook_data"]])
+	def test_the_reply_webhook_skips_what_connect_posted_but_not_its_api_user(self):
+		webhook = reply_webhook("Frappe", "secret")
+		# Marked by Message-ID, not author: the partner may use the API user's account themselves.
+		self.assertIn(f"{CONNECT_MESSAGE_ID!r} not in (doc.message_id or '')", webhook["condition"])
+		self.assertNotIn("doc.owner", webhook["condition"])
+		self.assertIn("message_id", [row["key"] for row in webhook["webhook_data"]])
+		self.assertTrue(is_from_connect(connect_message_id("abc123")))
+		self.assertFalse(is_from_connect("<20261113.123@mysite.local>"))
 
 	def test_files_on_a_crm_reply_are_fetched(self):
 		crm = FakeCRM(files={"/private/files/_test_crm_reply.txt": b"hello"})
