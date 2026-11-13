@@ -43,10 +43,8 @@ export function withPreview(doc, draft) {
 		display_industries: industries || [],
 		team: founder?.member_name ? [{ ...founder, is_founder: 1 }, ...others] : others,
 		photos: photos || [],
-		success_stories: (success_stories || []).map((story) => ({
-			...story,
-			client_logo_display: story.client_logo,
-		})),
+		// Stories are only read here (they're written on frappe.io), so each keeps its cleaned logo.
+		success_stories: success_stories || [],
 	}
 }
 

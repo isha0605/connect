@@ -4,7 +4,7 @@
 
 import { computed, onScopeDispose, ref, watch } from "vue"
 import { partnerConnect } from "@app/utils/partnerConnect"
-import { DEFAULT_ANSWERS } from "@app/utils/partnerProfile"
+import { DEFAULT_ANSWERS, clientLogoRow, storyIndustryOptions, storyLogo, storyView } from "@app/utils/partnerProfile"
 import { onPreviewChange, readPreview, withPreview } from "@app/utils/profilePreview"
 import { goToSignIn } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
@@ -100,6 +100,8 @@ export default function setup(context) {
 	})
 
 	// A verified industry has stories behind it: show only those, where the stories are.
+	const showAllStories = ref(false)
+
 	function showStoriesFor(industry) {
 		selectedStoryIndustry.value = industry
 		document.querySelector(`[data-component-id="${STORIES_SECTION}"]`)?.scrollIntoView({ behavior: "smooth" })
@@ -220,8 +222,16 @@ export default function setup(context) {
 		connect,
 		goToSignIn,
 		showStoriesFor,
+		// success stories: one featured, then a list, filtered by industry
+		storyView: computed(() => storyView(partner.data?.success_stories, selectedStoryIndustry.value, showAllStories.value)),
+		storyCount: computed(() => String((partner.data?.success_stories || []).length)),
+		storyIndustryOptions: computed(() => storyIndustryOptions(partner.data?.success_stories)),
+		storyLogo,
+		showAllStories,
+		openStory: (story) => story?.url && window.open(story.url, "_blank", "noopener"),
 		origin,
 		howWeWork: computed(() => partner.data?.how_we_work || DEFAULT_ANSWERS.how_we_work),
+		clientLogos: computed(() => clientLogoRow(partner.data?.success_stories)),
 		pmmLevel,
 		pmmLabel,
 		openPmmGuide,
