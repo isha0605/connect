@@ -8,6 +8,7 @@ from frappe.utils import cint, flt, now_datetime
 
 from connect.customer.doctype.customer_project.project_notifications import notify_quote_update
 from connect.partner.doctype.connect_partner_member.connect_partner_member import LEAD_ACCESS
+from connect.partner.chat_sla import hand_chat_clock_to_quote
 from connect.partner.sla import assign_answer_deadline, record_answer, withdraw_sibling_brief_clocks
 from connect.permissions import _has_partner_access
 
@@ -53,6 +54,7 @@ class ProjectQuote(Document):
 
 	def on_update(self):
 		notify_quote_update(self)
+		hand_chat_clock_to_quote(self)
 		self._reveal_customer()
 		if self.has_value_changed("status"):
 			self._update_project_hire()

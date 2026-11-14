@@ -1,0 +1,131 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "hash",
+ "creation": "2026-11-15 10:00:00.000000",
+ "description": "One customer chat message the partner had to answer within one working day. Written by the system; admins read it for the partner SLA.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "partner",
+  "thread",
+  "column_break_status",
+  "status",
+  "section_break_times",
+  "asked_at",
+  "reply_by",
+  "column_break_times",
+  "replied_at"
+ ],
+ "fields": [
+  {
+   "fieldname": "partner",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Partner",
+   "options": "Partner",
+   "read_only": 1,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "thread",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Thread",
+   "options": "Connect Thread",
+   "read_only": 1,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Due",
+   "description": "Withdrawn: the question went away before the deadline (the customer deleted the message, or a brief or hire request took over), so it does not count. Closing a thread with a question waiting is Failed.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Due\nFulfilled\nFailed\nWithdrawn",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "section_break_times",
+   "fieldtype": "Section Break",
+   "label": "Times"
+  },
+  {
+   "description": "When the customer's oldest unanswered message arrived.",
+   "fieldname": "asked_at",
+   "fieldtype": "Datetime",
+   "label": "Asked At",
+   "read_only": 1
+  },
+  {
+   "description": "The same time on the partner's next working day.",
+   "fieldname": "reply_by",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Reply By",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_times",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "When the partner's first reply arrived.",
+   "fieldname": "replied_at",
+   "fieldtype": "Datetime",
+   "label": "Replied At",
+   "read_only": 1
+  }
+ ],
+ "in_create": 1,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-15 11:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Partner",
+ "name": "Partner Chat Reply",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [
+  {
+   "color": "Orange",
+   "title": "Due"
+  },
+  {
+   "color": "Green",
+   "title": "Fulfilled"
+  },
+  {
+   "color": "Red",
+   "title": "Failed"
+  },
+  {
+   "color": "Gray",
+   "title": "Withdrawn"
+  }
+ ],
+ "title_field": "partner"
+}

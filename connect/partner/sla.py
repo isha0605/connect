@@ -109,6 +109,14 @@ def mark_overdue_answers_failed():
 			.where((status == "Due") & (deadline < now))
 		).run()
 
+	Reply = frappe.qb.DocType("Partner Chat Reply")
+	(
+		frappe.qb.update(Reply)
+		.set(Reply.status, "Failed")
+		.set(Reply.modified, now)
+		.where((Reply.status == "Due") & (Reply.reply_by < now))
+	).run()
+
 
 def withdraw_sibling_brief_clocks(hired_quote):
 	"""The project found its partner, so the other partners' unanswered briefs are withdrawn:
