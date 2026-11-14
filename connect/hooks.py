@@ -293,6 +293,8 @@ scheduler_events = {
 		"connect.crm_partner_leads.retry_partner_lead_sync",
 		# Partners Frappe's CRM didn't get.
 		"connect.crm_partners.retry_partner_sync",
+		# Briefs and hire requests whose one-working-day answer deadline passed unanswered.
+		"connect.partner.sla.mark_overdue_answers_failed",
 	],
 	"daily": [
 		"connect.customer.doctype.customer_project.hiring.expire_hire_requests",
