@@ -128,11 +128,29 @@ def get_thread_members(thread):
 		order_by="creation asc",
 	)
 	if not hides_customer(thread, user):
+		mark_invited(members)
 		return members
 	partner_side = [m for m in members if m.side != "Customer"]
+	mark_invited(partner_side)
 	return partner_side + [
-		{"name": ANONYMOUS_USER, "user": ANONYMOUS_USER, "side": "Customer", "permission": "Write", "is_removed": 0}
+		{
+			"name": ANONYMOUS_USER, "user": ANONYMOUS_USER, "side": "Customer", "permission": "Write",
+			"is_removed": 0, "is_invited": False,
+		}
 	]
+
+
+def mark_invited(members: list) -> None:
+	"""Invited until they first sign in, as on the Team page."""
+	signed_in = set(
+		frappe.get_all(
+			"User",
+			filters={"name": ["in", [m.user for m in members]], "last_login": ["is", "set"]},
+			pluck="name",
+		)
+	)
+	for member in members:
+		member.is_invited = member.user not in signed_in
 
 
 @frappe.whitelist()
