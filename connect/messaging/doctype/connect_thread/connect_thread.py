@@ -6,6 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import now_datetime
 
+from connect.auth.invitations import send_thread_invitation
 from connect.permissions import _get_partner_owners
 
 
@@ -94,6 +95,7 @@ class ConnectThread(Document):
 		member.insert()
 
 		self.post_system_message(_("{0} was added to this thread").format(email))
+		send_thread_invitation(member)
 
 		return member, created_user
 

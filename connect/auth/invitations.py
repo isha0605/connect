@@ -1,6 +1,7 @@
-"""Team invitations: an emailed link that signs someone added to a team straight in, once."""
+"""Team and thread invitations: an emailed link that signs someone added straight in, once."""
 
 import hashlib
+from datetime import datetime
 
 import frappe
 from frappe import _
@@ -15,6 +16,8 @@ COMPANIES = {
 	"Connect Partner Member": ("partner", "Partner", "partner_name"),
 	"Customer Team Member": ("customer", "Customer", "customer_name"),
 }
+THREAD_MEMBER = "Connect Thread Member"
+MESSAGING_PAGE = "/connect/messaging"
 
 
 def invite_member(doc, method=None):
@@ -35,14 +38,8 @@ def should_invite(doc) -> bool:
 
 
 def send_invitation(doc) -> None:
-	"""Emails a link to the sign-in page carrying a one-time token; only its hash is kept. The page
-	sends the token on: mail scanners open every link, and would use up one that signed in itself."""
-	token = frappe.generate_hash(length=32)
-	expires_on = add_days(now_datetime(), INVITE_DAYS)
-	doc.db_set(
-		{"invite_token_hash": hash_token(token), "invite_expires_on": expires_on}, update_modified=False
-	)
-
+	"""Emails a link to the sign-in page carrying a one-time token."""
+	link, expires_on = issue_sign_in_link(doc)
 	company = company_name(doc)
 	inviter = frappe.utils.get_fullname(frappe.session.user)
 	# Queued, not sent now: if adding the member fails, the email is rolled back with it.
@@ -53,10 +50,46 @@ def send_invitation(doc) -> None:
 		args={
 			"inviter": inviter,
 			"company": company,
-			"link": get_url(f"{SIGN_IN_PAGE}?invite={token}"),
+			"link": link,
 			"expires_on": frappe.utils.format_date(expires_on),
 		},
 	)
+
+
+def send_thread_invitation(member) -> None:
+	"""Emails someone added to a thread. Someone who has never signed in gets a one-time sign-in
+	link, as the roster shows them Invited until then; anyone else gets a plain link to the thread."""
+	expires_on = None
+	if frappe.db.get_value("User", member.user, "last_login"):
+		link = get_url(thread_path(member.thread))
+	else:
+		link, expires_on = issue_sign_in_link(member)
+
+	inviter = frappe.utils.get_fullname(member.added_by)
+	# The email names only the inviter, an admin of the recipient's side: naming the other side
+	# could reveal an anonymous customer to a partner.
+	frappe.sendmail(
+		recipients=[member.user],
+		subject=_("{0} added you to a conversation on Frappe Connect").format(inviter),
+		template="connect_thread_invitation",
+		args={
+			"inviter": inviter,
+			"link": link,
+			"expires_on": expires_on and frappe.utils.format_date(expires_on),
+		},
+	)
+
+
+def issue_sign_in_link(doc) -> tuple[str, datetime]:
+	"""Stores a fresh one-time token's hash on the member row; only the hash is kept. The link opens
+	the sign-in page, which sends the token on: mail scanners open every link, and would use up
+	one that signed in itself."""
+	token = frappe.generate_hash(length=32)
+	expires_on = add_days(now_datetime(), INVITE_DAYS)
+	doc.db_set(
+		{"invite_token_hash": hash_token(token), "invite_expires_on": expires_on}, update_modified=False
+	)
+	return get_url(f"{SIGN_IN_PAGE}?invite={token}"), expires_on
 
 
 def accept_invitation(token) -> dict:
@@ -72,7 +105,8 @@ def accept_invitation(token) -> dict:
 	)
 
 	frappe.local.login_manager.login_as(row.user)
-	return {"user": row.user, "redirect": landing_page(row.user)}
+	next_path = thread_path(row.thread) if doctype == THREAD_MEMBER else None
+	return {"user": row.user, "redirect": landing_page(row.user, next_path)}
 
 
 def find_invitation(token):
@@ -81,13 +115,11 @@ def find_invitation(token):
 		throw_expired()
 
 	token_hash = hash_token(token)
-	for doctype in COMPANIES:
-		row = frappe.db.get_value(
-			doctype,
-			{"invite_token_hash": token_hash},
-			["name", "user", "is_removed", "invite_expires_on"],
-			as_dict=True,
-		)
+	for doctype in (*COMPANIES, THREAD_MEMBER):
+		fields = ["name", "user", "is_removed", "invite_expires_on"]
+		if doctype == THREAD_MEMBER:
+			fields.append("thread")
+		row = frappe.db.get_value(doctype, {"invite_token_hash": token_hash}, fields, as_dict=True)
 		if row and not row.is_removed and row.invite_expires_on and row.invite_expires_on > now_datetime():
 			return doctype, row
 	throw_expired()
@@ -104,6 +136,10 @@ def company_name(doc) -> str:
 	link_field, company_doctype, name_field = COMPANIES[doc.doctype]
 	company = doc.get(link_field)
 	return frappe.db.get_value(company_doctype, company, name_field) or company
+
+
+def thread_path(thread: str) -> str:
+	return f"{MESSAGING_PAGE}?thread={thread}"
 
 
 def hash_token(token: str) -> str:
