@@ -9,6 +9,8 @@ from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, now_datetime
 
 from connect.api.auth import accept_invite
+from connect.api.threads import get_thread_members
+from connect.customer.doctype.customer_project.test_hiring import make_partner
 
 
 def new_email(tag):
@@ -42,8 +44,7 @@ class IntegrationTestTeamInvitation(IntegrationTestCase):
 		return frappe.get_doc(member).insert(ignore_permissions=True)
 
 	def token_sent(self):
-		link = self.sendmail.call_args.kwargs["args"]["link"]
-		return parse_qs(urlparse(link).query)["invite"][0]
+		return token_in(self.sendmail)
 
 	def test_an_added_member_is_emailed_a_link_that_signs_them_in(self):
 		member = self.add_member()
@@ -96,3 +97,85 @@ class IntegrationTestTeamInvitation(IntegrationTestCase):
 		member.save(ignore_permissions=True)
 
 		self.assertEqual(self.sendmail.call_args.kwargs["recipients"], [member.user])
+
+
+class IntegrationTestThreadInvitation(IntegrationTestCase):
+	"""Someone added to a thread is emailed: a one-time sign-in link if they are new to Connect,
+	else a plain link to the thread."""
+
+	def setUp(self):
+		self.addCleanup(frappe.db.rollback)
+		self.sendmail = patch("frappe.sendmail").start()
+		self.login_manager = MagicMock()
+		patch.object(frappe.local, "login_manager", self.login_manager, create=True).start()
+		self.addCleanup(patch.stopall)
+		self.addCleanup(frappe.set_user, "Administrator")
+
+		tag = frappe.generate_hash(length=6)
+		customer = frappe.get_doc({"doctype": "Customer", "customer_name": f"_Test Thread Invite Co {tag}"})
+		customer.insert(ignore_permissions=True)
+		partner = make_partner(f"_Test Thread Invite Partner {tag}")
+		self.admin = new_email("admin")
+		make_user(self.admin)
+		frappe.get_doc(
+			{"doctype": "Customer Team Member", "customer": customer.name, "user": self.admin, "is_admin": 1}
+		).insert(ignore_permissions=True)
+		self.thread = frappe.get_doc(
+			{"doctype": "Connect Thread", "customer": customer.name, "partner": partner}
+		).insert(ignore_permissions=True)
+		self.sendmail.reset_mock()
+
+	def add_to_thread(self, email):
+		frappe.set_user(self.admin)
+		member, _created = self.thread.add_member(email, "Customer", "Write", self.admin)
+		frappe.set_user("Administrator")
+		return member
+
+	def test_someone_new_is_emailed_a_link_that_signs_them_into_the_thread(self):
+		email = new_email("new")
+		self.add_to_thread(email)
+		self.assertEqual(self.sendmail.call_args.kwargs["recipients"], [email])
+
+		result = accept_invite(token_in(self.sendmail))
+
+		self.login_manager.login_as.assert_called_once_with(email)
+		self.assertEqual(result["redirect"], f"/connect/messaging?thread={self.thread.name}")
+
+	def test_someone_who_has_signed_in_before_is_emailed_a_plain_link_to_the_thread(self):
+		email = new_email("existing")
+		make_user(email)
+		frappe.db.set_value("User", email, "last_login", now_datetime())
+		member = self.add_to_thread(email)
+
+		link = self.sendmail.call_args.kwargs["args"]["link"]
+		self.assertTrue(link.endswith(f"/connect/messaging?thread={self.thread.name}"))
+		self.assertIsNone(frappe.db.get_value(member.doctype, member.name, "invite_token_hash"))
+
+	def test_an_account_that_never_signed_in_still_gets_a_sign_in_link(self):
+		email = new_email("dormant")
+		make_user(email)
+		self.add_to_thread(email)
+
+		accept_invite(token_in(self.sendmail))
+
+		self.login_manager.login_as.assert_called_once_with(email)
+
+	def test_someone_added_shows_as_invited_until_they_first_sign_in(self):
+		email = new_email("pending")
+		self.add_to_thread(email)
+		self.assertTrue(self.invited_flag(email))
+
+		frappe.db.set_value("User", email, "last_login", now_datetime())
+
+		self.assertFalse(self.invited_flag(email))
+
+	def invited_flag(self, email):
+		frappe.set_user(email)
+		members = get_thread_members(self.thread.name)
+		frappe.set_user("Administrator")
+		return next(m for m in members if m.user == email).is_invited
+
+
+def token_in(sendmail):
+	link = sendmail.call_args.kwargs["args"]["link"]
+	return parse_qs(urlparse(link).query)["invite"][0]
