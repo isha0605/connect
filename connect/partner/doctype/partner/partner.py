@@ -942,6 +942,21 @@ def get_partner_document(partner):
 	return doc
 
 
+def get_partner_managers(partner: str) -> list[dict]:
+	"""The Frappe staff looking after `partner`, for its team to email. Disabled users are left out."""
+	manager = frappe.qb.DocType("Partner Manager")
+	user = frappe.qb.DocType("User")
+	return (
+		frappe.qb.from_(manager)
+		.join(user)
+		.on(user.name == manager.user)
+		.select(user.full_name, user.name.as_("email"))
+		.where((manager.parent == partner) & (manager.parenttype == "Partner") & (user.enabled == 1))
+		.orderby(manager.idx)
+		.run(as_dict=True)
+	)
+
+
 def check_profile_visible(partner: str) -> None:
 	"""A listed partner's profile is public. An unlisted one opens only for its own members
 	(to preview it) and Frappe staff; for anyone else it does not exist."""

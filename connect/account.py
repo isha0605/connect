@@ -11,7 +11,7 @@ from connect.partner.doctype.connect_partner_member.connect_partner_member impor
 	get_active_memberships,
 	get_current_membership,
 )
-from connect.partner.doctype.partner.partner import VERIFIED
+from connect.partner.doctype.partner.partner import VERIFIED, get_partner_managers
 from connect.permissions import _my_company_membership
 
 
@@ -125,6 +125,8 @@ def partner_access(membership) -> dict:
 		"can_see_leads": level in LEAD_ACCESS,
 		"can_see_customers": level in CUSTOMER_ACCESS,
 		"home_route": partner_home_route(level, is_approved),
+		# the company menu's Partner managers, for the team to email
+		"managers": get_partner_managers(membership.partner),
 	}
 
 
