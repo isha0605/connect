@@ -128,7 +128,17 @@ class Partner(Document):
 		self.check_permission("write")
 		update_revenue_now(self.name)
 
+	@frappe.whitelist()
+	def send_to_frappe_crm(self):
+		"""Desk's Send to Frappe CRM button, for a partner whose sync failed."""
+		from connect.crm_partners import send_partner_now
+
+		send_partner_now(self.name)
+
 	def on_update(self):
+		from connect.crm_partners import queue_partner_sync
+
+		queue_partner_sync(self)
 		# background-fetches each success story's own frappe.io cover photo —
 		# never blocks this save, and no-ops for rows that already have one
 		queue_missing_story_images(self.get("success_stories"))
@@ -218,6 +228,7 @@ PRIVATE_PROFILE_FIELDS = (
 	"currency", "revenue_last_month", "revenue_this_month", "revenue_updated_on", "next_tier", "previous_tier",
 	"tier_changed_on", "reviewed_tier", "keep_tier", "keep_tier_reason", "listed_on", "listing_review",
 	"keep_listing", "keep_listing_reason",
+	"frappe_crm_partner", "frappe_crm_sync_status", "frappe_crm_sync_error",
 )
 
 
