@@ -16,10 +16,27 @@
   "verification_status",
   "cloud_registration",
   "cloud_registration_sent_on",
+  "email",
   "enabled",
   "show_in_website",
   "specialist",
   "rating",
+  "section_break_tier",
+  "currency",
+  "keep_tier",
+  "keep_tier_reason",
+  "revenue_last_month",
+  "revenue_this_month",
+  "revenue_updated_on",
+  "column_break_tier",
+  "reviewed_tier",
+  "next_tier",
+  "previous_tier",
+  "tier_changed_on",
+  "listed_on",
+  "listing_review",
+  "keep_listing",
+  "keep_listing_reason",
   "section_break_description",
   "description",
   "origin_story",
@@ -147,11 +164,11 @@
   {
    "description": "Set by Frappe admins only — partners cannot self-edit their tier.",
    "fieldname": "tier",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Tier",
-   "options": "\nGold\nSilver\nBronze\nBeginner",
+   "options": "Partner Tier",
    "permlevel": 1,
    "reqd": 1
   },
@@ -183,6 +200,16 @@
    "description": "When the admin was last emailed the registration link. A new link replaces the old one, so Connect sends one only after the old one expires."
   },
   {
+   "description": "The partner's main email for Frappe. Frappe Cloud marks the invoices of the partner's customers with it, so Connect finds the partner's revenue by it.",
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "no_copy": 1,
+   "options": "Email",
+   "permlevel": 1,
+   "search_index": 1
+  },
+  {
    "default": "1",
    "fieldname": "enabled",
    "fieldtype": "Check",
@@ -206,6 +233,144 @@
    "label": "Rating",
    "precision": "1",
    "read_only": 1
+  },
+  {
+   "fieldname": "section_break_tier",
+   "fieldtype": "Section Break",
+   "label": "Tier, Revenue and Listing"
+  },
+  {
+   "description": "The currency this partner's tier revenue targets use. Set from the country when empty: India uses INR, every other country USD.",
+   "fieldname": "currency",
+   "fieldtype": "Select",
+   "label": "Target Currency",
+   "options": "\nINR\nUSD",
+   "permlevel": 1
+  },
+  {
+   "default": "0",
+   "description": "The daily tier review leaves this partner's tier as it is. Use it for a tier agreed outside the rules, such as a legacy contract.",
+   "fieldname": "keep_tier",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Keep Tier",
+   "permlevel": 1
+  },
+  {
+   "depends_on": "keep_tier",
+   "description": "Why the tier is kept, so anyone opening the partner knows.",
+   "fieldname": "keep_tier_reason",
+   "fieldtype": "Small Text",
+   "label": "Keep Tier Reason",
+   "mandatory_depends_on": "keep_tier",
+   "permlevel": 1
+  },
+  {
+   "description": "Revenue from this partner's Frappe Cloud customers last month. The daily tier review sets it.",
+   "fieldname": "revenue_last_month",
+   "fieldtype": "Currency",
+   "label": "Revenue Last Month",
+   "no_copy": 1,
+   "options": "currency",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Revenue so far this month. The daily tier review sets it.",
+   "fieldname": "revenue_this_month",
+   "fieldtype": "Currency",
+   "label": "Revenue This Month",
+   "no_copy": 1,
+   "options": "currency",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "When the revenue above was last read from Frappe Cloud. Empty means it never was: the partner has no email.",
+   "fieldname": "revenue_updated_on",
+   "fieldtype": "Datetime",
+   "label": "Revenue Updated On",
+   "no_copy": 1,
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_tier",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "The tier last month's revenue, certificates and PMM level earn, from the latest daily review. The tier changes to it only when Apply Tier Changes is on in Integration Settings and Keep Tier is off.",
+   "fieldname": "reviewed_tier",
+   "fieldtype": "Link",
+   "label": "Tier From Last Review",
+   "no_copy": 1,
+   "options": "Partner Tier",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "The tier this month's revenue would give if the month ended today.",
+   "fieldname": "next_tier",
+   "fieldtype": "Link",
+   "label": "Tier This Month Points To",
+   "no_copy": 1,
+   "options": "Partner Tier",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "previous_tier",
+   "fieldtype": "Link",
+   "label": "Previous Tier",
+   "no_copy": 1,
+   "options": "Partner Tier",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "tier_changed_on",
+   "fieldtype": "Date",
+   "label": "Tier Changed On",
+   "no_copy": 1,
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "The day the partner was last turned on for the website. A partner short of certificates is only taken off after 90 days.",
+   "fieldname": "listed_on",
+   "fieldtype": "Date",
+   "label": "Listed On",
+   "no_copy": 1,
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Show if the partner has the certificates its tier needs (or is still within 90 days of being listed), Hide if not, from the latest daily review. Show in Website follows it only when Apply Tier and Listing Changes is on in Integration Settings and Keep Listing As Is is off.",
+   "fieldname": "listing_review",
+   "fieldtype": "Select",
+   "label": "Listing From Last Review",
+   "no_copy": 1,
+   "options": "\nShow\nHide",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "The daily review leaves Show in Website as it is. Use it when staff list or hide a partner by hand on purpose.",
+   "fieldname": "keep_listing",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Keep Listing As Is",
+   "permlevel": 1
+  },
+  {
+   "depends_on": "keep_listing",
+   "description": "Why the listing is kept, so anyone opening the partner knows.",
+   "fieldname": "keep_listing_reason",
+   "fieldtype": "Small Text",
+   "label": "Keep Listing Reason",
+   "mandatory_depends_on": "keep_listing",
+   "permlevel": 1
   },
   {
    "fieldname": "section_break_description",
@@ -700,7 +865,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-12 14:00:00.000000",
+ "modified": "2026-11-15 14:00:00.000000",
  "modified_by": "Administrator",
  "module": "Partner",
  "name": "Partner",

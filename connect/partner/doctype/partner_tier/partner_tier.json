@@ -1,0 +1,120 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:title",
+ "creation": "2026-11-13 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "enabled",
+  "column_break_targets",
+  "target_in_inr",
+  "target_in_usd",
+  "section_break_requirements",
+  "certificates_required",
+  "column_break_requirements",
+  "pmm_required"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "1",
+   "description": "The daily tier review only moves partners into an enabled tier.",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "column_break_targets",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Last month's Frappe Cloud revenue a partner billed in INR needs for this tier. Tiers are ordered by it, highest first.",
+   "fieldname": "target_in_inr",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Monthly Revenue Target (INR)",
+   "non_negative": 1
+  },
+  {
+   "description": "Last month's Frappe Cloud revenue a partner billed in USD needs for this tier.",
+   "fieldname": "target_in_usd",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Monthly Revenue Target (USD)",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "section_break_requirements",
+   "fieldtype": "Section Break",
+   "label": "Requirements"
+  },
+  {
+   "fieldname": "certificates_required",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Certificates Required",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_requirements",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "The lowest Partner Maturity Model level a partner needs for this tier.",
+   "fieldname": "pmm_required",
+   "fieldtype": "Int",
+   "label": "PMM Level Required",
+   "non_negative": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 0,
+ "links": [
+  {
+   "link_doctype": "Partner",
+   "link_fieldname": "tier"
+  }
+ ],
+ "modified": "2026-11-13 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Partner",
+ "name": "Partner Tier",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Partner Reviewer"
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "title",
+ "sort_field": "target_in_inr",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title"
+}

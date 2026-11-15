@@ -14,8 +14,8 @@ from connect.roles import REVIEWER_ROLE
 # A partner who registers in Connect starts at the lowest tier until Frappe sets theirs.
 NEW_PARTNER_TIER = "Beginner"
 
-# The monthly revenue on Frappe Cloud a partner needs before applying, in the currency Frappe Cloud
-# bills their team in: rupees for an Indian partner, dollars for everyone else. As Press has it.
+# The monthly revenue on Frappe Cloud a partner needs before applying, in the partner's target
+# currency: rupees for an Indian partner, dollars for everyone else. As Press has it.
 MRR_TARGETS = {"INR": 10000, "USD": 100}
 
 _APPLICATION_FIELDS = (
@@ -37,7 +37,6 @@ _APPLICATION_FIELDS = (
 	"erp_implementations_range",
 	"incorporation_certificate",
 	"company_logo",
-	"monthly_revenue",
 	"agreed_to_due_diligence",
 	"agreed_to_partnership_agreement",
 )
@@ -147,7 +146,9 @@ class PartnerApplication(Document):
 			frappe.throw(_("Connect your Frappe Cloud account before submitting for approval."))
 
 	def _validate_mrr(self):
-		if flt(self.monthly_revenue) < get_mrr_target(self.registered_country)[1]:
+		"""Keeps the revenue the application was submitted with, for the reviewer."""
+		self.monthly_revenue, _currency, target = get_revenue_and_target(self.partner)
+		if self.monthly_revenue < target:
 			frappe.throw(_("Reach the minimum monthly revenue before submitting for approval."))
 
 	def _apply_approval(self):
@@ -364,21 +365,8 @@ def get_mrr_status():
 	from connect.partner.doctype.partner.partner import _my_partner
 
 	partner = _my_partner()
-
-	# Pull fresh data from Press if the integration is enabled — this way the partner
-	# sees live numbers without waiting for the nightly scheduled sync.
-	try:
-		press_enabled = frappe.db.get_single_value("Integration Settings", "press_enabled")
-		if press_enabled:
-			from connect.partner.press_integration import sync_partner_mrr
-
-			sync_partner_mrr(partner)
-	except Exception:
-		pass  # never let a Press outage block the page load
-
-	doc = _get_partner_application(partner)
-	current_amount = flt(doc.monthly_revenue) if doc else 0
-	currency, target_amount = get_mrr_target(doc.registered_country if doc else None)
+	_refresh_revenue(partner)
+	current_amount, currency, target_amount = get_revenue_and_target(partner)
 
 	return {
 		"current_amount": current_amount,
@@ -389,7 +377,21 @@ def get_mrr_status():
 	}
 
 
-def get_mrr_target(country: str | None) -> tuple[str, int]:
-	"""The currency and minimum monthly revenue for a partner registered in `country`."""
-	currency = "INR" if country == "India" else "USD"
-	return currency, MRR_TARGETS[currency]
+def get_revenue_and_target(partner: str) -> tuple[float, str, int]:
+	"""The partner's revenue last month as Frappe Cloud reports it, its currency, and the minimum it
+	needs to apply. Only Frappe Cloud sets the revenue, so an applicant can't state their own."""
+	revenue, currency = frappe.db.get_value("Partner", partner, ["revenue_last_month", "currency"])
+	return flt(revenue), currency, MRR_TARGETS[currency]
+
+
+def _refresh_revenue(partner: str) -> None:
+	"""Reads the partner's revenue from Frappe Cloud as it opens the page, so it sees today's number.
+	When Frappe Cloud can't be read, the page shows the last saved number."""
+	from connect.partner.press_integration import is_press_enabled, update_partner_revenue
+
+	if not is_press_enabled():
+		return
+	try:
+		update_partner_revenue([partner])
+	except Exception:
+		frappe.log_error(title=f"Could not read revenue from Frappe Cloud for {partner}")

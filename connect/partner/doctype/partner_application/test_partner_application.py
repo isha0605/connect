@@ -34,42 +34,45 @@ class TestPartnerApplicationMRR(IntegrationTestCase):
 		make_partner(PARTNER)
 		make_partner_admin(PARTNER, OWNER)
 
-	def apply(self, country, monthly_revenue):
-		values = {"registered_country": country, "registered_state": "Gujarat" if country == "India" else None}
-		return frappe.get_doc(
-			{
-				"doctype": "Partner Application",
-				"partner": PARTNER,
-				"company_name": PARTNER,
-				"monthly_revenue": monthly_revenue,
-				**values,
-			}
-		).insert(ignore_permissions=True)
+	def apply(self, currency, revenue_last_month):
+		"""The partner's revenue as Frappe Cloud last reported it, and a draft application."""
+		frappe.db.set_value("Partner", PARTNER, {"currency": currency, "revenue_last_month": revenue_last_month})
+		values = {"partner": PARTNER, "company_name": PARTNER, "registered_country": "Germany"}
+		return frappe.get_doc({"doctype": "Partner Application", **values}).insert(ignore_permissions=True)
 
 	def mrr_status(self):
 		frappe.set_user(OWNER)
 		return get_mrr_status()
 
 	def test_an_indian_partner_needs_ten_thousand_rupees(self):
-		self.apply("India", 4000)
+		self.apply("INR", 4000)
 		status = self.mrr_status()
 		self.assertEqual((status["currency"], status["target_amount"]), ("INR", 10000))
 		self.assertEqual(status["progress"], 40)
 		self.assertFalse(status["requirement_complete"])
 
 	def test_a_partner_elsewhere_needs_a_hundred_dollars(self):
-		self.apply("Germany", 120)
+		self.apply("USD", 120)
 		status = self.mrr_status()
 		self.assertEqual((status["currency"], status["target_amount"]), ("USD", 100))
 		self.assertTrue(status["requirement_complete"])
 
 	def test_an_application_below_the_target_cannot_be_submitted(self):
-		doc = self.apply("India", 9999)
+		doc = self.apply("INR", 9999)
 		with self.assertRaisesRegex(frappe.ValidationError, "minimum monthly revenue"):
 			doc._validate_mrr()
 
-		doc.monthly_revenue = 10000
+		frappe.db.set_value("Partner", PARTNER, "revenue_last_month", 10000)
 		doc._validate_mrr()
+		self.assertEqual(doc.monthly_revenue, 10000)
+
+	def test_an_applicant_cannot_state_their_own_revenue(self):
+		self.apply("USD", 0)
+		frappe.set_user(OWNER)
+
+		doc = save_partner_application({"monthly_revenue": 99999})
+
+		self.assertFalse(doc["monthly_revenue"])
 
 	# ---- Before approval the sidebar has only Overview; after, the partner pages ----
 

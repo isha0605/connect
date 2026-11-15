@@ -3,6 +3,7 @@
 
 import frappe
 from frappe.tests import IntegrationTestCase
+from frappe.utils import getdate, today
 
 from connect.partner.doctype.partner.partner import (
 	PRIVATE_PROFILE_FIELDS,
@@ -16,6 +17,8 @@ from connect.partner.doctype.partner.partner import (
 )
 from connect.partner.doctype.partner_review.partner_review import list_partner_reviews
 from connect.patches.rename_partner_is_featured_to_show_in_website import execute as rename_is_featured
+from connect.patches.set_partner_listed_on import execute as set_partner_listed_on
+from connect.patches.set_partner_target_currency import execute as set_partner_target_currency
 
 LISTED = "_Test Visibility Listed Partner"
 PENDING = "_Test Visibility Pending Partner"
@@ -24,7 +27,7 @@ PENDING_MEMBER = "visibility.pending.member@example.test"
 
 def make_partner(partner_name, verification_status):
 	if not frappe.db.exists("Partner", partner_name):
-		tier = next(t for t in frappe.get_meta("Partner").get_field("tier").options.split("\n") if t)
+		tier = "Gold"
 		frappe.get_doc(
 			{"doctype": "Partner", "partner_name": partner_name, "tier": tier, "country": "India", "enabled": 1}
 		).insert(ignore_permissions=True)
@@ -216,8 +219,70 @@ class IntegrationTestServedCountries(IntegrationTestCase):
 		self.assertNotIn(SERVING, [p.name for p in search_partners(served_country="Japan")])
 
 
+INDIAN = "_Test Currency India"
+KENYAN = "_Test Currency Kenya"
+
+
+class IntegrationTestTierFields(IntegrationTestCase):
+	"""A partner's target currency comes from its country, and its listed date from when it was listed."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		remove_partners(INDIAN, KENYAN)
+		self.addCleanup(remove_partners, INDIAN, KENYAN)
+
+	def test_currency_follows_the_country(self):
+		insert_signup_partner(INDIAN)
+		frappe.get_doc({"doctype": "Partner", **partner_values(KENYAN), "country": "Kenya"}).insert()
+
+		self.assertEqual(frappe.db.get_value("Partner", INDIAN, "currency"), "INR")
+		self.assertEqual(frappe.db.get_value("Partner", KENYAN, "currency"), "USD")
+
+	def test_a_set_currency_is_kept(self):
+		frappe.get_doc({"doctype": "Partner", **partner_values(INDIAN), "currency": "USD"}).insert()
+
+		self.assertEqual(frappe.db.get_value("Partner", INDIAN, "currency"), "USD")
+
+	def test_listed_on_is_set_only_when_listing_turns_on(self):
+		insert_signup_partner(INDIAN)
+		partner = frappe.get_doc("Partner", INDIAN)
+		self.assertIsNone(partner.listed_on)
+
+		partner.show_in_website = 1
+		partner.save()
+		self.assertEqual(str(partner.listed_on), today())
+
+		frappe.db.set_value("Partner", INDIAN, "listed_on", "2026-01-01")
+		partner.reload()
+		partner.tagline = "Still listed"
+		partner.save()
+		self.assertEqual(str(partner.listed_on), "2026-01-01")
+
+	def test_currency_patch_fills_only_empty_currencies(self):
+		insert_signup_partner(INDIAN)
+		frappe.get_doc({"doctype": "Partner", **partner_values(KENYAN), "country": "Kenya"}).insert()
+		frappe.db.set_value("Partner", INDIAN, "currency", None)
+		frappe.db.set_value("Partner", KENYAN, "currency", "INR")
+
+		set_partner_target_currency()
+
+		self.assertEqual(frappe.db.get_value("Partner", INDIAN, "currency"), "INR")
+		self.assertEqual(frappe.db.get_value("Partner", KENYAN, "currency"), "INR")
+
+	def test_listed_on_patch_fills_only_empty_dates(self):
+		insert_signup_partner(INDIAN)
+		frappe.get_doc({"doctype": "Partner", **partner_values(KENYAN), "country": "Kenya"}).insert()
+		frappe.db.set_value("Partner", INDIAN, {"show_in_website": 1, "listed_on": None})
+		frappe.db.set_value("Partner", KENYAN, {"show_in_website": 1, "listed_on": "2026-01-01"})
+
+		set_partner_listed_on()
+
+		self.assertEqual(frappe.db.get_value("Partner", INDIAN, "listed_on"), getdate())
+		self.assertEqual(frappe.db.get_value("Partner", KENYAN, "listed_on"), getdate("2026-01-01"))
+
+
 def partner_values(partner_name):
-	tier = next(t for t in frappe.get_meta("Partner").get_field("tier").options.split("\n") if t)
+	tier = "Gold"
 	return {"partner_name": partner_name, "tier": tier, "country": "India"}
 
 

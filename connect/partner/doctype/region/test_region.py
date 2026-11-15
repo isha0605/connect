@@ -37,7 +37,7 @@ def make_partner(country):
 		partner.country = country
 		return partner.save(ignore_permissions=True)
 
-	tier = next(t for t in frappe.get_meta("Partner").get_field("tier").options.split("\n") if t)
+	tier = "Gold"
 	return frappe.get_doc(
 		{"doctype": "Partner", "partner_name": PARTNER, "tier": tier, "country": country, "enabled": 1}
 	).insert(ignore_permissions=True)

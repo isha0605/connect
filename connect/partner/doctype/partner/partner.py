@@ -9,7 +9,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.query_builder.functions import Max
-from frappe.utils import cint, flt, now_datetime
+from frappe.utils import cint, flt, now_datetime, today
 from frappe.utils.data import cast
 
 from connect.partner.industries import (
@@ -24,9 +24,13 @@ from connect.partner.industries import (
 from connect.partner.logo import attach_normalized_logos
 from connect.partner.story_image import queue_missing_story_images
 from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_membership
+from connect.partner.doctype.partner_tier.partner_tier import get_tier_order
 from connect.partner.doctype.region.region import get_filter_countries, get_region_of_country
 from connect.starter_packs.doctype.starter_pack.starter_pack import get_hours_range
 from connect.permissions import _has_full_access, _is_partner_admin
+
+# Partners in India are measured against the INR tier targets, every other partner against USD.
+INR_COUNTRY = "India"
 
 DIMENSION_SCORE_FIELDS = (
 	"business_understanding",
@@ -50,10 +54,18 @@ class Partner(Document):
 		self.name = name
 
 	def validate(self):
+		self.validate_keep_reasons()
 		self.validate_hourly_rate()
 		self.validate_served_countries()
 		validate_industries(self)
 		self.set_starter_pack_sequence()
+
+	def validate_keep_reasons(self):
+		"""Staff who stop the daily review changing a partner say why, so others know."""
+		if self.keep_tier and not (self.keep_tier_reason or "").strip():
+			frappe.throw(_("Say why the tier is kept, in Keep Tier Reason."), frappe.MandatoryError)
+		if self.keep_listing and not (self.keep_listing_reason or "").strip():
+			frappe.throw(_("Say why the listing is kept, in Keep Listing Reason."), frappe.MandatoryError)
 
 	def validate_hourly_rate(self):
 		if flt(self.hourly_rate) < 0:
@@ -100,11 +112,33 @@ class Partner(Document):
 	def before_save(self):
 		self.region = get_region_of_country(self.country)
 		self.countries_served = len(self.served_countries)
+		self.currency = self.currency or get_target_currency(self.country)
+		self.set_listed_on()
+
+	def set_listed_on(self):
+		"""Delisting gives a newly listed partner 90 days, counted from this date."""
+		if self.show_in_website and (self.is_new() or self.has_value_changed("show_in_website")):
+			self.listed_on = today()
+
+	@frappe.whitelist()
+	def update_revenue(self):
+		"""Desk's Update Revenue button: reads this partner's revenue from Frappe Cloud now."""
+		from connect.partner.press_integration import update_revenue_now
+
+		self.check_permission("write")
+		update_revenue_now(self.name)
 
 	def on_update(self):
 		# background-fetches each success story's own frappe.io cover photo —
 		# never blocks this save, and no-ops for rows that already have one
 		queue_missing_story_images(self.get("success_stories"))
+
+
+def get_target_currency(country: str | None) -> str | None:
+	"""The currency of the tier targets a partner in this country is measured against."""
+	if not country:
+		return None
+	return "INR" if country == INR_COUNTRY else "USD"
 
 
 def save_imported_partner(frappe_io_id: str, values: dict) -> str:
@@ -176,9 +210,14 @@ BASE_PARTNER_FILTERS = [
 	["Partner", "enabled", "=", 1],
 	["Partner", "verification_status", "=", VERIFIED],
 ]
-# Workflow state the public profile never shows: unpublished edits and Frappe-side flags.
+# What the public profile never shows: unpublished edits, Frappe-side flags, contact and account
+# details, and the partner's revenue and tier history.
 PRIVATE_PROFILE_FIELDS = (
 	"profile_draft", "cloud_registration", "cloud_registration_sent_on", "show_in_website", "starter_pack_sequence",
+	"email",
+	"currency", "revenue_last_month", "revenue_this_month", "revenue_updated_on", "next_tier", "previous_tier",
+	"tier_changed_on", "reviewed_tier", "keep_tier", "keep_tier_reason", "listed_on", "listing_review",
+	"keep_listing", "keep_listing_reason",
 )
 
 
@@ -806,15 +845,10 @@ def list_directory_filter_facets(search=None, tier=None, industry=None, country=
 
 def list_partner_tiers():
 	"""Returns the tiers actually in use among directory-listed partners (same show_in_website/enabled
-	scope as list_directory_partners), highest first as the Tier field lists them, for the Tier filter dropdown."""
+	scope as list_directory_partners), highest first, for the Tier filter dropdown."""
 	rows = frappe.get_all("Partner", fields=["tier"], filters=BASE_PARTNER_FILTERS, distinct=True)
 	present = {row.tier for row in rows if row.tier}
-	return [tier for tier in tier_order() if tier in present]
-
-
-def tier_order() -> list[str]:
-	"""Partner tiers, highest first, as the Tier field lists them."""
-	return [tier for tier in frappe.get_meta("Partner").get_options("tier").split("\n") if tier]
+	return [tier for tier in get_tier_order() if tier in present]
 
 
 def list_partner_countries():
