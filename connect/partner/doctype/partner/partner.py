@@ -54,10 +54,16 @@ class Partner(Document):
 		self.name = name
 
 	def validate(self):
+		self.validate_keep_reasons()
 		self.validate_hourly_rate()
 		self.validate_served_countries()
 		validate_industries(self)
 		self.set_starter_pack_sequence()
+
+	def validate_keep_reasons(self):
+		"""Staff who stop the daily review changing a partner say why, so others know."""
+		if self.keep_tier and not (self.keep_tier_reason or "").strip():
+			frappe.throw(_("Say why the tier is kept, in Keep Tier Reason."), frappe.MandatoryError)
 
 	def validate_hourly_rate(self):
 		if flt(self.hourly_rate) < 0:
@@ -201,7 +207,8 @@ BASE_PARTNER_FILTERS = [
 PRIVATE_PROFILE_FIELDS = (
 	"profile_draft", "cloud_registration", "cloud_registration_sent_on", "show_in_website", "starter_pack_sequence",
 	"email",
-	"currency", "revenue_last_month", "revenue_this_month", "revenue_updated_on",
+	"currency", "revenue_last_month", "revenue_this_month", "revenue_updated_on", "next_tier", "previous_tier",
+	"tier_changed_on", "reviewed_tier", "keep_tier", "keep_tier_reason",
 )
 
 

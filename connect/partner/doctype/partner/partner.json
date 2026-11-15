@@ -23,9 +23,16 @@
   "rating",
   "section_break_tier",
   "currency",
+  "keep_tier",
+  "keep_tier_reason",
   "revenue_last_month",
   "revenue_this_month",
   "revenue_updated_on",
+  "column_break_tier",
+  "reviewed_tier",
+  "next_tier",
+  "previous_tier",
+  "tier_changed_on",
   "section_break_description",
   "description",
   "origin_story",
@@ -237,6 +244,24 @@
    "permlevel": 1
   },
   {
+   "default": "0",
+   "description": "The daily tier review leaves this partner's tier as it is. Use it for a tier agreed outside the rules, such as a legacy contract.",
+   "fieldname": "keep_tier",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Keep Tier",
+   "permlevel": 1
+  },
+  {
+   "depends_on": "keep_tier",
+   "description": "Why the tier is kept, so anyone opening the partner knows.",
+   "fieldname": "keep_tier_reason",
+   "fieldtype": "Small Text",
+   "label": "Keep Tier Reason",
+   "mandatory_depends_on": "keep_tier",
+   "permlevel": 1
+  },
+  {
    "description": "Revenue from this partner's Frappe Cloud customers last month. The daily tier review sets it.",
    "fieldname": "revenue_last_month",
    "fieldtype": "Currency",
@@ -261,6 +286,47 @@
    "fieldname": "revenue_updated_on",
    "fieldtype": "Datetime",
    "label": "Revenue Updated On",
+   "no_copy": 1,
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_tier",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "The tier last month's revenue, certificates and PMM level earn, from the latest daily review. The tier changes to it only when Apply Tier Changes is on in Integration Settings and Keep Tier is off.",
+   "fieldname": "reviewed_tier",
+   "fieldtype": "Link",
+   "label": "Tier From Last Review",
+   "no_copy": 1,
+   "options": "Partner Tier",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "The tier this month's revenue would give if the month ended today.",
+   "fieldname": "next_tier",
+   "fieldtype": "Link",
+   "label": "Tier This Month Points To",
+   "no_copy": 1,
+   "options": "Partner Tier",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "previous_tier",
+   "fieldtype": "Link",
+   "label": "Previous Tier",
+   "no_copy": 1,
+   "options": "Partner Tier",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "tier_changed_on",
+   "fieldtype": "Date",
+   "label": "Tier Changed On",
    "no_copy": 1,
    "permlevel": 1,
    "read_only": 1

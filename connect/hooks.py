@@ -295,7 +295,8 @@ scheduler_events = {
 	"daily": [
 		"connect.customer.doctype.customer_project.hiring.expire_hire_requests",
 		"connect.partner.response_time.recompute_all_response_times",
-		"connect.partner.press_integration.update_all_partner_revenue",
+		# Partner revenue, then tiers: the tier review needs today's revenue.
+		"connect.partner.daily_review.run_daily_review",
 		"connect.partner.doctype.partner_certificate.partner_certificate.recount_partners_with_expired_certificates",
 		"connect.partner.doctype.certificate_application.certificate_application.check_all_approved_applications",
 	],
