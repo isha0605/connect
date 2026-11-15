@@ -146,7 +146,7 @@ export function isStoryOver(story, field) {
 
 // Fewer logos than this make a sparse row, so the profile leaves it out.
 export const MIN_CLIENT_LOGOS = 4
-const CLIENT_LOGOS_SHOWN = 6
+export const CLIENT_LOGOS_SHOWN = 6
 // Each logo covers about the same area, so a tall mark isn't dwarfed by a wide wordmark. Heavy
 // artwork (more of it inked, measured by connect.partner.logo) gets a little less, light artwork
 // a little more, so no logo looks louder than the rest.

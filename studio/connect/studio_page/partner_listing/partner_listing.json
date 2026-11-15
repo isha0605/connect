@@ -80,57 +80,110 @@
             "text": "{{ saveStatus }}"
            },
            "componentSlots": {},
-           "visibilityCondition": "canEdit && saveStatus"
+           "visibilityCondition": "isEditing && saveStatus"
           },
           {
-           "componentId": "header-mode",
-           "componentName": "TabButtons",
+           "componentId": "header-unpublished",
+           "componentName": "TextBlock",
            "componentProps": {
-            "modelValue": {
-             "$type": "variable",
-             "name": "listingMode"
-            },
-            "options": [
-             {
-              "iconLeft": "lucide-pencil",
-              "label": "Edit",
-              "value": "edit"
-             },
-             {
-              "iconLeft": "lucide-eye",
-              "label": "Preview",
-              "value": "preview"
-             }
-            ]
+            "tag": "p",
+            "text": "Unpublished changes"
            },
-           "componentSlots": {},
-           "visibilityCondition": "canEdit"
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "fontSize": "13px",
+            "lineHeight": "20px",
+            "marginRight": "4px"
+           },
+           "visibilityCondition": "canEdit && isViewing && hasUnpublished"
           },
           {
-           "componentEvents": {
-            "click": {
-             "action": "Run Script",
-             "event": "click",
-             "script": "discardOpen.value = true;"
-            }
-           },
-           "componentId": "pl-discard",
+           "componentId": "header-copy-link",
            "componentName": "Button",
            "componentProps": {
-            "label": "Discard",
+            "icon": "lucide-link",
             "variant": "subtle"
            },
-           "componentSlots": {},
-           "visibilityCondition": "canEdit && hasUnpublished"
-          },
-          {
            "componentEvents": {
             "click": {
              "action": "Run Script",
              "event": "click",
-             "script": "publishListing();"
+             "script": "copyProfileLink();"
             }
            },
+           "visibilityCondition": "profile && isViewing",
+           "attributes": {
+            "aria-label": "Copy the link to your public profile",
+            "title": "Copy link"
+           }
+          },
+          {
+           "componentId": "header-edit",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Edit profile",
+            "variant": "subtle"
+           },
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "listingMode.value = 'edit';"
+            }
+           },
+           "visibilityCondition": "canEdit && isViewing"
+          },
+          {
+           "componentId": "header-back",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Back to editing",
+            "iconLeft": "lucide-pencil",
+            "variant": "subtle"
+           },
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "listingMode.value = 'edit';"
+            }
+           },
+           "visibilityCondition": "canEdit && listingMode === 'preview'"
+          },
+          {
+           "componentId": "header-preview",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Preview",
+            "iconLeft": "lucide-eye",
+            "variant": "subtle"
+           },
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "listingMode.value = 'preview';"
+            }
+           },
+           "visibilityCondition": "isEditing"
+          },
+          {
+           "componentId": "pl-cancel",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "variant": "subtle"
+           },
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "cancelEditing();"
+            }
+           },
+           "visibilityCondition": "canEdit && !isViewing"
+          },
+          {
            "componentId": "pl-publish",
            "componentName": "Button",
            "componentProps": {
@@ -138,8 +191,14 @@
             "loading": "{{ publishing }}",
             "variant": "solid"
            },
-           "componentSlots": {},
-           "visibilityCondition": "canEdit && hasUnpublished"
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "publishListing();"
+            }
+           },
+           "visibilityCondition": "canEdit && !isViewing"
           }
          ],
          "componentId": "header-actions",
@@ -236,39 +295,6 @@
               {
                "baseStyles": {
                 "alignItems": "center",
-                "borderBottom": "1px solid var(--outline-gray-1)",
-                "display": "flex",
-                "justifyContent": "space-between",
-                "minHeight": "32px",
-                "paddingBottom": "8px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-5)",
-                  "fontSize": "13px",
-                  "fontWeight": "420",
-                  "letterSpacing": "0.02em",
-                  "lineHeight": "20px"
-                 },
-                 "componentId": "name-label",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "tag": "p",
-                  "text": "Name and tagline"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "name-head",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "alignItems": "center",
                 "display": "flex",
                 "gap": "16px"
                },
@@ -289,14 +315,52 @@
                  "componentName": "container",
                  "componentProps": {},
                  "componentSlots": {},
-                 "originalElement": "div"
+                 "originalElement": "div",
+                 "visibilityCondition": "!isEditing"
+                },
+                {
+                 "componentId": "name-logo-menu",
+                 "componentName": "Dropdown",
+                 "componentProps": {
+                  "align": "start",
+                  "options": "{{ logoMenu }}"
+                 },
+                 "visibilityCondition": "isEditing",
+                 "children": [
+                  {
+                   "componentId": "name-logo-edit",
+                   "componentName": "container",
+                   "originalElement": "div",
+                   "baseStyles": {
+                    "backgroundColor": "{{ markImage === 'none' ? 'var(--surface-gray-2)' : 'transparent' }}",
+                    "backgroundImage": "{{ markImage }}",
+                    "backgroundPosition": "center",
+                    "backgroundRepeat": "no-repeat",
+                    "backgroundSize": "contain",
+                    "borderRadius": "10px",
+                    "cursor": "pointer",
+                    "flexShrink": "0",
+                    "height": "48px",
+                    "opacity": "{{ uploading === 'logo' || uploading === 'logo_icon' ? '0.5' : '1' }}",
+                    "width": "48px"
+                   },
+                   "children": [],
+                   "attributes": {
+                    "role": "button",
+                    "tabindex": "0",
+                    "aria-label": "Change your logo",
+                    "title": "Change your logo"
+                   }
+                  }
+                 ]
                 },
                 {
                  "baseStyles": {
                   "display": "flex",
                   "flexDirection": "column",
                   "gap": "2px",
-                  "minWidth": "0px"
+                  "minWidth": "0px",
+                  "flex": "1 1 0px"
                  },
                  "children": [
                   {
@@ -391,7 +455,66 @@
                     "tag": "p",
                     "text": "{{ profile.tagline || 'No tagline yet' }}"
                    },
-                   "componentSlots": {}
+                   "componentSlots": {},
+                   "visibilityCondition": "!isEditing"
+                  },
+                  {
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "gap": "6px",
+                    "minWidth": "0px",
+                    "marginTop": "4px"
+                   },
+                   "children": [
+                    {
+                     "componentId": "edit-tagline-input",
+                     "componentName": "FormControl",
+                     "componentProps": {
+                      "modelValue": {
+                       "$type": "variable",
+                       "name": "draft.tagline"
+                      },
+                      "placeholder": "What you do, in one line",
+                      "size": "sm",
+                      "type": "text",
+                      "variant": "subtle",
+                      "aria-label": "Tagline"
+                     },
+                     "componentSlots": {}
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "{{ isOver('tagline') ? 'var(--ink-red-7)' : 'var(--ink-gray-5)' }}",
+                      "fontSize": "12px",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "16px",
+                      "marginTop": "4px",
+                      "textAlign": "right",
+                      "display": "{{ isOver('tagline') ? 'block' : '' }}"
+                     },
+                     "componentId": "edit-tagline-count",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "{{ counter('tagline') }}"
+                     },
+                     "componentSlots": {},
+                     "classes": [
+                      "hidden",
+                      "group-focus-within:block"
+                     ]
+                    }
+                   ],
+                   "componentId": "edit-tagline",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div",
+                   "classes": [
+                    "group"
+                   ],
+                   "visibilityCondition": "isEditing"
                   }
                  ],
                  "componentId": "name-text",
@@ -405,332 +528,7 @@
                "componentName": "container",
                "componentProps": {},
                "componentSlots": {},
-               "originalElement": "div",
-               "visibilityCondition": "!isEditing"
-              },
-              {
-               "baseStyles": {
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "16px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "display": "grid",
-                  "gap": "16px",
-                  "gridTemplateColumns": "repeat(2, minmax(0, 1fr))"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "display": "flex",
-                    "gap": "12px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "backgroundColor": "var(--surface-gray-2)",
-                      "backgroundImage": "{{ imageTile(draft.logo) }}",
-                      "backgroundPosition": "center",
-                      "backgroundRepeat": "no-repeat",
-                      "backgroundSize": "contain",
-                      "border": "1px solid var(--outline-gray-1)",
-                      "borderRadius": "10px",
-                      "flexShrink": "0",
-                      "height": "64px",
-                      "width": "64px"
-                     },
-                     "componentId": "edit-logo-tile",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "display": "flex",
-                      "flexDirection": "column",
-                      "gap": "6px"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "var(--ink-gray-5)",
-                        "fontSize": "12px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.15"
-                       },
-                       "componentId": "edit-logo-label",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "label",
-                        "text": "Logo"
-                       },
-                       "componentSlots": {}
-                      },
-                      {
-                       "componentEvents": {
-                        "click": {
-                         "action": "Run Script",
-                         "event": "click",
-                         "script": "uploadLogo();"
-                        }
-                       },
-                       "componentId": "edit-logo-btn",
-                       "componentName": "Button",
-                       "componentProps": {
-                        "label": "{{ uploadLabel('logo', 'logo', draft.logo) }}",
-                        "loading": "{{ uploading !== '' }}",
-                        "variant": "subtle"
-                       },
-                       "componentSlots": {},
-                       "visibilityCondition": "canEdit"
-                      }
-                     ],
-                     "componentId": "edit-logo-text",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "originalElement": "div"
-                    }
-                   ],
-                   "componentId": "edit-logo",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "display": "flex",
-                    "gap": "12px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "backgroundColor": "var(--surface-gray-2)",
-                      "backgroundImage": "{{ imageTile(draft.logo_icon) }}",
-                      "backgroundPosition": "center",
-                      "backgroundRepeat": "no-repeat",
-                      "backgroundSize": "contain",
-                      "border": "1px solid var(--outline-gray-1)",
-                      "borderRadius": "10px",
-                      "flexShrink": "0",
-                      "height": "64px",
-                      "width": "64px"
-                     },
-                     "componentId": "edit-mark-tile",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "display": "flex",
-                      "flexDirection": "column",
-                      "gap": "6px"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "var(--ink-gray-5)",
-                        "fontSize": "12px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.15"
-                       },
-                       "componentId": "edit-mark-label",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "label",
-                        "text": "Mark (square icon)"
-                       },
-                       "componentSlots": {}
-                      },
-                      {
-                       "componentEvents": {
-                        "click": {
-                         "action": "Run Script",
-                         "event": "click",
-                         "script": "uploadMark();"
-                        }
-                       },
-                       "componentId": "edit-mark-btn",
-                       "componentName": "Button",
-                       "componentProps": {
-                        "label": "{{ uploadLabel('logo_icon', 'mark', draft.logo_icon) }}",
-                        "loading": "{{ uploading !== '' }}",
-                        "variant": "subtle"
-                       },
-                       "componentSlots": {},
-                       "visibilityCondition": "canEdit"
-                      }
-                     ],
-                     "componentId": "edit-mark-text",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "originalElement": "div"
-                    }
-                   ],
-                   "componentId": "edit-mark",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  }
-                 ],
-                 "componentId": "edit-logos",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "6px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-5)",
-                    "fontSize": "12px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "1.15"
-                   },
-                   "componentId": "edit-company-label",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "label",
-                    "text": "Company name"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8)",
-                    "fontSize": "14px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "22px"
-                   },
-                   "componentId": "edit-company-value",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "p",
-                    "text": "{{ listingName }}"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-5)",
-                    "fontSize": "13px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "20px"
-                   },
-                   "componentId": "edit-company-hint",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "p",
-                    "text": "To change your company name, contact Frappe."
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "edit-company",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "flex",
-                  "flexDirection": "column",
-                  "gap": "6px",
-                  "minWidth": "0px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-5)",
-                    "fontSize": "12px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "1.15"
-                   },
-                   "componentId": "edit-tagline-label",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "label",
-                    "text": "Tagline"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "componentId": "edit-tagline-input",
-                   "componentName": "FormControl",
-                   "componentProps": {
-                    "modelValue": {
-                     "$type": "variable",
-                     "name": "draft.tagline"
-                    },
-                    "placeholder": "What you do, in one line",
-                    "size": "sm",
-                    "type": "text",
-                    "variant": "subtle"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "{{ isOver('tagline') ? 'var(--ink-red-7)' : 'var(--ink-gray-5)' }}",
-                    "fontSize": "12px",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "16px",
-                    "marginTop": "4px",
-                    "textAlign": "right",
-                    "display": "{{ isOver('tagline') ? 'block' : '' }}"
-                   },
-                   "componentId": "edit-tagline-count",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "p",
-                    "text": "{{ counter('tagline') }}"
-                   },
-                   "componentSlots": {},
-                   "classes": [
-                    "hidden",
-                    "group-focus-within:block"
-                   ]
-                  }
-                 ],
-                 "componentId": "edit-tagline",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div",
-                 "classes": [
-                  "group"
-                 ]
-                }
-               ],
-               "componentId": "edit-name",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div",
-               "visibilityCondition": "isEditing"
+               "originalElement": "div"
               }
              ],
              "componentId": "name-section",
@@ -746,40 +544,6 @@
               "gap": "20px"
              },
              "children": [
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "borderBottom": "1px solid var(--outline-gray-1)",
-                "display": "flex",
-                "justifyContent": "space-between",
-                "minHeight": "32px",
-                "paddingBottom": "8px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-5)",
-                  "fontSize": "13px",
-                  "fontWeight": "420",
-                  "letterSpacing": "0.02em",
-                  "lineHeight": "20px"
-                 },
-                 "componentId": "photos-label",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "tag": "p",
-                  "text": "Photos and video"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "photos-head",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div",
-               "visibilityCondition": "!isEditing"
-              },
               {
                "baseStyles": {
                 "display": "grid",
@@ -1047,57 +811,55 @@
              "baseStyles": {
               "display": "flex",
               "flexDirection": "column",
-              "gap": "20px"
+              "gap": "16px"
              },
              "children": [
               {
                "baseStyles": {
                 "alignItems": "center",
-                "borderBottom": "1px solid var(--outline-gray-1)",
                 "display": "flex",
                 "justifyContent": "space-between",
-                "minHeight": "32px",
-                "paddingBottom": "8px"
+                "gap": "12px"
                },
                "children": [
                 {
                  "baseStyles": {
-                  "color": "var(--ink-gray-5)",
-                  "fontSize": "13px",
-                  "fontWeight": "420",
-                  "letterSpacing": "0.02em",
-                  "lineHeight": "20px"
+                  "color": "var(--ink-gray-9)",
+                  "fontSize": "16px",
+                  "fontWeight": "600",
+                  "lineHeight": "24px"
                  },
                  "componentId": "logos-label",
                  "componentName": "TextBlock",
                  "componentProps": {
-                  "tag": "p",
-                  "text": "Client logos"
+                  "tag": "h3",
+                  "text": "Clients from your success stories"
                  },
                  "componentSlots": {}
                 },
                 {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-5)",
-                  "fontSize": "13px",
-                  "fontWeight": "420",
-                  "letterSpacing": "0.02em",
-                  "lineHeight": "20px"
-                 },
-                 "componentId": "logos-note",
-                 "componentName": "TextBlock",
+                 "componentId": "logos-submit",
+                 "componentName": "Button",
                  "componentProps": {
-                  "tag": "p",
-                  "text": "From your success stories"
+                  "label": "Submit a story",
+                  "iconRight": "lucide-external-link",
+                  "variant": "subtle"
                  },
-                 "componentSlots": {}
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "submitStory();"
+                  }
+                 }
                 }
                ],
                "componentId": "logos-head",
                "componentName": "container",
                "componentProps": {},
                "componentSlots": {},
-               "originalElement": "div"
+               "originalElement": "div",
+               "visibilityCondition": "isEditing"
               },
               {
                "baseStyles": {
@@ -1160,7 +922,59 @@
                  "slotId": "logos-row:default"
                 }
                },
-               "visibilityCondition": "clientLogos.length"
+               "visibilityCondition": "!isEditing && clientLogos.length"
+              },
+              {
+               "componentId": "edit-logos",
+               "componentName": "Repeater",
+               "componentProps": {
+                "data": "{{ editLogos }}",
+                "dataKey": "position",
+                "emptyStateMessage": ""
+               },
+               "baseStyles": {
+                "display": "grid",
+                "gap": "12px",
+                "gridTemplateColumns": "repeat(4, minmax(0, 1fr))"
+               },
+               "visibilityCondition": "isEditing && editLogos.length",
+               "children": [
+                {
+                 "componentId": "edit-logo-tile",
+                 "componentName": "container",
+                 "originalElement": "div",
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "backgroundColor": "var(--surface-gray-2)",
+                  "borderRadius": "10px",
+                  "display": "flex",
+                  "height": "64px",
+                  "justifyContent": "center"
+                 },
+                 "children": [
+                  {
+                   "componentId": "edit-logo-image",
+                   "componentName": "container",
+                   "originalElement": "div",
+                   "baseStyles": {
+                    "backgroundImage": "{{ imageTile(dataItem.logo) }}",
+                    "backgroundPosition": "center",
+                    "backgroundRepeat": "no-repeat",
+                    "backgroundSize": "contain",
+                    "filter": "grayscale(1) contrast(0.85)",
+                    "height": "32px",
+                    "opacity": "0.75",
+                    "width": "70%"
+                   },
+                   "children": [],
+                   "attributes": {
+                    "role": "img",
+                    "aria-label": "{{ dataItem.client_name || 'Client logo' }}"
+                   }
+                  }
+                 ]
+                }
+               ]
               },
               {
                "baseStyles": {
@@ -1193,39 +1007,6 @@
               "gap": "20px"
              },
              "children": [
-              {
-               "baseStyles": {
-                "alignItems": "center",
-                "borderBottom": "1px solid var(--outline-gray-1)",
-                "display": "flex",
-                "justifyContent": "space-between",
-                "minHeight": "32px",
-                "paddingBottom": "8px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-5)",
-                  "fontSize": "13px",
-                  "fontWeight": "420",
-                  "letterSpacing": "0.02em",
-                  "lineHeight": "20px"
-                 },
-                 "componentId": "details-label",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "tag": "p",
-                  "text": "Details"
-                 },
-                 "componentSlots": {}
-                }
-               ],
-               "componentId": "details-head",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
               {
                "baseStyles": {
                 "border": "1px solid var(--outline-gray-2)",
@@ -1695,7 +1476,7 @@
                          "componentName": "TextBlock",
                          "componentProps": {
                           "tag": "p",
-                          "text": "{{ isEditing ? 'Rate (\u20b9 per hour)' : 'Rate' }}"
+                          "text": "Rate"
                          },
                          "componentSlots": {}
                         }
@@ -1735,9 +1516,49 @@
                         "placeholder": "2500",
                         "size": "sm",
                         "type": "number",
-                        "variant": "subtle"
+                        "variant": "subtle",
+                        "aria-label": "Rate in rupees per hour"
                        },
-                       "componentSlots": {},
+                       "componentSlots": {
+                        "prefix": {
+                         "parentBlockId": "edit-rate-input",
+                         "slotId": "edit-rate-input:prefix",
+                         "slotContent": [
+                          {
+                           "componentId": "edit-rate-prefix",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "span",
+                            "text": "\u20b9"
+                           },
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)",
+                            "fontSize": "13px",
+                            "lineHeight": "20px"
+                           }
+                          }
+                         ]
+                        },
+                        "suffix": {
+                         "parentBlockId": "edit-rate-input",
+                         "slotId": "edit-rate-input:suffix",
+                         "slotContent": [
+                          {
+                           "componentId": "edit-rate-suffix",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "span",
+                            "text": "/hr"
+                           },
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)",
+                            "fontSize": "13px",
+                            "lineHeight": "20px"
+                           }
+                          }
+                         ]
+                        }
+                       },
                        "visibilityCondition": "isEditing"
                       }
                      ],
@@ -1746,113 +1567,6 @@
                      "componentProps": {},
                      "componentSlots": {},
                      "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "borderBottom": "1px solid var(--outline-gray-1)",
-                      "display": "flex",
-                      "flexDirection": "column",
-                      "gap": "6px",
-                      "padding": "14px 0"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "display": "flex",
-                        "gap": "6px"
-                       },
-                       "children": [
-                        {
-                         "baseStyles": {
-                          "color": "var(--ink-gray-7)",
-                          "fontSize": "14px",
-                          "fontWeight": "420",
-                          "letterSpacing": "0.02em",
-                          "lineHeight": "22px"
-                         },
-                         "componentId": "details-countries-label",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "tag": "p",
-                          "text": "Countries served"
-                         },
-                         "componentSlots": {}
-                        }
-                       ],
-                       "componentId": "details-countries-head",
-                       "componentName": "container",
-                       "componentProps": {},
-                       "componentSlots": {},
-                       "originalElement": "div"
-                      },
-                      {
-                       "baseStyles": {
-                        "display": "flex",
-                        "flexWrap": "wrap",
-                        "gap": "6px"
-                       },
-                       "componentId": "details-countries-chips",
-                       "componentName": "Repeater",
-                       "componentProps": {
-                        "data": "{{ details.countries }}",
-                        "dataKey": "",
-                        "emptyStateMessage": ""
-                       },
-                       "componentSlots": {
-                        "default": {
-                         "parentBlockId": "details-countries-chips",
-                         "slotContent": [
-                          {
-                           "baseStyles": {
-                            "backgroundColor": "var(--surface-gray-2)",
-                            "borderRadius": "8px",
-                            "color": "var(--ink-gray-7)",
-                            "fontSize": "13px",
-                            "fontWeight": "420",
-                            "letterSpacing": "0.02em",
-                            "lineHeight": "20px",
-                            "padding": "1px 8px",
-                            "whiteSpace": "nowrap"
-                           },
-                           "componentId": "details-countries-chips-chip",
-                           "componentName": "TextBlock",
-                           "componentProps": {
-                            "tag": "p",
-                            "text": "{{ dataItem }}"
-                           },
-                           "componentSlots": {}
-                          }
-                         ],
-                         "slotId": "details-countries-chips:default"
-                        }
-                       },
-                       "visibilityCondition": "details.countries.length"
-                      },
-                      {
-                       "baseStyles": {
-                        "color": "var(--ink-gray-5)",
-                        "fontSize": "14px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "22px"
-                       },
-                       "componentId": "details-countries-empty",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "p",
-                        "text": "Not added yet"
-                       },
-                       "componentSlots": {},
-                       "visibilityCondition": "!details.countries.length"
-                      }
-                     ],
-                     "componentId": "details-countries",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "originalElement": "div",
-                     "visibilityCondition": "!isEditing"
                     },
                     {
                      "baseStyles": {
@@ -2392,129 +2106,6 @@
                      "componentProps": {},
                      "componentSlots": {},
                      "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "borderBottom": "none",
-                      "display": "flex",
-                      "flexDirection": "column",
-                      "gap": "6px",
-                      "padding": "14px 0"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "alignItems": "center",
-                        "display": "flex",
-                        "gap": "6px"
-                       },
-                       "children": [
-                        {
-                         "baseStyles": {
-                          "color": "var(--ink-gray-7)",
-                          "fontSize": "14px",
-                          "fontWeight": "420",
-                          "letterSpacing": "0.02em",
-                          "lineHeight": "22px"
-                         },
-                         "componentId": "details-works-label",
-                         "componentName": "TextBlock",
-                         "componentProps": {
-                          "tag": "p",
-                          "text": "Works"
-                         },
-                         "componentSlots": {}
-                        }
-                       ],
-                       "componentId": "details-works-head",
-                       "componentName": "container",
-                       "componentProps": {},
-                       "componentSlots": {},
-                       "originalElement": "div"
-                      },
-                      {
-                       "baseStyles": {
-                        "display": "flex",
-                        "flexWrap": "wrap",
-                        "gap": "6px"
-                       },
-                       "componentId": "details-works-chips",
-                       "componentName": "Repeater",
-                       "componentProps": {
-                        "data": "{{ details.works }}",
-                        "dataKey": "",
-                        "emptyStateMessage": ""
-                       },
-                       "componentSlots": {
-                        "default": {
-                         "parentBlockId": "details-works-chips",
-                         "slotContent": [
-                          {
-                           "baseStyles": {
-                            "backgroundColor": "var(--surface-gray-2)",
-                            "borderRadius": "8px",
-                            "color": "var(--ink-gray-7)",
-                            "fontSize": "13px",
-                            "fontWeight": "420",
-                            "letterSpacing": "0.02em",
-                            "lineHeight": "20px",
-                            "padding": "1px 8px",
-                            "whiteSpace": "nowrap"
-                           },
-                           "componentId": "details-works-chips-chip",
-                           "componentName": "TextBlock",
-                           "componentProps": {
-                            "tag": "p",
-                            "text": "{{ dataItem }}"
-                           },
-                           "componentSlots": {}
-                          }
-                         ],
-                         "slotId": "details-works-chips:default"
-                        }
-                       },
-                       "visibilityCondition": "!isEditing && (details.works.length)"
-                      },
-                      {
-                       "baseStyles": {
-                        "color": "var(--ink-gray-5)",
-                        "fontSize": "14px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "22px"
-                       },
-                       "componentId": "details-works-empty",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "p",
-                        "text": "Not added yet"
-                       },
-                       "componentSlots": {},
-                       "visibilityCondition": "!isEditing && (!details.works.length)"
-                      },
-                      {
-                       "blockName": "ChipSelect",
-                       "componentId": "details-works-input",
-                       "componentName": "ChipSelect",
-                       "componentProps": {
-                        "label": "Works",
-                        "modelValue": {
-                         "$type": "variable",
-                         "name": "draft.delivery_options"
-                        },
-                        "options": "{{ deliveryOptions }}",
-                        "placeholder": "Select"
-                       },
-                       "componentSlots": {},
-                       "isCustomVueComponent": true,
-                       "visibilityCondition": "isEditing"
-                      }
-                     ],
-                     "componentId": "details-works",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "originalElement": "div"
                     }
                    ],
                    "componentId": "details-services-rows",
@@ -2536,23 +2127,6 @@
                "componentProps": {},
                "componentSlots": {},
                "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)",
-                "fontSize": "13px",
-                "fontWeight": "420",
-                "letterSpacing": "0.02em",
-                "lineHeight": "20px",
-                "marginTop": "-8px"
-               },
-               "componentId": "details-note",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "tag": "p",
-                "text": "Tier, PMM and certifications come from Frappe."
-               },
-               "componentSlots": {}
               }
              ],
              "componentId": "details-section",
@@ -4289,60 +3863,11 @@
                       "variant": "subtle"
                      },
                      "componentSlots": {},
-                     "visibilityCondition": "storyIndustryOptions.length > 1 && !(isEditing && storiesCollapsed)"
-                    },
-                    {
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "submitStory();"
-                      }
-                     },
-                     "componentId": "pls-submit",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "label": "Submit on frappe.io",
-                      "variant": "subtle",
-                      "iconRight": "lucide-external-link"
-                     },
-                     "componentSlots": {},
-                     "visibilityCondition": "isEditing"
-                    },
-                    {
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "storiesCollapsed.value = !storiesCollapsed.value;"
-                      }
-                     },
-                     "componentId": "pls-hide",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "label": "{{ storiesCollapsed ? 'Show' : 'Hide' }}",
-                      "variant": "subtle"
-                     },
-                     "componentSlots": {},
-                     "visibilityCondition": "isEditing"
+                     "visibilityCondition": "!isEditing && storyIndustryOptions.length > 1"
                     }
                    ]
                   }
                  ]
-                },
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-5)"
-                 },
-                 "componentId": "pls-source",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "fontSize": "text-p-base",
-                  "tag": "p",
-                  "text": "Published on frappe.io"
-                 },
-                 "componentSlots": {},
-                 "visibilityCondition": "isEditing"
                 }
                ]
               },
@@ -4356,7 +3881,6 @@
                "componentProps": {},
                "componentSlots": {},
                "originalElement": "div",
-               "visibilityCondition": "!(isEditing && storiesCollapsed)",
                "children": [
                 {
                  "baseStyles": {
@@ -4373,24 +3897,71 @@
                  "visibilityCondition": "storyView.featured",
                  "children": [
                   {
-                   "baseStyles": {
-                    "backgroundImage": "{{ storyLogo(storyView.featured) }}",
-                    "backgroundPosition": "left center",
-                    "backgroundRepeat": "no-repeat",
-                    "backgroundSize": "contain",
-                    "flexShrink": "0",
-                    "height": "36px",
-                    "width": "64px"
-                   },
-                   "componentId": "pls-featured-logo",
+                   "componentId": "pls-featured-top",
                    "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
                    "originalElement": "div",
-                   "attributes": {
-                    "aria-hidden": "true"
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "alignSelf": "stretch",
+                    "display": "flex",
+                    "justifyContent": "space-between",
+                    "minHeight": "36px"
                    },
-                   "visibilityCondition": "storyView.featured.client_logo"
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "backgroundImage": "{{ storyLogo(storyView.featured) }}",
+                      "backgroundPosition": "left center",
+                      "backgroundRepeat": "no-repeat",
+                      "backgroundSize": "contain",
+                      "flexShrink": "0",
+                      "height": "36px",
+                      "width": "64px"
+                     },
+                     "componentId": "pls-featured-logo",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div",
+                     "attributes": {
+                      "aria-hidden": "true"
+                     },
+                     "visibilityCondition": "storyView.featured.client_logo"
+                    },
+                    {
+                     "componentId": "pls-featured-menu-wrap",
+                     "componentName": "container",
+                     "originalElement": "div",
+                     "baseStyles": {
+                      "marginLeft": "auto"
+                     },
+                     "children": [
+                      {
+                       "componentId": "pls-featured-menu",
+                       "componentName": "Dropdown",
+                       "componentProps": {
+                        "align": "end",
+                        "options": "{{ storyMenu(storyView.featured) }}"
+                       },
+                       "children": [
+                        {
+                         "componentId": "pls-featured-menu-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "icon": "lucide-more-horizontal",
+                          "variant": "ghost",
+                          "size": "sm"
+                         },
+                         "attributes": {
+                          "aria-label": "More for the featured story"
+                         }
+                        }
+                       ]
+                      }
+                     ],
+                     "visibilityCondition": "isEditing"
+                    }
+                   ]
                   },
                   {
                    "baseStyles": {
@@ -4464,7 +4035,7 @@
                      "baseStyles": {
                       "alignItems": "center",
                       "borderBottom": "{{ dataItem.last ? 'none' : '1px solid var(--outline-gray-1)' }}",
-                      "cursor": "{{ dataItem.url ? 'pointer' : 'default' }}",
+                      "cursor": "{{ dataItem.url && !isEditing ? 'pointer' : 'default' }}",
                       "display": "flex",
                       "gap": "12px",
                       "padding": "16px 0"
@@ -4475,20 +4046,20 @@
                      "componentSlots": {},
                      "originalElement": "div",
                      "attributes": {
-                      "aria-label": "{{ 'Read the story: ' + dataItem.headline }}",
-                      "role": "{{ dataItem.url ? 'link' : null }}",
-                      "tabindex": "{{ dataItem.url ? 0 : null }}"
+                      "aria-label": "{{ isEditing ? null : 'Read the story: ' + dataItem.headline }}",
+                      "role": "{{ dataItem.url && !isEditing ? 'link' : null }}",
+                      "tabindex": "{{ dataItem.url && !isEditing ? 0 : null }}"
                      },
                      "componentEvents": {
                       "click": {
                        "action": "Run Script",
                        "event": "click",
-                       "script": "openStory(dataItem);"
+                       "script": "if (!isEditing.value) openStory(dataItem);"
                       },
                       "keydown.enter": {
                        "action": "Run Script",
                        "event": "keydown.enter",
-                       "script": "openStory(dataItem);"
+                       "script": "if (!isEditing.value) openStory(dataItem);"
                       }
                      },
                      "children": [
@@ -4518,7 +4089,8 @@
                         "display": "flex",
                         "flexDirection": "column",
                         "gap": "2px",
-                        "minWidth": "0px"
+                        "minWidth": "0px",
+                        "flex": "1 1 0px"
                        },
                        "componentId": "pls-row-text",
                        "componentName": "container",
@@ -4555,6 +4127,29 @@
                          "visibilityCondition": "dataItem.category"
                         }
                        ]
+                      },
+                      {
+                       "componentId": "pls-row-menu",
+                       "componentName": "Dropdown",
+                       "componentProps": {
+                        "align": "end",
+                        "options": "{{ storyMenu(dataItem) }}"
+                       },
+                       "children": [
+                        {
+                         "componentId": "pls-row-menu-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "icon": "lucide-more-horizontal",
+                          "variant": "ghost",
+                          "size": "sm"
+                         },
+                         "attributes": {
+                          "aria-label": "{{ 'More for ' + dataItem.headline }}"
+                         }
+                        }
+                       ],
+                       "visibilityCondition": "isEditing"
                       }
                      ]
                     }
@@ -4682,7 +4277,7 @@
            "componentId": "discard-cancel",
            "componentName": "Button",
            "componentProps": {
-            "label": "Cancel",
+            "label": "Keep editing",
             "size": "sm",
             "variant": "subtle"
            },
@@ -4730,7 +4325,7 @@
        "name": "discardOpen"
       },
       "size": "sm",
-      "title": "Discard unpublished changes?"
+      "title": "Discard your changes?"
      },
      "componentSlots": {}
     }
@@ -4770,7 +4365,7 @@
  "studio_app": "connect",
  "variables": [
   {
-   "initial_value": "\"edit\"",
+   "initial_value": "\"view\"",
    "variable_name": "listingMode",
    "variable_type": "String"
   },

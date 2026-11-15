@@ -1,10 +1,12 @@
-// The partner's Listing: their profile laid out the way businesses see it in the directory. The
-// partner's admin edits it in place (Edit), or sees it as businesses will (Preview). Edits save as
-// they type, as unpublished changes, until Publish makes them live. Reviews come from customers, and
-// success stories (with their client logos) are submitted on frappe.io, so those only show.
+// The partner's Listing: their profile as businesses see it in the directory. The partner's admin
+// edits it in place (Edit profile) and checks it as businesses will see it (Preview). Edits save as
+// they type, as unpublished changes, until Publish makes them live or Cancel drops them. Reviews come
+// from customers, and success stories (with their client logos) are submitted on frappe.io, so the
+// admin only orders those.
 
 import { computed, ref, watch } from "vue"
 import {
+	CLIENT_LOGOS_SHOWN,
 	DEFAULT_ANSWERS,
 	MAX_INDUSTRIES,
 	MIN_CLIENT_LOGOS,
@@ -29,9 +31,6 @@ const SUBMIT_STORY_URL = "https://frappe.io/partners"
 const REVIEWS_SHOWN = 4
 const STORIES_SECTION = "stories-section"
 const ANSWER_ICONS = "/assets/connect/images"
-// Delivery Mode records as the Listing words them.
-const DELIVERY_LABELS = { Onsite: "On site" }
-const deliveryLabel = (mode) => DELIVERY_LABELS[mode] || mode
 
 // What the editor shows for reviews, since the sample profile has none.
 const SAMPLE_REVIEWS = [
@@ -58,31 +57,37 @@ function openInNewTab(url) {
 
 export default function setup(context) {
 	startTracking(context)
-	const { call, toast, listingMode, selectedStoryIndustry } = context
+	const { call, router, toast, listingMode, selectedStoryIndustry } = context
 
-	const profile = ref(null)
+	// What businesses see now, and the same with the admin's unpublished changes.
+	const liveProfile = ref(null)
+	const draftProfile = ref(null)
 	const reviews = ref([])
 	const loadError = ref(false)
 
 	const inEditor = window.location.pathname.startsWith("/studio/")
+	const fetchProfile = (withDraft) =>
+		call(`${PROFILE_API}.get_my_profile`, { with_draft: withDraft }).catch((error) => {
+			// The editor signed in as someone on no partner's team gets the sample instead.
+			if (inEditor) return SAMPLE_PROFILE
+			throw error
+		})
+
 	function load() {
-		return call(`${PROFILE_API}.get_my_profile`, { with_draft: 1 })
-			.catch((error) => {
-				// The editor signed in as someone on no partner's team gets the sample instead.
-				if (inEditor) return SAMPLE_PROFILE
-				throw error
-			})
-			.then((data) => {
-				profile.value = data
-				draft.value = toDraft(data)
+		return fetchProfile(0)
+			.then((live) => Promise.all([live, live.can_edit ? fetchProfile(1) : live]))
+			.then(([live, withDraft]) => {
+				liveProfile.value = live
+				draftProfile.value = withDraft
+				draft.value = toDraft(withDraft)
 				autosave.reset()
-				return call(`${PROFILE_API}.list_partner_reviews`, { partner: data.partner })
+				return call(`${PROFILE_API}.list_partner_reviews`, { partner: live.partner })
 			})
 			.then((rows) => {
 				reviews.value = rows?.length || !inEditor ? rows || [] : SAMPLE_REVIEWS
 			})
 			.catch(() => {
-				loadError.value = !profile.value
+				loadError.value = !liveProfile.value
 			})
 	}
 
@@ -92,21 +97,35 @@ export default function setup(context) {
 	const autosave = useProfileAutosave({
 		call,
 		draft,
-		profile,
+		profile: draftProfile,
 		uploading,
 		// The page shows the saved draft; the fields keep what the partner is typing.
-		onSaved: () => call(`${PROFILE_API}.get_my_profile`, { with_draft: 1 }).then((data) => (profile.value = data)),
+		onSaved: () => fetchProfile(1).then((data) => (draftProfile.value = data)),
 	})
 	load()
 
-	const canEdit = computed(() => !!profile.value?.can_edit)
+	// view: what businesses see now. edit and preview: the admin's changes, in place or as businesses will see them.
+	const canEdit = computed(() => !!liveProfile.value?.can_edit)
+	const isViewing = computed(() => !canEdit.value || listingMode.value === "view")
 	const isEditing = computed(() => canEdit.value && listingMode.value === "edit")
+	const profile = computed(() => (isViewing.value ? liveProfile.value : draftProfile.value))
 	// Preview shows what's saved, so save what's waiting first.
 	watch(listingMode, (mode) => mode === "preview" && autosave.flush())
-	const stories = computed(() => profile.value?.success_stories || [])
+	// While editing, the stories follow the order being set; otherwise, the saved order.
+	const stories = computed(() => (isEditing.value ? draft.value.success_stories : profile.value?.success_stories) || [])
 
 	// ---- Name and tagline ----
 	const listingName = computed(() => profile.value?.partner_name || "")
+	const markImage = computed(() => imageTile(draft.value.logo_icon || draft.value.logo))
+
+	function copyProfileLink() {
+		const path = router.resolve(`/partner-profile-redesign/${encodeURIComponent(liveProfile.value.partner)}`).href
+		const link = new URL(path, window.location.origin).href
+		navigator.clipboard
+			.writeText(link)
+			.then(() => toast.success("Link copied"))
+			.catch(() => toast.info(link, { description: "Your browser blocked the clipboard. Copy the link from here." }))
+	}
 
 	// ---- Photos and video: one large tile, up to two beside it, "+N" for the rest ----
 	const photos = computed(() => (profile.value?.photos || []).map((photo, index) => ({ ...photo, index })))
@@ -117,6 +136,13 @@ export default function setup(context) {
 
 	// ---- Client logos, from the success stories, as the public profile shows them ----
 	const clientLogos = computed(() => clientLogoRow(stories.value))
+	// While editing, the logos the public profile shows, in the story order being set.
+	const editLogos = computed(() =>
+		stories.value
+			.map((story, position) => ({ ...story, position, logo: story.client_logo_display || story.client_logo }))
+			.filter((story) => story.client_logo)
+			.slice(0, CLIENT_LOGOS_SHOWN),
+	)
 	// Shown instead of the row: why the public profile has no logos yet.
 	const clientLogosNote = computed(() => {
 		const count = clientLogoCount(stories.value)
@@ -137,12 +163,9 @@ export default function setup(context) {
 			certified,
 			address: p.address || "Not added yet",
 			rate: p.hourly_rate ? `From ₹${Number(p.hourly_rate).toLocaleString("en-IN")}/hr` : "Not added yet",
-			// Until a partner lists the countries it serves, show its own country.
-			countries: p.served_countries?.length ? p.served_countries : p.country ? [p.country] : [],
 			industries: p.industry_badges || [],
 			apps: p.apps || [],
 			migrations: p.migrations || [],
-			works: (p.delivery_options || []).map(deliveryLabel),
 		}
 	})
 
@@ -183,20 +206,34 @@ export default function setup(context) {
 
 	// ---- Success stories: one featured, then a list, filtered by industry as on the public profile ----
 	const showAllStories = ref(false)
-	// Hide folds the section away while editing; the public profile always shows it.
-	const storiesCollapsed = ref(false)
 
 	// A verified industry has stories behind it: show only those, where the stories are.
 	function showStoriesFor(industry) {
 		selectedStoryIndustry.value = industry
-		storiesCollapsed.value = false
 		document.querySelector(`[data-component-id="${STORIES_SECTION}"]`)?.scrollIntoView({ behavior: "smooth" })
+	}
+
+	// The first story is the featured one, so featuring a story moves it to the top.
+	function moveStory(from, to) {
+		const ordered = [...draft.value.success_stories]
+		ordered.splice(to, 0, ...ordered.splice(from, 1))
+		draft.value.success_stories = ordered
+	}
+
+	function storyMenu(story) {
+		const last = stories.value.length - 1
+		return [
+			{ label: "Feature this story", icon: "lucide-star", condition: () => story.position > 0, onClick: () => moveStory(story.position, 0) },
+			{ label: "Move up", icon: "lucide-chevron-up", condition: () => story.position > 1, onClick: () => moveStory(story.position, story.position - 1) },
+			{ label: "Move down", icon: "lucide-chevron-down", condition: () => story.position < last, onClick: () => moveStory(story.position, story.position + 1) },
+			{ label: "Read story", icon: "lucide-external-link", condition: () => !!story.url, onClick: () => openInNewTab(story.url) },
+		]
 	}
 
 	const upload = (target, onUploaded) => uploadImage({ toast, uploading, target, onUploaded })
 
-	// ---- Publish: the saved edits go live together; Discard drops them ----
-	const hasUnpublished = computed(() => !!profile.value?.has_unpublished_changes)
+	// ---- Publish: the saved edits go live together; Cancel drops them ----
+	const hasUnpublished = computed(() => !!draftProfile.value?.has_unpublished_changes)
 	const publishing = ref(false)
 	const discardOpen = ref(false)
 	const discarding = ref(false)
@@ -208,14 +245,26 @@ export default function setup(context) {
 			.flush()
 			.then(() => {
 				if (!autosave.isSaved()) throw { messages: [autosave.status.value || "Wait for your changes to save, then publish."] }
-				return call(`${PROFILE_API}.publish_my_profile_draft`)
+				// Nothing changed: there's nothing to publish, so just leave editing.
+				if (!hasUnpublished.value) return false
+				return call(`${PROFILE_API}.publish_my_profile_draft`).then(() => load()).then(() => true)
 			})
-			.then(() => load())
-			.then(() => toast.success("Published. Businesses now see your changes."))
+			.then((published) => {
+				listingMode.value = "view"
+				if (published) toast.success("Published. Businesses now see your changes.")
+			})
 			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't publish your listing. Try again."))
 			.finally(() => {
 				publishing.value = false
 			})
+	}
+
+	// Leaves editing; asks first when there are changes to throw away.
+	function cancelEditing() {
+		autosave.flush().then(() => {
+			if (hasUnpublished.value || !autosave.isSaved()) discardOpen.value = true
+			else listingMode.value = "view"
+		})
 	}
 
 	function discardChanges() {
@@ -225,7 +274,8 @@ export default function setup(context) {
 			.then(() => load())
 			.then(() => {
 				discardOpen.value = false
-				toast.success("Unpublished changes discarded")
+				listingMode.value = "view"
+				toast.success("Changes discarded")
 			})
 			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't discard your changes. Try again."))
 			.finally(() => {
@@ -250,7 +300,11 @@ export default function setup(context) {
 		discardOpen,
 		discarding,
 		discardChanges,
+		cancelEditing,
 		listingName,
+		markImage,
+		copyProfileLink,
+		isViewing,
 		isEditing,
 		saveStatus: autosave.status,
 		hasSaveProblem: autosave.hasProblem,
@@ -259,6 +313,7 @@ export default function setup(context) {
 		photoColumns: computed(() => (sidePhotos.value.length ? "minmax(0, 2fr) minmax(0, 1fr)" : "minmax(0, 1fr)")),
 		openMedia: (photo) => openInNewTab(photo.video || photo.image),
 		clientLogos,
+		editLogos,
 		clientLogosNote,
 		details,
 		founder,
@@ -269,12 +324,18 @@ export default function setup(context) {
 		shownReviews,
 		showAllReviews,
 		hasMoreReviews: computed(() => reviews.value.length > REVIEWS_SHOWN),
-		storyView: computed(() => storyView(stories.value, selectedStoryIndustry.value, showAllStories.value)),
+		storyView: computed(() =>
+			storyView(
+				stories.value.map((story, position) => ({ ...story, position })),
+				isEditing.value ? "" : selectedStoryIndustry.value,
+				showAllStories.value,
+			),
+		),
 		storyCount: computed(() => String(stories.value.length)),
 		storyIndustryOptions: computed(() => storyIndustryOptions(stories.value)),
 		storyLogo,
+		storyMenu,
 		showAllStories,
-		storiesCollapsed,
 		showStoriesFor,
 		openStory: (story) => openInNewTab(story.url),
 		submitStory: () => openInNewTab(SUBMIT_STORY_URL),
@@ -285,8 +346,10 @@ export default function setup(context) {
 		isOver: (path) => isOverLimit(draft.value, path),
 		uploading,
 		uploadLabel,
-		uploadLogo: () => upload("logo", (url) => (draft.value.logo = url)),
-		uploadMark: () => upload("logo_icon", (url) => (draft.value.logo_icon = url)),
+		logoMenu: computed(() => [
+			{ label: uploadLabel("logo_icon", "mark", draft.value.logo_icon), onClick: () => upload("logo_icon", (url) => (draft.value.logo_icon = url)) },
+			{ label: uploadLabel("logo", "logo", draft.value.logo), onClick: () => upload("logo", (url) => (draft.value.logo = url)) },
+		]),
 		uploadFounderPhoto: () => upload("founder", (url) => (draft.value.founder.photo = url)),
 		// the gallery editor (GalleryEditor.vue) hands back the whole list after each change
 		setDraftPhotos: (photos) => (draft.value.photos = photos),
@@ -306,8 +369,5 @@ export default function setup(context) {
 		},
 		appOptions: computed(() => toOptions(options.value.apps)),
 		migrationOptions: computed(() => toOptions(options.value.migrations)),
-		deliveryOptions: computed(() =>
-			(options.value.delivery_modes || []).map((mode) => ({ label: deliveryLabel(mode), value: mode })),
-		),
 	}
 }
