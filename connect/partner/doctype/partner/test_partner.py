@@ -16,6 +16,7 @@ from connect.partner.doctype.partner.partner import (
 )
 from connect.partner.doctype.partner_review.partner_review import list_partner_reviews
 from connect.patches.rename_partner_is_featured_to_show_in_website import execute as rename_is_featured
+from connect.patches.set_partner_target_currency import execute as set_partner_target_currency
 
 LISTED = "_Test Visibility Listed Partner"
 PENDING = "_Test Visibility Pending Partner"
@@ -214,6 +215,42 @@ class IntegrationTestServedCountries(IntegrationTestCase):
 	def test_directory_finds_partners_by_a_served_country(self):
 		self.assertIn(SERVING, [p.name for p in search_partners(served_country="Kenya")])
 		self.assertNotIn(SERVING, [p.name for p in search_partners(served_country="Japan")])
+
+
+INDIAN = "_Test Currency India"
+KENYAN = "_Test Currency Kenya"
+
+
+class IntegrationTestTierFields(IntegrationTestCase):
+	"""A partner's target currency comes from its country."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		remove_partners(INDIAN, KENYAN)
+		self.addCleanup(remove_partners, INDIAN, KENYAN)
+
+	def test_currency_follows_the_country(self):
+		insert_signup_partner(INDIAN)
+		frappe.get_doc({"doctype": "Partner", **partner_values(KENYAN), "country": "Kenya"}).insert()
+
+		self.assertEqual(frappe.db.get_value("Partner", INDIAN, "currency"), "INR")
+		self.assertEqual(frappe.db.get_value("Partner", KENYAN, "currency"), "USD")
+
+	def test_a_set_currency_is_kept(self):
+		frappe.get_doc({"doctype": "Partner", **partner_values(INDIAN), "currency": "USD"}).insert()
+
+		self.assertEqual(frappe.db.get_value("Partner", INDIAN, "currency"), "USD")
+
+	def test_currency_patch_fills_only_empty_currencies(self):
+		insert_signup_partner(INDIAN)
+		frappe.get_doc({"doctype": "Partner", **partner_values(KENYAN), "country": "Kenya"}).insert()
+		frappe.db.set_value("Partner", INDIAN, "currency", None)
+		frappe.db.set_value("Partner", KENYAN, "currency", "INR")
+
+		set_partner_target_currency()
+
+		self.assertEqual(frappe.db.get_value("Partner", INDIAN, "currency"), "INR")
+		self.assertEqual(frappe.db.get_value("Partner", KENYAN, "currency"), "INR")
 
 
 def partner_values(partner_name):

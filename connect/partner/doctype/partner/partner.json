@@ -16,10 +16,16 @@
   "verification_status",
   "cloud_registration",
   "cloud_registration_sent_on",
+  "email",
   "enabled",
   "show_in_website",
   "specialist",
   "rating",
+  "section_break_tier",
+  "currency",
+  "revenue_last_month",
+  "revenue_this_month",
+  "revenue_updated_on",
   "section_break_description",
   "description",
   "origin_story",
@@ -183,6 +189,16 @@
    "description": "When the admin was last emailed the registration link. A new link replaces the old one, so Connect sends one only after the old one expires."
   },
   {
+   "description": "The partner's main email for Frappe. Frappe Cloud marks the invoices of the partner's customers with it, so Connect finds the partner's revenue by it.",
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "no_copy": 1,
+   "options": "Email",
+   "permlevel": 1,
+   "search_index": 1
+  },
+  {
    "default": "1",
    "fieldname": "enabled",
    "fieldtype": "Check",
@@ -205,6 +221,48 @@
    "in_list_view": 1,
    "label": "Rating",
    "precision": "1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_tier",
+   "fieldtype": "Section Break",
+   "label": "Tier and Revenue"
+  },
+  {
+   "description": "The currency this partner's tier revenue targets use. Set from the country when empty: India uses INR, every other country USD.",
+   "fieldname": "currency",
+   "fieldtype": "Select",
+   "label": "Target Currency",
+   "options": "\nINR\nUSD",
+   "permlevel": 1
+  },
+  {
+   "description": "Revenue from this partner's Frappe Cloud customers last month. The daily tier review sets it.",
+   "fieldname": "revenue_last_month",
+   "fieldtype": "Currency",
+   "label": "Revenue Last Month",
+   "no_copy": 1,
+   "options": "currency",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Revenue so far this month. The daily tier review sets it.",
+   "fieldname": "revenue_this_month",
+   "fieldtype": "Currency",
+   "label": "Revenue This Month",
+   "no_copy": 1,
+   "options": "currency",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "When the revenue above was last read from Frappe Cloud. Empty means it never was: the partner has no email.",
+   "fieldname": "revenue_updated_on",
+   "fieldtype": "Datetime",
+   "label": "Revenue Updated On",
+   "no_copy": 1,
+   "permlevel": 1,
    "read_only": 1
   },
   {

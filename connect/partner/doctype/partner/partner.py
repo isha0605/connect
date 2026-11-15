@@ -29,6 +29,9 @@ from connect.partner.doctype.region.region import get_filter_countries, get_regi
 from connect.starter_packs.doctype.starter_pack.starter_pack import get_hours_range
 from connect.permissions import _has_full_access, _is_partner_admin
 
+# Partners in India are measured against the INR tier targets, every other partner against USD.
+INR_COUNTRY = "India"
+
 DIMENSION_SCORE_FIELDS = (
 	"business_understanding",
 	"implementation_quality",
@@ -101,11 +104,27 @@ class Partner(Document):
 	def before_save(self):
 		self.region = get_region_of_country(self.country)
 		self.countries_served = len(self.served_countries)
+		self.currency = self.currency or get_target_currency(self.country)
+
+	@frappe.whitelist()
+	def update_revenue(self):
+		"""Desk's Update Revenue button: reads this partner's revenue from Frappe Cloud now."""
+		from connect.partner.press_integration import update_revenue_now
+
+		self.check_permission("write")
+		update_revenue_now(self.name)
 
 	def on_update(self):
 		# background-fetches each success story's own frappe.io cover photo —
 		# never blocks this save, and no-ops for rows that already have one
 		queue_missing_story_images(self.get("success_stories"))
+
+
+def get_target_currency(country: str | None) -> str | None:
+	"""The currency of the tier targets a partner in this country is measured against."""
+	if not country:
+		return None
+	return "INR" if country == INR_COUNTRY else "USD"
 
 
 def save_imported_partner(frappe_io_id: str, values: dict) -> str:
@@ -177,9 +196,12 @@ BASE_PARTNER_FILTERS = [
 	["Partner", "enabled", "=", 1],
 	["Partner", "verification_status", "=", VERIFIED],
 ]
-# Workflow state the public profile never shows: unpublished edits and Frappe-side flags.
+# What the public profile never shows: unpublished edits, Frappe-side flags, contact and account
+# details, and the partner's revenue and tier history.
 PRIVATE_PROFILE_FIELDS = (
 	"profile_draft", "cloud_registration", "cloud_registration_sent_on", "show_in_website", "starter_pack_sequence",
+	"email",
+	"currency", "revenue_last_month", "revenue_this_month", "revenue_updated_on",
 )
 
 
