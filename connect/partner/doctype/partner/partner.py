@@ -1069,7 +1069,7 @@ _PROFILE_MULTISELECT_FIELDS = {
 }
 
 # cover_image too: a story without a frappe.io cover keeps the one it was given
-_STORY_FIELDS = ("client_name", "client_logo", "headline", "category", "url", "cover_image")
+_STORY_FIELDS = ("client_name", "client_logo", "headline", "category", "url", "cover_image", "logo_position", "hide_logo")
 _FOUNDER_FIELDS = ("member_name", "designation", "bio", "photo")
 # Profile tables saved whole, with the fields each row keeps.
 _PROFILE_ROW_FIELDS = {

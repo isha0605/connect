@@ -19,6 +19,7 @@ import {
 	imageTile,
 	isOverLimit,
 	limitCounter,
+	orderedLogoStories,
 	storyIndustryOptions,
 	storyLogo,
 	storyView,
@@ -138,19 +139,44 @@ export default function setup(context) {
 
 	// ---- Client logos, from the success stories, as the public profile shows them ----
 	const clientLogos = computed(() => clientLogoRow(stories.value))
-	// While editing, the logos the public profile shows, in the story order being set.
-	const editLogos = computed(() =>
-		stories.value
-			.map((story, position) => ({ ...story, position, logo: story.client_logo_display || story.client_logo }))
-			.filter((story) => story.client_logo)
-			.slice(0, CLIENT_LOGOS_SHOWN),
-	)
+	// While editing, every logo in the order being set. Hidden ones, and any past the row's six, are faded.
+	const editLogos = computed(() => {
+		let shown = 0
+		const ordered = orderedLogoStories(stories.value)
+		return ordered.map((story, index) => {
+			const isShown = !story.hide_logo && ++shown <= CLIENT_LOGOS_SHOWN
+			return { ...story, index, last: index === ordered.length - 1, logo: story.client_logo_display || story.client_logo, faded: !isShown }
+		})
+	})
 	// Shown instead of the row: why the public profile has no logos yet.
 	const clientLogosNote = computed(() => {
 		const count = clientLogoCount(stories.value)
-		if (!count) return "No client logos yet. They come from your success stories."
-		return `Your client logos show on your profile once ${MIN_CLIENT_LOGOS} success stories have a logo. You have ${count}.`
+		if (!orderedLogoStories(stories.value).length) return "No client logos yet. They come from your success stories."
+		if (count < MIN_CLIENT_LOGOS) return `The logo row shows on your profile once it has ${MIN_CLIENT_LOGOS} logos. It has ${count}.`
+		return ""
 	})
+	const editLogosNote = computed(() => {
+		if (clientLogosNote.value) return clientLogosNote.value
+		const isTrimmed = editLogos.value.some((logo) => logo.faded)
+		return isTrimmed ? `Your profile shows the first ${CLIENT_LOGOS_SHOWN} logos you haven't hidden.` : ""
+	})
+
+	// A logo's order is its own, so moving one never changes which story is featured.
+	function moveLogo(from, to) {
+		const ordered = [...editLogos.value]
+		ordered.splice(to, 0, ...ordered.splice(from, 1))
+		ordered.forEach((logo, index) => (draft.value.success_stories[logo.position].logo_position = index + 1))
+	}
+
+	function clientLogoMenu(logo) {
+		const toggle = () => (draft.value.success_stories[logo.position].hide_logo = logo.hide_logo ? 0 : 1)
+		return [
+			{ label: "View story", icon: "lucide-external-link", condition: () => !!logo.url, onClick: () => openInNewTab(logo.url) },
+			{ label: "Move earlier", icon: "lucide-chevron-left", condition: () => logo.index > 0, onClick: () => moveLogo(logo.index, logo.index - 1) },
+			{ label: "Move later", icon: "lucide-chevron-right", condition: () => !logo.last, onClick: () => moveLogo(logo.index, logo.index + 1) },
+			{ label: logo.hide_logo ? "Show" : "Hide", icon: logo.hide_logo ? "lucide-eye" : "lucide-eye-off", onClick: toggle },
+		]
+	}
 
 	// ---- Details ----
 	const details = computed(() => {
@@ -354,6 +380,8 @@ export default function setup(context) {
 		openMedia: (photo) => openInNewTab(photo.video || photo.image),
 		clientLogos,
 		editLogos,
+		editLogosNote,
+		clientLogoMenu,
 		clientLogosNote,
 		officeRows: computed(() => (draft.value.offices || []).map((office, index) => ({ ...office, index }))),
 		canAddOffice: computed(() => (draft.value.offices || []).length < MAX_OFFICES),

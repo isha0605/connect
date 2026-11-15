@@ -158,15 +158,25 @@ const LOGO_MAX = { width: 130, height: 40 }
 // A logo not measured yet (still being cleaned) fits this box, as all logos did before.
 const UNMEASURED_LOGO = { width: "100px", height: "28px" }
 
+// Every story with a client logo, in the order the partner set for logos, each with its place among
+// the stories (`position`). A logo with no place set (0) follows the placed ones, in story order.
+export function orderedLogoStories(stories) {
+	const unplaced = Number.MAX_SAFE_INTEGER
+	return (stories || [])
+		.map((story, position) => ({ ...story, position }))
+		.filter((story) => story.client_logo)
+		.sort((a, b) => (a.logo_position || unplaced) - (b.logo_position || unplaced) || a.position - b.position)
+}
+
 export function clientLogoCount(stories) {
-	return (stories || []).filter((story) => story.client_logo).length
+	return orderedLogoStories(stories).filter((story) => !story.hide_logo).length
 }
 
 // The row's logos with their sizes, or none when there are too few for a row.
 export function clientLogoRow(stories) {
 	if (clientLogoCount(stories) < MIN_CLIENT_LOGOS) return []
-	return stories
-		.filter((story) => story.client_logo)
+	return orderedLogoStories(stories)
+		.filter((story) => !story.hide_logo)
 		.slice(0, CLIENT_LOGOS_SHOWN)
 		.map((story) => ({ ...story, logo: story.client_logo_display || story.client_logo, ...clientLogoSize(story) }))
 }

@@ -269,6 +269,17 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 		update_my_partner_profile(offices=[office] * 5)
 		self.assertEqual(len(get_my_profile()["offices"]), 5)
 
+	def test_logo_order_and_hidden_logos_are_kept(self):
+		frappe.set_user(ADMIN)
+		stories = get_my_profile()["success_stories"]
+		stories[0].update(logo_position=2, hide_logo=1)
+		stories[1].update(logo_position=1, hide_logo=0)
+		update_my_partner_profile(success_stories=stories)
+
+		saved = get_my_profile()["success_stories"]
+		self.assertEqual([(story["client_name"], story["logo_position"], story["hide_logo"]) for story in saved],
+			[("Refex", 2, 1), ("Motovolt", 1, 0)])
+
 	def test_discard_drops_unpublished_changes(self):
 		frappe.set_user(ADMIN)
 		self.save_listing_section(tagline="A drafted tagline")

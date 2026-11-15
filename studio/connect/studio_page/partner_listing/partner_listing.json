@@ -874,7 +874,7 @@
                "componentName": "Repeater",
                "componentProps": {
                 "data": "{{ clientLogos }}",
-                "dataKey": "index",
+                "dataKey": "position",
                 "emptyStateMessage": ""
                },
                "componentSlots": {
@@ -949,7 +949,9 @@
                   "borderRadius": "10px",
                   "display": "flex",
                   "height": "64px",
-                  "justifyContent": "center"
+                  "justifyContent": "center",
+                  "position": "relative",
+                  "padding": "0 40px"
                  },
                  "children": [
                   {
@@ -963,18 +965,86 @@
                     "backgroundSize": "contain",
                     "filter": "grayscale(1) contrast(0.85)",
                     "height": "32px",
-                    "opacity": "0.75",
-                    "width": "70%"
+                    "opacity": "{{ dataItem.faded ? '0.3' : '0.75' }}",
+                    "width": "100%"
                    },
                    "children": [],
                    "attributes": {
                     "role": "img",
                     "aria-label": "{{ dataItem.client_name || 'Client logo' }}"
                    }
+                  },
+                  {
+                   "componentId": "edit-logo-hidden",
+                   "componentName": "Icon",
+                   "componentProps": {
+                    "icon": "lucide-eye-off"
+                   },
+                   "baseStyles": {
+                    "color": "var(--ink-gray-5)",
+                    "height": "14px",
+                    "left": "10px",
+                    "position": "absolute",
+                    "top": "10px",
+                    "width": "14px"
+                   },
+                   "attributes": {
+                    "aria-label": "Hidden from your profile",
+                    "role": "img"
+                   },
+                   "visibilityCondition": "dataItem.hide_logo"
+                  },
+                  {
+                   "componentId": "edit-logo-corner",
+                   "componentName": "container",
+                   "originalElement": "div",
+                   "baseStyles": {
+                    "position": "absolute",
+                    "right": "6px",
+                    "top": "6px"
+                   },
+                   "children": [
+                    {
+                     "componentId": "edit-logo-menu",
+                     "componentName": "Dropdown",
+                     "componentProps": {
+                      "align": "end",
+                      "options": "{{ clientLogoMenu(dataItem) }}"
+                     },
+                     "children": [
+                      {
+                       "componentId": "edit-logo-menu-btn",
+                       "componentName": "Button",
+                       "componentProps": {
+                        "icon": "lucide-more-horizontal",
+                        "variant": "ghost",
+                        "size": "sm"
+                       },
+                       "attributes": {
+                        "aria-label": "{{ 'More for the ' + (dataItem.client_name || 'client') + ' logo' }}"
+                       }
+                      }
+                     ]
+                    }
+                   ]
                   }
                  ]
                 }
                ]
+              },
+              {
+               "componentId": "edit-logos-note",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "tag": "p",
+                "text": "{{ editLogosNote }}"
+               },
+               "baseStyles": {
+                "color": "var(--ink-gray-5)",
+                "fontSize": "13px",
+                "lineHeight": "20px"
+               },
+               "visibilityCondition": "isEditing && editLogosNote"
               },
               {
                "baseStyles": {
@@ -991,7 +1061,7 @@
                 "text": "{{ clientLogosNote }}"
                },
                "componentSlots": {},
-               "visibilityCondition": "!clientLogos.length"
+               "visibilityCondition": "!isEditing && !clientLogos.length"
               }
              ],
              "componentId": "logos-section",
