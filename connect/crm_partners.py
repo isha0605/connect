@@ -9,16 +9,19 @@ import json
 from urllib.parse import quote
 
 import frappe
+from frappe import _
+from frappe.utils import add_to_date, now_datetime
 from frappe.utils.synchronization import filelock
 
 from connect.crm_enquiries import frappe_crm
-from connect.crm_integration import crm_request
+from connect.crm_integration import RETRY_AFTER_MINUTES, crm_request
 from connect.partner.doctype.partner.partner import VERIFIED
 from connect.partner.doctype.partner_tier.tier_review import BEGINNER, ENTRY, is_applying_changes
 
 CRM_PARTNER = "CRM Partner"
 # The Partner fields the CRM shows. A change to any other field isn't sent.
 SENT_FIELDS = ("tier", "enabled", "verification_status", "email", "partner_name", "country")
+WAITING = ("Queued", "Failed")
 
 
 def queue_partner_sync(doc) -> None:
@@ -72,6 +75,7 @@ def _sync_partner(partner: str, settings) -> None:
 			response = crm_request(settings, "POST", f"/api/resource/{quote(CRM_PARTNER)}", json=body)
 			crm_partner = response.json()["data"]["name"]
 	except Exception:
+		# Logged once, not every hour the retry meets the same broken CRM.
 		if doc.frappe_crm_sync_status != "Failed":
 			frappe.log_error(title=f"Frappe CRM sync failed for Partner {partner}")
 		frappe.db.set_value(
@@ -118,3 +122,33 @@ def partner_payload(doc) -> dict:
 	if doc.email:
 		values["user"] = doc.email
 	return values
+
+
+def retry_partner_sync() -> None:
+	"""Hourly: sends the partners a failed or missed sync left behind."""
+	send_waiting_partners(saved_before=add_to_date(now_datetime(), minutes=-RETRY_AFTER_MINUTES))
+
+
+def send_waiting_partners(saved_before=None) -> None:
+	"""Sends every partner whose sync is queued or failed, one at a time."""
+	if not (frappe_crm() and is_applying_changes()):
+		return
+	filters = {"frappe_crm_sync_status": ["in", WAITING]}
+	if saved_before:
+		filters["modified"] = ["<", saved_before]
+	for partner in frappe.get_all("Partner", filters=filters, order_by="modified asc", pluck="name"):
+		sync_partner(partner)
+		frappe.db.commit()  # nosemgrep: keep each partner's sync status, so a later failure doesn't send it again
+
+
+def send_partner_now(partner: str) -> None:
+	"""Desk's Send to Frappe CRM button, for a partner whose sync failed."""
+	frappe.only_for("System Manager")
+	settings = frappe_crm()
+	if not settings:
+		frappe.throw(_("Frappe's CRM isn't connected. Set it up in Partner CRM Settings first."))
+	if not is_applying_changes():
+		frappe.throw(_("Turn on Apply Tier and Listing Changes in Integration Settings first."))
+	if not is_sent(frappe.get_doc("Partner", partner), settings):
+		frappe.throw(_("Only approved partners are sent to Frappe's CRM."))
+	_queue(partner)

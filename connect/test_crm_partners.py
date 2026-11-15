@@ -6,7 +6,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from connect.crm_integration import CRMRequestError
-from connect.crm_partners import partner_payload, sync_partner
+from connect.crm_partners import partner_payload, send_waiting_partners, sync_partner
 from connect.customer.doctype.customer_project.test_hiring import make_partner
 
 MODULE = "connect.crm_partners"
@@ -140,3 +140,15 @@ class IntegrationTestCRMPartners(IntegrationTestCase):
 
 		self.assertEqual(len(self.queued()), 1)
 		self.assertEqual(crm.sent("PUT")[0][1]["enabled"], 0)
+
+	def test_a_failed_send_is_kept_and_sent_again(self):
+		failed = self.sync(PartnersCRM(down=True))
+		self.assertEqual(failed.frappe_crm_sync_status, "Failed")
+		self.assertIn("CRM is down", failed.frappe_crm_sync_error)
+
+		with patch(f"{MODULE}.crm_request", side_effect=PartnersCRM()):
+			send_waiting_partners()
+
+		fields = ["frappe_crm_sync_status", "frappe_crm_sync_error"]
+		partner = frappe.db.get_value("Partner", PARTNER, fields, as_dict=True)
+		self.assertEqual((partner.frappe_crm_sync_status, partner.frappe_crm_sync_error), ("Synced", None))

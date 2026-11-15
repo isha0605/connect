@@ -128,6 +128,13 @@ class Partner(Document):
 		self.check_permission("write")
 		update_revenue_now(self.name)
 
+	@frappe.whitelist()
+	def send_to_frappe_crm(self):
+		"""Desk's Send to Frappe CRM button, for a partner whose sync failed."""
+		from connect.crm_partners import send_partner_now
+
+		send_partner_now(self.name)
+
 	def on_update(self):
 		from connect.crm_partners import queue_partner_sync
 
