@@ -858,8 +858,7 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		frappe.db.delete("Requirement", {"customer": customer})
 		self.assertIsNone(get_order(order.name)["company_details"])
 		frappe.get_doc(
-			{"doctype": "Requirement", "customer": customer, "company_name": "Test Co", "country": "India",
-			 "industry": "Manufacturing", "looking_for": "CRM", "timeline": "Within 1 month"}
+			{"doctype": "Requirement", "customer": customer, "industry": "Manufacturing", "looking_for": "CRM", "timeline": "Within 1 month"}
 		).insert(ignore_permissions=True)
 
 		details = save_company_details(order.name, "11-50", "Discrete Manufacturing", "Tally", focus=" Stock ")
@@ -879,7 +878,7 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		frappe.db.delete("Requirement", {"customer": customer})
 		save_company_details(order.name, "500+", "Retail", "Zoho")
 		req = frappe.get_last_doc("Requirement", {"customer": customer})
-		self.assertEqual((req.country, req.outcome, req.company_size), ("India", "Starter Pack", "500+"))
+		self.assertEqual((req.outcome, req.company_size), ("Starter Pack", "500+"))
 
 	def test_company_details_follow_the_opening_card_in_the_thread(self):
 		order = self.paid_order()
@@ -1019,8 +1018,7 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		self.assertFalse(context_as(user)["has_projects"])
 
 		frappe.get_doc(
-			{"doctype": "Requirement", "customer": customer, "company_name": "Test Co", "country": "India",
-			 "industry": "Manufacturing"}
+			{"doctype": "Requirement", "customer": customer, "industry": "Manufacturing"}
 		).insert(ignore_permissions=True)
 		self.assertEqual(context_as(user)["projects_route"], "/projects")
 

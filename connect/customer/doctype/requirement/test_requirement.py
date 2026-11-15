@@ -5,7 +5,11 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from connect.customer.doctype.customer_project.test_hiring import make_buyer
-from connect.customer.doctype.requirement.requirement import get_my_requirement, save_customer_requirement
+from connect.customer.doctype.requirement.requirement import (
+	get_my_requirement,
+	get_requirement_snapshot,
+	save_customer_requirement,
+)
 
 BUYER = "requirement.buyer@example.test"
 COMPANY = "_Test Requirement Co"
@@ -20,8 +24,6 @@ class IntegrationTestCompanyDetails(IntegrationTestCase):
 			{
 				"doctype": "Requirement",
 				"customer": COMPANY,
-				"company_name": COMPANY,
-				"country": "India",
 				"industry": "Manufacturing",
 				"looking_for": "Replace Existing ERP",
 				"timeline": "Within 3 months",
@@ -61,3 +63,15 @@ class IntegrationTestCompanyDetails(IntegrationTestCase):
 	def test_refuses_an_industry_not_on_the_list(self):
 		with self.assertRaises(frappe.ValidationError):
 			self.save_company(industry="Spaceflight")
+
+	def test_company_name_and_country_come_from_the_customer(self):
+		frappe.db.set_value("Customer", COMPANY, "country", "Kenya")
+
+		self.assertEqual(get_my_requirement()["country"], "Kenya")
+		self.assertEqual(get_requirement_snapshot(COMPANY)["country"], "Kenya")
+		self.assertEqual(get_requirement_snapshot(COMPANY)["company_name"], COMPANY)
+
+	def test_a_country_from_settings_is_saved_on_the_customer(self):
+		self.save_company(country="Kenya")
+
+		self.assertEqual(frappe.db.get_value("Customer", COMPANY, "country"), "Kenya")

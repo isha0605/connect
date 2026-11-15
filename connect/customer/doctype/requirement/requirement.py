@@ -42,15 +42,14 @@ def has_permission(doc, user=None, permission_type=None):
 
 
 def save_customer_requirement(
-	country, industry, apps=None,
+	industry, country=None, apps=None,
 	looking_for=None, company_size=None, current_situation=None, timeline=None, delivery_preference=None, budget=None,
 	special_requirements=None, additional_notes=None, outcome=None,
 ):
 	"""Creates or updates the caller's one Requirement, so the wizard and the Settings form share a single saved
 	record. Only the fields given change: Settings asks about the company alone, and must keep the rest.
-	company_name isn't a parameter here — it's already collected at signup (Customer.customer_name),
-	so it's read from there instead of asking again. company_size takes the forms' values as well
-	as the stored ones (see COMPANY_SIZES)."""
+	The company's name and country belong to its Customer: a country given here is saved there.
+	company_size takes the forms' values as well as the stored ones (see COMPANY_SIZES)."""
 	customer = get_customer_for_user()
 	if not customer:
 		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
@@ -58,8 +57,10 @@ def save_customer_requirement(
 	if isinstance(apps, str):
 		apps = json.loads(apps or "[]")
 
+	if country:
+		_set_customer_country(customer, country.strip())
+
 	given = {
-		"country": country,
 		"industry": industry,
 		"looking_for": looking_for,
 		"company_size": COMPANY_SIZES.get(company_size, company_size),
@@ -75,7 +76,6 @@ def save_customer_requirement(
 	if apps is not None:
 		values["apps"] = [{"app": a} for a in apps]
 	values["customer"] = customer
-	values["company_name"] = frappe.db.get_value("Customer", customer, "customer_name")
 
 	existing = frappe.db.get_value("Requirement", {"customer": customer}, "name", order_by="creation desc")
 	if existing:
@@ -89,13 +89,22 @@ def save_customer_requirement(
 	return {"name": doc.name}
 
 
+def _set_customer_country(customer: str, country: str) -> None:
+	if frappe.db.get_value("Customer", customer, "country") == country:
+		return
+	doc = frappe.get_doc("Customer", customer)
+	doc.country = country
+	# get_customer_for_user above scoped this to the caller's own company.
+	doc.save(ignore_permissions=True)
+
+
 COMPANY_DETAIL_FIELDS = ["company_size", "industry", "current_situation", "additional_notes"]
 
 
 def save_company_details(customer, values):
 	"""Sets just these fields on the customer's one Requirement, creating it if they have none,
 	so what they told the Find Partners wizard or the Settings form stays as it was. Returns
-	whether anything changed. A new Requirement is for India: Starter Packs only sell there."""
+	whether anything changed."""
 	values = {f: values.get(f) or "" for f in COMPANY_DETAIL_FIELDS}
 	existing = frappe.db.get_value("Requirement", {"customer": customer}, "name", order_by="creation desc")
 	if existing:
@@ -110,8 +119,6 @@ def save_company_details(customer, values):
 		{
 			"doctype": "Requirement",
 			"customer": customer,
-			"company_name": frappe.db.get_value("Customer", customer, "customer_name"),
-			"country": "India",
 			"outcome": "Starter Pack",
 			**values,
 		}
@@ -120,7 +127,7 @@ def save_company_details(customer, values):
 
 
 REQUIREMENT_FIELDS = [
-	"name", "company_name", "country", "industry", "looking_for", "company_size",
+	"name", "industry", "looking_for", "company_size",
 	"current_situation", "timeline", "delivery_preference", "budget",
 	"special_requirements", "additional_notes",
 ]
@@ -130,11 +137,19 @@ def _latest_requirement_for_customer(customer):
 	"""The customer's most recent Requirement row plus its apps, in 2 queries total — just the
 	fields get_my_requirement/get_requirement_snapshot actually return. frappe.get_doc(...) would
 	cost one query for every column on the doctype (not just the ~12 used here) plus one query per
-	child table it defines, whether read or not."""
+	child table it defines, whether read or not. The company's name and country come from its
+	Customer, which owns them."""
 	RequirementTable = frappe.qb.DocType("Requirement")
+	CustomerTable = frappe.qb.DocType("Customer")
 	rows = (
 		frappe.qb.from_(RequirementTable)
-		.select(*[RequirementTable[f] for f in REQUIREMENT_FIELDS])
+		.join(CustomerTable)
+		.on(CustomerTable.name == RequirementTable.customer)
+		.select(
+			*[RequirementTable[f] for f in REQUIREMENT_FIELDS],
+			CustomerTable.customer_name.as_("company_name"),
+			CustomerTable.country,
+		)
 		.where(RequirementTable.customer == customer)
 		.orderby(RequirementTable.creation, order=frappe.qb.desc)
 		.limit(1)
