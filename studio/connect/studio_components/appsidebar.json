@@ -7,39 +7,24 @@
     },
     "children": [
      {
-      "baseStyles": {
-       "height": "52px",
-       "marginBottom": "0px",
-       "paddingRight": "0px",
-       "width": "100%"
-      },
-      "componentId": "SidebarHeader-fpr-signed-in",
-      "componentName": "SidebarHeader",
+      "blockName": "ConnectSidebarHeader",
+      "componentId": "ConnectSidebarHeader-fpr",
+      "componentName": "ConnectSidebarHeader",
       "componentProps": {
-       "logo": "/assets/connect/images/connect-logo.svg",
-       "menuItems": [
-        {
-         "icon": "lucide-settings",
-         "label": "Settings",
-         "onClick": "() => { window.dispatchEvent(new CustomEvent('connect:open-settings')); }"
-        },
-        {
-         "condition": "() => !!(myContext.data && myContext.data.partner && myContext.data.partner.can_switch)",
-         "icon": "lucide-repeat",
-         "label": "Switch company",
-         "onClick": "() => { window.dispatchEvent(new CustomEvent('connect:switch-company')); }"
-        },
-        {
-         "icon": "lucide-log-out",
-         "label": "Log out",
-         "onClick": "() => { call('logout').then(() => { window.location.href = '/connect/partner-directory-redesign'; }); }"
-        }
-       ],
-       "showLogo": true,
-       "subtitle": "{{ (myContext.data && myContext.data.full_name) || '' }}",
-       "title": "Frappe Connect"
+       "context": "{{ myContext.data }}",
+       "icons": {
+        "settings": "lucide-settings",
+        "managers": "lucide-life-buoy",
+        "email": "lucide-mail",
+        "switch": "lucide-repeat",
+        "feedback": "lucide-message-square-text"
+       }
       },
-      "componentSlots": {}
+      "componentSlots": {},
+      "isCustomVueComponent": true,
+      "baseStyles": {
+       "width": "100%"
+      }
      }
     ],
     "componentId": "container-SidebarHeader-fpr-wrap-in",
@@ -347,6 +332,14 @@
     "blockName": "ConnectSettings",
     "componentId": "ConnectSettings-fpr",
     "componentName": "ConnectSettings",
+    "componentProps": {},
+    "componentSlots": {},
+    "isCustomVueComponent": true
+   },
+   {
+    "blockName": "ConnectFeedback",
+    "componentId": "ConnectFeedback-fpr",
+    "componentName": "ConnectFeedback",
     "componentProps": {},
     "componentSlots": {},
     "isCustomVueComponent": true
