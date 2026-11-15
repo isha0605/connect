@@ -50,6 +50,7 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 		partner.website = "https://profile.example.test"
 		partner.tagline = "The live tagline"
 		partner.profile_draft = None
+		partner.set("offices", [])
 		partner.set("success_stories", [])
 		for client in ("Refex", "Motovolt"):
 			partner.append(
@@ -226,9 +227,9 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 	def save_listing_section(self, **changes):
 		"""Saves like a Listing dialog: the whole profile as the page shows it, with `changes`."""
 		profile = get_my_profile(with_draft=True)
-		fields = ("tagline", "description", "website", "address", "year_founded", "hourly_rate")
+		fields = ("tagline", "description", "website", "year_founded", "hourly_rate")
 		payload = {field: profile[field] for field in fields}
-		for field in ("apps", "migrations", "industries", "founder", "photos", "success_stories"):
+		for field in ("apps", "migrations", "industries", "founder", "photos", "offices", "success_stories"):
 			payload[field] = frappe.as_json(profile[field])
 		update_my_partner_profile(**{**payload, **changes}, as_draft=1)
 
@@ -246,6 +247,27 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 		publish_my_profile_draft()
 		self.assertEqual(frappe.db.get_value("Partner", PARTNER, ["tagline", "profile_draft"]), ("A drafted tagline", None))
 		self.assertFalse(get_my_profile(with_draft=True)["has_unpublished_changes"])
+
+	def test_offices_wait_until_published(self):
+		frappe.set_user(ADMIN)
+		offices = [{"city": "Mumbai", "address": "Unit 402, Marol"}, {"city": "Pune", "address": "Baner Road"}]
+		self.save_listing_section(offices=frappe.as_json(offices))
+
+		self.assertEqual(get_my_profile()["offices"], [])
+		self.assertEqual(get_my_profile(with_draft=True)["offices"], offices)
+
+		publish_my_profile_draft()
+		self.assertEqual(get_my_profile()["offices"], offices)
+
+	def test_at_most_five_offices_each_with_a_city_and_address(self):
+		frappe.set_user(ADMIN)
+		office = {"city": "Mumbai", "address": "Unit 402, Marol"}
+		for offices in ([office] * 6, [{"city": " ", "address": "Baner Road"}], [{"city": "Pune", "address": ""}]):
+			with self.subTest(offices=offices), self.assertRaises(frappe.ValidationError):
+				update_my_partner_profile(offices=offices, as_draft=1)
+
+		update_my_partner_profile(offices=[office] * 5)
+		self.assertEqual(len(get_my_profile()["offices"]), 5)
 
 	def test_discard_drops_unpublished_changes(self):
 		frappe.set_user(ADMIN)

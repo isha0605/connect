@@ -9,7 +9,9 @@ import {
 	CLIENT_LOGOS_SHOWN,
 	DEFAULT_ANSWERS,
 	MAX_INDUSTRIES,
+	MAX_OFFICES,
 	MIN_CLIENT_LOGOS,
+	OFFICE_LIMITS,
 	PROFILE_API,
 	SAMPLE_PROFILE,
 	clientLogoCount,
@@ -161,13 +163,51 @@ export default function setup(context) {
 		return {
 			pmm: pmm ? String(pmm) : "Not rated yet",
 			certified,
-			address: p.address || "Not added yet",
+			offices: p.offices || [],
 			rate: p.hourly_rate ? `From ₹${Number(p.hourly_rate).toLocaleString("en-IN")}/hr` : "Not added yet",
 			industries: p.industry_badges || [],
 			apps: p.apps || [],
 			migrations: p.migrations || [],
 		}
 	})
+
+	// ---- Offices: added and changed in a dialog, saved with the rest of the draft ----
+	const officeDialogOpen = ref(false)
+	// null while adding one
+	const officeIndex = ref(null)
+	const officeForm = ref({ city: "", address: "" })
+	const officeError = ref("")
+	watch(officeForm, () => (officeError.value = ""), { deep: true })
+
+	function openOffice(index = null) {
+		officeIndex.value = index
+		officeForm.value = index === null ? { city: "", address: "" } : { ...draft.value.offices[index] }
+		officeError.value = ""
+		officeDialogOpen.value = true
+	}
+
+	function officeProblem(office) {
+		if (!office.city || !office.address) return "Add the city and the address."
+		if (office.city.length > OFFICE_LIMITS.city) return `Shorten the city to ${OFFICE_LIMITS.city} characters.`
+		if (office.address.length > OFFICE_LIMITS.address) return `Shorten the address to ${OFFICE_LIMITS.address} characters.`
+		return ""
+	}
+
+	function saveOffice() {
+		const office = { city: officeForm.value.city.trim(), address: officeForm.value.address.trim() }
+		officeError.value = officeProblem(office)
+		if (officeError.value) return
+		const offices = [...draft.value.offices]
+		if (officeIndex.value === null) offices.push(office)
+		else offices[officeIndex.value] = office
+		draft.value.offices = offices
+		officeDialogOpen.value = false
+	}
+
+	function removeOffice() {
+		draft.value.offices = draft.value.offices.filter((_office, index) => index !== officeIndex.value)
+		officeDialogOpen.value = false
+	}
 
 	// ---- Vision: the founder's quote, then the three answers as the public profile shows them ----
 	const founder = computed(() => profile.value?.founder || {})
@@ -315,6 +355,15 @@ export default function setup(context) {
 		clientLogos,
 		editLogos,
 		clientLogosNote,
+		officeRows: computed(() => (draft.value.offices || []).map((office, index) => ({ ...office, index }))),
+		canAddOffice: computed(() => (draft.value.offices || []).length < MAX_OFFICES),
+		officeDialogOpen,
+		officeIndex,
+		officeForm,
+		officeError,
+		openOffice,
+		saveOffice,
+		removeOffice,
 		details,
 		founder,
 		answers,

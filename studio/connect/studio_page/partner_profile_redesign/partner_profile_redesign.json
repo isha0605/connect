@@ -1393,7 +1393,7 @@
               },
               {
                "baseStyles": {
-                "display": "{{ partner.data && partner.data.address ? 'flex' : 'none' }}",
+                "display": "{{ partner.data && partner.data.offices && partner.data.offices.length ? 'flex' : 'none' }}",
                 "flexDirection": "column",
                 "gap": "8px",
                 "padding": "12px 0",
@@ -1410,22 +1410,65 @@
                  "componentProps": {
                   "fontSize": "text-xs",
                   "tag": "span",
-                  "text": "Address"
+                  "text": "{{ partner.data && partner.data.offices && partner.data.offices.length > 1 ? 'Offices' : 'Address' }}"
                  },
                  "componentSlots": {}
                 },
                 {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-6, #525252)"
-                 },
-                 "componentId": "field-address-value",
-                 "componentName": "TextBlock",
+                 "componentId": "field-offices",
+                 "componentName": "Repeater",
                  "componentProps": {
-                  "fontSize": "text-p-base",
-                  "tag": "p",
-                  "text": "{{ partner.data ? partner.data.address : '' }}"
+                  "data": "{{ partner.data ? partner.data.offices : [] }}",
+                  "dataKey": "idx",
+                  "emptyStateMessage": ""
                  },
-                 "componentSlots": {}
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "10px"
+                 },
+                 "children": [
+                  {
+                   "componentId": "field-office",
+                   "componentName": "container",
+                   "originalElement": "div",
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "gap": "2px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-8)",
+                      "fontWeight": "500"
+                     },
+                     "componentId": "field-office-city",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-p-base",
+                      "tag": "p",
+                      "text": "{{ dataItem.city }}"
+                     },
+                     "componentSlots": {}
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-6, #525252)",
+                      "whiteSpace": "pre-line"
+                     },
+                     "componentId": "field-office-address",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-p-base",
+                      "tag": "p",
+                      "text": "{{ dataItem.address }}"
+                     },
+                     "componentSlots": {}
+                    }
+                   ]
+                  }
+                 ]
                 }
                ],
                "componentId": "field-address",

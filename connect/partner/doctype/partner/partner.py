@@ -56,6 +56,7 @@ class Partner(Document):
 	def validate(self):
 		self.validate_keep_reasons()
 		self.validate_hourly_rate()
+		self.validate_offices()
 		self.validate_served_countries()
 		validate_industries(self)
 		self.set_starter_pack_sequence()
@@ -70,6 +71,14 @@ class Partner(Document):
 	def validate_hourly_rate(self):
 		if flt(self.hourly_rate) < 0:
 			frappe.throw(_("Hourly rate can't be negative."))
+
+	def validate_offices(self):
+		# Checked here as well as by the fields' reqd, since a Listing draft is checked without a save.
+		if len(self.offices) > _MAX_OFFICES:
+			frappe.throw(_("Add up to {0} offices.").format(_MAX_OFFICES))
+		for office in self.offices:
+			if not (office.city or "").strip() or not (office.address or "").strip():
+				frappe.throw(_("Give each office a city and an address."), frappe.MandatoryError)
 
 	def set_starter_pack_sequence(self):
 		"""Gives each Starter Pack partner a unique rotation slot so paid orders round-robin fairly."""
@@ -894,10 +903,13 @@ def get_partner_preview(partner):
 	fields = [
 		"name", "partner_name", "logo", "description", "tier", "specialist",
 		"rating", "city", "country", "pmm_level", "hourly_rate", "response_time_hours",
-		"certs_erpnext", "certs_frappe_framework", "address",
+		"certs_erpnext", "certs_frappe_framework",
 	]
 	check_profile_visible(partner)
 	doc = frappe.db.get_value("Partner", partner, fields, as_dict=True)
+	doc["offices"] = frappe.get_all(
+		"Partner Office", filters={"parent": partner, "parenttype": "Partner"}, fields=["city", "address"], order_by="idx asc"
+	)
 
 	doc["apps"] = _apps_by_partner([partner]).get(partner, [])
 	attach_industries([doc])
@@ -1062,6 +1074,7 @@ _FOUNDER_FIELDS = ("member_name", "designation", "bio", "photo")
 # Profile tables saved whole, with the fields each row keeps.
 _PROFILE_ROW_FIELDS = {
 	"success_stories": _STORY_FIELDS,
+	"offices": ("city", "address"),
 	"photos": ("image", "video"),
 	"addons": ("addon_name", "typical_hours"),
 }
@@ -1074,7 +1087,7 @@ _PROFILE_SIMPLE_FIELDS = (
 	# certs_frappe_framework: they're counted from linked certificates (recount_certificates),
 	# and countries_served, counted from served_countries. rollouts, sites_deployed, certified_experts
 	# and references_count come from frappe.io's import, so partners can't overwrite them.
-	"tagline", "description", "country", "city", "address", "website",
+	"tagline", "description", "country", "city", "website",
 	"year_founded", "hourly_rate", "typical_project_size", "proposal_timeline",
 	"demo_available", "logo_position_x", "logo_position_y", "phone", "team_size", "journey_blog_url",
 	"logo", "logo_icon", "why_choose_them", "how_we_work", "successful_implementation", "origin_story",
@@ -1083,17 +1096,19 @@ _PROFILE_SIMPLE_FIELDS = (
 # What the partner's Profile builder edits, beyond the lists below.
 _BUILDER_FIELDS = (
 	"tagline", "website", "phone", "journey_blog_url", "logo", "logo_icon", "description", "year_founded",
-	"team_size", "certs_erpnext", "certs_frappe_framework", "address", "city", "country",
+	"team_size", "certs_erpnext", "certs_frappe_framework", "city", "country",
 	"hourly_rate", "why_choose_them", "how_we_work", "successful_implementation", "origin_story",
 )
 # Longest text each profile field may hold, so every partner's profile lays out the same way.
 # The Profile builder shows the same limits as it counts.
 _TEXT_LIMITS = {
-	"tagline": 80, "address": 200, "description": 500, "why_choose_them": 300, "how_we_work": 300,
+	"tagline": 80, "description": 500, "why_choose_them": 300, "how_we_work": 300,
 	"successful_implementation": 300, "origin_story": 400,
 }
 _FOUNDER_LIMITS = {"member_name": 60, "designation": 40, "bio": 280}
 _STORY_LIMITS = {"client_name": 40, "headline": 90}
+_OFFICE_LIMITS = {"city": 60, "address": 200}
+_MAX_OFFICES = 5
 
 # Shown on the public profile, so a link must be an upload, an app asset or an https page.
 _MEDIA_PREFIXES = ("/files/", "/assets/", "https://")
@@ -1125,6 +1140,7 @@ def get_my_profile(with_draft=False) -> dict:
 		"delivery_options": [row.delivery_mode for row in doc.delivery_options],
 		"founder": {field: founder.get(field) for field in _FOUNDER_FIELDS} if founder else {},
 		"photos": [{"image": row.image, "video": row.video} for row in doc.photos],
+		"offices": [{"city": row.city, "address": row.address} for row in doc.offices],
 		"success_stories": stories,
 		"industries": picked_industries(doc),
 		# the picked industries as the public profile shows them, with their verified tick
@@ -1155,6 +1171,7 @@ def _limited_texts(doc) -> list[tuple]:
 	rows = [("partner", doc, _TEXT_LIMITS)]
 	rows += [("founder", row, _FOUNDER_LIMITS) for row in doc.team if row.is_founder]
 	rows += [("story", row, _STORY_LIMITS) for row in doc.success_stories]
+	rows += [("office", row, _OFFICE_LIMITS) for row in doc.offices]
 	return [(where, row, fieldname, limit) for where, row, limits in rows for fieldname, limit in limits.items()]
 
 
@@ -1194,13 +1211,13 @@ def _check_gallery_size(doc, live) -> None:
 
 def update_my_partner_profile(
 	tagline=None, description=None, country=None, city=None,
-	address=None, website=None, year_founded=None,
+	website=None, year_founded=None,
 	hourly_rate=None,
 	typical_project_size=None, proposal_timeline=None,
 	demo_available=None,
 	logo_position_x=None, logo_position_y=None,
 	apps=None, migrations=None, business_processes=None, implementation_types=None, languages=None,
-	founder=None, success_stories=None, addons=None,
+	founder=None, success_stories=None, offices=None, addons=None,
 	phone=None, team_size=None, journey_blog_url=None,
 	logo=None, logo_icon=None, why_choose_them=None, origin_story=None, photos=None,
 	how_we_work=None, successful_implementation=None, industries=None, delivery_options=None, as_draft=False,
@@ -1215,7 +1232,7 @@ def update_my_partner_profile(
 	# Pack prices, the imported numbers) are not parameters; frappe.call drops what a caller sends for them.
 	changes = dict(
 		tagline=tagline, description=description, country=country,
-		city=city, address=address, website=website, year_founded=year_founded,
+		city=city, website=website, year_founded=year_founded,
 		hourly_rate=hourly_rate, typical_project_size=typical_project_size,
 		proposal_timeline=proposal_timeline,
 		demo_available=demo_available,
@@ -1225,7 +1242,8 @@ def update_my_partner_profile(
 		how_we_work=how_we_work, successful_implementation=successful_implementation,
 		apps=apps, migrations=migrations, business_processes=business_processes,
 		implementation_types=implementation_types, languages=languages, industries=industries,
-		delivery_options=delivery_options, founder=founder, success_stories=success_stories, photos=photos, addons=addons,
+		delivery_options=delivery_options, founder=founder, success_stories=success_stories, offices=offices, photos=photos,
+		addons=addons,
 	)
 	changes = {key: value for key, value in changes.items() if value is not None}
 
@@ -1237,6 +1255,7 @@ def update_my_partner_profile(
 
 	# The draft isn't saved, so run the checks Partner.validate and link validation would.
 	doc.validate_hourly_rate()
+	doc.validate_offices()
 	doc.validate_country()
 	validate_industries(doc)
 	_save_profile_draft(live, doc)

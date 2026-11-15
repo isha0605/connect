@@ -22,7 +22,6 @@ const DRAFT_FIELDS = [
 	"description",
 	"year_founded",
 	"team_size",
-	"address",
 	"city",
 	"country",
 	"hourly_rate",
@@ -44,7 +43,7 @@ export const SAMPLE_PROFILE = {
 	team_size: "51-200",
 	certs_erpnext: 8,
 	certs_frappe_framework: 3,
-	address: "No. 100, Lake View Estate, Main Road\nChennai, Tamil Nadu 600116, India",
+	offices: [{ city: "Chennai", address: "No. 100, Lake View Estate, Main Road, Chennai, Tamil Nadu 600116, India" }],
 	city: "Chennai",
 	country: "India",
 	hourly_rate: 2500,
@@ -74,7 +73,6 @@ export const SAMPLE_PROFILE = {
 export const LIMITS = {
 	tagline: { limit: 80, label: "Tagline", tab: "basics" },
 	description: { limit: 500, label: "Introduction", tab: "about" },
-	address: { limit: 200, label: "Address", tab: "about" },
 	why_choose_them: { limit: 300, label: "Why work with us and who should work with us", tab: "vision" },
 	how_we_work: { limit: 300, label: "How we'll work together", tab: "vision" },
 	successful_implementation: { limit: 300, label: "Successful implementation", tab: "vision" },
@@ -84,6 +82,9 @@ export const LIMITS = {
 	origin_story: { limit: 400, label: "How we got here", tab: "story" },
 }
 export const STORY_LIMITS = { client_name: 40, headline: 90 }
+// An office's limits and how many a profile lists, as Partner.validate_offices checks them.
+export const OFFICE_LIMITS = { city: 60, address: 200 }
+export const MAX_OFFICES = 5
 
 // What the public profile shows for a vision answer the partner hasn't written.
 export const DEFAULT_ANSWERS = {
@@ -118,6 +119,7 @@ export function toDraft(data) {
 		delivery_options: [...(data.delivery_options || [])],
 		founder: { member_name: "", designation: "", bio: "", photo: "", ...(data.founder || {}) },
 		photos: (data.photos || []).map((photo) => ({ ...photo })),
+		offices: (data.offices || []).map((office) => ({ ...office })),
 		success_stories: (data.success_stories || []).map((story) => ({ ...story })),
 	}
 }
@@ -199,7 +201,7 @@ export function draftProblem(draft, saved) {
 }
 
 export function toSavePayload(draft) {
-	const { apps, migrations, industries, delivery_options, founder, photos, success_stories, ...fields } = draft
+	const { apps, migrations, industries, delivery_options, founder, photos, offices, success_stories, ...fields } = draft
 	return {
 		...fields,
 		// number fields: an empty box saves as 0, which the profile shows as unset
@@ -211,6 +213,7 @@ export function toSavePayload(draft) {
 		delivery_options: JSON.stringify(delivery_options || []),
 		founder: JSON.stringify(founder),
 		photos: JSON.stringify(photos),
+		offices: JSON.stringify(offices || []),
 		success_stories: JSON.stringify(success_stories),
 	}
 }

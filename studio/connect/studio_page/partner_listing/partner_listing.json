@@ -1269,7 +1269,8 @@
                       "display": "flex",
                       "flexDirection": "column",
                       "gap": "6px",
-                      "padding": "14px 0"
+                      "padding": "14px 0",
+                      "minWidth": "0px"
                      },
                      "children": [
                       {
@@ -1303,65 +1304,182 @@
                        "originalElement": "div"
                       },
                       {
-                       "baseStyles": {
-                        "color": "var(--ink-gray-8)",
-                        "fontSize": "15px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "24px",
-                        "whiteSpace": "pre-line"
+                       "componentId": "details-offices",
+                       "componentName": "Repeater",
+                       "componentProps": {
+                        "data": "{{ details.offices }}",
+                        "dataKey": "",
+                        "emptyStateMessage": ""
                        },
-                       "componentId": "details-address-value",
+                       "baseStyles": {
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "gap": "12px"
+                       },
+                       "visibilityCondition": "!isEditing && details.offices.length",
+                       "children": [
+                        {
+                         "componentId": "details-office",
+                         "componentName": "container",
+                         "originalElement": "div",
+                         "baseStyles": {
+                          "display": "flex",
+                          "flexDirection": "column",
+                          "gap": "2px"
+                         },
+                         "children": [
+                          {
+                           "componentId": "details-office-city",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "p",
+                            "text": "{{ dataItem.city }}"
+                           },
+                           "baseStyles": {
+                            "color": "var(--ink-gray-8)",
+                            "fontSize": "15px",
+                            "fontWeight": "500",
+                            "lineHeight": "24px"
+                           }
+                          },
+                          {
+                           "componentId": "details-office-address",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "p",
+                            "text": "{{ dataItem.address }}"
+                           },
+                           "baseStyles": {
+                            "color": "var(--ink-gray-6)",
+                            "fontSize": "14px",
+                            "lineHeight": "22px",
+                            "whiteSpace": "pre-line"
+                           }
+                          }
+                         ]
+                        }
+                       ]
+                      },
+                      {
+                       "componentId": "details-offices-empty",
                        "componentName": "TextBlock",
                        "componentProps": {
                         "tag": "p",
-                        "text": "{{ details.address }}"
+                        "text": "Not added yet"
                        },
-                       "componentSlots": {},
-                       "visibilityCondition": "!isEditing"
+                       "baseStyles": {
+                        "color": "var(--ink-gray-5)",
+                        "fontSize": "14px",
+                        "lineHeight": "22px"
+                       },
+                       "visibilityCondition": "!isEditing && !details.offices.length"
                       },
                       {
-                       "baseStyles": {
-                        "resize": "none",
-                        "scrollbarWidth": "thin"
-                       },
-                       "componentId": "edit-address-input",
-                       "componentName": "FormControl",
+                       "componentId": "edit-offices",
+                       "componentName": "Repeater",
                        "componentProps": {
-                        "modelValue": {
-                         "$type": "variable",
-                         "name": "draft.address"
-                        },
-                        "rows": 3,
+                        "data": "{{ officeRows }}",
+                        "dataKey": "index",
+                        "emptyStateMessage": ""
+                       },
+                       "baseStyles": {
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "gap": "4px",
+                        "minWidth": "0px",
+                        "width": "100%"
+                       },
+                       "visibilityCondition": "isEditing && officeRows.length",
+                       "children": [
+                        {
+                         "componentId": "edit-office",
+                         "componentName": "container",
+                         "originalElement": "div",
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "gap": "8px",
+                          "minWidth": "0px",
+                          "width": "100%"
+                         },
+                         "children": [
+                          {
+                           "componentId": "edit-office-city",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "p",
+                            "text": "{{ dataItem.city }}"
+                           },
+                           "baseStyles": {
+                            "color": "var(--ink-gray-8)",
+                            "flexShrink": "0",
+                            "fontSize": "14px",
+                            "fontWeight": "500",
+                            "lineHeight": "22px"
+                           }
+                          },
+                          {
+                           "componentId": "edit-office-address",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "p",
+                            "text": "{{ dataItem.address }}"
+                           },
+                           "baseStyles": {
+                            "color": "var(--ink-gray-5)",
+                            "flex": "1 1 0px",
+                            "fontSize": "14px",
+                            "lineHeight": "22px",
+                            "minWidth": "0px",
+                            "overflow": "hidden",
+                            "textOverflow": "ellipsis",
+                            "whiteSpace": "nowrap"
+                           }
+                          },
+                          {
+                           "componentId": "edit-office-edit",
+                           "componentName": "Button",
+                           "componentProps": {
+                            "label": "Edit",
+                            "size": "sm",
+                            "variant": "ghost"
+                           },
+                           "componentEvents": {
+                            "click": {
+                             "action": "Run Script",
+                             "event": "click",
+                             "script": "openOffice(dataItem.index);"
+                            }
+                           },
+                           "attributes": {
+                            "aria-label": "{{ 'Edit the ' + dataItem.city + ' address' }}"
+                           }
+                          }
+                         ]
+                        }
+                       ]
+                      },
+                      {
+                       "componentId": "edit-office-add",
+                       "componentName": "Button",
+                       "componentProps": {
+                        "label": "Add address",
+                        "iconLeft": "lucide-plus",
                         "size": "sm",
-                        "type": "textarea",
                         "variant": "subtle"
                        },
-                       "componentSlots": {},
-                       "visibilityCondition": "isEditing"
-                      },
-                      {
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "openOffice();"
+                        }
+                       },
+                       "visibilityCondition": "isEditing && canAddOffice",
                        "baseStyles": {
-                        "color": "{{ isOver('address') ? 'var(--ink-red-7)' : 'var(--ink-gray-5)' }}",
-                        "fontSize": "12px",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "16px",
-                        "marginTop": "4px",
-                        "textAlign": "right",
-                        "display": "{{ isOver('address') ? 'block' : '' }}"
-                       },
-                       "componentId": "edit-address-count",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "p",
-                        "text": "{{ counter('address') }}"
-                       },
-                       "componentSlots": {},
-                       "classes": [
-                        "hidden",
-                        "group-focus-within:block"
-                       ],
-                       "visibilityCondition": "isEditing"
+                        "alignSelf": "flex-start",
+                        "marginTop": "4px"
+                       }
                       }
                      ],
                      "componentId": "details-address",
@@ -4328,6 +4446,200 @@
       "title": "Discard your changes?"
      },
      "componentSlots": {}
+    },
+    {
+     "componentId": "office-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "officeDialogOpen"
+      },
+      "size": "sm",
+      "title": "{{ officeIndex === null ? 'Add address' : 'Edit address' }}"
+     },
+     "children": [
+      {
+       "componentId": "office-body",
+       "componentName": "container",
+       "originalElement": "div",
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "14px",
+        "width": "100%"
+       },
+       "children": [
+        {
+         "componentId": "office-city",
+         "componentName": "container",
+         "originalElement": "div",
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "6px"
+         },
+         "children": [
+          {
+           "componentId": "office-city-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "label",
+            "text": "City"
+           },
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "fontSize": "12px",
+            "fontWeight": "420",
+            "letterSpacing": "0.02em",
+            "lineHeight": "1.15"
+           }
+          },
+          {
+           "componentId": "office-city-input",
+           "componentName": "FormControl",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "officeForm.city"
+            },
+            "placeholder": "Mumbai",
+            "size": "sm",
+            "type": "text",
+            "variant": "subtle",
+            "aria-label": "City"
+           }
+          }
+         ]
+        },
+        {
+         "componentId": "office-address",
+         "componentName": "container",
+         "originalElement": "div",
+         "baseStyles": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "6px"
+         },
+         "children": [
+          {
+           "componentId": "office-address-label",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "label",
+            "text": "Address"
+           },
+           "baseStyles": {
+            "color": "var(--ink-gray-5)",
+            "fontSize": "12px",
+            "fontWeight": "420",
+            "letterSpacing": "0.02em",
+            "lineHeight": "1.15"
+           }
+          },
+          {
+           "componentId": "office-address-input",
+           "componentName": "FormControl",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "officeForm.address"
+            },
+            "rows": 3,
+            "size": "sm",
+            "type": "textarea",
+            "variant": "subtle",
+            "aria-label": "Address"
+           },
+           "baseStyles": {
+            "resize": "none"
+           }
+          }
+         ]
+        },
+        {
+         "componentId": "office-error",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "tag": "p",
+          "text": "{{ officeError }}"
+         },
+         "baseStyles": {
+          "color": "var(--ink-red-7)",
+          "fontSize": "13px",
+          "lineHeight": "20px"
+         },
+         "visibilityCondition": "officeError"
+        },
+        {
+         "componentId": "office-actions",
+         "componentName": "container",
+         "originalElement": "div",
+         "baseStyles": {
+          "display": "flex",
+          "gap": "8px",
+          "justifyContent": "flex-end",
+          "marginTop": "10px"
+         },
+         "children": [
+          {
+           "componentId": "office-remove",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Remove",
+            "size": "sm",
+            "theme": "red",
+            "variant": "subtle"
+           },
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "removeOffice();"
+            }
+           },
+           "visibilityCondition": "officeIndex !== null",
+           "baseStyles": {
+            "marginRight": "auto"
+           }
+          },
+          {
+           "componentId": "office-cancel",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "size": "sm",
+            "variant": "subtle"
+           },
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "officeDialogOpen.value = false;"
+            }
+           }
+          },
+          {
+           "componentId": "office-save",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Save",
+            "size": "sm",
+            "variant": "solid"
+           },
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "saveOffice();"
+            }
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
     }
    ],
    "componentId": "root",
