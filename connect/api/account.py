@@ -1,4 +1,5 @@
 import frappe
+from frappe.rate_limiter import rate_limit
 
 # Whitelisted entry points only — the logic lives in connect.account, connect.team and
 # Connect User Settings. Kept here as thin wrappers because the frontend calls these
@@ -58,6 +59,13 @@ def upload_profile_image():
 def get_my_context():
 	from connect.account import get_my_context
 	return get_my_context()
+
+
+@frappe.whitelist(methods=["POST"])
+@rate_limit(limit=10, seconds=60 * 60)
+def send_feedback(message, page=None):
+	from connect.messaging.doctype.connect_feedback.connect_feedback import submit_feedback
+	return submit_feedback(message, page)
 
 
 @frappe.whitelist()
