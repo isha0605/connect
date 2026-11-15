@@ -152,3 +152,20 @@ class IntegrationTestCRMPartners(IntegrationTestCase):
 		fields = ["frappe_crm_sync_status", "frappe_crm_sync_error"]
 		partner = frappe.db.get_value("Partner", PARTNER, fields, as_dict=True)
 		self.assertEqual((partner.frappe_crm_sync_status, partner.frappe_crm_sync_error), ("Synced", None))
+
+	def test_turning_tier_changes_on_queues_every_approved_partner(self):
+		make_partner(APPLYING)
+		frappe.db.set_value("Partner", APPLYING, "verification_status", "Pending Review")
+		settings = frappe.get_single("Integration Settings")
+		settings.apply_tier_and_listing_changes = 0
+		settings.save()
+
+		settings.apply_tier_and_listing_changes = 1
+		settings.save()
+
+		filters = {"name": ["in", [FRAPPE, PARTNER, APPLYING]]}
+		fields = ["name", "frappe_crm_sync_status"]
+		status = dict(frappe.get_all("Partner", filters=filters, fields=fields, as_list=True))
+		self.assertEqual(status[PARTNER], "Queued")
+		self.assertFalse(status[FRAPPE] or status[APPLYING])
+		self.assertIn(f"{MODULE}.send_waiting_partners", [c.args[0] for c in self.enqueue.call_args_list if c.args])

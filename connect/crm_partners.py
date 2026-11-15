@@ -10,6 +10,8 @@ from urllib.parse import quote
 
 import frappe
 from frappe import _
+from frappe.query_builder import Criterion
+from frappe.query_builder.functions import IfNull
 from frappe.utils import add_to_date, now_datetime
 from frappe.utils.synchronization import filelock
 
@@ -127,6 +129,24 @@ def partner_payload(doc) -> dict:
 def retry_partner_sync() -> None:
 	"""Hourly: sends the partners a failed or missed sync left behind."""
 	send_waiting_partners(saved_before=add_to_date(now_datetime(), minutes=-RETRY_AFTER_MINUTES))
+
+
+def queue_all_partners() -> None:
+	"""When tier and listing changes are turned on: sends every approved partner once, so the CRM
+	stops showing the values frappe.io last sent."""
+	settings = frappe_crm()
+	if not settings:
+		return
+	partner = frappe.qb.DocType("Partner")
+	(
+		frappe.qb.update(partner)
+		.set(partner.frappe_crm_sync_status, "Queued")
+		.where(partner.name != settings.partner)
+		.where(
+			Criterion.any([partner.verification_status == VERIFIED, IfNull(partner.frappe_crm_partner, "") != ""])
+		)
+	).run()
+	frappe.enqueue("connect.crm_partners.send_waiting_partners", queue="long", enqueue_after_commit=True)
 
 
 def send_waiting_partners(saved_before=None) -> None:
