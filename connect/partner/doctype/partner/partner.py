@@ -24,6 +24,7 @@ from connect.partner.industries import (
 from connect.partner.logo import attach_normalized_logos
 from connect.partner.story_image import queue_missing_story_images
 from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_membership
+from connect.partner.doctype.partner_tier.partner_tier import get_tier_order
 from connect.partner.doctype.region.region import get_filter_countries, get_region_of_country
 from connect.starter_packs.doctype.starter_pack.starter_pack import get_hours_range
 from connect.permissions import _has_full_access, _is_partner_admin
@@ -806,15 +807,10 @@ def list_directory_filter_facets(search=None, tier=None, industry=None, country=
 
 def list_partner_tiers():
 	"""Returns the tiers actually in use among directory-listed partners (same show_in_website/enabled
-	scope as list_directory_partners), highest first as the Tier field lists them, for the Tier filter dropdown."""
+	scope as list_directory_partners), highest first, for the Tier filter dropdown."""
 	rows = frappe.get_all("Partner", fields=["tier"], filters=BASE_PARTNER_FILTERS, distinct=True)
 	present = {row.tier for row in rows if row.tier}
-	return [tier for tier in tier_order() if tier in present]
-
-
-def tier_order() -> list[str]:
-	"""Partner tiers, highest first, as the Tier field lists them."""
-	return [tier for tier in frappe.get_meta("Partner").get_options("tier").split("\n") if tier]
+	return [tier for tier in get_tier_order() if tier in present]
 
 
 def list_partner_countries():

@@ -498,7 +498,7 @@ def make_pack(pack_key, price, total_hours):
 
 def make_partner(partner_name, starter_pack):
 	if not frappe.db.exists("Partner", partner_name):
-		tier = next(t for t in frappe.get_meta("Partner").get_field("tier").options.split("\n") if t)
+		tier = "Gold"
 		frappe.get_doc(
 			{"doctype": "Partner", "partner_name": partner_name, "tier": tier, "country": "India"}
 		).insert(ignore_permissions=True)

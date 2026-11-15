@@ -24,7 +24,7 @@ PENDING_MEMBER = "visibility.pending.member@example.test"
 
 def make_partner(partner_name, verification_status):
 	if not frappe.db.exists("Partner", partner_name):
-		tier = next(t for t in frappe.get_meta("Partner").get_field("tier").options.split("\n") if t)
+		tier = "Gold"
 		frappe.get_doc(
 			{"doctype": "Partner", "partner_name": partner_name, "tier": tier, "country": "India", "enabled": 1}
 		).insert(ignore_permissions=True)
@@ -217,7 +217,7 @@ class IntegrationTestServedCountries(IntegrationTestCase):
 
 
 def partner_values(partner_name):
-	tier = next(t for t in frappe.get_meta("Partner").get_field("tier").options.split("\n") if t)
+	tier = "Gold"
 	return {"partner_name": partner_name, "tier": tier, "country": "India"}
 
 

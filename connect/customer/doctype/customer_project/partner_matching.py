@@ -10,8 +10,8 @@ from connect.partner.doctype.partner.partner import (
 	BASE_PARTNER_FILTERS,
 	_child_values_by_partner,
 	_partners_matching_child,
-	tier_order,
 )
+from connect.partner.doctype.partner_tier.partner_tier import get_tier_order
 from connect.partner.industries import partners_in_industries
 
 # Which partners the brief goes to ("Edit criteria" on the custom implementation page).
@@ -52,7 +52,7 @@ def _criteria_facets(criteria: dict) -> dict:
 
 	return {
 		"cities": [{"value": city, "count": count} for city, count in sorted(cities.items())],
-		"tiers": [{"value": tier, "count": tiers[tier]} for tier in tier_order() if tier in tiers],
+		"tiers": [{"value": tier, "count": tiers[tier]} for tier in get_tier_order() if tier in tiers],
 		"work": [
 			{
 				"value": key,
