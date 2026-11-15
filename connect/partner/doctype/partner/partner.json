@@ -33,6 +33,10 @@
   "next_tier",
   "previous_tier",
   "tier_changed_on",
+  "listed_on",
+  "listing_review",
+  "keep_listing",
+  "keep_listing_reason",
   "section_break_description",
   "description",
   "origin_story",
@@ -233,7 +237,7 @@
   {
    "fieldname": "section_break_tier",
    "fieldtype": "Section Break",
-   "label": "Tier and Revenue"
+   "label": "Tier, Revenue and Listing"
   },
   {
    "description": "The currency this partner's tier revenue targets use. Set from the country when empty: India uses INR, every other country USD.",
@@ -330,6 +334,43 @@
    "no_copy": 1,
    "permlevel": 1,
    "read_only": 1
+  },
+  {
+   "description": "The day the partner was last turned on for the website. A partner short of certificates is only taken off after 90 days.",
+   "fieldname": "listed_on",
+   "fieldtype": "Date",
+   "label": "Listed On",
+   "no_copy": 1,
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Show if the partner has the certificates its tier needs (or is still within 90 days of being listed), Hide if not, from the latest daily review. Show in Website follows it only when Apply Tier and Listing Changes is on in Integration Settings and Keep Listing As Is is off.",
+   "fieldname": "listing_review",
+   "fieldtype": "Select",
+   "label": "Listing From Last Review",
+   "no_copy": 1,
+   "options": "\nShow\nHide",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "The daily review leaves Show in Website as it is. Use it when staff list or hide a partner by hand on purpose.",
+   "fieldname": "keep_listing",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Keep Listing As Is",
+   "permlevel": 1
+  },
+  {
+   "depends_on": "keep_listing",
+   "description": "Why the listing is kept, so anyone opening the partner knows.",
+   "fieldname": "keep_listing_reason",
+   "fieldtype": "Small Text",
+   "label": "Keep Listing Reason",
+   "mandatory_depends_on": "keep_listing",
+   "permlevel": 1
   },
   {
    "fieldname": "section_break_description",

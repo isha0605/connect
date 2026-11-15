@@ -9,7 +9,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.query_builder.functions import Max
-from frappe.utils import cint, flt, now_datetime
+from frappe.utils import cint, flt, now_datetime, today
 from frappe.utils.data import cast
 
 from connect.partner.industries import (
@@ -64,6 +64,8 @@ class Partner(Document):
 		"""Staff who stop the daily review changing a partner say why, so others know."""
 		if self.keep_tier and not (self.keep_tier_reason or "").strip():
 			frappe.throw(_("Say why the tier is kept, in Keep Tier Reason."), frappe.MandatoryError)
+		if self.keep_listing and not (self.keep_listing_reason or "").strip():
+			frappe.throw(_("Say why the listing is kept, in Keep Listing Reason."), frappe.MandatoryError)
 
 	def validate_hourly_rate(self):
 		if flt(self.hourly_rate) < 0:
@@ -111,6 +113,12 @@ class Partner(Document):
 		self.region = get_region_of_country(self.country)
 		self.countries_served = len(self.served_countries)
 		self.currency = self.currency or get_target_currency(self.country)
+		self.set_listed_on()
+
+	def set_listed_on(self):
+		"""Delisting gives a newly listed partner 90 days, counted from this date."""
+		if self.show_in_website and (self.is_new() or self.has_value_changed("show_in_website")):
+			self.listed_on = today()
 
 	@frappe.whitelist()
 	def update_revenue(self):
@@ -208,7 +216,8 @@ PRIVATE_PROFILE_FIELDS = (
 	"profile_draft", "cloud_registration", "cloud_registration_sent_on", "show_in_website", "starter_pack_sequence",
 	"email",
 	"currency", "revenue_last_month", "revenue_this_month", "revenue_updated_on", "next_tier", "previous_tier",
-	"tier_changed_on", "reviewed_tier", "keep_tier", "keep_tier_reason",
+	"tier_changed_on", "reviewed_tier", "keep_tier", "keep_tier_reason", "listed_on", "listing_review",
+	"keep_listing", "keep_listing_reason",
 )
 
 
