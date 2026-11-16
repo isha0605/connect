@@ -1,0 +1,614 @@
+{
+ "block": {
+  "componentId": "ppst-root",
+  "componentName": "container",
+  "originalElement": "div",
+  "baseStyles": {
+   "display": "flex",
+   "flexDirection": "column",
+   "gap": "48px"
+  },
+  "children": [
+   {
+    "componentId": "featured-section",
+    "componentName": "container",
+    "originalElement": "div",
+    "baseStyles": {
+     "display": "flex",
+     "flexDirection": "column",
+     "gap": "16px"
+    },
+    "children": [
+     {
+      "componentId": "featured-heading",
+      "componentName": "TextBlock",
+      "componentProps": {
+       "tag": "h2",
+       "text": "Featured by Frappe",
+       "fontSize": "text-lg"
+      },
+      "baseStyles": {
+       "color": "var(--ink-gray-8)",
+       "fontWeight": "500"
+      }
+     },
+     {
+      "componentId": "featured-rows",
+      "componentName": "Repeater",
+      "componentProps": {
+       "data": "{{ featureRows }}",
+       "dataKey": "index",
+       "emptyStateMessage": ""
+      },
+      "baseStyles": {
+       "display": "flex",
+       "flexDirection": "column",
+       "gap": "4px",
+       "margin": "0 -12px"
+      },
+      "children": [
+       {
+        "componentId": "featured-row",
+        "componentName": "container",
+        "originalElement": "div",
+        "baseStyles": {
+         "alignItems": "center",
+         "borderRadius": "10px",
+         "cursor": "pointer",
+         "display": "flex",
+         "gap": "16px",
+         "padding": "12px"
+        },
+        "children": [
+         {
+          "componentId": "featured-thumb",
+          "componentName": "container",
+          "originalElement": "div",
+          "baseStyles": {
+           "backgroundColor": "var(--surface-gray-2)",
+           "backgroundImage": "{{ 'url(\"' + dataItem.image + '\")' }}",
+           "backgroundPosition": "center",
+           "backgroundSize": "cover",
+           "borderRadius": "8px",
+           "flexShrink": "0",
+           "height": "90px",
+           "width": "160px"
+          },
+          "children": [],
+          "attributes": {
+           "aria-hidden": "true"
+          },
+          "mobileStyles": {
+           "height": "68px",
+           "width": "120px"
+          }
+         },
+         {
+          "componentId": "featured-text",
+          "componentName": "container",
+          "originalElement": "div",
+          "baseStyles": {
+           "display": "flex",
+           "flexDirection": "column",
+           "gap": "2px",
+           "minWidth": "0px"
+          },
+          "children": [
+           {
+            "componentId": "featured-title",
+            "componentName": "TextBlock",
+            "componentProps": {
+             "tag": "p",
+             "text": "{{ dataItem.title }}",
+             "fontSize": "text-base"
+            },
+            "baseStyles": {
+             "color": "var(--ink-gray-8)",
+             "fontWeight": "500"
+            }
+           },
+           {
+            "componentId": "featured-meta",
+            "componentName": "TextBlock",
+            "componentProps": {
+             "tag": "p",
+             "text": "{{ dataItem.meta }}",
+             "fontSize": "text-p-base"
+            },
+            "baseStyles": {
+             "color": "var(--ink-gray-6)"
+            }
+           }
+          ]
+         }
+        ],
+        "classes": [
+         "hover:bg-surface-gray-2",
+         "focus-visible:bg-surface-gray-2",
+         "focus-visible:outline-none"
+        ],
+        "attributes": {
+         "role": "link",
+         "tabindex": "0",
+         "aria-label": "{{ dataItem.title + ', ' + dataItem.meta }}"
+        },
+        "componentEvents": {
+         "click": {
+          "action": "Run Script",
+          "event": "click",
+          "script": "openFeature(dataItem);"
+         },
+         "keydown.enter": {
+          "action": "Run Script",
+          "event": "keydown.enter",
+          "script": "openFeature(dataItem);"
+         }
+        }
+       }
+      ]
+     }
+    ],
+    "visibilityCondition": "featureRows.length"
+   },
+   {
+    "baseStyles": {
+     "display": "flex",
+     "flexDirection": "column",
+     "gap": "28px"
+    },
+    "children": [
+     {
+      "baseStyles": {
+       "display": "flex",
+       "flexDirection": "column",
+       "gap": "4px"
+      },
+      "componentId": "pls-head",
+      "componentName": "container",
+      "componentProps": {},
+      "componentSlots": {},
+      "originalElement": "div",
+      "children": [
+       {
+        "baseStyles": {
+         "alignItems": "center",
+         "display": "flex",
+         "flexWrap": "wrap",
+         "gap": "8px"
+        },
+        "componentId": "pls-title-row",
+        "componentName": "container",
+        "componentProps": {},
+        "componentSlots": {},
+        "originalElement": "div",
+        "children": [
+         {
+          "baseStyles": {
+           "color": "var(--ink-gray-8)",
+           "fontWeight": "500"
+          },
+          "componentId": "pls-title",
+          "componentName": "TextBlock",
+          "componentProps": {
+           "fontSize": "text-lg",
+           "tag": "p",
+           "text": "Success stories"
+          },
+          "componentSlots": {}
+         },
+         {
+          "baseStyles": {
+           "backgroundColor": "var(--surface-gray-2)",
+           "borderRadius": "9999px",
+           "padding": "1px 6px"
+          },
+          "componentId": "pls-count-badge",
+          "componentName": "container",
+          "componentProps": {},
+          "componentSlots": {},
+          "originalElement": "div",
+          "children": [
+           {
+            "baseStyles": {
+             "color": "var(--ink-gray-6)"
+            },
+            "componentId": "pls-count",
+            "componentName": "TextBlock",
+            "componentProps": {
+             "fontSize": "text-xs",
+             "tag": "p",
+             "text": "{{ storyCount }}"
+            },
+            "componentSlots": {}
+           }
+          ]
+         },
+         {
+          "baseStyles": {
+           "alignItems": "center",
+           "display": "flex",
+           "gap": "8px",
+           "marginLeft": "auto"
+          },
+          "componentId": "pls-actions",
+          "componentName": "container",
+          "componentProps": {},
+          "componentSlots": {},
+          "originalElement": "div",
+          "children": [
+           {
+            "baseStyles": {
+             "width": "10rem"
+            },
+            "componentId": "pls-filter",
+            "componentName": "Select",
+            "componentProps": {
+             "aria-label": "Filter stories by industry",
+             "modelValue": {
+              "$type": "variable",
+              "name": "selectedStoryIndustry"
+             },
+             "options": "{{ storyIndustryOptions }}",
+             "size": "sm",
+             "variant": "subtle"
+            },
+            "componentSlots": {},
+            "visibilityCondition": "!isEditing && storyIndustryOptions.length > 1"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "baseStyles": {
+       "display": "flex",
+       "flexDirection": "column"
+      },
+      "componentId": "pls-body",
+      "componentName": "container",
+      "componentProps": {},
+      "componentSlots": {},
+      "originalElement": "div",
+      "children": [
+       {
+        "baseStyles": {
+         "alignItems": "flex-start",
+         "display": "flex",
+         "flexDirection": "column",
+         "gap": "6px"
+        },
+        "componentId": "pls-featured",
+        "componentName": "container",
+        "componentProps": {},
+        "componentSlots": {},
+        "originalElement": "div",
+        "visibilityCondition": "storyView.featured",
+        "children": [
+         {
+          "componentId": "pls-featured-top",
+          "componentName": "container",
+          "originalElement": "div",
+          "baseStyles": {
+           "alignItems": "center",
+           "alignSelf": "stretch",
+           "display": "flex",
+           "justifyContent": "space-between",
+           "minHeight": "36px"
+          },
+          "children": [
+           {
+            "baseStyles": {
+             "backgroundImage": "{{ storyLogo(storyView.featured) }}",
+             "backgroundPosition": "left center",
+             "backgroundRepeat": "no-repeat",
+             "backgroundSize": "contain",
+             "flexShrink": "0",
+             "height": "36px",
+             "width": "64px"
+            },
+            "componentId": "pls-featured-logo",
+            "componentName": "container",
+            "componentProps": {},
+            "componentSlots": {},
+            "originalElement": "div",
+            "attributes": {
+             "aria-hidden": "true"
+            },
+            "visibilityCondition": "storyView.featured.client_logo"
+           },
+           {
+            "componentId": "pls-featured-menu-wrap",
+            "componentName": "container",
+            "originalElement": "div",
+            "baseStyles": {
+             "marginLeft": "auto"
+            },
+            "children": [
+             {
+              "componentId": "pls-featured-menu",
+              "componentName": "Dropdown",
+              "componentProps": {
+               "align": "end",
+               "options": "{{ storyMenu(storyView.featured) }}"
+              },
+              "children": [
+               {
+                "componentId": "pls-featured-menu-btn",
+                "componentName": "Button",
+                "componentProps": {
+                 "icon": "lucide-more-horizontal",
+                 "variant": "ghost",
+                 "size": "sm"
+                },
+                "attributes": {
+                 "aria-label": "More for the featured story"
+                }
+               }
+              ]
+             }
+            ],
+            "visibilityCondition": "isEditing"
+           }
+          ]
+         },
+         {
+          "baseStyles": {
+           "color": "var(--ink-gray-9)",
+           "marginTop": "10px",
+           "fontWeight": "600"
+          },
+          "componentId": "pls-featured-headline",
+          "componentName": "TextBlock",
+          "componentProps": {
+           "fontSize": "text-xl",
+           "tag": "p",
+           "text": "{{ storyView.featured.headline }}"
+          },
+          "componentSlots": {}
+         },
+         {
+          "baseStyles": {
+           "color": "var(--ink-gray-6)"
+          },
+          "componentId": "pls-featured-industry",
+          "componentName": "TextBlock",
+          "componentProps": {
+           "fontSize": "text-p-base",
+           "tag": "p",
+           "text": "{{ storyView.featured.category }}"
+          },
+          "componentSlots": {},
+          "visibilityCondition": "storyView.featured.category"
+         },
+         {
+          "componentEvents": {
+           "click": {
+            "action": "Run Script",
+            "event": "click",
+            "script": "openStory(storyView.value.featured);"
+           }
+          },
+          "componentId": "pls-featured-read",
+          "componentName": "Button",
+          "componentProps": {
+           "label": "Read the story",
+           "variant": "subtle"
+          },
+          "componentSlots": {},
+          "baseStyles": {
+           "marginTop": "10px"
+          },
+          "visibilityCondition": "storyView.featured.url"
+         }
+        ]
+       },
+       {
+        "baseStyles": {
+         "display": "flex",
+         "flexDirection": "column",
+         "marginTop": "28px"
+        },
+        "componentId": "pls-rows",
+        "componentName": "Repeater",
+        "componentProps": {
+         "data": "{{ storyView.rows }}",
+         "dataKey": "index",
+         "emptyStateMessage": ""
+        },
+        "componentSlots": {
+         "default": {
+          "parentBlockId": "pls-rows",
+          "slotContent": [
+           {
+            "baseStyles": {
+             "alignItems": "center",
+             "borderBottom": "{{ dataItem.last ? 'none' : '1px solid var(--outline-gray-1)' }}",
+             "cursor": "{{ dataItem.url && !isEditing ? 'pointer' : 'default' }}",
+             "display": "flex",
+             "gap": "12px",
+             "padding": "16px 0"
+            },
+            "componentId": "pls-row",
+            "componentName": "container",
+            "componentProps": {},
+            "componentSlots": {},
+            "originalElement": "div",
+            "attributes": {
+             "aria-label": "{{ isEditing ? null : 'Read the story: ' + dataItem.headline }}",
+             "role": "{{ dataItem.url && !isEditing ? 'link' : null }}",
+             "tabindex": "{{ dataItem.url && !isEditing ? 0 : null }}"
+            },
+            "componentEvents": {
+             "click": {
+              "action": "Run Script",
+              "event": "click",
+              "script": "if (!isEditing.value) openStory(dataItem);"
+             },
+             "keydown.enter": {
+              "action": "Run Script",
+              "event": "keydown.enter",
+              "script": "if (!isEditing.value) openStory(dataItem);"
+             }
+            },
+            "children": [
+             {
+              "baseStyles": {
+               "backgroundImage": "{{ storyLogo(dataItem) }}",
+               "backgroundPosition": "center",
+               "backgroundRepeat": "no-repeat",
+               "backgroundSize": "contain",
+               "flexShrink": "0",
+               "height": "32px",
+               "width": "56px",
+               "backgroundColor": "{{ dataItem.client_logo ? 'transparent' : 'var(--surface-gray-2)' }}",
+               "borderRadius": "6px"
+              },
+              "componentId": "pls-row-logo",
+              "componentName": "container",
+              "componentProps": {},
+              "componentSlots": {},
+              "originalElement": "div",
+              "attributes": {
+               "aria-hidden": "true"
+              }
+             },
+             {
+              "baseStyles": {
+               "display": "flex",
+               "flexDirection": "column",
+               "gap": "2px",
+               "minWidth": "0px",
+               "flex": "1 1 0px"
+              },
+              "componentId": "pls-row-text",
+              "componentName": "container",
+              "componentProps": {},
+              "componentSlots": {},
+              "originalElement": "div",
+              "children": [
+               {
+                "baseStyles": {
+                 "color": "var(--ink-gray-8)",
+                 "fontWeight": "500"
+                },
+                "componentId": "pls-row-headline",
+                "componentName": "TextBlock",
+                "componentProps": {
+                 "fontSize": "text-base",
+                 "tag": "p",
+                 "text": "{{ dataItem.headline }}"
+                },
+                "componentSlots": {}
+               },
+               {
+                "baseStyles": {
+                 "color": "var(--ink-gray-6)"
+                },
+                "componentId": "pls-row-industry",
+                "componentName": "TextBlock",
+                "componentProps": {
+                 "fontSize": "text-p-base",
+                 "tag": "p",
+                 "text": "{{ dataItem.category }}"
+                },
+                "componentSlots": {},
+                "visibilityCondition": "dataItem.category"
+               }
+              ]
+             },
+             {
+              "componentId": "pls-row-menu",
+              "componentName": "Dropdown",
+              "componentProps": {
+               "align": "end",
+               "options": "{{ storyMenu(dataItem) }}"
+              },
+              "children": [
+               {
+                "componentId": "pls-row-menu-btn",
+                "componentName": "Button",
+                "componentProps": {
+                 "icon": "lucide-more-horizontal",
+                 "variant": "ghost",
+                 "size": "sm"
+                },
+                "attributes": {
+                 "aria-label": "{{ 'More for ' + dataItem.headline }}"
+                }
+               }
+              ],
+              "visibilityCondition": "isEditing"
+             }
+            ]
+           }
+          ],
+          "slotId": "pls-rows:default"
+         }
+        },
+        "visibilityCondition": "storyView.rows.length"
+       },
+       {
+        "componentEvents": {
+         "click": {
+          "action": "Run Script",
+          "event": "click",
+          "script": "showAllStories.value = !showAllStories.value;"
+         }
+        },
+        "componentId": "pls-more",
+        "componentName": "Button",
+        "componentProps": {
+         "label": "{{ storyView.moreLabel }}",
+         "variant": "ghost",
+         "iconRight": "{{ showAllStories ? 'lucide-chevron-up' : 'lucide-chevron-down' }}"
+        },
+        "componentSlots": {},
+        "baseStyles": {
+         "alignSelf": "flex-start",
+         "marginTop": "8px"
+        },
+        "visibilityCondition": "storyView.moreLabel"
+       },
+       {
+        "baseStyles": {
+         "color": "var(--ink-gray-5)"
+        },
+        "componentId": "pls-empty",
+        "componentName": "TextBlock",
+        "componentProps": {
+         "fontSize": "text-p-base",
+         "tag": "p",
+         "text": "No success stories yet."
+        },
+        "componentSlots": {},
+        "visibilityCondition": "!storyView.featured"
+       }
+      ]
+     }
+    ],
+    "componentId": "stories-section",
+    "componentName": "container",
+    "componentProps": {},
+    "componentSlots": {},
+    "originalElement": "div"
+   }
+  ],
+  "componentProps": {},
+  "componentSlots": {}
+ },
+ "component_id": "partnerprofilestories",
+ "component_name": "PartnerProfileStories",
+ "creation": "2026-11-16 15:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Studio Component",
+ "idx": 0,
+ "inputs": [],
+ "is_disabled": 0,
+ "is_standard": 1,
+ "modified": "2026-11-16 15:00:00.000000",
+ "modified_by": "Administrator",
+ "name": "partnerprofilestories",
+ "owner": "Administrator"
+}
