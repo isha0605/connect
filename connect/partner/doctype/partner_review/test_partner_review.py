@@ -5,6 +5,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner
+from connect.partner.doctype.review_request.test_review_request import make_reviewer
 from connect.partner.doctype.partner_review.partner_review import get_my_review_for_partner, submit_partner_review
 
 PARTNER = "_Test Review Partner"
@@ -45,6 +46,19 @@ class TestWhoReviews(IntegrationTestCase):
 		review = submit_partner_review(PARTNER, 2)
 		frappe.set_user("Administrator")
 
-		frappe.get_doc("Partner Review", review["name"]).update({"is_hidden": 1}).save()
+		reviewer = make_reviewer("review.moderator@example.test")
+		frappe.set_user(self.buyer)
+		with self.assertRaises(frappe.PermissionError):
+			frappe.get_doc("Partner Review", review["name"]).hide("Not a customer")
+
+		frappe.set_user(reviewer)
+		doc = frappe.get_doc("Partner Review", review["name"])
+		with self.assertRaises(frappe.ValidationError):
+			doc.hide("")
+		doc.hide("Not a customer")
+		frappe.set_user("Administrator")
 
 		self.assertEqual(frappe.db.get_value("Partner", PARTNER, "rating"), 0)
+		self.assertEqual(
+			frappe.db.get_value("Partner Review", review["name"], ["is_hidden", "hidden_reason"]), (1, "Not a customer")
+		)

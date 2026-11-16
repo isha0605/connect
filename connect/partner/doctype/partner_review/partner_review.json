@@ -14,7 +14,9 @@
   "reviewed_on",
   "verification",
   "review_request",
+  "is_free_email",
   "is_hidden",
+  "hidden_reason",
   "headline",
   "quote",
   "section_break_dimensions",
@@ -90,11 +92,29 @@
   },
   {
    "default": "0",
+   "fetch_from": "review_request.is_free_email",
+   "fieldname": "is_free_email",
+   "fieldtype": "Check",
+   "label": "From a Free Email Address",
+   "read_only": 1,
+   "in_standard_filter": 1,
+   "description": "The reviewer confirmed with a free email address like Gmail, which says less about where they work."
+  },
+  {
+   "default": "0",
    "fieldname": "is_hidden",
    "fieldtype": "Check",
    "label": "Hidden",
    "in_standard_filter": 1,
-   "description": "A hidden review isn't shown on the partner's profile and doesn't count in their rating."
+   "description": "A hidden review isn't shown on the partner's profile and doesn't count in their rating. Use Hide review to change it.",
+   "read_only": 1
+  },
+  {
+   "depends_on": "is_hidden",
+   "fieldname": "hidden_reason",
+   "fieldtype": "Small Text",
+   "label": "Why It's Hidden",
+   "read_only": 1
   },
   {
    "fieldname": "headline",
@@ -150,7 +170,7 @@
  "index_web_pages_for_search": 1,
  "istable": 0,
  "links": [],
- "modified": "2026-11-16 12:00:00.000000",
+ "modified": "2026-11-16 17:00:00.000000",
  "modified_by": "Administrator",
  "module": "Partner",
  "name": "Partner Review",
@@ -173,11 +193,11 @@
   {
    "role": "Partner Reviewer",
    "read": 1,
-   "write": 1,
    "report": 1,
    "export": 1
   }
  ],
  "sort_field": "modified",
- "sort_order": "DESC"
+ "sort_order": "DESC",
+ "track_changes": 1
 }

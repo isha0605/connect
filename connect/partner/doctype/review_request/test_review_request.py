@@ -160,3 +160,6 @@ def make_reviewer(email):
 	if not frappe.db.exists("User", email):
 		frappe.get_doc({"doctype": "User", "email": email, "first_name": "Reviewer"}).insert(ignore_permissions=True)
 	frappe.get_doc("User", email).add_roles("Partner Reviewer")
+	# A role list read before the role was added stays cached for the user.
+	frappe.clear_cache(user=email)
+	return email
