@@ -1,8 +1,9 @@
 <script setup>
 // The page a review request's email link opens. It says which partner is asking about which
 // project, and acts only when the customer answers (mail scanners open links on their own):
-// "I worked with them" signs them in and opens the review form on the partner's profile; "I didn't"
-// tells the partner and Frappe's partner reviewers. The link itself is what authorises them.
+// "I worked with them" opens the review form on the partner's profile; "I didn't" tells the partner
+// and Frappe's partner reviewers. The link signs in a new customer; someone with an account signs in
+// to it first, with the usual code, and comes back here.
 import { computed, reactive, ref } from "vue"
 import { Button, FormControl, call } from "frappe-ui"
 
@@ -22,6 +23,7 @@ const busy = ref(false)
 const error = ref("")
 
 const partnerName = computed(() => request.value?.partner_name || "the partner")
+const needsSignIn = computed(() => request.value?.has_account && !request.value?.is_signed_in_as_contact)
 const errors = computed(() => {
 	if (!tried.value) return {}
 	const found = {}
@@ -64,6 +66,13 @@ async function accept() {
 
 function signIn() {
 	window.location.href = SIGN_IN
+}
+
+// Back to this link after the code. Someone signed in to another account signs out first.
+async function signInAsContact() {
+	busy.value = true
+	if (!window.is_guest) await call("logout").catch(() => {})
+	window.location.href = `${SIGN_IN}&next=${encodeURIComponent(window.location.pathname + window.location.search)}`
 }
 
 async function decline() {
@@ -112,7 +121,16 @@ async function decline() {
 				{{ request.project_summary }}
 			</blockquote>
 
-			<form v-if="state === 'ready'" novalidate class="flex flex-col gap-4" @submit.prevent="accept">
+			<div v-if="state === 'ready' && needsSignIn" class="flex flex-col gap-4">
+				<p class="text-p-base text-ink-gray-7">
+					You already have an account as <span class="font-medium text-ink-gray-9">{{ request.contact_email }}</span>.
+					Sign in with the code we email you, and you'll come back here to confirm.
+				</p>
+				<Button variant="solid" label="Sign in to continue" :loading="busy" @click="signInAsContact" />
+				<Button variant="ghost" label="I didn't work with them" :disabled="busy" @click="state = 'declining'" />
+			</div>
+
+			<form v-else-if="state === 'ready'" novalidate class="flex flex-col gap-4" @submit.prevent="accept">
 				<FormControl v-model="form.full_name" label="Your name" required :error="errors.full_name" />
 				<FormControl
 					v-if="!request.has_account"
@@ -121,7 +139,7 @@ async function decline() {
 					required
 					:error="errors.company_name"
 				/>
-				<p class="text-p-sm text-ink-gray-5">You'll be signed in as {{ request.contact_email }}.</p>
+				<p v-if="!request.has_account" class="text-p-sm text-ink-gray-5">You'll be signed in as {{ request.contact_email }}.</p>
 				<p v-if="error" class="text-p-sm text-ink-red-6">{{ error }}</p>
 				<Button variant="solid" type="submit" :label="`Yes, I worked with ${partnerName}`" :loading="busy" />
 				<Button variant="ghost" label="I didn't work with them" :disabled="busy" @click="state = 'declining'" />

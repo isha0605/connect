@@ -8,7 +8,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, now_datetime
 
-from connect.customer.doctype.customer_project.test_hiring import make_partner, make_partner_admin
+from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
 from connect.partner.doctype.connect_partner_member.test_switch_partner import add_member
 from connect.partner.doctype.partner_review.partner_review import submit_partner_review
 from connect.partner.doctype.review_request import review_request as requests
@@ -109,6 +109,25 @@ class TestReviewRequest(IntegrationTestCase):
 			frappe.db.get_value("Review Request", request["name"], ["status", "review"]), ("Reviewed", review["name"])
 		)
 		self.assertEqual(frappe.db.get_value("Partner", PARTNER, "rating"), 4)
+
+	def test_someone_with_an_account_must_sign_in_to_it_first(self):
+		make_buyer(self.customer_email, f"Acme Steel {frappe.generate_hash(length=6)}")
+		request = self.ask()
+		token = self.link_token()
+
+		for user in ("Guest", OWNER):
+			frappe.set_user(user)
+			self.assertFalse(requests.open_request(token)["is_signed_in_as_contact"])
+			with self.subTest(user=user), self.assertRaises(frappe.PermissionError):
+				requests.accept_request(token, "Ravi Kumar")
+
+		frappe.set_user(self.customer_email)
+		self.assertTrue(requests.open_request(token)["is_signed_in_as_contact"])
+		requests.accept_request(token, "Ravi Kumar")
+		frappe.set_user("Administrator")
+
+		self.login_manager.login_as.assert_not_called()
+		self.assertEqual(frappe.db.get_value("Review Request", request["name"], "status"), "Accepted")
 
 	def test_a_link_works_once_and_not_after_it_expires_or_is_withdrawn(self):
 		self.ask()

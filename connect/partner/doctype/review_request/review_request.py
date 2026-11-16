@@ -306,8 +306,11 @@ def _request_dict(doc: ReviewRequest) -> dict:
 
 def open_request(token: str) -> dict:
 	"""What the link is about, for the page the customer lands on."""
+	from connect.auth.accounts import find_user
+
 	doc = request_for_link(token)
 	doc.open()
+	user = find_user(doc.contact_email)
 	return {
 		"partner": doc.partner,
 		"partner_name": doc.partner_name(),
@@ -316,14 +319,15 @@ def open_request(token: str) -> dict:
 		"contact_name": doc.contact_name,
 		"contact_email": doc.contact_email,
 		"company_name": doc.company_name,
-		"has_account": bool(frappe.db.exists("User", doc.contact_email)),
+		"has_account": bool(user),
+		"is_signed_in_as_contact": bool(user) and frappe.session.user == user.name,
 	}
 
 
 def accept_request(token: str, full_name: str | None = None, company_name: str | None = None) -> dict:
-	"""The customer confirms they worked with the partner. The link proves they read the email, so
-	it signs them in, making their account and company from the details they confirm when they're
-	new. Returns where to go next: the partner's profile, to write the review."""
+	"""The customer confirms they worked with the partner. A new customer gets an account and company
+	from the details they confirm, and the link signs them in. Someone with an account must already be
+	signed in to it. Returns where to go next: the partner's profile, to write the review."""
 	from connect.auth.accounts import create_account, create_customer, find_user
 	from connect.customer.doctype.customer.customer import get_customer_for_user
 
@@ -335,17 +339,17 @@ def accept_request(token: str, full_name: str | None = None, company_name: str |
 	company_name = (company_name or "").strip() or doc.company_name
 
 	user = find_user(email)
-	if user and not user.enabled:
-		frappe.throw(_("This account is disabled. Contact Frappe to restore access."))
 	if user:
-		customer = get_customer_for_user(user.name) or create_customer(user.name, full_name, company_name)
-		user_name = user.name
+		# The link lasts 30 days and can be forwarded; an account's projects and chats need its own
+		# short-lived sign-in code, not the link.
+		if frappe.session.user != user.name:
+			frappe.throw(_("Sign in as {0} to confirm this.").format(email), frappe.PermissionError)
+		doc.accept(get_customer_for_user(user.name) or create_customer(user.name, full_name, company_name))
 	else:
 		user_name = create_account(email, {"full_name": full_name, "company_name": company_name})
-		customer = get_customer_for_user(user_name)
+		doc.accept(get_customer_for_user(user_name))
+		frappe.local.login_manager.login_as(user_name)
 
-	doc.accept(customer)
-	frappe.local.login_manager.login_as(user_name)
 	return {"redirect": f"/connect/partner-profile-redesign/{doc.partner}?review=1"}
 
 
