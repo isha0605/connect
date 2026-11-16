@@ -1,39 +1,33 @@
-// Partner profile: a Connect button in the pinned header once the one beside the partner's
-// name has scrolled away, the photo and video gallery, and the partner's story at the end of
-// the page. Connect opens the New project dialog for this partner (partnerConnect.ts).
+// Partner profile: the sections the partner's Listing shows (the partnerprofilesections and
+// partnerprofilestories components, fed by useProfileView), reviews, a Connect button in the pinned
+// header once the one beside the partner's name has scrolled away, and a lightbox for the photos.
+// Connect opens the New project dialog for this partner (partnerConnect.ts).
 
 import { computed, onScopeDispose, ref, watch } from "vue"
 import { partnerConnect } from "@app/utils/partnerConnect"
-import { DEFAULT_ANSWERS, clientLogoRow, featureRows, storyIndustryOptions, storyLogo, storyView } from "@app/utils/partnerProfile"
+import { useProfileView } from "@app/utils/profileView"
 import { onPreviewChange, readPreview, withPreview } from "@app/utils/profilePreview"
 import { goToSignIn } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
 
 const HERO_CONNECT = "contact-btn-ppr"
 const HEADER = "header-row-ppr"
-const STORIES_SECTION = "success-stories-section"
 // How long to keep looking for the page's buttons after it opens.
 const WAIT_FOR_PAGE_MS = 5000
-
-function article(word) {
-	return /^[aeiou]/i.test(word) ? "an" : "a"
-}
-
-const PMM_GUIDE = "https://frappe.io/partners/maturity-model"
-
-// The grid shows three tiles; the third says how many more the gallery holds.
-const GALLERY_TILES = 3
 
 function escapeAttr(value) {
 	return String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")
 }
 
-function listOf(items, shown = 3) {
-	const lead = items.slice(0, shown)
-	const rest = items.length - lead.length
-	if (rest > 0) return `${lead.join(", ")} and ${rest} more`
-	if (lead.length <= 1) return lead[0] || ""
-	return `${lead.slice(0, -1).join(", ")} and ${lead.at(-1)}`
+// The Partner record in the shape the shared sections read, the same as get_my_profile's.
+function profileOf(record) {
+	if (!record) return null
+	return {
+		...record,
+		apps: (record.apps || []).map((row) => row.app),
+		migrations: (record.migrations || []).map((row) => row.migration_path),
+		founder: (record.team || []).find((member) => member.is_founder) || {},
+	}
 }
 
 export default function setup(context) {
@@ -97,8 +91,7 @@ export default function setup(context) {
 		})
 	}
 
-	// Every Connect on the page: the one beside the partner's name, the header's, and the
-	// pricing cards'.
+	// Both Connects on the page: the one beside the partner's name and the header's.
 	const connecting = partnerConnect(context)
 	function connect() {
 		connecting.connectWith({ name: route.params.partner_id, partner_name: partner.data?.partner_name })
@@ -131,40 +124,17 @@ export default function setup(context) {
 		observer?.disconnect()
 	})
 
-	// A verified industry has stories behind it: show only those, where the stories are.
-	const showAllStories = ref(false)
+	// The sections are the Listing's, never in edit mode here.
+	const isEditing = ref(false)
+	const profile = computed(() => profileOf(partner.data))
+	const stories = computed(() => partner.data?.success_stories || [])
+	const view = useProfileView({ profile, stories, isEditing, selectedStoryIndustry, forCustomers: true })
 
-	function showStoriesFor(industry) {
-		selectedStoryIndustry.value = industry
-		document.querySelector(`[data-component-id="${STORIES_SECTION}"]`)?.scrollIntoView({ behavior: "smooth" })
-	}
-
-	// ---- Process maturity (PMM) ----
-	// Frappe rates partners Level 1 to 5; 0 means not rated yet (frappe.io shows TBD).
-	const pmmLevel = computed(() => Math.round(Number(partner.data?.pmm_level) || 0))
-	const pmmLabel = computed(() => (pmmLevel.value ? String(pmmLevel.value) : "Not rated yet"))
-
-	function openPmmGuide() {
-		window.open(PMM_GUIDE, "_blank", "noopener")
-	}
-
-	// ---- Gallery ----
-	// Each Partner Photo is an image, or a video with the image as its cover.
+	// Each Partner Photo is an image, or a video with the image as its cover. Kept in the
+	// photos' own order, so a tile's index is its place in the lightbox.
 	const galleryItems = computed(() =>
-		(partner.data?.photos || [])
-			.filter((p) => p.image || p.video)
-			.map((p) => ({ image: p.image || "", video: p.video || "" })),
+		(partner.data?.photos || []).map((photo) => ({ image: photo.image || "", video: photo.video || "" })),
 	)
-	const moreCount = computed(() => Math.max(0, galleryItems.value.length - GALLERY_TILES))
-
-	function tileBackground(index) {
-		const item = galleryItems.value[index]
-		return item?.image ? `url("${item.image}")` : "none"
-	}
-
-	function isVideo(index) {
-		return !!galleryItems.value[index]?.video
-	}
 
 	// -1 while the lightbox is closed.
 	const galleryIndex = ref(-1)
@@ -211,72 +181,18 @@ export default function setup(context) {
 	})
 	onScopeDispose(() => window.removeEventListener("keydown", onGalleryKey))
 
-	// The partner's own account of how they started when they've written one, else the
-	// Description they gave Frappe, else a line made only from facts on their record —
-	// nothing about their history is made up.
-	const origin = computed(() => {
-		const p = partner.data
-		if (!p) return null
-		const place = [p.city, p.country].filter(Boolean).join(", ")
-		const eyebrow = p.year_founded
-			? `Founded ${p.year_founded}${place ? ` in ${place}` : ""}`
-			: place
-				? `Based in ${place}`
-				: ""
-		const text = String(p.origin_story || p.description || "").trim()
-		const paragraphs = text
-			? text
-					.split(/\n\s*\n/)
-					.map((part) => part.replace(/\s*\n\s*/g, " ").trim())
-					.filter(Boolean)
-			: [factsAbout(p, place)]
-		return {
-			eyebrow,
-			heading: p.origin_story ? "How they got started" : `About ${p.partner_name}`,
-			paragraphs,
-		}
-	})
-
-	function factsAbout(p, place) {
-		const tier = p.tier ? `${article(p.tier)} ${p.tier} Frappe partner` : "a Frappe partner"
-		let line = `${p.partner_name} is ${tier}${place ? ` based in ${place}` : ""}.`
-		const stories = p.success_stories || []
-		if (stories.length) {
-			const industries = [...new Set(stories.map((s) => s.category).filter(Boolean))]
-			const count = `${stories.length} success ${stories.length === 1 ? "story" : "stories"}`
-			line += ` They have published ${count}${industries.length ? ` across ${listOf(industries)}` : ""}.`
-		}
-		return line
-	}
-
 	return {
 		...connecting,
+		...view,
+		isEditing,
+		profile,
 		connect,
 		openReview,
 		goToSignIn,
-		showStoriesFor,
-		// success stories: one featured, then a list, filtered by industry
-		storyView: computed(() => storyView(partner.data?.success_stories, selectedStoryIndustry.value, showAllStories.value)),
-		storyCount: computed(() => String((partner.data?.success_stories || []).length)),
-		storyIndustryOptions: computed(() => storyIndustryOptions(partner.data?.success_stories)),
-		storyLogo,
-		showAllStories,
-		openStory: (story) => story?.url && window.open(story.url, "_blank", "noopener"),
-		featureRows: computed(() => featureRows(partner.data?.features)),
-		openFeature: (feature) => window.open(feature.url, "_blank", "noopener"),
-		origin,
-		howWeWork: computed(() => partner.data?.how_we_work || DEFAULT_ANSWERS.how_we_work),
-		clientLogos: computed(() => clientLogoRow(partner.data?.success_stories)),
-		pmmLevel,
-		pmmLabel,
-		openPmmGuide,
+		openMedia: (photo) => openGallery(photo.index),
 		galleryItems,
-		moreCount,
-		tileBackground,
-		isVideo,
 		galleryOpen,
 		galleryCounter,
-		openGallery,
 		closeGallery,
 		showPrevious,
 		showNext,
