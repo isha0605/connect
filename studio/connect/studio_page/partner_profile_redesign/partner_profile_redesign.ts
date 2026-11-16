@@ -4,7 +4,7 @@
 
 import { computed, onScopeDispose, ref, watch } from "vue"
 import { partnerConnect } from "@app/utils/partnerConnect"
-import { DEFAULT_ANSWERS, clientLogoRow, storyIndustryOptions, storyLogo, storyView } from "@app/utils/partnerProfile"
+import { DEFAULT_ANSWERS, clientLogoRow, featureRows, storyIndustryOptions, storyLogo, storyView } from "@app/utils/partnerProfile"
 import { onPreviewChange, readPreview, withPreview } from "@app/utils/profilePreview"
 import { goToSignIn } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
@@ -229,6 +229,8 @@ export default function setup(context) {
 		storyLogo,
 		showAllStories,
 		openStory: (story) => story?.url && window.open(story.url, "_blank", "noopener"),
+		featureRows: computed(() => featureRows(partner.data?.features)),
+		openFeature: (feature) => window.open(feature.url, "_blank", "noopener"),
 		origin,
 		howWeWork: computed(() => partner.data?.how_we_work || DEFAULT_ANSWERS.how_we_work),
 		clientLogos: computed(() => clientLogoRow(partner.data?.success_stories)),

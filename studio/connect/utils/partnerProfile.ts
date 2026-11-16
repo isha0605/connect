@@ -257,6 +257,17 @@ export function uploadImage({ toast, uploading, target, onUploaded }) {
 	input.click()
 }
 
+// ---- Featured by Frappe: podcasts, stories and posts Frappe staff add in the Desk ----
+
+// Each with the line under its title: "Podcast · Episode 13 · 50 min".
+export function featureRows(features) {
+	return (features || []).map((feature, index) => ({
+		...feature,
+		index,
+		meta: [feature.kind, feature.detail].filter(Boolean).join(" · "),
+	}))
+}
+
 // ---- Success stories: the first featured, then a list, filtered by industry ----
 
 // Stories listed under the featured one before "Show all".

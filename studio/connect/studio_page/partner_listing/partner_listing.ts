@@ -16,6 +16,7 @@ import {
 	SAMPLE_PROFILE,
 	clientLogoCount,
 	clientLogoRow,
+	featureRows,
 	imageTile,
 	isOverLimit,
 	limitCounter,
@@ -415,6 +416,8 @@ export default function setup(context) {
 		showAllStories,
 		showStoriesFor,
 		openStory: (story) => openInNewTab(story.url),
+		featureRows: computed(() => featureRows(profile.value?.features)),
+		openFeature: (feature) => openInNewTab(feature.url),
 		submitStory: () => openInNewTab(SUBMIT_STORY_URL),
 		imageTile,
 		// editing in place
