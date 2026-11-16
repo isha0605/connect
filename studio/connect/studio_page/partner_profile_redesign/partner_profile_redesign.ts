@@ -50,12 +50,16 @@ export default function setup(context) {
 			return
 		}
 		try {
-			const { review, can_review } = await call("connect.api.partner.get_my_review_for_partner", {
+			const { review, can_review, reviewed_by_teammate } = await call("connect.api.partner.get_my_review_for_partner", {
 				partner: route.params.partner_id,
 			})
 			if (fromLink && review) return
 			if (!can_review) {
-				toast.info("Only customers who hired this partner on Connect, or whom they asked for feedback, can review them.")
+				toast.info(
+					reviewed_by_teammate
+						? "Someone at your company has already reviewed this partner."
+						: "Only customers who hired this partner on Connect, or whom they asked for feedback, can review them.",
+				)
 				return
 			}
 			reviewRating.value = review ? review.rating : 0

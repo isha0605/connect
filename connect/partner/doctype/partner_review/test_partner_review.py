@@ -38,6 +38,27 @@ class TestWhoReviews(IntegrationTestCase):
 
 		self.assertEqual(frappe.db.get_value("Partner Review", review["name"], "verification"), "Hired on Connect")
 
+	def test_only_the_author_edits_their_companys_review(self):
+		frappe.get_doc(
+			{"doctype": "Partner Customer", "partner": PARTNER, "customer": "_Test Review Buyer Co", "source": "Connect"}
+		).insert(ignore_permissions=True)
+		frappe.set_user(self.buyer)
+		submit_partner_review(PARTNER, 5, headline="Great work")
+		frappe.set_user("Administrator")
+		teammate = make_buyer("review.teammate@example.test", "_Test Review Buyer Co")
+
+		frappe.set_user(teammate)
+		self.assertEqual(
+			get_my_review_for_partner(PARTNER), {"review": None, "can_review": False, "reviewed_by_teammate": True}
+		)
+		with self.assertRaises(frappe.PermissionError):
+			submit_partner_review(PARTNER, 1, headline="Not great")
+		frappe.set_user("Administrator")
+
+		self.assertEqual(
+			frappe.db.get_value("Partner Review", {"partner": PARTNER}, ["rating", "headline"]), (5, "Great work")
+		)
+
 	def test_a_hidden_review_does_not_count(self):
 		frappe.get_doc(
 			{"doctype": "Partner Customer", "partner": PARTNER, "customer": "_Test Review Buyer Co", "source": "Connect"}

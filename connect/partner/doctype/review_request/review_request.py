@@ -87,6 +87,11 @@ class ReviewRequest(Document):
 		self.token_hash = None
 		self.save(ignore_permissions=True)
 
+		# The company reviewed the partner before it was asked: that review answers the request.
+		review = frappe.db.get_value("Partner Review", {"partner": self.partner, "customer": customer}, "name")
+		if review:
+			frappe.get_doc("Partner Review", review).refresh_standing()
+
 	def decline(self, reason: str | None) -> None:
 		"""The contact says they didn't work with the partner. Frappe's partner reviewers look into it."""
 		self.decline_reason = (reason or "").strip() or None
@@ -239,10 +244,13 @@ EDITABLE_FIELDS = ("contact_name", "contact_email", "company_name", "project_tit
 
 
 def my_requests() -> list[dict]:
-	"""The caller's partner's review requests, newest first."""
+	"""The caller's partner's review requests, newest first, each saying whether Frappe hid its review."""
 	partner = _my_partner()
 	return frappe.get_all(
-		"Review Request", filters={"partner": partner}, fields=list(REQUEST_FIELDS), order_by="creation desc"
+		"Review Request",
+		filters={"partner": partner},
+		fields=[*REQUEST_FIELDS, "review.is_hidden as is_review_hidden"],
+		order_by="creation desc",
 	)
 
 

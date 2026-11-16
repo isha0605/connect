@@ -110,6 +110,32 @@ class TestReviewRequest(IntegrationTestCase):
 		)
 		self.assertEqual(frappe.db.get_value("Partner", PARTNER, "rating"), 4)
 
+		frappe.db.set_value("Partner Review", review["name"], "is_hidden", 1)
+		frappe.set_user(OWNER)
+		self.assertTrue(requests.my_requests()[0].is_review_hidden)
+
+	def test_a_review_the_company_wrote_when_hired_answers_the_request(self):
+		company = f"Acme Steel {frappe.generate_hash(length=6)}"
+		make_buyer(self.customer_email, company)
+		frappe.get_doc({"doctype": "Partner Customer", "partner": PARTNER, "customer": company, "source": "Connect"}).insert(
+			ignore_permissions=True
+		)
+		frappe.set_user(self.customer_email)
+		review = submit_partner_review(PARTNER, 5)
+		request = self.ask()
+
+		frappe.set_user(self.customer_email)
+		requests.accept_request(self.link_token(), "Ravi Kumar")
+		frappe.set_user("Administrator")
+
+		self.assertEqual(
+			frappe.db.get_value("Review Request", request["name"], ["status", "review"]), ("Reviewed", review["name"])
+		)
+		self.assertEqual(
+			frappe.db.get_value("Partner Review", review["name"], ["verification", "review_request"]),
+			("Hired on Connect", request["name"]),
+		)
+
 	def test_someone_with_an_account_must_sign_in_to_it_first(self):
 		make_buyer(self.customer_email, f"Acme Steel {frappe.generate_hash(length=6)}")
 		request = self.ask()

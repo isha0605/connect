@@ -16,7 +16,11 @@ const STATUSES = {
 	Sent: { label: "Sent", theme: "blue", note: (r) => `Sent ${day(r.sent_on)} · link expires ${day(r.expires_on)}` },
 	Opened: { label: "Opened", theme: "blue", note: (r) => `Opened · link expires ${day(r.expires_on)}` },
 	Accepted: { label: "Confirmed", theme: "blue", note: () => "Confirmed working with you, review not written yet" },
-	Reviewed: { label: "Reviewed", theme: "green", note: () => "Review is on your profile" },
+	Reviewed: {
+		label: "Reviewed",
+		theme: "green",
+		note: (r) => (r.is_review_hidden ? "Frappe hid this review from your profile" : "Review is on your profile"),
+	},
 	Declined: { label: "Declined", theme: "red", note: () => "Said they didn't work with you" },
 	Expired: { label: "Expired", theme: "gray", note: () => "No answer before the link expired" },
 	Withdrawn: { label: "Withdrawn", theme: "gray", note: () => "You withdrew the request" },
@@ -58,7 +62,7 @@ function actionsFor(request) {
 		{
 			label: "View review",
 			icon: "lucide-star",
-			condition: () => request.status === "Reviewed",
+			condition: () => request.status === "Reviewed" && !request.is_review_hidden,
 			onClick: () => window.open(`/connect/partner-profile-redesign/${encodeURIComponent(request.partner)}`, "_blank"),
 		},
 		{

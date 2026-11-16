@@ -29,6 +29,12 @@ class PartnerReview(Document):
 	def on_trash(self):
 		recompute_rating_from_reviews(self.partner, exclude=self.name)
 
+	def refresh_standing(self):
+		"""The company's standing with the partner changed, as when it accepts a review request
+		after it wrote this review: the review links that request and says how Connect knows them."""
+		self.verification, self.review_request = _standing(self.partner, self.customer)
+		self.save(ignore_permissions=True)
+
 	@frappe.whitelist()
 	def hide(self, reason=None):
 		"""Frappe's partner reviewers take a review off the profile and out of the rating."""
@@ -64,14 +70,17 @@ def list_partner_reviews(partner):
 
 def get_my_review_for_partner(partner):
 	"""The caller's own review of a partner, so the review form opens pre-filled, and whether
-	they may review it at all."""
+	they may review it at all. A company reviews a partner once, and only its author edits it."""
 	customer = get_customer_for_user()
 	if not customer:
-		return {"review": None, "can_review": False}
+		return {"review": None, "can_review": False, "reviewed_by_teammate": False}
 	rows = frappe.get_all(
 		"Partner Review", filters={"partner": partner, "customer": customer}, fields=["*"], limit_page_length=1
 	)
-	return {"review": rows[0] if rows else None, "can_review": _standing(partner, customer)[0] is not None}
+	review = rows[0] if rows else None
+	if review and review.owner != frappe.session.user:
+		return {"review": None, "can_review": False, "reviewed_by_teammate": True}
+	return {"review": review, "can_review": _standing(partner, customer)[0] is not None, "reviewed_by_teammate": False}
 
 
 def submit_partner_review(
@@ -110,9 +119,11 @@ def submit_partner_review(
 	if review_request:
 		values["review_request"] = review_request
 
-	existing = frappe.db.get_value("Partner Review", {"partner": partner, "customer": customer}, "name")
+	existing = frappe.db.get_value("Partner Review", {"partner": partner, "customer": customer}, ["name", "owner"], as_dict=True)
+	if existing and existing.owner != frappe.session.user:
+		frappe.throw(_("Someone at your company has already reviewed this partner."), frappe.PermissionError)
 	if existing:
-		doc = frappe.get_doc("Partner Review", existing)
+		doc = frappe.get_doc("Partner Review", existing.name)
 		doc.update(values)
 		doc.save(ignore_permissions=True)
 	else:
@@ -135,9 +146,10 @@ def review_standing(partner: str, customer: str) -> tuple[str, str | None]:
 
 
 def _standing(partner: str, customer: str) -> tuple[str | None, str | None]:
-	if frappe.db.exists("Partner Customer", {"partner": partner, "customer": customer, "source": "Connect"}):
-		return HIRED, None
+	# A hired customer may also have answered the partner's request; the review answers it too.
 	request = frappe.db.get_value(
 		"Review Request", {"partner": partner, "customer": customer, "status": ["in", ACCEPTED]}, "name"
 	)
+	if frappe.db.exists("Partner Customer", {"partner": partner, "customer": customer, "source": "Connect"}):
+		return HIRED, request
 	return (CONFIRMED, request) if request else (None, None)
