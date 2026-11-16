@@ -35,7 +35,7 @@ def execute(filters: dict | None = None) -> tuple[list[dict], list[dict]]:
 
 def get_columns() -> list[dict]:
 	labels = {
-		"brief": (_("Briefs: On Time"), _("Briefs: Late")),
+		"brief": (_("Requirements: On Time"), _("Requirements: Late")),
 		"hire": (_("Hire Requests: On Time"), _("Hire Requests: Late")),
 		"chat": (_("Chat Replies: On Time"), _("Chat Replies: Late")),
 	}
