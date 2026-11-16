@@ -11,7 +11,8 @@ from connect.auth.invitations import hash_token
 LINK_DAYS = 30
 REMIND_AFTER_DAYS = 3
 SENT_A_DAY = 20
-SIGN_IN_PAGE = "/connect/login-signup-redesign"
+# Where the emailed link opens: it says who is asking, and acts only when the customer answers.
+REVIEW_PAGE = "/connect/review-request"
 
 # The link works while the request is in one of these.
 OPEN = ("Sent", "Opened")
@@ -154,7 +155,7 @@ class ReviewRequest(Document):
 				"contact_name": self.contact_name,
 				"partner": partner,
 				"project_title": self.project_title,
-				"link": get_url(f"{SIGN_IN_PAGE}?review={token}"),
+				"link": get_url(f"{REVIEW_PAGE}?token={token}"),
 				"expires_on": frappe.utils.format_date(self.expires_on),
 				"reminder": reminder,
 			},

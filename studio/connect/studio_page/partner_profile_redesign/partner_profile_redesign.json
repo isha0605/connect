@@ -3120,7 +3120,7 @@
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "if (!myContext.data || !myContext.data.customer) {\n  goToSignIn();\n  return;\n}\ncall('connect.api.partner.get_my_review_for_partner', { partner: route.params.partner_id }).then((r) => {\n  reviewRating.value = r ? r.rating : 0;\n  reviewHeadline.value = r ? (r.headline || '') : '';\n  reviewQuote.value = r ? (r.quote || '') : '';\n  reviewDialogOpen.value = true;\n});"
+               "script": "openReview();"
               }
              },
              "componentId": "reviews-write-btn",
@@ -3563,6 +3563,21 @@
                       "text": "{{ item.customer_name || item.customer }}"
                      },
                      "componentSlots": {}
+                    },
+                    {
+                     "classes": [
+                      "self-start"
+                     ],
+                     "componentId": "review-verification",
+                     "componentName": "Badge",
+                     "componentProps": {
+                      "label": "{{ item.verification }}",
+                      "theme": "green",
+                      "variant": "subtle",
+                      "size": "sm"
+                     },
+                     "componentSlots": {},
+                     "visibilityCondition": "item.verification && item.verification !== 'Not verified'"
                     }
                    ],
                    "componentId": "review-header-body",
@@ -4302,7 +4317,7 @@
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "reviewSubmitting.value = true;\ncall('connect.api.partner.submit_partner_review', { partner: route.params.partner_id, rating: reviewRating.value, headline: reviewHeadline.value, quote: reviewQuote.value }).then(() => {\n  toast({ title: 'Review submitted', text: 'Thanks for sharing your feedback!', icon: 'check-circle' });\n  reviewDialogOpen.value = false;\n  reviewSubmitting.value = false;\n  partnerReviews.reload();\n  partner.reload();\n}).catch(() => { reviewSubmitting.value = false; });"
+               "script": "reviewSubmitting.value = true;\ncall('connect.api.partner.submit_partner_review', { partner: route.params.partner_id, rating: reviewRating.value, headline: reviewHeadline.value, quote: reviewQuote.value }).then(() => {\n  toast({ title: 'Review submitted', text: 'Thanks for sharing your feedback!', icon: 'check-circle' });\n  reviewDialogOpen.value = false;\n  reviewSubmitting.value = false;\n  partnerReviews.reload();\n  partner.reload();\n}).catch((error) => {\n  reviewSubmitting.value = false;\n  toast({ title: 'Could not submit your review', text: (error && error.messages && error.messages[0]) || 'Try again.', icon: 'alert-circle' });\n});"
               }
              },
              "componentId": "review-submit-btn",
@@ -5197,7 +5212,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-13 11:00:00.000000",
+ "modified": "2026-11-16 15:00:00.000000",
  "modified_by": "Administrator",
  "name": "partner_profile_redesign",
  "owner": "Administrator",

@@ -46,14 +46,15 @@ def list_partner_reviews(partner):
 
 
 def get_my_review_for_partner(partner):
-	"""Returns the caller's own review of a partner, if one exists, so the review form opens pre-filled."""
+	"""The caller's own review of a partner, so the review form opens pre-filled, and whether
+	they may review it at all."""
 	customer = get_customer_for_user()
 	if not customer:
-		return None
+		return {"review": None, "can_review": False}
 	rows = frappe.get_all(
 		"Partner Review", filters={"partner": partner, "customer": customer}, fields=["*"], limit_page_length=1
 	)
-	return rows[0] if rows else None
+	return {"review": rows[0] if rows else None, "can_review": _standing(partner, customer)[0] is not None}
 
 
 def submit_partner_review(
@@ -107,14 +108,19 @@ def submit_partner_review(
 def review_standing(partner: str, customer: str) -> tuple[str, str | None]:
 	"""How Connect knows the customer worked with the partner, and the review request that shows
 	it, if any. Throws for a customer who neither hired the partner nor was asked by them."""
+	verification, request = _standing(partner, customer)
+	if not verification:
+		frappe.throw(
+			_("Only customers who hired this partner on Connect, or whom they asked for feedback, can review them."),
+			frappe.PermissionError,
+		)
+	return verification, request
+
+
+def _standing(partner: str, customer: str) -> tuple[str | None, str | None]:
 	if frappe.db.exists("Partner Customer", {"partner": partner, "customer": customer, "source": "Connect"}):
 		return HIRED, None
 	request = frappe.db.get_value(
 		"Review Request", {"partner": partner, "customer": customer, "status": ["in", ACCEPTED]}, "name"
 	)
-	if request:
-		return CONFIRMED, request
-	frappe.throw(
-		_("Only customers who hired this partner on Connect, or whom they asked for feedback, can review them."),
-		frappe.PermissionError,
-	)
+	return (CONFIRMED, request) if request else (None, None)

@@ -56,7 +56,7 @@ class TestReviewRequest(IntegrationTestCase):
 
 	def link_token(self):
 		link = self.sendmail.call_args.kwargs["args"]["link"]
-		return parse_qs(urlparse(link).query)["review"][0]
+		return parse_qs(urlparse(link).query)["token"][0]
 
 	def test_sending_emails_a_one_time_link(self):
 		request = self.ask()

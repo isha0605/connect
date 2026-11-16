@@ -40,6 +40,32 @@ export default function setup(context) {
 	startTracking(context)
 	const { route, partner, showHeaderConnect, selectedStoryIndustry, toast } = context
 
+	// Reviews: only the partner's real customers write one (hired on Connect, or asked by the
+	// partner). ?review=1, from a review request the customer just confirmed, opens the form.
+	const { call, myContext, reviewDialogOpen, reviewRating, reviewHeadline, reviewQuote } = context
+	async function openReview() {
+		if (window.is_guest) {
+			goToSignIn()
+			return
+		}
+		try {
+			const { review, can_review } = await call("connect.api.partner.get_my_review_for_partner", {
+				partner: route.params.partner_id,
+			})
+			if (!can_review) {
+				toast.info("Only customers who hired this partner on Connect, or whom they asked for feedback, can review them.")
+				return
+			}
+			reviewRating.value = review ? review.rating : 0
+			reviewHeadline.value = review ? review.headline || "" : ""
+			reviewQuote.value = review ? review.quote || "" : ""
+			reviewDialogOpen.value = true
+		} catch {
+			toast.error("Couldn't open the review form. Try again.")
+		}
+	}
+	if (route.query.review && !window.is_guest) openReview()
+
 	// ?preview=1, from the partner's own Profile builder: their unsaved profile over the saved
 	// one, kept in step as they type in the builder's tab. Only ever this browser's own draft.
 	const partnerId = route.params.partner_id
@@ -220,6 +246,7 @@ export default function setup(context) {
 	return {
 		...connecting,
 		connect,
+		openReview,
 		goToSignIn,
 		showStoriesFor,
 		// success stories: one featured, then a list, filtered by industry

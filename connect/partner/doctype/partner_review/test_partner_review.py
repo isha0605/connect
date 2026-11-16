@@ -5,7 +5,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner
-from connect.partner.doctype.partner_review.partner_review import submit_partner_review
+from connect.partner.doctype.partner_review.partner_review import get_my_review_for_partner, submit_partner_review
 
 PARTNER = "_Test Review Partner"
 
@@ -22,6 +22,7 @@ class TestWhoReviews(IntegrationTestCase):
 
 	def test_a_stranger_cannot_review(self):
 		frappe.set_user(self.buyer)
+		self.assertFalse(get_my_review_for_partner(PARTNER)["can_review"])
 		with self.assertRaises(frappe.PermissionError):
 			submit_partner_review(PARTNER, 5)
 
@@ -31,6 +32,7 @@ class TestWhoReviews(IntegrationTestCase):
 		).insert(ignore_permissions=True)
 
 		frappe.set_user(self.buyer)
+		self.assertTrue(get_my_review_for_partner(PARTNER)["can_review"])
 		review = submit_partner_review(PARTNER, 5)
 
 		self.assertEqual(frappe.db.get_value("Partner Review", review["name"], "verification"), "Hired on Connect")
