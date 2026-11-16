@@ -12,7 +12,9 @@
   "rating",
   "column_break_rating",
   "reviewed_on",
-  "verified",
+  "verification",
+  "review_request",
+  "is_hidden",
   "headline",
   "quote",
   "section_break_dimensions",
@@ -69,10 +71,30 @@
    "in_list_view": 1
   },
   {
-   "fieldname": "verified",
+   "default": "Not verified",
+   "fieldname": "verification",
+   "fieldtype": "Select",
+   "label": "Verification",
+   "options": "Hired on Connect\nConfirmed by customer\nNot verified",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "How Connect knows the reviewer worked with the partner: they hired them on Connect, or they confirmed it from the partner's review request."
+  },
+  {
+   "fieldname": "review_request",
+   "fieldtype": "Link",
+   "label": "Review Request",
+   "options": "Review Request",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_hidden",
    "fieldtype": "Check",
-   "label": "Verified",
-   "in_list_view": 1
+   "label": "Hidden",
+   "in_standard_filter": 1,
+   "description": "A hidden review isn't shown on the partner's profile and doesn't count in their rating."
   },
   {
    "fieldname": "headline",
@@ -128,7 +150,7 @@
  "index_web_pages_for_search": 1,
  "istable": 0,
  "links": [],
- "modified": "2026-11-08 12:00:00.000000",
+ "modified": "2026-11-16 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Partner",
  "name": "Partner Review",
@@ -149,11 +171,11 @@
    "share": 1
   },
   {
-   "role": "Customer",
+   "role": "Partner Reviewer",
    "read": 1,
    "write": 1,
-   "create": 1,
-   "delete": 1
+   "report": 1,
+   "export": 1
   }
  ],
  "sort_field": "modified",

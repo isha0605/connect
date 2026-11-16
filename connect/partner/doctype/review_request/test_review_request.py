@@ -10,6 +10,7 @@ from frappe.utils import add_days, now_datetime
 
 from connect.customer.doctype.customer_project.test_hiring import make_partner, make_partner_admin
 from connect.partner.doctype.connect_partner_member.test_switch_partner import add_member
+from connect.partner.doctype.partner_review.partner_review import submit_partner_review
 from connect.partner.doctype.review_request import review_request as requests
 
 PARTNER = "_Test Review Partner"
@@ -89,14 +90,25 @@ class TestReviewRequest(IntegrationTestCase):
 
 		self.assertTrue(frappe.db.get_value("Review Request", request["name"], "is_free_email"))
 
-	def test_accepting_signs_in_a_new_customer(self):
+	def test_accepting_signs_in_a_new_customer_who_can_then_review(self):
 		request = self.ask()
 
 		requests.accept_request(self.link_token(), "Ravi Kumar", f"Acme Steel {frappe.generate_hash(length=6)}")
 
 		self.login_manager.login_as.assert_called_once_with(self.customer_email)
 		self.assertEqual(frappe.db.get_value("Review Request", request["name"], "status"), "Accepted")
-		self.assertTrue(frappe.db.get_value("Review Request", request["name"], "customer"))
+		frappe.set_user(self.customer_email)
+		review = submit_partner_review(PARTNER, 4, headline="Solid rollout")
+		frappe.set_user("Administrator")
+
+		self.assertEqual(
+			frappe.db.get_value("Partner Review", review["name"], ["verification", "review_request"]),
+			("Confirmed by customer", request["name"]),
+		)
+		self.assertEqual(
+			frappe.db.get_value("Review Request", request["name"], ["status", "review"]), ("Reviewed", review["name"])
+		)
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER, "rating"), 4)
 
 	def test_a_link_works_once_and_not_after_it_expires_or_is_withdrawn(self):
 		self.ask()

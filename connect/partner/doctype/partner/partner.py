@@ -175,8 +175,8 @@ def save_imported_partner(frappe_io_id: str, values: dict) -> str:
 
 
 def recompute_rating_from_reviews(partner_name, exclude=None):
-	"""Recomputes a Partner's rating and dimension scores from its Partner Review records."""
-	filters = {"partner": partner_name}
+	"""Recomputes a Partner's rating and dimension scores from its shown Partner Review records."""
+	filters = {"partner": partner_name, "is_hidden": 0}
 	if exclude:
 		filters["name"] = ["!=", exclude]
 	reviews = frappe.get_all(
@@ -718,7 +718,7 @@ def _decorate_directory_rows(rows):
 	whatever search_partners already returned. Shared by list_directory_partners and the wizard
 	hand-off (list_directory_partners_for_wizard) so both render identical cards."""
 	names = [r.name for r in rows]
-	review_partners = frappe.get_all("Partner Review", filters={"partner": ["in", names]}, pluck="partner") if names else []
+	review_partners = frappe.get_all("Partner Review", filters={"partner": ["in", names], "is_hidden": 0}, pluck="partner") if names else []
 	review_counts = Counter(review_partners)
 	for row in rows:
 		row["review_count"] = review_counts.get(row.name, 0)
