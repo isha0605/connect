@@ -2,6 +2,8 @@
 // "In their words") and partnerprofilestories (Featured by Frappe and Success stories). The Listing
 // and the public profile both spread this into their setup's return, so the sections read the same
 // names on either page. Each page passes its own profile record and the stories in the order to show.
+// On the public profile (forCustomers) a section with nothing in it is left out, since its empty
+// note speaks to the partner ("Add your founder…"); the partner's own Listing keeps the notes.
 
 import { computed, ref } from "vue"
 import {
@@ -33,7 +35,7 @@ export function openInNewTab(url) {
 }
 
 // profile, stories and isEditing are refs or computeds; selectedStoryIndustry is the page's variable.
-export function useProfileView({ profile, stories, isEditing, selectedStoryIndustry }) {
+export function useProfileView({ profile, stories, isEditing, selectedStoryIndustry, forCustomers = false }) {
 	const photos = computed(() => (profile.value?.photos || []).map((photo, index) => ({ ...photo, index })))
 	const sidePhotos = computed(() => {
 		const more = photos.value.length - GALLERY_TILES
@@ -112,5 +114,6 @@ export function useProfileView({ profile, stories, isEditing, selectedStoryIndus
 		showStoriesFor,
 		openStory: (story) => openInNewTab(story?.url),
 		imageTile,
+		showEmptyNotes: !forCustomers,
 	}
 }
