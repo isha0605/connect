@@ -496,21 +496,6 @@ def search_partners(
 	return partners
 
 
-# The finder wizard's industry answers are broader than the Industry list partners pick from —
-# translate each to the closest Industry; matching then also takes in that Industry's group.
-WIZARD_TO_PARTNER_INDUSTRY = {
-	"Manufacturing": "Manufacturing",
-	"Retail & Distribution": "Trading and Distribution",
-	"Healthcare": "Healthcare",
-	"Education": "Education",
-	"Services": "Services",
-	"Construction": "Engineering and Construction",
-	"Logistics": "Logistics",
-	"Technology": "Technology",
-	"Other": "Others",
-}
-
-
 # Real, defensible mappings from the wizard's customer-facing answers to Partner
 # classification data. Deliberately partial — an answer with no clean equivalent
 # (company size, timeline, budget, several "looking for" / "current situation"
@@ -552,7 +537,7 @@ def count_matching_partners(answers=None):
 
 	industry = answers.get("industry")
 	if industry:
-		child_matches.append(partners_in_industries([WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry)]))
+		child_matches.append(partners_in_industries([industry]))
 
 	impl_type = LOOKING_FOR_TO_IMPL_TYPE.get(answers.get("looking_for"))
 	if impl_type:
@@ -608,8 +593,7 @@ def _score_partners_by_requirements(answers):
 	impl_by = _child_values_by_partner("Partner Implementation Type", "implementation_type", names)
 	bp_by = _child_values_by_partner("Partner Business Process", "business_process", names)
 
-	industry = answers.get("industry")
-	wanted_industry = WIZARD_TO_PARTNER_INDUSTRY.get(industry, industry) if industry else None
+	wanted_industry = answers.get("industry")
 	in_wanted_industry = partners_in_industries([wanted_industry]) if wanted_industry else set()
 
 	delivery = answers.get("delivery_preference")

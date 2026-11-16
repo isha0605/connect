@@ -63,16 +63,17 @@ const INDUSTRY_GROUPS = [
 		key: "services",
 		group: "Services",
 		industries: [
-			"Aviation Industry", "Education", "Finance", "Government", "Hospitality", "Logistics",
-			"Nonprofit", "Professional services", "Real Estate", "Rental Business",
+			"Aviation Industry", "Banking, Insurance and Broking", "Consulting", "Education", "Government",
+			"Healthcare", "Hotels, Restaurants and Cafes", "Logistics", "Nonprofit", "Professional services",
+			"Real Estate", "Rental Business", "Software Development", "Telecommunications",
 		],
 	},
 	{
 		key: "trading",
 		group: "Trading and Distribution",
-		industries: ["Distribution", "E-commerce", "Fast Moving Consumer Goods", "Retail"],
+		industries: ["E-commerce", "Fast Moving Consumer Goods", "Goods Trading", "Retail"],
 	},
-	{ key: "others", group: "Others", industries: ["Agriculture", "Engineering and Construction"] },
+	{ key: "others", group: "Others", industries: ["Agriculture", "Engineering and Construction", "Livestock"] },
 ]
 export const INDUSTRY_OPTIONS = INDUSTRY_GROUPS.map(({ key, group, industries }) => ({
 	key,
