@@ -1964,7 +1964,7 @@ export default function setup(context) {
 			country: editCountry.value.trim(),
 			industry: editIndustry.value.trim(),
 			looking_for: editLookingFor.value.trim(),
-			company_size: editCompanySize.value.trim(),
+			company_size: editCompanySize.value,
 			current_situation: editCurrentSituation.value.trim(),
 			timeline: editTimeline.value.trim(),
 			delivery_preference: editDeliveryPreference.value.trim(),
