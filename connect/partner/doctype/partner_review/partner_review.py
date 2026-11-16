@@ -89,7 +89,8 @@ def submit_partner_review(
 	timeliness=None, support=None, technical_expertise=None,
 ):
 	"""Creates or updates the caller's review of a partner. Only the partner's real customers
-	review it: those who hired it on Connect, or confirmed they worked with it from its request."""
+	review it: those who completed a project with it on Connect, or confirmed they worked with it
+	from its request."""
 	customer = get_customer_for_user()
 	if not customer:
 		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
@@ -135,11 +136,12 @@ def submit_partner_review(
 
 def review_standing(partner: str, customer: str) -> tuple[str, str | None]:
 	"""How Connect knows the customer worked with the partner, and the review request that shows
-	it, if any. Throws for a customer who neither hired the partner nor was asked by them."""
+	it, if any. Throws for a customer who neither completed a project with the partner nor was
+	asked by them."""
 	verification, request = _standing(partner, customer)
 	if not verification:
 		frappe.throw(
-			_("Only customers who hired this partner on Connect, or whom they asked for feedback, can review them."),
+			_("Only customers who completed a project with this partner on Connect, or whom they asked for feedback, can review them."),
 			frappe.PermissionError,
 		)
 	return verification, request
@@ -150,6 +152,22 @@ def _standing(partner: str, customer: str) -> tuple[str | None, str | None]:
 	request = frappe.db.get_value(
 		"Review Request", {"partner": partner, "customer": customer, "status": ["in", ACCEPTED]}, "name"
 	)
-	if frappe.db.exists("Partner Customer", {"partner": partner, "customer": customer, "source": "Connect"}):
+	if _completed_a_project(partner, customer):
 		return HIRED, request
 	return (CONFIRMED, request) if request else (None, None)
+
+
+def _completed_a_project(partner: str, customer: str) -> bool:
+	"""Whether someone at the company completed a project with the partner on Connect. A hire
+	alone isn't enough: nothing has been delivered yet, and it can still be cancelled."""
+	Project = frappe.qb.DocType("Customer Project")
+	Member = frappe.qb.DocType("Customer Team Member")
+	return bool(
+		frappe.qb.from_(Project)
+		.join(Member)
+		.on(Member.user == Project.user)
+		.select(Project.name)
+		.where((Project.partner == partner) & (Project.status == "Completed") & (Member.customer == customer))
+		.limit(1)
+		.run()
+	)

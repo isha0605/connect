@@ -437,7 +437,15 @@ def hired_partner(doc: CustomerProject) -> dict | None:
 		"cloud_link_status": doc.cloud_link_status if confirmed else None,
 		# The page reads it by this name.
 		"central_setup_url": doc.cloud_setup_url if waiting_for_customer else None,
+		"is_reviewed": doc.status == "Completed" and is_partner_reviewed(doc),
 	}
+
+
+def is_partner_reviewed(doc: CustomerProject) -> bool:
+	"""Whether the customer's company has reviewed the partner it hired, so a completed project
+	asks for a review only until it has one."""
+	customer = get_customer_for_user(doc.user)
+	return bool(customer) and bool(frappe.db.exists("Partner Review", {"partner": doc.partner, "customer": customer}))
 
 
 def declined_hire(doc: CustomerProject) -> dict | None:

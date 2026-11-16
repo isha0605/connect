@@ -58,7 +58,7 @@ export default function setup(context) {
 				toast.info(
 					reviewed_by_teammate
 						? "Someone at your company has already reviewed this partner."
-						: "Only customers who hired this partner on Connect, or whom they asked for feedback, can review them.",
+						: "Only customers who completed a project with this partner on Connect, or whom they asked for feedback, can review them.",
 				)
 				return
 			}
