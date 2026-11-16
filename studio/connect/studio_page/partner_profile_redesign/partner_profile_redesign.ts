@@ -41,9 +41,10 @@ export default function setup(context) {
 	const { route, partner, showHeaderConnect, selectedStoryIndustry, toast } = context
 
 	// Reviews: only the partner's real customers write one (hired on Connect, or asked by the
-	// partner). ?review=1, from a review request the customer just confirmed, opens the form.
-	const { call, myContext, reviewDialogOpen, reviewRating, reviewHeadline, reviewQuote } = context
-	async function openReview() {
+	// partner). ?review=1, from a review request the customer just confirmed, opens the form until
+	// they have reviewed, so going Back to it or reloading doesn't open it again.
+	const { call, reviewDialogOpen, reviewRating, reviewHeadline, reviewQuote } = context
+	async function openReview({ fromLink = false } = {}) {
 		if (window.is_guest) {
 			goToSignIn()
 			return
@@ -52,6 +53,7 @@ export default function setup(context) {
 			const { review, can_review } = await call("connect.api.partner.get_my_review_for_partner", {
 				partner: route.params.partner_id,
 			})
+			if (fromLink && review) return
 			if (!can_review) {
 				toast.info("Only customers who hired this partner on Connect, or whom they asked for feedback, can review them.")
 				return
@@ -64,7 +66,7 @@ export default function setup(context) {
 			toast.error("Couldn't open the review form. Try again.")
 		}
 	}
-	if (route.query.review && !window.is_guest) openReview()
+	if (route.query.review && !window.is_guest) openReview({ fromLink: true })
 
 	// ?preview=1, from the partner's own Profile builder: their unsaved profile over the saved
 	// one, kept in step as they type in the builder's tab. Only ever this browser's own draft.

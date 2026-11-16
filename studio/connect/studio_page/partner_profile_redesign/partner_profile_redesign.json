@@ -4317,7 +4317,7 @@
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "reviewSubmitting.value = true;\ncall('connect.api.partner.submit_partner_review', { partner: route.params.partner_id, rating: reviewRating.value, headline: reviewHeadline.value, quote: reviewQuote.value }).then(() => {\n  toast({ title: 'Review submitted', text: 'Thanks for sharing your feedback!', icon: 'check-circle' });\n  reviewDialogOpen.value = false;\n  reviewSubmitting.value = false;\n  partnerReviews.reload();\n  partner.reload();\n}).catch((error) => {\n  reviewSubmitting.value = false;\n  toast({ title: 'Could not submit your review', text: (error && error.messages && error.messages[0]) || 'Try again.', icon: 'alert-circle' });\n});"
+               "script": "reviewSubmitting.value = true;\ncall('connect.api.partner.submit_partner_review', { partner: route.params.partner_id, rating: reviewRating.value, headline: reviewHeadline.value, quote: reviewQuote.value }).then(() => {\n  toast.success('Thanks for your review. It is on the profile now.');\n  reviewDialogOpen.value = false;\n  reviewSubmitting.value = false;\n  partnerReviews.reload();\n  partner.reload();\n}).catch((error) => {\n  reviewSubmitting.value = false;\n  toast.error((error && error.messages && error.messages[0]) || 'Could not submit your review. Try again.');\n});"
               }
              },
              "componentId": "review-submit-btn",
@@ -5212,7 +5212,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-16 15:00:00.000000",
+ "modified": "2026-11-16 18:00:00.000000",
  "modified_by": "Administrator",
  "name": "partner_profile_redesign",
  "owner": "Administrator",
