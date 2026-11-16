@@ -178,7 +178,7 @@ class ReviewRequest(Document):
 				"document_type": "Review Request",
 				"document_name": self.name,
 				"subject": subject[:140],
-				"link": "/connect/customers",
+				"link": "/customers?view=past",
 			},
 		)
 
@@ -231,7 +231,7 @@ def expire_review_requests() -> None:
 # ---- The partner's side ----
 
 REQUEST_FIELDS = (
-	"name", "contact_name", "contact_email", "company_name", "project_title", "project_summary",
+	"name", "partner", "contact_name", "contact_email", "company_name", "project_title", "project_summary",
 	"status", "sent_on", "reminded_on", "expires_on", "review",
 )
 EDITABLE_FIELDS = ("contact_name", "contact_email", "company_name", "project_title", "project_summary")

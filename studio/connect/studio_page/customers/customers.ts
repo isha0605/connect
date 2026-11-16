@@ -1,9 +1,10 @@
 // The partner's Customers, as Frappe CRM's list: quick filters with Refresh, Filter, Sort and
 // Columns, a full-width table and a footer with page size and count. Customers who want to link
 // come first, as they wait on the team: approving the link moves them to Onboarding. Sites and MRR
-// are demo data until they come from Frappe Cloud.
+// are demo data until they come from Frappe Cloud. Past projects (PastProjects.vue) are the work
+// done before Connect, whose customers the partner asks for a review.
 
-import { computed, ref } from "vue"
+import { computed, ref, watch } from "vue"
 import { toast } from "frappe-ui"
 import { BILLING, STAGES, approveLink, isWaitingToLink, money, toCustomer } from "@app/utils/partnerCustomers"
 import { matchesFilters } from "@app/utils/listFilters"
@@ -27,6 +28,10 @@ const COLUMNS = [
 	{ key: "mrr", label: "MRR", width: "7rem" },
 ]
 const PAGE_SIZES = [20, 50, 100].map((n) => ({ label: String(n), value: n }))
+const VIEWS = [
+	{ label: "Customers", value: "customers" },
+	{ label: "Past projects", value: "past" },
+]
 
 // What the Filter button can filter on. Owners are whoever owns a customer on the list.
 function filterFields(owners) {
@@ -49,6 +54,14 @@ const matchesQuery = (query, ...fields) => !query || fields.some((field) => fiel
 
 export default function setup(context) {
 	startTracking(context)
+	const { route, router } = context
+
+	// Which list shows; in the URL, so a notification about a review request opens Past projects.
+	const view = ref(route.query.view === "past" ? "past" : "customers")
+	watch(view, (value) => {
+		const { view: _old, ...query } = route.query
+		router.replace({ query: value === "past" ? { ...query, view: value } : query })
+	})
 
 	const query = ref("")
 	const stage = ref("")
@@ -149,6 +162,8 @@ export default function setup(context) {
 	}
 
 	return {
+		view,
+		views: VIEWS,
 		query,
 		stage,
 		pays,
