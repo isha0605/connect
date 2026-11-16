@@ -12,7 +12,6 @@ from frappe.utils import cint, flt, get_datetime, get_system_timezone, now_datet
 
 from connect.analytics import capture
 from connect.customer.doctype.customer.customer import get_customer_for_user
-from connect.customer.doctype.requirement.requirement import COMPANY_SIZES
 from connect.customer.doctype.requirement.requirement import save_company_details as save_requirement_details
 from connect.starter_packs.doctype.starter_pack_order.implementation import (
 	hand_over,
@@ -584,9 +583,8 @@ def company_details(doc):
 	)
 	if not (req and req.company_size and req.industry and req.current_situation):
 		return None
-	sizes = {v: k for k, v in COMPANY_SIZES.items()}
 	return {
-		"employees": sizes.get(req.company_size, req.company_size),
+		"employees": req.company_size,
 		"industry": req.industry,
 		"system": req.current_situation,
 		"focus": req.additional_notes or "",
@@ -609,7 +607,7 @@ def save_company_details(order, employees, industry, system, focus=None, key=Non
 	changed = save_requirement_details(
 		customer,
 		{
-			"company_size": COMPANY_SIZES.get(employees, employees),
+			"company_size": employees,
 			"industry": industry,
 			"current_situation": system,
 			"additional_notes": focus,

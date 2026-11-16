@@ -405,7 +405,7 @@ async function loadCompany() {
 	company.value = {
 		company_name: (saved && saved.company_name) || context?.customer?.customer_name || "",
 		country: saved?.country || "",
-		employees: saved?.employees || "",
+		employees: saved?.company_size || "",
 		industry: saved?.industry || "",
 		system: saved?.current_situation || "",
 		notes: saved?.additional_notes || "",

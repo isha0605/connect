@@ -14,11 +14,6 @@ class Requirement(Document):
 	pass
 
 
-# The forms send the sizes the recommendation quiz uses; company_size stores them with an en dash,
-# as the Find Partners wizard always has.
-COMPANY_SIZES = {"1-10": "1–10", "11-50": "11–50", "51-200": "51–200", "201-500": "201–500", "500+": "500+"}  # noqa: RUF001
-
-
 def _customer_names_for_user(user):
 	return frappe.get_all("Customer Team Member", filters={"user": user}, pluck="customer")
 
@@ -48,8 +43,7 @@ def save_customer_requirement(
 ):
 	"""Creates or updates the caller's one Requirement, so the wizard and the Settings form share a single saved
 	record. Only the fields given change: Settings asks about the company alone, and must keep the rest.
-	The company's name and country belong to its Customer: a country given here is saved there.
-	company_size takes the forms' values as well as the stored ones (see COMPANY_SIZES)."""
+	The company's name and country belong to its Customer: a country given here is saved there."""
 	customer = get_customer_for_user()
 	if not customer:
 		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
@@ -63,7 +57,7 @@ def save_customer_requirement(
 	given = {
 		"industry": industry,
 		"looking_for": looking_for,
-		"company_size": COMPANY_SIZES.get(company_size, company_size),
+		"company_size": company_size,
 		"current_situation": current_situation,
 		"timeline": timeline,
 		"delivery_preference": delivery_preference,
@@ -190,7 +184,6 @@ def get_my_requirement():
 		"apps": req.apps,
 		"looking_for": req.looking_for,
 		"company_size": req.company_size,
-		"employees": {v: k for k, v in COMPANY_SIZES.items()}.get(req.company_size, req.company_size),
 		"current_situation": req.current_situation,
 		"timeline": req.timeline,
 		"delivery_preference": req.delivery_preference,

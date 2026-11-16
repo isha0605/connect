@@ -867,7 +867,7 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		)
 		self.assertEqual(get_order(order.name)["company_details"], details)
 		req = frappe.get_last_doc("Requirement", {"customer": customer})
-		self.assertEqual((req.company_size, req.industry, req.current_situation), ("11–50", "Discrete Manufacturing", "Tally"))
+		self.assertEqual((req.company_size, req.industry, req.current_situation), ("11-50", "Discrete Manufacturing", "Tally"))
 		# what the buyer said elsewhere stays
 		self.assertEqual((req.looking_for, req.timeline), ("CRM", "Within 1 month"))
 		self.assertEqual(frappe.db.count("Requirement", {"customer": customer}), 1)
@@ -902,7 +902,7 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		self.assertIn("GST returns", intro.content)
 		self.assertEqual(card.message_type, "Requirement")
 		answers = frappe.parse_json(card.content)
-		self.assertEqual((answers["company_size"], answers["industry"]), ("1–10", "Retail"))
+		self.assertEqual((answers["company_size"], answers["industry"]), ("1-10", "Retail"))
 
 		save_company_details(order.name, "1-10", "Retail", "Busy", focus="GST returns")  # nothing new
 		self.assertEqual(frappe.db.count("Connect Message", {"thread": thread}), posted + 2)

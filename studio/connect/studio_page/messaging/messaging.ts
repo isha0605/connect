@@ -1638,7 +1638,7 @@ export default function setup(context) {
 			summary: built,
 			budget: req.budget || "",
 			industry: req.industry || "",
-			size: req.company_size ? `${req.company_size.replace("–", " to ")} people` : "",
+			size: req.company_size ? `${req.company_size.replace("-", " to ")} people` : "",
 			built,
 			situation,
 			lookingFor: req.partner_brief || lookingParts.join(" "),

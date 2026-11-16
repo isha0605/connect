@@ -10,6 +10,8 @@ from connect.customer.doctype.requirement.requirement import (
 	get_requirement_snapshot,
 	save_customer_requirement,
 )
+from connect.patches.use_one_set_of_company_sizes import OLD_TO_NEW
+from connect.patches.use_one_set_of_company_sizes import execute as use_one_set_of_company_sizes
 
 BUYER = "requirement.buyer@example.test"
 COMPANY = "_Test Requirement Co"
@@ -61,8 +63,19 @@ class IntegrationTestCompanyDetails(IntegrationTestCase):
 	def test_stores_the_number_of_employees_as_company_size(self):
 		self.save_company(company_size="11-50")
 
-		self.assertEqual(frappe.db.get_value("Requirement", {"customer": COMPANY}, "company_size"), "11–50")  # noqa: RUF001
-		self.assertEqual(get_my_requirement()["employees"], "11-50")
+		self.assertEqual(frappe.db.get_value("Requirement", {"customer": COMPANY}, "company_size"), "11-50")
+		self.assertEqual(get_my_requirement()["company_size"], "11-50")
+
+	def test_refuses_a_size_outside_the_shared_ranges(self):
+		with self.assertRaises(frappe.ValidationError):
+			self.save_company(company_size="201-1000")
+
+	def test_the_patch_moves_old_sizes_to_the_shared_ranges(self):
+		requirement = frappe.db.get_value("Requirement", {"customer": COMPANY}, "name")
+		for old, new in OLD_TO_NEW.items():
+			frappe.db.set_value("Requirement", requirement, "company_size", old)
+			use_one_set_of_company_sizes()
+			self.assertEqual(frappe.db.get_value("Requirement", requirement, "company_size"), new)
 
 	def test_refuses_an_industry_not_on_the_list(self):
 		with self.assertRaises(frappe.ValidationError):
