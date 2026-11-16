@@ -296,6 +296,7 @@ scheduler_events = {
 	],
 	"daily": [
 		"connect.customer.doctype.customer_project.hiring.expire_hire_requests",
+		"connect.partner.doctype.review_request.review_request.expire_review_requests",
 		"connect.partner.response_time.recompute_all_response_times",
 		# Partner revenue, then tiers, then the directory listing: each step needs the one before.
 		"connect.partner.daily_review.run_daily_review",

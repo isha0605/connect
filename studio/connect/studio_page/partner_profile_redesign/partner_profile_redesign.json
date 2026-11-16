@@ -3120,7 +3120,7 @@
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "if (!myContext.data || !myContext.data.customer) {\n  goToSignIn();\n  return;\n}\ncall('connect.api.partner.get_my_review_for_partner', { partner: route.params.partner_id }).then((r) => {\n  reviewRating.value = r ? r.rating : 0;\n  reviewHeadline.value = r ? (r.headline || '') : '';\n  reviewQuote.value = r ? (r.quote || '') : '';\n  reviewDialogOpen.value = true;\n});"
+               "script": "openReview();"
               }
              },
              "componentId": "reviews-write-btn",
@@ -3539,17 +3539,45 @@
                    "children": [
                     {
                      "baseStyles": {
-                      "color": "var(--ink-gray-7)",
-                      "fontWeight": "500"
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "flexWrap": "wrap",
+                      "gap": "8px"
                      },
-                     "componentId": "review-reviewer-name",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-base",
-                      "tag": "span",
-                      "text": "{{ item.reviewer_name }}"
-                     },
-                     "componentSlots": {}
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-7)",
+                        "fontWeight": "500"
+                       },
+                       "componentId": "review-reviewer-name",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-base",
+                        "tag": "span",
+                        "text": "{{ item.reviewer_name }}"
+                       },
+                       "componentSlots": {}
+                      },
+                      {
+                       "componentId": "review-verification",
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ item.verification }}",
+                        "theme": "green",
+                        "variant": "subtle",
+                        "size": "sm"
+                       },
+                       "componentSlots": {},
+                       "visibilityCondition": "item.verification && item.verification !== 'Not verified'"
+                      }
+                     ],
+                     "componentId": "review-name-row",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
                     },
                     {
                      "baseStyles": {
@@ -4456,7 +4484,7 @@
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "reviewSubmitting.value = true;\ncall('connect.api.partner.submit_partner_review', { partner: route.params.partner_id, rating: reviewRating.value, headline: reviewHeadline.value, quote: reviewQuote.value }).then(() => {\n  toast({ title: 'Review submitted', text: 'Thanks for sharing your feedback!', icon: 'check-circle' });\n  reviewDialogOpen.value = false;\n  reviewSubmitting.value = false;\n  partnerReviews.reload();\n  partner.reload();\n}).catch(() => { reviewSubmitting.value = false; });"
+               "script": "reviewSubmitting.value = true;\ncall('connect.api.partner.submit_partner_review', { partner: route.params.partner_id, rating: reviewRating.value, headline: reviewHeadline.value, quote: reviewQuote.value }).then(() => {\n  toast.success('Thanks for your review. It is on the profile now.');\n  reviewDialogOpen.value = false;\n  reviewSubmitting.value = false;\n  partnerReviews.reload();\n  partner.reload();\n}).catch((error) => {\n  reviewSubmitting.value = false;\n  toast.error((error && error.messages && error.messages[0]) || 'Could not submit your review. Try again.');\n});"
               }
              },
              "componentId": "review-submit-btn",
@@ -5351,7 +5379,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-13 11:00:00.000000",
+ "modified": "2026-11-16 18:00:00.000000",
  "modified_by": "Administrator",
  "name": "partner_profile_redesign",
  "owner": "Administrator",

@@ -1,0 +1,235 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:RR-{#####}",
+ "creation": "2026-11-16 12:00:00.000000",
+ "description": "A partner's request for a review from a past customer, sent as a one-time link to the customer's email.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "partner",
+  "status",
+  "column_break_contact",
+  "contact_name",
+  "contact_email",
+  "company_name",
+  "is_free_email",
+  "section_project",
+  "project_title",
+  "project_summary",
+  "section_progress",
+  "sent_by",
+  "sent_on",
+  "reminded_on",
+  "expires_on",
+  "column_break_progress",
+  "customer",
+  "review",
+  "decline_reason",
+  "token_hash"
+ ],
+ "fields": [
+  {
+   "fieldname": "partner",
+   "fieldtype": "Link",
+   "label": "Partner",
+   "options": "Partner",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nSent\nOpened\nAccepted\nReviewed\nDeclined\nExpired\nWithdrawn",
+   "default": "Draft",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Moves as the partner sends the request and the customer answers it."
+  },
+  {
+   "fieldname": "column_break_contact",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contact_name",
+   "fieldtype": "Data",
+   "label": "Contact Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "contact_email",
+   "fieldtype": "Data",
+   "label": "Contact Email",
+   "options": "Email",
+   "reqd": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "label": "Company Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "is_free_email",
+   "fieldtype": "Check",
+   "label": "Free Email Address",
+   "read_only": 1,
+   "in_standard_filter": 1,
+   "description": "The contact's email is on a free provider like Gmail, so it says less about where they work. Worth a look before trusting the review."
+  },
+  {
+   "fieldname": "section_project",
+   "fieldtype": "Section Break",
+   "label": "Project"
+  },
+  {
+   "fieldname": "project_title",
+   "fieldtype": "Data",
+   "label": "Project Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project_summary",
+   "fieldtype": "Small Text",
+   "label": "Project Summary"
+  },
+  {
+   "fieldname": "section_progress",
+   "fieldtype": "Section Break",
+   "label": "Progress"
+  },
+  {
+   "fieldname": "sent_by",
+   "fieldtype": "Link",
+   "label": "Sent By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sent_on",
+   "fieldtype": "Datetime",
+   "label": "Sent On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reminded_on",
+   "fieldtype": "Datetime",
+   "label": "Reminded On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "expires_on",
+   "fieldtype": "Datetime",
+   "label": "Link Expires On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_progress",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer",
+   "read_only": 1,
+   "description": "The customer's company on Connect, once they confirm they worked with the partner."
+  },
+  {
+   "fieldname": "review",
+   "fieldtype": "Link",
+   "label": "Review",
+   "options": "Partner Review",
+   "read_only": 1
+  },
+  {
+   "fieldname": "decline_reason",
+   "fieldtype": "Small Text",
+   "label": "Decline Reason",
+   "read_only": 1,
+   "description": "What the contact said when they answered that they didn't work with the partner."
+  },
+  {
+   "fieldname": "token_hash",
+   "fieldtype": "Data",
+   "label": "Token Hash",
+   "read_only": 1,
+   "hidden": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-16 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Partner",
+ "name": "Review Request",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Partner Reviewer",
+   "read": 1,
+   "report": 1,
+   "export": 1
+  }
+ ],
+ "search_fields": "contact_email,company_name",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [
+  {
+   "title": "Draft",
+   "color": "Gray"
+  },
+  {
+   "title": "Sent",
+   "color": "Blue"
+  },
+  {
+   "title": "Opened",
+   "color": "Cyan"
+  },
+  {
+   "title": "Accepted",
+   "color": "Purple"
+  },
+  {
+   "title": "Reviewed",
+   "color": "Green"
+  },
+  {
+   "title": "Declined",
+   "color": "Red"
+  },
+  {
+   "title": "Expired",
+   "color": "Orange"
+  },
+  {
+   "title": "Withdrawn",
+   "color": "Gray"
+  }
+ ],
+ "title_field": "company_name",
+ "track_changes": 1
+}

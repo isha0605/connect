@@ -20,6 +20,7 @@ CONNECT_NOTIFICATION_DOCTYPES = (
 	"Customer Project",
 	"Project Quote",
 	"Starter Pack Order",
+	"Review Request",
 )
 
 

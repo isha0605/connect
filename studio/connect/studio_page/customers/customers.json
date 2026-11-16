@@ -58,13 +58,26 @@
         {
          "children": [
           {
+           "componentId": "cu-view",
+           "componentName": "TabButtons",
+           "componentProps": {
+            "modelValue": {
+             "$type": "variable",
+             "name": "view"
+            },
+            "options": "{{ views }}",
+            "size": "sm"
+           },
+           "componentSlots": {}
+          },
+          {
            "componentId": "cu-demo-tip",
            "componentName": "Tooltip",
            "componentProps": {
             "text": "Sites and MRR are sample numbers until Connect reads them from Frappe Cloud."
            },
            "componentSlots": {},
-           "visibilityCondition": "hasDemoData",
+           "visibilityCondition": "hasDemoData && view === 'customers'",
            "children": [
             {
              "componentId": "cu-demo",
@@ -314,7 +327,8 @@
            "componentId": "cu-filters",
            "componentName": "container",
            "componentProps": {},
-           "originalElement": "div"
+           "originalElement": "div",
+           "visibilityCondition": "view === 'customers'"
           },
           {
            "baseStyles": {
@@ -952,7 +966,8 @@
            "componentId": "cu-table",
            "componentName": "container",
            "componentProps": {},
-           "originalElement": "div"
+           "originalElement": "div",
+           "visibilityCondition": "view === 'customers'"
           },
           {
            "children": [
@@ -995,7 +1010,17 @@
            "componentId": "cu-footer",
            "componentName": "container",
            "componentProps": {},
-           "originalElement": "div"
+           "originalElement": "div",
+           "visibilityCondition": "view === 'customers'"
+          },
+          {
+           "blockName": "PastProjects",
+           "componentId": "cu-past",
+           "componentName": "PastProjects",
+           "componentProps": {},
+           "componentSlots": {},
+           "isCustomVueComponent": true,
+           "visibilityCondition": "view === 'past'"
           }
          ],
          "classes": [

@@ -553,7 +553,7 @@ def get_assigned_partner(partner):
 	if not card:
 		return None
 	card["industries"] = picked_industries(frappe.get_doc("Partner", partner))
-	card["review_count"] = frappe.db.count("Partner Review", {"partner": partner})
+	card["review_count"] = frappe.db.count("Partner Review", {"partner": partner, "is_hidden": 0})
 	return card
 
 
