@@ -10,6 +10,8 @@ from frappe.tests import IntegrationTestCase
 from connect.api.auth import send_code, verify_code
 from connect.auth.accounts import is_own_path, landing_page
 from connect.auth.email_code import EmailCode, EmailCodeError
+from connect.partner.doctype.partner.partner import VERIFIED
+from connect.partner.doctype.partner.test_partner import make_partner
 from connect.roles import CONSULTANT_ROLE
 
 
@@ -215,6 +217,16 @@ class IntegrationTestEmailCodeSignIn(IntegrationTestCase):
 		email = self.known_user()
 		with patch("connect.auth.accounts.frappe.get_roles", return_value=[CONSULTANT_ROLE]):
 			self.assertEqual(landing_page(email), "/connect/messaging")
+
+	def test_a_partner_lands_on_their_own_home(self):
+		partner = "_Test Auth Landing Partner"
+		make_partner(partner, VERIFIED)
+		email = self.known_user()
+		frappe.get_doc({"doctype": "Connect Partner Member", "partner": partner, "user": email, "is_admin": 1}).insert(
+			ignore_permissions=True
+		)
+
+		self.assertEqual(landing_page(email), "/connect/leads")
 
 	def test_a_buyer_lands_on_home_once_it_is_published(self):
 		email = self.known_user()
