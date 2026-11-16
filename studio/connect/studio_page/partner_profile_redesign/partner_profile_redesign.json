@@ -3539,17 +3539,45 @@
                    "children": [
                     {
                      "baseStyles": {
-                      "color": "var(--ink-gray-7)",
-                      "fontWeight": "500"
+                      "alignItems": "center",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "flexWrap": "wrap",
+                      "gap": "8px"
                      },
-                     "componentId": "review-reviewer-name",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "fontSize": "text-base",
-                      "tag": "span",
-                      "text": "{{ item.reviewer_name }}"
-                     },
-                     "componentSlots": {}
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-7)",
+                        "fontWeight": "500"
+                       },
+                       "componentId": "review-reviewer-name",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-base",
+                        "tag": "span",
+                        "text": "{{ item.reviewer_name }}"
+                       },
+                       "componentSlots": {}
+                      },
+                      {
+                       "componentId": "review-verification",
+                       "componentName": "Badge",
+                       "componentProps": {
+                        "label": "{{ item.verification }}",
+                        "theme": "green",
+                        "variant": "subtle",
+                        "size": "sm"
+                       },
+                       "componentSlots": {},
+                       "visibilityCondition": "item.verification && item.verification !== 'Not verified'"
+                      }
+                     ],
+                     "componentId": "review-name-row",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
                     },
                     {
                      "baseStyles": {
@@ -3563,21 +3591,6 @@
                       "text": "{{ item.customer_name || item.customer }}"
                      },
                      "componentSlots": {}
-                    },
-                    {
-                     "classes": [
-                      "self-start"
-                     ],
-                     "componentId": "review-verification",
-                     "componentName": "Badge",
-                     "componentProps": {
-                      "label": "{{ item.verification }}",
-                      "theme": "green",
-                      "variant": "subtle",
-                      "size": "sm"
-                     },
-                     "componentSlots": {},
-                     "visibilityCondition": "item.verification && item.verification !== 'Not verified'"
                     }
                    ],
                    "componentId": "review-header-body",
