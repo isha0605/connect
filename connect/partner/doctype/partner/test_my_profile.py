@@ -54,6 +54,7 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 		partner.tagline = "The live tagline"
 		partner.profile_draft = None
 		partner.set("offices", [])
+		partner.set("features", [])
 		partner.set("success_stories", [])
 		for client in ("Refex", "Motovolt"):
 			partner.append(
@@ -315,6 +316,31 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 			with self.assertRaises(frappe.PermissionError):
 				action()
 		self.assertTrue(frappe.db.get_value("Partner", PARTNER, "profile_draft"))
+
+	def test_featured_by_frappe_shows_in_order_and_only_frappe_sets_it(self):
+		features = [
+			{"title": "Business software in the real world", "kind": "Podcast", "detail": "Episode 13 · 50 min",
+				"url": "https://frappe.io/podcast/13", "image": "/files/podcast-13.png"},
+			{"title": "Enduring the test of time", "kind": "Partner story", "detail": "6 min read",
+				"url": "https://frappe.io/blog/enduring", "image": "/files/enduring.png"},
+		]
+		partner = frappe.get_doc("Partner", PARTNER)
+		# copies: set() adds a doctype to each dict it's given
+		partner.set("features", [dict(feature) for feature in features])
+		partner.save(ignore_permissions=True)
+
+		frappe.set_user(ADMIN)
+		# Through frappe.call, as the browser sends it, which drops arguments the API doesn't take.
+		frappe.call("connect.api.partner.update_my_partner_profile", features=[], tagline="Still featured")
+		self.assertEqual(get_my_profile()["features"], features)
+
+	def test_featured_by_frappe_needs_https_links(self):
+		partner = frappe.get_doc("Partner", PARTNER)
+		for feature in ({"url": "http://frappe.io/podcast/13", "image": "/files/podcast-13.png"},
+				{"url": "https://frappe.io/podcast/13", "image": "ftp://example.com/podcast.png"}):
+			partner.set("features", [{"title": "Episode 13", "kind": "Podcast", **feature}])
+			with self.subTest(feature=feature), self.assertRaises(frappe.ValidationError):
+				partner.save(ignore_permissions=True)
 
 	def test_partners_cannot_type_numbers_frappe_owns(self):
 		owned = {"certs_erpnext": 0, "rollouts": 12, "sites_deployed": 30, "certified_experts": 4, "references_count": 5}

@@ -57,6 +57,7 @@ class Partner(Document):
 		self.validate_keep_reasons()
 		self.validate_hourly_rate()
 		self.validate_offices()
+		self.validate_features()
 		self.validate_served_countries()
 		validate_industries(self)
 		self.set_starter_pack_sequence()
@@ -71,6 +72,15 @@ class Partner(Document):
 	def validate_hourly_rate(self):
 		if flt(self.hourly_rate) < 0:
 			frappe.throw(_("Hourly rate can't be negative."))
+
+	def validate_features(self):
+		"""Featured by Frappe opens its pages from the public profile, so each needs an https link and
+		an uploaded or https image."""
+		for feature in self.features:
+			if not (feature.url or "").startswith("https://"):
+				frappe.throw(_("Give {0} an https link.").format(feature.title))
+			if feature.image and not feature.image.startswith(_MEDIA_PREFIXES):
+				frappe.throw(_("Upload the image for {0}, or give an https link to it.").format(feature.title))
 
 	def validate_offices(self):
 		# Checked here as well as by the fields' reqd, since a Listing draft is checked without a save.
@@ -1070,6 +1080,8 @@ _PROFILE_MULTISELECT_FIELDS = {
 # cover_image too: a story without a frappe.io cover keeps the one it was given
 _STORY_FIELDS = ("client_name", "client_logo", "headline", "category", "url", "cover_image", "logo_position", "hide_logo")
 _FOUNDER_FIELDS = ("member_name", "designation", "bio", "photo")
+# Featured by Frappe: set by Frappe staff in the Desk, so not among the fields a partner saves.
+_FEATURE_FIELDS = ("title", "kind", "detail", "url", "image")
 # Profile tables saved whole, with the fields each row keeps.
 _PROFILE_ROW_FIELDS = {
 	"success_stories": _STORY_FIELDS,
@@ -1140,6 +1152,7 @@ def get_my_profile(with_draft=False) -> dict:
 		"founder": {field: founder.get(field) for field in _FOUNDER_FIELDS} if founder else {},
 		"photos": [{"image": row.image, "video": row.video} for row in doc.photos],
 		"offices": [{"city": row.city, "address": row.address} for row in doc.offices],
+		"features": [{field: row.get(field) for field in _FEATURE_FIELDS} for row in doc.features],
 		"success_stories": stories,
 		"industries": picked_industries(doc),
 		# the picked industries as the public profile shows them, with their verified tick
