@@ -7,34 +7,25 @@
 import { computed, ref, watch } from "vue"
 import {
 	CLIENT_LOGOS_SHOWN,
-	DEFAULT_ANSWERS,
 	MAX_INDUSTRIES,
 	MAX_OFFICES,
-	MIN_CLIENT_LOGOS,
 	OFFICE_LIMITS,
 	PROFILE_API,
 	SAMPLE_PROFILE,
-	clientLogoCount,
-	clientLogoRow,
-	featureRows,
 	imageTile,
 	isOverLimit,
 	limitCounter,
 	orderedLogoStories,
-	storyIndustryOptions,
-	storyLogo,
-	storyView,
 	toDraft,
 	toOptions,
 	uploadImage,
 } from "@app/utils/partnerProfile"
 import { useProfileAutosave } from "@app/utils/profileAutosave"
+import { openInNewTab, useProfileView } from "@app/utils/profileView"
 import { startTracking } from "@app/utils/tracking"
 
 const SUBMIT_STORY_URL = "https://frappe.io/partners"
 const REVIEWS_SHOWN = 4
-const STORIES_SECTION = "stories-section"
-const ANSWER_ICONS = "/assets/connect/images"
 
 // What the editor shows for reviews, since the sample profile has none.
 const SAMPLE_REVIEWS = [
@@ -53,10 +44,6 @@ function timeAgo(date) {
 	if (months < 12) return months === 1 ? "1 month ago" : `${months} months ago`
 	const years = Math.floor(months / 12)
 	return years === 1 ? "1 year ago" : `${years} years ago`
-}
-
-function openInNewTab(url) {
-	if (url) window.open(url, "_blank", "noopener")
 }
 
 export default function setup(context) {
@@ -117,6 +104,8 @@ export default function setup(context) {
 	watch(listingMode, (mode) => mode === "preview" && autosave.flush())
 	// While editing, the stories follow the order being set; otherwise, the saved order.
 	const stories = computed(() => (isEditing.value ? draft.value.success_stories : profile.value?.success_stories) || [])
+	// What the shared profile sections show, the same as on the public profile.
+	const view = useProfileView({ profile, stories, isEditing, selectedStoryIndustry })
 
 	// ---- Name and tagline ----
 	const listingName = computed(() => profile.value?.partner_name || "")
@@ -131,15 +120,7 @@ export default function setup(context) {
 			.catch(() => toast.info(link, { description: "Your browser blocked the clipboard. Copy the link from here." }))
 	}
 
-	// ---- Photos and video: one large tile, up to two beside it, "+N" for the rest ----
-	const photos = computed(() => (profile.value?.photos || []).map((photo, index) => ({ ...photo, index })))
-	const sidePhotos = computed(() => {
-		const more = photos.value.length - 3
-		return photos.value.slice(1, 3).map((photo, index) => ({ ...photo, more: index === 1 && more > 0 ? `+${more}` : "" }))
-	})
-
-	// ---- Client logos, from the success stories, as the public profile shows them ----
-	const clientLogos = computed(() => clientLogoRow(stories.value))
+	// ---- Client logos ----
 	// While editing, every logo in the order being set. Hidden ones, and any past the row's six, are faded.
 	const editLogos = computed(() => {
 		let shown = 0
@@ -149,15 +130,8 @@ export default function setup(context) {
 			return { ...story, index, last: index === ordered.length - 1, logo: story.client_logo_display || story.client_logo, faded: !isShown }
 		})
 	})
-	// Shown instead of the row: why the public profile has no logos yet.
-	const clientLogosNote = computed(() => {
-		const count = clientLogoCount(stories.value)
-		if (!orderedLogoStories(stories.value).length) return "No client logos yet. They come from your success stories."
-		if (count < MIN_CLIENT_LOGOS) return `The logo row shows on your profile once it has ${MIN_CLIENT_LOGOS} logos. It has ${count}.`
-		return ""
-	})
 	const editLogosNote = computed(() => {
-		if (clientLogosNote.value) return clientLogosNote.value
+		if (view.clientLogosNote.value) return view.clientLogosNote.value
 		const isTrimmed = editLogos.value.some((logo) => logo.faded)
 		return isTrimmed ? `Your profile shows the first ${CLIENT_LOGOS_SHOWN} logos you haven't hidden.` : ""
 	})
@@ -178,25 +152,6 @@ export default function setup(context) {
 			{ label: logo.hide_logo ? "Show" : "Hide", icon: logo.hide_logo ? "lucide-eye" : "lucide-eye-off", onClick: toggle },
 		]
 	}
-
-	// ---- Details ----
-	const details = computed(() => {
-		const p = profile.value || {}
-		const pmm = Math.round(Number(p.pmm_level) || 0)
-		const certified = [
-			p.certs_erpnext ? `${p.certs_erpnext} ERPNext` : "",
-			p.certs_frappe_framework ? `${p.certs_frappe_framework} Framework` : "",
-		].filter(Boolean)
-		return {
-			pmm: pmm ? String(pmm) : "Not rated yet",
-			certified,
-			offices: p.offices || [],
-			rate: p.hourly_rate ? `From ₹${Number(p.hourly_rate).toLocaleString("en-IN")}/hr` : "Not added yet",
-			industries: p.industry_badges || [],
-			apps: p.apps || [],
-			migrations: p.migrations || [],
-		}
-	})
 
 	// ---- Offices: added and changed in a dialog, saved with the rest of the draft ----
 	const officeDialogOpen = ref(false)
@@ -236,25 +191,6 @@ export default function setup(context) {
 		officeDialogOpen.value = false
 	}
 
-	// ---- Vision: the founder's quote, then the three answers as the public profile shows them ----
-	const founder = computed(() => profile.value?.founder || {})
-	const answers = computed(() => {
-		const p = profile.value || {}
-		const rows = [
-			{ key: "origin_story", icon: `${ANSWER_ICONS}/how-we-got-here-icon.svg`, label: "How we got here" },
-			{ key: "why_choose_them", icon: `${ANSWER_ICONS}/why-work-with-us-icon.svg`, label: "Why work with us and who should work with us" },
-			{ key: "how_we_work", icon: `${ANSWER_ICONS}/how-we-work-icon.svg`, label: "How we'll work together" },
-		]
-		return rows.map((row, index) => ({
-			...row,
-			text: p[row.key] || DEFAULT_ANSWERS[row.key] || "Not added yet.",
-			empty: !p[row.key],
-			// an empty answer shows Frappe's default text where there is one
-			defaulted: !p[row.key] && !!DEFAULT_ANSWERS[row.key],
-			last: index === rows.length - 1,
-		}))
-	})
-
 	// ---- Reviews ----
 	const showAllReviews = ref(false)
 	const averageRating = computed(() => {
@@ -271,15 +207,7 @@ export default function setup(context) {
 		})),
 	)
 
-	// ---- Success stories: one featured, then a list, filtered by industry as on the public profile ----
-	const showAllStories = ref(false)
-
-	// A verified industry has stories behind it: show only those, where the stories are.
-	function showStoriesFor(industry) {
-		selectedStoryIndustry.value = industry
-		document.querySelector(`[data-component-id="${STORIES_SECTION}"]`)?.scrollIntoView({ behavior: "smooth" })
-	}
-
+	// ---- Success stories ----
 	// The first story is the featured one, so featuring a story moves it to the top.
 	function moveStory(from, to) {
 		const ordered = [...draft.value.success_stories]
@@ -358,6 +286,7 @@ export default function setup(context) {
 	const options = computed(() => profile.value?.options || {})
 
 	return {
+		...view,
 		profile,
 		loadError,
 		canEdit,
@@ -375,15 +304,10 @@ export default function setup(context) {
 		isEditing,
 		saveStatus: autosave.status,
 		hasSaveProblem: autosave.hasProblem,
-		mainPhoto: computed(() => photos.value[0] || null),
-		sidePhotos,
-		photoColumns: computed(() => (sidePhotos.value.length ? "minmax(0, 2fr) minmax(0, 1fr)" : "minmax(0, 1fr)")),
 		openMedia: (photo) => openInNewTab(photo.video || photo.image),
-		clientLogos,
 		editLogos,
 		editLogosNote,
 		clientLogoMenu,
-		clientLogosNote,
 		officeRows: computed(() => (draft.value.offices || []).map((office, index) => ({ ...office, index }))),
 		canAddOffice: computed(() => (draft.value.offices || []).length < MAX_OFFICES),
 		officeDialogOpen,
@@ -393,33 +317,14 @@ export default function setup(context) {
 		openOffice,
 		saveOffice,
 		removeOffice,
-		details,
-		founder,
-		answers,
 		reviews,
 		averageRating,
 		reviewCount: computed(() => (reviews.value.length === 1 ? "1 review" : `${reviews.value.length} reviews`)),
 		shownReviews,
 		showAllReviews,
 		hasMoreReviews: computed(() => reviews.value.length > REVIEWS_SHOWN),
-		storyView: computed(() =>
-			storyView(
-				stories.value.map((story, position) => ({ ...story, position })),
-				isEditing.value ? "" : selectedStoryIndustry.value,
-				showAllStories.value,
-			),
-		),
-		storyCount: computed(() => String(stories.value.length)),
-		storyIndustryOptions: computed(() => storyIndustryOptions(stories.value)),
-		storyLogo,
 		storyMenu,
-		showAllStories,
-		showStoriesFor,
-		openStory: (story) => openInNewTab(story.url),
-		featureRows: computed(() => featureRows(profile.value?.features)),
-		openFeature: (feature) => openInNewTab(feature.url),
 		submitStory: () => openInNewTab(SUBMIT_STORY_URL),
-		imageTile,
 		// editing in place
 		draft,
 		counter: (path) => limitCounter(draft.value, path),
