@@ -8,7 +8,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, now_datetime
 
-from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
+from connect.customer.doctype.customer_project.test_hiring import complete_a_project, make_buyer, make_partner, make_partner_admin
 from connect.partner.doctype.connect_partner_member.test_switch_partner import add_member
 from connect.partner.doctype.partner_review.partner_review import submit_partner_review
 from connect.partner.doctype.review_request import review_request as requests
@@ -114,12 +114,10 @@ class TestReviewRequest(IntegrationTestCase):
 		frappe.set_user(OWNER)
 		self.assertTrue(requests.my_requests()[0].is_review_hidden)
 
-	def test_a_review_the_company_wrote_when_hired_answers_the_request(self):
+	def test_a_review_the_company_wrote_after_a_project_answers_the_request(self):
 		company = f"Acme Steel {frappe.generate_hash(length=6)}"
 		make_buyer(self.customer_email, company)
-		frappe.get_doc({"doctype": "Partner Customer", "partner": PARTNER, "customer": company, "source": "Connect"}).insert(
-			ignore_permissions=True
-		)
+		complete_a_project(self.customer_email, PARTNER)
 		frappe.set_user(self.customer_email)
 		review = submit_partner_review(PARTNER, 5)
 		request = self.ask()

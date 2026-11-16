@@ -2497,6 +2497,54 @@
              "componentProps": {},
              "componentSlots": {},
              "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "{{ isCompleted && hired ? 'flex' : 'none' }}",
+              "flexDirection": "column",
+              "gap": "8px",
+              "marginTop": "16px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-6)"
+               },
+               "componentId": "cs-review-text",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-p-base",
+                "tag": "p",
+                "text": "{{ hired && hired.is_reviewed ? 'Thanks for reviewing ' + hired.partner_name + '.' : 'How was working with ' + (hired ? hired.partner_name : 'your partner') + '? Your review helps other businesses choose a partner.' }}"
+               },
+               "componentSlots": {}
+              },
+              {
+               "componentEvents": {
+                "click": {
+                 "action": "Run Script",
+                 "event": "click",
+                 "script": "reviewPartner();"
+                }
+               },
+               "componentId": "cs-review-btn",
+               "componentName": "Button",
+               "componentProps": {
+                "label": "{{ 'Review ' + (hired ? hired.partner_name : 'your partner') }}",
+                "variant": "subtle"
+               },
+               "componentSlots": {},
+               "classes": [
+                "self-start"
+               ],
+               "visibilityCondition": "hired && !hired.is_reviewed"
+              }
+             ],
+             "componentId": "cs-review",
+             "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
+             "originalElement": "div"
             }
            ],
            "componentId": "cs-inner",
@@ -4814,6 +4862,97 @@
       },
       "size": "sm",
       "title": "Delete this draft?"
+     },
+     "componentSlots": {}
+    },
+    {
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%"
+       },
+       "children": [
+        {
+         "baseStyles": {
+          "color": "var(--ink-gray-6)"
+         },
+         "componentId": "review-ask-text",
+         "componentName": "TextBlock",
+         "componentProps": {
+          "fontSize": "text-p-base",
+          "tag": "p",
+          "text": "{{ 'How was working with ' + (hired ? hired.partner_name : 'your partner') + '? Your review shows on their profile and helps other businesses choose a partner.' }}"
+         },
+         "componentSlots": {}
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "gap": "8px",
+          "justifyContent": "flex-end",
+          "marginTop": "24px"
+         },
+         "children": [
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "reviewAskOpen.value = false;"
+            }
+           },
+           "componentId": "review-ask-later",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Later",
+            "variant": "subtle",
+            "size": "sm"
+           },
+           "componentSlots": {}
+          },
+          {
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "reviewPartner();"
+            }
+           },
+           "componentId": "review-ask-write",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Write a review",
+            "variant": "solid",
+            "size": "sm"
+           },
+           "componentSlots": {}
+          }
+         ],
+         "componentId": "review-ask-actions",
+         "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
+         "originalElement": "div"
+        }
+       ],
+       "componentId": "review-ask-body",
+       "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
+       "originalElement": "div"
+      }
+     ],
+     "componentId": "review-ask-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "reviewAskOpen"
+      },
+      "size": "sm",
+      "title": "Project completed"
      },
      "componentSlots": {}
     },

@@ -53,6 +53,15 @@ def make_buyer(email, company):
 	return email
 
 
+
+def complete_a_project(user, partner, status="Completed"):
+	"""A project `user` took to `status` with `partner` on Connect."""
+	project = frappe.get_doc({"doctype": "Customer Project", "project_name": "_Test Completed Project"}).insert(
+		ignore_permissions=True
+	)
+	project.db_set({"user": user, "partner": partner, "status": status})
+	return project
+
 def make_partner_admin(partner, email):
 	if not frappe.db.exists("User", email):
 		frappe.get_doc({"doctype": "User", "email": email, "first_name": "Admin"}).insert(

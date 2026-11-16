@@ -491,12 +491,20 @@ export default function setup(context) {
 		call("connect.api.projects.complete_project", { name: projectName })
 			.then((data) => {
 				project.value = data
-				toast.success("Project completed")
+				if (data.hired && !data.hired.is_reviewed) reviewAskOpen.value = true
+				else toast.success("Project completed")
 			})
 			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't complete the project. Try again."))
 			.finally(() => {
 				completing.value = false
 			})
+	}
+
+	// A completed project asks for a review of the partner, written in the profile's review form.
+	const reviewAskOpen = ref(false)
+	function reviewPartner() {
+		reviewAskOpen.value = false
+		if (hired.value) router.push({ path: `/partner-profile-redesign/${encodeURIComponent(hired.value.partner)}`, query: { review: "1" } })
 	}
 
 	// The Partner panel: who was hired, and on what quote.
@@ -640,6 +648,8 @@ export default function setup(context) {
 		setupOnCentral,
 		isCompleted,
 		completing,
+		reviewAskOpen,
+		reviewPartner,
 		markComplete,
 		hiredCost,
 		messagePartner,
