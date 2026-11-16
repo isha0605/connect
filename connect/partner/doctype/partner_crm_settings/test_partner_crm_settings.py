@@ -655,6 +655,8 @@ def drop_fixtures():
 	"""Deletes leaf-first so link validation can't block the parents."""
 	drop_test_messages()
 	for doctype, filters in (
+		# Chat reply SLA clocks the test's messages opened: they point at its threads.
+		("Partner Chat Reply", {"partner": "_test_crm_partner"}),
 		("Connect Message", {"thread": ["in", _test_threads() or [""]]}),
 		("File", {"file_name": ["like", "\\_test\\_tiny%"]}),
 		("File", {"file_name": "_test_crm_reply.txt"}),
