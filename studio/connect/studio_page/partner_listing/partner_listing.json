@@ -45,19 +45,42 @@
        },
        "children": [
         {
+         "componentId": "header-title-row",
+         "componentName": "container",
+         "originalElement": "div",
          "baseStyles": {
-          "color": "var(--ink-gray-9)",
-          "fontSize": "16px",
-          "fontWeight": "500",
-          "lineHeight": "24px"
+          "alignItems": "center",
+          "display": "flex",
+          "gap": "8px",
+          "minWidth": "0px"
          },
-         "componentId": "header-title",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "tag": "h1",
-          "text": "Public profile"
-         },
-         "componentSlots": {}
+         "children": [
+          {
+           "baseStyles": {
+            "color": "var(--ink-gray-9)",
+            "fontSize": "16px",
+            "fontWeight": "500",
+            "lineHeight": "24px"
+           },
+           "componentId": "header-title",
+           "componentName": "TextBlock",
+           "componentProps": {
+            "tag": "h1",
+            "text": "Public profile"
+           },
+           "componentSlots": {}
+          },
+          {
+           "componentId": "header-preview-badge",
+           "componentName": "Badge",
+           "componentProps": {
+            "label": "Preview",
+            "theme": "blue",
+            "variant": "subtle"
+           },
+           "visibilityCondition": "canEdit && listingMode === 'preview'"
+          }
+         ]
         },
         {
          "baseStyles": {
@@ -137,8 +160,7 @@
            "componentId": "header-back",
            "componentName": "Button",
            "componentProps": {
-            "label": "Back to editing",
-            "iconLeft": "lucide-pencil",
+            "label": "Continue editing",
             "variant": "subtle"
            },
            "componentEvents": {
@@ -181,7 +203,7 @@
              "script": "cancelEditing();"
             }
            },
-           "visibilityCondition": "canEdit && !isViewing"
+           "visibilityCondition": "isEditing"
           },
           {
            "componentId": "pl-publish",
