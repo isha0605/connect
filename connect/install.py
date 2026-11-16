@@ -3,6 +3,7 @@
 
 from connect.patches import (
 	create_partner_tiers,
+	link_industry_fields_to_industry,
 	seed_crm_status_defaults,
 	seed_regions,
 	seed_starter_packs,
@@ -16,3 +17,4 @@ def after_install():
 	seed_regions.execute()
 	seed_crm_status_defaults.seed()
 	create_partner_tiers.execute()
+	link_industry_fields_to_industry.create_industries()

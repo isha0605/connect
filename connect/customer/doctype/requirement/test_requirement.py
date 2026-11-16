@@ -54,6 +54,10 @@ class IntegrationTestCompanyDetails(IntegrationTestCase):
 		self.assertEqual(saved.timeline, "Within 3 months")
 		self.assertEqual(saved.budget, "₹2L–₹10L")  # noqa: RUF001
 
+	def test_rejects_an_industry_outside_the_list(self):
+		with self.assertRaises(frappe.LinkValidationError):
+			self.save_company(industry="Retail & Distribution")
+
 	def test_stores_the_number_of_employees_as_company_size(self):
 		self.save_company(company_size="11-50")
 

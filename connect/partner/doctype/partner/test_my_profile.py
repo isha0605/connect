@@ -18,7 +18,10 @@ ADMIN = "profile.admin@example.test"
 MEMBER = "profile.member@example.test"
 OTHER_ADMIN = "profile.other.admin@example.test"
 BUYER = "profile.buyer@example.test"
-INDUSTRY_NAMES = ["Textile Manufacturing", "Retail", "Agriculture", "Education", "Finance", "Logistics", "Hospitality"]
+INDUSTRY_NAMES = [
+	"Textile Manufacturing", "Retail", "Agriculture", "Education", "Banking, Insurance and Broking", "Logistics",
+	"Hotels, Restaurants and Cafes",
+]
 
 
 def make_industries():
