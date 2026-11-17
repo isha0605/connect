@@ -5,6 +5,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
+from connect.partner.doctype.certificate_application.test_certificate_application import make_staff_user
 from connect.partner.doctype.partner_application.partner_application import (
 	get_mrr_status,
 	save_partner_application,
@@ -43,6 +44,21 @@ class TestPartnerApplicationMRR(IntegrationTestCase):
 	def mrr_status(self):
 		frappe.set_user(OWNER)
 		return get_mrr_status()
+
+	def test_review_alone_lets_a_staff_role_decide(self):
+		"""Status sits at permlevel 1, but a staff role with Review needn't also hold level-1 write."""
+		from frappe.permissions import reset_perms
+
+		self.addCleanup(frappe.clear_cache, doctype="Partner Application")
+		self.addCleanup(reset_perms, "Partner Application")
+		staff = make_staff_user("decider.application@example.test", "_Test Application Decider", ("read", "review"), "Partner Application")
+		application = self.apply("INR", 20000)
+		application.db_set({"docstatus": 1, "status": "Pending Review"})
+
+		frappe.set_user(staff)
+		frappe.get_doc("Partner Application", application.name).approve()
+
+		self.assertEqual(frappe.db.get_value("Partner Application", application.name, "status"), "Approved")
 
 	def test_an_indian_partner_needs_ten_thousand_rupees(self):
 		self.apply("INR", 4000)

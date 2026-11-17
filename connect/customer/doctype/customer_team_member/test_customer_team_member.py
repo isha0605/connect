@@ -76,6 +76,17 @@ class IntegrationTestCustomerTeamMember(IntegrationTestCase):
 		with self.assertRaises(frappe.ValidationError):
 			add_team_member("roles.sales@example.test", access_level="Sales")
 
+	def test_the_patch_gives_a_company_without_an_admin_an_owner(self):
+		"""Before, a customer's last admin could be removed, leaving nobody to run its team."""
+		from connect.patches.set_one_owner_per_customer import give_ownerless_companies_an_owner
+
+		self.addCleanup(frappe.db.rollback)
+		frappe.db.set_value("Customer Team Member", self.owner.name, {"access": "Member", "is_removed": 1})
+
+		give_ownerless_companies_an_owner()
+
+		self.assertEqual(_get_customer_owner(CUSTOMER), ADMIN)
+
 	def test_the_team_list_puts_the_owner_first(self):
 		frappe.set_user(MEMBER)
 		rows = get_my_team()

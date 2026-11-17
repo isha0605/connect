@@ -27,16 +27,16 @@ ISSUED = [{"name": "LMS-FREE-1", "course": "erpnext-training", "issue_date": "20
 	"member": MEMBER, "member_name": "Free Member"}]
 
 
-def make_staff_user(email, role, rights):
-	"""A Desk user whose only role is a new staff role holding `rights` on Certificate Application,
-	set up as a System Manager would in Role Permissions Manager."""
+def make_staff_user(email, role, rights, doctype="Certificate Application"):
+	"""A Desk user whose only role is a new staff role holding `rights` on `doctype`, set up as a
+	System Manager would in Role Permissions Manager. The caller resets the doctype's permissions."""
 	from frappe.permissions import add_permission, update_permission_property
 
 	if not frappe.db.exists("Role", role):
 		frappe.get_doc({"doctype": "Role", "role_name": role, "desk_access": 1}).insert(ignore_permissions=True)
-	add_permission("Certificate Application", role)
+	add_permission(doctype, role)
 	for right in rights:
-		update_permission_property("Certificate Application", role, 0, right, 1)
+		update_permission_property(doctype, role, 0, right, 1)
 
 	if not frappe.db.exists("User", email):
 		frappe.get_doc({"doctype": "User", "email": email, "first_name": "Staff", "user_type": "System User"}).insert(
@@ -141,6 +141,22 @@ class IntegrationTestCertificateApplication(IntegrationTestCase):
 		frappe.set_user(clerk)
 		with self.assertRaises(frappe.PermissionError):
 			frappe.get_doc("Certificate Application", application).approve()
+
+	def test_a_site_with_saved_permissions_keeps_review_for_reviewers(self):
+		"""A site that customised these permissions before Review existed gets it from the patch."""
+		from frappe.permissions import setup_custom_perms
+
+		from connect.patches.grant_review_on_custom_permissions import execute
+
+		setup_custom_perms("Certificate Application")
+		saved = {"parent": "Certificate Application", "role": REVIEWER_ROLE, "permlevel": 0}
+		frappe.db.set_value("Custom DocPerm", saved, "review", 0)
+		frappe.clear_cache(doctype="Certificate Application")
+		self.assertNotIn(REVIEWER, reviewer_emails())
+
+		execute()
+		self.assertEqual(frappe.db.get_value("Custom DocPerm", saved, "review"), 1)
+		self.assertIn(REVIEWER, reviewer_emails())
 
 	def test_allowance_runs_out_and_a_rejection_gives_it_back(self):
 		frappe.db.set_value("Partner", PARTNER, "free_certifications", 1)
