@@ -195,8 +195,6 @@ fixtures = [
 		"doctype": "Custom DocPerm",
 		"filters": [["parent", "in", ["Studio Page", "Studio Component"]]],
 	},
-	# A one-click bundle for a new partner reviewer in Desk. Staff can make their own profiles.
-	{"doctype": "Role Profile", "filters": [["name", "in", ["Partner Review Team"]]]},
 ]
 
 # Stops a Starter Pack Order being refunded after kickoff. It has to be a class override:
