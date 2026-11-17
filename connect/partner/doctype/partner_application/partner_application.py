@@ -104,12 +104,11 @@ class PartnerApplication(Document):
 
 	@frappe.whitelist()
 	def approve(self):
-		# A reviewer also needs write at permlevel 1, which is where status and reviewer_comments live.
 		frappe.has_permission(self.doctype, "review", throw=True)
 		self._check_pending_review()
 		self.status = "Approved"
 		self.reviewer_comments = None
-		self.save()
+		self._save_review()
 
 	@frappe.whitelist()
 	def reject(self, reason=None):
@@ -117,7 +116,13 @@ class PartnerApplication(Document):
 		self._check_pending_review()
 		self.status = "Rejected"
 		self.reviewer_comments = reason
-		self.save()
+		self._save_review()
+
+	def _save_review(self):
+		# Review, checked above, is the right to decide. Status and reviewer_comments sit at
+		# permlevel 1 only to keep applicants from setting them, so a reviewer's role needn't
+		# also be given level-1 write.
+		self.save(ignore_permissions=True)
 
 	def _check_pending_review(self):
 		if self.docstatus != 1 or self.status != "Pending Review":
