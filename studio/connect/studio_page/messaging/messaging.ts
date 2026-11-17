@@ -1051,6 +1051,12 @@ export default function setup(context) {
 		return item.side === "Partner" ? isPartnerAdmin() : isCustomerAdmin()
 	}
 
+	// Only a company's one Owner hands it over; an Admin manages members but not ownership.
+	function isRowOwner(item) {
+		const membership = context.myContext.data && context.myContext.data[item.side === "Partner" ? "partner" : "customer"]
+		return !!(membership && membership.access_level === "Owner")
+	}
+
 	// ---- Account menu (rail logo) ----
 	// myContext.data.user is frappe.session.user -- "Guest" for a visitor Frappe never
 	// authenticated, same test the framework itself uses (frappe.session.user == "Guest").
@@ -2089,15 +2095,15 @@ export default function setup(context) {
 	}
 
 	function makeAdmin(item) {
-		if (!window.confirm(`Make ${item.user} the admin? You will lose admin rights.`)) return
+		if (!window.confirm(`Make ${item.user} the Owner? You become an Admin, and only they can manage Admins or hand the company over again.`)) return
 		call("connect.api.threads.make_thread_admin", { thread: selectedThread.value, member: item.name })
 			.then(() => {
 				context.myContext.reload()
 				context.threadAdmins.reload()
-				toast.success("Admin transferred")
+				toast.success(`${item.user} is now the Owner`)
 			})
 			.catch((e) => {
-				toast.error("Could not transfer admin", { description: e.messages ? e.messages[0] : e.message })
+				toast.error("Could not transfer ownership", { description: e.messages ? e.messages[0] : e.message })
 			})
 	}
 
@@ -2116,7 +2122,7 @@ export default function setup(context) {
 	function memberRowOptions(item) {
 		const disabled = !isRowAdmin(item)
 		return [
-			{ label: "Make admin", icon: "lucide-crown", disabled, onClick: () => makeAdmin(item) },
+			{ label: "Transfer ownership", icon: "lucide-crown", disabled: !isRowOwner(item), onClick: () => makeAdmin(item) },
 			{ label: "Remove from chat", icon: "lucide-user-minus", theme: "red", disabled, onClick: () => removeMember(item) },
 		]
 	}
