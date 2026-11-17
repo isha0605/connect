@@ -9,6 +9,13 @@ from connect.messaging.doctype.connect_user_settings.connect_user_settings impor
 	WEEKDAYS,
 	get_settings_for_users,
 )
+from connect.partner.performance_events import (
+	HIRE_CLOCK,
+	QUOTE_FIELDS,
+	REQUIREMENT_CLOCK,
+	send_chat_reply_result,
+	send_overdue_results,
+)
 
 ANSWER_STATUSES = ("Quoted", "Partner Declined")
 # Guards the calendar walk when a schedule has no working day at all (odd or stale data).
@@ -99,23 +106,24 @@ def mark_overdue_answers_failed():
 	message — fails, so a partner's silence shows up without anyone saving the record."""
 	now = now_datetime()
 	Quote = frappe.qb.DocType("Project Quote")
-	clocks = ((Quote.sla_status, Quote.response_by), (Quote.hire_sla_status, Quote.hire_response_by))
-	for status, deadline in clocks:
-		# Bumping modified makes a stale open copy fail its save instead of reverting the miss.
-		(
-			frappe.qb.update(Quote)
-			.set(status, "Failed")
-			.set(Quote.modified, now)
-			.where((status == "Due") & (deadline < now))
-		).run()
+	_fail_quote_clocks(REQUIREMENT_CLOCK, Quote.sla_status, Quote.response_by, Quote.response_by < now)
+	_fail_quote_clocks(HIRE_CLOCK, Quote.hire_sla_status, Quote.hire_response_by, Quote.hire_response_by < now)
 
 	Reply = frappe.qb.DocType("Partner Chat Reply")
+	overdue = (Reply.status == "Due") & (Reply.reply_by < now)
+	replies = frappe.qb.from_(Reply).select(Reply.name, Reply.reply_by).where(overdue).for_update().run(as_dict=True)
+	if not replies:
+		return
+
+	# Bumping modified makes a stale open copy fail its save instead of reverting the miss.
 	(
 		frappe.qb.update(Reply)
 		.set(Reply.status, "Failed")
 		.set(Reply.modified, now)
-		.where((Reply.status == "Due") & (Reply.reply_by < now))
+		.where(overdue & Reply.name.isin([reply.name for reply in replies]))
 	).run()
+	for reply in replies:
+		send_chat_reply_result(reply.name, "Failed", reply.reply_by)
 
 
 def withdraw_sibling_brief_clocks(hired_quote):
@@ -130,12 +138,7 @@ def withdraw_sibling_brief_clocks(hired_quote):
 		& (Quote.sla_status == "Due")
 	)
 
-	(
-		frappe.qb.update(Quote)
-		.set(Quote.sla_status, "Failed")
-		.set(Quote.modified, now)
-		.where(siblings & (Quote.response_by < now))
-	).run()
+	_fail_quote_clocks(REQUIREMENT_CLOCK, Quote.sla_status, Quote.response_by, siblings & (Quote.response_by < now))
 	(
 		frappe.qb.update(Quote)
 		.set(Quote.sla_status, "")
@@ -143,6 +146,26 @@ def withdraw_sibling_brief_clocks(hired_quote):
 		.set(Quote.modified, now)
 		.where(siblings & (Quote.response_by >= now))
 	).run()
+
+
+def _fail_quote_clocks(clock: str, status, deadline, overdue):
+	"""Fails every Due clock matching `overdue` in one update. The rows are locked first, so
+	an answer saved meanwhile waits, and each miss is sent to Pulse exactly as stored."""
+	Quote = frappe.qb.DocType("Project Quote")
+	condition = (status == "Due") & overdue
+	fields = [getattr(Quote, field) for field in QUOTE_FIELDS]
+	quotes = frappe.qb.from_(Quote).select(*fields, deadline.as_("deadline")).where(condition).for_update().run(as_dict=True)
+	if not quotes:
+		return
+
+	# Bumping modified makes a stale open copy fail its save instead of reverting the miss.
+	(
+		frappe.qb.update(Quote)
+		.set(status, "Failed")
+		.set(Quote.modified, now_datetime())
+		.where(condition & Quote.name.isin([quote.name for quote in quotes]))
+	).run()
+	send_overdue_results(clock, quotes)
 
 
 def get_answer_deadline(partner: str, arrival: datetime) -> datetime | None:

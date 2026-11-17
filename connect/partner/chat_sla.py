@@ -4,6 +4,7 @@ import frappe
 from frappe.query_builder.functions import Min
 from frappe.utils import get_datetime, now_datetime
 
+from connect.partner.performance_events import SLA_RESULTS, send_chat_reply_result
 from connect.partner.sla import get_answer_deadline
 
 REPLY = "Partner Chat Reply"
@@ -124,12 +125,18 @@ def _settle_clock(thread: str):
 
 def _close_clock(name: str, status: str, replied_at=None):
 	"""Settles a clock only while it is still Due: the hourly job or a concurrent reply may
-	have settled it first, and one silence must count exactly once."""
+	have settled it first, and one silence must count exactly once. The row is locked so
+	only the save that settles it sends its result."""
+	if not frappe.db.get_value(REPLY, {"name": name, "status": "Due"}, "name", for_update=True):
+		return
+
 	Reply = frappe.qb.DocType(REPLY)
 	query = frappe.qb.update(Reply).set(Reply.status, status).set(Reply.modified, now_datetime())
 	if replied_at:
 		query = query.set(Reply.replied_at, replied_at)
 	query.where((Reply.name == name) & (Reply.status == "Due")).run()
+	if status in SLA_RESULTS:
+		send_chat_reply_result(name, status, replied_at or now_datetime())
 
 
 def _has_open_quote_clock(thread: str) -> bool:
