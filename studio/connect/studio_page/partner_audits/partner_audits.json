@@ -1778,6 +1778,235 @@
               },
               {
                "baseStyles": {
+                "display": "flex",
+                "gap": "12px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "flexShrink": "0",
+                  "paddingTop": "6px",
+                  "width": "9px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "border": "1px solid var(--ink-gray-4)",
+                    "borderRadius": "999px",
+                    "flexShrink": "0",
+                    "height": "9px",
+                    "width": "9px"
+                   },
+                   "children": [],
+                   "componentId": "pa-answer-dot",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "backgroundColor": "var(--outline-gray-2)",
+                    "flex": "1",
+                    "marginTop": "4px",
+                    "minHeight": "12px",
+                    "width": "1px"
+                   },
+                   "children": [],
+                   "componentId": "pa-answer-rail-line",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div",
+                   "visibilityCondition": "false"
+                  }
+                 ],
+                 "componentId": "pa-answer-rail",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "display": "flex",
+                  "flex": "1",
+                  "flexDirection": "column",
+                  "gap": "8px",
+                  "minWidth": "0px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)",
+                    "fontSize": "13px",
+                    "fontWeight": "500",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "20px"
+                   },
+                   "componentId": "pa-answer-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "p",
+                    "text": "Your next answer"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "componentId": "pa-answer-input",
+                   "componentName": "FormControl",
+                   "componentProps": {
+                    "modelValue": {
+                     "$type": "variable",
+                     "name": "answerText"
+                    },
+                    "placeholder": "What you changed",
+                    "rows": 4,
+                    "size": "sm",
+                    "type": "textarea",
+                    "variant": "subtle"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-red-6)",
+                    "fontSize": "13px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "20px"
+                   },
+                   "componentId": "pa-answer-error",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "p",
+                    "text": "{{ answerError }}"
+                   },
+                   "componentSlots": {},
+                   "visibilityCondition": "answerError"
+                  },
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "gap": "6px",
+                    "minWidth": "0px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)",
+                      "flexShrink": "0",
+                      "height": "13px",
+                      "width": "13px"
+                     },
+                     "componentId": "pa-answer-file-icon",
+                     "componentName": "Icon",
+                     "componentProps": {
+                      "icon": "lucide-paperclip"
+                     },
+                     "componentSlots": {}
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-7)",
+                      "fontSize": "13px",
+                      "fontWeight": "420",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "20px",
+                      "minWidth": "0px",
+                      "overflow": "hidden",
+                      "textOverflow": "ellipsis",
+                      "whiteSpace": "nowrap"
+                     },
+                     "componentId": "pa-answer-file-name",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "{{ answerEvidence }}"
+                     },
+                     "componentSlots": {}
+                    },
+                    {
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "removeEvidence();"
+                      }
+                     },
+                     "componentId": "pa-answer-file-remove",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "icon": "lucide-x",
+                      "size": "sm",
+                      "tooltip": "Remove evidence",
+                      "variant": "ghost"
+                     },
+                     "componentSlots": {},
+                     "attributes": {
+                      "aria-label": "Remove evidence"
+                     }
+                    }
+                   ],
+                   "componentId": "pa-answer-file",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div",
+                   "visibilityCondition": "answerEvidence"
+                  },
+                  {
+                   "baseStyles": {
+                    "display": "flex"
+                   },
+                   "children": [
+                    {
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "attachEvidence();"
+                      }
+                     },
+                     "componentId": "pa-answer-attach",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "iconLeft": "lucide-paperclip",
+                      "label": "Attach evidence",
+                      "size": "sm",
+                      "variant": "subtle"
+                     },
+                     "componentSlots": {}
+                    }
+                   ],
+                   "componentId": "pa-answer-attach-row",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div",
+                   "visibilityCondition": "!answerEvidence"
+                  }
+                 ],
+                 "componentId": "pa-answer-body",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "originalElement": "div"
+                }
+               ],
+               "componentId": "pa-answer",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div",
+               "visibilityCondition": "panel.canAnswer"
+              },
+              {
+               "baseStyles": {
                 "color": "var(--ink-gray-6)",
                 "fontSize": "13px",
                 "fontWeight": "420",
@@ -1806,6 +2035,38 @@
            "componentProps": {},
            "componentSlots": {},
            "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "borderTop": "1px solid var(--outline-gray-1)",
+            "display": "flex",
+            "flexShrink": "0",
+            "padding": "12px 16px"
+           },
+           "children": [
+            {
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "submitAnswer();"
+              }
+             },
+             "componentId": "pa-panel-submit",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Submit for review",
+              "variant": "solid"
+             },
+             "componentSlots": {}
+            }
+           ],
+           "componentId": "pa-panel-foot",
+           "componentName": "container",
+           "componentProps": {},
+           "componentSlots": {},
+           "originalElement": "div",
+           "visibilityCondition": "panel.canAnswer"
           }
          ],
          "componentId": "pa-panel",
@@ -2045,7 +2306,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-18 10:00:00.000000",
+ "modified": "2026-11-18 01:10:34.918479",
  "modified_by": "Administrator",
  "name": "partner_audits",
  "owner": "Administrator",

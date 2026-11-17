@@ -1,5 +1,5 @@
 // The partner's Audits: the audits Frappe ran for them and, inside each, the non-conformances (NCs)
-// the auditor raised, each with what happened to it so far.
+// the auditor raised. The partner answers an open NC, and the auditor closes it or sends it back.
 // Sample data for now: nothing is stored or sent until the page reads the Partner Audit and Partner
 // Non Conformance records. openAudit is a page variable, so the editor can show an audit from the
 // Data panel.
@@ -11,6 +11,8 @@ const AUDIT_TYPES = ["Online", "In-Person", "Hybrid"]
 const AUDIT_STATUSES = ["Requested", "Scheduled", "In Progress", "Completed", "On Hold", "Cancelled"]
 const AUDIT_THEMES = { Requested: "gray", Scheduled: "blue", "In Progress": "amber", Completed: "green", "On Hold": "amber", Cancelled: "red" }
 const NC_STATUSES = ["Open", "In progress", "In review", "Closed"]
+// The partner can answer an NC only while it waits on them.
+const ANSWERABLE = ["Open", "In progress"]
 
 const GRAY = "var(--ink-gray-4)"
 const BLUE = "var(--ink-blue-6)"
@@ -224,16 +226,26 @@ export default function setup(context) {
 	// ---- The open non-conformance, in the side panel ----
 	const openNc = ref("")
 	const selectedNc = computed(() => (audit.value?.non_conformances || []).find((row) => row.name === openNc.value) || null)
+	const answerText = ref("")
+	const answerEvidence = ref("")
+	const answerError = ref("")
+	watch(openNc, () => {
+		answerText.value = ""
+		answerEvidence.value = ""
+		answerError.value = ""
+	})
 
 	const panel = computed(() => {
 		const row = selectedNc.value
 		if (!row) return null
 		const auditor = audit.value.auditor
+		const canAnswer = ANSWERABLE.includes(row.status)
 		return {
 			statement: row.statement,
 			reference: `${row.name} · ${row.department}`,
 			finding: row.finding,
 			measures: row.measures || "Not added yet.",
+			canAnswer,
 			reviewingText: row.status === "In review" ? `${auditor} is reviewing your answer.` : "",
 			steps: row.history.map((entry, index) => ({
 				key: `${entry.kind}-${index}`,
@@ -242,7 +254,8 @@ export default function setup(context) {
 				note: entry.note,
 				evidence: entry.evidence,
 				dot: STEP_DOTS[entry.kind] || GRAY,
-				hasLine: index < row.history.length - 1,
+				// The line runs on to the next step, or to the answer box below the last one.
+				hasLine: index < row.history.length - 1 || canAnswer,
 			})),
 		}
 	})
@@ -259,6 +272,31 @@ export default function setup(context) {
 		else window.removeEventListener("keydown", onPanelKey)
 	})
 	onScopeDispose(() => window.removeEventListener("keydown", onPanelKey))
+
+	// Sample data: only the file's name is kept, nothing is uploaded.
+	function attachEvidence() {
+		const input = document.createElement("input")
+		input.type = "file"
+		input.onchange = () => {
+			answerEvidence.value = input.files?.[0]?.name || ""
+		}
+		input.click()
+	}
+
+	function submitAnswer() {
+		const note = answerText.value.trim()
+		if (!note) {
+			answerError.value = "Write what you changed."
+			return
+		}
+		const row = selectedNc.value
+		row.history.push(step("submitted", today(), note, answerEvidence.value))
+		row.status = "In review"
+		answerText.value = ""
+		answerEvidence.value = ""
+		answerError.value = ""
+		toast.info("Saved on this page only. Answers don't reach Frappe yet.")
+	}
 
 	function openReport() {
 		toast.info("This sample audit has no report file.")
@@ -325,6 +363,12 @@ export default function setup(context) {
 		selectNc: (name) => (openNc.value = name),
 		panel,
 		closePanel,
+		answerText,
+		answerEvidence,
+		answerError,
+		attachEvidence,
+		removeEvidence: () => (answerEvidence.value = ""),
+		submitAnswer,
 		requestOpen,
 		requestForm,
 		requestError,
