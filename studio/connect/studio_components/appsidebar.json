@@ -233,10 +233,24 @@
       "componentId": "SidebarItem-fpr-overview",
       "componentName": "SidebarItem",
       "componentProps": {
-       "active": "{{ ['/partner-overview', '/partner-certifications'].includes(route.path) }}",
+       "active": "{{ route.path === '/partner-overview' }}",
        "icon": "lucide-handshake",
        "label": "Partnership",
        "route": "/partner-overview"
+      },
+      "componentSlots": {}
+     },
+     {
+      "baseStyles": {
+       "display": "{{ (myContext.data && myContext.data.partner && myContext.data.partner.is_approved) ? 'flex' : 'none' }}"
+      },
+      "componentId": "SidebarItem-fpr-certifications",
+      "componentName": "SidebarItem",
+      "componentProps": {
+       "active": "{{ route.path === '/partner-certifications' }}",
+       "icon": "lucide-award",
+       "label": "Certifications",
+       "route": "/partner-certifications"
       },
       "componentSlots": {}
      },
@@ -383,7 +397,7 @@
  "idx": 0,
  "is_disabled": 0,
  "is_standard": 1,
- "modified": "2026-11-17 16:00:00",
+ "modified": "2026-11-16 16:48:22.687394",
  "modified_by": "Administrator",
  "name": "appsidebar",
  "owner": "Administrator"
