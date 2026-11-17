@@ -11,7 +11,12 @@ from connect.messaging.customer_identity import (
 	mask_message,
 )
 from connect.messaging.doctype.connect_thread_member.connect_thread_member import get_unread_counts, mark_read
-from connect.permissions import _check_can_read, _get_partner_admins, _visible_message_filters
+from connect.permissions import (
+	_check_can_read,
+	_get_customer_owner,
+	_get_partner_admins,
+	_visible_message_filters,
+)
 
 # The newest messages a thread opens with, as the Messages page has always loaded them.
 THREAD_MESSAGE_LIMIT = 200
@@ -71,9 +76,7 @@ def get_thread_admins(thread):
 	if not thread_doc:
 		frappe.throw(_("Thread not found"))
 
-	customer_admin = frappe.db.get_value(
-		"Customer Team Member", {"customer": thread_doc.customer, "is_admin": 1}, "user"
-	)
+	customer_admin = _get_customer_owner(thread_doc.customer)
 	if hides_customer(thread, user):
 		customer_admin = ANONYMOUS_USER
 	return {"partner_admins": _get_partner_admins(thread_doc.partner), "customer_admin": customer_admin}

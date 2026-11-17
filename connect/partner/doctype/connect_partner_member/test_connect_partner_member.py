@@ -172,10 +172,10 @@ class IntegrationTestConnectPartnerMember(IntegrationTestCase):
 class UnitTestSetOneOwnerPerPartner(UnitTestCase):
 	def test_the_earliest_owner_stays_and_the_rest_become_admins(self):
 		owners = [
-			{"name": "a1", "partner": "A"},
-			{"name": "b1", "partner": "B"},
-			{"name": "a2", "partner": "A"},
-			{"name": "a3", "partner": "A"},
+			{"name": "a1", "company": "A"},
+			{"name": "b1", "company": "B"},
+			{"name": "a2", "company": "A"},
+			{"name": "a3", "company": "A"},
 		]
 
 		self.assertEqual(split_owners(owners), (["a1", "b1"], ["a2", "a3"]))

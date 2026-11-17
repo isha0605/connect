@@ -1,19 +1,18 @@
 import frappe
 from frappe import _
-from frappe.utils import cint
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
+from connect.membership import FULL_ACCESS, MEMBER
 from connect.notifications import unread_notification_count
 from connect.partner.doctype.connect_partner_member.connect_partner_member import (
 	CUSTOMER_ACCESS,
-	FULL_ACCESS,
 	LEAD_ACCESS,
 	access_level_of,
 	get_active_memberships,
 	get_current_membership,
 )
 from connect.partner.doctype.partner.partner import VERIFIED, get_partner_managers
-from connect.permissions import _my_company_membership
+from connect.permissions import _customer_access_at, _my_company_membership
 
 
 def get_my_profile():
@@ -88,9 +87,14 @@ def get_my_context():
 	customer = get_customer_for_user(user)
 	customer_membership = None
 	if customer:
-		is_admin = frappe.db.get_value("Customer Team Member", {"customer": customer, "user": user}, "is_admin")
+		level = _customer_access_at(customer, user) or MEMBER
 		customer_name = frappe.db.get_value("Customer", customer, "customer_name")
-		customer_membership = {"customer": customer, "customer_name": customer_name, "is_admin": cint(is_admin)}
+		customer_membership = {
+			"customer": customer,
+			"customer_name": customer_name,
+			"access_level": level,
+			"is_admin": level in FULL_ACCESS,
+		}
 	partner_membership = get_current_membership(user)
 	if partner_membership:
 		partner_membership.update(partner_access(partner_membership))

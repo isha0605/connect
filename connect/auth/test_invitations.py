@@ -118,7 +118,7 @@ class IntegrationTestThreadInvitation(IntegrationTestCase):
 		self.admin = new_email("admin")
 		make_user(self.admin)
 		frappe.get_doc(
-			{"doctype": "Customer Team Member", "customer": customer.name, "user": self.admin, "is_admin": 1}
+			{"doctype": "Customer Team Member", "customer": customer.name, "user": self.admin, "access": "Owner"}
 		).insert(ignore_permissions=True)
 		self.thread = frappe.get_doc(
 			{"doctype": "Connect Thread", "customer": customer.name, "partner": partner}

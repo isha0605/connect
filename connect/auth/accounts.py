@@ -142,7 +142,7 @@ def create_customer(user, full_name, company_name, country=None):
 			"customer": customer.name,
 			"user": user,
 			"full_name": full_name,
-			"is_admin": 1,
+			"access": "Owner",
 		}
 	).insert(ignore_permissions=True)
 	made_by(member, user)

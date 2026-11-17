@@ -125,7 +125,7 @@ class IntegrationTestEmailCodeSignIn(IntegrationTestCase):
 		self.assertEqual((user.full_name, user.user_type), ("Meera Iyer", "Website User"))
 		self.assertEqual(frappe.db.get_value("Customer", company, "country"), "India")
 		self.assertTrue(
-			frappe.db.exists("Customer Team Member", {"customer": company, "user": email, "is_admin": 1})
+			frappe.db.exists("Customer Team Member", {"customer": company, "user": email, "access": "Owner"})
 		)
 		self.login_manager.login_as.assert_called_once_with(email)
 		self.assertEqual(result["user"], email)

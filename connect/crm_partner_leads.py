@@ -14,6 +14,7 @@ from frappe.utils.synchronization import filelock
 
 from connect.crm_enquiries import frappe_crm
 from connect.crm_integration import CRMRequestError, crm_has, crm_request, lead_source
+from connect.permissions import _get_customer_owner
 
 PARTNER_LEAD_SOURCE = "Connect Partner Lead"
 
@@ -141,12 +142,9 @@ def lead_payload(doc, settings) -> dict:
 
 
 def _customer_contact(customer: str):
-	"""The customer's admin, else anyone still on their team."""
-	user = frappe.db.get_value(
-		"Customer Team Member",
-		{"customer": customer, "is_removed": 0},
-		"user",
-		order_by="is_admin desc, creation asc",
+	"""The customer's Owner, else anyone still on their team."""
+	user = _get_customer_owner(customer) or frappe.db.get_value(
+		"Customer Team Member", {"customer": customer, "is_removed": 0}, "user", order_by="creation asc"
 	)
 	person = user and frappe.db.get_value(
 		"User", user, ["first_name", "last_name", "email", "mobile_no", "phone"], as_dict=True

@@ -101,7 +101,7 @@ class IntegrationTestFrappeConsultants(IntegrationTestCase):
 		)
 		if not frappe.db.exists("Customer Team Member", {"user": user}):
 			frappe.get_doc(
-				{"doctype": "Customer Team Member", "customer": customer, "user": user, "is_admin": 1}
+				{"doctype": "Customer Team Member", "customer": customer, "user": user, "access": "Owner"}
 			).insert(ignore_permissions=True)
 		return user, customer
 

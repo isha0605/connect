@@ -3,9 +3,8 @@ from pathlib import Path
 
 import frappe
 
+from connect.membership import FULL_ACCESS, OWNER
 from connect.partner.doctype.connect_partner_member.connect_partner_member import (
-	FULL_ACCESS,
-	OWNER,
 	access_level_of,
 	get_active_memberships,
 	get_current_membership,
@@ -17,8 +16,24 @@ def _has_full_access(user):
 
 
 def _is_customer_admin(customer, user):
-	return bool(
-		frappe.db.exists("Customer Team Member", {"customer": customer, "user": user, "is_admin": 1})
+	"""Whether the user is the Owner or an Admin of `customer` and still on its team."""
+	return _customer_access_at(customer, user) in FULL_ACCESS
+
+
+def _is_customer_owner(customer, user):
+	return _customer_access_at(customer, user) == OWNER
+
+
+def _customer_access_at(customer, user) -> str | None:
+	return frappe.db.get_value(
+		"Customer Team Member", {"customer": customer, "user": user, "is_removed": 0}, "access"
+	)
+
+
+def _get_customer_owner(customer) -> str | None:
+	"""The customer's Owner: the person a partner or the CRM reaches for the company."""
+	return frappe.db.get_value(
+		"Customer Team Member", {"customer": customer, "access": OWNER, "is_removed": 0}, "user"
 	)
 
 
@@ -99,7 +114,7 @@ def _my_company_membership(user):
 	"""Returns which company (and doctype/row) this user belongs to, or Nones if neither. Someone
 	removed from a team no longer belongs to it."""
 	customer_row = frappe.db.get_value(
-		"Customer Team Member", {"user": user, "is_removed": 0}, ["name", "customer", "is_admin"], as_dict=True
+		"Customer Team Member", {"user": user, "is_removed": 0}, ["name", "customer", "access"], as_dict=True
 	)
 	if customer_row:
 		return "Customer Team Member", customer_row.customer, customer_row

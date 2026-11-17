@@ -184,7 +184,7 @@ class IntegrationTestCRMSync(IntegrationTestCase):
 		make_crm_settings(cls.partner)
 		make_user(BUYER, "Asha", "Rao")
 		frappe.get_doc(
-			{"doctype": "Customer Team Member", "customer": cls.customer, "user": BUYER, "is_admin": 1}
+			{"doctype": "Customer Team Member", "customer": cls.customer, "user": BUYER, "access": "Owner"}
 		).insert(ignore_permissions=True)
 		make_consultant(CONSULTANT_ONE, "Rahul")
 		make_consultant(CONSULTANT_TWO, "Priya")
