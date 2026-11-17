@@ -13,7 +13,7 @@ from connect.customer.doctype.customer_project.customer_project import (
 	get_own_project,
 	project_dict,
 )
-from connect.permissions import _check_can_read, _get_partner_owners, _is_partner_admin
+from connect.permissions import _check_can_read, _get_partner_admins, _is_partner_admin
 
 # A request the partner hasn't answered by then is withdrawn, so the customer can hire someone else.
 HIRE_REQUEST_EXPIRY_DAYS = 7
@@ -199,7 +199,7 @@ def _post_system_message(thread: str | None, content: str):
 
 
 def _email_partner_owners(doc, row):
-	for owner in _get_partner_owners(row.partner):
+	for owner in _get_partner_admins(row.partner):
 		frappe.enqueue(
 			"connect.customer.doctype.customer_project.hiring.send_hire_request_email",
 			queue="short",

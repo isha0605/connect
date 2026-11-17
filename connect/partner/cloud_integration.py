@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, escape_html, get_url, now_datetime
 
-from connect.permissions import _get_partner_owners, _is_partner_admin
+from connect.permissions import _get_partner_admins, _is_partner_admin
 
 # Frappe Cloud's registration link stays open this long (its Invitation Expiry). A new link
 # replaces the old one, so the partner's admin is emailed again only after the old one closes.
@@ -155,7 +155,7 @@ def _ensure_registration(client, partner: str) -> bool:
 		return False
 
 	# Frappe Cloud registers one person for the team: the partner's earliest owner.
-	owners = _get_partner_owners(partner)
+	owners = _get_partner_admins(partner)
 	if not owners:
 		frappe.throw(_("{0} has no admin to register on Frappe Cloud.").format(row.partner_name))
 

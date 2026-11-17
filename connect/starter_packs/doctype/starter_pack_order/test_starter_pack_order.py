@@ -286,7 +286,7 @@ class IntegrationTestStarterPackPayment(IntegrationTestCase):
 		company = f"_Test SP New Co {frappe.generate_hash(length=6)}"
 		_, order = self.place([self.pack_a], as_user=user, company=company)
 		self.assertEqual(order.customer, company)
-		self.assertTrue(frappe.db.exists("Customer Team Member", {"customer": company, "user": user, "is_admin": 1}))
+		self.assertTrue(frappe.db.exists("Customer Team Member", {"customer": company, "user": user, "access": "Owner"}))
 
 		# a company that's already here is someone else's: its admin adds them instead
 		other = make_user("_test_sp_no_company_2@example.com")
@@ -739,12 +739,12 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		)
 		if not frappe.db.exists("Customer Team Member", {"user": user}):
 			frappe.get_doc(
-				{"doctype": "Customer Team Member", "customer": customer, "user": user, "is_admin": 1}
+				{"doctype": "Customer Team Member", "customer": customer, "user": user, "access": "Owner"}
 			).insert(ignore_permissions=True)
 		admin = make_user("_test_sp_partner_admin@example.com")
 		if not frappe.db.exists("Connect Partner Member", {"user": admin}):
 			frappe.get_doc(
-				{"doctype": "Connect Partner Member", "partner": self.partner, "user": admin, "is_admin": 1}
+				{"doctype": "Connect Partner Member", "partner": self.partner, "user": admin, "access": "Owner"}
 			).insert(ignore_permissions=True)
 		order.db_set({"user": user, "customer": customer})
 		return user, customer, admin
@@ -764,7 +764,7 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		self.assertTrue(order.partner)
 		self.assertEqual((order.customer, order.company_name), (company, "_Test SP Linked Co"))
 		# they belonged to no company, so they join this one, as its admin since it has none
-		self.assertTrue(frappe.db.exists("Customer Team Member", {"customer": company, "user": user, "is_admin": 1}))
+		self.assertTrue(frappe.db.exists("Customer Team Member", {"customer": company, "user": user, "access": "Owner"}))
 		post.assert_called_once_with(order.name)  # the chat opens, as payment would have
 		self.assertRaises(frappe.ValidationError, link_company, order.name, company)
 

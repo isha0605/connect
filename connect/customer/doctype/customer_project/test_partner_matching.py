@@ -40,7 +40,7 @@ def make_admin(partner, email):
 		frappe.get_doc({"doctype": "User", "email": email, "first_name": "Admin"}).insert(ignore_permissions=True)
 	if not frappe.db.exists("Connect Partner Member", {"partner": partner, "user": email}):
 		frappe.get_doc(
-			{"doctype": "Connect Partner Member", "partner": partner, "user": email, "is_admin": 1}
+			{"doctype": "Connect Partner Member", "partner": partner, "user": email, "access": "Owner"}
 		).insert(ignore_permissions=True)
 
 

@@ -10,7 +10,7 @@ from connect.messaging.customer_identity import (
 	mask_requirement,
 )
 from connect.partner.doctype.connect_partner_member.connect_partner_member import LEAD_ACCESS
-from connect.permissions import _get_partner_owners, _has_partner_access
+from connect.permissions import _get_partner_admins, _has_partner_access
 
 # The documents Connect notifies people about. Anything else in Notification Log (Frappe's own
 # impersonation or mail-server alerts) stays out of Connect's panel and unread count.
@@ -251,7 +251,7 @@ def notify_partner_of_new_requirement(doc, method=None):
 
 def _requirement_email_recipients(thread: str, partner: str) -> list[str]:
 	"""The partner's owners, and whoever the customer's lead is assigned to, each once."""
-	recipients = _get_partner_owners(partner)
+	recipients = _get_partner_admins(partner)
 	assigned_to = frappe.db.get_value("Partner Lead", {"thread": thread}, "assigned_to")
 	# Only while they can still work the lead: not once removed or moved off sales.
 	if assigned_to and assigned_to not in recipients and _has_partner_access(partner, assigned_to, LEAD_ACCESS):

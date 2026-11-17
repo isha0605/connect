@@ -15,6 +15,7 @@ from frappe.utils.password import get_decrypted_password, set_encrypted_password
 from frappe.utils.synchronization import filelock
 
 from connect.messaging.customer_identity import anonymous_company
+from connect.permissions import _get_customer_owner
 
 WEBHOOK_SECRET_HEADER = "X-Frappe-Webhook-Signature"
 
@@ -260,9 +261,7 @@ def _customer_contact(thread_doc):
 		limit=1,
 		pluck="sender",
 	)
-	user = (first and first[0]) or frappe.db.get_value(
-		"Customer Team Member", {"customer": thread_doc.customer, "is_admin": 1}, "user"
-	)
+	user = (first and first[0]) or _get_customer_owner(thread_doc.customer)
 	person = user and frappe.db.get_value("User", user, ["first_name", "last_name", "email"], as_dict=True)
 	return person or frappe._dict()
 

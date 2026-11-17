@@ -14,7 +14,6 @@ import {
 	FormControl,
 	Spinner,
 	TextInput,
-	Tooltip,
 	call,
 	dialog,
 	toast,
@@ -111,10 +110,6 @@ const team = ref([])
 const me = ref("")
 const teamError = ref("")
 const amAdmin = computed(() => team.value.some((m) => m.user === me.value && m.is_admin))
-const showAdd = ref(false)
-const newEmail = ref("")
-const newRole = ref("")
-const adding = ref(false)
 
 async function loadTeam() {
 	teamError.value = ""
@@ -135,63 +130,36 @@ async function loadTeam() {
 	}
 }
 
-async function addMember() {
-	if (!newEmail.value.trim() || adding.value) return
-	adding.value = true
-	try {
-		const data = await call("connect.api.account.add_team_member", {
-			email: newEmail.value.trim(),
-			role: newRole.value.trim() || null,
-		})
-		showAdd.value = false
-		newEmail.value = ""
-		newRole.value = ""
-		await loadTeam()
-		toast.success(data && data.created_user ? "New account created and added" : "Team member added")
-	} catch (e) {
-		toast.error(errorText(e, "Could not add team member"))
-	} finally {
-		adding.value = false
-	}
-}
-
-function memberOptions(member) {
-	return [
-		{
-			label: "Disable",
-			icon: "lucide-user-minus",
-			theme: "red",
-			disabled: !amAdmin.value || member.user === me.value,
-			onClick: () => disableMember(member),
-		},
-	]
-}
-
-async function disableMember(member) {
-	try {
-		await call("connect.api.account.remove_team_member", { member: member.name })
-		await loadTeam()
-		toast.success("Team member disabled")
-	} catch (e) {
-		toast.error(errorText(e, "Could not disable team member"))
-	}
-}
-
-// ---- Users on a partner firm: Pragati's panel, after Frappe CRM's Settings → Users ----
-// One access level each, as a menu that saves on pick; the last owner's is locked, and Remove
-// sits in the ⋯ menu. Only owners change anything.
+// ---- Users on a partner firm or a customer company: Pragati's panel, after Frappe CRM's Settings → Users ----
+// One access level each, as a menu that saves on pick, and Remove sits in the ⋯ menu. A company
+// has one Owner: only they manage Admins and hand the company over. An Admin manages everyone else.
 const isPartner = ref(false)
-const ACCESS_LEVELS = [
-	{ key: "Owner", icon: "lucide-shield", description: "Everything, including the team, audits, link requests and settings" },
+const PARTNER_LEVELS = [
+	{ key: "Owner", icon: "lucide-crown", description: "Everything. The only one who manages Admins and hands over the firm" },
+	{ key: "Admin", icon: "lucide-shield", description: "Everything, including the team, audits, link requests and settings" },
 	{ key: "Sales", icon: "lucide-briefcase", description: "Leads, quotes and customers" },
 	{ key: "Finance", icon: "lucide-receipt", description: "Billing, Contributions and customer invoices" },
 	{ key: "Member", icon: "lucide-user", description: "View-only: standing, team, profile and resources" },
 ]
-const ACCESS_OPTIONS = ACCESS_LEVELS.map((level) => ({ label: level.key, value: level.key }))
-const levelOf = (member) => ACCESS_LEVELS.find((level) => level.key === member.access_level) || ACCESS_LEVELS[3]
+const CUSTOMER_LEVELS = [
+	{ key: "Owner", icon: "lucide-crown", description: "Everything. The only one who manages Admins and hands over the company" },
+	{ key: "Admin", icon: "lucide-shield", description: "Everything, including the team, company details and partners" },
+	{ key: "Member", icon: "lucide-user", description: "Projects, shortlists and messages" },
+]
+const ACCESS_LEVELS = computed(() => (isPartner.value ? PARTNER_LEVELS : CUSTOMER_LEVELS))
+const RUNS_THE_COMPANY = ["Owner", "Admin"]
+const levelOf = (member) =>
+	ACCESS_LEVELS.value.find((level) => level.key === member.access_level) || ACCESS_LEVELS.value.at(-1)
 const memberName = (member) => member.full_name || member.user
-const ownerCount = computed(() => team.value.filter((m) => m.access_level === "Owner").length)
-const isLastOwner = (member) => member.access_level === "Owner" && ownerCount.value === 1
+const amOwner = computed(() => team.value.some((m) => m.user === me.value && m.access_level === "Owner"))
+// The Owner manages everyone but themselves. An Admin manages everyone below Admin.
+const canManage = (member) =>
+	member.user !== me.value && (amOwner.value || (amAdmin.value && !RUNS_THE_COMPANY.includes(member.access_level)))
+// Owner is never picked: it changes hands only by a transfer. Only the Owner gives Admin.
+const assignableLevels = computed(() =>
+	ACCESS_LEVELS.value.filter((level) => level.key !== "Owner" && (amOwner.value || level.key !== "Admin")),
+)
+const ACCESS_OPTIONS = computed(() => assignableLevels.value.map((level) => ({ label: level.key, value: level.key })))
 
 // Frappe CRM shows search only once the list is long enough to need it.
 const teamQuery = ref("")
@@ -201,7 +169,7 @@ const shownTeam = computed(() => {
 })
 
 function accessOptions(member) {
-	return ACCESS_LEVELS.map((level) => ({
+	return assignableLevels.value.map((level) => ({
 		label: level.key,
 		icon: level.icon,
 		description: level.description,
@@ -224,8 +192,27 @@ async function setAccess(member, level) {
 // With CRM sync on, someone without a CRM user can be looked up again once they're added there.
 const partnerMemberOptions = (member) => [
 	member.in_crm === false && { label: "Match with CRM", icon: "lucide-refresh-cw", onClick: () => matchWithCrm(member) },
-	{ label: "Remove", icon: "lucide-trash-2", theme: "red", onClick: () => confirmRemove(member) },
+	amOwner.value && member.user !== me.value && {
+		label: "Transfer ownership",
+		icon: "lucide-crown",
+		onClick: () => confirmTransfer(member),
+	},
+	canManage(member) && { label: "Remove", icon: "lucide-trash-2", theme: "red", onClick: () => confirmRemove(member) },
 ].filter(Boolean)
+
+function confirmTransfer(member) {
+	dialog.confirm({
+		title: `Make ${memberName(member)} the Owner?`,
+		message: "Your company has one Owner. You become an Admin, and only they can manage Admins or hand the company over again.",
+		confirmLabel: "Transfer ownership",
+		onConfirm: async ({ close }) => {
+			await call("connect.api.account.set_team_member_access", { member: member.name, access_level: "Owner" })
+			close()
+			await loadTeam()
+			toast.success(`${memberName(member)} is now the Owner`)
+		},
+	})
+}
 
 async function matchWithCrm(member) {
 	try {
@@ -239,7 +226,6 @@ async function matchWithCrm(member) {
 }
 
 function confirmRemove(member) {
-	if (isLastOwner(member)) return toast.error("Make someone else owner first")
 	dialog.danger({
 		title: `Remove ${memberName(member)}?`,
 		message: "They lose access to your firm in Connect. You can invite them again any time.",
@@ -561,9 +547,9 @@ const HEADINGS = {
 	},
 	crm: { title: "CRM", description: "Connect your Frappe CRM account" },
 }
-// A partner's Users header is Pragati's: the title alone, with Invite beside it.
+// The Users header is Pragati's: the title alone, with Invite beside it.
 const heading = computed(() =>
-	tab.value === "users" && isPartner.value ? { title: "Users", description: "" } : HEADINGS[tab.value] || HEADINGS.profile,
+	tab.value === "users" ? { title: "Users", description: "" } : HEADINGS[tab.value] || HEADINGS.profile,
 )
 
 // ---- Opening ----
@@ -621,7 +607,7 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 						<p v-if="heading.description" class="text-base text-ink-gray-6">{{ heading.description }}</p>
 					</div>
 					<Button
-						v-if="tab === 'users' && isPartner && amAdmin"
+						v-if="tab === 'users' && amAdmin"
 						class="shrink-0"
 						variant="solid"
 						label="Invite"
@@ -681,8 +667,8 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 					<!-- Users -->
 					<template v-else-if="tab === 'users'">
 						<p v-if="teamError" class="text-base text-ink-gray-5">{{ teamError }}</p>
-						<!-- A partner firm: Pragati's rows, one access level each -->
-						<template v-else-if="isPartner">
+						<!-- Pragati's rows, one access level each, for a partner firm or a customer company -->
+						<template v-else>
 							<TextInput v-if="team.length > 10" v-model="teamQuery" type="search" placeholder="Search users" class="mb-3">
 								<template #prefix><span class="lucide-search size-4 text-ink-gray-5" aria-hidden="true" /></template>
 							</TextInput>
@@ -703,19 +689,14 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 											</div>
 										</ListCell>
 
-										<!-- Access: a menu for owners, locked for the last owner, text for everyone else -->
+										<!-- Access: a menu where the viewer can change it, text everywhere else -->
 										<ListCell class="justify-end">
-											<template v-if="amAdmin">
-												<Tooltip v-if="isLastOwner(item)" text="A firm needs at least one owner">
-													<Button :label="levelOf(item).key" :icon-left="levelOf(item).icon" />
-												</Tooltip>
-												<Dropdown
-													v-else
-													:options="accessOptions(item)"
-													:button="{ label: levelOf(item).key, iconLeft: levelOf(item).icon, iconRight: 'lucide-chevron-down' }"
-													align="end"
-												/>
-											</template>
+											<Dropdown
+												v-if="canManage(item)"
+												:options="accessOptions(item)"
+												:button="{ label: levelOf(item).key, iconLeft: levelOf(item).icon, iconRight: 'lucide-chevron-down' }"
+												align="end"
+											/>
 											<span v-else class="inline-flex items-center gap-1.5 text-base text-ink-gray-7">
 												<span :class="[levelOf(item).icon, 'size-4 text-ink-gray-5']" aria-hidden="true" />
 												{{ levelOf(item).key }}
@@ -724,7 +705,7 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 
 										<ListCell class="justify-end">
 											<Dropdown
-												v-if="amAdmin"
+												v-if="amAdmin && partnerMemberOptions(item).length"
 												:options="partnerMemberOptions(item)"
 												:button="{ icon: 'lucide-more-horizontal', variant: 'ghost', 'aria-label': `More for ${memberName(item)}` }"
 												align="end"
@@ -733,36 +714,6 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 									</ListRow>
 								</ListRows>
 							</List>
-						</template>
-						<template v-else>
-							<div
-								class="hidden w-full gap-[10px] border-b border-outline-gray-2 pb-2 text-xs font-medium text-ink-gray-5 sm:grid sm:grid-cols-[minmax(120px,1fr)_minmax(140px,1.4fr)_90px_40px]"
-							>
-								<span>Name</span><span>Email</span><span>Role</span><span />
-							</div>
-							<!-- Phones: name, email and role stack on the left with the menu on the right -->
-							<div
-								v-for="m in team"
-								:key="m.name"
-								class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-[10px] gap-y-1 border-b border-outline-gray-1 py-[10px] sm:grid-cols-[minmax(120px,1fr)_minmax(140px,1.4fr)_90px_40px] sm:gap-y-[10px]"
-							>
-								<span class="col-start-1 row-start-1 flex min-w-0 items-center gap-1.5 sm:col-auto sm:row-auto">
-									<span class="truncate text-sm font-medium text-ink-gray-9">{{ m.full_name || m.user }}</span>
-									<Badge v-if="m.is_admin" label="Admin" size="sm" theme="gray" variant="subtle" />
-								</span>
-								<span class="col-start-1 row-start-2 truncate text-sm text-ink-gray-5 sm:col-auto sm:row-auto">{{ m.user }}</span>
-								<span class="col-start-1 row-start-3 flex flex-wrap items-center gap-1.5 empty:hidden sm:col-auto sm:row-auto sm:empty:flex">
-									<Badge v-if="m.role" :label="m.role" size="sm" theme="gray" variant="subtle" />
-								</span>
-								<span class="col-start-2 row-start-1 row-end-3 flex items-center justify-end sm:col-auto sm:row-auto">
-									<Dropdown v-if="amAdmin && m.user !== me" :options="memberOptions(m)" align="end">
-										<Button icon="lucide-more-horizontal" size="sm" variant="ghost" />
-									</Dropdown>
-								</span>
-							</div>
-							<div class="mt-4 flex justify-end">
-								<Button label="Add" icon-left="lucide-user-plus" variant="outline" :disabled="!amAdmin" @click="showAdd = true" />
-							</div>
 						</template>
 					</template>
 
@@ -885,21 +836,6 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 					<Button variant="solid" type="submit" label="Send invite" :loading="inviting" />
 				</div>
 			</form>
-		</template>
-	</Dialog>
-
-	<Dialog v-model="showAdd" title="Add a team member" size="sm">
-		<template #default>
-			<div class="flex flex-col gap-4">
-				<FormControl v-model="newEmail" label="Email" type="email" placeholder="name@company.com" />
-				<FormControl v-model="newRole" label="Role" type="text" placeholder="e.g. Sales, Support" />
-			</div>
-		</template>
-		<template #actions>
-			<div class="flex justify-end gap-2">
-				<Button label="Cancel" @click="showAdd = false" />
-				<Button label="Add" variant="solid" :loading="adding" :disabled="!newEmail.trim()" @click="addMember" />
-			</div>
 		</template>
 	</Dialog>
 </template>

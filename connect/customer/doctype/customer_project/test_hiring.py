@@ -62,14 +62,14 @@ def complete_a_project(user, partner, status="Completed"):
 	project.db_set({"user": user, "partner": partner, "status": status})
 	return project
 
-def make_partner_admin(partner, email):
+def make_partner_admin(partner, email, access="Owner"):
 	if not frappe.db.exists("User", email):
 		frappe.get_doc({"doctype": "User", "email": email, "first_name": "Admin"}).insert(
 			ignore_permissions=True
 		)
 	if not frappe.db.exists("Connect Partner Member", {"partner": partner, "user": email}):
 		frappe.get_doc(
-			{"doctype": "Connect Partner Member", "partner": partner, "user": email, "is_admin": 1}
+			{"doctype": "Connect Partner Member", "partner": partner, "user": email, "access": access}
 		).insert(ignore_permissions=True)
 	return email
 

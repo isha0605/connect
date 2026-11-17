@@ -9,7 +9,6 @@ from frappe.utils import flt, now_datetime
 from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_membership
 from connect.partner.doctype.partner.partner import VERIFIED
 from connect.permissions import _is_partner_admin
-from connect.roles import REVIEWER_ROLE
 
 # A partner who registers in Connect starts at the lowest tier until Frappe sets theirs.
 NEW_PARTNER_TIER = "Beginner"
@@ -93,9 +92,9 @@ class PartnerApplication(Document):
 		elif self.status == "Rejected":
 			self._apply_rejection()
 
-		from connect.permissions import _get_partner_owners
+		from connect.permissions import _get_partner_admins
 
-		for owner in _get_partner_owners(self.partner):
+		for owner in _get_partner_admins(self.partner):
 			frappe.publish_realtime(
 				"partner_application_status_updated",
 				{"partner": self.partner},
@@ -105,20 +104,25 @@ class PartnerApplication(Document):
 
 	@frappe.whitelist()
 	def approve(self):
-		# reviewer role has write at permlevel 1, which is where status and reviewer_comments live
-		frappe.only_for(REVIEWER_ROLE)
+		frappe.has_permission(self.doctype, "review", throw=True)
 		self._check_pending_review()
 		self.status = "Approved"
 		self.reviewer_comments = None
-		self.save()
+		self._save_review()
 
 	@frappe.whitelist()
 	def reject(self, reason=None):
-		frappe.only_for(REVIEWER_ROLE)
+		frappe.has_permission(self.doctype, "review", throw=True)
 		self._check_pending_review()
 		self.status = "Rejected"
 		self.reviewer_comments = reason
-		self.save()
+		self._save_review()
+
+	def _save_review(self):
+		# Review, checked above, is the right to decide. Status and reviewer_comments sit at
+		# permlevel 1 only to keep applicants from setting them, so a reviewer's role needn't
+		# also be given level-1 write.
+		self.save(ignore_permissions=True)
 
 	def _check_pending_review(self):
 		if self.docstatus != 1 or self.status != "Pending Review":
@@ -237,7 +241,7 @@ def _register_partner(details: frappe._dict) -> str:
 		}
 	).insert(ignore_permissions=True)
 	frappe.get_doc(
-		{"doctype": "Connect Partner Member", "partner": partner.name, "user": frappe.session.user, "is_admin": 1}
+		{"doctype": "Connect Partner Member", "partner": partner.name, "user": frappe.session.user, "access": "Owner"}
 	).insert(ignore_permissions=True)
 	return partner.name
 

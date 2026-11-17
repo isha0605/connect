@@ -144,7 +144,7 @@ class IntegrationTestPartnerCRMSettings(IntegrationTestCase):
 
 	def test_a_reply_with_no_partner_admin_is_logged(self):
 		with (
-			patch(f"{REPLY_MODULE}._get_partner_owners", return_value=[]),
+			patch(f"{REPLY_MODULE}._get_partner_admins", return_value=[]),
 			patch(f"{REPLY_MODULE}.frappe.log_error") as log_error,
 		):
 			rows = self._deliver("_test_comm_8", content="<p>Hello?</p>")
@@ -184,7 +184,7 @@ class IntegrationTestCRMSync(IntegrationTestCase):
 		make_crm_settings(cls.partner)
 		make_user(BUYER, "Asha", "Rao")
 		frappe.get_doc(
-			{"doctype": "Customer Team Member", "customer": cls.customer, "user": BUYER, "is_admin": 1}
+			{"doctype": "Customer Team Member", "customer": cls.customer, "user": BUYER, "access": "Owner"}
 		).insert(ignore_permissions=True)
 		make_consultant(CONSULTANT_ONE, "Rahul")
 		make_consultant(CONSULTANT_TWO, "Priya")
@@ -592,7 +592,7 @@ def make_partner_admin(partner):
 			"doctype": "Connect Partner Member",
 			"partner": partner,
 			"user": user,
-			"is_admin": 1,
+			"access": "Owner",
 		}
 	).insert(ignore_permissions=True)
 	return user

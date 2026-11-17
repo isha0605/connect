@@ -8,7 +8,7 @@ from frappe import _
 from frappe.utils import cint, escape_html, flt, fmt_money, getdate, today
 
 from connect.partner.doctype.partner.partner import VERIFIED
-from connect.permissions import _get_partner_owners
+from connect.permissions import _get_partner_admins
 
 BEGINNER = "Beginner"
 ENTRY = "Entry"
@@ -148,7 +148,7 @@ def send_tier_email(ladder: TierLadder, doc, old_tier: str) -> None:
 
 def email_partner_admins(partner: str, subject: str, message: str) -> None:
 	"""Emails the partner's admins, with the partnerships team in copy."""
-	owners = _get_partner_owners(partner)
+	owners = _get_partner_admins(partner)
 	recipients = frappe.get_all("User", filters={"name": ["in", owners or [""]]}, pluck="email")
 	if not recipients:
 		return

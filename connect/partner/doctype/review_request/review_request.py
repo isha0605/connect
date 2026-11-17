@@ -167,9 +167,9 @@ class ReviewRequest(Document):
 		)
 
 	def _partner_recipients(self) -> list[str]:
-		from connect.permissions import _get_partner_owners
+		from connect.permissions import _get_partner_admins
 
-		return [*_get_partner_owners(self.partner), self.sent_by]
+		return [*_get_partner_admins(self.partner), self.sent_by]
 
 	def _notify(self, users: list[str], subject: str):
 		from frappe.desk.doctype.notification_log.notification_log import enqueue_create_notification
@@ -202,11 +202,9 @@ def partner_domains(partner: str) -> set[str]:
 
 def reviewers() -> list[str]:
 	"""Frappe's partner reviewers: the people told when a customer disputes a request."""
-	from connect.roles import REVIEWER_ROLE
+	from connect.permissions import _get_reviewers
 
-	return frappe.get_all(
-		"Has Role", filters={"role": REVIEWER_ROLE, "parenttype": "User"}, pluck="parent", distinct=True
-	)
+	return _get_reviewers("Partner Review")
 
 
 def request_for_link(token: str) -> ReviewRequest:

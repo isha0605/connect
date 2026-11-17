@@ -31,7 +31,7 @@ from connect.starter_packs.doctype.starter_pack_order.partner_rotation import (
 	assign_partner,
 	tell_admins,
 )
-from connect.permissions import _get_partner_owners
+from connect.permissions import _get_partner_admins
 
 SETTINGS = "Starter Pack Settings"
 SAVEPOINT = "starter_pack_implementation_partner"
@@ -151,7 +151,7 @@ def link_company(order, customer):
 	if current and current != customer:
 		frappe.throw(_("The buyer belongs to {0}. Link the order to that company.").format(frappe.bold(current)))
 	if not current:
-		has_admin = frappe.db.exists("Customer Team Member", {"customer": customer, "is_admin": 1})
+		has_owner = frappe.db.exists("Customer Team Member", {"customer": customer, "access": "Owner", "is_removed": 0})
 		# Added on the buyer's behalf; only_for above keeps this to System Managers.
 		frappe.get_doc(
 			{
@@ -159,7 +159,7 @@ def link_company(order, customer):
 				"customer": customer,
 				"user": doc.user,
 				"full_name": doc.buyer_name,
-				"is_admin": 0 if has_admin else 1,
+				"access": "Member" if has_owner else "Owner",
 			}
 		).insert(ignore_permissions=True)
 
@@ -232,7 +232,7 @@ def move_thread(order):
 	remove_partner_member(thread.name, old)
 	if not new:
 		# No one to hand it to: Frappe's owners look after it until someone does.
-		for owner in _get_partner_owners(order.partner):
+		for owner in _get_partner_admins(order.partner):
 			ensure_partner_member(thread.name, owner, frappe.session.user)
 		return
 

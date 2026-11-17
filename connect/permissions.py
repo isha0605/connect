@@ -3,6 +3,7 @@ from pathlib import Path
 
 import frappe
 
+from connect.membership import FULL_ACCESS, OWNER
 from connect.partner.doctype.connect_partner_member.connect_partner_member import (
 	access_level_of,
 	get_active_memberships,
@@ -15,16 +16,44 @@ def _has_full_access(user):
 
 
 def _is_customer_admin(customer, user):
-	return bool(
-		frappe.db.exists("Customer Team Member", {"customer": customer, "user": user, "is_admin": 1})
+	"""Whether the user is the Owner or an Admin of `customer` and still on its team."""
+	return _customer_access_at(customer, user) in FULL_ACCESS
+
+
+def _is_customer_owner(customer, user):
+	return _customer_access_at(customer, user) == OWNER
+
+
+def _customer_access_at(customer, user) -> str | None:
+	return frappe.db.get_value(
+		"Customer Team Member", {"customer": customer, "user": user, "is_removed": 0}, "access"
+	)
+
+
+def _get_customer_owner(customer) -> str | None:
+	"""The customer's Owner: the person a partner or the CRM reaches for the company."""
+	return frappe.db.get_value(
+		"Customer Team Member", {"customer": customer, "access": OWNER, "is_removed": 0}, "user"
 	)
 
 
 def _is_partner_admin(partner, user):
-	"""Whether the user owns `partner` and works for it now. An owner of two firms acts for one
-	at a time, so a link to the other firm's records does nothing until they switch."""
+	"""Whether the user is the Owner or an Admin of `partner` and works for it now. Someone who
+	runs two firms acts for one at a time, so a link to the other firm's records does nothing
+	until they switch."""
+	return _current_access_at(partner, user) in FULL_ACCESS
+
+
+def _is_partner_owner(partner, user):
+	"""Whether the user is the Owner of `partner` and works for it now."""
+	return _current_access_at(partner, user) == OWNER
+
+
+def _current_access_at(partner, user) -> str | None:
 	membership = get_current_membership(user)
-	return bool(membership) and membership.partner == partner and bool(membership.is_admin)
+	if not membership or membership.partner != partner:
+		return None
+	return access_level_of(membership)
 
 
 def _current_partner(user) -> str | None:
@@ -41,14 +70,16 @@ def _switched_away_partners(user) -> list[str]:
 	return [row.partner for row in get_active_memberships(user) if row.partner != current]
 
 
-def _get_partner_owners(partner) -> list[str]:
-	"""The partner's active owners (admins), earliest first. A partner can have several."""
-	return frappe.get_all(
+def _get_partner_admins(partner) -> list[str]:
+	"""The users who run the partner: the Owner first, then each Admin, earliest first. Callers
+	that need one contact take the first."""
+	rows = frappe.get_all(
 		"Connect Partner Member",
-		filters={"partner": partner, "is_admin": 1, "is_removed": 0},
+		filters={"partner": partner, "access": ["in", FULL_ACCESS], "is_removed": 0},
+		fields=["user", "access"],
 		order_by="creation asc",
-		pluck="user",
 	)
+	return [row.user for row in sorted(rows, key=lambda row: row.access != OWNER)]
 
 
 def _my_partner_with_access(user, levels):
@@ -69,21 +100,33 @@ def _has_partner_access(partner, user, levels) -> bool:
 	row = frappe.db.get_value(
 		"Connect Partner Member",
 		{"partner": partner, "user": user, "is_removed": 0},
-		["is_admin", "access"],
+		["access"],
 		as_dict=True,
 	)
 	return bool(row) and access_level_of(row) in levels
 
 
-def _is_partner_reviewer(user):
-	return "Partner Reviewer" in frappe.get_roles(user)
+def _can_review(doctype, user) -> bool:
+	"""Whether the user holds the Review right on `doctype`: Partner Reviewer by default, or any
+	staff role a System Manager gives it in Role Permissions Manager."""
+	return frappe.has_permission(doctype, "review", user=user)
+
+
+def _get_reviewers(doctype) -> list[str]:
+	"""The enabled users whose roles hold the Review right on `doctype`, for review emails. System
+	Managers hold every right but don't review, so they aren't emailed."""
+	from frappe.permissions import get_doctype_roles
+	from frappe.utils.user import get_users_with_role
+
+	roles = [role for role in get_doctype_roles(doctype, "review") if role != "System Manager"]
+	return sorted({user for role in roles for user in get_users_with_role(role)})
 
 
 def _my_company_membership(user):
 	"""Returns which company (and doctype/row) this user belongs to, or Nones if neither. Someone
 	removed from a team no longer belongs to it."""
 	customer_row = frappe.db.get_value(
-		"Customer Team Member", {"user": user, "is_removed": 0}, ["name", "customer", "is_admin"], as_dict=True
+		"Customer Team Member", {"user": user, "is_removed": 0}, ["name", "customer", "access"], as_dict=True
 	)
 	if customer_row:
 		return "Customer Team Member", customer_row.customer, customer_row
@@ -205,7 +248,7 @@ def get_partner_crm_settings_permission_query_conditions(user, doctype=None):
 def has_partner_application_permission(doc, ptype="read", user=None, **kwargs):
 	"""Controllers can only deny access on top of the 'Connect Partner' role baseline, never grant it."""
 	user = user or frappe.session.user
-	if _has_full_access(user) or _is_partner_reviewer(user):
+	if _has_full_access(user) or _can_review("Partner Application", user):
 		return True
 	if not doc.get("partner"):
 		return True
@@ -213,15 +256,15 @@ def has_partner_application_permission(doc, ptype="read", user=None, **kwargs):
 
 
 def get_partner_application_permission_query_conditions(user, doctype=None):
-	if _has_full_access(user) or _is_partner_reviewer(user):
+	if _has_full_access(user) or _can_review("Partner Application", user):
 		return ""
 	return _current_admin_partner_sql(user, "tabPartner Application")
 
 
 def _current_admin_partner_sql(user, table) -> str:
-	"""SQL for rows of `table` that belong to the partner the user works for now and owns."""
+	"""SQL for rows of `table` that belong to the partner the user works for now and runs."""
 	membership = get_current_membership(user)
-	if not membership or not membership.is_admin:
+	if not membership or access_level_of(membership) not in FULL_ACCESS:
 		return "1 = 0"
 	return f"`{table}`.partner = {frappe.db.escape(membership.partner)}"
 

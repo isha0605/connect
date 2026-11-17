@@ -67,10 +67,10 @@ class PartnerCRMSettings(Document):
 
 def _my_partner_as_admin():
 	"""Returns the partner this user administers, since CRM credentials are partner-wide and only admins may touch them."""
-	from connect.permissions import _my_company_membership
+	from connect.permissions import _is_partner_admin, _my_company_membership
 
-	doctype, partner, row = _my_company_membership(frappe.session.user)
-	if doctype != "Connect Partner Member" or not row or not row.get("is_admin"):
+	doctype, partner, _row = _my_company_membership(frappe.session.user)
+	if doctype != "Connect Partner Member" or not _is_partner_admin(partner, frappe.session.user):
 		frappe.throw(_("Only a partner admin can manage CRM settings"), frappe.PermissionError)
 	return partner
 

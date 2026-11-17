@@ -4,20 +4,21 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import now_datetime
 
-# What a person can do at their partner firm. Owner is `is_admin`; the rest are `access`.
-OWNER, SALES, FINANCE, MEMBER = "Owner", "Sales", "Finance", "Member"
-ACCESS_LEVELS = (OWNER, SALES, FINANCE, MEMBER)
+from connect.membership import ADMIN, MEMBER, OWNER, CompanyMembership
+
+# What a person can do at their partner firm. A firm has exactly one Owner (see CompanyMembership).
+SALES, FINANCE = "Sales", "Finance"
+ACCESS_LEVELS = (OWNER, ADMIN, SALES, FINANCE, MEMBER)
 # Who opens the Leads page, and so who a lead can be assigned to.
-LEAD_ACCESS = (OWNER, SALES)
+LEAD_ACCESS = (OWNER, ADMIN, SALES)
 # Who opens the Customers page. A Member does neither: their work is in Messages.
-CUSTOMER_ACCESS = (OWNER, SALES, FINANCE)
+CUSTOMER_ACCESS = (OWNER, ADMIN, SALES, FINANCE)
 
 
 def access_level_of(row) -> str:
-	"""Owner, Sales, Finance or Member, from a member row or a dict with is_admin and access."""
-	return OWNER if row.get("is_admin") else (row.get("access") or MEMBER)
+	"""Owner, Admin, Sales, Finance or Member, from a member row or a dict with `access`."""
+	return row.get("access") or MEMBER
 
 
 def get_current_membership(user: str) -> frappe._dict | None:
@@ -70,7 +71,7 @@ def list_my_partners(user: str) -> list[dict]:
 		frappe.qb.from_(member)
 		.join(partner)
 		.on(partner.name == member.partner)
-		.select(member.partner, partner.partner_name, partner.logo, member.is_admin, member.access)
+		.select(member.partner, partner.partner_name, partner.logo, member.access)
 		.where((member.user == user) & (member.is_removed == 0))
 		.orderby(member.creation, order=frappe.qb.desc)
 	).run(as_dict=True)
@@ -102,13 +103,18 @@ def _memberships(user: str) -> tuple[list, str | None]:
 	memberships = frappe.get_all(
 		"Connect Partner Member",
 		filters={"user": user, "is_removed": 0},
-		fields=["name", "partner", "is_admin", "access"],
+		fields=["name", "partner", "access"],
 		order_by="creation desc",
 	)
 	return memberships, frappe.db.get_value("Connect User Settings", user, "current_partner")
 
 
-class ConnectPartnerMember(Document):
+class ConnectPartnerMember(CompanyMembership, Document):
+	COMPANY_FIELD = "partner"
+	COMPANY_DOCTYPE = "Partner"
+	SIDE = "Partner"
+	ACCESS_LEVELS = ACCESS_LEVELS
+
 	def validate(self):
 		if frappe.db.exists(
 			"Connect Partner Member",
@@ -116,59 +122,11 @@ class ConnectPartnerMember(Document):
 		):
 			frappe.throw(_("{0} is already a member of {1}").format(self.user, self.partner))
 
-		self._keep_an_owner()
+		self.validate_owner()
 
-	def _keep_an_owner(self):
-		"""A firm can have several owners, but never none: its chats and requests go to them."""
-		before = self.get_doc_before_save()
-		was_owner = bool(before and before.is_admin and not before.is_removed)
-		if not was_owner or (self.is_admin and not self.is_removed):
-			return
+	def get_access_of(self, user: str) -> str | None:
+		"""Someone who works for two firms acts for one at a time, so they act here only while
+		this firm is the one they work for now."""
+		from connect.permissions import _current_access_at
 
-		if not frappe.db.exists(
-			"Connect Partner Member",
-			{"partner": self.partner, "is_admin": 1, "is_removed": 0, "name": ["!=", self.name]},
-		):
-			frappe.throw(_("Make someone else an owner first. A firm needs at least one owner."))
-
-	@property
-	def access_level(self) -> str:
-		return access_level_of(self)
-
-	def set_access_level(self, level: str, changed_by: str):
-		"""Makes this person an owner, or gives them Sales, Finance or Member access."""
-		from connect.permissions import _is_partner_admin
-
-		if not _is_partner_admin(self.partner, changed_by):
-			frappe.throw(_("Only an owner can change what people can do"), frappe.PermissionError)
-		if level not in ACCESS_LEVELS:
-			frappe.throw(_("Pick Owner, Sales, Finance or Member"))
-		if self.is_removed:
-			frappe.throw(_("{0} has left the team").format(self.user))
-
-		self.is_admin = int(level == OWNER)
-		if level != OWNER:
-			self.access = level
-		self.save(ignore_permissions=True)
-
-	def remove(self, removed_by):
-		"""Removes this person from the company roster, revoking their thread access but leaving their past messages untouched."""
-		from connect.permissions import _is_partner_admin
-
-		if not _is_partner_admin(self.partner, removed_by):
-			frappe.throw(_("Only an admin can remove a team member"), frappe.PermissionError)
-		if self.is_removed:
-			frappe.throw(_("{0} has already left").format(self.user))
-
-		# A removed owner stops being one, so every `is_admin` check drops them too.
-		self.is_removed = 1
-		self.is_admin = 0
-		self.removed_on = now_datetime()
-		self.save(ignore_permissions=True)
-
-		for row in frappe.get_all(
-			"Connect Thread Member",
-			filters={"user": self.user, "side": "Partner", "is_removed": 0},
-			fields=["name", "thread"],
-		):
-			frappe.get_doc("Connect Thread", row.thread).remove_member(row.name, removed_by)
+		return _current_access_at(self.partner, user)

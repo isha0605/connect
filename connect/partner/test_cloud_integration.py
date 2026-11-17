@@ -195,7 +195,7 @@ class TestCloudAccountStep(IntegrationTestCase):
 			)
 		if not frappe.db.exists("Connect Partner Member", {"partner": PARTNER, "user": STAFF}):
 			frappe.get_doc(
-				{"doctype": "Connect Partner Member", "partner": PARTNER, "user": STAFF, "is_admin": 0}
+				{"doctype": "Connect Partner Member", "partner": PARTNER, "user": STAFF, "access": "Member"}
 			).insert(ignore_permissions=True)
 		with self.assertRaises(frappe.PermissionError):
 			self.as_user(STAFF, FakeCloud(), connect_cloud_account)

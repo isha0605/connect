@@ -125,7 +125,7 @@ class IntegrationTestEmailCodeSignIn(IntegrationTestCase):
 		self.assertEqual((user.full_name, user.user_type), ("Meera Iyer", "Website User"))
 		self.assertEqual(frappe.db.get_value("Customer", company, "country"), "India")
 		self.assertTrue(
-			frappe.db.exists("Customer Team Member", {"customer": company, "user": email, "is_admin": 1})
+			frappe.db.exists("Customer Team Member", {"customer": company, "user": email, "access": "Owner"})
 		)
 		self.login_manager.login_as.assert_called_once_with(email)
 		self.assertEqual(result["user"], email)
@@ -222,7 +222,7 @@ class IntegrationTestEmailCodeSignIn(IntegrationTestCase):
 		partner = "_Test Auth Landing Partner"
 		make_partner(partner, VERIFIED)
 		email = self.known_user()
-		frappe.get_doc({"doctype": "Connect Partner Member", "partner": partner, "user": email, "is_admin": 1}).insert(
+		frappe.get_doc({"doctype": "Connect Partner Member", "partner": partner, "user": email, "access": "Owner"}).insert(
 			ignore_permissions=True
 		)
 

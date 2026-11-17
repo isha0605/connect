@@ -68,7 +68,7 @@ class IntegrationTestFrappeConsultants(IntegrationTestCase):
 		make_user(FRAPPE_ADMIN)
 		if not frappe.db.exists("Connect Partner Member", {"partner": FRAPPE, "user": FRAPPE_ADMIN}):
 			frappe.get_doc(
-				{"doctype": "Connect Partner Member", "partner": FRAPPE, "user": FRAPPE_ADMIN, "is_admin": 1}
+				{"doctype": "Connect Partner Member", "partner": FRAPPE, "user": FRAPPE_ADMIN, "access": "Owner"}
 			).insert(ignore_permissions=True)
 		frappe.db.set_single_value(
 			SETTINGS,
@@ -101,7 +101,7 @@ class IntegrationTestFrappeConsultants(IntegrationTestCase):
 		)
 		if not frappe.db.exists("Customer Team Member", {"user": user}):
 			frappe.get_doc(
-				{"doctype": "Customer Team Member", "customer": customer, "user": user, "is_admin": 1}
+				{"doctype": "Customer Team Member", "customer": customer, "user": user, "access": "Owner"}
 			).insert(ignore_permissions=True)
 		return user, customer
 
@@ -128,7 +128,7 @@ class IntegrationTestFrappeConsultants(IntegrationTestCase):
 		self.assertEqual((consultant.full_name, consultant.enabled), ("Test Consultant-One", 1))
 		self.assertTrue(
 			frappe.db.exists(
-				"Connect Partner Member", {"partner": FRAPPE, "user": ONE, "is_admin": 0, "is_removed": 0}
+				"Connect Partner Member", {"partner": FRAPPE, "user": ONE, "access": "Member", "is_removed": 0}
 			)
 		)
 		self.assertIn(PARTNER_ROLE, frappe.get_roles(ONE))

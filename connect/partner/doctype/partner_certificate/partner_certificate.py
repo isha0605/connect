@@ -73,9 +73,9 @@ def recount_partners_with_expired_certificates() -> None:
 
 
 def publish_certificates_updated(partner: str) -> None:
-	from connect.permissions import _get_partner_owners
+	from connect.permissions import _get_partner_admins
 
-	for owner in _get_partner_owners(partner):
+	for owner in _get_partner_admins(partner):
 		frappe.publish_realtime(
 			"partner_application_certificates_updated", {"partner": partner}, user=owner, after_commit=True
 		)
@@ -108,9 +108,9 @@ def cancel_approved_requests(partner: str, user_email: str, course: str) -> None
 
 def tell_partner_certificate_moved(old_partner: str, new_partner_name: str, holder: str, course: str) -> None:
 	"""The holder confirmed their certificate for another partner, so the old one loses it."""
-	from connect.permissions import _get_partner_owners
+	from connect.permissions import _get_partner_admins
 
-	owners = _get_partner_owners(old_partner)
+	owners = _get_partner_admins(old_partner)
 	if not owners:
 		return
 	frappe.sendmail(
