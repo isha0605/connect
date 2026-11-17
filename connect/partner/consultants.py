@@ -96,7 +96,7 @@ def join_frappe_team(user):
 		return
 	# As in sync_consultant: it follows the consultant record, not the caller's rights.
 	frappe.get_doc(
-		{"doctype": "Connect Partner Member", "partner": partner, "user": user, "is_admin": 0, "role": "Consultant"}
+		{"doctype": "Connect Partner Member", "partner": partner, "user": user, "role": "Consultant"}
 	).insert(ignore_permissions=True)
 
 

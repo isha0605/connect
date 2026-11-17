@@ -26,40 +26,55 @@ class ConnectThreadMember(Document):
 
 	def make_admin(self, user):
 		"""Transfers admin from the caller to this member, creating their company row if they don't yet have one."""
-		from connect.permissions import _is_customer_admin, _is_partner_admin
-
 		if self.is_removed:
 			frappe.throw(_("A removed member can't be made admin"))
 
 		thread_doc = frappe.get_doc("Connect Thread", self.thread)
-
-		if self.side == "Customer":
-			company = thread_doc.customer
-			authorized = _is_customer_admin(company, user)
-			member_doctype = "Customer Team Member"
-			company_field = "customer"
-		elif self.side == "Partner":
-			company = thread_doc.partner
-			authorized = _is_partner_admin(company, user)
-			member_doctype = "Connect Partner Member"
-			company_field = "partner"
+		if self.side == "Partner":
+			self._hand_over_partner(thread_doc.partner, user)
+		elif self.side == "Customer":
+			self._hand_over_customer(thread_doc.customer, user)
 		else:
 			frappe.throw(_("Invalid side"))
 
-		if not authorized:
+	def _hand_over_partner(self, partner, user):
+		"""Makes this member the partner's Owner. The caller, the Owner now, becomes an Admin."""
+		from connect.partner.doctype.connect_partner_member.connect_partner_member import OWNER
+		from connect.permissions import _is_partner_owner
+
+		if not _is_partner_owner(partner, user):
+			frappe.throw(_("Only the Owner can hand over the firm"), frappe.PermissionError)
+
+		row = frappe.db.get_value("Connect Partner Member", {"partner": partner, "user": self.user}, "name")
+		if row:
+			member = frappe.get_doc("Connect Partner Member", row)
+		else:
+			member = frappe.get_doc({"doctype": "Connect Partner Member", "partner": partner, "user": self.user})
+			member.insert(ignore_permissions=True)
+		member.set_access_level(OWNER, user)
+
+	def _hand_over_customer(self, customer, user):
+		from connect.permissions import _is_customer_admin
+
+		if not _is_customer_admin(customer, user):
 			frappe.throw(_("Only an admin of your own side can do this"), frappe.PermissionError)
 
 		# filter-dict set_value silently no-ops when no row matches, so no exists check is needed
-		frappe.db.set_value(member_doctype, {company_field: company, "user": user}, "is_admin", 0)
+		frappe.db.set_value("Customer Team Member", {"customer": customer, "user": user}, "is_admin", 0)
 
-		target_row = frappe.db.get_value(member_doctype, {company_field: company, "user": self.user}, "name")
+		target_row = frappe.db.get_value("Customer Team Member", {"customer": customer, "user": self.user}, "name")
 		if target_row:
-			frappe.db.set_value(member_doctype, target_row, "is_admin", 1)
+			frappe.db.set_value("Customer Team Member", target_row, "is_admin", 1)
 		else:
-			new_row = {"doctype": member_doctype, company_field: company, "user": self.user, "is_admin": 1}
-			if self.side == "Customer":
-				new_row["full_name"] = get_fullname(self.user)
-			frappe.get_doc(new_row).insert(ignore_permissions=True)
+			frappe.get_doc(
+				{
+					"doctype": "Customer Team Member",
+					"customer": customer,
+					"user": self.user,
+					"is_admin": 1,
+					"full_name": get_fullname(self.user),
+				}
+			).insert(ignore_permissions=True)
 
 
 def get_unread_counts(threads: list[str], user: str) -> dict[str, int]:

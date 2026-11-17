@@ -6,6 +6,7 @@ from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.notifications import unread_notification_count
 from connect.partner.doctype.connect_partner_member.connect_partner_member import (
 	CUSTOMER_ACCESS,
+	FULL_ACCESS,
 	LEAD_ACCESS,
 	access_level_of,
 	get_active_memberships,
@@ -122,6 +123,7 @@ def partner_access(membership) -> dict:
 		# Overview, the onboarding checklist; after, the partner pages and no checklist.
 		"is_approved": is_approved,
 		"access_level": level,
+		"is_admin": level in FULL_ACCESS,
 		"can_see_leads": level in LEAD_ACCESS,
 		"can_see_customers": level in CUSTOMER_ACCESS,
 		"home_route": partner_home_route(level, is_approved),

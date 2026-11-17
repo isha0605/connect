@@ -116,11 +116,11 @@ class CertificateApplication(Document):
 		)
 
 	def _email_approved(self):
-		from connect.permissions import _get_partner_owners
+		from connect.permissions import _get_partner_admins
 
 		link = course_page_url(CERTIFICATE_TYPES[self.certificate_type])
 		frappe.sendmail(
-			recipients=list(dict.fromkeys([self.member_email, *_get_partner_owners(self.partner)])),
+			recipients=list(dict.fromkeys([self.member_email, *_get_partner_admins(self.partner)])),
 			subject=_("Your free {0} certification is approved").format(self.certificate_type),
 			message=_(
 				"{0} can now take the {1} course and exam on Frappe School: <a href='{2}'>{2}</a>. Frappe gives "
@@ -131,9 +131,9 @@ class CertificateApplication(Document):
 		)
 
 	def _email_rejected(self):
-		from connect.permissions import _get_partner_owners
+		from connect.permissions import _get_partner_admins
 
-		owners = _get_partner_owners(self.partner)
+		owners = _get_partner_admins(self.partner)
 		if not owners:
 			return
 		frappe.sendmail(

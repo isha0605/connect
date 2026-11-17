@@ -167,9 +167,9 @@ class ReviewRequest(Document):
 		)
 
 	def _partner_recipients(self) -> list[str]:
-		from connect.permissions import _get_partner_owners
+		from connect.permissions import _get_partner_admins
 
-		return [*_get_partner_owners(self.partner), self.sent_by]
+		return [*_get_partner_admins(self.partner), self.sent_by]
 
 	def _notify(self, users: list[str], subject: str):
 		from frappe.desk.doctype.notification_log.notification_log import enqueue_create_notification

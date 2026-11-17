@@ -744,7 +744,7 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		admin = make_user("_test_sp_partner_admin@example.com")
 		if not frappe.db.exists("Connect Partner Member", {"user": admin}):
 			frappe.get_doc(
-				{"doctype": "Connect Partner Member", "partner": self.partner, "user": admin, "is_admin": 1}
+				{"doctype": "Connect Partner Member", "partner": self.partner, "user": admin, "access": "Owner"}
 			).insert(ignore_permissions=True)
 		order.db_set({"user": user, "customer": customer})
 		return user, customer, admin

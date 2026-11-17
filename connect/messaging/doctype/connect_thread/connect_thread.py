@@ -7,7 +7,7 @@ from frappe.model.document import Document
 from frappe.utils import now_datetime
 
 from connect.auth.invitations import send_thread_invitation
-from connect.permissions import _get_partner_owners
+from connect.permissions import _get_partner_admins
 
 
 class ConnectThread(Document):
@@ -164,7 +164,7 @@ def open_contact_thread(customer: str, partner: str, user: str) -> str:
 
 	ensure_thread_member(thread, user, "Customer", user)
 
-	for owner in _get_partner_owners(partner):
+	for owner in _get_partner_admins(partner):
 		ensure_thread_member(thread, owner, "Partner", user)
 	return thread
 
@@ -191,7 +191,7 @@ def get_or_open_thread(customer: str, partner: str, user: str, consultant: str |
 		)
 
 	ensure_thread_member(thread, user, "Customer", user)
-	for partner_user in [consultant] if consultant else _get_partner_owners(partner):
+	for partner_user in [consultant] if consultant else _get_partner_admins(partner):
 		ensure_partner_member(thread, partner_user, user)
 	return thread
 

@@ -4,6 +4,8 @@ from pathlib import Path
 import frappe
 
 from connect.partner.doctype.connect_partner_member.connect_partner_member import (
+	FULL_ACCESS,
+	OWNER,
 	access_level_of,
 	get_active_memberships,
 	get_current_membership,
@@ -21,10 +23,22 @@ def _is_customer_admin(customer, user):
 
 
 def _is_partner_admin(partner, user):
-	"""Whether the user owns `partner` and works for it now. An owner of two firms acts for one
-	at a time, so a link to the other firm's records does nothing until they switch."""
+	"""Whether the user is the Owner or an Admin of `partner` and works for it now. Someone who
+	runs two firms acts for one at a time, so a link to the other firm's records does nothing
+	until they switch."""
+	return _current_access_at(partner, user) in FULL_ACCESS
+
+
+def _is_partner_owner(partner, user):
+	"""Whether the user is the Owner of `partner` and works for it now."""
+	return _current_access_at(partner, user) == OWNER
+
+
+def _current_access_at(partner, user) -> str | None:
 	membership = get_current_membership(user)
-	return bool(membership) and membership.partner == partner and bool(membership.is_admin)
+	if not membership or membership.partner != partner:
+		return None
+	return access_level_of(membership)
 
 
 def _current_partner(user) -> str | None:
@@ -41,14 +55,16 @@ def _switched_away_partners(user) -> list[str]:
 	return [row.partner for row in get_active_memberships(user) if row.partner != current]
 
 
-def _get_partner_owners(partner) -> list[str]:
-	"""The partner's active owners (admins), earliest first. A partner can have several."""
-	return frappe.get_all(
+def _get_partner_admins(partner) -> list[str]:
+	"""The users who run the partner: the Owner first, then each Admin, earliest first. Callers
+	that need one contact take the first."""
+	rows = frappe.get_all(
 		"Connect Partner Member",
-		filters={"partner": partner, "is_admin": 1, "is_removed": 0},
+		filters={"partner": partner, "access": ["in", FULL_ACCESS], "is_removed": 0},
+		fields=["user", "access"],
 		order_by="creation asc",
-		pluck="user",
 	)
+	return [row.user for row in sorted(rows, key=lambda row: row.access != OWNER)]
 
 
 def _my_partner_with_access(user, levels):
@@ -69,7 +85,7 @@ def _has_partner_access(partner, user, levels) -> bool:
 	row = frappe.db.get_value(
 		"Connect Partner Member",
 		{"partner": partner, "user": user, "is_removed": 0},
-		["is_admin", "access"],
+		["access"],
 		as_dict=True,
 	)
 	return bool(row) and access_level_of(row) in levels
@@ -219,9 +235,9 @@ def get_partner_application_permission_query_conditions(user, doctype=None):
 
 
 def _current_admin_partner_sql(user, table) -> str:
-	"""SQL for rows of `table` that belong to the partner the user works for now and owns."""
+	"""SQL for rows of `table` that belong to the partner the user works for now and runs."""
 	membership = get_current_membership(user)
-	if not membership or not membership.is_admin:
+	if not membership or access_level_of(membership) not in FULL_ACCESS:
 		return "1 = 0"
 	return f"`{table}`.partner = {frappe.db.escape(membership.partner)}"
 

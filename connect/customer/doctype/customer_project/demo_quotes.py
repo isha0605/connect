@@ -61,12 +61,12 @@ def _reply_with_quote(quote, project: str, sender: str, budget_range: tuple[int,
 
 def _partner_sender(quote) -> str | None:
 	"""Someone on the partner's side of the thread to send it as: an owner if one is in it."""
-	from connect.permissions import _get_partner_owners
+	from connect.permissions import _get_partner_admins
 
 	members = frappe.get_all(
 		"Connect Thread Member",
 		filters={"thread": quote.thread, "side": "Partner", "is_removed": 0},
 		pluck="user",
 	)
-	owner = next((user for user in _get_partner_owners(quote.partner) if user in members), None)
+	owner = next((user for user in _get_partner_admins(quote.partner) if user in members), None)
 	return owner or (members[0] if members else None)

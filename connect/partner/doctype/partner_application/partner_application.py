@@ -93,9 +93,9 @@ class PartnerApplication(Document):
 		elif self.status == "Rejected":
 			self._apply_rejection()
 
-		from connect.permissions import _get_partner_owners
+		from connect.permissions import _get_partner_admins
 
-		for owner in _get_partner_owners(self.partner):
+		for owner in _get_partner_admins(self.partner):
 			frappe.publish_realtime(
 				"partner_application_status_updated",
 				{"partner": self.partner},
@@ -237,7 +237,7 @@ def _register_partner(details: frappe._dict) -> str:
 		}
 	).insert(ignore_permissions=True)
 	frappe.get_doc(
-		{"doctype": "Connect Partner Member", "partner": partner.name, "user": frappe.session.user, "is_admin": 1}
+		{"doctype": "Connect Partner Member", "partner": partner.name, "user": frappe.session.user, "access": "Owner"}
 	).insert(ignore_permissions=True)
 	return partner.name
 

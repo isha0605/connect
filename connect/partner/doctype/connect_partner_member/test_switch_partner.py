@@ -39,7 +39,7 @@ class IntegrationTestSwitchPartner(IntegrationTestCase):
 		make_partner_admin(SECOND, SECOND_OWNER)
 		make_partner_admin(OTHER, OTHER_OWNER)
 		# FIRST before SECOND, so SECOND is the newest membership.
-		add_member(FIRST, WORKER, is_admin=1)
+		add_member(FIRST, WORKER, access="Owner")
 		add_member(SECOND, WORKER, access="Sales")
 		frappe.get_doc("User", WORKER).add_roles(PARTNER_ROLE)
 		frappe.delete_doc("Connect User Settings", WORKER, force=True, ignore_missing=True)
@@ -95,7 +95,7 @@ class IntegrationTestSwitchPartner(IntegrationTestCase):
 	def test_leaving_a_firm_keeps_its_chats_readable_and_falls_back(self):
 		switch_partner(WORKER, FIRST)
 		member = frappe.db.get_value("Connect Partner Member", {"partner": FIRST, "user": WORKER})
-		frappe.db.set_value("Connect Partner Member", member, {"is_removed": 1, "is_admin": 0})
+		frappe.db.set_value("Connect Partner Member", member, {"is_removed": 1})
 
 		self.assertEqual(get_current_membership(WORKER).partner, SECOND)
 		_check_can_read(self.first_thread, WORKER)
@@ -106,11 +106,11 @@ class IntegrationTestSwitchPartner(IntegrationTestCase):
 		self.assertEqual(get_current_partners([WORKER, SECOND_OWNER]), {WORKER: FIRST, SECOND_OWNER: SECOND})
 
 
-def add_member(partner, user, access=None, is_admin=0):
+def add_member(partner, user, access="Member"):
 	"""Adds the user to the partner's team, or restores their membership as given."""
 	if not frappe.db.exists("User", user):
 		frappe.get_doc({"doctype": "User", "email": user, "first_name": "Member"}).insert(ignore_permissions=True)
-	values = {"is_removed": 0, "is_admin": is_admin, "access": access}
+	values = {"is_removed": 0, "access": access}
 	member = frappe.db.get_value("Connect Partner Member", {"partner": partner, "user": user})
 	if member:
 		frappe.db.set_value("Connect Partner Member", member, values)

@@ -154,7 +154,7 @@ def start_project_with_partner(
 	from connect.customer.doctype.customer_project.brief import send_brief
 	from connect.messaging.doctype.connect_thread.connect_thread import get_or_open_thread
 	from connect.partner.doctype.partner.partner import VERIFIED
-	from connect.permissions import _get_partner_owners
+	from connect.permissions import _get_partner_admins
 
 	customer = get_customer_for_user(frappe.session.user)
 	if not customer:
@@ -163,7 +163,7 @@ def start_project_with_partner(
 	# owners: without any, nobody would read it.
 	listed = frappe.db.get_value("Partner", partner, ["enabled", "verification_status"], as_dict=True)
 	takes_work = listed and listed.enabled and listed.verification_status == VERIFIED
-	if not takes_work or not _get_partner_owners(partner):
+	if not takes_work or not _get_partner_admins(partner):
 		frappe.throw(_("This partner can't take messages yet."))
 
 	if project:

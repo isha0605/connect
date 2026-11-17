@@ -79,8 +79,10 @@ def _recipient_cards(criteria: dict) -> list[dict]:
 
 
 def _recipient_filters(criteria: dict) -> list:
-	"""Matching partners that have an admin to read the brief."""
-	with_admin = frappe.get_all("Connect Partner Member", filters={"is_admin": 1}, pluck="partner", distinct=True)
+	"""Matching partners that have an Owner to read the brief."""
+	with_admin = frappe.get_all(
+		"Connect Partner Member", filters={"access": "Owner", "is_removed": 0}, pluck="partner", distinct=True
+	)
 	return [*get_partner_filters(criteria), ["Partner", "name", "in", with_admin or [""]]]
 
 

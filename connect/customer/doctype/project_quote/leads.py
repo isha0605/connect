@@ -169,7 +169,7 @@ def partner_team(partner: str, levels=ACCESS_LEVELS) -> list[dict]:
 		frappe.qb.from_(Member)
 		.join(User)
 		.on(User.name == Member.user)
-		.select(Member.user, User.full_name, Member.is_admin, Member.access, Member.crm_user)
+		.select(Member.user, User.full_name, Member.access, Member.crm_user)
 		.where(Member.partner == partner)
 		.where(Member.is_removed == 0)
 		.orderby(User.full_name)

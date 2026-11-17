@@ -213,7 +213,7 @@ class TestRegisterPartner(IntegrationTestCase):
 		partner = frappe.db.get_value("Partner", NEW_COMPANY, ["country", "verification_status"], as_dict=True)
 		self.assertEqual((partner.country, partner.verification_status), ("Germany", "Pending Review"))
 		self.assertTrue(
-			frappe.db.exists("Connect Partner Member", {"partner": NEW_COMPANY, "user": APPLICANT, "is_admin": 1})
+			frappe.db.exists("Connect Partner Member", {"partner": NEW_COMPANY, "user": APPLICANT, "access": "Owner"})
 		)
 		self.assertEqual((application["partner"], application["status"]), (NEW_COMPANY, "Draft"))
 

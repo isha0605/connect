@@ -222,7 +222,7 @@ class IntegrationTestEmailCodeSignIn(IntegrationTestCase):
 		partner = "_Test Auth Landing Partner"
 		make_partner(partner, VERIFIED)
 		email = self.known_user()
-		frappe.get_doc({"doctype": "Connect Partner Member", "partner": partner, "user": email, "is_admin": 1}).insert(
+		frappe.get_doc({"doctype": "Connect Partner Member", "partner": partner, "user": email, "access": "Owner"}).insert(
 			ignore_permissions=True
 		)
 
