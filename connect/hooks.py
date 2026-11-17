@@ -221,6 +221,10 @@ doc_events = {
 			"connect.notifications.sync_thread_last_message",
 			"connect.notifications.notify_partner_of_new_requirement",
 			"connect.crm_integration.queue_crm_lead_sync",
+			"connect.partner.chat_sla.track_thread_reply",
+		],
+		"on_trash": [
+			"connect.partner.chat_sla.track_thread_reply_removal",
 		],
 	},
 	"Connect DM Message": {
@@ -293,6 +297,8 @@ scheduler_events = {
 		"connect.crm_partner_leads.retry_partner_lead_sync",
 		# Partners Frappe's CRM didn't get.
 		"connect.crm_partners.retry_partner_sync",
+		# Briefs and hire requests whose one-working-day answer deadline passed unanswered.
+		"connect.partner.sla.mark_overdue_answers_failed",
 	],
 	"daily": [
 		"connect.customer.doctype.customer_project.hiring.expire_hire_requests",

@@ -11,6 +11,7 @@ from frappe.utils import now_datetime
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.customer.doctype.customer_project.partner_matching import normalize_criteria
 from connect.partner.cloud_integration import queue_cloud_link
+from connect.partner.performance_events import send_project_events
 from connect.customer.doctype.customer_project.project_notifications import (
 	notify_project_created,
 	notify_project_step,
@@ -64,6 +65,7 @@ class CustomerProject(Document):
 
 	def on_update(self):
 		notify_project_step(self)
+		send_project_events(self)
 		if self.status == "Hired" and self.has_value_changed("status"):
 			queue_cloud_link(self)
 

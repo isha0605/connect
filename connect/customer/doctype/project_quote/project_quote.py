@@ -8,6 +8,9 @@ from frappe.utils import cint, flt, now_datetime
 
 from connect.customer.doctype.customer_project.project_notifications import notify_quote_update
 from connect.partner.doctype.connect_partner_member.connect_partner_member import LEAD_ACCESS
+from connect.partner.chat_sla import hand_chat_clock_to_quote
+from connect.partner.performance_events import RequirementEvents
+from connect.partner.sla import assign_answer_deadline, record_answer, withdraw_sibling_brief_clocks
 from connect.permissions import _has_partner_access
 
 # Once the customer shows interest in the partner's quote, the partner learns who they are.
@@ -43,17 +46,26 @@ class ProjectQuote(Document):
 
 			self.lead = lead_for_requirement(self.partner, self.thread)
 
+		assign_answer_deadline(self)
+
+	def after_insert(self):
+		RequirementEvents(self).send_received()
+
 	def validate(self):
 		if self.has_value_changed("status"):
 			self._check_hire_change()
+			record_answer(self)
 
 	def on_update(self):
 		notify_quote_update(self)
+		hand_chat_clock_to_quote(self)
+		RequirementEvents(self).send_quote_steps()
 		self._reveal_customer()
 		if self.has_value_changed("status"):
 			self._update_project_hire()
 		if self.status == "Hired" and self.has_value_changed("status"):
 			self._win_lead()
+			withdraw_sibling_brief_clocks(self)
 		if self.status == "Partner Declined" and self.has_value_changed("status"):
 			self._tell_customer_of_decline()
 			self._lose_lead()

@@ -48,6 +48,12 @@ class ConnectThread(Document):
 			self.closed_by = None
 			self.closed_on = None
 
+	def on_update(self):
+		if self.has_value_changed("status") and self.status == "Closed":
+			from connect.partner.chat_sla import fail_open_chat_clock
+
+			fail_open_chat_clock(self.name)
+
 	def post_system_message(self, content):
 		frappe.get_doc({
 			"doctype": "Connect Message",

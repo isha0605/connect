@@ -36,14 +36,19 @@ def simulate_quotes(name: str) -> dict:
 
 	budget_range = BUDGET_RANGES.get(doc.budget, BUDGET_RANGES["Not decided yet"])
 	sent = 0
-	for quote_name in frappe.get_all(
-		"Project Quote", filters={"customer_project": doc.name, "status": "Awaiting"}, pluck="name"
-	):
-		quote = frappe.get_doc("Project Quote", quote_name)
-		sender = _partner_sender(quote)
-		if sender:
-			_reply_with_quote(quote, doc.name, sender, budget_range)
-			sent += 1
+	# The demo answers for the partners, so these quotes must not touch any SLA clock.
+	frappe.flags.simulated_answer = True
+	try:
+		for quote_name in frappe.get_all(
+			"Project Quote", filters={"customer_project": doc.name, "status": "Awaiting"}, pluck="name"
+		):
+			quote = frappe.get_doc("Project Quote", quote_name)
+			sender = _partner_sender(quote)
+			if sender:
+				_reply_with_quote(quote, doc.name, sender, budget_range)
+				sent += 1
+	finally:
+		frappe.flags.simulated_answer = False
 	return {"sent": sent, **quote_counts(doc.name)}
 
 

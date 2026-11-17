@@ -8,6 +8,7 @@ from frappe.utils import cint, get_fullname, nowdate
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.partner.doctype.partner.partner import recompute_rating_from_reviews
+from connect.partner.performance_events import send_review_event
 from connect.roles import REVIEWER_ROLE
 
 
@@ -25,6 +26,7 @@ class PartnerReview(Document):
 		recompute_rating_from_reviews(self.partner)
 		if self.review_request and self.has_value_changed("review_request"):
 			frappe.get_doc("Review Request", self.review_request).mark_reviewed(self.name)
+		send_review_event(self)
 
 	def on_trash(self):
 		recompute_rating_from_reviews(self.partner, exclude=self.name)
