@@ -79,6 +79,9 @@ class CompanyMembership:
 	def _allow_one_owner(self):
 		if self.access != OWNER or self.is_removed:
 			return
+		# Only a save that makes someone Owner can make a second one, so others skip the lock.
+		if not self.is_new() and not (self.has_value_changed("access") or self.has_value_changed("is_removed")):
+			return
 
 		# Locks the company, so two saves at the same time can't both make an Owner.
 		frappe.db.get_value(self.COMPANY_DOCTYPE, self.get(self.COMPANY_FIELD), "name", for_update=True)
