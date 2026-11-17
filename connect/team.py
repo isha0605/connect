@@ -1,15 +1,15 @@
 import frappe
 from frappe import _
+from frappe.model.document import get_controller
 from frappe.utils import validate_email_address
 
 from connect.crm_integration import crm_settings
-from connect.membership import FULL_ACCESS, MEMBER, OWNER
-from connect.permissions import _current_access_at, _customer_access_at, _my_company_membership
+from connect.membership import FULL_ACCESS, MEMBER
+from connect.permissions import _my_company_membership
 
-# Each side's team row and how to read someone's access at a company of that side.
+# Each side's team row: the field naming its company and the person's free-text job title.
 COMPANY_FIELD = {"Connect Partner Member": "partner", "Customer Team Member": "customer"}
 ROLE_FIELD = {"Connect Partner Member": "role", "Customer Team Member": "designation"}
-ACCESS_AT = {"Connect Partner Member": _current_access_at, "Customer Team Member": _customer_access_at}
 
 
 def get_my_company_members():
@@ -52,7 +52,7 @@ def get_my_team():
 			row.in_crm = bool(row.pop("crm_user")) if has_crm else None
 
 	# The people who run the company come first.
-	levels = _access_levels(doctype)
+	levels = get_controller(doctype).ACCESS_LEVELS
 	return sorted(rows, key=lambda row: levels.index(row.access_level))
 
 
@@ -69,19 +69,21 @@ def add_team_member(email, role=None, password=None, full_name=None, access_leve
 	it doesn't exist. `access_level` sets what they can do: Admin or Member, and on a partner firm
 	also Sales or Finance."""
 	doctype, company = _my_company()
-	access_level = _invite_access(doctype, company, access_level)
+	fieldname = COMPANY_FIELD[doctype]
+	invite = frappe.new_doc(doctype)
+	invite.update({fieldname: company, "access": access_level or MEMBER})
+	invite.check_can_invite(frappe.session.user)
 	email = _clean_email(email)
 
-	fieldname = COMPANY_FIELD[doctype]
 	existing = frappe.db.get_value(doctype, {fieldname: company, "user": email}, ["name", "is_removed"], as_dict=True)
 	if existing and not existing.is_removed:
 		frappe.throw(_("{0} is already a member").format(email))
 	created_user = _make_user(email, full_name, password)
 
 	# Someone removed earlier keeps their row (one per company and user), so it's brought back.
-	member_doc = frappe.get_doc(doctype, existing.name) if existing else frappe.new_doc(doctype)
+	member_doc = frappe.get_doc(doctype, existing.name) if existing else invite
 	member_doc.update(
-		{fieldname: company, "user": email, "access": access_level, "is_removed": 0, "removed_on": None}
+		{fieldname: company, "user": email, "access": invite.access, "is_removed": 0, "removed_on": None}
 	)
 	if role or not existing:
 		member_doc.set(ROLE_FIELD[doctype], role)
@@ -107,28 +109,6 @@ def _my_company() -> tuple[str, str]:
 	if not doctype:
 		frappe.throw(_("You are not a member of any company"))
 	return doctype, company
-
-
-def _invite_access(doctype, company, access_level) -> str:
-	"""The access a new member starts with. Only the Owner or an Admin invites, a company's one
-	Owner changes only by a transfer, and only the Owner adds an Admin."""
-	caller_access = ACCESS_AT[doctype](company, frappe.session.user)
-	if caller_access not in FULL_ACCESS:
-		frappe.throw(_("Only an admin can add a team member"), frappe.PermissionError)
-
-	level = access_level or MEMBER
-	if level == OWNER:
-		frappe.throw(_("A company has one Owner. Invite them first, then transfer ownership."))
-	if level not in _access_levels(doctype):
-		frappe.throw(_("Pick one of: {0}").format(", ".join(_access_levels(doctype)[1:])))
-	if level in FULL_ACCESS and caller_access != OWNER:
-		frappe.throw(_("Only the Owner can add an Admin"), frappe.PermissionError)
-	return level
-
-
-def _access_levels(doctype) -> list[str]:
-	"""The side's access levels, Owner first, as its `access` field lists them."""
-	return frappe.get_meta(doctype).get_field("access").options.split("\n")
 
 
 def _clean_email(email) -> str:

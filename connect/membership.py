@@ -45,6 +45,15 @@ class CompanyMembership:
 		self.access = level
 		self.save(ignore_permissions=True)
 
+	def check_can_invite(self, invited_by: str):
+		"""Checks a new, unsaved team row before anything is made for it. The Owner or an Admin
+		invites, only the Owner invites an Admin, and the one Owner changes only by a transfer."""
+		if self.access == OWNER:
+			frappe.throw(_("A company has one Owner. Invite them first, then transfer ownership."))
+		if self.access not in self.ACCESS_LEVELS:
+			frappe.throw(_("Pick one of: {0}").format(", ".join(self.ACCESS_LEVELS[1:])))
+		self._check_can_change(self.access, invited_by)
+
 	def remove(self, removed_by: str):
 		"""Removes this person from the company roster, revoking their thread access but leaving
 		their past messages untouched."""
