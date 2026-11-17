@@ -186,6 +186,9 @@ export default function setup(context) {
 	}
 
 	// ---- Apply for Certification: a free one from Frappe, or the paid exam on Frappe School ----
+	// Hidden for now: free certifications in Connect are planned for later. The server side stays;
+	// true shows the Apply for Certification button and the Free certifications list again.
+	const isApplyingOpen = false
 	const applyOpen = ref(false)
 	const applyCourse = ref("erpnext")
 	const applyEmail = ref("")
@@ -307,6 +310,7 @@ export default function setup(context) {
 		linking,
 		openLink,
 		sendLink,
+		isApplyingOpen,
 		applyOpen,
 		applyCourse,
 		applyEmail,
