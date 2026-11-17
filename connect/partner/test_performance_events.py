@@ -76,12 +76,13 @@ class IntegrationTestPartnerPerformanceEvents(IntegrationTestCase):
 		self.as_user(BUYER, set_hire_reason, self.project.name, "Price")
 		self.as_user(ADMIN, respond_to_hire, self.quote.name, 1)
 		self.as_user(BUYER, complete_project, self.project.name)
-		self.as_user(BUYER, submit_partner_review, PARTNER, 5, "Smooth rollout.", "Yes")
+		self.as_user(BUYER, submit_partner_review, PARTNER, 5, "Smooth", "Smooth rollout.")
 
 		sent = self.sent()
 		self.assertEqual(sent["partner_requirement_answered"][0]["answer"], "Accepted")
 		self.assertEqual(sent["partner_hire_reason_given"][0]["hire_reason"], "Price")
-		self.assertEqual((sent["partner_reviewed"][0]["rating"], sent["partner_reviewed"][0]["would_recommend"]), (5, "Yes"))
+		review = sent["partner_reviewed"][0]
+		self.assertEqual((review["rating"], review["verification"], review["is_hidden"]), (5, "Hired on Connect", 0))
 		for event in ("partner_requirement_received", "partner_hired", "partner_project_completed"):
 			self.assertEqual(len(sent[event]), 1, event)
 		# Interested, then the hire request: both shortlist, and the dashboard counts the requirement once.
@@ -91,6 +92,16 @@ class IntegrationTestPartnerPerformanceEvents(IntegrationTestCase):
 		self.assertEqual(received["requirement"], self.quote.name)
 		self.assertEqual(received["received_on"], self.quote.creation.date().isoformat())
 		self.assertEqual((received["partner"], received["partner_country"]), (PARTNER, "India"))
+
+	def test_hiding_a_review_sends_its_new_state(self):
+		review = frappe.get_doc(
+			{"doctype": "Partner Review", "partner": PARTNER, "reviewer_name": "Old", "rating": 2, "reviewed_on": "2026-11-01"}
+		).insert(ignore_permissions=True)
+		review.hide("Not about this partner.")
+
+		states = [(row["review"], row["is_hidden"]) for row in self.sent()["partner_reviewed"]]
+		self.assertEqual(states, [(review.name, 0), (review.name, 1)])
+		self.assertEqual(self.sent()["partner_reviewed"][0]["received_on"], "2026-11-01")
 
 	def test_an_on_time_answer_sends_an_on_time_result(self):
 		self.quote_it()
@@ -112,7 +123,11 @@ class IntegrationTestPartnerPerformanceEvents(IntegrationTestCase):
 		mark_overdue_answers_failed()
 		mark_overdue_answers_failed()
 
-		misses = [call for call in self.capture.call_args_list if call.args[0] == "partner_sla_result"]
+		# Other clocks on the site may be overdue too; count this requirement's misses only.
+		misses = [
+			call for call in self.capture.call_args_list
+			if call.args[0] == "partner_sla_result" and call.kwargs["properties"]["requirement"] == self.quote.name
+		]
 		self.assertEqual(len(misses), 1)
 		self.assertEqual(misses[0].kwargs["properties"]["result"], "Late")
 		self.assertEqual(misses[0].kwargs["captured_at"][:16], to_utc_minute(deadline))
