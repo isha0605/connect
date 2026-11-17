@@ -77,7 +77,10 @@ def _rename_partner_industries():
 		fields=["name", "parent", "industry"],
 	)
 	for row in rows:
-		new = RENAMED[row.industry]
+		# MariaDB matches names case-insensitively, so a row may already hold the new name.
+		new = RENAMED.get(row.industry)
+		if not new:
+			continue
 		if frappe.db.exists("Partner Industry", {"parent": row.parent, "parentfield": "industries", "industry": new}):
 			frappe.db.delete("Partner Industry", {"name": row.name})
 		else:
