@@ -22,7 +22,7 @@ OWNERLESS_PARTNER = "_Test SLA Ownerless Partner"
 SIBLING_PARTNER = "_Test SLA Sibling Partner"
 OWNER = "sla.owner@example.test"
 SIBLING_OWNER = "sla.sibling.owner@example.test"
-SECOND_OWNER = "sla.second.owner@example.test"
+ADMIN = "sla.admin@example.test"
 BUYER = "sla.buyer@example.test"
 
 # 2026-11-10 is a Tuesday; the 13th a Friday, the 16th a Monday.
@@ -158,12 +158,12 @@ class IntegrationTestBriefSLA(SLAFixture):
 		set_working_hours(OWNER, "08:00", "18:00", WEEKDAY_SCHEDULE["work_days"])
 		self.assertEqual(get_answer_deadline(PARTNER, TUESDAY_10), datetime(2026, 11, 11, 10, 0))
 
-	def test_several_owners_take_the_latest_deadline(self):
+	def test_the_owner_and_admins_take_the_latest_deadline(self):
 		set_working_hours(OWNER, "08:00", "18:00", WEEKDAY_SCHEDULE["work_days"])
-		make_partner_admin(PARTNER, SECOND_OWNER)
-		set_working_hours(SECOND_OWNER, "09:00", "17:00", ["monday"])
+		make_partner_admin(PARTNER, ADMIN, access="Admin")
+		set_working_hours(ADMIN, "09:00", "17:00", ["monday"])
 
-		# The Monday-only owner's clock starts Monday the 16th, so their deadline is the 23rd.
+		# The Monday-only Admin's clock starts Monday the 16th, so their deadline is the 23rd.
 		self.assertEqual(get_answer_deadline(PARTNER, TUESDAY_10), datetime(2026, 11, 23, 9, 0))
 
 	def test_demo_quotes_earn_no_sla_credit(self):

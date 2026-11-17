@@ -169,11 +169,11 @@ def _fail_quote_clocks(clock: str, status, deadline, overdue):
 
 
 def get_answer_deadline(partner: str, arrival: datetime) -> datetime | None:
-	"""When the partner's answer to a brief arriving at `arrival` is due: the latest owner's
-	next-working-day deadline, so the firm fails only once every owner's calendar is past it."""
-	from connect.permissions import _get_partner_owners
+	"""When the partner's answer to a brief arriving at `arrival` is due: the latest next-working-day
+	deadline of the Owner and Admins, so the firm fails only once all their calendars are past it."""
+	from connect.permissions import _get_partner_admins
 
-	owners = _get_partner_owners(partner)
+	owners = _get_partner_admins(partner)
 	if not owners:
 		return None
 
