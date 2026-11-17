@@ -14,7 +14,6 @@ import {
 	FormControl,
 	Spinner,
 	TextInput,
-	Tooltip,
 	call,
 	dialog,
 	toast,
@@ -178,20 +177,28 @@ async function disableMember(member) {
 }
 
 // ---- Users on a partner firm: Pragati's panel, after Frappe CRM's Settings → Users ----
-// One access level each, as a menu that saves on pick; the last owner's is locked, and Remove
-// sits in the ⋯ menu. Only owners change anything.
+// One access level each, as a menu that saves on pick, and Remove sits in the ⋯ menu. A firm has
+// one Owner: only they manage Admins and hand the firm over. An Admin manages everyone else.
 const isPartner = ref(false)
 const ACCESS_LEVELS = [
-	{ key: "Owner", icon: "lucide-shield", description: "Everything, including the team, audits, link requests and settings" },
+	{ key: "Owner", icon: "lucide-crown", description: "Everything. The only one who manages Admins and hands over the firm" },
+	{ key: "Admin", icon: "lucide-shield", description: "Everything, including the team, audits, link requests and settings" },
 	{ key: "Sales", icon: "lucide-briefcase", description: "Leads, quotes and customers" },
 	{ key: "Finance", icon: "lucide-receipt", description: "Billing, Contributions and customer invoices" },
 	{ key: "Member", icon: "lucide-user", description: "View-only: standing, team, profile and resources" },
 ]
-const ACCESS_OPTIONS = ACCESS_LEVELS.map((level) => ({ label: level.key, value: level.key }))
-const levelOf = (member) => ACCESS_LEVELS.find((level) => level.key === member.access_level) || ACCESS_LEVELS[3]
+const RUNS_THE_FIRM = ["Owner", "Admin"]
+const levelOf = (member) => ACCESS_LEVELS.find((level) => level.key === member.access_level) || ACCESS_LEVELS[4]
 const memberName = (member) => member.full_name || member.user
-const ownerCount = computed(() => team.value.filter((m) => m.access_level === "Owner").length)
-const isLastOwner = (member) => member.access_level === "Owner" && ownerCount.value === 1
+const amOwner = computed(() => team.value.some((m) => m.user === me.value && m.access_level === "Owner"))
+// The Owner manages everyone but themselves. An Admin manages Sales, Finance and Members only.
+const canManage = (member) =>
+	member.user !== me.value && (amOwner.value || (amAdmin.value && !RUNS_THE_FIRM.includes(member.access_level)))
+// Owner is never picked: it changes hands only by a transfer. Only the Owner gives Admin.
+const assignableLevels = computed(() =>
+	ACCESS_LEVELS.filter((level) => level.key !== "Owner" && (amOwner.value || level.key !== "Admin")),
+)
+const ACCESS_OPTIONS = computed(() => assignableLevels.value.map((level) => ({ label: level.key, value: level.key })))
 
 // Frappe CRM shows search only once the list is long enough to need it.
 const teamQuery = ref("")
@@ -201,7 +208,7 @@ const shownTeam = computed(() => {
 })
 
 function accessOptions(member) {
-	return ACCESS_LEVELS.map((level) => ({
+	return assignableLevels.value.map((level) => ({
 		label: level.key,
 		icon: level.icon,
 		description: level.description,
@@ -224,8 +231,27 @@ async function setAccess(member, level) {
 // With CRM sync on, someone without a CRM user can be looked up again once they're added there.
 const partnerMemberOptions = (member) => [
 	member.in_crm === false && { label: "Match with CRM", icon: "lucide-refresh-cw", onClick: () => matchWithCrm(member) },
-	{ label: "Remove", icon: "lucide-trash-2", theme: "red", onClick: () => confirmRemove(member) },
+	amOwner.value && member.user !== me.value && {
+		label: "Transfer ownership",
+		icon: "lucide-crown",
+		onClick: () => confirmTransfer(member),
+	},
+	canManage(member) && { label: "Remove", icon: "lucide-trash-2", theme: "red", onClick: () => confirmRemove(member) },
 ].filter(Boolean)
+
+function confirmTransfer(member) {
+	dialog.confirm({
+		title: `Make ${memberName(member)} the Owner?`,
+		message: "Your firm has one Owner. You become an Admin, and only they can manage Admins or hand the firm over again.",
+		confirmLabel: "Transfer ownership",
+		onConfirm: async ({ close }) => {
+			await call("connect.api.account.set_team_member_access", { member: member.name, access_level: "Owner" })
+			close()
+			await loadTeam()
+			toast.success(`${memberName(member)} is now the Owner`)
+		},
+	})
+}
 
 async function matchWithCrm(member) {
 	try {
@@ -239,7 +265,6 @@ async function matchWithCrm(member) {
 }
 
 function confirmRemove(member) {
-	if (isLastOwner(member)) return toast.error("Make someone else owner first")
 	dialog.danger({
 		title: `Remove ${memberName(member)}?`,
 		message: "They lose access to your firm in Connect. You can invite them again any time.",
@@ -703,19 +728,14 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 											</div>
 										</ListCell>
 
-										<!-- Access: a menu for owners, locked for the last owner, text for everyone else -->
+										<!-- Access: a menu where the viewer can change it, text everywhere else -->
 										<ListCell class="justify-end">
-											<template v-if="amAdmin">
-												<Tooltip v-if="isLastOwner(item)" text="A firm needs at least one owner">
-													<Button :label="levelOf(item).key" :icon-left="levelOf(item).icon" />
-												</Tooltip>
-												<Dropdown
-													v-else
-													:options="accessOptions(item)"
-													:button="{ label: levelOf(item).key, iconLeft: levelOf(item).icon, iconRight: 'lucide-chevron-down' }"
-													align="end"
-												/>
-											</template>
+											<Dropdown
+												v-if="canManage(item)"
+												:options="accessOptions(item)"
+												:button="{ label: levelOf(item).key, iconLeft: levelOf(item).icon, iconRight: 'lucide-chevron-down' }"
+												align="end"
+											/>
 											<span v-else class="inline-flex items-center gap-1.5 text-base text-ink-gray-7">
 												<span :class="[levelOf(item).icon, 'size-4 text-ink-gray-5']" aria-hidden="true" />
 												{{ levelOf(item).key }}
@@ -724,7 +744,7 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 
 										<ListCell class="justify-end">
 											<Dropdown
-												v-if="amAdmin"
+												v-if="amAdmin && partnerMemberOptions(item).length"
 												:options="partnerMemberOptions(item)"
 												:button="{ icon: 'lucide-more-horizontal', variant: 'ghost', 'aria-label': `More for ${memberName(item)}` }"
 												align="end"
