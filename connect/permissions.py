@@ -106,8 +106,20 @@ def _has_partner_access(partner, user, levels) -> bool:
 	return bool(row) and access_level_of(row) in levels
 
 
-def _is_partner_reviewer(user):
-	return "Partner Reviewer" in frappe.get_roles(user)
+def _can_review(doctype, user) -> bool:
+	"""Whether the user holds the Review right on `doctype`: Partner Reviewer by default, or any
+	staff role a System Manager gives it in Role Permissions Manager."""
+	return frappe.has_permission(doctype, "review", user=user)
+
+
+def _get_reviewers(doctype) -> list[str]:
+	"""The enabled users whose roles hold the Review right on `doctype`, for review emails. System
+	Managers hold every right but don't review, so they aren't emailed."""
+	from frappe.permissions import get_doctype_roles
+	from frappe.utils.user import get_users_with_role
+
+	roles = [role for role in get_doctype_roles(doctype, "review") if role != "System Manager"]
+	return sorted({user for role in roles for user in get_users_with_role(role)})
 
 
 def _my_company_membership(user):
@@ -236,7 +248,7 @@ def get_partner_crm_settings_permission_query_conditions(user, doctype=None):
 def has_partner_application_permission(doc, ptype="read", user=None, **kwargs):
 	"""Controllers can only deny access on top of the 'Connect Partner' role baseline, never grant it."""
 	user = user or frappe.session.user
-	if _has_full_access(user) or _is_partner_reviewer(user):
+	if _has_full_access(user) or _can_review("Partner Application", user):
 		return True
 	if not doc.get("partner"):
 		return True
@@ -244,7 +256,7 @@ def has_partner_application_permission(doc, ptype="read", user=None, **kwargs):
 
 
 def get_partner_application_permission_query_conditions(user, doctype=None):
-	if _has_full_access(user) or _is_partner_reviewer(user):
+	if _has_full_access(user) or _can_review("Partner Application", user):
 		return ""
 	return _current_admin_partner_sql(user, "tabPartner Application")
 

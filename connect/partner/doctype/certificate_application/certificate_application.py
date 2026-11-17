@@ -17,7 +17,6 @@ from connect.partner.doctype.partner_certificate.partner_certificate import (
 	CERTIFICATE_TYPES,
 	publish_certificates_updated,
 )
-from connect.roles import REVIEWER_ROLE
 
 OPEN_STATUSES = ("Applied", "Approved")
 # An application holds one of the partner's free certifications in these states.
@@ -54,14 +53,14 @@ class CertificateApplication(Document):
 
 	@frappe.whitelist()
 	def approve(self):
-		frappe.only_for(REVIEWER_ROLE)
+		frappe.has_permission(self.doctype, "review", throw=True)
 		self._check_applied()
 		self.update({"status": "Approved", "reviewed_by": frappe.session.user, "reviewed_on": now_datetime()})
 		self.save()
 
 	@frappe.whitelist()
 	def reject(self, reason=None):
-		frappe.only_for(REVIEWER_ROLE)
+		frappe.has_permission(self.doctype, "review", throw=True)
 		self._check_applied()
 		if not (reason or "").strip():
 			frappe.throw(_("Say why the application is rejected. The partner sees it."))
@@ -146,9 +145,9 @@ class CertificateApplication(Document):
 
 
 def reviewer_emails() -> list[str]:
-	users = frappe.get_all("Has Role", filters={"role": REVIEWER_ROLE, "parenttype": "User"}, pluck="parent")
-	people = [user for user in users if user not in ("Administrator", "Guest")]
-	return frappe.get_all("User", filters={"name": ["in", people or [""]], "enabled": 1}, pluck="name")
+	from connect.permissions import _get_reviewers
+
+	return _get_reviewers("Certificate Application")
 
 
 def free_certification_status(partner: str) -> dict:

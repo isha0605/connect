@@ -9,7 +9,6 @@ from frappe.utils import cint, get_fullname, nowdate
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.partner.doctype.partner.partner import recompute_rating_from_reviews
 from connect.partner.performance_events import send_review_event
-from connect.roles import REVIEWER_ROLE
 
 
 HIRED = "Hired on Connect"
@@ -40,7 +39,7 @@ class PartnerReview(Document):
 	@frappe.whitelist()
 	def hide(self, reason=None):
 		"""Frappe's partner reviewers take a review off the profile and out of the rating."""
-		frappe.only_for((REVIEWER_ROLE, "System Manager"))
+		frappe.has_permission(self.doctype, "review", throw=True)
 		if not (reason or "").strip():
 			frappe.throw(_("Say why the review is hidden."))
 		self.update({"is_hidden": 1, "hidden_reason": reason.strip()})
@@ -49,7 +48,7 @@ class PartnerReview(Document):
 
 	@frappe.whitelist()
 	def show(self):
-		frappe.only_for((REVIEWER_ROLE, "System Manager"))
+		frappe.has_permission(self.doctype, "review", throw=True)
 		self.update({"is_hidden": 0, "hidden_reason": None})
 		self.save(ignore_permissions=True)
 

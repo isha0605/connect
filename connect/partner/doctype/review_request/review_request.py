@@ -202,11 +202,9 @@ def partner_domains(partner: str) -> set[str]:
 
 def reviewers() -> list[str]:
 	"""Frappe's partner reviewers: the people told when a customer disputes a request."""
-	from connect.roles import REVIEWER_ROLE
+	from connect.permissions import _get_reviewers
 
-	return frappe.get_all(
-		"Has Role", filters={"role": REVIEWER_ROLE, "parenttype": "User"}, pluck="parent", distinct=True
-	)
+	return _get_reviewers("Partner Review")
 
 
 def request_for_link(token: str) -> ReviewRequest:

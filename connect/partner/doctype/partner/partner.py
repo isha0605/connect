@@ -27,7 +27,7 @@ from connect.partner.doctype.connect_partner_member.connect_partner_member impor
 from connect.partner.doctype.partner_tier.partner_tier import get_tier_order
 from connect.partner.doctype.region.region import get_filter_countries, get_region_of_country
 from connect.starter_packs.doctype.starter_pack.starter_pack import get_hours_range
-from connect.permissions import _has_full_access, _is_partner_admin
+from connect.permissions import _can_review, _has_full_access, _is_partner_admin
 
 # Partners in India are measured against the INR tier targets, every other partner against USD.
 INR_COUNTRY = "India"
@@ -962,7 +962,7 @@ def check_profile_visible(partner: str) -> None:
 
 def _can_see_unlisted_partner(partner: str) -> bool:
 	user = frappe.session.user
-	if _has_full_access(user) or "Partner Reviewer" in frappe.get_roles(user):
+	if _has_full_access(user) or _can_review("Partner Application", user):
 		return True
 	return bool(frappe.db.exists("Connect Partner Member", {"partner": partner, "user": user, "is_removed": 0}))
 

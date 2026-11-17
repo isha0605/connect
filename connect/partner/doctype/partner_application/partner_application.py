@@ -9,7 +9,6 @@ from frappe.utils import flt, now_datetime
 from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_membership
 from connect.partner.doctype.partner.partner import VERIFIED
 from connect.permissions import _is_partner_admin
-from connect.roles import REVIEWER_ROLE
 
 # A partner who registers in Connect starts at the lowest tier until Frappe sets theirs.
 NEW_PARTNER_TIER = "Beginner"
@@ -105,8 +104,8 @@ class PartnerApplication(Document):
 
 	@frappe.whitelist()
 	def approve(self):
-		# reviewer role has write at permlevel 1, which is where status and reviewer_comments live
-		frappe.only_for(REVIEWER_ROLE)
+		# A reviewer also needs write at permlevel 1, which is where status and reviewer_comments live.
+		frappe.has_permission(self.doctype, "review", throw=True)
 		self._check_pending_review()
 		self.status = "Approved"
 		self.reviewer_comments = None
@@ -114,7 +113,7 @@ class PartnerApplication(Document):
 
 	@frappe.whitelist()
 	def reject(self, reason=None):
-		frappe.only_for(REVIEWER_ROLE)
+		frappe.has_permission(self.doctype, "review", throw=True)
 		self._check_pending_review()
 		self.status = "Rejected"
 		self.reviewer_comments = reason
