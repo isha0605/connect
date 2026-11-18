@@ -37,6 +37,21 @@ MISSING_ANSWER_MESSAGES = {
 }
 
 
+# What an edit names as changed, in the short nouns partners read in the thread.
+CHANGE_NAMES = {
+	"description": "description",
+	"budget": "budget",
+	"go_live": "timeline",
+	"apps": "apps",
+	"operations": "today",
+	"systems": "today",
+	"problems": "to fix",
+	"regions": "looking for",
+	"work_modes": "looking for",
+	"criteria": "looking for",
+}
+
+
 def set_answers(doc, answers: dict) -> None:
 	"""Puts the given answers on the project, and the company's on its Customer. A question
 	left out keeps its answer, so a project that lacks a few can be given just those."""
@@ -74,6 +89,22 @@ def check_answers(doc) -> None:
 	for field, message in MISSING_ANSWER_MESSAGES.items():
 		if field in given and not given[field]:
 			frappe.throw(_(message), title=_("Answer every question"))
+
+
+def get_answers(doc) -> dict:
+	"""The project's own answers, in a form two versions can be compared in."""
+	extras = frappe.parse_json(doc.criteria) or {}
+	return {
+		**{field: doc.get(field) or "" for field in TEXT_ANSWERS},
+		**{field: sorted(frappe.parse_json(doc.get(field)) or []) for field in LIST_ANSWERS},
+		"apps": sorted(row.app for row in doc.apps),
+		"criteria": {group: sorted(extras.get(group) or []) for group in ("cities", "tiers")},
+	}
+
+
+def get_changes(before: dict, after: dict) -> list[str]:
+	"""What changed between two versions of the answers, each named once."""
+	return list(dict.fromkeys(name for field, name in CHANGE_NAMES.items() if before.get(field) != after.get(field)))
 
 
 def get_partner_criteria(doc) -> dict:

@@ -13,6 +13,8 @@ from frappe.utils import now_datetime
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.customer.doctype.customer_project.questions import (
 	check_answers,
+	get_answers,
+	get_changes,
 	get_company,
 	get_partner_criteria,
 	set_answers,
@@ -231,6 +233,32 @@ def share_requirements(answers: str | dict) -> dict:
 	return project_dict(doc)
 
 
+def update_requirements(name: str, answers: str | dict) -> dict:
+	"""Edit on sent requirements: saves the changed answers and sends them to every partner who
+	has them. With nothing changed, sends nothing."""
+	from connect.customer.doctype.customer_project.brief import send_requirements_update
+
+	doc = get_own_project(name)
+	if doc.status != "Shared":
+		frappe.throw(_("Requirements can change only while you're choosing a partner."))
+	customer = get_customer_for_user(doc.user)
+	if not customer:
+		frappe.throw(_("Sign in with your company account to send this to partners."), frappe.PermissionError)
+
+	before = get_answers(doc)
+	doc.set_answers(frappe.parse_json(answers))
+	doc.check_answers()
+	changes = get_changes(before, get_answers(doc))
+	if not changes:
+		return project_dict(doc)
+
+	doc.requirements_updated_on = now_datetime()
+	# Only System Managers write projects; get_own_project checked the caller owns this one.
+	doc.save(ignore_permissions=True)
+	send_requirements_update(doc, customer, changes)
+	return project_dict(doc)
+
+
 def my_projects() -> list[dict]:
 	"""The caller's projects, newest first, in the Projects page's row shape. Once the
 	partner accepts, a row shows them like a booked pack; until then it says who it's waiting on."""
@@ -284,6 +312,7 @@ def project_dict(doc: CustomerProject) -> dict:
 		"shared_count": doc.shared_count or 0,
 		"brief_thread": first_brief_thread(doc.name),
 		"shared_on": with_timezone(doc.shared_on),
+		"requirements_updated_on": with_timezone(doc.requirements_updated_on),
 		"budget": doc.budget,
 		"description": doc.description,
 		"created_on": with_timezone(doc.creation),
@@ -321,6 +350,8 @@ def quote_counts(project: str) -> dict:
 	return {
 		"quotes": sum(1 for status in statuses if status in OPEN_QUOTE_STATUSES),
 		"shortlisted": sum(1 for status in statuses if status == "Interested"),
+		# Who an edit to the requirements goes to (brief.UPDATE_SKIPPED_STATUSES).
+		"update_recipients": sum(1 for status in statuses if status != "Not Interested"),
 	}
 
 
@@ -336,7 +367,7 @@ def list_quotes(name: str) -> list[dict]:
 		.on(Partner.name == Quote.partner)
 		.select(
 			Quote.name, Quote.partner, Quote.thread, Quote.status, Quote.amount, Quote.timeline_weeks, Quote.note,
-			Quote.quoted_on,
+			Quote.quoted_on, Quote.quoted_before_update,
 			Partner.partner_name, Partner.tier, Partner.city, Partner.country, Partner.logo,
 			Partner.verification_status,
 		)

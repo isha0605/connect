@@ -18,23 +18,59 @@ def send_to_partners(doc, customer: str) -> int:
 	return len(partners)
 
 
+# Who an edit goes to: every partner with the requirements, except those the customer set aside.
+UPDATE_SKIPPED_STATUSES = ("Not Interested",)
+# Quotes the partner made against the earlier version, to confirm or redo.
+QUOTED_STATUSES = ("Quoted", "Interested")
+
+
+def send_requirements_update(doc, customer: str, changes: list[str]) -> int:
+	"""Sends edited requirements to the partners who have them: a line saying what changed,
+	then a new Requirement card. Their quotes now answer that card, and a quote made against
+	the earlier version is flagged until the partner confirms it or quotes again. Returns how
+	many partners got it."""
+	card = {**requirement_card(doc, customer), "update": True, "changes": changes}
+	line = _("Requirements updated · Changed: {0}").format(", ".join(changes))
+	quotes = frappe.get_all(
+		"Project Quote",
+		filters={"customer_project": doc.name, "status": ["not in", UPDATE_SKIPPED_STATUSES], "thread": ["is", "set"]},
+		pluck="name",
+	)
+	for name in quotes:
+		quote = frappe.get_doc("Project Quote", name)
+		frappe.get_doc("Connect Thread", quote.thread).post_system_message(line)
+		quote.brief_message = _post_card(quote.thread, doc.user, card)
+		quote.quoted_before_update = int(bool(quote.amount) and quote.status in QUOTED_STATUSES)
+		# A system step of the customer's edit; update_requirements checked the project is theirs.
+		quote.save(ignore_permissions=True)
+	return len(quotes)
+
+
 def send_brief(doc, customer: str, partner: str, card: dict | None = None) -> str:
 	"""Sends the brief to one partner, as the customer's Requirement card in their thread with
 	that partner, and returns the thread."""
 	from connect.messaging.doctype.connect_thread.connect_thread import get_or_open_thread
 
 	thread = get_or_open_thread(customer, partner, doc.user)
-	message = frappe.get_doc(
-		{
-			"doctype": "Connect Message",
-			"thread": thread,
-			"sender": doc.user,
-			"message_type": "Requirement",
-			"content": frappe.as_json(card or requirement_card(doc, customer)),
-		}
-	).insert(ignore_permissions=True)
-	await_quote(doc.name, partner, thread, message.name)
+	await_quote(doc.name, partner, thread, _post_card(thread, doc.user, card or requirement_card(doc, customer)))
 	return thread
+
+
+def _post_card(thread: str, sender: str, card: dict) -> str:
+	"""The customer's Requirement card in `thread`; returns the message."""
+	return (
+		frappe.get_doc(
+			{
+				"doctype": "Connect Message",
+				"thread": thread,
+				"sender": sender,
+				"message_type": "Requirement",
+				"content": frappe.as_json(card),
+			}
+		)
+		.insert(ignore_permissions=True)
+		.name
+	)
 
 
 def await_quote(project: str, partner: str, thread: str, brief_message: str | None = None):
