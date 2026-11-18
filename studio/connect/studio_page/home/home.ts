@@ -125,9 +125,10 @@ export default function setup(context) {
 		router.push(projectPath(project))
 	}
 
-	// The Projects page's New project dialog: a saved draft opens on the page its answers recommended.
+	// The New project dialog: a shared project opens on its quotes.
 	const dialog = projectDialog(context, {
-		onSaved: (project) => router.push(projectPath({ kind: "project", project: project.name, verdict: project.verdict })),
+		onSaved: (project) =>
+			router.push(projectPath({ kind: "project", project: project.name, verdict: project.verdict, status: project.status })),
 	})
 
 	function viewAllProjects() {
