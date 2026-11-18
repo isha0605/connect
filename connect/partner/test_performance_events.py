@@ -93,6 +93,7 @@ class IntegrationTestPartnerPerformanceEvents(IntegrationTestCase):
 		self.as_user(BUYER, hire_partner, self.quote.name)
 		self.as_user(BUYER, set_hire_reason, self.project.name, '["Timeline", "Price"]', "They knew our industry")
 		self.as_user(ADMIN, respond_to_hire, self.quote.name, 1)
+		frappe.db.set_value("Customer Project", self.project.name, "live_on", now_datetime())
 		self.as_user(BUYER, complete_project, self.project.name)
 		self.as_user(BUYER, submit_partner_review, PARTNER, 5, "Smooth", "Smooth rollout.")
 

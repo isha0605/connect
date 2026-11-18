@@ -141,6 +141,12 @@ def complete_task(name, task):
 
 
 @frappe.whitelist(methods=["POST"])
+def not_live_yet(name):
+	from connect.customer.doctype.customer_project.going_live import not_live_yet
+	return not_live_yet(name)
+
+
+@frappe.whitelist(methods=["POST"])
 def complete_project(name):
 	from connect.customer.doctype.customer_project.customer_project import complete_project
 	return complete_project(name)

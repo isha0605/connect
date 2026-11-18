@@ -46,7 +46,7 @@ HIRE_QUOTE_STATUSES = ("Hire Requested", "Hire Declined", "Hired")
 # The project's status while its hire quote (Project Quote, which owns the hire) is in each state.
 HIRE_PROJECT_STATUSES = {"Hire Requested": "Hiring", "Hired": "Hired"}
 # What a freed project forgets about the hire it had.
-NO_HIRE = {"status": "Shared", "partner": None, "hired_quote": None, "hire_reason": "", "hire_note": "", "hire_requested_on": None}
+NO_HIRE = {"status": "Shared", "partner": None, "hired_quote": None, "hire_reason": "", "hire_note": "", "hire_requested_on": None, "live_on": None}
 
 HOSTING_TASKS = ("fc-login", "fc-code", "fc-link")
 
@@ -312,6 +312,9 @@ def project_dict(doc: CustomerProject) -> dict:
 		"hire_reason": doc.hire_reason,
 		"hire_reasons": list(HIRE_REASONS),
 		"hire_note_limit": HIRE_NOTE_LIMIT,
+		"hired_on": with_timezone(doc.hired_on),
+		"live_on": with_timezone(doc.live_on),
+		"completed_on": with_timezone(doc.completed_on),
 		"done_tasks": frappe.parse_json(doc.done_tasks) or [],
 		**quote_counts(doc.name),
 	}
@@ -417,6 +420,10 @@ def complete_project(name: str) -> dict:
 	doc = get_own_project(name)
 	if doc.status != "Hired":
 		frappe.throw(_("Only a project with a partner can be completed."))
+	# The partner says when it is built; the customer confirms. Ending it earlier would ask
+	# for a review of work that hasn't been delivered.
+	if not doc.live_on:
+		frappe.throw(_("Your partner hasn't marked this project live yet."))
 	doc.status = "Completed"
 	doc.save(ignore_permissions=True)
 	return project_dict(doc)
