@@ -102,6 +102,11 @@ def send_quote(quote, amount, weeks, note=None):
 	return {"message": frappe.get_doc("Project Quote", quote).send_quote(amount, weeks, note)}
 
 
+@frappe.whitelist(methods=["POST"])
+def confirm_quote(quote):
+	frappe.get_doc("Project Quote", quote).confirm_quote()
+
+
 # The partner's side: their admin answers the request from the card in the thread.
 @frappe.whitelist(methods=["POST"])
 def respond_to_hire(quote, accept, reason=None):

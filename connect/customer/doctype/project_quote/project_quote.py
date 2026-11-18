@@ -17,8 +17,8 @@ from connect.permissions import _has_partner_access
 REVEALING_STATUSES = ("Interested", "Hire Requested", "Hired")
 # A hire request waiting for the partner's answer, and the hire itself. A project has one at most.
 HIRE_STATUSES = ("Hire Requested", "Hired")
-# What Frappe's sales CRM shows of the brief, on its partner's note there.
-FRAPPE_CRM_FIELDS = ("status", "amount", "timeline_weeks")
+# What the CRM shows of the brief, on the partner's Lead note there.
+FRAPPE_CRM_FIELDS = ("status", "amount", "timeline_weeks", "quoted_before_update")
 # A partner quotes, or changes their quote, until the customer answers it.
 QUOTABLE_STATUSES = ("Awaiting", "Quoted")
 # A brief the partner may still win, which keeps its lead open when they decline another.
@@ -81,7 +81,7 @@ class ProjectQuote(Document):
 		user = frappe.session.user
 		if not _has_partner_access(self.partner, user, LEAD_ACCESS):
 			frappe.throw(_("Only your firm's owners and sales can send quotes."), frappe.PermissionError)
-		if self.status not in QUOTABLE_STATUSES:
+		if not self.is_quotable():
 			frappe.throw(_("The customer has already answered this quote, so it can't change now."))
 
 		amount, weeks, note = flt(amount), cint(weeks), (note or "").strip()
@@ -97,6 +97,27 @@ class ProjectQuote(Document):
 		# Whoever quotes answers the customer's questions about it, so they join the thread.
 		ensure_partner_member(self.thread, user, user)
 		return post_quote(self, user, amount, weeks, note)
+
+	def is_quotable(self) -> bool:
+		"""Until the customer answers a quote, the partner can change it. After the customer edits
+		their requirements, a quote made before then can change too."""
+		return self.status in QUOTABLE_STATUSES or bool(self.quoted_before_update and self.status == "Interested")
+
+	def confirm_quote(self):
+		"""The partner's "Quote still stands" after the customer edited the requirements: the same
+		figure now answers the new version."""
+		if not _has_partner_access(self.partner, frappe.session.user, LEAD_ACCESS):
+			frappe.throw(_("Only your firm's owners and sales can answer a brief."), frappe.PermissionError)
+		if not self.quoted_before_update:
+			frappe.throw(_("This quote already answers the latest requirements."))
+
+		self.quoted_before_update = 0
+		# Partners have no Desk write on briefs; the check above made sure this one is theirs.
+		self.save(ignore_permissions=True)
+		partner_name = frappe.db.get_value("Partner", self.partner, "partner_name") or self.partner
+		frappe.get_doc("Connect Thread", self.thread).post_system_message(
+			_("{0} confirmed their quote").format(partner_name)
+		)
 
 	def decline_brief(self):
 		"""The caller's "Not interested" on this brief, from the chat or the lead. It is final:
@@ -182,8 +203,10 @@ def post_quote(quote, sender: str, amount: float, weeks: int, note: str) -> str:
 			"timeline_weeks": weeks,
 			"note": note,
 			"quote_message": message.name,
-			"status": "Quoted",
+			# A customer's interest stays on a quote redone after they edited the requirements.
+			"status": "Interested" if quote.status == "Interested" else "Quoted",
 			"quoted_on": now_datetime(),
+			"quoted_before_update": 0,
 		}
 	)
 	# Partners have no Desk write on briefs; send_quote checked this one is theirs to quote.
@@ -206,9 +229,13 @@ def quotable_briefs(thread: str) -> list[dict]:
 		.on(Project.name == Quote.customer_project)
 		.select(
 			Quote.name, Project.project_name, Quote.status, Quote.amount, Quote.timeline_weeks.as_("weeks"), Quote.note,
-			Quote.brief_message,
+			Quote.brief_message, Quote.quoted_before_update,
 		)
-		.where((Quote.thread == thread) & Quote.status.isin(QUOTABLE_STATUSES))
+		.where(Quote.thread == thread)
+		.where(
+			Quote.status.isin(QUOTABLE_STATUSES)
+			| ((Quote.status == "Interested") & (Quote.quoted_before_update == 1))
+		)
 		.orderby(Quote.creation)
 		.run(as_dict=True)
 	)
