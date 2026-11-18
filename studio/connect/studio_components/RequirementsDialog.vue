@@ -2,7 +2,7 @@
 // "Your requirements" on a sent project: what partners got, read back, and Edit to change it.
 // Editing happens in place (Pragati's BriefDetailsDialog); Send goes to every partner who has
 // the requirements, and a quote made before then waits for its partner to confirm or redo it.
-import { computed, nextTick, ref, watch } from "vue"
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { Alert, Button, Dialog, ErrorMessage, FormControl, MultiSelect, ScrollArea, call, dialog, toast } from "frappe-ui"
 import {
 	BUDGET_OPTIONS,
@@ -45,6 +45,7 @@ const regionOptions = ref([])
 const cityOptions = ref([])
 const tierOptions = ref([])
 const descriptionField = ref(null)
+const scroller = ref(null)
 
 const criteria = computed(() => ({ ...blankCriteria(), ...(props.project?.criteria || {}) }))
 const canEdit = computed(() => props.project?.status === "Shared")
@@ -101,8 +102,12 @@ watch(
 	() => props.modelValue,
 	(open) => {
 		if (open) editing.value = false
+		if (open) scheduleFit()
 	},
 )
+watch(editing, scheduleFit)
+onMounted(() => window.addEventListener("resize", fitHeight))
+onBeforeUnmount(() => window.removeEventListener("resize", fitHeight))
 watch(() => form.value.description, () => nextTick(fitDescription))
 
 function startEditing() {
@@ -193,6 +198,25 @@ function onOpen(open) {
 	leaveEditing(() => emit("update:modelValue", false))
 }
 
+// The body scrolls inside the dialog, never the page: it gets the window's height less the
+// dialog's own title, buttons and margins, measured, since fonts and zoom change them.
+// After the dialog is on the page: it opens with a transition.
+function scheduleFit() {
+	nextTick(() => requestAnimationFrame(fitHeight))
+}
+
+function fitHeight() {
+	const viewport = scroller.value?.$el?.querySelector?.("[data-slot=scroll-area-viewport]")
+	const content = viewport?.closest(".dialog-content")
+	const overlay = content?.closest(".dialog-scroll-container")
+	if (!overlay) return
+	const style = getComputedStyle(content)
+	const margins = parseFloat(style.marginTop) + parseFloat(style.marginBottom)
+	const chrome = content.offsetHeight - viewport.offsetHeight
+	// The overlay's own height, not the window's: the same units as the dialog at any zoom.
+	viewport.style.maxHeight = `${Math.max(overlay.clientHeight - chrome - margins, 160)}px`
+}
+
 // The description grows with its text, so the dialog keeps a single scroll.
 function fitDescription() {
 	const area = descriptionField.value?.$el?.querySelector?.("textarea")
@@ -235,7 +259,7 @@ function andList(values) {
 	>
 		<template #default>
 			<!-- frappe-ui's ScrollArea: a thin scrollbar, shown while scrolling, in place of the browser's. -->
-			<ScrollArea v-if="project" class="-mr-4 sm:-mr-6" viewport-class="max-h-[calc(100vh-16rem)] pr-4 sm:pr-6">
+			<ScrollArea v-if="project" ref="scroller" class="-mr-4 sm:-mr-6" viewport-class="pr-4 sm:pr-6">
 				<div v-if="editing" class="space-y-6">
 					<Alert theme="blue" title="Partners who quoted will confirm or re-quote" />
 					<form novalidate class="space-y-4" @submit.prevent="send">
