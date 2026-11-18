@@ -12,14 +12,18 @@
   "user",
   "shared_on",
   "shared_count",
-  "section_answers",
+  "section_partners",
+  "regions",
+  "apps",
+  "column_break_partners",
   "go_live",
+  "work_modes",
+  "criteria",
+  "section_operations",
   "operations",
   "systems",
+  "column_break_operations",
   "problems",
-  "criteria",
-  "industries",
-  "company_size",
   "section_brief",
   "budget",
   "description",
@@ -88,14 +92,48 @@
    "read_only": 1
   },
   {
-   "fieldname": "section_answers",
+   "fieldname": "section_partners",
    "fieldtype": "Section Break",
-   "label": "Answers"
+   "label": "Partners They Want"
+  },
+  {
+   "description": "Countries the partners should be from.",
+   "fieldname": "regions",
+   "fieldtype": "JSON",
+   "label": "Partner Regions"
+  },
+  {
+   "description": "A partner gets the brief when they list at least one of these apps.",
+   "fieldname": "apps",
+   "fieldtype": "Table MultiSelect",
+   "label": "Apps",
+   "options": "Partner App"
+  },
+  {
+   "fieldname": "column_break_partners",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "go_live",
    "fieldtype": "Data",
-   "label": "When Do They Need It Live"
+   "label": "When They Need It Live"
+  },
+  {
+   "description": "On premises, remote, or both.",
+   "fieldname": "work_modes",
+   "fieldtype": "JSON",
+   "label": "How They Want To Work"
+  },
+  {
+   "fieldname": "criteria",
+   "fieldtype": "JSON",
+   "label": "Extra Partner Criteria",
+   "description": "Cities and tiers added with Edit criteria."
+  },
+  {
+   "fieldname": "section_operations",
+   "fieldtype": "Section Break",
+   "label": "How They Work Today"
   },
   {
    "fieldname": "operations",
@@ -108,41 +146,29 @@
    "label": "Systems In Use"
   },
   {
+   "fieldname": "column_break_operations",
+   "fieldtype": "Column Break"
+  },
+  {
    "fieldname": "problems",
    "fieldtype": "JSON",
-   "label": "Trying To Fix"
-  },
-  {
-   "fieldname": "criteria",
-   "fieldtype": "JSON",
-   "label": "Partner Criteria"
-  },
-  {
-   "description": "The industries the customer picked, as they worded them (e.g. Food and Beverages).",
-   "fieldname": "industries",
-   "fieldtype": "JSON",
-   "label": "Industries"
-  },
-  {
-   "description": "Number of employees, as picked (e.g. 1 to 10).",
-   "fieldname": "company_size",
-   "fieldtype": "Data",
-   "label": "Company Size"
+   "label": "Trying To Solve"
   },
   {
    "fieldname": "section_brief",
    "fieldtype": "Section Break",
-   "label": "Custom Implementation Brief"
+   "label": "Brief"
   },
   {
    "fieldname": "budget",
-   "fieldtype": "Data",
-   "label": "Budget"
+   "fieldtype": "Select",
+   "label": "Budget",
+   "options": "\nUnder ₹5 lakh\n₹5 to 15 lakh\n₹15 to 40 lakh\nOver ₹40 lakh\nNot decided yet"
   },
   {
    "fieldname": "description",
    "fieldtype": "Text",
-   "label": "What Do They Want Built"
+   "label": "What They Need"
   },
   {
    "fieldname": "section_hiring",
@@ -195,25 +221,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "done_tasks",
-   "fieldtype": "JSON",
-   "label": "Done Tasks",
-   "read_only": 1
-  },
-  {
-   "description": "When the partner marked the project live. Cleared when the customer says it isn't live yet.",
-   "fieldname": "live_on",
-   "fieldtype": "Datetime",
-   "label": "Live On",
-   "read_only": 1
-  },
-  {
-   "fieldname": "completed_on",
-   "fieldtype": "Datetime",
-   "label": "Completed On",
-   "read_only": 1
-  },
-  {
    "fieldname": "cloud_link_status",
    "fieldtype": "Select",
    "label": "Frappe Cloud Link",
@@ -237,11 +244,30 @@
    "read_only": 1,
    "no_copy": 1,
    "description": "Why the last request to Frappe Cloud failed. Connect tries again every hour."
+  },
+  {
+   "fieldname": "done_tasks",
+   "fieldtype": "JSON",
+   "label": "Done Tasks",
+   "read_only": 1
+  },
+  {
+   "description": "When the partner marked the project live. Cleared when the customer says it isn't live yet.",
+   "fieldname": "live_on",
+   "fieldtype": "Datetime",
+   "label": "Live On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "completed_on",
+   "fieldtype": "Datetime",
+   "label": "Completed On",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-18 16:00:00.000000",
+ "modified": "2026-11-18 17:00:00.000000",
  "modified_by": "Administrator",
  "module": "Customer",
  "name": "Customer Project",

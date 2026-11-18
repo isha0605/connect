@@ -20,8 +20,9 @@ from connect.partner.industries import partners_in_industries
 # for both. The go-live answer is edited alongside but doesn't filter partners.
 WORK_MODES = {"onsite": ("Onsite", "Hybrid"), "remote": ("Remote", "Hybrid")}
 PARTNER_FIELDS = {"countries": "country", "cities": "city", "tiers": "tier"}
-# Criteria groups, in the order the chips show; industries match the partners' picked industries.
-CRITERIA_GROUPS = ("countries", "industries", "cities", "tiers")
+# Criteria groups, in the order the chips show; industries and apps match the partners' picked
+# ones, and a partner with any one of the picked apps matches.
+CRITERIA_GROUPS = ("countries", "industries", "apps", "cities", "tiers")
 
 
 def partner_criteria(criteria: str | dict | None = None, include_recipients: bool = False) -> dict:
@@ -41,7 +42,9 @@ def get_brief_recipients(criteria: dict) -> list[str]:
 
 
 def _criteria_facets(criteria: dict) -> dict:
-	in_reach = normalize_criteria({"countries": criteria["countries"], "industries": criteria["industries"]})
+	in_reach = normalize_criteria(
+		{"countries": criteria["countries"], "industries": criteria["industries"], "apps": criteria["apps"]}
+	)
 	partners = frappe.get_all("Partner", filters=get_partner_filters(in_reach), fields=["name", "city", "tier"])
 	modes = _child_values_by_partner(
 		"Partner Delivery Mode", "delivery_mode", [p.name for p in partners], parentfield="delivery_options"
@@ -94,6 +97,9 @@ def get_partner_filters(criteria: dict) -> list:
 			filters.append(["Partner", field, "in", criteria[group]])
 	if criteria["industries"]:
 		filters.append(["Partner", "name", "in", list(partners_in_industries(criteria["industries"])) or [""]])
+	if criteria["apps"]:
+		with_apps = _partners_matching_child("Partner App", "app", "in", criteria["apps"], parentfield="apps")
+		filters.append(["Partner", "name", "in", list(with_apps) or [""]])
 
 	if criteria["work"]:
 		wanted = {mode for work in criteria["work"] for mode in WORK_MODES[work]}

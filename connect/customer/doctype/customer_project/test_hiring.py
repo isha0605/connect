@@ -274,23 +274,29 @@ class TestHiring(IntegrationTestCase):
 		self.assertEqual(frappe.db.get_value("Customer Project", self.project.name, "shared_on"), shared_on)
 
 
-# What the New project dialog sends.
+# What the project questions send, every question answered.
 PROJECT_ANSWERS = {
-	"project_name": "Stock and accounts",
-	"go_live": "3-months",
+	"regions": ["India"],
+	"company_size": "11-50",
+	"industries": ["Retail"],
+	"apps": ["ERPNext"],
+	"go_live": "one_to_three_months",
+	"work_modes": ["remote"],
 	"operations": "spreadsheets",
-	"problems": '["stock"]',
-	"verdict": "packs",
+	"problems": ["stock_visibility"],
+	"budget": "₹5 to 15 lakh",
+	"description": "We export cotton fabric to Europe.",
 }
 
 
 class TestStartProjectWithPartner(IntegrationTestCase):
-	"""Connect on a partner's profile or card: the New project answers become a project, sent to
-	that partner as the customer's Requirement card."""
+	"""Connect on a partner's profile or card: the project questions' answers become a project,
+	sent to that partner as the customer's Requirement card."""
 
 	def setUp(self):
 		frappe.set_user("Administrator")
 		self.addCleanup(frappe.set_user, "Administrator")
+		self.addCleanup(frappe.db.rollback)
 		make_partner(PARTNER)
 		make_partner_admin(PARTNER, PARTNER_ADMIN)
 		make_buyer(BUYER, "Hiring Buyer Co")
@@ -298,34 +304,30 @@ class TestStartProjectWithPartner(IntegrationTestCase):
 	def start(self, partner=PARTNER, as_user=BUYER, **answers):
 		frappe.set_user(as_user)
 		try:
-			return start_project_with_partner(partner, **{**PROJECT_ANSWERS, **answers})
+			return start_project_with_partner(partner, answers={**PROJECT_ANSWERS, **answers})
 		finally:
 			frappe.set_user("Administrator")
 
 	def test_a_partner_not_yet_approved_cannot_be_sent_a_project(self):
 		frappe.db.set_value("Partner", PARTNER, "verification_status", "Pending Review")
-		self.addCleanup(frappe.db.set_value, "Partner", PARTNER, "verification_status", "Verified")
 		with self.assertRaisesRegex(frappe.ValidationError, "can't take messages yet"):
-			self.start(project_name="Warehouse rollout")
+			self.start()
 
 	def test_the_project_is_sent_to_the_partner_as_a_requirement(self):
-		result = self.start(project_name="Warehouse rollout")
+		result = self.start(description="A warehouse rollout")
 
 		project = frappe.get_doc("Customer Project", result["project"]["name"])
 		self.assertEqual((project.status, project.shared_count, project.user), ("Shared", 1, BUYER))
 		card = frappe.get_all(
 			"Connect Message",
-			filters={
-				"thread": result["thread"],
-				"message_type": "Requirement",
-				"content": ["like", "%Warehouse rollout%"],
-			},
+			filters={"thread": result["thread"], "message_type": "Requirement"},
 			fields=["sender", "content"],
 		)
 		self.assertEqual(len(card), 1)
 		self.assertEqual(card[0].sender, BUYER)
-		# No brief written yet, so the project's name says what they're looking for.
-		self.assertEqual(frappe.parse_json(card[0].content)["looking_for"], "Warehouse rollout")
+		content = frappe.parse_json(card[0].content)
+		self.assertEqual((content["description"], content["apps"]), ("A warehouse rollout", ["ERPNext"]))
+		self.assertEqual((content["industry"], content["company_size"]), ("Retail", "11-50"))
 		self.assertEqual(frappe.db.get_value("Connect Thread", result["thread"], "partner"), PARTNER)
 		# The partner's quote is matched to this project.
 		self.assertTrue(
@@ -334,7 +336,7 @@ class TestStartProjectWithPartner(IntegrationTestCase):
 
 	def test_another_project_goes_to_the_same_chat(self):
 		first = self.start()
-		second = self.start(project_name="Payroll")
+		second = self.start()
 		self.assertEqual(first["thread"], second["thread"])
 		self.assertNotEqual(first["project"]["name"], second["project"]["name"])
 
@@ -352,13 +354,16 @@ class TestStartProjectWithPartner(IntegrationTestCase):
 		self.assertRaises(frappe.ValidationError, self.start, partner=lonely)
 		self.assertEqual(frappe.db.count("Customer Project", {"user": BUYER}), before)
 
-	def test_a_project_needs_a_name(self):
-		self.assertRaises(frappe.ValidationError, self.start, project_name=" ")
+	def test_a_project_with_a_question_unanswered_is_not_sent(self):
+		before = frappe.db.count("Customer Project", {"user": BUYER})
+		with self.assertRaisesRegex(frappe.ValidationError, "budget range"):
+			self.start(budget="")
+		self.assertEqual(frappe.db.count("Customer Project", {"user": BUYER}), before)
 
 
 class TestContactWithExistingProject(IntegrationTestCase):
-	"""Contact on a partner for a customer who has projects: one of them goes to the partner,
-	with its brief asked for first when it has none."""
+	"""Connect on a partner for a customer who has projects: one of them goes to the partner,
+	with any answer it lacks asked for first."""
 
 	def setUp(self):
 		frappe.set_user("Administrator")
@@ -368,49 +373,53 @@ class TestContactWithExistingProject(IntegrationTestCase):
 		make_partner_admin(PARTNER, PARTNER_ADMIN)
 		make_buyer(BUYER, "Hiring Buyer Co")
 		frappe.set_user(BUYER)
-		self.project = save_project("Stock and accounts")["name"]
+		self.project = save_project(PROJECT_ANSWERS)["name"]
 		frappe.set_user("Administrator")
 
-	def send(self, as_user=BUYER, **brief):
+	def send(self, as_user=BUYER, answers=None):
 		frappe.set_user(as_user)
 		try:
-			return start_project_with_partner(PARTNER, project=self.project, **brief)
+			return start_project_with_partner(PARTNER, project=self.project, answers=answers)
 		finally:
 			frappe.set_user("Administrator")
 
-	def test_a_brief_given_here_is_kept_and_sent(self):
-		result = self.send(budget="₹5 to 15 lakh", description="We export cotton fabric to Europe.")
+	def test_a_saved_project_is_sent_as_it_is(self):
+		result = self.send()
 
 		project = frappe.get_doc("Customer Project", self.project)
 		self.assertEqual((project.status, project.shared_count), ("Shared", 1))
-		self.assertEqual((project.budget, project.description), ("₹5 to 15 lakh", "We export cotton fabric to Europe."))
 		card = frappe.db.get_value(
 			"Connect Message", {"thread": result["thread"], "message_type": "Requirement"}, "content"
 		)
 		self.assertEqual(frappe.parse_json(card)["budget"], "₹5 to 15 lakh")
 
-	def test_a_project_without_a_brief_is_not_sent(self):
-		with self.assertRaisesRegex(frappe.ValidationError, "budget range"):
+	def test_answers_given_here_are_kept_for_the_next_partner(self):
+		self.send(answers={**PROJECT_ANSWERS, "budget": "Over ₹40 lakh"})
+		self.assertEqual(frappe.db.get_value("Customer Project", self.project, "budget"), "Over ₹40 lakh")
+
+	def test_a_project_missing_an_answer_is_not_sent(self):
+		frappe.db.set_value("Customer Project", self.project, "description", "")
+		with self.assertRaisesRegex(frappe.ValidationError, "what you need"):
 			self.send()
 		self.assertFalse(frappe.db.exists("Project Quote", {"customer_project": self.project}))
 
 	def test_the_same_project_is_not_sent_to_a_partner_twice(self):
-		self.send(budget="₹5 to 15 lakh", description="We export cotton fabric to Europe.")
+		self.send()
 		with self.assertRaisesRegex(frappe.ValidationError, "already sent this project"):
 			self.send()
 
 	def test_a_project_waiting_on_a_hire_answer_is_not_sent(self):
 		frappe.db.set_value("Customer Project", self.project, "status", "Hiring")
 		with self.assertRaisesRegex(frappe.ValidationError, "Wait for their answer"):
-			self.send(budget="₹5 to 15 lakh", description="We export cotton fabric to Europe.")
+			self.send()
 
 	def test_a_disabled_partner_cannot_be_sent_a_project(self):
 		frappe.db.set_value("Partner", PARTNER, "enabled", 0)
 		with self.assertRaisesRegex(frappe.ValidationError, "can't take messages yet"):
-			self.send(budget="₹5 to 15 lakh", description="We export cotton fabric to Europe.")
+			self.send()
 
 	def test_someone_elses_project_is_refused(self):
 		other = "hiring.other.buyer@example.test"
 		make_buyer(other, "Other Buyer Co")
 		with self.assertRaises(frappe.PermissionError):
-			self.send(as_user=other, budget="₹5 to 15 lakh", description="Not theirs")
+			self.send(as_user=other)
