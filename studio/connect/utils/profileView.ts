@@ -62,7 +62,8 @@ export function useProfileView({ profile, stories, isEditing, selectedStoryIndus
 			offices: p.offices || [],
 			rate: p.hourly_rate ? `From ₹${Number(p.hourly_rate).toLocaleString("en-IN")}/hr` : "Not added yet",
 			industries: p.industry_badges || [],
-			apps: p.apps || [],
+			// The partner's own picks, then the apps their success stories name on frappe.io.
+			apps: [...new Set([...(p.apps || []), ...(p.story_apps || [])])],
 			migrations: p.migrations || [],
 		}
 	})

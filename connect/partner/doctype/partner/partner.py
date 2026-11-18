@@ -22,6 +22,7 @@ from connect.partner.industries import (
 	validate_industries,
 )
 from connect.partner.logo import attach_normalized_logos
+from connect.partner.story_apps import apps_from_stories, queue_missing_story_apps
 from connect.partner.story_image import queue_missing_story_images
 from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_membership
 from connect.partner.doctype.partner_tier.partner_tier import get_tier_order
@@ -166,6 +167,7 @@ class Partner(Document):
 		# background-fetches each success story's own frappe.io cover photo —
 		# never blocks this save, and no-ops for rows that already have one
 		queue_missing_story_images(self.get("success_stories"))
+		queue_missing_story_apps(self.get("success_stories"))
 
 
 def get_target_currency(country: str | None) -> str | None:
@@ -950,6 +952,8 @@ def get_partner_document(partner):
 	# the picked industries, each with the verified tick its success stories earn
 	doc["industry_badges"] = industry_badges(industries, doc.get("success_stories"))
 	doc["display_industries"] = industries
+	# shown with the partner's own apps, never used to match or filter partners
+	doc["story_apps"] = apps_from_stories(doc.get("success_stories"))
 	# adds client_logo_display per success story — a greyscale-normalized copy of
 	# the client logo where one has been built, else the original URL
 	attach_normalized_logos(doc.get("success_stories"))
@@ -1097,8 +1101,10 @@ _PROFILE_MULTISELECT_FIELDS = {
 	"delivery_options": "delivery_mode",
 }
 
-# cover_image too: a story without a frappe.io cover keeps the one it was given
-_STORY_FIELDS = ("client_name", "client_logo", "headline", "category", "url", "cover_image", "logo_position", "hide_logo")
+# cover_image and apps too: a saved story keeps what was fetched from its frappe.io page
+_STORY_FIELDS = (
+	"client_name", "client_logo", "headline", "category", "url", "cover_image", "apps", "logo_position", "hide_logo",
+)
 _FOUNDER_FIELDS = ("member_name", "designation", "bio", "photo")
 # Featured by Frappe: set by Frappe staff in the Desk, so not among the fields a partner saves.
 _FEATURE_FIELDS = ("title", "kind", "detail", "url", "image")
@@ -1167,6 +1173,7 @@ def get_my_profile(with_draft=False) -> dict:
 		"company_name": doc.company_name,
 		**{fieldname: doc.get(fieldname) for fieldname in _BUILDER_FIELDS},
 		"apps": [row.app for row in doc.apps],
+		"story_apps": apps_from_stories(stories),
 		"migrations": [row.migration_path for row in doc.migrations],
 		"served_countries": [row.country for row in doc.served_countries],
 		"delivery_options": [row.delivery_mode for row in doc.delivery_options],

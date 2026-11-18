@@ -59,7 +59,12 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 		for client in ("Refex", "Motovolt"):
 			partner.append(
 				"success_stories",
-				{"client_name": client, "headline": f"{client} story", "cover_image": f"/files/{client}.png"},
+				{
+					"client_name": client,
+					"headline": f"{client} story",
+					"cover_image": f"/files/{client}.png",
+					"apps": "ERPNext\nFrappe HR",
+				},
 			)
 		partner.save(ignore_permissions=True)
 
@@ -128,7 +133,7 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 		with self.assertRaises(frappe.PermissionError):
 			get_my_profile()
 
-	def test_admin_saves_gallery_and_keeps_story_covers(self):
+	def test_admin_saves_gallery_and_keeps_story_covers_and_apps(self):
 		frappe.set_user(ADMIN)
 		stories = get_my_profile()["success_stories"]
 		update_my_partner_profile(
@@ -142,6 +147,7 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 		profile = get_my_profile()
 		self.assertEqual([photo["image"] for photo in profile["photos"]], ["/files/team.png", "/files/office.png"])
 		self.assertEqual(profile["success_stories"][0]["cover_image"], "/files/Refex.png")
+		self.assertEqual(profile["story_apps"], ["ERPNext", "Frappe HR"])
 		self.assertEqual(profile["why_choose_them"], "We ship.")
 		self.assertEqual(profile["how_we_work"], "Weekly demos.")
 		self.assertEqual(profile["successful_implementation"], "Live in six weeks.")
