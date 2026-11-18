@@ -2,11 +2,13 @@
 // Contact on a partner, for a customer who already has projects: one of them goes to the
 // partner as their brief. A project with every answer shows what it says and is sent from
 // here; one missing any opens the project questions, filled in, to answer the rest and send.
+// Create new project, last in the list, opens the questions for a new one to this partner.
 // With no project yet, the page opens the project questions instead (partnerConnect.ts).
 import { computed, getCurrentInstance, ref, watch } from "vue"
 import { Button, Dialog, ErrorMessage, FormControl, LoadingIndicator, call } from "frappe-ui"
 import { DialogDescription } from "reka-ui"
 import { missingAnswers } from "@app/utils/projectDialog"
+import { GO_LIVE_OPTIONS } from "@app/utils/recommendation"
 import ProjectQuestionsDialog from "./ProjectQuestionsDialog.vue"
 
 const props = defineProps({
@@ -20,8 +22,8 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue"])
 
 const router = getCurrentInstance()?.appContext.config.globalProperties.$router
-const PROJECTS_ROUTE = "/projects"
 const MESSAGES_ROUTE = "/messaging"
+const NEW_PROJECT = "new"
 
 const picked = ref(null)
 // The picked project with every answer (get_project), to check and to fill the questions from.
@@ -30,13 +32,25 @@ const loading = ref(false)
 const sending = ref(false)
 const sendError = ref("")
 const answering = ref(false)
+// The questions open for this project, or for a new one (null).
+const answeringProject = ref(null)
 
 const partnerName = computed(() => props.partner?.partner_name || props.partner?.name || "")
-// A picker only when there is a choice: one project is just its name.
-const picking = computed(() => props.projects.length > 1)
-const projectOptions = computed(() => props.projects.map((p) => ({ label: p.project_title, value: p.project })))
-const pickedTitle = computed(() => props.projects.find((p) => p.project === picked.value)?.project_title || "")
+const projectOptions = computed(() => [
+	...props.projects.map((p) => ({ label: p.project_title, value: p.project })),
+	{ label: "Create new project", value: NEW_PROJECT },
+])
 const isComplete = computed(() => !!project.value && !Object.keys(missingAnswers(project.value)).length)
+// What the partner gets, as Pragati's design lists it.
+const details = computed(() => {
+	const current = project.value || {}
+	return [
+		{ label: "What you need", text: current.description, long: true },
+		{ label: "Apps", text: (current.apps || []).join(", ") },
+		{ label: "Budget", text: current.budget },
+		{ label: "Timeline", text: GO_LIVE_OPTIONS.find((o) => o.value === current.go_live)?.label },
+	].filter((row) => row.text)
+})
 
 // Reset on open, not on close, so the answers don't vanish while the dialog fades out.
 watch(
@@ -49,7 +63,14 @@ watch(
 	},
 	{ immediate: true },
 )
-watch(picked, loadProject)
+watch(picked, (value, previous) => {
+	if (value !== NEW_PROJECT) return loadProject()
+	// Not a project to show: the questions open for a new one, and the pick goes back.
+	picked.value = previous
+	answeringProject.value = null
+	close()
+	answering.value = true
+})
 
 function loadProject() {
 	project.value = null
@@ -65,12 +86,8 @@ function close() {
 	emit("update:modelValue", false)
 }
 
-function manage() {
-	close()
-	router?.push(PROJECTS_ROUTE)
-}
-
 function answerTheRest() {
+	answeringProject.value = project.value
 	close()
 	answering.value = true
 }
@@ -107,47 +124,18 @@ function send() {
 
 		<template v-if="partner && picked" #default>
 			<form novalidate @submit.prevent="isComplete ? send() : answerTheRest()">
-				<div v-if="picking" class="flex items-center justify-between gap-3">
-					<FormControl
-						v-model="picked"
-						class="min-w-0 flex-1"
-						type="select"
-						label="Project"
-						:options="projectOptions"
-					/>
-					<Button class="shrink-0 self-end" variant="ghost" size="sm" label="Manage" @click="manage">
-						<template #suffix><span class="lucide-arrow-up-right size-4" /></template>
-					</Button>
-				</div>
+				<FormControl v-model="picked" type="select" label="Project" :options="projectOptions" />
 
-				<dl :class="picking ? 'mt-4 space-y-2' : 'space-y-2'">
-					<!-- Manage fades in rather than appearing, so the name beside it never reflows. -->
-					<div v-if="!picking" class="group flex gap-6 text-p-base">
-						<dt class="w-32 shrink-0 text-ink-gray-5">Project</dt>
-						<dd class="flex min-w-0 items-center gap-1 font-medium text-ink-gray-8">
-							<span class="min-w-0">{{ pickedTitle }}</span>
-							<Button
-								class="-my-1 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
-								variant="ghost"
-								size="sm"
-								label="Manage"
-								@click="manage"
-							>
-								<template #suffix><span class="lucide-arrow-up-right size-4" /></template>
-							</Button>
+				<dl v-if="isComplete" class="mt-4 space-y-2">
+					<div v-for="row in details" :key="row.label" class="flex gap-6 text-p-base">
+						<dt class="w-32 shrink-0 text-ink-gray-5">{{ row.label }}</dt>
+						<dd
+							class="min-w-0 text-ink-gray-8"
+							:class="row.long ? 'line-clamp-3 whitespace-pre-line' : 'font-medium'"
+						>
+							{{ row.text }}
 						</dd>
 					</div>
-
-					<template v-if="isComplete">
-						<div class="flex gap-6 text-p-base">
-							<dt class="w-32 shrink-0 text-ink-gray-5">What you need</dt>
-							<dd class="line-clamp-3 min-w-0 whitespace-pre-line text-ink-gray-8">{{ project.description }}</dd>
-						</div>
-						<div class="flex gap-6 text-p-base">
-							<dt class="w-32 shrink-0 text-ink-gray-5">Budget</dt>
-							<dd class="font-medium text-ink-gray-8">{{ project.budget }}</dd>
-						</div>
-					</template>
 				</dl>
 
 				<div v-if="loading" class="mt-5 flex justify-center"><LoadingIndicator class="size-4 text-ink-gray-5" /></div>
@@ -174,5 +162,5 @@ function send() {
 		</template>
 	</Dialog>
 
-	<ProjectQuestionsDialog v-model="answering" :partner="partner" :project="project" />
+	<ProjectQuestionsDialog v-model="answering" :partner="partner" :project="answeringProject" />
 </template>
