@@ -299,6 +299,8 @@ def project_dict(doc: CustomerProject) -> dict:
 		"operations": doc.operations,
 		"systems": frappe.parse_json(doc.systems) or [],
 		"problems": frappe.parse_json(doc.problems) or [],
+		"industries": frappe.parse_json(doc.industries) or [],
+		"company_size": doc.company_size,
 		"criteria": normalize_criteria(frappe.parse_json(doc.criteria) or {}),
 		"shared_count": doc.shared_count or 0,
 		"brief_thread": first_brief_thread(doc.name),
