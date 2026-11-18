@@ -272,7 +272,8 @@ def requirement_fields(requirement):
 		(_("Work mode"), requirement.get("delivery_preference")),
 		(_("Current setup"), requirement.get("current_situation")),
 		(_("Budget"), requirement.get("budget")),
-		(_("What they need"), requirement.get("description")),
+		# A Starter Pack card names the pack bought instead of a description.
+		(_("What they need"), requirement.get("description") or requirement.get("looking_for")),
 	]
 	return [(label, value) for label, value in fields if value]
 
