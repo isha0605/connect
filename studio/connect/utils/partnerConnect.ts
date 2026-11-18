@@ -1,12 +1,12 @@
 // The Connect button on a partner's profile and on their directory and Shortlisted cards. A
 // customer with projects picks one in the Contact dialog (ContactPartnerDialog.vue); one with
-// none answers the New project dialog. Either way it goes to that partner
+// none answers the project questions (ProjectQuestionsDialog.vue). Either way it goes to that partner
 // (connect.api.projects.start_project_with_partner), then their chat in Messaging. A guest signs in on Connect's page first and comes back to the
 // same page with ?connect=<partner>, which opens the dialog; an account without a company (a
 // partner's) is told why it can't.
 //
-// The page spreads this into its setup() return and renders the Projects page's dialog blocks,
-// with {{ projectSaveLabel }} on the last button, and the ContactPartnerDialog block.
+// The page spreads this into its setup() return and renders the ProjectQuestionsDialog and
+// ContactPartnerDialog blocks.
 
 import { ref, watch } from "vue"
 import { projectDialog } from "@app/utils/projectDialog"
@@ -31,9 +31,7 @@ function isContactable(row) {
 export function partnerConnect(context) {
 	const { call, route, router, myContext, toast } = context
 
-	const dialog = projectDialog(context, {
-		onSaved: (project, thread) => router.push({ path: "/messaging", query: { thread } }),
-	})
+	const dialog = projectDialog()
 
 	const contactDialogOpen = ref(false)
 	const contactPartner = ref(null)
