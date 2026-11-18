@@ -2,8 +2,7 @@
 // /custom-implementation?project=CP-…, which is where the project questions land once shared.
 
 import { computed, h, onScopeDispose, ref } from "vue"
-import { EMPLOYEE_OPTIONS, OPERATION_OPTIONS, PROBLEM_OPTIONS, goLiveCriterion } from "@app/utils/recommendation"
-import { blankCriteria, orList, workCriterion } from "@app/utils/partnerCriteria"
+import { goLiveCriterion } from "@app/utils/recommendation"
 import { startTracking } from "@app/utils/tracking"
 import { tierSeal } from "@app/utils/tierSeal"
 
@@ -361,8 +360,6 @@ export default function setup(context) {
 		{ label: projectTitle.value },
 	])
 
-	// Who the brief went to (see @app/utils/partnerCriteria), for View requirements.
-	const savedCriteria = computed(() => ({ ...blankCriteria(), ...(project.value?.criteria || {}) }))
 
 	// ---- Choosing a partner, step 1 of 2 ----
 	const isShared = computed(() => !!project.value)
@@ -572,31 +569,14 @@ export default function setup(context) {
 		requirementsOpen.value = true
 	}
 
-	const labelIn = (options, value) => options.find((o) => o.value === value)?.label || ""
-	function andList(values) {
-		if (values.length <= 1) return values.join("")
-		return `${values.slice(0, -1).join(", ")} and ${values[values.length - 1]}`
+	// After an edit is sent: the new version, with its "Updated" line and the quotes' flags.
+	function onRequirementsUpdated(updated) {
+		project.value = updated
+		loadQuotes()
 	}
-
-	// The brief as partners got it: one row per answer, blank ones left out.
-	const requirementRows = computed(() => {
-		const current = project.value || {}
-		const c = savedCriteria.value
-		const place = c.cities.length ? c.cities : c.countries
-		const tier = c.tiers.length ? `${orList(c.tiers)} tier` : "Any tier"
-		const work = { "On premises": "on premises", Remote: "remote" }[workCriterion(c.work)]
-		const operations = labelIn(OPERATION_OPTIONS, current.operations)
-		const systems = (current.systems || []).length ? `You use ${andList(current.systems)}` : ""
-		const size = labelIn(EMPLOYEE_OPTIONS, current.company_size)
-		return [
-			{ label: "Budget", text: current.budget || "" },
-			{ label: "Timeline", text: current.go_live ? goLiveCriterion(current.go_live) : "" },
-			{ label: "Apps", text: andList(current.apps || []) },
-			{ label: "Today", text: [operations, systems].filter(Boolean).join(". ") },
-			{ label: "To solve", text: (current.problems || []).map((v) => labelIn(PROBLEM_OPTIONS, v)).filter(Boolean).join("\n") },
-			{ label: "Looking for", text: [tier, place.length ? `in ${orList(place)}` : "anywhere", work].filter(Boolean).join(", ") },
-			{ label: "Company", text: [andList(current.industries || []), size && `${size} employees`].filter(Boolean).join(" · ") },
-		].filter((row) => row.text)
+	const requirementsUpdatedLine = computed(() => {
+		const at = project.value?.requirements_updated_on
+		return at ? `Updated ${new Date(at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""
 	})
 
 	return {
@@ -684,6 +664,7 @@ export default function setup(context) {
 		openFeedback,
 		requirementsOpen,
 		viewRequirements,
-		requirementRows,
+		onRequirementsUpdated,
+		requirementsUpdatedLine,
 	}
 }
