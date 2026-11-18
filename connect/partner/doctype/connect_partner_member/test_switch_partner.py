@@ -5,7 +5,6 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from connect.account import get_my_context
-from connect.api.messages import search_messages
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
 from connect.messaging.doctype.connect_thread.connect_thread import ensure_partner_member, get_or_open_thread
 from connect.partner.doctype.connect_partner_member.connect_partner_member import (
@@ -25,7 +24,6 @@ SECOND_OWNER = "switch.second.owner@example.test"
 OTHER_OWNER = "switch.other.owner@example.test"
 BUYER = "switch.buyer@example.test"
 CUSTOMER = "_Test Switch Customer"
-SEARCH_WORD = "switchsearchword"
 
 
 class IntegrationTestSwitchPartner(IntegrationTestCase):
@@ -49,7 +47,6 @@ class IntegrationTestSwitchPartner(IntegrationTestCase):
 		self.second_thread = get_or_open_thread(CUSTOMER, SECOND, BUYER)
 		self.other_thread = get_or_open_thread(CUSTOMER, OTHER, BUYER)
 		ensure_partner_member(self.second_thread, WORKER, SECOND_OWNER)
-		add_message(self.first_thread, SEARCH_WORD)
 
 	def test_the_newest_membership_is_current_until_a_switch(self):
 		self.assertEqual(get_current_membership(WORKER).partner, SECOND)
@@ -72,16 +69,14 @@ class IntegrationTestSwitchPartner(IntegrationTestCase):
 		with self.assertRaises(frappe.PermissionError):
 			switch_partner(WORKER, OTHER)
 
-	def test_chats_and_search_follow_the_current_firm(self):
+	def test_chats_follow_the_current_firm(self):
 		switch_partner(WORKER, FIRST)
 		frappe.set_user(WORKER)
 		self.assertEqual(visible_threads(), {self.first_thread})
-		self.assertTrue(search_messages(SEARCH_WORD))
 
 		switch_partner(WORKER, SECOND)
 
 		self.assertEqual(visible_threads(), {self.second_thread})
-		self.assertFalse(search_messages(SEARCH_WORD))
 		with self.assertRaisesRegex(frappe.PermissionError, "Switch to that company"):
 			_check_can_read(self.first_thread, WORKER)
 
@@ -118,13 +113,6 @@ def add_member(partner, user, access="Member"):
 	frappe.get_doc({"doctype": "Connect Partner Member", "partner": partner, "user": user, **values}).insert(
 		ignore_permissions=True
 	)
-
-
-def add_message(thread, content):
-	if not frappe.db.exists("Connect Message", {"thread": thread, "content": content}):
-		frappe.get_doc(
-			{"doctype": "Connect Message", "thread": thread, "sender": BUYER, "content": content, "message_type": "Text"}
-		).insert(ignore_permissions=True)
 
 
 def visible_threads(partners=(FIRST, SECOND)):

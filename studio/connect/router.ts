@@ -21,8 +21,43 @@ function sendGuestToConnect(to) {
 	return false
 }
 
+// Each page's code is its own hashed file, and a deploy (or a local build) replaces them all. A tab
+// opened before it still asks for the old files when it moves to another page, gets a 404, and
+// Studio renders the page without its script: empty. Vite reports the failed file, so once the
+// navigation lands, reload into that page with the new build.
+const RELOADED_AT_KEY = "connect:reloaded-for-new-build"
+const RELOAD_GUARD_MS = 10_000
+let isPageFileMissing = false
+
+function noticeMissingPageFile() {
+	isPageFileMissing = true
+}
+
+function reloadIntoNewBuild(to) {
+	if (!isPageFileMissing || reloadedRecently()) return
+	isPageFileMissing = false
+	try {
+		sessionStorage.setItem(RELOADED_AT_KEY, String(Date.now()))
+	} catch {
+		// Without storage the guard can't hold, so don't risk a reload loop.
+		return
+	}
+	window.location.assign(`/${window.app_route}${to.fullPath}`)
+}
+
+// A file still missing right after a reload is really gone; reloading again wouldn't help.
+function reloadedRecently() {
+	try {
+		return Date.now() - Number(sessionStorage.getItem(RELOADED_AT_KEY) || 0) < RELOAD_GUARD_MS
+	} catch {
+		return true
+	}
+}
+
 export default {
 	setup(router) {
 		router.beforeEach(sendGuestToConnect)
+		window.addEventListener("vite:preloadError", noticeMissingPageFile)
+		router.afterEach(reloadIntoNewBuild)
 	},
 }
