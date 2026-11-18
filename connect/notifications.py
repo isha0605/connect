@@ -262,7 +262,10 @@ def _requirement_email_recipients(thread: str, partner: str) -> list[str]:
 def requirement_fields(requirement):
 	"""A Requirement card's answers as (label, value) pairs, leaving out the ones not given."""
 	apps = requirement.get("apps")
+	changes = requirement.get("changes")
 	fields = [
+		# An edit's card leads with what changed, so it doesn't read as a new requirement.
+		(_("Changed"), ", ".join(changes) if isinstance(changes, list) else changes),
 		(_("Company"), requirement.get("company_name")),
 		(_("Country"), requirement.get("country")),
 		(_("Industry"), requirement.get("industry")),
@@ -284,6 +287,11 @@ def _send_new_requirement_email(thread_name, customer, admin, content):
 	recipient = frappe.db.get_value("User", admin, "email") or admin
 	customer_name = (customer and frappe.db.get_value("Customer", customer, "customer_name")) or customer or anonymous_company()
 	requirement = frappe.parse_json(content) if content else {}
+	subject, intro = (
+		(_("{0} updated their requirements"), _("just updated their requirements on Connect."))
+		if requirement.get("update")
+		else (_("New requirement from {0}"), _("just sent a new requirement on Connect."))
+	)
 	details_html = "".join(
 		f"<p><b>{label}:</b> {frappe.utils.escape_html(value)}</p>" for label, value in requirement_fields(requirement)
 	)
@@ -292,9 +300,9 @@ def _send_new_requirement_email(thread_name, customer, admin, content):
 	try:
 		frappe.sendmail(
 			recipients=[recipient],
-			subject=_("New requirement from {0}").format(customer_name),
+			subject=subject.format(customer_name),
 			message=(
-				f"<p>{frappe.utils.escape_html(customer_name)} {_('just sent a new requirement on Connect.')}</p>"
+				f"<p>{frappe.utils.escape_html(customer_name)} {intro}</p>"
 				f"{details_html}"
 				f"<p><a href='{thread_url}'>{_('View conversation')}</a></p>"
 			),

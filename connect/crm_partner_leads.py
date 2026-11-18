@@ -112,7 +112,9 @@ def _briefs(leads: list[str]) -> dict[str, list[dict]]:
 		frappe.qb.from_(Quote)
 		.join(Project)
 		.on(Project.name == Quote.customer_project)
-		.select(Quote.lead, Project.project_name, Quote.status, Quote.amount, Quote.timeline_weeks)
+		.select(
+			Quote.lead, Project.project_name, Quote.status, Quote.amount, Quote.timeline_weeks, Quote.quoted_before_update
+		)
 		.where(Quote.lead.isin(leads))
 		.orderby(Quote.creation)
 		.run(as_dict=True)
@@ -178,6 +180,8 @@ def _brief_line(brief) -> str:
 		parts.append(fmt_money(brief.amount, currency="INR"))
 	if brief.timeline_weeks:
 		parts.append(_("{0} weeks").format(brief.timeline_weeks))
+	if brief.quoted_before_update:
+		parts.append(_("Quoted before the update"))
 	return f"{brief.project_name}: " + " · ".join(parts)
 
 
