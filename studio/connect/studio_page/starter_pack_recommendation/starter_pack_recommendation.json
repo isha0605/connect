@@ -38,70 +38,25 @@
         "display": "flex",
         "flexDirection": "row",
         "flexShrink": "0",
+        "height": "48px",
         "justifyContent": "space-between",
-        "padding": "16px 20px"
+        "paddingBottom": "0px",
+        "paddingLeft": "20px",
+        "paddingRight": "20px",
+        "paddingTop": "0px"
        },
        "children": [
         {
          "baseStyles": {
-          "color": "var(--ink-gray-8)",
-          "display": "{{ inProject ? 'none' : 'block' }}"
-         },
-         "componentId": "header-title",
-         "componentName": "TextBlock",
-         "componentProps": {
-          "fontSize": "text-lg",
-          "tag": "span",
-          "text": "Partners"
-         }
-        },
-        {
-         "baseStyles": {
-          "display": "{{ inProject ? 'flex' : 'none' }}"
+          "display": "flex"
          },
          "componentId": "rec-breadcrumbs",
          "componentName": "Breadcrumbs",
          "componentProps": {
-          "items": "{{ breadcrumbItems }}"
+          "items": "{{ inProject ? breadcrumbItems : [{ label: 'Partners' }] }}"
          }
         },
         {
-         "baseStyles": {
-          "alignItems": "center",
-          "cursor": "pointer",
-          "display": "{{ isGuest ? 'flex' : 'none' }}",
-          "flexDirection": "row",
-          "gap": "8px",
-          "padding": "6px 8px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-7)",
-            "whiteSpace": "nowrap"
-           },
-           "componentId": "header-login-label",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-base",
-            "tag": "span",
-            "text": "Log in or create account"
-           }
-          },
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-7)",
-            "flexShrink": "0",
-            "height": "16px",
-            "width": "16px"
-           },
-           "componentId": "header-login-arrow",
-           "componentName": "Icon",
-           "componentProps": {
-            "icon": "lucide-arrow-right"
-           }
-          }
-         ],
          "componentEvents": {
           "click": {
            "action": "Run Script",
@@ -109,9 +64,12 @@
            "script": "window.location.href = '/connect/login-signup-redesign?screen=login&next=' + encodeURIComponent(window.location.pathname + window.location.search);"
           }
          },
-         "componentId": "header-login",
-         "componentName": "container",
-         "originalElement": "div",
+         "componentId": "Button-vuu7pyu9u",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "Log in or create account",
+          "variant": "subtle"
+         },
          "visibilityCondition": "myContext.data?.user === 'Guest'"
         }
        ],
@@ -759,7 +717,7 @@
                "componentProps": {
                 "fontSize": "text-p-base",
                 "tag": "p",
-                "text": "We'd have pointed you at a scoped implementation instead — packs are ERPNext as it ships."
+                "text": "We'd have pointed you at a scoped implementation instead \u2014 packs are ERPNext as it ships."
                }
               },
               {
@@ -1421,7 +1379,7 @@
                          "componentProps": {
                           "fontSize": "text-p-base",
                           "tag": "span",
-                          "text": "•"
+                          "text": "\u2022"
                          },
                          "componentSlots": {}
                         },
@@ -1547,7 +1505,7 @@
                          "componentProps": {
                           "fontSize": "text-p-base",
                           "tag": "span",
-                          "text": "•"
+                          "text": "\u2022"
                          },
                          "componentSlots": {}
                         },
@@ -1761,7 +1719,7 @@
                "componentProps": {
                 "fontSize": "text-p-base",
                 "tag": "span",
-                "text": "Thanks — that helps us get the next one right."
+                "text": "Thanks \u2014 that helps us get the next one right."
                }
               }
              ],
@@ -1966,7 +1924,7 @@
          "componentProps": {
           "fontSize": "text-p-base",
           "tag": "span",
-          "text": "{{ scopePack ? scopePack.total_hours + ' hours · ' + scopePack.delivery_days + ' days to deliver' : '' }}"
+          "text": "{{ scopePack ? scopePack.total_hours + ' hours \u00b7 ' + scopePack.delivery_days + ' days to deliver' : '' }}"
          }
         },
         {
@@ -2022,7 +1980,8 @@
                  "componentName": "Icon",
                  "componentProps": {
                   "icon": "{{ moduleIcon(dataItem.module_name) }}"
-                 }
+                 },
+                 "componentSlots": {}
                 },
                 {
                  "baseStyles": {
@@ -2041,6 +2000,8 @@
                ],
                "componentId": "scope-module-head",
                "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
                "originalElement": "div"
               },
               {
@@ -2349,6 +2310,7 @@
              },
              "componentSlots": {
               "default": {
+               "parentBlockId": "proj-dlg-ops-list",
                "slotContent": [
                 {
                  "baseStyles": {
@@ -2367,7 +2329,8 @@
                  "componentProps": {
                   "label": "{{ dataItem.label }}",
                   "value": "{{ dataItem.value }}"
-                 }
+                 },
+                 "componentSlots": {}
                 }
                ],
                "slotId": "default",
@@ -2499,6 +2462,7 @@
            },
            "componentSlots": {
             "default": {
+             "parentBlockId": "proj-dlg-fix-list",
              "slotContent": [
               {
                "baseStyles": {
@@ -2521,7 +2485,8 @@
                 "modelValue": "{{ hasProblem(dataItem.value) }}",
                 "padded": true,
                 "size": "md"
-               }
+               },
+               "componentSlots": {}
               }
              ],
              "slotId": "default",
@@ -2808,7 +2773,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-18 18:00:00.000000",
+ "modified": "2026-11-18 16:07:03.186623",
  "modified_by": "Administrator",
  "name": "starter_pack_recommendation",
  "owner": "Administrator",

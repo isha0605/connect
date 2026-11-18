@@ -39,50 +39,46 @@
         "borderBottom": "1px solid var(--outline-gray-1)",
         "display": "flex",
         "flexDirection": "row",
+        "flexShrink": "0",
+        "height": "48px",
         "justifyContent": "space-between",
         "minHeight": "48px",
         "paddingBottom": "0px",
         "paddingLeft": "20px",
-        "paddingRight": "14px",
+        "paddingRight": "20px",
         "paddingTop": "0px"
        },
        "children": [
         {
-         "baseStyles": {
-          "color": "var(--ink-gray-9)",
-          "fontWeight": "500"
-         },
-         "componentId": "text-header-title",
-         "componentName": "TextBlock",
+         "componentId": "Breadcrumbs-idg2n53sv",
+         "componentName": "Breadcrumbs",
          "componentProps": {
-          "fontSize": "text-lg",
-          "tag": "span",
-          "text": "Get started"
-         },
-         "componentSlots": {}
+          "items": [
+           {
+            "label": "Get started"
+           }
+          ]
+         }
         },
         {
          "baseStyles": {
-          "display": "{{ myContext.fetched && !(myContext.data && (myContext.data.customer || myContext.data.partner)) ? 'flex' : 'none' }}",
-          "paddingBottom": "0px",
-          "paddingLeft": "6px",
-          "paddingRight": "6px",
-          "paddingTop": "0px"
+          "display": "{{ myContext.fetched && !(myContext.data && (myContext.data.customer || myContext.data.partner)) ? 'flex' : 'none' }}"
          },
          "componentEvents": {
           "click": {
            "action": "Run Script",
            "event": "click",
-           "script": "window.location.assign('/connect/login-signup-redesign?screen=login')"
+           "oldEvent": "click",
+           "script": "window.location.href = '/connect/login-signup-redesign?screen=login&next=' + encodeURIComponent(window.location.pathname + window.location.search);"
           }
          },
          "componentId": "header-login-btn",
          "componentName": "Button",
          "componentProps": {
-          "iconRight": "lucide-arrow-right",
+          "iconRight": "",
           "label": "Log in or create account",
           "theme": "gray",
-          "variant": "ghost"
+          "variant": "subtle"
          },
          "componentSlots": {},
          "visibilityCondition": "myContext.data?.user === 'Guest'"
@@ -2639,7 +2635,7 @@
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-11-12 18:30:00.000000",
+ "modified": "2026-11-18 16:07:03.065699",
  "modified_by": "doshi.maitri.mk@gmail.com",
  "name": "get_started",
  "owner": "Administrator",
