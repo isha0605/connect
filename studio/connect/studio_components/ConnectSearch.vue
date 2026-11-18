@@ -20,9 +20,7 @@ const PAGES = [
 	{ label: "Public profile", icon: "lucide-store", route: "/partner-listing" },
 	{ label: "Invoices", icon: "lucide-receipt", route: "/partner-invoicing" },
 ]
-// With nothing typed, each group shows a few rows; a query shows more of what matched.
-const ROWS_WITHOUT_QUERY = 5
-const ROWS_WITH_QUERY = 8
+const ROWS_PER_GROUP = 8
 
 const open = ref(false)
 const query = ref("")
@@ -37,17 +35,21 @@ const router = getCurrentInstance()?.appContext.config.globalProperties.$router
 const partner = computed(() => (props.context?.partner?.is_approved ? props.context.partner : null))
 const shortcut = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K"
 
+// Nothing typed: only the pages to go to. A query searches people, leads, customers and pages.
 const groups = computed(() => {
 	const text = query.value.trim().toLowerCase()
-	const limit = text ? ROWS_WITH_QUERY : ROWS_WITHOUT_QUERY
-	const matches = (...values) => !text || values.some((value) => (value || "").toLowerCase().includes(text))
+	if (!text) return numbered([{ title: "Go to", rows: pageRows() }])
+
+	const matches = (...values) => values.some((value) => (value || "").toLowerCase().includes(text))
 	const found = [
+		{ title: "People", rows: team.value.filter((m) => matches(m.full_name, m.user)).map(personRow) },
+		{ title: "Leads", rows: leads.value.filter((l) => matches(...leadText(l))).map(leadRow) },
+		{ title: "Customers", rows: customers.value.filter((c) => matches(c.company)).map(customerRow) },
 		{ title: "Pages", rows: pageRows().filter((row) => matches(row.label)) },
-		{ title: "People", rows: team.value.filter((m) => matches(m.full_name, m.user)).slice(0, limit).map(personRow) },
-		{ title: "Leads", rows: leads.value.filter((l) => matches(...leadText(l))).slice(0, limit).map(leadRow) },
-		{ title: "Customers", rows: customers.value.filter((c) => matches(c.company)).slice(0, limit).map(customerRow) },
-	].filter((group) => group.rows.length)
-	return numbered(found)
+	]
+	return numbered(
+		found.map((group) => ({ ...group, rows: group.rows.slice(0, ROWS_PER_GROUP) })).filter((group) => group.rows.length),
+	)
 })
 
 const rows = computed(() => groups.value.flatMap((group) => group.rows))
@@ -205,7 +207,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onShortcut))
 					aria-controls="connect-search-results"
 					:aria-expanded="true"
 					:aria-activedescendant="rows.length ? optionId(activeIndex) : undefined"
-					placeholder="Search pages, people, leads and customers"
+					placeholder="Search people, leads, customers and pages"
 					class="h-12 w-full border-0 bg-transparent px-0 text-base text-ink-gray-8 placeholder:text-ink-gray-4 focus:ring-0"
 					@keydown="onKeydown"
 				/>
@@ -234,7 +236,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onShortcut))
 					</button>
 				</section>
 
-				<div v-if="loading" class="flex justify-center py-4">
+				<div v-if="loading && query.trim()" class="flex justify-center py-4">
 					<LoadingIndicator class="size-4 text-ink-gray-5" />
 				</div>
 				<p v-else-if="!rows.length" class="px-3 py-6 text-center text-base text-ink-gray-5">
