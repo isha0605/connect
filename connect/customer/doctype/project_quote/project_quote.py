@@ -21,6 +21,8 @@ HIRE_STATUSES = ("Hire Requested", "Hired")
 FRAPPE_CRM_FIELDS = ("status", "amount", "timeline_weeks", "quoted_before_update")
 # A partner quotes, or changes their quote, until the customer answers it.
 QUOTABLE_STATUSES = ("Awaiting", "Quoted")
+# A quote with a figure the customer may still take: what an edit to the requirements flags.
+QUOTED_STATUSES = ("Quoted", "Interested")
 # A brief the partner may still win, which keeps its lead open when they decline another.
 OPEN_FOR_PARTNER_STATUSES = ("Awaiting", "Quoted", "Interested", "Hire Requested", "Hired")
 DECLINED_LOST_REASON = "Not taking new clients"
@@ -55,6 +57,9 @@ class ProjectQuote(Document):
 		if self.has_value_changed("status"):
 			self._check_hire_change()
 			record_answer(self)
+		# Set aside or hired: no longer a figure for the partner to confirm against an edit.
+		if self.status not in QUOTED_STATUSES:
+			self.quoted_before_update = 0
 
 	def on_update(self):
 		notify_quote_update(self)
@@ -101,7 +106,9 @@ class ProjectQuote(Document):
 	def is_quotable(self) -> bool:
 		"""Until the customer answers a quote, the partner can change it. After the customer edits
 		their requirements, a quote made before then can change too."""
-		return self.status in QUOTABLE_STATUSES or bool(self.quoted_before_update and self.status == "Interested")
+		if self.status in QUOTABLE_STATUSES:
+			return True
+		return bool(self.quoted_before_update and self.status == "Interested" and self._is_project_choosing())
 
 	def confirm_quote(self):
 		"""The partner's "Quote still stands" after the customer edited the requirements: the same
@@ -110,6 +117,8 @@ class ProjectQuote(Document):
 			frappe.throw(_("Only your firm's owners and sales can answer a brief."), frappe.PermissionError)
 		if not self.quoted_before_update:
 			frappe.throw(_("This quote already answers the latest requirements."))
+		if self.status not in QUOTED_STATUSES or not self._is_project_choosing():
+			frappe.throw(_("The customer has moved on from this quote, so it can't be confirmed now."))
 
 		self.quoted_before_update = 0
 		# Partners have no Desk write on briefs; the check above made sure this one is theirs.
@@ -118,6 +127,9 @@ class ProjectQuote(Document):
 		frappe.get_doc("Connect Thread", self.thread).post_system_message(
 			_("{0} confirmed their quote").format(partner_name)
 		)
+
+	def _is_project_choosing(self) -> bool:
+		return frappe.db.get_value("Customer Project", self.customer_project, "status") == "Shared"
 
 	def decline_brief(self):
 		"""The caller's "Not interested" on this brief, from the chat or the lead. It is final:
@@ -234,7 +246,7 @@ def quotable_briefs(thread: str) -> list[dict]:
 		.where(Quote.thread == thread)
 		.where(
 			Quote.status.isin(QUOTABLE_STATUSES)
-			| ((Quote.status == "Interested") & (Quote.quoted_before_update == 1))
+			| ((Quote.status == "Interested") & (Quote.quoted_before_update == 1) & (Project.status == "Shared"))
 		)
 		.orderby(Quote.creation)
 		.run(as_dict=True)

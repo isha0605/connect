@@ -6,7 +6,12 @@ from frappe.tests import IntegrationTestCase
 
 from connect.customer.doctype.customer_project.customer_project import share_requirements, update_requirements
 from connect.customer.doctype.customer_project.test_hiring import PROJECT_ANSWERS, make_buyer
-from connect.customer.doctype.customer_project.test_questions import BUYER, COMPANY, MATCHING, make_matching_partner
+from connect.customer.doctype.customer_project.test_questions import (
+	BUYER,
+	COMPANY,
+	MATCHING,
+	make_matching_partner,
+)
 
 PARTNER_ADMIN = "questions.partner.admin@example.test"
 
@@ -43,7 +48,9 @@ class TestRequirementsUpdate(IntegrationTestCase):
 		quote = frappe.get_doc("Project Quote", self.quote.name)
 		card = frappe.parse_json(frappe.db.get_value("Connect Message", quote.brief_message, "content"))
 		self.assertNotEqual(quote.brief_message, self.quote.brief_message)
-		self.assertEqual((card["update"], card["changes"], card["budget"]), (True, ["budget", "timeline"], "Over ₹40 lakh"))
+		self.assertEqual(
+			(card["update"], card["changes"], card["budget"]), (True, ["budget", "timeline"], "Over ₹40 lakh")
+		)
 		line = frappe.get_all(
 			"Connect Message", filters={"thread": quote.thread, "message_type": "System"}, pluck="content"
 		)
@@ -91,9 +98,37 @@ class TestRequirementsUpdate(IntegrationTestCase):
 		self.quoted()
 		self.update(description="We also need payroll.")
 		frappe.set_user(BUYER)
-		self.assertRaises(frappe.PermissionError, frappe.get_doc("Project Quote", self.quote.name).confirm_quote)
+		self.assertRaises(
+			frappe.PermissionError, frappe.get_doc("Project Quote", self.quote.name).confirm_quote
+		)
 
 	def test_requirements_are_locked_once_a_hire_is_asked(self):
 		frappe.db.set_value("Customer Project", self.project, "status", "Hiring")
 		with self.assertRaisesRegex(frappe.ValidationError, "choosing a partner"):
 			self.update(description="Too late")
+
+	def test_the_reply_says_how_many_got_it(self):
+		from connect.customer.doctype.customer_project.brief import get_update_recipients
+
+		recipients = len(get_update_recipients(self.project))
+		self.assertEqual(self.update(description="We also need payroll.")["update_sent_to"], recipients)
+		self.assertEqual(self.update(description="We also need payroll.")["update_sent_to"], 0)
+
+	def test_setting_a_quote_aside_clears_its_flag(self):
+		self.quoted()
+		self.update(description="We also need payroll.")
+		quote = frappe.get_doc("Project Quote", self.quote.name)
+		quote.status = "Not Interested"
+		quote.save(ignore_permissions=True)
+		self.assertFalse(frappe.db.get_value("Project Quote", self.quote.name, "quoted_before_update"))
+
+	def test_a_flagged_quote_waits_while_the_customer_hires(self):
+		self.quoted("Interested")
+		self.update(description="We also need payroll.")
+		frappe.db.set_value("Customer Project", self.project, "status", "Hiring")
+
+		frappe.set_user(PARTNER_ADMIN)
+		quote = frappe.get_doc("Project Quote", self.quote.name)
+		self.assertFalse(quote.is_quotable())
+		with self.assertRaisesRegex(frappe.ValidationError, "moved on"):
+			quote.confirm_quote()
