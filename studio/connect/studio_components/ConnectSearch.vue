@@ -213,7 +213,14 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onShortcut))
 				/>
 			</div>
 
-			<div id="connect-search-results" role="listbox" aria-label="Search results" class="max-h-[60vh] overflow-y-auto p-2">
+			<!-- Same thin scrollbar as the rest of Connect's scrolling lists. -->
+			<div
+				id="connect-search-results"
+				role="listbox"
+				aria-label="Search results"
+				class="max-h-[60vh] overflow-y-auto p-2"
+				style="scrollbar-width: thin; scrollbar-color: var(--outline-gray-3) transparent"
+			>
 				<section v-for="group in groups" :key="group.title" class="mb-2 last:mb-0">
 					<h3 class="px-3 pb-1 pt-2 text-sm text-ink-gray-5">{{ group.title }}</h3>
 					<button
