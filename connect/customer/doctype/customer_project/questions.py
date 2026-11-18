@@ -13,7 +13,12 @@ from connect.customer.doctype.customer_project.partner_matching import normalize
 TEXT_ANSWERS = ("go_live", "operations", "budget", "description")
 LIST_ANSWERS = ("regions", "work_modes", "systems", "problems")
 # Answers picked from answerOptions.json, which the form shows too.
-OPTION_ANSWERS = {"go_live": "go_live", "operations": "operations", "problems": "problems", "work_modes": "work"}
+OPTION_ANSWERS = {
+	"go_live": "go_live",
+	"operations": "operations",
+	"problems": "problems",
+	"work_modes": "work",
+}
 # The one operations answer with no systems to name.
 NO_SYSTEMS = "spreadsheets"
 
@@ -33,19 +38,20 @@ MISSING_ANSWER_MESSAGES = {
 
 
 def set_answers(doc, answers: dict) -> None:
-	"""Puts the form's answers on the project, and the company's on its Customer."""
+	"""Puts the given answers on the project, and the company's on its Customer. A question
+	left out keeps its answer, so a project that lacks a few can be given just those."""
 	for field in TEXT_ANSWERS:
-		doc.set(field, (answers.get(field) or "").strip())
+		if field in answers:
+			doc.set(field, (answers[field] or "").strip())
 	for field in LIST_ANSWERS:
-		doc.set(field, frappe.as_json(_clean_list(answers.get(field))))
+		if field in answers:
+			doc.set(field, frappe.as_json(_clean_list(answers[field])))
+	if "apps" in answers:
+		doc.set("apps", [{"app": app} for app in _clean_list(answers["apps"])])
 	if not uses_other_systems(doc.operations):
 		doc.systems = frappe.as_json([])
-	doc.set("apps", [{"app": app} for app in _clean_list(answers.get("apps"))])
-	_check_options(doc)
-
-	get_customer(doc).set_company_facts(
-		(answers.get("company_size") or "").strip(), _clean_list(answers.get("industries"))
-	)
+	check_options(doc)
+	_set_company_facts(get_customer(doc), answers)
 
 
 def check_answers(doc) -> None:
@@ -73,6 +79,7 @@ def set_criteria(doc, criteria: dict) -> None:
 	doc.regions = frappe.as_json(picked["countries"])
 	doc.work_modes = frappe.as_json(picked["work"])
 	doc.criteria = frappe.as_json({"cities": picked["cities"], "tiers": picked["tiers"]})
+	check_options(doc)
 
 
 def get_partner_criteria(doc) -> dict:
@@ -110,13 +117,20 @@ def uses_other_systems(operations: str | None) -> bool:
 	return bool(operations) and operations != NO_SYSTEMS
 
 
-def _check_options(doc) -> None:
+def check_options(doc) -> None:
+	"""Stops an answer that isn't one of the form's options, such as a go-live of "tomorrow"."""
 	for field, question in OPTION_ANSWERS.items():
 		value = doc.get(field)
 		values = frappe.parse_json(value) if field in LIST_ANSWERS else [value]
 		unknown = [item for item in values or [] if item and not answer_label(question, item)]
 		if unknown:
 			frappe.throw(_("{0} is not one of the answers.").format(", ".join(unknown)))
+
+
+def _set_company_facts(customer, answers: dict) -> None:
+	size = (answers.get("company_size") or "").strip() if "company_size" in answers else customer.company_size
+	industries = _clean_list(answers["industries"]) if "industries" in answers else customer.get_industries()
+	customer.set_company_facts(size, industries)
 
 
 def _clean_list(value) -> list[str]:

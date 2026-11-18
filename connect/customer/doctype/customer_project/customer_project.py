@@ -109,8 +109,8 @@ class CustomerProject(Document):
 		check_answers(self)
 
 	def _get_next_project_name(self) -> str:
-		"""Implementation for {company}, then (2), (3) for the same user. A deleted draft's number
-		is not used again, so old chats and quotes never share a name with a new project."""
+		"""Implementation for {company}, then (2), (3) for the same user: one more than the
+		highest number they have, so a deleted draft below it leaves its number unused."""
 		company = frappe.db.get_value("Customer", get_customer_for_user(self.user), "customer_name")
 		base = _("Implementation for {0}").format(company) if company else _("Implementation")
 		taken = frappe.get_all(
@@ -238,9 +238,9 @@ def share_requirements(name: str) -> dict:
 
 def save_criteria(name: str, criteria=None, go_live=None) -> dict:
 	doc = get_own_project(name)
-	set_criteria(doc, frappe.parse_json(criteria) or {})
 	if go_live is not None:
 		doc.go_live = go_live
+	set_criteria(doc, frappe.parse_json(criteria) or {})
 	doc.save(ignore_permissions=True)
 	return project_dict(doc)
 

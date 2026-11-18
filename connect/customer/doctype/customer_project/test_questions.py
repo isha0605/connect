@@ -50,10 +50,32 @@ class TestProjectQuestions(IntegrationTestCase):
 		self.save(company_size="51-200", industries=["Retail", "E-commerce"])
 
 		customer = frappe.get_doc("Customer", COMPANY)
-		self.assertEqual((customer.company_size, customer.get_industries()), ("51-200", ["Retail", "E-commerce"]))
+		self.assertEqual(
+			(customer.company_size, customer.get_industries()), ("51-200", ["Retail", "E-commerce"])
+		)
+
+	def test_answers_left_out_keep_what_was_saved(self):
+		project = self.save()["name"]
+
+		saved = save_project({"budget": "Over ₹40 lakh"}, project)
+
+		self.assertEqual(
+			(saved["budget"], saved["apps"], saved["go_live"]),
+			("Over ₹40 lakh", ["ERPNext"], "one_to_three_months"),
+		)
+		self.assertEqual((saved["company_size"], saved["industries"]), ("11-50", ["Retail"]))
+
+	def test_edit_criteria_refuses_an_unknown_go_live(self):
+		project = self.save()["name"]
+		with self.assertRaisesRegex(frappe.ValidationError, "not one of the answers"):
+			save_criteria(project, frappe.as_json({"countries": ["India"]}), go_live="tomorrow")
 
 	def test_every_question_must_be_answered(self):
-		for question, message in (("regions", "where your partners"), ("apps", "apps"), ("problems", "solve")):
+		for question, message in (
+			("regions", "where your partners"),
+			("apps", "apps"),
+			("problems", "solve"),
+		):
 			with self.subTest(question), self.assertRaisesRegex(frappe.ValidationError, message):
 				self.save(**{question: []})
 
@@ -70,13 +92,20 @@ class TestProjectQuestions(IntegrationTestCase):
 
 	def test_edit_criteria_keeps_regions_and_work_mode_as_answers(self):
 		project = self.save()["name"]
-		criteria = {"countries": ["Germany"], "work": ["onsite"], "industries": ["Healthcare"], "tiers": ["Gold"]}
+		criteria = {
+			"countries": ["Germany"],
+			"work": ["onsite"],
+			"industries": ["Healthcare"],
+			"tiers": ["Gold"],
+		}
 
 		saved = save_criteria(project, frappe.as_json(criteria))
 
 		self.assertEqual((saved["regions"], saved["work_modes"]), (["Germany"], ["onsite"]))
 		# Industries are the company's answer, so Edit criteria leaves them alone.
-		self.assertEqual((saved["criteria"]["industries"], saved["criteria"]["tiers"]), (["Retail"], ["Gold"]))
+		self.assertEqual(
+			(saved["criteria"]["industries"], saved["criteria"]["tiers"]), (["Retail"], ["Gold"])
+		)
 
 
 class TestAppMatching(IntegrationTestCase):
