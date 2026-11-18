@@ -47,11 +47,29 @@ const canChangeFacts = ref(true)
 const isGuest = ref(false)
 const regionOptions = ref([])
 const appOptions = ref([])
+// { app: logo url }, for the Apps list.
+const appLogos = ref({})
 
 const partnerName = computed(() => props.partner?.partner_name || props.partner?.name || "")
 const title = computed(() => (partnerName.value ? `New project for ${partnerName.value}` : "New project"))
 const sendLabel = computed(() => (partnerName.value ? `Send to ${partnerName.value}` : "Share requirements"))
 const usesOtherSystems = computed(() => needsSystems(answers.value.operations))
+// One choice, stored as the work modes it allows: either works is both.
+const WORK_CHOICES = [...WORK_OPTIONS, { label: "Either works", value: "either" }]
+const workChoice = computed({
+	get: () => {
+		const modes = answers.value.work_modes || []
+		return modes.length > 1 ? "either" : modes[0] || ""
+	},
+	set: (choice) => {
+		answers.value.work_modes = choice === "either" ? WORK_OPTIONS.map((o) => o.value) : choice ? [choice] : []
+	},
+})
+const descriptionNote = computed(() =>
+	partnerName.value
+		? `${partnerName.value} quotes from this, and sees your company details.`
+		: "Partners who match quote from this, without seeing your company name.",
+)
 const factsNote = computed(() =>
 	canChangeFacts.value ? "" : "Only your company's Owner or an Admin can change this.",
 )
@@ -91,7 +109,10 @@ function loadOptions() {
 		.then((countries) => (regionOptions.value = (countries || []).map((c) => ({ label: c, value: c }))))
 		.catch(() => {})
 	call("connect.api.partner.list_partner_filter_options")
-		.then((options) => (appOptions.value = (options?.apps || []).map((a) => ({ label: a, value: a }))))
+		.then((options) => {
+			appOptions.value = (options?.apps || []).map((a) => ({ label: a, value: a }))
+			appLogos.value = options?.app_logos || {}
+		})
 		.catch(() => {})
 }
 
@@ -252,7 +273,11 @@ function send() {
 						placeholder="Select"
 						required
 						:error="errors.apps"
-					/>
+					>
+						<template #item-prefix="{ item }">
+							<img v-if="appLogos[item.value]" :src="appLogos[item.value]" alt="" class="size-4 shrink-0 rounded-sm" />
+						</template>
+					</MultiSelect>
 					<FormControl
 						v-model="answers.go_live"
 						type="select"
@@ -262,10 +287,11 @@ function send() {
 						required
 						:error="errors.go_live"
 					/>
-					<MultiSelect
-						v-model="answers.work_modes"
+					<FormControl
+						v-model="workChoice"
+						type="select"
 						label="How do you want to work?"
-						:options="WORK_OPTIONS"
+						:options="WORK_CHOICES"
 						placeholder="Select"
 						required
 						:error="errors.work_modes"
@@ -324,12 +350,9 @@ function send() {
 						placeholder="What do you make or sell, who are your customers, how does it run today, what keeps going wrong, and what must it connect to or prove?"
 						:rows="6"
 						required
-						description="Partners quote from this, so the detail you add here comes back as accuracy."
+						:description="descriptionNote"
 						:error="errors.description"
 					/>
-					<p v-if="!partner" class="text-p-sm text-ink-gray-5">
-						It goes to every partner that matches. They see your answers and requirements, not your company name or contact details.
-					</p>
 					<ErrorMessage v-if="sendError" :message="sendError" />
 				</div>
 
