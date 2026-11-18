@@ -2698,6 +2698,58 @@
                            "componentSlots": {},
                            "originalElement": "div",
                            "visibilityCondition": "canAnswerBrief(dataItem)"
+                          },
+                          {
+                           "baseStyles": {
+                            "display": "flex",
+                            "flexWrap": "wrap",
+                            "gap": "8px",
+                            "marginTop": "12px"
+                           },
+                           "componentId": "message-quote-check-o",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div",
+                           "visibilityCondition": "canConfirmQuote(dataItem)",
+                           "children": [
+                            {
+                             "componentEvents": {
+                              "click": {
+                               "action": "Run Script",
+                               "event": "click",
+                               "script": "answerInterested(dataItem);"
+                              }
+                             },
+                             "componentId": "message-quote-redo-o",
+                             "componentName": "Button",
+                             "componentProps": {
+                              "label": "Send new quote",
+                              "disabled": "{{ confirmingQuote }}",
+                              "size": "sm",
+                              "variant": "subtle"
+                             },
+                             "componentSlots": {}
+                            },
+                            {
+                             "componentEvents": {
+                              "click": {
+                               "action": "Run Script",
+                               "event": "click",
+                               "script": "confirmQuote(dataItem);"
+                              }
+                             },
+                             "componentId": "message-quote-stands-o",
+                             "componentName": "Button",
+                             "componentProps": {
+                              "label": "Quote still stands",
+                              "loading": "{{ confirmingQuote }}",
+                              "size": "sm",
+                              "variant": "subtle"
+                             },
+                             "componentSlots": {}
+                            }
+                           ]
                           }
                          ],
                          "classes": [
@@ -15424,7 +15476,7 @@
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-11-18 23:30:00.000000",
+ "modified": "2026-11-19 10:00:00.000000",
  "modified_by": "tridots@example.com",
  "name": "messaging",
  "owner": "Administrator",

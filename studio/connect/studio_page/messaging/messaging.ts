@@ -1485,7 +1485,7 @@ export default function setup(context) {
 
 	function quoteCardTitle() {
 		const brief = chosenBrief()
-		const verb = brief.status === "Quoted" ? "Update quote" : "Quote"
+		const verb = brief.status === "Quoted" || brief.quoted_before_update ? "Update quote" : "Quote"
 		return quotableBriefs.value.length > 1 ? verb : `${verb} for ${brief.project_name || "this brief"}`
 	}
 
@@ -1559,6 +1559,29 @@ export default function setup(context) {
 		if (!brief) return
 		quoteOpen.value = true
 		selectQuoteBrief(brief.name)
+	}
+
+	// After the customer edits their requirements, a quote made before then waits on its
+	// partner: Send new quote redoes it, Quote still stands keeps the figure for the new version.
+	function canConfirmQuote(item) {
+		return Boolean(briefOfCard(item)?.quoted_before_update)
+	}
+
+	const confirmingQuote = ref(false)
+	function confirmQuote(item) {
+		const brief = briefOfCard(item)
+		if (!brief || confirmingQuote.value) return
+		confirmingQuote.value = true
+		call("connect.api.projects.confirm_quote", { quote: brief.name })
+			.then(() => {
+				toast.success("The customer has been told")
+				context.messages.reload()
+				loadQuotableBriefs()
+			})
+			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't save your answer. Try again."))
+			.finally(() => {
+				confirmingQuote.value = false
+			})
 	}
 
 	const showDeclineBriefDialog = ref(false)
@@ -3898,6 +3921,9 @@ export default function setup(context) {
 		canAnswerBrief,
 		answerInterested,
 		openDeclineBrief,
+		canConfirmQuote,
+		confirmQuote,
+		confirmingQuote,
 		showDeclineBriefDialog,
 		decliningBrief,
 		declineBrief,
