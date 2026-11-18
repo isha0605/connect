@@ -2,7 +2,8 @@
 // Settings (Profile, Users, Working hours, a customer's Company details and a partner admin's CRM
 // connection) for every page with the shared sidebar. The
 // sidebar's logo menu opens it with a "connect:open-settings" window event, so pages need no
-// script of their own for it. Same server calls as Messaging's own settings.
+// script of their own for it. Same server calls as Messaging's own settings. The event's `user`
+// (from the sidebar's search) opens the Users tab on that person.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import {
 	Avatar,
@@ -552,9 +553,18 @@ const heading = computed(() =>
 	tab.value === "users" ? { title: "Users", description: "" } : HEADINGS[tab.value] || HEADINGS.profile,
 )
 
+// The person search opened Users on: their row is highlighted and scrolled to once the team loads.
+const focusedUser = ref("")
+watch([team, focusedUser], () => {
+	if (!focusedUser.value) return
+	nextTick(() => document.querySelector(`[data-team-user="${CSS.escape(focusedUser.value)}"]`)?.scrollIntoView({ block: "center" }))
+})
+
 // ---- Opening ----
 function openSettings(event) {
 	tab.value = (event && event.detail && event.detail.tab) || "profile"
+	focusedUser.value = (event && event.detail && event.detail.user) || ""
+	teamQuery.value = ""
 	loadProfile()
 	loadTeam()
 	loadHours()
@@ -674,7 +684,7 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 							</TextInput>
 							<List :columns="['minmax(0,1fr)', 'auto', 'auto']" :row-height="56">
 								<ListRows :items="shownTeam" row-key="name" v-slot="{ item }">
-									<ListRow>
+									<ListRow :data-team-user="item.user" :class="item.user === focusedUser ? 'bg-surface-gray-2' : ''">
 										<ListCell>
 											<div class="flex min-w-0 items-center gap-3">
 												<Avatar :label="memberName(item)" :image="item.user_image" size="xl" class="shrink-0" />
