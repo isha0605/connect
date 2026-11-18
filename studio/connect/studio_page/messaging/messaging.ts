@@ -100,10 +100,7 @@ export default function setup(context) {
 	const showMediaDialog = ref(false)
 	const showTemplatesDialog = ref(false)
 	// ---- Profile settings popup (sidebar avatar) ----
-	// Two-pane popup, mirroring Raven's own profile settings — distinct from the pre-existing
-	// "Settings" SidebarItem above (which edits the customer's saved Requirement via
-	// settingsOpen/settingsCompanyName/etc., Studio Variables predating this .ts file's
-	// convention of declaring state here instead — left untouched, just named around).
+	// Two-pane popup, mirroring Raven's own profile settings.
 	// Profile is self-service rename; Users is a read-only roster of the caller's own company
 	// (customer or partner side — get_my_team auto-detects which).
 	const showProfileSettingsDialog = ref(false)
@@ -1660,17 +1657,19 @@ export default function setup(context) {
 		requirementDetailOpen.value = true
 	}
 
+	// The project questions' answers, in their order. Looking for is only on cards sent before
+	// they existed; what they need shows above these rows.
 	const REQUIREMENT_FIELD_LABELS = [
 		["company_name", "Company"],
 		["country", "Country"],
 		["industry", "Industry"],
-		["looking_for", "Looking for"],
-		["company_size", "Company size"],
-		["current_situation", "Current setup"],
-		["timeline", "Timeline"],
-		["delivery_preference", "Delivery"],
-		["budget", "Budget"],
+		["company_size", "Number of employees"],
 		["apps", "Apps"],
+		["timeline", "Go live"],
+		["delivery_preference", "Work mode"],
+		["current_situation", "Current setup"],
+		["budget", "Budget"],
+		["looking_for", "Looking for"],
 	]
 
 	function requirementFieldRows(req) {
@@ -1910,81 +1909,6 @@ export default function setup(context) {
 		} catch (e) {
 			toast.error("Could not download", { description: e.message })
 		}
-	}
-
-	// ---- Requirement draft (Contact Partner composer card) ----
-	// Landing on a brand-new thread via "Contact Partner" seeds this instead of auto-sending —
-	// same staged-before-send pattern as a file attachment: the customer reviews/edits it in a
-	// popup, and it only ever becomes a real message once Send is pressed.
-	const draftRequirement = ref(null)
-	const showRequirementPreviewDialog = ref(false)
-	const editCompanyName = ref("")
-	const editCountry = ref("")
-	const editIndustry = ref("")
-	const editLookingFor = ref("")
-	const editCompanySize = ref("")
-	const editCurrentSituation = ref("")
-	const editTimeline = ref("")
-	const editDeliveryPreference = ref("")
-	const editBudget = ref("")
-	const editAppsText = ref("")
-
-	async function fetchRequirementDraft() {
-		try {
-			const snapshot = await call("connect.api.threads.get_requirement_snapshot")
-			if (snapshot) draftRequirement.value = snapshot
-		} catch (e) {
-			// no saved requirement to prefill — composer just starts empty, same as before
-		}
-	}
-
-	function requirementDraftSummary() {
-		if (!draftRequirement.value) return ""
-		const req = draftRequirement.value
-		return [req.industry, req.looking_for].filter(Boolean).join(" · ") || "Tap to review"
-	}
-
-	function openRequirementPreview() {
-		if (!draftRequirement.value) return
-		const req = draftRequirement.value
-		editCompanyName.value = req.company_name || ""
-		editCountry.value = req.country || ""
-		editIndustry.value = req.industry || ""
-		editLookingFor.value = req.looking_for || ""
-		editCompanySize.value = req.company_size || ""
-		editCurrentSituation.value = req.current_situation || ""
-		editTimeline.value = req.timeline || ""
-		editDeliveryPreference.value = req.delivery_preference || ""
-		editBudget.value = req.budget || ""
-		editAppsText.value = (req.apps || []).join(", ")
-		showRequirementPreviewDialog.value = true
-	}
-
-	function closeRequirementPreview() {
-		showRequirementPreviewDialog.value = false
-	}
-
-	function saveRequirementDraftEdits() {
-		draftRequirement.value = {
-			company_name: editCompanyName.value.trim(),
-			country: editCountry.value.trim(),
-			industry: editIndustry.value.trim(),
-			looking_for: editLookingFor.value.trim(),
-			company_size: editCompanySize.value,
-			current_situation: editCurrentSituation.value.trim(),
-			timeline: editTimeline.value.trim(),
-			delivery_preference: editDeliveryPreference.value.trim(),
-			budget: editBudget.value.trim(),
-			apps: editAppsText.value
-				.split(",")
-				.map((a) => a.trim())
-				.filter(Boolean),
-		}
-		showRequirementPreviewDialog.value = false
-	}
-
-	function removeRequirementDraft() {
-		draftRequirement.value = null
 	}
 
 	// ---- Profile settings popup ----
@@ -2695,14 +2619,12 @@ export default function setup(context) {
 		}
 		const readyAttachments = draftAttachments.value.filter((a) => a.file_url)
 		const content = currentDraft().trim()
-		if (!content && !readyAttachments.length && !draftRequirement.value) return
+		if (!content && !readyAttachments.length) return
 
 		const thread = selectedThread.value
-		const requirementToSend = draftRequirement.value
 		const replyToSend = replyToMessage.value ? replyToMessage.value.name : null
 		setDraft("")
 		draftAttachments.value = []
-		draftRequirement.value = null
 		replyToMessage.value = null
 
 		try {
@@ -2719,9 +2641,6 @@ export default function setup(context) {
 					file_size: a.file_size,
 					silent: silentFlag,
 				})
-			}
-			if (requirementToSend) {
-				await call("connect.api.messages.send_message", { thread, requirement_data: requirementToSend })
 			}
 			context.messages.reload()
 			context.myThreads.reload()
@@ -3662,7 +3581,7 @@ export default function setup(context) {
 	// this race — its own resource fetch beats myThreads' reload to the client, so requiring
 	// it to already be *in* that list here would intermittently fall through to the "most
 	// recent" fallback instead (usually landing on the same thread by coincidence, since it
-	// IS the newest — but skipping the ?requirement=1 handling that only lives in this branch).
+	// IS the newest).
 	// selectThread() itself needs nothing but the name; it fetches everything else by thread.
 	// Placed here (right before return, not up near its own declaration) deliberately: with
 	// immediate:true this can fire selectThread() synchronously during setup()'s own execution,
@@ -3706,16 +3625,6 @@ export default function setup(context) {
 				}
 				if (requested) {
 					selectThread(requested)
-					// set by start_partner_thread's is_new_thread — a brand-new Contact-Partner thread
-					// seeds the composer with a reviewable Requirement draft instead of auto-sending one.
-					// Consumed once: stripped from the URL right after, so a later reload of this same
-					// link (or revisiting the thread) doesn't keep re-seeding an already-sent draft.
-					if (params.get("requirement") === "1") {
-						fetchRequirementDraft()
-						params.delete("requirement")
-						const newSearch = params.toString()
-						window.history.replaceState({}, "", window.location.pathname + (newSearch ? "?" + newSearch : ""))
-					}
 					return
 				}
 				// On phone-width screens the page opens on the thread list (master-detail), so skip
@@ -3818,23 +3727,6 @@ export default function setup(context) {
 		selectProfileSettingsSection,
 		saveMyProfile,
 		openProfileImagePicker,
-		draftRequirement,
-		showRequirementPreviewDialog,
-		editCompanyName,
-		editCountry,
-		editIndustry,
-		editLookingFor,
-		editCompanySize,
-		editCurrentSituation,
-		editTimeline,
-		editDeliveryPreference,
-		editBudget,
-		editAppsText,
-		requirementDraftSummary,
-		openRequirementPreview,
-		closeRequirementPreview,
-		saveRequirementDraftEdits,
-		removeRequirementDraft,
 		openFilePicker,
 		removeAttachment,
 		formatFileSize,
