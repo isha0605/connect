@@ -134,8 +134,19 @@ def send_project_events(project):
 
 	if project.status == "Completed" and project.has_value_changed("status"):
 		RequirementEvents(get_quote(project.hired_quote)).send_completed(project.completed_on or now_datetime())
-	if project.hire_reason and project.has_value_changed("hire_reason"):
-		RequirementEvents(get_quote(project.hired_quote)).send_hire_reason(project.hire_reason, now_datetime())
+	if project.has_value_changed("hire_reason") or project.has_value_changed("hire_note"):
+		before = project.get_doc_before_save()
+		already_sent = set(hire_reasons(before)) if before else set()
+		events = RequirementEvents(get_quote(project.hired_quote))
+		for reason in hire_reasons(project):
+			if reason not in already_sent:
+				events.send_hire_reason(reason, now_datetime())
+
+
+def hire_reasons(project) -> list[str]:
+	"""One reason per event, so the dashboard counts each; a written note counts as Other."""
+	reasons = (project.hire_reason or "").splitlines()
+	return reasons + ["Other"] if project.hire_note else reasons
 
 
 def send_review_event(review):

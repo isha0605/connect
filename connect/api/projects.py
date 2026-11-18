@@ -129,9 +129,9 @@ def respond_to_hire(quote, accept, reason=None):
 
 
 @frappe.whitelist(methods=["POST"])
-def set_hire_reason(name, reason=None):
+def set_hire_reason(name, reasons=None, note=None):
 	from connect.customer.doctype.customer_project.customer_project import set_hire_reason
-	return set_hire_reason(name, reason)
+	return set_hire_reason(name, reasons, note)
 
 
 @frappe.whitelist(methods=["POST"])

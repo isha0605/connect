@@ -35,6 +35,10 @@ OPEN_QUOTE_STATUSES = ("Quoted", "Interested")
 # Partners the brief went to who have no quote to show: still to answer, or not available.
 INVITED_QUOTE_STATUSES = ("Awaiting", "Partner Declined")
 
+# Why the customer chose their partner. The page's Other chip is the free-text `hire_note`.
+HIRE_REASONS = ("Price", "Timeline", "Their profile", "How they replied")
+HIRE_NOTE_LIMIT = 500
+
 # The quote statuses a hire request moves through, which only hiring.py sets.
 HIRE_QUOTE_STATUSES = ("Hire Requested", "Hire Declined", "Hired")
 
@@ -42,7 +46,7 @@ HIRE_QUOTE_STATUSES = ("Hire Requested", "Hire Declined", "Hired")
 # The project's status while its hire quote (Project Quote, which owns the hire) is in each state.
 HIRE_PROJECT_STATUSES = {"Hire Requested": "Hiring", "Hired": "Hired"}
 # What a freed project forgets about the hire it had.
-NO_HIRE = {"status": "Shared", "partner": None, "hired_quote": None, "hire_reason": "", "hire_requested_on": None}
+NO_HIRE = {"status": "Shared", "partner": None, "hired_quote": None, "hire_reason": "", "hire_note": "", "hire_requested_on": None}
 
 HOSTING_TASKS = ("fc-login", "fc-code", "fc-link")
 
@@ -306,6 +310,8 @@ def project_dict(doc: CustomerProject) -> dict:
 		"hired": hired_partner(doc),
 		"declined_hire": declined_hire(doc),
 		"hire_reason": doc.hire_reason,
+		"hire_reasons": list(HIRE_REASONS),
+		"hire_note_limit": HIRE_NOTE_LIMIT,
 		"done_tasks": frappe.parse_json(doc.done_tasks) or [],
 		**quote_counts(doc.name),
 	}
@@ -376,13 +382,22 @@ def set_quote_status(quote: str, status: str) -> dict:
 	return quote_counts(row.customer_project)
 
 
-def set_hire_reason(name: str, reason=None):
-	"""Why they picked this partner ("Why Tridots Tech?"). Skipping leaves it blank. The
-	field's Select options reject anything that isn't one of the reasons."""
+def set_hire_reason(name: str, reasons=None, note=None):
+	"""Why they picked this partner ("What made you choose them?"): any of HIRE_REASONS, one
+	per line, and a note for anything else. Done with nothing picked sends nothing."""
 	doc = get_own_project(name)
 	if not doc.partner:
 		frappe.throw(_("Hire a partner first."))
-	doc.hire_reason = reason or ""
+	reasons = frappe.parse_json(reasons) or []
+	if any(reason not in HIRE_REASONS for reason in reasons):
+		frappe.throw(_("Pick a reason from the list."))
+	note = (note or "").strip()
+	if len(note) > HIRE_NOTE_LIMIT:
+		frappe.throw(_("Keep the note under {0} characters.").format(HIRE_NOTE_LIMIT))
+
+	doc.hire_reason = "\n".join(reason for reason in HIRE_REASONS if reason in reasons)
+	doc.hire_note = note
+	# Only System Managers write projects; get_own_project checked the caller owns this one.
 	doc.save(ignore_permissions=True)
 
 
