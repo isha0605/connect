@@ -13,6 +13,7 @@ import {
 	Dialog,
 	Dropdown,
 	FormControl,
+	MultiSelect,
 	Spinner,
 	TextInput,
 	call,
@@ -362,7 +363,7 @@ const company = ref(blankCompany())
 const savingCompany = ref(false)
 
 function blankCompany() {
-	return { company_name: "", country: "", employees: "", industry: "", system: "", notes: "" }
+	return { company_name: "", country: "", employees: "", industries: [], system: "", canChangeFacts: true }
 }
 
 // A value saved before these lists (e.g. industry "Manufacturing") stays selected until it's changed.
@@ -375,27 +376,24 @@ function withSaved(options, value) {
 }
 const countryOptions = computed(() => withSaved(COUNTRY_OPTIONS, company.value.country))
 const employeeOptions = computed(() => withSaved(EMPLOYEE_OPTIONS, company.value.employees))
-const industryOptions = computed(() => withSaved(INDUSTRY_OPTIONS, company.value.industry))
 const systemOptions = computed(() => withSaved(SYSTEM_OPTIONS, company.value.system))
 
+// Kept on the Customer, which every project's questions start from. Once set, only the
+// Owner or an Admin can change the number of employees and industries.
 async function loadCompany() {
 	let saved = null
-	let context = null
 	try {
-		;[saved, context] = await Promise.all([
-			call("connect.api.customer.get_my_requirement"),
-			call("connect.api.account.get_my_context"),
-		])
+		saved = await call("connect.api.customer.get_company_details")
 	} catch (e) {
 		// An empty form still works.
 	}
 	company.value = {
-		company_name: (saved && saved.company_name) || context?.customer?.customer_name || "",
+		company_name: saved?.company_name || "",
 		country: saved?.country || "",
 		employees: saved?.company_size || "",
-		industry: saved?.industry || "",
-		system: saved?.current_situation || "",
-		notes: saved?.additional_notes || "",
+		industries: saved?.industries || [],
+		system: saved?.current_system || "",
+		canChangeFacts: saved ? saved.can_change_facts : true,
 	}
 }
 
@@ -404,14 +402,9 @@ async function saveCompany() {
 	savingCompany.value = true
 	try {
 		const c = company.value
-		// Only these fields: the rest of the Requirement (budget, timeline...) stays as it was.
-		await call("connect.api.customer.save_customer_requirement", {
-			country: c.country,
-			industry: c.industry,
-			company_size: c.employees,
-			current_situation: c.system,
-			additional_notes: c.notes.trim(),
-		})
+		const details = { country: c.country, company_size: c.employees, industries: c.industries, current_system: c.system }
+		const saved = await call("connect.api.customer.save_company_details", { details: JSON.stringify(details) })
+		company.value = { ...company.value, canChangeFacts: saved.can_change_facts }
 		toast.success("Your company details have been saved.")
 	} catch (e) {
 		toast.error(errorText(e, "Could not save. Please try again."))
@@ -770,11 +763,32 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 							<FormControl v-model="company.country" class="min-w-0 flex-1" label="Country" type="combobox" :options="countryOptions" placeholder="Select" size="md" variant="outline" />
 						</div>
 						<div class="mb-[14px] flex flex-col gap-3 sm:flex-row">
-							<FormControl v-model="company.employees" class="min-w-0 flex-1" label="Number of employees" type="select" :options="employeeOptions" placeholder="Select" size="md" variant="outline" />
-							<FormControl v-model="company.industry" class="min-w-0 flex-1" label="Industry" type="combobox" :options="industryOptions" placeholder="Select" size="md" variant="outline" />
+							<FormControl
+								v-model="company.employees"
+								class="min-w-0 flex-1"
+								label="Number of employees"
+								type="select"
+								:options="employeeOptions"
+								placeholder="Select"
+								size="md"
+								variant="outline"
+								:disabled="!company.canChangeFacts"
+							/>
+							<MultiSelect
+								v-model="company.industries"
+								class="min-w-0 flex-1"
+								label="Industries"
+								:options="INDUSTRY_OPTIONS"
+								placeholder="Select"
+								size="md"
+								variant="outline"
+								:disabled="!company.canChangeFacts"
+							/>
 						</div>
-						<FormControl v-model="company.system" class="mb-[14px]" label="What do you use today?" type="select" :options="systemOptions" placeholder="Select" size="md" variant="outline" />
-						<FormControl v-model="company.notes" label="Anything partners should know?" type="textarea" :rows="3" placeholder="For example, GST invoicing or tracking stock across two shops" size="md" variant="outline" />
+						<p v-if="!company.canChangeFacts" class="-mt-2 mb-[14px] text-p-sm text-ink-gray-5">
+							Only your company's Owner or an Admin can change the number of employees or industries.
+						</p>
+						<FormControl v-model="company.system" label="What do you use today?" type="select" :options="systemOptions" placeholder="Select" size="md" variant="outline" />
 						<div class="mt-5 flex justify-end">
 							<Button label="Save" icon-left="lucide-check" :loading="savingCompany" @click="saveCompany" />
 						</div>
