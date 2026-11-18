@@ -888,6 +888,7 @@ def list_partner_filter_options():
 		"implementation_types": frappe.get_all("Implementation Type", pluck="title", order_by="title"),
 		"languages": frappe.get_all("FC Language", pluck="title", order_by="title"),
 		"apps": frappe.get_all("App", pluck="title", order_by="title"),
+		"app_logos": dict(frappe.get_all("App", fields=["title", "logo"], filters={"logo": ["is", "set"]}, as_list=True)),
 		"migration_paths": frappe.get_all("Migration Path", pluck="title", order_by="title"),
 	}
 
