@@ -28,12 +28,16 @@ STATUS_TIMESTAMPS = {"Shared": "shared_on", "Hired": "hired_on", "Completed": "c
 # Paying states a Starter Pack Order stays a project in (mirrors my_orders()).
 PAID = ("Paid", "Partially Refunded", "Refunded")
 
-# Quoted is a reply nobody has decided on yet ("Others" on the project page), Interested is
-# shortlisted, and Not Interested drops out of both lists (Undo puts it back).
+# Quoted is a reply nobody has decided on yet, Interested has the customer's details shared,
+# and Not Interested is set aside (Restore puts it back).
 QUOTE_STATUSES = ("Quoted", "Interested", "Not Interested")
 OPEN_QUOTE_STATUSES = ("Quoted", "Interested")
 # Partners the brief went to who have no quote to show: still to answer, or not available.
 INVITED_QUOTE_STATUSES = ("Awaiting", "Partner Declined")
+
+# Why the customer chose their partner. The page's Other chip is the free-text `hire_note`.
+HIRE_REASONS = ("Price", "Timeline", "Their profile", "How they replied")
+HIRE_NOTE_LIMIT = 500
 
 # The quote statuses a hire request moves through, which only hiring.py sets.
 HIRE_QUOTE_STATUSES = ("Hire Requested", "Hire Declined", "Hired")
@@ -42,7 +46,7 @@ HIRE_QUOTE_STATUSES = ("Hire Requested", "Hire Declined", "Hired")
 # The project's status while its hire quote (Project Quote, which owns the hire) is in each state.
 HIRE_PROJECT_STATUSES = {"Hire Requested": "Hiring", "Hired": "Hired"}
 # What a freed project forgets about the hire it had.
-NO_HIRE = {"status": "Shared", "partner": None, "hired_quote": None, "hire_reason": "", "hire_requested_on": None}
+NO_HIRE = {"status": "Shared", "partner": None, "hired_quote": None, "hire_reason": "", "hire_note": "", "hire_requested_on": None, "live_on": None}
 
 HOSTING_TASKS = ("fc-login", "fc-code", "fc-link")
 
@@ -295,6 +299,8 @@ def project_dict(doc: CustomerProject) -> dict:
 		"operations": doc.operations,
 		"systems": frappe.parse_json(doc.systems) or [],
 		"problems": frappe.parse_json(doc.problems) or [],
+		"industries": frappe.parse_json(doc.industries) or [],
+		"company_size": doc.company_size,
 		"criteria": normalize_criteria(frappe.parse_json(doc.criteria) or {}),
 		"shared_count": doc.shared_count or 0,
 		"brief_thread": first_brief_thread(doc.name),
@@ -306,6 +312,11 @@ def project_dict(doc: CustomerProject) -> dict:
 		"hired": hired_partner(doc),
 		"declined_hire": declined_hire(doc),
 		"hire_reason": doc.hire_reason,
+		"hire_reasons": list(HIRE_REASONS),
+		"hire_note_limit": HIRE_NOTE_LIMIT,
+		"hired_on": with_timezone(doc.hired_on),
+		"live_on": with_timezone(doc.live_on),
+		"completed_on": with_timezone(doc.completed_on),
 		"done_tasks": frappe.parse_json(doc.done_tasks) or [],
 		**quote_counts(doc.name),
 	}
@@ -335,8 +346,8 @@ def quote_counts(project: str) -> dict:
 
 
 def list_quotes(name: str) -> list[dict]:
-	"""The project's quotes for the Interested / Others lists, cheapest first, and the invited
-	partners who have not quoted, for the Invited list below Others."""
+	"""The project's quotes, cheapest first, including those set aside as Not Interested, and
+	the invited partners who have not quoted, listed below the quotes."""
 	doc = get_own_project(name)
 	Quote = frappe.qb.DocType("Project Quote")
 	Partner = frappe.qb.DocType("Partner")
@@ -346,10 +357,12 @@ def list_quotes(name: str) -> list[dict]:
 		.on(Partner.name == Quote.partner)
 		.select(
 			Quote.name, Quote.partner, Quote.thread, Quote.status, Quote.amount, Quote.timeline_weeks, Quote.note,
-			Partner.partner_name, Partner.tier, Partner.city, Partner.logo, Partner.verification_status,
+			Quote.quoted_on,
+			Partner.partner_name, Partner.tier, Partner.city, Partner.country, Partner.logo,
+			Partner.verification_status,
 		)
 		.where(Quote.customer_project == doc.name)
-		.where(Quote.status.isin(OPEN_QUOTE_STATUSES + INVITED_QUOTE_STATUSES))
+		.where(Quote.status.isin(QUOTE_STATUSES + INVITED_QUOTE_STATUSES))
 		.orderby(Quote.amount, order=Order.asc)
 		.run(as_dict=True)
 	)
@@ -374,13 +387,22 @@ def set_quote_status(quote: str, status: str) -> dict:
 	return quote_counts(row.customer_project)
 
 
-def set_hire_reason(name: str, reason=None):
-	"""Why they picked this partner ("Why Tridots Tech?"). Skipping leaves it blank. The
-	field's Select options reject anything that isn't one of the reasons."""
+def set_hire_reason(name: str, reasons=None, note=None):
+	"""Why they picked this partner ("What made you choose them?"): any of HIRE_REASONS, one
+	per line, and a note for anything else. Done with nothing picked sends nothing."""
 	doc = get_own_project(name)
 	if not doc.partner:
 		frappe.throw(_("Hire a partner first."))
-	doc.hire_reason = reason or ""
+	reasons = frappe.parse_json(reasons) or []
+	if any(reason not in HIRE_REASONS for reason in reasons):
+		frappe.throw(_("Pick a reason from the list."))
+	note = (note or "").strip()
+	if len(note) > HIRE_NOTE_LIMIT:
+		frappe.throw(_("Keep the note under {0} characters.").format(HIRE_NOTE_LIMIT))
+
+	doc.hire_reason = "\n".join(reason for reason in HIRE_REASONS if reason in reasons)
+	doc.hire_note = note
+	# Only System Managers write projects; get_own_project checked the caller owns this one.
 	doc.save(ignore_permissions=True)
 
 
@@ -400,6 +422,10 @@ def complete_project(name: str) -> dict:
 	doc = get_own_project(name)
 	if doc.status != "Hired":
 		frappe.throw(_("Only a project with a partner can be completed."))
+	# The partner says when it is built; the customer confirms. Ending it earlier would ask
+	# for a review of work that hasn't been delivered.
+	if not doc.live_on:
+		frappe.throw(_("Your partner hasn't marked this project live yet."))
 	doc.status = "Completed"
 	doc.save(ignore_permissions=True)
 	return project_dict(doc)

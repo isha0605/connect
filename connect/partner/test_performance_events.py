@@ -67,20 +67,41 @@ class IntegrationTestPartnerPerformanceEvents(IntegrationTestCase):
 		self.quote.update({"status": "Quoted", "amount": 500000, "timeline_weeks": 8})
 		self.quote.save(ignore_permissions=True)
 
+	def test_saving_hire_reasons_again_sends_only_the_new_ones(self):
+		self.quote_it()
+		self.as_user(BUYER, hire_partner, self.quote.name)
+		self.as_user(BUYER, set_hire_reason, self.project.name, '["Price"]')
+		self.as_user(BUYER, set_hire_reason, self.project.name, '["Price", "Timeline"]')
+
+		reasons = [row["hire_reason"] for row in self.sent()["partner_hire_reason_given"]]
+		self.assertEqual(reasons, ["Price", "Timeline"])
+
+	def test_a_hire_reason_outside_the_list_is_rejected(self):
+		self.quote_it()
+		self.as_user(BUYER, hire_partner, self.quote.name)
+
+		self.assertRaises(
+			frappe.ValidationError, self.as_user, BUYER, set_hire_reason, self.project.name, '["Luck"]'
+		)
+		self.assertFalse(frappe.db.get_value("Customer Project", self.project.name, "hire_reason"))
+
 	def test_a_requirement_s_journey_sends_one_event_per_step(self):
 		self.quote_it()
 		self.quote.reload()
 		self.quote.status = "Interested"
 		self.quote.save(ignore_permissions=True)
 		self.as_user(BUYER, hire_partner, self.quote.name)
-		self.as_user(BUYER, set_hire_reason, self.project.name, "Price")
+		self.as_user(BUYER, set_hire_reason, self.project.name, '["Timeline", "Price"]', "They knew our industry")
 		self.as_user(ADMIN, respond_to_hire, self.quote.name, 1)
+		frappe.db.set_value("Customer Project", self.project.name, "live_on", now_datetime())
 		self.as_user(BUYER, complete_project, self.project.name)
 		self.as_user(BUYER, submit_partner_review, PARTNER, 5, "Smooth", "Smooth rollout.")
 
 		sent = self.sent()
 		self.assertEqual(sent["partner_requirement_answered"][0]["answer"], "Accepted")
-		self.assertEqual(sent["partner_hire_reason_given"][0]["hire_reason"], "Price")
+		# One event per reason, so the dashboard counts each; the note counts as Other.
+		reasons = [row["hire_reason"] for row in sent["partner_hire_reason_given"]]
+		self.assertEqual(reasons, ["Price", "Timeline", "Other"])
 		review = sent["partner_reviewed"][0]
 		self.assertEqual((review["rating"], review["verification"], review["is_hidden"]), (5, "Hired on Connect", 0))
 		for event in ("partner_requirement_received", "partner_hired", "partner_project_completed"):

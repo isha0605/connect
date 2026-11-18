@@ -39,9 +39,10 @@ export default function setup(context) {
 		return at.toLocaleDateString("en-US", options)
 	}
 
-	// A saved draft opens on whichever page its answers recommended.
+	// A shared project opens on its quotes; a saved draft on the page its answers recommended.
 	const dialog = projectDialog(context, {
-		onSaved: (project) => router.push(projectPath({ kind: "project", project: project.name, verdict: project.verdict })),
+		onSaved: (project) =>
+			router.push(projectPath({ kind: "project", project: project.name, verdict: project.verdict, status: project.status })),
 	})
 
 	// Older links sent "Change my answers" here as /projects?edit=CP-…; still honoured.

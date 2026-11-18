@@ -26,6 +26,16 @@ class PartnerCustomer(Document):
 		if not self.is_new() and self.has_value_changed("stage"):
 			self._validate_stage_change()
 
+	def on_update(self):
+		if not self.has_value_changed("stage"):
+			return
+		from connect.customer.doctype.customer_project import going_live
+
+		if self.stage == "Live":
+			going_live.mark_projects_live(self)
+		elif self.get_doc_before_save() and self.get_doc_before_save().stage == "Live":
+			going_live.unmark_projects_live(self)
+
 	def is_linked(self) -> bool:
 		return self.stage != WANTS_TO_LINK
 
@@ -42,10 +52,16 @@ class PartnerCustomer(Document):
 
 def add_won_customer(quote) -> str:
 	"""The partner's customer record for the customer whose lead they just won, made the first
-	time. A customer who hires them again keeps the record they already have."""
+	time. A customer who hires them again keeps the record they already have; one that was Live
+	goes back to Onboarding, since the new project still has to be built and marked live."""
 	customer = frappe.db.get_value("Connect Thread", quote.thread, "customer")
 	existing = frappe.db.get_value("Partner Customer", {"partner": quote.partner, "customer": customer}, "name")
 	if existing:
+		record = frappe.get_doc("Partner Customer", existing)
+		if record.stage == "Live":
+			record.stage = "Onboarding"
+			# A system step on the partner accepting the hire; Activity reads the Version history.
+			record.save(ignore_permissions=True, ignore_version=False)
 		return existing
 	# A system step on the partner accepting the hire; neither side writes this record directly.
 	return (

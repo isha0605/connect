@@ -5,7 +5,7 @@
 // The partner count is live (count_matching_partners). "Share requirements" keeps the
 // budget and brief on the project — nothing messages partners yet, and the page says so.
 
-import { computed, onScopeDispose, ref } from "vue"
+import { computed, h, onScopeDispose, ref } from "vue"
 import {
 	BUDGET_OPTIONS,
 	CUSTOM_HOW_IT_WORKS,
@@ -19,6 +19,7 @@ import {
 import { isProjectSent, projectDialog, projectPath } from "@app/utils/projectDialog"
 import { blankCriteria, criteriaSummary, orList, partnerCriteria, workCriterion } from "@app/utils/partnerCriteria"
 import { startTracking } from "@app/utils/tracking"
+import { tierSeal } from "@app/utils/tierSeal"
 
 export default function setup(context) {
 	startTracking(context)
@@ -36,6 +37,13 @@ export default function setup(context) {
 	const onCompactChange = (event) => (isCompact.value = event.matches)
 	compactQuery.addEventListener("change", onCompactChange)
 	onScopeDispose(() => compactQuery.removeEventListener("change", onCompactChange))
+
+	// Below 640px a quote row has two columns: the price moves under the city, and Message into More.
+	const narrowQuery = window.matchMedia("(max-width: 639px)")
+	const isNarrow = ref(narrowQuery.matches)
+	const onNarrowChange = (event) => (isNarrow.value = event.matches)
+	narrowQuery.addEventListener("change", onNarrowChange)
+	onScopeDispose(() => narrowQuery.removeEventListener("change", onNarrowChange))
 
 	let projectName = String(route.query.project || "")
 	const project = ref(null)
@@ -60,56 +68,99 @@ export default function setup(context) {
 			})
 	}
 
-	// ---- Quotes: partners' replies to the shared brief ----
-	// Others are replies not decided on yet; Interested is the shortlist. Not interested
-	// drops a partner from both, with an Undo. Below Others, Invited lists the partners who
-	// got the brief and have no quote to show: still to answer, or not available.
+	// ---- Hire a Partner: every quote in one list, narrowed by a filter ----
+	// Share details (Interested) tells the partner who the customer is; Not interested sets a
+	// quote aside, with Restore. Partners who got the brief and have not quoted follow the quotes.
 	const INVITED_STATUS_LABELS = {
-		// The heading already says they have not quoted, so their row shows their city instead.
 		Awaiting: "",
 		"Partner Declined": "Not available to take on new clients",
 	}
 	const quotes = ref([])
-	const quoteTab = ref("interested")
-	let hasChosenTab = false
+	const quotesLoaded = ref(false)
 	function loadQuotes() {
 		if (!projectName) return
 		call("connect.api.projects.list_quotes", { name: projectName })
 			.then((rows) => {
 				quotes.value = rows || []
-				// With nobody shortlisted yet, Others is where there is something to read.
-				if (!hasChosenTab && !interestedQuotes.value.length) quoteTab.value = "others"
-				hasChosenTab = true
+				quotesLoaded.value = true
 			})
 			.catch(() => {})
 	}
-	const interestedQuotes = computed(() => quotes.value.filter((q) => q.status === "Interested"))
-	const otherQuotes = computed(() => quotes.value.filter((q) => q.status === "Quoted"))
+
+	// With no column chosen, quotes keep the order they arrived in, shared ones first: arrival
+	// order is neutral and rewards replying promptly, where a tier-first order favours a few firms.
+	const SORTS = [
+		{ key: null, label: "Arrived first" },
+		{ key: "quote", label: "Lowest quote" },
+		{ key: "timeline", label: "Shortest timeline" },
+		{ key: "partner", label: "Partner A–Z" },
+	]
+	const COMPARE = {
+		partner: (a, b) => (a.partner_name || "").localeCompare(b.partner_name || ""),
+		quote: (a, b) => a.amount - b.amount,
+		timeline: (a, b) => a.timeline_weeks - b.timeline_weeks || a.amount - b.amount,
+	}
+	const sortKey = ref(null)
+	const sortLabel = computed(() => SORTS.find((option) => option.key === sortKey.value).label)
+	const sortOptions = computed(() =>
+		SORTS.map((option) => ({
+			label: option.label,
+			selected: sortKey.value === option.key,
+			onClick: () => (sortKey.value = option.key),
+		})),
+	)
+	// A quote with no date yet sorts after the dated ones.
+	const quotedAt = (row) => (row.quoted_on ? new Date(row.quoted_on).getTime() : Infinity)
+	const arrivedFirst = (a, b) =>
+		(a.status === "Interested" ? 0 : 1) - (b.status === "Interested" ? 0 : 1) || quotedAt(a) - quotedAt(b)
+
+	const VIEWS = {
+		all: { label: "All quotes", match: (row) => row.status !== "Not Interested" },
+		shared: { label: "Details shared", match: (row) => row.status === "Interested" },
+		declined: { label: "Not interested", match: (row) => row.status === "Not Interested" },
+	}
+	const EMPTY_VIEWS = {
+		all: { icon: "lucide-inbox", title: "No quotes yet", text: "" },
+		shared: { icon: "lucide-send", title: "No details shared yet", text: "" },
+		declined: { icon: "lucide-ban", title: "No one marked not interested", text: "" },
+	}
+	const view = ref("all")
+	const viewLabel = computed(() => VIEWS[view.value].label)
+	const quoteRows = computed(() => {
+		const rows = quotes.value.filter((row) => !(row.status in INVITED_STATUS_LABELS))
+		return rows.sort(sortKey.value ? COMPARE[sortKey.value] : arrivedFirst)
+	})
+	const viewOptions = computed(() =>
+		Object.entries(VIEWS).map(([key, option]) => ({
+			label: option.label,
+			selected: view.value === key,
+			onClick: () => (view.value = key),
+			slots: { suffix: () => h("span", { class: "text-base tabular-nums text-ink-gray-5" }, viewCount(key)) },
+		})),
+	)
+	const viewCount = (key) => String(quoteRows.value.filter(VIEWS[key].match).length)
+
 	const invitedPartners = computed(() =>
 		quotes.value
-			.filter((q) => q.status in INVITED_STATUS_LABELS)
-			.map((q) => ({ ...q, isInvited: true, statusLabel: INVITED_STATUS_LABELS[q.status] })),
+			.filter((row) => row.status in INVITED_STATUS_LABELS)
+			.map((row) => ({ ...row, isInvited: true, statusLabel: INVITED_STATUS_LABELS[row.status] })),
 	)
-	const othersRows = computed(() => {
-		const invited = invitedPartners.value
-		if (!invited.length) return otherQuotes.value
-		const label = `${invited.length} partner${invited.length === 1 ? "" : "s"} invited`
-		const heading = { name: "invited-heading", isHeading: true, label }
-		return [...otherQuotes.value, heading, ...invited]
-	})
+	const visibleQuotes = computed(() => quoteRows.value.filter(VIEWS[view.value].match))
+	const hasQuoteRows = computed(() => quoteRows.value.length > 0)
 	const hasQuotes = computed(() => quotes.value.length > 0)
-	const quoteTabs = computed(() => [
-		{ label: `Interested ${interestedQuotes.value.length}`, value: "interested" },
-		{ label: `Others ${otherQuotes.value.length}`, value: "others" },
-	])
-	const shownQuotes = computed(() => (quoteTab.value === "interested" ? interestedQuotes.value : othersRows.value))
-	// The Partner / Quote / Timeline header is for quotes: with only invited partners it stays hidden.
-	const showQuoteHead = computed(() => shownQuotes.value.some((row) => !row.isHeading && !row.isInvited))
-	const showInterestedEmpty = computed(
-		() => hasQuotes.value && quoteTab.value === "interested" && !interestedQuotes.value.length,
-	)
+	const shownQuotes = computed(() => {
+		const invited = view.value === "all" ? invitedPartners.value : []
+		if (!invited.length) return visibleQuotes.value
+		const label = `${invited.length} partner${invited.length === 1 ? "" : "s"} invited`
+		return [...visibleQuotes.value, { name: "invited-heading", isHeading: true, label }, ...invited]
+	})
+	const showQuoteHead = computed(() => visibleQuotes.value.length > 0)
+	const emptyView = computed(() => {
+		if (!quotesLoaded.value || visibleQuotes.value.length) return null
+		const empty = EMPTY_VIEWS[view.value]
+		return view.value === "all" ? { ...empty, text: sentLine.value } : empty
+	})
 
-	// An invited partner has no quote yet, so their row shows no amount or timeline.
 	function quoteAmount(row) {
 		if (row?.isInvited) return ""
 		return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(
@@ -120,6 +171,13 @@ export default function setup(context) {
 		if (row?.isInvited) return ""
 		const weeks = row?.timeline_weeks || 0
 		return `${weeks} week${weeks === 1 ? "" : "s"}`
+	}
+	// The line under a partner's name: where they are (their country when no city is on file),
+	// and whether they have the customer's details.
+	function quoteSubline(row) {
+		if (row?.statusLabel) return row.statusLabel
+		const shared = row?.status === "Interested" ? "Details shared" : ""
+		return [row?.city || row?.country, shared].filter(Boolean).join(" · ")
 	}
 
 	function setQuoteStatus(row, status) {
@@ -136,18 +194,26 @@ export default function setup(context) {
 			})
 	}
 
-	function markInterested(row) {
-		setQuoteStatus(row, "Interested").catch(() => {})
+	function shareDetails(row) {
+		setQuoteStatus(row, "Interested")
+			.then(() => toast.success(`Details shared with ${row.partner_name}`))
+			.catch(() => {})
 	}
 
 	function notInterested(row) {
 		const before = row.status
 		setQuoteStatus(row, "Not Interested")
 			.then(() => {
-				toast(`${row.partner_name} removed`, {
+				toast(`${row.partner_name} moved to Not interested`, {
 					action: { label: "Undo", onClick: () => setQuoteStatus(row, before).catch(() => {}) },
 				})
 			})
+			.catch(() => {})
+	}
+
+	function restoreQuote(row) {
+		setQuoteStatus(row, "Quoted")
+			.then(() => toast.success(`${row.partner_name} restored`))
 			.catch(() => {})
 	}
 
@@ -155,32 +221,72 @@ export default function setup(context) {
 		router.push({ path: "/messaging", query: { thread: row.thread } })
 	}
 
-	// ---- Hire: agree to the terms, then say why this partner (or skip) ----
+	function openPartnerProfile(row) {
+		router.push(`/partner-profile-redesign/${encodeURIComponent(row.partner)}`)
+	}
+
+	// Message is on every row, so More holds Share details (until it's done) and Not interested.
+	// On a narrow screen Message moves into More too.
+	function quoteMenu(row) {
+		return [
+			isNarrow.value && { label: "Message", icon: "lucide-message-square", onClick: () => readThread(row) },
+			row.status === "Quoted" && { label: "Share details", icon: "lucide-send", onClick: () => shareDetails(row) },
+			row.status !== "Not Interested" && { label: "Not interested", icon: "lucide-ban", onClick: () => notInterested(row) },
+		].filter(Boolean)
+	}
+
+	// ---- Hire: agree to the terms, then say what made you choose them ----
+	const OTHER_REASON = "Other"
 	const hireOpen = ref(false)
 	const hireStep = ref("terms")
 	const hireAgreed = ref(false)
+	const hireNeedsAgreement = ref(false)
 	const hireRow = ref(null)
 	const hiring = ref(false)
+	// The reasons come from the server, which checks them; Other opens a note of its own.
+	const hireReasons = computed(() => [...(project.value?.hire_reasons || []), OTHER_REASON])
+	const hireNoteLimit = computed(() => project.value?.hire_note_limit || 500)
+	const pickedReasons = ref([])
+	const savingHireReasons = ref(false)
+	const hireReasonError = ref("")
+	// Kept out of reactive state: a returned ref re-renders the whole page on every keystroke.
+	let hireNoteText = ""
 	const hireName = computed(() => hireRow.value?.partner_name || "this partner")
-	const hireTitle = computed(() => (hireStep.value === "terms" ? `Hire ${hireName.value}` : `Why ${hireName.value}?`))
-	const hireTerms = computed(() => [
-		{ title: `Pay ${hireName.value} directly`, text: "Frappe takes no fee and is not a party to the agreement." },
-		{ title: "Scope, price and timeline are as quoted", text: `Changes are agreed between you and ${hireName.value}.` },
-		{ title: "Hosting is billed through your partner", text: `Frappe Cloud bills ${hireName.value}, who bills you.` },
-		{ title: `${hireName.value} confirms the hire`, text: "They have 7 days to accept. Until then you can cancel the request." },
-		{ title: "Your site stays private", text: "Frappe can see that this project exists, not what is in your site." },
-	])
-	const hireReasons = ["Price", "Timeline", "Their profile", "How they replied"]
+	const hireTitle = computed(() => (hireStep.value === "terms" ? "Confirm the hire" : ""))
+	const hasOtherReason = computed(() => pickedReasons.value.includes(OTHER_REASON))
+	// Frappe not being a party comes first: it is the one a customer would otherwise assume the opposite of.
+	const hireTerms = computed(() =>
+		[
+			{ icon: "lucide-wallet", text: `Pay ${hireName.value} directly, Frappe isn’t a party` },
+			{ icon: "lucide-file-check", text: "Scope, price and timeline are as quoted" },
+			{ icon: "lucide-cloud", text: `Host with ${hireName.value}, Frappe Cloud or elsewhere` },
+			{ icon: "lucide-lock", text: "Frappe sees this project, not your site" },
+			// Hire is on every quote, so it can be the first time this partner learns who you are.
+			hireRow.value?.status !== "Interested" && {
+				icon: "lucide-building-2",
+				text: `${hireName.value} gets your company name and contact details`,
+			},
+		].filter(Boolean),
+	)
 
 	function hirePartner(row) {
 		hireRow.value = row
 		hireAgreed.value = false
+		hireNeedsAgreement.value = false
+		pickedReasons.value = []
+		hireNoteText = ""
+		hireReasonError.value = ""
 		hireStep.value = "terms"
 		hireOpen.value = true
 	}
 
+	// Hire stays enabled, since a disabled button can't say why; pressing it unticked says so instead.
 	function confirmHire() {
-		if (!hireAgreed.value || hiring.value || !hireRow.value) return
+		if (!hireAgreed.value) {
+			hireNeedsAgreement.value = true
+			return
+		}
+		if (hiring.value || !hireRow.value) return
 		hiring.value = true
 		call("connect.api.projects.hire_partner", { quote: hireRow.value.name })
 			.then((data) => {
@@ -194,18 +300,41 @@ export default function setup(context) {
 			})
 	}
 
-	// Skip sends no reason; either way the dialog closes on step 2.
-	function giveHireReason(reason) {
-		hireOpen.value = false
-		if (!reason || !project.value) return
-		call("connect.api.projects.set_hire_reason", { name: project.value.name, reason }).catch(() => {})
+	function toggleHireReason(reason) {
+		const picked = pickedReasons.value
+		pickedReasons.value = picked.includes(reason) ? picked.filter((item) => item !== reason) : [...picked, reason]
 	}
 
-	function quoteMenu(row) {
-		return [
-			{ label: "Messages", icon: "lucide-message-square", onClick: () => readThread(row) },
-			{ label: "Not interested", icon: "lucide-ban", onClick: () => notInterested(row) },
-		]
+	function rememberHireNote(text) {
+		hireNoteText = text || ""
+	}
+
+	// Done is the one action: with nothing picked it just closes. A failed save keeps the dialog
+	// open with the reason, so the answer isn't lost.
+	function sendHireReasons() {
+		if (savingHireReasons.value) return
+		const reasons = pickedReasons.value.filter((reason) => reason !== OTHER_REASON)
+		const note = hasOtherReason.value ? hireNoteText.trim() : ""
+		if (!project.value || (!reasons.length && !note)) {
+			hireOpen.value = false
+			return
+		}
+		savingHireReasons.value = true
+		hireReasonError.value = ""
+		call("connect.api.projects.set_hire_reason", {
+			name: project.value.name,
+			reasons: JSON.stringify(reasons),
+			note,
+		})
+			.then(() => {
+				hireOpen.value = false
+			})
+			.catch((error) => {
+				hireReasonError.value = error?.messages?.[0] || "Couldn't save that. Try again."
+			})
+			.finally(() => {
+				savingHireReasons.value = false
+			})
 	}
 
 	// Demo only: partners can't send quotes yet, so this makes every partner the brief went
@@ -388,7 +517,8 @@ export default function setup(context) {
 	const isHired = computed(() => !!hired.value?.confirmed)
 	const declinedHire = computed(() => project.value?.declined_hire || null)
 	// While quotes are listed, the heading, tabs and column header stay put and only the rows scroll.
-	const pinsQuoteList = computed(() => hasQuotes.value && !isHired.value && !isAwaitingPartner.value)
+	const isChoosing = computed(() => isShared.value && !isHired.value && !isAwaitingPartner.value)
+	const pinsQuoteList = computed(() => hasQuotes.value && isChoosing.value)
 	const stageTitle = computed(() => {
 		if (isHired.value) return "Set up hosting"
 		if (isAwaitingPartner.value) return `Waiting for ${hired.value?.partner_name || "your partner"}`
@@ -421,69 +551,89 @@ export default function setup(context) {
 			})
 	}
 
-	const HOSTING_TASKS = [
-		{
-			key: "fc-login",
-			label: "Log in to Frappe Cloud",
-			hint: "Your site is hosted on Frappe Cloud. Create an account if you do not have one.",
-			cta: "Log in",
-			url: "https://frappecloud.com/dashboard",
-		},
-		{
-			key: "fc-code",
-			label: "Copy your partner’s referral code",
-			hint: "You enter it on Frappe Cloud in the next task.",
-			copy: true,
-		},
-		{
-			key: "fc-link",
-			label: "Link your Frappe Cloud account to your partner",
-			hint: "Your partner then manages your hosting and bills you for it.",
-			cta: "Link",
-			url: "https://frappecloud.com/dashboard/settings/partner",
-		},
-	]
-	const hostingTasks = computed(() => {
-		const done = project.value?.done_tasks || []
-		return HOSTING_TASKS.map((task) => ({ ...task, done: done.includes(task.key) }))
+	// ---- Hired: hired, built, live — with the one optional thing to do on the middle step ----
+	// The partner marks the project live from their customer record; the customer confirms it.
+	const FRAPPE_CLOUD_PARTNER_URL = "https://frappecloud.com/dashboard/settings/partner"
+	const FRAPPE_CLOUD_DOCS_URL = "https://docs.frappe.io/cloud"
+	const shortDate = (at) => (at ? new Date(at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "")
+	const isCompleted = computed(() => project.value?.status === "Completed")
+	const isLive = computed(() => !!project.value?.live_on && !isCompleted.value)
+	const isHostingLinked = computed(() => hired.value?.cloud_link_status === "Active")
+
+	const hiredSteps = computed(() => {
+		const name = hired.value?.partner_name || "your partner"
+		const done = isCompleted.value
+		const built = isLive.value || done
+		const current = project.value || {}
+		return [
+			{
+				key: "hired",
+				state: "done",
+				text: `You hired ${name}`,
+				sub: `Terms agreed. You pay ${name} directly`,
+				date: shortDate(current.hired_on),
+			},
+			{
+				key: "build",
+				state: built ? "done" : "now",
+				text: built ? "Implementation complete" : "Implementation ongoing",
+				sub: done ? `By ${name}` : isHostingLinked.value ? `${name} manages your hosting` : `Let ${name} manage your hosting`,
+				hosting: !done && !isHostingLinked.value,
+				date: built ? shortDate(current.live_on || current.completed_on) : "",
+			},
+			{
+				key: "live",
+				state: done ? "done" : isLive.value ? "now" : "next",
+				text: done ? "Live" : isLive.value ? `${name} marked it live` : "Going live",
+				sub: done
+					? "You confirmed it’s working"
+					: isLive.value
+						? "Check your site, then confirm it’s working"
+						: `You confirm once ${name} marks it live`,
+				date: done ? shortDate(current.completed_on) : isLive.value ? shortDate(current.live_on) : "",
+				isLast: true,
+			},
+		]
 	})
 
-	function completeTask(task) {
-		call("connect.api.projects.complete_task", { name: projectName, task: task.key })
-			.then((data) => {
-				project.value = data
-			})
-			.catch(() => {})
+	// Set up opens the customer's one-time Frappe Cloud link once there is one; until then the
+	// partner settings page, where the copied code links them.
+	function setUpHosting() {
+		window.open(hired.value?.central_setup_url || FRAPPE_CLOUD_PARTNER_URL, "_blank", "noopener")
 	}
 
-	function actOnTask(task) {
-		if (task.copy) return copyReferralCode(task)
-		window.open(task.url, "_blank", "noopener")
-		completeTask(task)
+	function openHostingDocs() {
+		window.open(FRAPPE_CLOUD_DOCS_URL, "_blank", "noopener")
 	}
 
-	function copyReferralCode(task) {
+	function copyReferralCode() {
 		const code = hired.value?.referral_code
 		if (!code) return
 		navigator.clipboard
 			.writeText(code)
-			.then(() => toast.success("Referral code copied", { description: code }))
+			.then(() => toast.success("Partner code copied", { description: code }))
 			.catch(() =>
-				toast.info(`Your referral code is ${code}`, {
+				toast.info(`Your partner code is ${code}`, {
 					description: "Your browser blocked the clipboard. Copy it from here.",
 				}),
 			)
-		completeTask(task)
 	}
 
-	// Opens the customer's one-time Frappe Cloud link, where they accept the partner. It
-	// works only for their own email.
-	function setupOnCentral() {
-		const url = hired.value?.central_setup_url
-		if (url) window.open(url, "_blank", "noopener")
+	const answeringLive = ref(false)
+	function notLiveYet() {
+		if (answeringLive.value) return
+		answeringLive.value = true
+		call("connect.api.projects.not_live_yet", { name: projectName })
+			.then((data) => {
+				project.value = data
+				toast.success(`Note sent to ${hired.value?.partner_name || "your partner"}`)
+			})
+			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't send that. Try again."))
+			.finally(() => {
+				answeringLive.value = false
+			})
 	}
 
-	const isCompleted = computed(() => project.value?.status === "Completed")
 	const completing = ref(false)
 	function markComplete() {
 		if (completing.value) return
@@ -522,7 +672,7 @@ export default function setup(context) {
 	}
 	const sentLine = computed(() => {
 		const n = project.value?.shared_count || 0
-		return `Sent to ${n} partner${n === 1 ? "" : "s"}. Quotes arrive in Messages, usually within a few working days.`
+		return `Sent to ${n} partner${n === 1 ? "" : "s"}`
 	})
 	// Once hired, the timeline is the partner's quoted one.
 	const timelineLabel = computed(() =>
@@ -549,48 +699,66 @@ export default function setup(context) {
 		return `${values.slice(0, -1).join(", ")} and ${values[values.length - 1]}`
 	}
 
-	const requirements = computed(() => {
-		const p = project.value || {}
+	// The brief as partners got it: one row per answer, blank ones left out.
+	const requirementRows = computed(() => {
+		const current = project.value || {}
 		const c = savedCriteria.value
 		const place = c.cities.length ? c.cities : c.countries
-		const where = place.length ? `in ${orList(place)}` : "in any region"
-		const tier = c.tiers.length ? `a ${orList(c.tiers)} tier partner` : "a partner of any tier"
-		const work = { "On premises": "on premises", Remote: "remotely" }[workCriterion(c.work)] || "remotely or on premises"
-		return {
-			budget: p.budget || "No budget given",
-			goLive: goLiveCriterion(p.go_live),
-			description: p.description || "",
-			operations: labelIn(OPERATION_OPTIONS, p.operations),
-			systems: (p.systems || []).length ? `You use ${andList(p.systems)}` : "",
-			problems: (p.problems || []).map((v) => labelIn(PROBLEM_OPTIONS, v)).filter(Boolean),
-			lookingFor: `${tier[0].toUpperCase()}${tier.slice(1)} based ${where}, who works ${work}.`,
-		}
+		const tier = c.tiers.length ? `${orList(c.tiers)} tier` : "Any tier"
+		const work = { "On premises": "on premises", Remote: "remote" }[workCriterion(c.work)]
+		const operations = labelIn(OPERATION_OPTIONS, current.operations)
+		const systems = (current.systems || []).length ? `You use ${andList(current.systems)}` : ""
+		const size = current.company_size ? `${current.company_size} people` : ""
+		return [
+			{ label: "Budget", text: current.budget || "" },
+			{ label: "Timeline", text: current.go_live ? goLiveCriterion(current.go_live) : "" },
+			{ label: "Today", text: [operations, systems].filter(Boolean).join(". ") },
+			{ label: "To fix", text: (current.problems || []).map((v) => labelIn(PROBLEM_OPTIONS, v)).filter(Boolean).join("\n") },
+			{ label: "Looking for", text: [tier, place.length ? `in ${orList(place)}` : "anywhere", work].filter(Boolean).join(", ") },
+			{ label: "Company", text: [(current.industries || [])[0], size].filter(Boolean).join(" · ") },
+		].filter((row) => row.text)
 	})
 
 	return {
 		quotes,
-		quoteTab,
-		quoteTabs,
 		hasQuotes,
+		hasQuoteRows,
 		showQuoteHead,
 		isCompact,
+		isNarrow,
 		shownQuotes,
-		showInterestedEmpty,
+		emptyView,
+		sortLabel,
+		sortOptions,
+		viewLabel,
+		viewOptions,
 		quoteAmount,
 		quoteTimeline,
-		markInterested,
+		quoteSubline,
+		restoreQuote,
 		readThread,
+		openPartnerProfile,
+		tierSeal,
 		hirePartner,
 		hireOpen,
 		hireRow,
 		hireStep,
 		hireAgreed,
+		hireNeedsAgreement,
 		hiring,
+		hireName,
 		hireTitle,
 		hireTerms,
 		hireReasons,
+		pickedReasons,
+		rememberHireNote,
+		hireNoteLimit,
+		savingHireReasons,
+		hireReasonError,
+		hasOtherReason,
+		toggleHireReason,
+		sendHireReasons,
 		confirmHire,
-		giveHireReason,
 		quoteMenu,
 		simulating,
 		simulateQuotes,
@@ -635,6 +803,7 @@ export default function setup(context) {
 		hired,
 		isHired,
 		isAwaitingPartner,
+		isChoosing,
 		pinsQuoteList,
 		awaitingLine,
 		declinedHire,
@@ -643,9 +812,13 @@ export default function setup(context) {
 		cancelHireRequest,
 		stageTitle,
 		stageStep,
-		hostingTasks,
-		actOnTask,
-		setupOnCentral,
+		hiredSteps,
+		isLive,
+		setUpHosting,
+		openHostingDocs,
+		copyReferralCode,
+		notLiveYet,
+		answeringLive,
 		isCompleted,
 		completing,
 		reviewAskOpen,
@@ -662,6 +835,6 @@ export default function setup(context) {
 		openFeedback,
 		requirementsOpen,
 		viewRequirements,
-		requirements,
+		requirementRows,
 	}
 }

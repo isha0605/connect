@@ -129,15 +129,21 @@ def respond_to_hire(quote, accept, reason=None):
 
 
 @frappe.whitelist(methods=["POST"])
-def set_hire_reason(name, reason=None):
+def set_hire_reason(name, reasons=None, note=None):
 	from connect.customer.doctype.customer_project.customer_project import set_hire_reason
-	return set_hire_reason(name, reason)
+	return set_hire_reason(name, reasons, note)
 
 
 @frappe.whitelist(methods=["POST"])
 def complete_task(name, task):
 	from connect.customer.doctype.customer_project.customer_project import complete_task
 	return complete_task(name, task)
+
+
+@frappe.whitelist(methods=["POST"])
+def not_live_yet(name):
+	from connect.customer.doctype.customer_project.going_live import not_live_yet
+	return not_live_yet(name)
 
 
 @frappe.whitelist(methods=["POST"])

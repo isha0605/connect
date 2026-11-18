@@ -8,6 +8,7 @@ from connect.partner.performance_events import (
 	SLA_RESULTS,
 	RequirementEvents,
 	get_partner_properties,
+	hire_reasons,
 	send_chat_reply_result,
 	send_review_state,
 )
@@ -21,7 +22,7 @@ def execute():
 	projects = {
 		project.name: project
 		for project in frappe.get_all(
-			"Customer Project", fields=["name", "status", "hired_quote", "hire_reason", "hired_on", "completed_on"]
+			"Customer Project", fields=["name", "status", "hired_quote", "hire_reason", "hire_note", "hired_on", "completed_on"]
 		)
 	}
 	quote_fields = [*QUOTE_FIELDS, "quoted_on", "sla_status", "response_by", "hire_sla_status", "hire_response_by"]
@@ -57,7 +58,7 @@ def send_quote_history(events: RequirementEvents, project):
 		return
 	hired_on = quote.responded_on or project.hired_on or quote.creation
 	events.send_hired(hired_on)
-	if project.hire_reason:
-		events.send_hire_reason(project.hire_reason, hired_on)
+	for reason in hire_reasons(project):
+		events.send_hire_reason(reason, hired_on)
 	if project.status == "Completed":
 		events.send_completed(project.completed_on or hired_on)
