@@ -265,7 +265,7 @@ def requirement_fields(requirement):
 	changes = requirement.get("changes")
 	fields = [
 		# An edit's card leads with what changed, so it doesn't read as a new requirement.
-		(_("Changed"), ", ".join(changes) if isinstance(changes, list) else changes),
+		(_("Changed"), ", ".join(_(change) for change in changes) if isinstance(changes, list) else changes),
 		(_("Company"), requirement.get("company_name")),
 		(_("Country"), requirement.get("country")),
 		(_("Industry"), requirement.get("industry")),
