@@ -23,19 +23,13 @@ class IntegrationTestIndustryList(IntegrationTestCase):
 		make_industry(OLD_INDUSTRY)
 
 	def test_renames_old_values_everywhere(self):
-		# Written straight to the table: the Link fields no longer accept these values.
-		frappe.db.set_value("Customer", COMPANY, "industry", "FinTech")
+		# Written straight to the table: the Link field no longer accepts this value.
 		requirement = self.make_requirement()
 		frappe.db.set_value("Requirement", requirement, "industry", "Retail & Distribution")
-		project = self.make_project(industries=["Technology"], criteria={"industries": ["Distribution", "Goods Trading"]})
 
 		patch.execute()
 
-		self.assertEqual(frappe.db.get_value("Customer", COMPANY, "industry"), "Banking, Insurance and Broking")
 		self.assertEqual(frappe.db.get_value("Requirement", requirement, "industry"), "Trading and Distribution")
-		saved = frappe.db.get_value("Customer Project", project, ["industries", "criteria"], as_dict=True)
-		self.assertEqual(frappe.parse_json(saved.industries), ["Software Development"])
-		self.assertEqual(frappe.parse_json(saved.criteria)["industries"], ["Goods Trading"])
 
 	def test_a_partner_with_the_old_and_new_name_keeps_one(self):
 		make_industry("Finance")
@@ -55,7 +49,8 @@ class IntegrationTestIndustryList(IntegrationTestCase):
 		self.assertEqual(frappe.db.get_value("Industry", "Livestock", "industry_group"), "Others")
 
 	def test_stops_before_deleting_when_a_value_has_no_new_name(self):
-		frappe.db.set_value("Customer", COMPANY, "industry", OLD_INDUSTRY)
+		requirement = self.make_requirement()
+		frappe.db.set_value("Requirement", requirement, "industry", OLD_INDUSTRY)
 
 		with self.assertRaises(frappe.ValidationError):
 			patch.execute()
@@ -71,15 +66,6 @@ class IntegrationTestIndustryList(IntegrationTestCase):
 				"industry": "Manufacturing",
 			}
 		).insert(ignore_permissions=True).name
-
-	def make_project(self, industries: list[str], criteria: dict) -> str:
-		name = frappe.get_doc({"doctype": "Customer Project", "project_name": "Industry rename"}).insert(
-			ignore_permissions=True
-		).name
-		frappe.db.set_value(
-			"Customer Project", name, {"industries": frappe.as_json(industries), "criteria": frappe.as_json(criteria)}
-		)
-		return name
 
 
 def make_industry(name: str) -> None:

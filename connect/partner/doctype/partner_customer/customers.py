@@ -21,7 +21,7 @@ from connect.permissions import _check_can_write, _my_partner_with_access
 def my_customers() -> dict:
 	"""The partner's Customers page: Owners, Sales and Finance see all of the team's customers."""
 	partner = _my_partner_with_access(frappe.session.user, CUSTOMER_ACCESS)
-	rows = _customer_query(partner).run(as_dict=True)
+	rows = _with_industries(_customer_query(partner).run(as_dict=True))
 	billing = customer_billing(rows)
 	return {
 		"me": frappe.session.user,
@@ -142,7 +142,7 @@ def _customer_query(partner: str):
 		.select(
 			Record.name, Record.partner, Record.customer, Record.stage, Record.assigned_to, Record.source,
 			Record.converted_on, Record.creation, Record.billing_by, Record.linked_on,
-			Customer.customer_name, Customer.industry, Customer.country,
+			Customer.customer_name, Customer.country,
 			Project.project_name,
 			Contact.full_name.as_("contact"), Contact.email, Contact.mobile_no.as_("phone"),
 			Owner.full_name.as_("assigned_to_name"),
@@ -158,7 +158,23 @@ def _get_customer_row(name: str):
 	rows = _customer_query(_my_partner_with_access(frappe.session.user, CUSTOMER_ACCESS)).where(Record.name == name).run(as_dict=True)
 	if not rows:
 		frappe.throw(_("Customer not found."), frappe.DoesNotExistError)
-	return rows[0]
+	return _with_industries(rows)[0]
+
+
+def _with_industries(rows: list) -> list:
+	"""Each row's customer industries, as one line, in one query for all rows."""
+	picked = frappe.get_all(
+		"Customer Industry",
+		filters={"parenttype": "Customer", "parent": ["in", [row.customer for row in rows] or [""]]},
+		fields=["parent", "industry"],
+		order_by="idx asc",
+	)
+	by_customer = {}
+	for row in picked:
+		by_customer.setdefault(row.parent, []).append(row.industry)
+	for row in rows:
+		row.industry = ", ".join(by_customer.get(row.customer, []))
+	return rows
 
 
 def _customer_threads(row) -> list[str]:

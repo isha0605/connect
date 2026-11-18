@@ -124,8 +124,7 @@ def _briefs(leads: list[str]) -> dict[str, list[dict]]:
 
 
 def lead_payload(doc, settings) -> dict:
-	"""The Lead's fields: the customer and the person on their side. Industry is a fixed list on the
-	CRM, which refuses a Lead with a value it doesn't have, so one it lacks is left off."""
+	"""The Lead's fields: the customer and the person on their side."""
 	person = _customer_contact(doc.name)
 	payload = {
 		"first_name": person.first_name or doc.customer_name,
@@ -134,11 +133,17 @@ def lead_payload(doc, settings) -> dict:
 		"mobile_no": person.mobile_no or person.phone,
 		"organization": doc.customer_name,
 		"website": doc.website,
-		"industry": doc.industry if doc.industry and crm_has(settings, "CRM Industry", doc.industry) else None,
+		"industry": _crm_industry(doc, settings),
 		"source": lead_source(settings, PARTNER_LEAD_SOURCE),
 		"status": settings.default_lead_status,
 	}
 	return {key: value for key, value in payload.items() if value}
+
+
+def _crm_industry(doc, settings) -> str | None:
+	"""A Lead holds one industry, from the CRM's fixed list, which refuses a value it doesn't
+	have: the customer's first industry the CRM has, if any."""
+	return next((name for name in doc.get_industries() if crm_has(settings, "CRM Industry", name)), None)
 
 
 def _customer_contact(customer: str):

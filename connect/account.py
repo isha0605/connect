@@ -88,10 +88,13 @@ def get_my_context():
 	customer_membership = None
 	if customer:
 		level = _customer_access_at(customer, user) or MEMBER
-		customer_name = frappe.db.get_value("Customer", customer, "customer_name")
+		company = frappe.get_doc("Customer", customer)
 		customer_membership = {
 			"customer": customer,
-			"customer_name": customer_name,
+			"customer_name": company.customer_name,
+			# The project questions start from these.
+			"company_size": company.company_size,
+			"industries": company.get_industries(),
 			"access_level": level,
 			"is_admin": level in FULL_ACCESS,
 		}

@@ -6,7 +6,19 @@ from frappe.model.document import Document
 
 
 class Customer(Document):
-	pass
+	def get_industries(self) -> list[str]:
+		return [row.industry for row in self.industries]
+
+	def set_company_facts(self, company_size: str, industries: list[str]) -> None:
+		"""What the project questions ask about the company: its size and industries. Every
+		project starts from these, and a change in one project updates them for the next."""
+		if self.company_size == company_size and self.get_industries() == industries:
+			return
+
+		self.company_size = company_size
+		self.set("industries", [{"industry": industry} for industry in industries])
+		# Callers pass the caller's own company (get_customer_for_user), which any member may describe.
+		self.save(ignore_permissions=True)
 
 
 def get_permission_query_conditions(user):
