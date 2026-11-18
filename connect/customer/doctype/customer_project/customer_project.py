@@ -16,7 +16,6 @@ from connect.customer.doctype.customer_project.questions import (
 	get_company,
 	get_partner_criteria,
 	set_answers,
-	set_criteria,
 )
 from connect.partner.cloud_integration import queue_cloud_link
 from connect.partner.performance_events import send_project_events
@@ -146,13 +145,6 @@ def get_own_project(name: str) -> CustomerProject:
 	return doc
 
 
-def save_project(answers: str | dict, name: str | None = None) -> dict:
-	"""Saves the project questions' answers as a draft project, or on the draft `name`."""
-	doc = get_own_project(name) if name else frappe.new_doc("Customer Project")
-	_save_answers(doc, answers)
-	return project_dict(doc)
-
-
 def start_project_with_partner(partner: str, project: str | None = None, answers: str | dict | None = None) -> dict:
 	"""Connect on a partner's profile or card: sends one project to that one partner, as the
 	customer's Requirement card in their chat. The project is an existing one of theirs
@@ -213,45 +205,34 @@ def get_project(name: str) -> dict:
 	return project_dict(get_own_project(name))
 
 
-def share_requirements(name: str) -> dict:
-	"""Sends the project to every partner its answers match, as the customer's own Requirement
-	card."""
+def share_requirements(answers: str | dict) -> dict:
+	"""New project: saves the answers as a project and sends it to every partner they match, as
+	the customer's own Requirement card. With no partner to send to, nothing is saved, so the
+	customer can widen their answers and try again."""
 	from connect.customer.doctype.customer_project.brief import send_to_partners
+	from connect.customer.doctype.customer_project.partner_matching import get_brief_recipients
 
-	doc = get_own_project(name)
-	doc.check_answers()
-	if doc.status in ("Shared", "Hiring", "Hired", "Completed"):
-		frappe.throw(_("These requirements have already been sent."))
-	customer = get_customer_for_user(doc.user)
+	customer = get_customer_for_user(frappe.session.user)
 	if not customer:
-		frappe.throw(_("Sign in with your company account to send this to partners."))
+		frappe.throw(_("Sign in with your company account to send this to partners."), frappe.PermissionError)
 
+	doc = frappe.new_doc("Customer Project")
+	doc.set_answers(frappe.parse_json(answers))
+	doc.check_answers()
+	if not get_brief_recipients(get_partner_criteria(doc)):
+		frappe.throw(_("No partners match these answers yet. Try more regions or apps."))
+
+	# Only System Managers write projects; this one is the caller's own.
+	doc.insert(ignore_permissions=True)
 	sent = send_to_partners(doc, customer)
-	if not sent:
-		frappe.throw(_("No partners match these criteria yet. Try widening them."))
-
 	doc.status = "Shared"
 	doc.shared_count = sent
 	doc.save(ignore_permissions=True)
 	return project_dict(doc)
 
 
-def save_criteria(name: str, criteria=None, go_live=None) -> dict:
-	doc = get_own_project(name)
-	if go_live is not None:
-		doc.go_live = go_live
-	set_criteria(doc, frappe.parse_json(criteria) or {})
-	doc.save(ignore_permissions=True)
-	return project_dict(doc)
-
-
-def delete_project(name: str):
-	doc = get_own_project(name)
-	frappe.delete_doc("Customer Project", doc.name, ignore_permissions=True)
-
-
 def my_projects() -> list[dict]:
-	"""The caller's draft projects, newest first, in the Projects page's row shape. Once the
+	"""The caller's projects, newest first, in the Projects page's row shape. Once the
 	partner accepts, a row shows them like a booked pack; until then it says who it's waiting on."""
 	if frappe.session.user == "Guest":
 		return []

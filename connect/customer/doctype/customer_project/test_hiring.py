@@ -10,7 +10,6 @@ from frappe.utils import add_days, now_datetime
 from connect.customer.doctype.customer_project.customer_project import (
 	get_project,
 	my_projects,
-	save_project,
 	set_quote_status,
 	start_project_with_partner,
 )
@@ -289,6 +288,14 @@ PROJECT_ANSWERS = {
 }
 
 
+def make_project(**answers):
+	"""A project saved the way every entry point saves one, as the signed-in buyer."""
+	doc = frappe.new_doc("Customer Project")
+	doc.set_answers({**PROJECT_ANSWERS, **answers})
+	doc.check_answers()
+	return doc.insert(ignore_permissions=True)
+
+
 class TestStartProjectWithPartner(IntegrationTestCase):
 	"""Connect on a partner's profile or card: the project questions' answers become a project,
 	sent to that partner as the customer's Requirement card."""
@@ -373,7 +380,7 @@ class TestContactWithExistingProject(IntegrationTestCase):
 		make_partner_admin(PARTNER, PARTNER_ADMIN)
 		make_buyer(BUYER, "Hiring Buyer Co")
 		frappe.set_user(BUYER)
-		self.project = save_project(PROJECT_ANSWERS)["name"]
+		self.project = make_project().name
 		frappe.set_user("Administrator")
 
 	def send(self, as_user=BUYER, answers=None):

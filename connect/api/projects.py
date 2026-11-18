@@ -17,12 +17,6 @@ def list_projects():
 
 # `answers` is the project questions' answers as one JSON object; see questions.py.
 @frappe.whitelist(methods=["POST"])
-def save_project(answers, name=None):
-	from connect.customer.doctype.customer_project.customer_project import save_project
-	return save_project(answers, name)
-
-
-@frappe.whitelist(methods=["POST"])
 def start_project_with_partner(partner, project=None, answers=None):
 	from connect.customer.doctype.customer_project.customer_project import start_project_with_partner
 	return start_project_with_partner(partner, project, answers)
@@ -35,15 +29,9 @@ def get_project(name):
 
 
 @frappe.whitelist(methods=["POST"])
-def share_requirements(name):
+def share_requirements(answers):
 	from connect.customer.doctype.customer_project.customer_project import share_requirements
-	return share_requirements(name)
-
-
-@frappe.whitelist(methods=["POST"])
-def delete_project(name):
-	from connect.customer.doctype.customer_project.customer_project import delete_project
-	return delete_project(name)
+	return share_requirements(answers)
 
 
 # Guests too: the Find Partners questions show the live count before anyone signs up. It
@@ -52,12 +40,6 @@ def delete_project(name):
 def partner_criteria(criteria=None, include_recipients=False):
 	from connect.customer.doctype.customer_project.partner_matching import partner_criteria
 	return partner_criteria(criteria, frappe.utils.sbool(include_recipients))
-
-
-@frappe.whitelist(methods=["POST"])
-def save_criteria(name, criteria=None, go_live=None):
-	from connect.customer.doctype.customer_project.customer_project import save_criteria
-	return save_criteria(name, criteria, go_live)
 
 
 @frappe.whitelist()

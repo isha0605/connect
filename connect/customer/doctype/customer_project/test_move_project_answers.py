@@ -57,3 +57,27 @@ class TestMoveAnswersPatch(IntegrationTestCase):
 		self.assertEqual(customer.company_size, "51-200")
 		# No industries answered anywhere, so Edit criteria's pick describes the company.
 		self.assertEqual(customer.get_industries(), ["Retail"])
+
+
+class TestDeleteDraftProjects(IntegrationTestCase):
+	"""A new project is shared as it is saved, so drafts are deleted; sent projects stay."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		self.addCleanup(frappe.db.rollback)
+
+	def test_drafts_go_and_sent_projects_stay(self):
+		from connect.patches import delete_draft_projects
+
+		draft = frappe.get_doc({"doctype": "Customer Project", "project_name": "Old draft"}).insert(
+			ignore_permissions=True
+		)
+		sent = frappe.get_doc({"doctype": "Customer Project", "project_name": "Sent"}).insert(
+			ignore_permissions=True
+		)
+		sent.db_set("status", "Shared")
+
+		delete_draft_projects.execute()
+
+		self.assertFalse(frappe.db.exists("Customer Project", draft.name))
+		self.assertTrue(frappe.db.exists("Customer Project", sent.name))

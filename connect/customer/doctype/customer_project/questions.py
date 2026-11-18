@@ -48,6 +48,10 @@ def set_answers(doc, answers: dict) -> None:
 			doc.set(field, frappe.as_json(_clean_list(answers[field])))
 	if "apps" in answers:
 		doc.set("apps", [{"app": app} for app in _clean_list(answers["apps"])])
+	if "criteria" in answers:
+		# Edit criteria's extras in the share dialog; regions and work mode are answers above.
+		extras = normalize_criteria(answers["criteria"])
+		doc.criteria = frappe.as_json({"cities": extras["cities"], "tiers": extras["tiers"]})
 	if not uses_other_systems(doc.operations):
 		doc.systems = frappe.as_json([])
 	check_options(doc)
@@ -72,18 +76,8 @@ def check_answers(doc) -> None:
 			frappe.throw(_(message), title=_("Answer every question"))
 
 
-def set_criteria(doc, criteria: dict) -> None:
-	"""Edit criteria's picks: regions and work mode are answers, and cities and tiers are
-	kept as extras. Industries and apps change only through the questions."""
-	picked = normalize_criteria(criteria)
-	doc.regions = frappe.as_json(picked["countries"])
-	doc.work_modes = frappe.as_json(picked["work"])
-	doc.criteria = frappe.as_json({"cities": picked["cities"], "tiers": picked["tiers"]})
-	check_options(doc)
-
-
 def get_partner_criteria(doc) -> dict:
-	"""Who the brief goes to, from the answers and Edit criteria's extras."""
+	"""Who the brief goes to, from the answers and the share dialog's extras."""
 	extras = frappe.parse_json(doc.criteria) or {}
 	company = get_company(doc)
 	return normalize_criteria(
