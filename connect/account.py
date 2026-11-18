@@ -165,10 +165,6 @@ def get_projects_route(user, customer=None):
 		limit=1,
 		pluck="name",
 	)
-	if (
-		has_order
-		or frappe.db.exists("Customer Project", {"user": user})
-		or (customer and frappe.db.exists("Requirement", {"customer": customer}))
-	):
+	if has_order or frappe.db.exists("Customer Project", {"user": user}):
 		return "/projects"
 	return None
