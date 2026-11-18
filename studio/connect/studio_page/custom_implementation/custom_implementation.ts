@@ -560,25 +560,47 @@ export default function setup(context) {
 	const isLive = computed(() => !!project.value?.live_on && !isCompleted.value)
 	const isHostingLinked = computed(() => hired.value?.cloud_link_status === "Active")
 
+	// The path shows from the hire request on: until the partner accepts, its first step is the
+	// request itself, and the work after it is still to come.
+	const hiredCardTitle = computed(() => {
+		const name = hired.value?.partner_name || "your partner"
+		return isAwaitingPartner.value ? `Hiring ${name}` : `Working with ${name}`
+	})
+
+	function hireStepOf(name, current) {
+		if (isAwaitingPartner.value) {
+			return {
+				key: "hired",
+				state: "now",
+				text: `Hire request sent to ${name}`,
+				sub: `Waiting for ${name} to accept. You’ll get a notification either way`,
+				date: shortDate(hired.value?.requested_on),
+				isRequest: true,
+			}
+		}
+		return {
+			key: "hired",
+			state: "done",
+			text: `You hired ${name}`,
+			sub: `Terms agreed. You pay ${name} directly`,
+			date: shortDate(current.hired_on),
+		}
+	}
+
 	const hiredSteps = computed(() => {
 		const name = hired.value?.partner_name || "your partner"
 		const done = isCompleted.value
 		const built = isLive.value || done
+		const waiting = isAwaitingPartner.value
 		const current = project.value || {}
 		return [
-			{
-				key: "hired",
-				state: "done",
-				text: `You hired ${name}`,
-				sub: `Terms agreed. You pay ${name} directly`,
-				date: shortDate(current.hired_on),
-			},
+			hireStepOf(name, current),
 			{
 				key: "build",
-				state: built ? "done" : "now",
+				state: built ? "done" : waiting ? "next" : "now",
 				text: built ? "Implementation complete" : "Implementation ongoing",
 				sub: done ? `By ${name}` : isHostingLinked.value ? `${name} manages your hosting` : `Let ${name} manage your hosting`,
-				hosting: !done && !isHostingLinked.value,
+				hosting: !done && !waiting && !isHostingLinked.value,
 				date: built ? shortDate(current.live_on || current.completed_on) : "",
 			},
 			{
@@ -813,6 +835,7 @@ export default function setup(context) {
 		stageTitle,
 		stageStep,
 		hiredSteps,
+		hiredCardTitle,
 		isLive,
 		setUpHosting,
 		openHostingDocs,

@@ -1235,7 +1235,7 @@
             {
              "baseStyles": {
               "alignItems": "baseline",
-              "display": "{{ isAwaitingPartner ? 'flex' : 'none' }}",
+              "display": "none",
               "justifyContent": "space-between",
               "width": "100%",
               "gap": "{{ isCompact ? '12px' : '' }}"
@@ -1297,7 +1297,7 @@
             },
             {
              "baseStyles": {
-              "display": "{{ isAwaitingPartner ? 'flex' : 'none' }}",
+              "display": "none",
               "gap": "4px",
               "marginTop": "14px",
               "width": "100%"
@@ -1342,7 +1342,7 @@
               "border": "1px solid var(--outline-gray-2)",
               "borderRadius": "12px",
               "boxSizing": "border-box",
-              "display": "{{ isAwaitingPartner ? 'flex' : 'none' }}",
+              "display": "none",
               "flexDirection": "column",
               "marginTop": "22px",
               "padding": "32px 24px",
@@ -2234,7 +2234,7 @@
                  "componentName": "TextBlock",
                  "componentProps": {
                   "tag": "p",
-                  "text": "{{ 'Working with ' + (hired ? hired.partner_name : '') }}",
+                  "text": "{{ hiredCardTitle }}",
                   "fontSize": "text-xl"
                  },
                  "componentSlots": {},
@@ -2596,6 +2596,37 @@
                      ],
                      "visibilityCondition": "dataItem.key === 'live' && dataItem.state === 'now'",
                      "originalElement": "div"
+                    },
+                    {
+                     "classes": [
+                      "mt-3",
+                      "flex",
+                      "gap-2"
+                     ],
+                     "children": [
+                      {
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "cancelHireRequest();"
+                        }
+                       },
+                       "componentId": "hp-cancel-request",
+                       "componentName": "Button",
+                       "componentProps": {
+                        "label": "Cancel request",
+                        "loading": "{{ cancelling }}"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "componentId": "hp-request-actions",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div",
+                     "visibilityCondition": "dataItem.isRequest"
                     }
                    ],
                    "originalElement": "li"
@@ -2618,7 +2649,7 @@
                }
               }
              ],
-             "visibilityCondition": "isHired",
+             "visibilityCondition": "isHired || isAwaitingPartner",
              "originalElement": "div"
             }
            ],
@@ -2908,7 +2939,7 @@
              "visibilityCondition": "isCompleted && hired && !hired.is_reviewed"
             }
            ],
-           "visibilityCondition": "isHired",
+           "visibilityCondition": "isHired || isAwaitingPartner",
            "originalElement": "div"
           },
           {
@@ -5395,7 +5426,7 @@
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-11-18 20:00:00.000000",
+ "modified": "2026-11-18 21:00:00.000000",
  "modified_by": "Administrator",
  "name": "custom_implementation",
  "owner": "Administrator",
