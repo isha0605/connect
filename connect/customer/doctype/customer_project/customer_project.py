@@ -250,13 +250,13 @@ def update_requirements(name: str, answers: str | dict) -> dict:
 	doc.check_answers()
 	changes = get_changes(before, get_answers(doc))
 	if not changes:
-		return project_dict(doc)
+		return {**project_dict(doc), "update_sent_to": 0}
 
 	doc.requirements_updated_on = now_datetime()
 	# Only System Managers write projects; get_own_project checked the caller owns this one.
 	doc.save(ignore_permissions=True)
-	send_requirements_update(doc, customer, changes)
-	return project_dict(doc)
+	sent = send_requirements_update(doc, customer, changes)
+	return {**project_dict(doc), "update_sent_to": sent}
 
 
 def my_projects() -> list[dict]:
@@ -346,12 +346,13 @@ def booked_order(project: str) -> str | None:
 
 
 def quote_counts(project: str) -> dict:
+	from connect.customer.doctype.customer_project.brief import get_update_recipients
+
 	statuses = frappe.get_all("Project Quote", filters={"customer_project": project}, pluck="status")
 	return {
 		"quotes": sum(1 for status in statuses if status in OPEN_QUOTE_STATUSES),
 		"shortlisted": sum(1 for status in statuses if status == "Interested"),
-		# Who an edit to the requirements goes to (brief.UPDATE_SKIPPED_STATUSES).
-		"update_recipients": sum(1 for status in statuses if status != "Not Interested"),
+		"update_recipients": len(get_update_recipients(project)),
 	}
 
 

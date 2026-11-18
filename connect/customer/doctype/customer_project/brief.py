@@ -7,6 +7,7 @@ from frappe import _
 from connect.customer.doctype.customer_project.answers import answer_label, work_label
 from connect.customer.doctype.customer_project.partner_matching import get_brief_recipients
 from connect.customer.doctype.customer_project.questions import get_partner_criteria
+from connect.customer.doctype.project_quote.project_quote import QUOTED_STATUSES
 
 def send_to_partners(doc, customer: str) -> int:
 	"""Sends the brief to each matching partner's admin, as the customer's own Requirement card
@@ -18,10 +19,6 @@ def send_to_partners(doc, customer: str) -> int:
 	return len(partners)
 
 
-# Who an edit goes to: every partner with the requirements, except those the customer set aside.
-UPDATE_SKIPPED_STATUSES = ("Not Interested",)
-# Quotes the partner made against the earlier version, to confirm or redo.
-QUOTED_STATUSES = ("Quoted", "Interested")
 
 
 def send_requirements_update(doc, customer: str, changes: list[str]) -> int:
@@ -30,12 +27,8 @@ def send_requirements_update(doc, customer: str, changes: list[str]) -> int:
 	the earlier version is flagged until the partner confirms it or quotes again. Returns how
 	many partners got it."""
 	card = {**requirement_card(doc, customer), "update": True, "changes": changes}
-	line = _("Requirements updated · Changed: {0}").format(", ".join(changes))
-	quotes = frappe.get_all(
-		"Project Quote",
-		filters={"customer_project": doc.name, "status": ["not in", UPDATE_SKIPPED_STATUSES], "thread": ["is", "set"]},
-		pluck="name",
-	)
+	line = _("Requirements updated · Changed: {0}").format(", ".join(_(change) for change in changes))
+	quotes = get_update_recipients(doc.name)
 	for name in quotes:
 		quote = frappe.get_doc("Project Quote", name)
 		frappe.get_doc("Connect Thread", quote.thread).post_system_message(line)
@@ -44,6 +37,16 @@ def send_requirements_update(doc, customer: str, changes: list[str]) -> int:
 		# A system step of the customer's edit; update_requirements checked the project is theirs.
 		quote.save(ignore_permissions=True)
 	return len(quotes)
+
+
+def get_update_recipients(project: str) -> list[str]:
+	"""The briefs an edit goes to: every partner with the requirements, including those who
+	declined, except partners the customer set aside (Pragati's edit-requirements spec)."""
+	return frappe.get_all(
+		"Project Quote",
+		filters={"customer_project": project, "status": ["!=", "Not Interested"], "thread": ["is", "set"]},
+		pluck="name",
+	)
 
 
 def send_brief(doc, customer: str, partner: str, card: dict | None = None) -> str:

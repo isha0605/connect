@@ -57,7 +57,8 @@ const lockNote = computed(() => {
 const editActions = computed(() =>
 	canEdit.value ? [{ label: "Edit", iconLeft: "lucide-pencil", onClick: startEditing }] : [],
 )
-const dirty = computed(() => editing.value && JSON.stringify(form.value) !== initial)
+// Compared the way the server compares versions: list order and outer spaces don't count.
+const dirty = computed(() => editing.value && comparable(form.value) !== initial)
 const recipients = computed(() => props.project?.update_recipients || 0)
 const sendLabel = computed(() => `Send to ${recipients.value} ${recipients.value === 1 ? "partner" : "partners"}`)
 const errors = computed(() => (tried.value ? missingAnswers(form.value, EDITED) : {}))
@@ -119,7 +120,7 @@ function startEditing() {
 		tiers: [...criteria.value.tiers],
 		description: current.description || "",
 	}
-	initial = JSON.stringify(form.value)
+	initial = comparable(form.value)
 	tried.value = false
 	sendError.value = ""
 	editing.value = true
@@ -156,7 +157,9 @@ function send() {
 		.then((project) => {
 			emit("updated", project)
 			editing.value = false
-			toast.success(`Sent to ${recipients.value} ${recipients.value === 1 ? "partner" : "partners"}`)
+			const sent = project.update_sent_to || 0
+			if (sent) toast.success(`Sent to ${sent} ${sent === 1 ? "partner" : "partners"}`)
+			else toast.info("Nothing changed, so nothing was sent")
 		})
 		.catch((error) => {
 			sendError.value = error?.messages?.[0] || "Couldn't send your requirements. Try again."
@@ -198,6 +201,14 @@ function fitDescription() {
 	area.style.resize = "none"
 	area.style.height = "auto"
 	area.style.height = `${area.scrollHeight}px`
+}
+
+function comparable(values) {
+	const entries = Object.entries(values).map(([key, value]) => [
+		key,
+		Array.isArray(value) ? [...value].sort() : String(value ?? "").trim(),
+	])
+	return JSON.stringify(Object.fromEntries(entries))
 }
 
 function labelIn(options, value) {
