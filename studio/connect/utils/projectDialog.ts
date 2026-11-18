@@ -3,7 +3,7 @@
 // into their setup() return and render the ProjectQuestionsDialog block bound to it.
 
 import { ref } from "vue"
-import { STARTER_PACKS_ENABLED } from "@app/utils/recommendation"
+import { STARTER_PACKS_ENABLED, WORK_OPTIONS } from "@app/utils/recommendation"
 
 // The project questions, a step each, and what each says when left unanswered. The server
 // (questions.py) refuses a project missing any of them, with the same words.
@@ -37,6 +37,18 @@ export function missingAnswers(answers, fields = Object.keys(MISSING_ANSWERS)) {
 		if (empty) found[field] = MISSING_ANSWERS[field]
 	}
 	return found
+}
+
+// "How do you want to work?" is one choice, kept as the work modes it allows: either is both.
+export const WORK_CHOICES = [...WORK_OPTIONS, { label: "Either works", value: "either" }]
+
+export function workChoiceOf(modes) {
+	return (modes || []).length > 1 ? "either" : (modes || [])[0] || ""
+}
+
+export function workModesOf(choice) {
+	if (choice === "either") return WORK_OPTIONS.map((option) => option.value)
+	return choice ? [choice] : []
 }
 
 // Same rule as the Find Partners wizard: anyone not on spreadsheets has systems to name.

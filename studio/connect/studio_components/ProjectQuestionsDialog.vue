@@ -15,10 +15,18 @@ import {
 	OPERATION_OPTIONS,
 	PROBLEM_OPTIONS,
 	SYSTEM_OPTIONS,
-	WORK_OPTIONS,
 } from "@app/utils/recommendation"
-import { MISSING_ANSWERS, PROJECT_QUESTION_STEPS, missingAnswers, usesOtherSystems as needsSystems } from "@app/utils/projectDialog"
+import {
+	MISSING_ANSWERS,
+	PROJECT_QUESTION_STEPS,
+	WORK_CHOICES,
+	missingAnswers,
+	usesOtherSystems as needsSystems,
+	workChoiceOf,
+	workModesOf,
+} from "@app/utils/projectDialog"
 import { goToSignIn } from "@app/utils/signIn"
+import AppsSelect from "./AppsSelect.vue"
 
 const props = defineProps({
 	// Whether the dialog is open (v-model).
@@ -46,24 +54,14 @@ const sending = ref(false)
 const canChangeFacts = ref(true)
 const isGuest = ref(false)
 const regionOptions = ref([])
-const appOptions = ref([])
-// { app: logo url }, for the Apps list.
-const appLogos = ref({})
 
 const partnerName = computed(() => props.partner?.partner_name || props.partner?.name || "")
 const title = computed(() => (partnerName.value ? `New project for ${partnerName.value}` : "New project"))
 const sendLabel = computed(() => (partnerName.value ? `Send to ${partnerName.value}` : "Share requirements"))
 const usesOtherSystems = computed(() => needsSystems(answers.value.operations))
-// One choice, stored as the work modes it allows: either works is both.
-const WORK_CHOICES = [...WORK_OPTIONS, { label: "Either works", value: "either" }]
 const workChoice = computed({
-	get: () => {
-		const modes = answers.value.work_modes || []
-		return modes.length > 1 ? "either" : modes[0] || ""
-	},
-	set: (choice) => {
-		answers.value.work_modes = choice === "either" ? WORK_OPTIONS.map((o) => o.value) : choice ? [choice] : []
-	},
+	get: () => workChoiceOf(answers.value.work_modes),
+	set: (choice) => (answers.value.work_modes = workModesOf(choice)),
 })
 const descriptionNote = computed(() =>
 	partnerName.value
@@ -107,12 +105,6 @@ function loadOptions() {
 	if (regionOptions.value.length) return
 	call("connect.api.partner.list_partner_countries")
 		.then((countries) => (regionOptions.value = (countries || []).map((c) => ({ label: c, value: c }))))
-		.catch(() => {})
-	call("connect.api.partner.list_partner_filter_options")
-		.then((options) => {
-			appOptions.value = (options?.apps || []).map((a) => ({ label: a, value: a }))
-			appLogos.value = options?.app_logos || {}
-		})
 		.catch(() => {})
 }
 
@@ -266,18 +258,7 @@ function send() {
 				</div>
 
 				<div v-else-if="step === 2" class="mt-6 flex flex-col gap-4">
-					<MultiSelect
-						v-model="answers.apps"
-						label="Apps"
-						:options="appOptions"
-						placeholder="Select"
-						required
-						:error="errors.apps"
-					>
-						<template #item-prefix="{ item }">
-							<img v-if="appLogos[item.value]" :src="appLogos[item.value]" alt="" class="size-4 shrink-0 rounded-sm" />
-						</template>
-					</MultiSelect>
+					<AppsSelect v-model="answers.apps" required :error="errors.apps" />
 					<FormControl
 						v-model="answers.go_live"
 						type="select"
