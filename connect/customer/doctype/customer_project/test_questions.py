@@ -130,3 +130,45 @@ class TestAppMatching(IntegrationTestCase):
 
 	def test_an_app_no_partner_lists_matches_none(self):
 		self.assertEqual(self.matching(["Helpdesk"]), [])
+
+
+class TestWhoChangesCompanyFacts(IntegrationTestCase):
+	"""Any member may fill in the company's blank facts; only the Owner or an Admin changes them."""
+
+	MEMBER = "questions.member@example.test"
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		self.addCleanup(frappe.set_user, "Administrator")
+		self.addCleanup(frappe.db.rollback)
+		make_buyer(BUYER, COMPANY)
+		make_buyer(self.MEMBER, COMPANY)
+		frappe.db.set_value("Customer Team Member", {"user": BUYER}, "access", "Owner")
+		frappe.db.set_value("Customer Team Member", {"user": self.MEMBER}, "access", "Member")
+		customer = frappe.get_doc("Customer", COMPANY)
+		customer.company_size = ""
+		customer.set("industries", [])
+		customer.save(ignore_permissions=True)
+
+	def save_as(self, user, **answers):
+		frappe.set_user(user)
+		try:
+			return save_project({**PROJECT_ANSWERS, **answers})
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_a_member_fills_in_blank_facts(self):
+		self.save_as(self.MEMBER)
+		self.assertEqual(frappe.db.get_value("Customer", COMPANY, "company_size"), "11-50")
+
+	def test_a_member_cannot_change_set_facts(self):
+		self.save_as(self.MEMBER)
+		with self.assertRaises(frappe.PermissionError):
+			self.save_as(self.MEMBER, company_size="500+")
+		with self.assertRaises(frappe.PermissionError):
+			self.save_as(self.MEMBER, industries=["Healthcare"])
+
+	def test_the_owner_changes_them(self):
+		self.save_as(self.MEMBER)
+		self.save_as(BUYER, company_size="500+")
+		self.assertEqual(frappe.db.get_value("Customer", COMPANY, "company_size"), "500+")
