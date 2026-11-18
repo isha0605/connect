@@ -46,6 +46,10 @@ const cityOptions = ref([])
 const tierOptions = ref([])
 const descriptionField = ref(null)
 const scroller = ref(null)
+// The reading view's height, which editing keeps: the form scrolls inside the same dialog.
+let readingHeight = 0
+// Rounding at display scaling, and the line gap under the inline dialog, take a few pixels.
+const SAFETY_GAP = 16
 
 const criteria = computed(() => ({ ...blankCriteria(), ...(props.project?.criteria || {}) }))
 const canEdit = computed(() => props.project?.status === "Shared")
@@ -111,6 +115,7 @@ onBeforeUnmount(() => window.removeEventListener("resize", fitHeight))
 watch(() => form.value.description, () => nextTick(fitDescription))
 
 function startEditing() {
+	readingHeight = scrollViewport()?.offsetHeight || 0
 	const current = props.project || {}
 	form.value = {
 		budget: current.budget || "",
@@ -205,8 +210,12 @@ function scheduleFit() {
 	nextTick(() => requestAnimationFrame(fitHeight))
 }
 
+function scrollViewport() {
+	return scroller.value?.$el?.querySelector?.("[data-slot=scroll-area-viewport]")
+}
+
 function fitHeight() {
-	const viewport = scroller.value?.$el?.querySelector?.("[data-slot=scroll-area-viewport]")
+	const viewport = scrollViewport()
 	const content = viewport?.closest(".dialog-content")
 	const overlay = content?.closest(".dialog-scroll-container")
 	if (!overlay) return
@@ -214,7 +223,9 @@ function fitHeight() {
 	const margins = parseFloat(style.marginTop) + parseFloat(style.marginBottom)
 	const chrome = content.offsetHeight - viewport.offsetHeight
 	// The overlay's own height, not the window's: the same units as the dialog at any zoom.
-	viewport.style.maxHeight = `${Math.max(overlay.clientHeight - chrome - margins, 160)}px`
+	const room = overlay.clientHeight - chrome - margins - SAFETY_GAP
+	const height = editing.value && readingHeight ? Math.min(room, readingHeight) : room
+	viewport.style.maxHeight = `${Math.max(height, 160)}px`
 }
 
 // The description grows with its text, so the dialog keeps a single scroll.
