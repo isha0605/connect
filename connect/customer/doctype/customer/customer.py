@@ -12,24 +12,50 @@ class Customer(Document):
 
 	def set_company_facts(self, company_size: str, industries: list[str]) -> None:
 		"""What the project questions ask about the company: its size and industries. Every
-		project starts from these, and a change in one project updates them for the next. Any
-		member may fill in a blank one; only the Owner or an Admin may change one."""
+		project starts from these, and a change in one project updates them for the next."""
+		if self._apply_company_facts(company_size, industries):
+			# The caller's own company (get_customer_for_user); _apply_company_facts checked who may change it.
+			self.save(ignore_permissions=True)
+
+	def set_company_details(self, details: dict) -> None:
+		"""Settings → Company details: where the company is, what it uses, and its facts."""
+		self.country = (details.get("country") or "").strip()
+		self.current_system = details.get("current_system") or ""
+		self._apply_company_facts(details.get("company_size") or "", list(details.get("industries") or []))
+		# The caller's own company (get_customer_for_user); _apply_company_facts checked who may change it.
+		self.save(ignore_permissions=True)
+
+	def get_company_details(self) -> dict:
+		return {
+			"company_name": self.customer_name,
+			"country": self.country,
+			"company_size": self.company_size,
+			"industries": self.get_industries(),
+			"current_system": self.current_system,
+			"can_change_facts": self.can_change_facts(frappe.session.user),
+		}
+
+	def can_change_facts(self, user: str) -> bool:
+		"""Any member may fill in blank facts; only the Owner or an Admin may change set ones."""
 		from connect.permissions import _is_customer_admin
 
+		return not (self.company_size and self.industries) or _is_customer_admin(self.name, user)
+
+	def _apply_company_facts(self, company_size: str, industries: list[str]) -> bool:
+		"""Sets the facts, if this user may; returns whether they changed."""
 		size_changed = bool(self.company_size) and self.company_size != company_size
 		industries_changed = bool(self.industries) and self.get_industries() != industries
-		if (size_changed or industries_changed) and not _is_customer_admin(self.name, frappe.session.user):
+		if (size_changed or industries_changed) and not self.can_change_facts(frappe.session.user):
 			frappe.throw(
 				_("Only your company's Owner or an Admin can change its number of employees or industries."),
 				frappe.PermissionError,
 			)
 		if self.company_size == company_size and self.get_industries() == industries:
-			return
+			return False
 
 		self.company_size = company_size
 		self.set("industries", [{"industry": industry} for industry in industries])
-		# The caller's own company (get_customer_for_user), checked above for who may change it.
-		self.save(ignore_permissions=True)
+		return True
 
 
 def get_permission_query_conditions(user):
@@ -54,6 +80,20 @@ def get_customer_for_user(user=None):
 	if not user or user == "Guest":
 		return None
 	return frappe.db.get_value("Customer Team Member", {"user": user}, "customer")
+
+
+def get_my_company_details() -> dict | None:
+	customer = get_customer_for_user()
+	return frappe.get_doc("Customer", customer).get_company_details() if customer else None
+
+
+def save_my_company_details(details: dict) -> dict:
+	customer = get_customer_for_user()
+	if not customer:
+		frappe.throw(_("Your account isn't linked to a customer company yet."), frappe.PermissionError)
+	doc = frappe.get_doc("Customer", customer)
+	doc.set_company_details(details)
+	return doc.get_company_details()
 
 
 def get_my_customer():
