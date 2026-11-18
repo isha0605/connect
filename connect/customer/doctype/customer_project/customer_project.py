@@ -28,8 +28,8 @@ STATUS_TIMESTAMPS = {"Shared": "shared_on", "Hired": "hired_on", "Completed": "c
 # Paying states a Starter Pack Order stays a project in (mirrors my_orders()).
 PAID = ("Paid", "Partially Refunded", "Refunded")
 
-# Quoted is a reply nobody has decided on yet ("Others" on the project page), Interested is
-# shortlisted, and Not Interested drops out of both lists (Undo puts it back).
+# Quoted is a reply nobody has decided on yet, Interested has the customer's details shared,
+# and Not Interested is set aside (Restore puts it back).
 QUOTE_STATUSES = ("Quoted", "Interested", "Not Interested")
 OPEN_QUOTE_STATUSES = ("Quoted", "Interested")
 # Partners the brief went to who have no quote to show: still to answer, or not available.
@@ -335,8 +335,8 @@ def quote_counts(project: str) -> dict:
 
 
 def list_quotes(name: str) -> list[dict]:
-	"""The project's quotes for the Interested / Others lists, cheapest first, and the invited
-	partners who have not quoted, for the Invited list below Others."""
+	"""The project's quotes, cheapest first, including those set aside as Not Interested, and
+	the invited partners who have not quoted, listed below the quotes."""
 	doc = get_own_project(name)
 	Quote = frappe.qb.DocType("Project Quote")
 	Partner = frappe.qb.DocType("Partner")
@@ -346,10 +346,12 @@ def list_quotes(name: str) -> list[dict]:
 		.on(Partner.name == Quote.partner)
 		.select(
 			Quote.name, Quote.partner, Quote.thread, Quote.status, Quote.amount, Quote.timeline_weeks, Quote.note,
-			Partner.partner_name, Partner.tier, Partner.city, Partner.logo, Partner.verification_status,
+			Quote.quoted_on,
+			Partner.partner_name, Partner.tier, Partner.city, Partner.country, Partner.logo,
+			Partner.verification_status,
 		)
 		.where(Quote.customer_project == doc.name)
-		.where(Quote.status.isin(OPEN_QUOTE_STATUSES + INVITED_QUOTE_STATUSES))
+		.where(Quote.status.isin(QUOTE_STATUSES + INVITED_QUOTE_STATUSES))
 		.orderby(Quote.amount, order=Order.asc)
 		.run(as_dict=True)
 	)
