@@ -18,7 +18,10 @@ class TestMoveAnswersPatch(IntegrationTestCase):
 		frappe.set_user("Administrator")
 		self.addCleanup(frappe.db.rollback)
 		make_buyer(BUYER, COMPANY)
-		frappe.db.set_value("Customer", COMPANY, "company_size", "")
+		customer = frappe.get_doc("Customer", COMPANY)
+		customer.company_size = ""
+		customer.set("industries", [])
+		customer.save(ignore_permissions=True)
 		self.project = frappe.get_doc({"doctype": "Customer Project", "project_name": "Old project"}).insert(
 			ignore_permissions=True
 		)
@@ -26,7 +29,9 @@ class TestMoveAnswersPatch(IntegrationTestCase):
 			{
 				"user": BUYER,
 				"regions": None,
-				"criteria": frappe.as_json({"countries": ["India"], "work": ["remote"], "tiers": ["Gold"]}),
+				"criteria": frappe.as_json(
+					{"countries": ["India"], "work": ["remote"], "industries": ["Retail"], "tiers": ["Gold"]}
+				),
 			}
 		)
 		requirement = frappe.get_doc(
@@ -48,4 +53,7 @@ class TestMoveAnswersPatch(IntegrationTestCase):
 		self.assertEqual(frappe.parse_json(project.work_modes), ["remote"])
 		self.assertEqual(frappe.parse_json(project.criteria), {"cities": [], "tiers": ["Gold"]})
 		self.assertEqual([row.app for row in project.apps], ["ERPNext"])
-		self.assertEqual(frappe.db.get_value("Customer", COMPANY, "company_size"), "51-200")
+		customer = frappe.get_doc("Customer", COMPANY)
+		self.assertEqual(customer.company_size, "51-200")
+		# No industries answered anywhere, so Edit criteria's pick describes the company.
+		self.assertEqual(customer.get_industries(), ["Retail"])
