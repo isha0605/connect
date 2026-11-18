@@ -4,10 +4,7 @@ import frappe
 
 from connect.api.attachments import _attach_file_to_message, _claim_staged_attachment, _copy_message_attachment
 from connect.messaging.customer_identity import (
-	ANONYMOUS_USER,
-	anonymous_company,
 	customer_users,
-	hidden_threads,
 	hides_customer,
 	mask_message,
 )
@@ -23,9 +20,6 @@ from connect.permissions import (
 # Requirement cards are one-off snapshots tied to their thread, so only plain text and files can be
 # forwarded.
 FORWARDABLE_MESSAGE_TYPES = ("Text", "File")
-
-MIN_SEARCH_LENGTH = 2
-MAX_SEARCH_RESULTS = 50
 
 
 PINNED_MESSAGE_FIELDS = [
@@ -205,90 +199,3 @@ def forward_message(message, source_is_dm, target_thread, target_is_dm):
 		_attach_file_to_message(file_copy.name, forwarded.doctype, forwarded.name)
 
 	return forwarded.as_dict()
-
-
-@frappe.whitelist()
-def search_messages(query, thread=None, is_dm=0, kind="messages"):
-	"""Searches only conversations the caller can already read, so results never leak a message they couldn't open anyway."""
-	query = (query or "").strip()
-	if len(query) < MIN_SEARCH_LENGTH:
-		return []
-	is_dm = frappe.utils.cint(is_dm)
-	pattern = "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
-
-	if kind == "files":
-		filters = [["message_type", "=", "File"], ["file_name", "like", pattern]]
-	elif kind == "links":
-		filters = [["message_type", "=", "Text"], ["content", "like", pattern], ["content", "like", "%http%"]]
-	else:
-		filters = [["message_type", "=", "Text"], ["content", "like", pattern]]
-
-	sources = [(False, "Connect Message", "thread"), (True, "Connect DM Message", "dm_thread")]
-	results = []
-	for source_is_dm, doctype, thread_field in sources:
-		if thread and source_is_dm != bool(is_dm):
-			continue
-		scoped = filters + ([[thread_field, "=", thread]] if thread else [])
-		rows = (_search_dm_messages if source_is_dm else _search_thread_messages)(scoped)
-		for row in rows:
-			row["is_dm"] = int(source_is_dm)
-		results.extend(rows)
-
-	results.sort(key=lambda r: r.creation, reverse=True)
-	results = _mask_search_results(results[:MAX_SEARCH_RESULTS])
-
-	full_names = {
-		u.name: u.full_name
-		for u in frappe.get_all(
-			"User", filters={"name": ["in", list({r.sender for r in results})]}, fields=["name", "full_name"]
-		)
-	}
-	full_names[ANONYMOUS_USER] = anonymous_company()
-	for row in results:
-		row["sender_full_name"] = full_names.get(row.sender)
-	return results
-
-
-SEARCH_FIELDS = ["name", "sender", "message_type", "content", "file_name", "creation"]
-
-
-def _search_dm_messages(filters):
-	return frappe.get_list(
-		"Connect DM Message",
-		filters=filters,
-		fields=[*SEARCH_FIELDS, "dm_thread as thread"],
-		order_by="creation desc",
-		limit_page_length=MAX_SEARCH_RESULTS,
-	)
-
-
-def _search_thread_messages(filters):
-	"""Searches the threads the caller is on now, where an anonymous customer's messages are
-	masked rather than left out, and the ones they were removed from, up to their removal."""
-	user = frappe.session.user
-	fields = [*SEARCH_FIELDS, "thread"]
-	# get_list, so the permission rules leave out the chats of a firm the caller switched away from.
-	active = frappe.get_list(
-		"Connect Thread Member", filters={"user": user, "is_removed": 0}, pluck="thread", limit_page_length=0
-	)
-	# Read without permission checks: scoped to the caller's own active threads.
-	rows = frappe.get_all(
-		"Connect Message",
-		filters=filters + [["thread", "in", active]],
-		fields=fields,
-		order_by="creation desc",
-		limit=MAX_SEARCH_RESULTS,
-	) if active else []
-	return rows + frappe.get_list(
-		"Connect Message",
-		filters=filters + [["thread", "not in", active or [""]]],
-		fields=fields,
-		order_by="creation desc",
-		limit_page_length=MAX_SEARCH_RESULTS,
-	)
-
-
-def _mask_search_results(results):
-	hidden = hidden_threads(list({r.thread for r in results if not r.is_dm}))
-	customers = {thread: customer_users(thread) for thread in hidden}
-	return [mask_message(r, customers[r.thread]) if not r.is_dm and r.thread in hidden else r for r in results]

@@ -6,7 +6,7 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from connect.api.messages import get_pinned_messages, search_messages
+from connect.api.messages import get_pinned_messages
 from connect.api.threads import get_my_threads, get_thread_member_profiles, get_thread_members, get_thread_messages
 from connect.customer.doctype.customer_project.brief import send_brief
 from connect.customer.doctype.customer_project.customer_project import set_quote_status
@@ -74,11 +74,9 @@ class TestCustomerIdentity(IntegrationTestCase):
 		members = frappe.get_list("Connect Thread Member", filters={"thread": self.thread}, pluck="user")
 		self.assertNotIn(BUYER, members)
 
-	def test_search_and_pins_mask_the_customer(self):
+	def test_pins_mask_the_customer(self):
 		self.message.db_set({"is_pinned": 1, "pinned_by": BUYER})
 		self.as_user(OWNER)
-		results = search_messages("Tally", thread=self.thread)
-		self.assertEqual([(r.sender, r.sender_full_name) for r in results], [(ANONYMOUS_USER, anonymous_company())])
 		self.assertEqual(get_pinned_messages(self.thread)[0].pinned_by, ANONYMOUS_USER)
 
 	def test_the_customer_still_sees_themselves(self):
