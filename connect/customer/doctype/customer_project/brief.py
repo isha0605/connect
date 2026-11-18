@@ -5,13 +5,14 @@ import frappe
 from frappe import _
 
 from connect.customer.doctype.customer_project.answers import answer_label, work_label
-from connect.customer.doctype.customer_project.partner_matching import get_brief_recipients, normalize_criteria
+from connect.customer.doctype.customer_project.partner_matching import get_brief_recipients
+from connect.customer.doctype.customer_project.questions import get_partner_criteria
 
 def send_to_partners(doc, customer: str) -> int:
 	"""Sends the brief to each matching partner's admin, as the customer's own Requirement card
 	in their thread with that partner, and returns how many got it."""
 	card = requirement_card(doc, customer)
-	partners = get_brief_recipients(normalize_criteria(frappe.parse_json(doc.criteria) or {}))
+	partners = get_brief_recipients(get_partner_criteria(doc))
 	for partner in partners:
 		send_brief(doc, customer, partner, card)
 	return len(partners)
@@ -53,40 +54,23 @@ def await_quote(project: str, partner: str, thread: str, brief_message: str | No
 
 
 def requirement_card(doc, customer: str) -> dict:
-	"""The same Requirement card a customer sends from Messaging: their saved requirement and
-	company, with this project's name, brief and answers on top."""
-	from connect.customer.doctype.requirement.requirement import get_requirement_snapshot
-
-	company = frappe.db.get_value("Customer", customer, ["customer_name", "industry", "country"], as_dict=True) or {}
-	criteria = normalize_criteria(frappe.parse_json(doc.criteria) or {})
-	industries = frappe.parse_json(doc.industries) or []
-
-	card = get_requirement_snapshot(customer) or {}
-	card.update(
-		{
-			"project_name": doc.project_name,
-			"company_name": card.get("company_name") or company.get("customer_name"),
-			# what they picked themselves, before anything saved for the company
-			"industry": ", ".join(industries) or card.get("industry") or company.get("industry"),
-			"country": card.get("country") or company.get("country"),
-			"company_size": doc.company_size or card.get("company_size"),
-			"description": doc.description,
-			"looking_for": looking_for(doc),
-			"current_situation": _current_situation(doc) or card.get("current_situation"),
-			"timeline": answer_label("go_live", doc.go_live) or card.get("timeline"),
-			"delivery_preference": work_label(criteria["work"]) if criteria["work"] else card.get("delivery_preference"),
-			"budget": doc.budget,
-			"partner_brief": partner_brief(criteria),
-		}
-	)
-	return card
-
-
-def looking_for(doc) -> str:
-	# A project sent from a partner's Connect button has no brief written yet: its name says it.
-	if not doc.description:
-		return doc.project_name
-	return _("Custom implementation: {0}").format(doc.description)
+	"""The Requirement card partners get: the project's answers, and its company's."""
+	company = frappe.get_doc("Customer", customer)
+	criteria = get_partner_criteria(doc)
+	return {
+		"project_name": doc.project_name,
+		"company_name": company.customer_name,
+		"country": company.country,
+		"industry": ", ".join(company.get_industries()),
+		"company_size": company.company_size,
+		"apps": criteria["apps"],
+		"timeline": answer_label("go_live", doc.go_live),
+		"delivery_preference": work_label(criteria["work"]),
+		"current_situation": _current_situation(doc),
+		"budget": doc.budget,
+		"description": doc.description,
+		"partner_brief": partner_brief(criteria),
+	}
 
 
 def partner_brief(criteria: dict) -> str:
@@ -117,7 +101,7 @@ def _current_situation(doc) -> str:
 	if systems:
 		situation = "; ".join(filter(None, [situation, _("uses {0}").format(", ".join(systems))]))
 	if problems:
-		fix = ", ".join(filter(None, (answer_label("problems", p).lower() for p in problems)))
-		situation = ". ".join(filter(None, [situation, _("Wants fixed: {0}").format(fix)]))
+		solve = ", ".join(filter(None, (answer_label("problems", p).lower() for p in problems)))
+		situation = ". ".join(filter(None, [situation, _("Wants to solve: {0}").format(solve)]))
 	return situation
 

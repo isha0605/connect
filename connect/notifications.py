@@ -263,16 +263,16 @@ def requirement_fields(requirement):
 	"""A Requirement card's answers as (label, value) pairs, leaving out the ones not given."""
 	apps = requirement.get("apps")
 	fields = [
-		("Company", requirement.get("company_name")),
-		("Country", requirement.get("country")),
-		("Industry", requirement.get("industry")),
-		("Looking for", requirement.get("looking_for")),
-		("Company size", requirement.get("company_size")),
-		("Current setup", requirement.get("current_situation")),
-		("Timeline", requirement.get("timeline")),
-		("Delivery", requirement.get("delivery_preference")),
-		("Budget", requirement.get("budget")),
-		("Apps", ", ".join(apps) if isinstance(apps, list) else apps),
+		(_("Company"), requirement.get("company_name")),
+		(_("Country"), requirement.get("country")),
+		(_("Industry"), requirement.get("industry")),
+		(_("Number of employees"), requirement.get("company_size")),
+		(_("Apps"), ", ".join(apps) if isinstance(apps, list) else apps),
+		(_("Go live"), requirement.get("timeline")),
+		(_("Work mode"), requirement.get("delivery_preference")),
+		(_("Current setup"), requirement.get("current_situation")),
+		(_("Budget"), requirement.get("budget")),
+		(_("What they need"), requirement.get("description")),
 	]
 	return [(label, value) for label, value in fields if value]
 

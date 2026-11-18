@@ -343,11 +343,13 @@ def _brief_card(requirement, customer: str) -> dict:
 
 
 def _brief_fields(card: dict) -> dict:
+	apps = card.get("apps")
 	rows = [
 		(_("Budget"), card.get("budget")),
 		(_("Industry"), card.get("industry")),
 		(_("Country"), card.get("country")),
 		(_("Size"), card.get("company_size")),
+		(_("Apps"), ", ".join(apps) if isinstance(apps, list) else apps),
 		(_("Current operations"), card.get("current_situation")),
 		(_("Go live"), card.get("timeline")),
 		(_("Delivery"), card.get("delivery_preference")),
