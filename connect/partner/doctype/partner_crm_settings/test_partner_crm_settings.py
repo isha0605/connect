@@ -322,7 +322,7 @@ class IntegrationTestCRMSync(IntegrationTestCase):
 		)
 		body = email_body(frappe._dict(message_type="Requirement", content=card))
 		self.assertEqual(
-			body, "<b>Requirement</b><br>Company: Digitalis<br>Timeline: 30 days<br>Apps: HR and Payroll"
+			body, "<b>Requirement</b><br>Company: Digitalis<br>Apps: HR and Payroll<br>Go live: 30 days"
 		)
 
 	def test_a_crm_reply_is_posted_as_the_consultant_who_sent_it(self):

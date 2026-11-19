@@ -4,17 +4,49 @@
 import frappe
 from frappe import _
 
-from connect.customer.doctype.customer_project.answers import answer_label, work_label
-from connect.customer.doctype.customer_project.partner_matching import get_brief_recipients, normalize_criteria
+from connect.customer.doctype.customer_project.answers import answer_label
+from connect.customer.doctype.customer_project.partner_matching import get_brief_recipients
+from connect.customer.doctype.customer_project.questions import get_partner_criteria
+from connect.customer.doctype.project_quote.project_quote import QUOTED_STATUSES
 
 def send_to_partners(doc, customer: str) -> int:
 	"""Sends the brief to each matching partner's admin, as the customer's own Requirement card
 	in their thread with that partner, and returns how many got it."""
 	card = requirement_card(doc, customer)
-	partners = get_brief_recipients(normalize_criteria(frappe.parse_json(doc.criteria) or {}))
+	partners = get_brief_recipients(get_partner_criteria(doc))
 	for partner in partners:
 		send_brief(doc, customer, partner, card)
 	return len(partners)
+
+
+
+
+def send_requirements_update(doc, customer: str, changes: list[str]) -> int:
+	"""Sends edited requirements to the partners who have them: a line saying what changed,
+	then a new Requirement card. Their quotes now answer that card, and a quote made against
+	the earlier version is flagged until the partner confirms it or quotes again. Returns how
+	many partners got it."""
+	card = {**requirement_card(doc, customer), "update": True, "changes": changes}
+	line = _("Requirements updated · Changed: {0}").format(", ".join(_(change) for change in changes))
+	quotes = get_update_recipients(doc.name)
+	for name in quotes:
+		quote = frappe.get_doc("Project Quote", name)
+		frappe.get_doc("Connect Thread", quote.thread).post_system_message(line)
+		quote.brief_message = _post_card(quote.thread, doc.user, card)
+		quote.quoted_before_update = int(bool(quote.amount) and quote.status in QUOTED_STATUSES)
+		# A system step of the customer's edit; update_requirements checked the project is theirs.
+		quote.save(ignore_permissions=True)
+	return len(quotes)
+
+
+def get_update_recipients(project: str) -> list[str]:
+	"""The briefs an edit goes to: every partner with the requirements, including those who
+	declined, except partners the customer set aside (Pragati's edit-requirements spec)."""
+	return frappe.get_all(
+		"Project Quote",
+		filters={"customer_project": project, "status": ["!=", "Not Interested"], "thread": ["is", "set"]},
+		pluck="name",
+	)
 
 
 def send_brief(doc, customer: str, partner: str, card: dict | None = None) -> str:
@@ -23,17 +55,25 @@ def send_brief(doc, customer: str, partner: str, card: dict | None = None) -> st
 	from connect.messaging.doctype.connect_thread.connect_thread import get_or_open_thread
 
 	thread = get_or_open_thread(customer, partner, doc.user)
-	message = frappe.get_doc(
-		{
-			"doctype": "Connect Message",
-			"thread": thread,
-			"sender": doc.user,
-			"message_type": "Requirement",
-			"content": frappe.as_json(card or requirement_card(doc, customer)),
-		}
-	).insert(ignore_permissions=True)
-	await_quote(doc.name, partner, thread, message.name)
+	await_quote(doc.name, partner, thread, _post_card(thread, doc.user, card or requirement_card(doc, customer)))
 	return thread
+
+
+def _post_card(thread: str, sender: str, card: dict) -> str:
+	"""The customer's Requirement card in `thread`; returns the message."""
+	return (
+		frappe.get_doc(
+			{
+				"doctype": "Connect Message",
+				"thread": thread,
+				"sender": sender,
+				"message_type": "Requirement",
+				"content": frappe.as_json(card),
+			}
+		)
+		.insert(ignore_permissions=True)
+		.name
+	)
 
 
 def await_quote(project: str, partner: str, thread: str, brief_message: str | None = None):
@@ -53,40 +93,54 @@ def await_quote(project: str, partner: str, thread: str, brief_message: str | No
 
 
 def requirement_card(doc, customer: str) -> dict:
-	"""The same Requirement card a customer sends from Messaging: their saved requirement and
-	company, with this project's name, brief and answers on top."""
-	from connect.customer.doctype.requirement.requirement import get_requirement_snapshot
-
-	company = frappe.db.get_value("Customer", customer, ["customer_name", "industry", "country"], as_dict=True) or {}
-	criteria = normalize_criteria(frappe.parse_json(doc.criteria) or {})
-	industries = frappe.parse_json(doc.industries) or []
-
-	card = get_requirement_snapshot(customer) or {}
-	card.update(
-		{
-			"project_name": doc.project_name,
-			"company_name": card.get("company_name") or company.get("customer_name"),
-			# what they picked themselves, before anything saved for the company
-			"industry": ", ".join(industries) or card.get("industry") or company.get("industry"),
-			"country": card.get("country") or company.get("country"),
-			"company_size": doc.company_size or card.get("company_size"),
-			"description": doc.description,
-			"looking_for": looking_for(doc),
-			"current_situation": _current_situation(doc) or card.get("current_situation"),
-			"timeline": answer_label("go_live", doc.go_live) or card.get("timeline"),
-			"delivery_preference": work_label(criteria["work"]) if criteria["work"] else card.get("delivery_preference"),
-			"budget": doc.budget,
-			"partner_brief": partner_brief(criteria),
-		}
-	)
-	return card
+	"""The Requirement card partners get: the project's answers, and its company's."""
+	company = frappe.get_doc("Customer", customer)
+	criteria = get_partner_criteria(doc)
+	return {
+		"project_name": doc.project_name,
+		"company_name": company.customer_name,
+		"country": company.country,
+		"industry": ", ".join(company.get_industries()),
+		"company_size": company.company_size,
+		"apps": criteria["apps"],
+		"current_situation": _current_situation(doc),
+		"budget": doc.budget,
+		"description": doc.description,
+		"partner_brief": partner_brief(criteria),
+		# The version this card carries, as the Requirements dialog reads it.
+		"rows": requirement_rows(doc, company),
+	}
 
 
-def looking_for(doc) -> str:
-	# A project sent from a partner's Connect button has no brief written yet: its name says it.
-	if not doc.description:
-		return doc.project_name
-	return _("Custom implementation: {0}").format(doc.description)
+def requirement_rows(doc, company) -> list[dict]:
+	"""The requirements as one label and value per answer, blank ones left out: what the
+	Requirements dialog shows, on the project page and from each card in a chat."""
+	criteria = get_partner_criteria(doc)
+	place = criteria["cities"] or criteria["countries"]
+	tier = _("{0} tier").format(_listed(criteria["tiers"], _("or"))) if criteria["tiers"] else _("Any tier")
+	looking_for = [tier, _("in {0}").format(_listed(place, _("or"))) if place else _("anywhere")]
+	today = [answer_label("operations", doc.operations), _uses(doc)]
+	size = answer_label("employees", company.company_size) if company else ""
+	industries = company.get_industries() if company else []
+	rows = [
+		(_("Budget"), doc.budget),
+		(_("Apps"), _listed(criteria["apps"])),
+		(_("Today"), ". ".join(filter(None, today))),
+		(_("To fix"), ", ".join(filter(None, (answer_label("problems", p) for p in frappe.parse_json(doc.problems) or [])))),
+		(_("Looking for"), ", ".join(looking_for)),
+		(
+			_("Company"),
+			" · ".join(filter(None, [_listed(industries), size and _("{0} employees").format(size), company and company.country])),
+		),
+	]
+	return [{"label": label, "text": text} for label, text in rows if text]
+
+
+def _listed(values: list[str], joiner: str | None = None) -> str:
+	"""The values joined as "A, B and C", or with `joiner` as "A, B or C"."""
+	if len(values) <= 1:
+		return "".join(values)
+	return f"{', '.join(values[:-1])} {joiner or _('and')} {values[-1]}"
 
 
 def partner_brief(criteria: dict) -> str:
@@ -104,20 +158,26 @@ def partner_brief(criteria: dict) -> str:
 		who += " " + _("who offers services for {0}").format(either(criteria["industries"]))
 
 	tier = _("{0} tier").format(either(criteria["tiers"])) if criteria["tiers"] else _("Any tier")
-	work = work_label(criteria["work"]).lower()
 	# "A partner." says nothing on its own, so it's only there with a place or industry
-	return (_("A partner") + who + ". " if who else "") + f"{tier}, {work}."
+	return (_("A partner") + who + ". " if who else "") + f"{tier}."
+
+
+def _uses(doc) -> str:
+	"""The systems they use today, with what else they named for "Something else"."""
+	systems = [system for system in frappe.parse_json(doc.systems) or [] if system != "Something else"]
+	if doc.other_system:
+		systems.append(doc.other_system)
+	return _("You use {0}").format(_listed(systems)) if systems else ""
 
 
 def _current_situation(doc) -> str:
 	situation = answer_label("operations", doc.operations)
-	systems = frappe.parse_json(doc.systems) or []
 	problems = frappe.parse_json(doc.problems) or []
 
-	if systems:
-		situation = "; ".join(filter(None, [situation, _("uses {0}").format(", ".join(systems))]))
+	if _uses(doc):
+		situation = "; ".join(filter(None, [situation, _uses(doc).lower()]))
 	if problems:
-		fix = ", ".join(filter(None, (answer_label("problems", p).lower() for p in problems)))
-		situation = ". ".join(filter(None, [situation, _("Wants fixed: {0}").format(fix)]))
+		solve = ", ".join(filter(None, (answer_label("problems", p).lower() for p in problems)))
+		situation = ". ".join(filter(None, [situation, _("Wants to solve: {0}").format(solve)]))
 	return situation
 

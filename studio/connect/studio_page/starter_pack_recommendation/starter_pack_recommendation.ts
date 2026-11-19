@@ -17,7 +17,7 @@ import {
 	recommend,
 } from "@app/utils/recommendation"
 import { packBasket } from "@app/utils/packBasket"
-import { isProjectSent, projectDialog, projectPath } from "@app/utils/projectDialog"
+import { isProjectSent, projectDialog } from "@app/utils/projectDialog"
 import { startTracking } from "@app/utils/tracking"
 
 export default function setup(context) {
@@ -102,38 +102,14 @@ export default function setup(context) {
 		recommended.value.length > 1 ? "Why we recommend these packs" : "Why we recommend this pack",
 	)
 
-	// For a project, "Change my answers" edits the draft right here; if the new answers
-	// rule a pack out, the custom implementation page takes over.
-	const dialog = projectDialog(context, {
-		onSaved: (saved) => {
-			if (saved.verdict === "packs") {
-				project.value = saved
-				answers.value = answersFromProject(saved)
-				tickRecommended()
-				return
-			}
-			router.push(projectPath({ kind: "project", project: saved.name, verdict: saved.verdict }))
-		},
-	})
+	// Projects are shared as they're saved, so the answers change in the questionnaire.
+	const dialog = projectDialog()
 
 	function changeAnswers() {
-		if (inProject) {
-			if (project.value) dialog.editProject(project.value)
-			return
-		}
 		router.push({ path: "/find-partners-redesign", query: answersToQuery(answers.value || {}) })
 	}
 
-	function deleteProject() {
-		call("connect.api.projects.delete_project", { name: projectName })
-			.then(() => router.push("/projects"))
-			.catch(() => toast.error("Couldn't delete the project."))
-	}
-
-	const projectMenu = [
-		{ label: "Change my answers", icon: "lucide-pencil", onClick: changeAnswers },
-		{ label: "Delete project", icon: "lucide-trash-2", onClick: deleteProject },
-	]
+	const projectMenu = [{ label: "Change my answers", icon: "lucide-pencil", onClick: changeAnswers }]
 
 	// Under "Consider a custom implementation if": someone who came here from the custom
 	// page goes back to it; anyone else is offered partner quotes.

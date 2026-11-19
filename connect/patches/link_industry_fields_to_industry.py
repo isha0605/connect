@@ -34,12 +34,14 @@ RENAMED = {
 	"Other": "Others",
 	"Professional Services": "Professional services",
 }
-SINGLE_VALUE_FIELDS = (("Requirement", "industry"), ("Customer", "industry"))
+# Customer.industry and Customer Project.industries were renamed here too, before industries moved to
+# the Customer's list (move_project_answers_to_one_place); this has run on every site since.
+SINGLE_VALUE_FIELDS = (("Requirement", "industry"),)
 
 
 def execute():
 	"""Makes the Industry list frappe.io's success-story industries, now that Requirement.industry
-	and Customer.industry link to it. Renames old values everywhere an industry is stored, then
+	links to it. Renames old values everywhere an industry is stored, then
 	deletes the Industry records outside the list.
 
 	Stops before deleting anything if a stored value is neither in the list nor renamed, so that
@@ -49,7 +51,6 @@ def execute():
 		for old, new in RENAMED.items():
 			frappe.db.set_value(doctype, {fieldname: old}, fieldname, new, update_modified=False)
 	_rename_partner_industries()
-	_rename_in_projects()
 
 	check_every_value_is_listed()
 	for name in frappe.get_all("Industry", filters={"name": ["not in", list(INDUSTRIES)]}, pluck="name"):
@@ -87,37 +88,11 @@ def _rename_partner_industries():
 			frappe.db.set_value("Partner Industry", row.name, "industry", new, update_modified=False)
 
 
-def _rename_in_projects():
-	"""A project keeps industries twice: the questionnaire's answers and its Edit criteria."""
-	for project in frappe.get_all("Customer Project", fields=["name", "industries", "criteria"]):
-		industries = frappe.parse_json(project.industries or "[]") or []
-		criteria = frappe.parse_json(project.criteria or "{}") or {}
-		changes = {}
-
-		if _renamed(industries) != industries:
-			changes["industries"] = frappe.as_json(_renamed(industries))
-		if _renamed(criteria.get("industries") or []) != (criteria.get("industries") or []):
-			criteria["industries"] = _renamed(criteria["industries"])
-			changes["criteria"] = frappe.as_json(criteria)
-
-		if changes:
-			frappe.db.set_value("Customer Project", project.name, changes, update_modified=False)
-
-
-def _renamed(industries: list[str]) -> list[str]:
-	return list(dict.fromkeys(RENAMED.get(industry, industry) for industry in industries))
-
-
 def check_every_value_is_listed() -> None:
 	unlisted = {}
 	for doctype, fieldname in (*SINGLE_VALUE_FIELDS, ("Partner Industry", "industry")):
 		values = frappe.get_all(doctype, filters={fieldname: ["is", "set"]}, pluck=fieldname, distinct=True)
 		unlisted.update({value: doctype for value in values if value not in INDUSTRIES})
-
-	for project in frappe.get_all("Customer Project", fields=["industries", "criteria"]):
-		criteria = frappe.parse_json(project.criteria or "{}") or {}
-		stored = (frappe.parse_json(project.industries or "[]") or []) + (criteria.get("industries") or [])
-		unlisted.update({value: "Customer Project" for value in stored if value not in INDUSTRIES})
 
 	if unlisted:
 		found = ", ".join(f"{value} ({doctype})" for value, doctype in sorted(unlisted.items()))

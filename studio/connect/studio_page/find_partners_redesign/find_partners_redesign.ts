@@ -1,9 +1,9 @@
 // "Tell us about your business": three steps of questions, then a hand-off to either
 // the Starter Pack recommendation or a partner directory filtered to the answers.
 //
-// ?intent=contact is Get started's "Contact partners" instead: step 1 asks which regions
-// partners should be from, step 3 is the brief (budget, what to build), and the end is the
-// Share requirements dialog, which sends the brief to every matching partner. A guest signs
+// ?intent=contact is Get started's "Contact partners" instead: step 2 also asks what else they
+// use, step 3 is the brief (budget, what they need) in place of what they want fixed, and the
+// end is the Share requirements dialog, which sends the brief to every matching partner. A guest signs
 // up first and comes back here (?details=1) with their answers kept in this tab.
 // The answers themselves are Studio variables so the form controls can v-model them;
 // what they mean lives in @app/utils/recommendation, shared with the recommendation page.
@@ -89,16 +89,16 @@ export default function setup(context) {
 	}
 
 	function continueFromBusiness() {
-		const whereMissing = contactMode ? !partnerRegions.value.length : !businessCountry.value
-		if (whereMissing || !employeeCount.value || !(industries.value || []).length) {
+		if (!businessCountry.value || !employeeCount.value || !(industries.value || []).length) {
 			showErrors.value = true
 			return
 		}
 		goToStep(2)
 	}
 
+	// The recommendation needs how they run today; a brief to partners can go without it.
 	function continueFromOperations() {
-		if (!operations.value) {
+		if (!contactMode && !operations.value) {
 			showErrors.value = true
 			return
 		}
@@ -126,32 +126,9 @@ export default function setup(context) {
 		const user = myContext?.data?.user
 		return !!user && user !== "Guest"
 	})
-	const partnerRegions = ref([])
 	const briefBudget = ref("")
 	const briefDescription = ref("")
-
-	// Where partners should be from: the countries partners are actually in.
-	const regionChips = computed(() =>
-		(partnerCountries.data || []).map((country) => ({
-			value: country,
-			label: country,
-			picked: partnerRegions.value.includes(country),
-		})),
-	)
-	function toggleRegion(country) {
-		const list = partnerRegions.value
-		partnerRegions.value = list.includes(country) ? list.filter((c) => c !== country) : [...list, country]
-	}
-	// Until they pick, partners from their own country (if there are any there).
-	watch(
-		() => partnerCountries.data,
-		(countries) => {
-			if (contactMode && !partnerRegions.value.length && (countries || []).includes(businessCountry.value)) {
-				partnerRegions.value = [businessCountry.value]
-			}
-		},
-		{ immediate: true },
-	)
+	const otherSystem = ref("")
 
 	// Kept in this tab across signing up — the sign-up page reloads the app.
 	const BRIEF_KEY = "connect.contactPartners.brief"
@@ -159,7 +136,12 @@ export default function setup(context) {
 		try {
 			window.sessionStorage.setItem(
 				BRIEF_KEY,
-				JSON.stringify({ ...answers(), regions: partnerRegions.value, budget: briefBudget.value, description: briefDescription.value }),
+				JSON.stringify({
+					...answers(),
+					other_system: otherSystem.value,
+					budget: briefBudget.value,
+					description: briefDescription.value,
+				}),
 			)
 		} catch {
 			// Without storage they answer again after signing up.
@@ -178,7 +160,7 @@ export default function setup(context) {
 		industries.value = kept.industries || []
 		operations.value = kept.operations || ""
 		currentSystems.value = kept.systems || []
-		partnerRegions.value = kept.regions || []
+		otherSystem.value = kept.other_system || ""
 		briefBudget.value = kept.budget || ""
 		briefDescription.value = kept.description || ""
 		return true
@@ -186,16 +168,12 @@ export default function setup(context) {
 
 	// What the brief goes out with: the questions' answers, then whatever Edit criteria adds.
 	const shareCriteria = ref(blankCriteria())
-	const shareGoLive = ref("no_deadline")
 	const shareOpen = ref(false)
 	const editingCriteria = ref(false)
 	const recipients = ref(null)
 	const sharing = ref(false)
-	const chips = partnerCriteria(context, {
-		saved: () => shareCriteria.value,
-		goLive: () => shareGoLive.value,
-	})
-	const shareSummary = computed(() => criteriaSummary(shareCriteria.value, shareGoLive.value))
+	const chips = partnerCriteria(context, { saved: () => shareCriteria.value })
+	const shareSummary = computed(() => criteriaSummary(shareCriteria.value))
 
 	// The partners the brief goes to, from the same query the send uses.
 	function loadRecipients() {
@@ -212,10 +190,12 @@ export default function setup(context) {
 			})
 	}
 
+	// The same partners the send reaches (get_partner_criteria in questions.py): in their
+	// country when partners are there, else anywhere, with their industries.
 	function openShare() {
 		shareCriteria.value = {
 			...blankCriteria(),
-			countries: [...partnerRegions.value],
+			countries: partnersCountry(),
 			industries: [...(industries.value || [])],
 		}
 		editingCriteria.value = false
@@ -227,7 +207,6 @@ export default function setup(context) {
 	function toggleEditCriteria() {
 		if (editingCriteria.value) {
 			shareCriteria.value = chips.draftFilters()
-			shareGoLive.value = chips.criteriaDraft.value.go_live || shareGoLive.value
 			editingCriteria.value = false
 			loadRecipients()
 		} else {
@@ -295,32 +274,22 @@ export default function setup(context) {
 		if (sharing.value) return
 		if (editingCriteria.value) toggleEditCriteria()
 		sharing.value = true
-		const company = myContext?.data?.customer?.customer_name
-		call("connect.api.projects.save_project", {
-			project_name: company ? `Custom implementation for ${company}` : "Custom implementation",
-			go_live: shareGoLive.value,
-			operations: operations.value,
-			systems: JSON.stringify(currentSystems.value || []),
-			problems: JSON.stringify([]),
-			verdict: "custom",
-			// as they picked them, for the brief partners receive
-			industries: JSON.stringify(industries.value || []),
-			company_size: EMPLOYEE_OPTIONS.find((o) => o.value === employeeCount.value)?.label || "",
+		const systems = usesOtherSystems(operations.value) ? currentSystems.value || [] : []
+		call("connect.api.projects.share_requirements", {
+			answers: JSON.stringify({
+				country: businessCountry.value,
+				company_size: employeeCount.value,
+				industries: industries.value || [],
+				operations: operations.value,
+				systems,
+				other_system: systems.includes("Something else") ? otherSystem.value.trim() : "",
+				budget: briefBudget.value,
+				description: briefDescription.value.trim(),
+				criteria: { cities: shareCriteria.value.cities, tiers: shareCriteria.value.tiers },
+			}),
+			// This wizard doesn't ask what they want fixed or the apps.
+			contact_partners: 1,
 		})
-			.then((project) =>
-				call("connect.api.projects.save_criteria", {
-					name: project.name,
-					criteria: JSON.stringify(shareCriteria.value),
-					go_live: shareGoLive.value,
-				}),
-			)
-			.then((project) =>
-				call("connect.api.projects.share_requirements", {
-					name: project.name,
-					budget: briefBudget.value,
-					description: briefDescription.value,
-				}),
-			)
 			.then((project) => {
 				try {
 					window.sessionStorage.removeItem(BRIEF_KEY)
@@ -356,6 +325,21 @@ export default function setup(context) {
 		loadRecipients()
 	}
 
+	// A signed-in customer's company facts fill step 1, as in the New project dialog: they are
+	// the company's, and once set only its Owner or an Admin can change them.
+	if (contactMode) {
+		watch(
+			() => myContext?.data?.customer,
+			(company) => {
+				if (!company) return
+				if (company.country) businessCountry.value = company.country
+				if (company.company_size) employeeCount.value = company.company_size
+				if ((company.industries || []).length) industries.value = company.industries
+			},
+			{ immediate: true },
+		)
+	}
+
 	// Back from signing up: their answers again, on the brief, with the dialog open.
 	// ?details stays in the URL: changing the route remounts the page, which would undo this.
 	if (contactMode && route.query.details && restoreBrief()) {
@@ -370,18 +354,12 @@ export default function setup(context) {
 	}
 
 	// ---- Partners that match, under the map ----
-	// Where they want partners from (contact mode's region chips, otherwise their own
-	// country when partners are there) and their industry — the same matching the brief
-	// is sent with. Re-counted a moment after the answers settle.
+	// Their own country when partners are there, and their industry — the same matching the
+	// brief is sent with. Re-counted a moment after the answers settle.
 	const liveMatchCount = ref(null)
 	let countTimer = null
 	function matchCriteria() {
-		const countries = contactMode
-			? partnerRegions.value
-			: (partnerCountries.data || []).includes(businessCountry.value)
-				? [businessCountry.value]
-				: []
-		return { ...blankCriteria(), countries: [...countries], industries: [...(industries.value || [])] }
+		return { ...blankCriteria(), countries: partnersCountry(), industries: [...(industries.value || [])] }
 	}
 	watch(
 		() => JSON.stringify(matchCriteria()),
@@ -405,6 +383,14 @@ export default function setup(context) {
 		router.push({ path: "/partner-directory-redesign", query: directoryQuery(answers(), partnerCountries.data || []) })
 	}
 
+	// Their country as the partners' country names it, when partners are there; the server
+	// matches it the same way, ignoring case.
+	function partnersCountry() {
+		const country = String(businessCountry.value || "").toLowerCase()
+		const match = (partnerCountries.data || []).find((name) => name.toLowerCase() === country)
+		return match ? [match] : []
+	}
+
 	function finishStep3() {
 		if (contactMode) continueFromBrief()
 		else seeRecommendation()
@@ -416,10 +402,9 @@ export default function setup(context) {
 		viewAllPartners,
 		contactMode,
 		signedIn,
-		regionChips,
-		toggleRegion,
 		briefBudget,
 		briefDescription,
+		otherSystem,
 		budgetOptions: BUDGET_OPTIONS,
 		finishStep3,
 		shareOpen,
@@ -438,10 +423,7 @@ export default function setup(context) {
 		shareBrief,
 		cityChips: chips.cityChips,
 		tierChips: chips.tierChips,
-		workChips: chips.workChips,
-		goLiveChips: chips.goLiveChips,
 		toggleCriterion: chips.toggleCriterion,
-		setGoLive: chips.setGoLive,
 		countryOptions: COUNTRY_OPTIONS,
 		employeeOptions: EMPLOYEE_OPTIONS,
 		industryOptions: INDUSTRY_OPTIONS,

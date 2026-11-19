@@ -88,10 +88,12 @@ def get_my_context():
 	customer_membership = None
 	if customer:
 		level = _customer_access_at(customer, user) or MEMBER
-		customer_name = frappe.db.get_value("Customer", customer, "customer_name")
+		company = frappe.get_doc("Customer", customer)
 		customer_membership = {
 			"customer": customer,
-			"customer_name": customer_name,
+			"customer_name": company.customer_name,
+			# The project questions start from these: country, company_size, industries.
+			**company.get_company_facts(),
 			"access_level": level,
 			"is_admin": level in FULL_ACCESS,
 		}
@@ -162,10 +164,6 @@ def get_projects_route(user, customer=None):
 		limit=1,
 		pluck="name",
 	)
-	if (
-		has_order
-		or frappe.db.exists("Customer Project", {"user": user})
-		or (customer and frappe.db.exists("Requirement", {"customer": customer}))
-	):
+	if has_order or frappe.db.exists("Customer Project", {"user": user}):
 		return "/projects"
 	return None

@@ -15,24 +15,11 @@ def list_projects():
 	return sorted(my_projects() + orders, key=lambda row: row["created_on"] or "", reverse=True)
 
 
+# `answers` is the project questions' answers as one JSON object; see questions.py.
 @frappe.whitelist(methods=["POST"])
-def save_project(
-	project_name, go_live=None, operations=None, problems=None, verdict=None, name=None, systems=None,
-	industries=None, company_size=None,
-):
-	from connect.customer.doctype.customer_project.customer_project import save_project
-	return save_project(project_name, go_live, operations, problems, verdict, name, systems, industries, company_size)
-
-
-@frappe.whitelist(methods=["POST"])
-def start_project_with_partner(
-	partner, project_name=None, go_live=None, operations=None, problems=None, verdict=None, systems=None,
-	project=None, budget=None, description=None,
-):
+def start_project_with_partner(partner, project=None, answers=None):
 	from connect.customer.doctype.customer_project.customer_project import start_project_with_partner
-	return start_project_with_partner(
-		partner, project_name, go_live, operations, problems, verdict, systems, project, budget, description
-	)
+	return start_project_with_partner(partner, project, answers)
 
 
 @frappe.whitelist()
@@ -42,15 +29,15 @@ def get_project(name):
 
 
 @frappe.whitelist(methods=["POST"])
-def share_requirements(name, budget=None, description=None):
-	from connect.customer.doctype.customer_project.customer_project import share_requirements
-	return share_requirements(name, budget, description)
+def update_requirements(name, answers):
+	from connect.customer.doctype.customer_project.customer_project import update_requirements
+	return update_requirements(name, answers)
 
 
 @frappe.whitelist(methods=["POST"])
-def delete_project(name):
-	from connect.customer.doctype.customer_project.customer_project import delete_project
-	return delete_project(name)
+def share_requirements(answers, contact_partners=False):
+	from connect.customer.doctype.customer_project.customer_project import share_requirements
+	return share_requirements(answers, frappe.utils.sbool(contact_partners))
 
 
 # Guests too: the Find Partners questions show the live count before anyone signs up. It
@@ -59,12 +46,6 @@ def delete_project(name):
 def partner_criteria(criteria=None, include_recipients=False):
 	from connect.customer.doctype.customer_project.partner_matching import partner_criteria
 	return partner_criteria(criteria, frappe.utils.sbool(include_recipients))
-
-
-@frappe.whitelist(methods=["POST"])
-def save_criteria(name, criteria=None, go_live=None):
-	from connect.customer.doctype.customer_project.customer_project import save_criteria
-	return save_criteria(name, criteria, go_live)
 
 
 @frappe.whitelist()
@@ -119,6 +100,11 @@ def quotable_briefs(thread):
 @frappe.whitelist(methods=["POST"])
 def send_quote(quote, amount, weeks, note=None):
 	return {"message": frappe.get_doc("Project Quote", quote).send_quote(amount, weeks, note)}
+
+
+@frappe.whitelist(methods=["POST"])
+def confirm_quote(quote):
+	frappe.get_doc("Project Quote", quote).confirm_quote()
 
 
 # The partner's side: their admin answers the request from the card in the thread.

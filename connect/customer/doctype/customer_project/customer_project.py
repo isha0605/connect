@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Isha and contributors
 # For license information, please see license.txt
 
+import re
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -9,7 +11,15 @@ from frappe.query_builder.functions import Sum
 from frappe.utils import now_datetime
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
-from connect.customer.doctype.customer_project.partner_matching import normalize_criteria
+from connect.customer.doctype.customer_project.questions import (
+	NOT_ASKED_BY_CONTACT_PARTNERS,
+	check_answers,
+	get_answers,
+	get_changes,
+	get_company,
+	get_partner_criteria,
+	set_answers,
+)
 from connect.partner.cloud_integration import queue_cloud_link
 from connect.partner.performance_events import send_project_events
 from connect.customer.doctype.customer_project.project_notifications import (
@@ -59,6 +69,9 @@ class CustomerProject(Document):
 
 	def before_insert(self):
 		self.user = frappe.session.user
+		self.project_name = self.project_name or self._get_next_project_name()
+		# Starter Packs are off, so every project is a custom implementation.
+		self.verdict = self.verdict or VERDICTS["custom"]
 
 	def validate(self):
 		self._check_hire_change()
@@ -91,6 +104,24 @@ class CustomerProject(Document):
 		# A system step of the quote's change; whoever changed the quote was checked there.
 		self.save(ignore_permissions=True)
 
+	def set_answers(self, answers: dict) -> None:
+		set_answers(self, answers)
+
+	def check_answers(self, not_asked: tuple[str, ...] = ()) -> None:
+		check_answers(self, not_asked)
+
+	def _get_next_project_name(self) -> str:
+		"""Implementation for {company}, then (2), (3) for the same user: one more than the
+		highest number they have, so a deleted draft below it leaves its number unused."""
+		company = frappe.db.get_value("Customer", get_customer_for_user(self.user), "customer_name")
+		base = _("Implementation for {0}").format(company) if company else _("Implementation")
+		taken = frappe.get_all(
+			"Customer Project", filters={"user": self.user, "project_name": ["like", f"{base}%"]}, pluck="project_name"
+		)
+		numbers = [_project_number(base, name) for name in taken]
+		highest = max(numbers, default=0)
+		return f"{base} ({highest + 1})" if highest else base
+
 	def _check_hire_change(self):
 		"""Only the hire quote moves a project into or out of Hiring and Hired; a hired project
 		finishing (Completed) is the project's own step."""
@@ -117,44 +148,11 @@ def get_own_project(name: str) -> CustomerProject:
 	return doc
 
 
-def save_project(
-	project_name, go_live=None, operations=None, problems=None, verdict=None, name=None, systems=None,
-	industries=None, company_size=None,
-) -> dict:
-	"""Create a draft project, or update one when `name` is given ("Change my answers").
-	Industries and company size come only from the Contact partners questions, so they're
-	left alone when not given."""
-	project_name = (project_name or "").strip()
-	if not project_name:
-		frappe.throw(_("Give the project a name."))
-
-	doc = get_own_project(name) if name else frappe.new_doc("Customer Project")
-	doc.update(
-		{
-			"project_name": project_name,
-			"go_live": go_live or "",
-			"operations": operations or "",
-			"systems": _json_list(systems),
-			"problems": _json_list(problems),
-			"verdict": VERDICTS.get(verdict, ""),
-		}
-	)
-	if industries is not None:
-		doc.industries = _json_list(industries)
-	if company_size is not None:
-		doc.company_size = (company_size or "").strip()
-	doc.save(ignore_permissions=True)
-	return project_dict(doc)
-
-
-def start_project_with_partner(
-	partner, project_name=None, go_live=None, operations=None, problems=None, verdict=None, systems=None,
-	project=None, budget=None, description=None,
-) -> dict:
-	"""Contact on a partner's profile or directory card: sends one project to that one partner,
-	as the customer's Requirement card in their chat. The project is an existing one of theirs
-	(`project`, with its brief filled in here if it has none yet), or a new one saved from the
-	New project answers. Returns the project and the chat."""
+def start_project_with_partner(partner: str, project: str | None = None, answers: str | dict | None = None) -> dict:
+	"""Connect on a partner's profile or card: sends one project to that one partner, as the
+	customer's Requirement card in their chat. The project is an existing one of theirs
+	(`project`, with any answers it lacks given here), or a new one saved from `answers`.
+	Returns the project and the chat."""
 	from connect.customer.doctype.customer_project.brief import send_brief
 	from connect.messaging.doctype.connect_thread.connect_thread import get_or_open_thread
 	from connect.partner.doctype.partner.partner import VERIFIED
@@ -170,10 +168,8 @@ def start_project_with_partner(
 	if not takes_work or not _get_partner_admins(partner):
 		frappe.throw(_("This partner can't take messages yet."))
 
-	if project:
-		doc = _existing_project_to_send(project, partner, budget, description)
-	else:
-		doc = get_own_project(save_project(project_name, go_live, operations, problems, verdict, systems=systems)["name"])
+	doc = _existing_project_to_send(project, partner) if project else frappe.new_doc("Customer Project")
+	_save_answers(doc, answers)
 	# The customer picked this partner themselves, so the partner sees who they are, from the
 	# brief's own notifications on.
 	thread = get_or_open_thread(customer, partner, doc.user)
@@ -186,9 +182,9 @@ def start_project_with_partner(
 	return {"project": project_dict(doc), "thread": thread}
 
 
-def _existing_project_to_send(name: str, partner: str, budget=None, description=None) -> CustomerProject:
-	"""The caller's project, ready to go to `partner`: still looking for one, not sent to them
-	before, and with a brief. A brief given here is kept on the project for the next partner."""
+def _existing_project_to_send(name: str, partner: str) -> CustomerProject:
+	"""The caller's project, if it can go to `partner`: still looking for one, and not sent to
+	them before."""
 	doc = get_own_project(name)
 	if doc.status in ("Hired", "Completed"):
 		frappe.throw(_("This project already has a partner."))
@@ -196,68 +192,77 @@ def _existing_project_to_send(name: str, partner: str, budget=None, description=
 		frappe.throw(_("You've asked a partner to take this project on. Wait for their answer first."))
 	if frappe.db.exists("Project Quote", {"customer_project": doc.name, "partner": partner}):
 		frappe.throw(_("You've already sent this project to them. Carry on in Messages."))
-
-	if (budget or "").strip():
-		doc.budget = budget.strip()
-	if (description or "").strip():
-		doc.description = description.strip()
-	_check_brief(doc)
 	return doc
 
 
-def _check_brief(doc: CustomerProject):
-	"""What a partner needs to quote: a budget range and what to build."""
-	if not doc.budget:
-		frappe.throw(_("Pick a budget range."))
-	if not doc.description:
-		frappe.throw(_("Tell partners what you want built."))
+def _save_answers(doc: CustomerProject, answers: str | dict | None) -> None:
+	"""Saves `answers` on the project, if given, once every question is answered."""
+	if answers:
+		doc.set_answers(frappe.parse_json(answers))
+	doc.check_answers()
+	# Only System Managers write projects; the caller owns this one (get_own_project) or makes it.
+	doc.save(ignore_permissions=True)
 
 
 def get_project(name: str) -> dict:
 	return project_dict(get_own_project(name))
 
 
-def share_requirements(name: str, budget=None, description=None) -> dict:
-	"""Keep the custom-implementation brief on the project and send it to every partner its
-	criteria match, as the customer's own Requirement card."""
+def share_requirements(answers: str | dict, contact_partners: bool = False) -> dict:
+	"""New project: saves the answers as a project and sends it to every partner they match, as
+	the customer's own Requirement card. With no partner to send to, nothing is saved, so the
+	customer can widen their answers and try again. `contact_partners` is Get started's wizard,
+	which doesn't ask what they want fixed or the apps."""
 	from connect.customer.doctype.customer_project.brief import send_to_partners
+	from connect.customer.doctype.customer_project.partner_matching import get_brief_recipients
 
-	doc = get_own_project(name)
-	doc.budget = (budget or "").strip()
-	doc.description = (description or "").strip()
-	_check_brief(doc)
-	if doc.status in ("Shared", "Hiring", "Hired", "Completed"):
-		frappe.throw(_("These requirements have already been sent."))
-	customer = get_customer_for_user(doc.user)
+	customer = get_customer_for_user(frappe.session.user)
 	if not customer:
-		frappe.throw(_("Sign in with your company account to send this to partners."))
+		frappe.throw(_("Sign in with your company account to send this to partners."), frappe.PermissionError)
 
+	doc = frappe.new_doc("Customer Project")
+	doc.set_answers(frappe.parse_json(answers))
+	doc.check_answers(NOT_ASKED_BY_CONTACT_PARTNERS if contact_partners else ())
+	if not get_brief_recipients(get_partner_criteria(doc)):
+		frappe.throw(_("No partners match these answers yet. Try more apps."))
+
+	# Only System Managers write projects; this one is the caller's own.
+	doc.insert(ignore_permissions=True)
 	sent = send_to_partners(doc, customer)
-	if not sent:
-		frappe.throw(_("No partners match these criteria yet. Try widening them."))
-
 	doc.status = "Shared"
 	doc.shared_count = sent
 	doc.save(ignore_permissions=True)
 	return project_dict(doc)
 
 
-def save_criteria(name: str, criteria=None, go_live=None) -> dict:
+def update_requirements(name: str, answers: str | dict) -> dict:
+	"""Edit on sent requirements: saves the changed answers and sends them to every partner who
+	has them. With nothing changed, sends nothing."""
+	from connect.customer.doctype.customer_project.brief import send_requirements_update
+
 	doc = get_own_project(name)
-	doc.criteria = frappe.as_json(normalize_criteria(frappe.parse_json(criteria) or {}))
-	if go_live is not None:
-		doc.go_live = go_live
+	if doc.status != "Shared":
+		frappe.throw(_("Requirements can change only while you're choosing a partner."))
+	customer = get_customer_for_user(doc.user)
+	if not customer:
+		frappe.throw(_("Sign in with your company account to send this to partners."), frappe.PermissionError)
+
+	before = get_answers(doc)
+	doc.set_answers(frappe.parse_json(answers))
+	doc.check_answers()
+	changes = get_changes(before, get_answers(doc))
+	if not changes:
+		return {**project_dict(doc), "update_sent_to": 0}
+
+	doc.requirements_updated_on = now_datetime()
+	# Only System Managers write projects; get_own_project checked the caller owns this one.
 	doc.save(ignore_permissions=True)
-	return project_dict(doc)
-
-
-def delete_project(name: str):
-	doc = get_own_project(name)
-	frappe.delete_doc("Customer Project", doc.name, ignore_permissions=True)
+	sent = send_requirements_update(doc, customer, changes)
+	return {**project_dict(doc), "update_sent_to": sent}
 
 
 def my_projects() -> list[dict]:
-	"""The caller's draft projects, newest first, in the Projects page's row shape. Once the
+	"""The caller's projects, newest first, in the Projects page's row shape. Once the
 	partner accepts, a row shows them like a booked pack; until then it says who it's waiting on."""
 	if frappe.session.user == "Guest":
 		return []
@@ -288,23 +293,29 @@ def my_projects() -> list[dict]:
 
 
 def project_dict(doc: CustomerProject) -> dict:
+	from connect.customer.doctype.customer_project.brief import requirement_rows
 	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import with_timezone
 
+	company = get_company(doc)
 	return {
 		"name": doc.name,
 		"project_name": doc.project_name,
 		"status": doc.status,
 		"verdict": VERDICT_KEYS.get(doc.verdict, ""),
-		"go_live": doc.go_live,
+		"company_size": company.company_size if company else "",
+		"industries": company.get_industries() if company else [],
+		"apps": [row.app for row in doc.apps],
 		"operations": doc.operations,
 		"systems": frappe.parse_json(doc.systems) or [],
+		"other_system": doc.other_system,
+		"country": company.country if company else "",
 		"problems": frappe.parse_json(doc.problems) or [],
-		"industries": frappe.parse_json(doc.industries) or [],
-		"company_size": doc.company_size,
-		"criteria": normalize_criteria(frappe.parse_json(doc.criteria) or {}),
+		"criteria": get_partner_criteria(doc),
 		"shared_count": doc.shared_count or 0,
 		"brief_thread": first_brief_thread(doc.name),
 		"shared_on": with_timezone(doc.shared_on),
+		"requirements_updated_on": with_timezone(doc.requirements_updated_on),
+		"requirement_rows": requirement_rows(doc, company),
 		"budget": doc.budget,
 		"description": doc.description,
 		"created_on": with_timezone(doc.creation),
@@ -338,10 +349,13 @@ def booked_order(project: str) -> str | None:
 
 
 def quote_counts(project: str) -> dict:
+	from connect.customer.doctype.customer_project.brief import get_update_recipients
+
 	statuses = frappe.get_all("Project Quote", filters={"customer_project": project}, pluck="status")
 	return {
 		"quotes": sum(1 for status in statuses if status in OPEN_QUOTE_STATUSES),
 		"shortlisted": sum(1 for status in statuses if status == "Interested"),
+		"update_recipients": len(get_update_recipients(project)),
 	}
 
 
@@ -357,7 +371,7 @@ def list_quotes(name: str) -> list[dict]:
 		.on(Partner.name == Quote.partner)
 		.select(
 			Quote.name, Quote.partner, Quote.thread, Quote.status, Quote.amount, Quote.timeline_weeks, Quote.note,
-			Quote.quoted_on,
+			Quote.quoted_on, Quote.quoted_before_update,
 			Partner.partner_name, Partner.tier, Partner.city, Partner.country, Partner.logo,
 			Partner.verification_status,
 		)
@@ -543,9 +557,13 @@ def _project_rows(user: str) -> list[dict]:
 	)
 
 
+def _project_number(base: str, name: str) -> int:
+	"""1 for the base name, n for "base (n)", 0 for any other name that only starts the same."""
+	if name == base:
+		return 1
+	match = re.fullmatch(re.escape(base) + r" \((\d+)\)", name)
+	return int(match.group(1)) if match else 0
+
+
 def _count_where(condition):
 	return Sum(Case().when(condition, 1).else_(0))
-
-
-def _json_list(value) -> str:
-	return frappe.as_json(frappe.parse_json(value) or [])

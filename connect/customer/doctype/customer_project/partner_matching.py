@@ -5,23 +5,19 @@ from collections import Counter
 
 import frappe
 
-from connect.customer.doctype.customer_project.answers import answer_label
 from connect.partner.doctype.partner.partner import (
 	BASE_PARTNER_FILTERS,
-	_child_values_by_partner,
 	_partners_matching_child,
 )
 from connect.partner.doctype.partner_tier.partner_tier import get_tier_order
 from connect.partner.industries import partners_in_industries
 
-# Which partners the brief goes to ("Edit criteria" on the custom implementation page).
-# Each group narrows to any of the picked values; nothing picked means no limit there.
-# "How do you want to work" maps onto the partners' delivery modes, where Hybrid counts
-# for both. The go-live answer is edited alongside but doesn't filter partners.
-WORK_MODES = {"onsite": ("Onsite", "Hybrid"), "remote": ("Remote", "Hybrid")}
+# Which partners the brief goes to. Each group narrows to any of the picked values; nothing
+# picked means no limit there.
 PARTNER_FIELDS = {"countries": "country", "cities": "city", "tiers": "tier"}
-# Criteria groups, in the order the chips show; industries match the partners' picked industries.
-CRITERIA_GROUPS = ("countries", "industries", "cities", "tiers")
+# Criteria groups, in the order the chips show; industries and apps match the partners' picked
+# ones, and a partner with any one of the picked apps matches.
+CRITERIA_GROUPS = ("countries", "industries", "apps", "cities", "tiers")
 
 
 def partner_criteria(criteria: str | dict | None = None, include_recipients: bool = False) -> dict:
@@ -41,11 +37,10 @@ def get_brief_recipients(criteria: dict) -> list[str]:
 
 
 def _criteria_facets(criteria: dict) -> dict:
-	in_reach = normalize_criteria({"countries": criteria["countries"], "industries": criteria["industries"]})
-	partners = frappe.get_all("Partner", filters=get_partner_filters(in_reach), fields=["name", "city", "tier"])
-	modes = _child_values_by_partner(
-		"Partner Delivery Mode", "delivery_mode", [p.name for p in partners], parentfield="delivery_options"
+	in_reach = normalize_criteria(
+		{"countries": criteria["countries"], "industries": criteria["industries"], "apps": criteria["apps"]}
 	)
+	partners = frappe.get_all("Partner", filters=get_partner_filters(in_reach), fields=["name", "city", "tier"])
 
 	cities = Counter(p.city for p in partners if p.city)
 	tiers = Counter(p.tier for p in partners if p.tier)
@@ -53,14 +48,6 @@ def _criteria_facets(criteria: dict) -> dict:
 	return {
 		"cities": [{"value": city, "count": count} for city, count in sorted(cities.items())],
 		"tiers": [{"value": tier, "count": tiers[tier]} for tier in get_tier_order() if tier in tiers],
-		"work": [
-			{
-				"value": key,
-				"label": answer_label("work", key),
-				"count": sum(1 for p in partners if set(modes.get(p.name, ())) & set(wanted)),
-			}
-			for key, wanted in WORK_MODES.items()
-		],
 		"total": frappe.db.count("Partner", get_partner_filters(criteria)),
 	}
 
@@ -94,18 +81,12 @@ def get_partner_filters(criteria: dict) -> list:
 			filters.append(["Partner", field, "in", criteria[group]])
 	if criteria["industries"]:
 		filters.append(["Partner", "name", "in", list(partners_in_industries(criteria["industries"])) or [""]])
-
-	if criteria["work"]:
-		wanted = {mode for work in criteria["work"] for mode in WORK_MODES[work]}
-		working = _partners_matching_child(
-			"Partner Delivery Mode", "delivery_mode", "in", list(wanted), parentfield="delivery_options"
-		)
-		filters.append(["Partner", "name", "in", list(working) or [""]])
+	if criteria["apps"]:
+		with_apps = _partners_matching_child("Partner App", "app", "in", criteria["apps"], parentfield="apps")
+		filters.append(["Partner", "name", "in", list(with_apps) or [""]])
 	return filters
 
 
 def normalize_criteria(criteria: dict | None) -> dict:
 	criteria = criteria or {}
-	normalized = {group: [value for value in criteria.get(group) or [] if value] for group in CRITERIA_GROUPS}
-	normalized["work"] = [work for work in criteria.get("work") or [] if work in WORK_MODES]
-	return normalized
+	return {group: [value for value in criteria.get(group) or [] if value] for group in CRITERIA_GROUPS}

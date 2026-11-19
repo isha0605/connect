@@ -439,7 +439,7 @@ def _card_fields(message_type, card):
 	from connect.notifications import requirement_fields
 
 	if message_type == "Requirement":
-		return "Requirement", requirement_fields(card)
+		return (_("Requirements updated") if card.get("update") else "Requirement"), requirement_fields(card)
 	if message_type == "Meeting":
 		# starts_at is an ISO time ("2026-10-20T14:23:00+05:30"): its date and time are enough here.
 		when = (card.get("starts_at") or "").replace("T", " ")[:16]

@@ -1012,18 +1012,10 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		order = self.paid_order()
 		user, customer, _admin = self.signed_in_buyer(order)
 		# Orders from earlier tests in this class belong to the same buyer.
-		frappe.db.delete("Requirement", {"customer": customer})
 		for key in ("user", "customer"):
 			frappe.db.set_value("Starter Pack Order", {key: user if key == "user" else customer}, "payment_status", "Unpaid")
 		self.assertFalse(context_as(user)["has_projects"])
 
-		frappe.get_doc(
-			{"doctype": "Requirement", "customer": customer, "industry": "Manufacturing"}
-		).insert(ignore_permissions=True)
-		self.assertEqual(context_as(user)["projects_route"], "/projects")
-
-		frappe.db.delete("Requirement", {"customer": customer})
-		self.assertFalse(context_as(user)["has_projects"])
 		order.db_set("payment_status", "Paid")
 		self.assertEqual(context_as(user)["projects_route"], "/projects")
 

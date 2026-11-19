@@ -2,8 +2,9 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 
-from connect.customer.doctype.customer_project.brief import await_quote, looking_for
+from connect.customer.doctype.customer_project.brief import await_quote
 
 
 def execute():
@@ -43,9 +44,16 @@ def _briefed_threads(project) -> list[tuple[str, str]]:
 		.where(Thread.partner.isnotnull())
 		.run(as_dict=True)
 	)
-	brief = looking_for(project)
+	brief = _looking_for(project)
 	return [
 		(m.thread, m.partner)
 		for m in messages
 		if (frappe.parse_json(m.content or "{}") or {}).get("looking_for") == brief
 	]
+
+
+def _looking_for(project) -> str | None:
+	"""How a Requirement card worded the brief when this patch was written."""
+	if not project.description:
+		return project.get("project_name")
+	return _("Custom implementation: {0}").format(project.description)

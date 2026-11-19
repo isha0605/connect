@@ -262,17 +262,21 @@ def _requirement_email_recipients(thread: str, partner: str) -> list[str]:
 def requirement_fields(requirement):
 	"""A Requirement card's answers as (label, value) pairs, leaving out the ones not given."""
 	apps = requirement.get("apps")
+	changes = requirement.get("changes")
 	fields = [
-		("Company", requirement.get("company_name")),
-		("Country", requirement.get("country")),
-		("Industry", requirement.get("industry")),
-		("Looking for", requirement.get("looking_for")),
-		("Company size", requirement.get("company_size")),
-		("Current setup", requirement.get("current_situation")),
-		("Timeline", requirement.get("timeline")),
-		("Delivery", requirement.get("delivery_preference")),
-		("Budget", requirement.get("budget")),
-		("Apps", ", ".join(apps) if isinstance(apps, list) else apps),
+		# An edit's card leads with what changed, so it doesn't read as a new requirement.
+		(_("Changed"), ", ".join(_(change) for change in changes) if isinstance(changes, list) else changes),
+		(_("Company"), requirement.get("company_name")),
+		(_("Country"), requirement.get("country")),
+		(_("Industry"), requirement.get("industry")),
+		(_("Number of employees"), requirement.get("company_size")),
+		(_("Apps"), ", ".join(apps) if isinstance(apps, list) else apps),
+		(_("Go live"), requirement.get("timeline")),
+		(_("Work mode"), requirement.get("delivery_preference")),
+		(_("Current setup"), requirement.get("current_situation")),
+		(_("Budget"), requirement.get("budget")),
+		# A Starter Pack card names the pack bought instead of a description.
+		(_("What they need"), requirement.get("description") or requirement.get("looking_for")),
 	]
 	return [(label, value) for label, value in fields if value]
 
@@ -283,6 +287,11 @@ def _send_new_requirement_email(thread_name, customer, admin, content):
 	recipient = frappe.db.get_value("User", admin, "email") or admin
 	customer_name = (customer and frappe.db.get_value("Customer", customer, "customer_name")) or customer or anonymous_company()
 	requirement = frappe.parse_json(content) if content else {}
+	subject, intro = (
+		(_("{0} updated their requirements"), _("just updated their requirements on Connect."))
+		if requirement.get("update")
+		else (_("New requirement from {0}"), _("just sent a new requirement on Connect."))
+	)
 	details_html = "".join(
 		f"<p><b>{label}:</b> {frappe.utils.escape_html(value)}</p>" for label, value in requirement_fields(requirement)
 	)
@@ -291,9 +300,9 @@ def _send_new_requirement_email(thread_name, customer, admin, content):
 	try:
 		frappe.sendmail(
 			recipients=[recipient],
-			subject=_("New requirement from {0}").format(customer_name),
+			subject=subject.format(customer_name),
 			message=(
-				f"<p>{frappe.utils.escape_html(customer_name)} {_('just sent a new requirement on Connect.')}</p>"
+				f"<p>{frappe.utils.escape_html(customer_name)} {intro}</p>"
 				f"{details_html}"
 				f"<p><a href='{thread_url}'>{_('View conversation')}</a></p>"
 			),

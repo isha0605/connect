@@ -1,23 +1,7 @@
-// "We recommend a custom implementation": where a draft project lands when its answers
-// rule a Starter Pack out (see recommend() in @app/utils/recommendation). Opened as
-// /custom-implementation?project=CP-…; the project is a Customer Project.
-//
-// The partner count is live (count_matching_partners). "Share requirements" keeps the
-// budget and brief on the project — nothing messages partners yet, and the page says so.
+// A shared project (Customer Project): its quotes, the hire and going live. Opened as
+// /custom-implementation?project=CP-…, which is where the project questions land once shared.
 
 import { computed, h, onScopeDispose, ref } from "vue"
-import {
-	BUDGET_OPTIONS,
-	CUSTOM_HOW_IT_WORKS,
-	OPERATION_OPTIONS,
-	PROBLEM_OPTIONS,
-	STARTER_PACK_IF,
-	answersFromProject,
-	goLiveCriterion,
-	recommend,
-} from "@app/utils/recommendation"
-import { isProjectSent, projectDialog, projectPath } from "@app/utils/projectDialog"
-import { blankCriteria, criteriaSummary, orList, partnerCriteria, workCriterion } from "@app/utils/partnerCriteria"
 import { startTracking } from "@app/utils/tracking"
 import { tierSeal } from "@app/utils/tierSeal"
 
@@ -48,19 +32,12 @@ export default function setup(context) {
 	let projectName = String(route.query.project || "")
 	const project = ref(null)
 	const loadError = ref(false)
-	const matchCount = ref(null)
-	const budget = ref("")
-	const description = ref("")
-	const sharing = ref(false)
 
 	function loadProject(name) {
 		projectName = name
 		call("connect.api.projects.get_project", { name })
 			.then((data) => {
 				project.value = data
-				budget.value = data.budget || ""
-				description.value = data.description || ""
-				refreshMatchCount(data.criteria)
 				if (data.status === "Shared") loadQuotes()
 			})
 			.catch(() => {
@@ -364,8 +341,7 @@ export default function setup(context) {
 	} else if (inEditor) {
 		call("connect.api.projects.list_projects")
 			.then((rows) => {
-				const drafts = (rows || []).filter((row) => row.kind === "project")
-				const first = drafts.find((row) => row.verdict === "custom") || drafts[0]
+				const first = (rows || []).find((row) => row.kind === "project")
 				if (first) loadProject(first.project)
 				else loadError.value = true
 			})
@@ -378,137 +354,14 @@ export default function setup(context) {
 
 
 	const projectTitle = computed(() => project.value?.project_name || "Project")
-	const isDraft = computed(() => !isProjectSent(project.value?.status))
 	const breadcrumbItems = computed(() => [
 		{ label: "Projects", route: { path: "/projects" } },
 		{ label: projectTitle.value },
 	])
 
-	const whyReasons = computed(() => {
-		if (!project.value) return []
-		const result = recommend(answersFromProject(project.value))
-		return result.verdict === "custom" ? result.reasons : []
-	})
 
-	// ---- Partner criteria: who the brief goes to (see @app/utils/partnerCriteria) ----
-	const savedCriteria = computed(() => ({ ...blankCriteria(), ...(project.value?.criteria || {}) }))
-	const criteria = computed(() => criteriaSummary(savedCriteria.value, project.value?.go_live))
-
-	function refreshMatchCount(saved) {
-		call("connect.api.projects.partner_criteria", { criteria: JSON.stringify(saved || {}) })
-			.then((data) => {
-				matchCount.value = data.total
-			})
-			.catch(() => {})
-	}
-
-	const criteriaOpen = ref(false)
-	const chips = partnerCriteria(context, {
-		saved: () => savedCriteria.value,
-		goLive: () => project.value?.go_live,
-	})
-
-	function editCriteria() {
-		chips.startEditing()
-		criteriaOpen.value = true
-	}
-
-	const savingCriteria = ref(false)
-	function saveCriteria() {
-		if (savingCriteria.value || !project.value) return
-		savingCriteria.value = true
-		call("connect.api.projects.save_criteria", {
-			name: project.value.name,
-			criteria: JSON.stringify(chips.draftFilters()),
-			go_live: chips.criteriaDraft.value.go_live,
-		})
-			.then((data) => {
-				project.value = data
-				matchCount.value = chips.criteriaFacets.value.total
-				criteriaOpen.value = false
-			})
-			.catch(() => toast.error("Couldn't save your criteria. Try again."))
-			.finally(() => {
-				savingCriteria.value = false
-			})
-	}
-
-	const matchCountLabel = computed(() => (matchCount.value === null ? "–" : String(matchCount.value)))
-	const matchCaption = computed(() =>
-		matchCount.value === 1 ? "partner matches your criteria" : "partners match your criteria",
-	)
-
-	function shareRequirements() {
-		if (sharing.value || !project.value) return
-		sharing.value = true
-		call("connect.api.projects.share_requirements", {
-			name: project.value.name,
-			budget: budget.value,
-			description: description.value,
-		})
-			.then((data) => {
-				project.value = data
-				const n = data.shared_count || 0
-				toast.success(`Sent to ${n} partner${n === 1 ? "" : "s"}. Their quotes arrive in Messages and on this page.`, {
-					action: data.brief_thread && { label: "View", onClick: viewBriefInMessages },
-				})
-			})
-			.catch((error) => {
-				toast.error(error?.messages?.[0] || "Couldn't send your requirements. Try again.")
-			})
-			.finally(() => {
-				sharing.value = false
-			})
-	}
-
-	// "Change my answers" edits the draft right here. If the new answers still point to a
-	// custom implementation the page just reloads the project; otherwise it moves to the
-	// Starter Pack page the answers now recommend.
-	const dialog = projectDialog(context, {
-		onSaved: (saved) => {
-			if (saved.verdict === "custom") {
-				project.value = saved
-				projectName = saved.name
-				return
-			}
-			router.push(projectPath({ kind: "project", project: saved.name, verdict: saved.verdict }))
-		},
-	})
-
-	function changeAnswers() {
-		if (project.value) dialog.editProject(project.value)
-	}
-
-	function viewAllPartners() {
-		router.push("/partner-directory-redesign")
-	}
-
-	function lookAtPacks() {
-		router.push({ path: "/starter-pack-recommendation", query: { project: projectName } })
-	}
-
-	// Delete asks first: it removes the project and every answer on it.
-	const deleteOpen = ref(false)
-	const deleting = ref(false)
-
-	function confirmDelete() {
-		if (deleting.value) return
-		deleting.value = true
-		call("connect.api.projects.delete_project", { name: projectName })
-			.then(() => router.push("/projects"))
-			.catch(() => toast.error("Couldn't delete the draft."))
-			.finally(() => {
-				deleting.value = false
-			})
-	}
-
-	const projectMenu = [
-		{ label: "Edit draft", icon: "lucide-pencil", onClick: changeAnswers },
-		{ label: "Delete draft", icon: "lucide-trash-2", onClick: () => (deleteOpen.value = true) },
-	]
-
-	// ---- After "Share requirements": choosing a partner, step 1 of 2 ----
-	const isShared = computed(() => !isDraft.value)
+	// ---- Choosing a partner, step 1 of 2 ----
+	const isShared = computed(() => !!project.value)
 
 	// ---- Hiring: the partner has 7 days to accept the request ----
 	// `hired` is set from the request on; `isHired` only once the partner accepts.
@@ -696,10 +549,8 @@ export default function setup(context) {
 		const n = project.value?.shared_count || 0
 		return `Sent to ${n} partner${n === 1 ? "" : "s"}`
 	})
-	// Once hired, the timeline is the partner's quoted one.
-	const timelineLabel = computed(() =>
-		hired.value?.timeline_weeks ? quoteTimeline(hired.value) : goLiveCriterion(project.value?.go_live),
-	)
+	// The hired partner's quoted timeline.
+	const timelineLabel = computed(() => (hired.value?.timeline_weeks ? quoteTimeline(hired.value) : ""))
 	const createdOn = computed(() => {
 		const at = project.value?.created_on
 		return at ? new Date(at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""
@@ -715,30 +566,14 @@ export default function setup(context) {
 		requirementsOpen.value = true
 	}
 
-	const labelIn = (options, value) => options.find((o) => o.value === value)?.label || ""
-	function andList(values) {
-		if (values.length <= 1) return values.join("")
-		return `${values.slice(0, -1).join(", ")} and ${values[values.length - 1]}`
+	// After an edit is sent: the new version, with its "Updated" line and the quotes' flags.
+	function onRequirementsUpdated(updated) {
+		project.value = updated
+		loadQuotes()
 	}
-
-	// The brief as partners got it: one row per answer, blank ones left out.
-	const requirementRows = computed(() => {
-		const current = project.value || {}
-		const c = savedCriteria.value
-		const place = c.cities.length ? c.cities : c.countries
-		const tier = c.tiers.length ? `${orList(c.tiers)} tier` : "Any tier"
-		const work = { "On premises": "on premises", Remote: "remote" }[workCriterion(c.work)]
-		const operations = labelIn(OPERATION_OPTIONS, current.operations)
-		const systems = (current.systems || []).length ? `You use ${andList(current.systems)}` : ""
-		const size = current.company_size ? `${current.company_size} people` : ""
-		return [
-			{ label: "Budget", text: current.budget || "" },
-			{ label: "Timeline", text: current.go_live ? goLiveCriterion(current.go_live) : "" },
-			{ label: "Today", text: [operations, systems].filter(Boolean).join(". ") },
-			{ label: "To fix", text: (current.problems || []).map((v) => labelIn(PROBLEM_OPTIONS, v)).filter(Boolean).join("\n") },
-			{ label: "Looking for", text: [tier, place.length ? `in ${orList(place)}` : "anywhere", work].filter(Boolean).join(", ") },
-			{ label: "Company", text: [(current.industries || [])[0], size].filter(Boolean).join(" · ") },
-		].filter((row) => row.text)
+	const requirementsUpdatedLine = computed(() => {
+		const at = project.value?.requirements_updated_on
+		return at ? `Updated ${new Date(at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""
 	})
 
 	return {
@@ -784,43 +619,11 @@ export default function setup(context) {
 		quoteMenu,
 		simulating,
 		simulateQuotes,
-		...dialog,
 		inEditor,
 		project,
 		loadError,
 		projectTitle,
-		isDraft,
 		breadcrumbItems,
-		whyReasons,
-		criteria,
-		matchCountLabel,
-		matchCaption,
-		budget,
-		description,
-		sharing,
-		budgetOptions: BUDGET_OPTIONS,
-		customHowItWorks: CUSTOM_HOW_IT_WORKS,
-		starterPackIf: STARTER_PACK_IF,
-		shareRequirements,
-		editCriteria,
-		criteriaOpen,
-		cityChips: chips.cityChips,
-		tierChips: chips.tierChips,
-		workChips: chips.workChips,
-		goLiveChips: chips.goLiveChips,
-		partnersLeft: chips.partnersLeft,
-		toggleCriterion: chips.toggleCriterion,
-		setGoLive: chips.setGoLive,
-		clearCriteria: chips.clearCriteria,
-		saveCriteria,
-		savingCriteria,
-		changeAnswers,
-		lookAtPacks,
-		viewAllPartners,
-		projectMenu,
-		deleteOpen,
-		deleting,
-		confirmDelete,
 		isShared,
 		hired,
 		isHired,
@@ -858,6 +661,7 @@ export default function setup(context) {
 		openFeedback,
 		requirementsOpen,
 		viewRequirements,
-		requirementRows,
+		onRequirementsUpdated,
+		requirementsUpdatedLine,
 	}
 }

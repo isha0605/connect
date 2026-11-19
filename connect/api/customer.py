@@ -39,24 +39,15 @@ def list_my_shortlist():
 
 
 @frappe.whitelist()
-def save_customer_requirement(
-	industry, country=None, apps=None,
-	looking_for=None, company_size=None, current_situation=None, timeline=None, delivery_preference=None, budget=None,
-	special_requirements=None, additional_notes=None, outcome=None,
-):
-	from connect.customer.doctype.requirement.requirement import save_customer_requirement
-	return save_customer_requirement(
-		industry, country=country, apps=apps, looking_for=looking_for, company_size=company_size,
-		current_situation=current_situation, timeline=timeline, delivery_preference=delivery_preference,
-		budget=budget, special_requirements=special_requirements, additional_notes=additional_notes,
-		outcome=outcome,
-	)
+def get_company_details():
+	from connect.customer.doctype.customer.customer import get_my_company_details
+	return get_my_company_details()
 
 
-@frappe.whitelist(allow_guest=True)
-def get_my_requirement():
-	from connect.customer.doctype.requirement.requirement import get_my_requirement
-	return get_my_requirement()
+@frappe.whitelist(methods=["POST"])
+def save_company_details(details):
+	from connect.customer.doctype.customer.customer import save_my_company_details
+	return save_my_company_details(frappe.parse_json(details))
 
 
 # Open to visitors without an account, so a few per hour from one address, against spam.

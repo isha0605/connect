@@ -1,18 +1,15 @@
 // Who a brief goes to: the criteria summary ("Based in India", "All tiers", …) and the Edit
-// criteria chips, shared by the custom implementation page and the Contact partners flow on
-// find-partners-redesign.
+// criteria chips, for the Contact partners flow on find-partners-redesign.
 //
-// Countries and industries come from the questions; the chips narrow within them by city,
-// tier and how they want to work (connect.api.projects.partner_criteria counts each chip).
-// The go-live chip edits the project's own answer — it isn't a partner filter.
+// The country and industries come from the questions; the chips narrow within them by city
+// and tier (connect.api.projects.partner_criteria counts each chip).
 
 import { computed, ref } from "vue"
-import { GO_LIVE_OPTIONS, WORK_OPTIONS, goLiveCriterion } from "@app/utils/recommendation"
 
-const CHIP_GROUPS = ["cities", "tiers", "work"]
+const CHIP_GROUPS = ["cities", "tiers"]
 
 export function blankCriteria() {
-	return { countries: [], industries: [], cities: [], tiers: [], work: [] }
+	return { countries: [], industries: [], apps: [], cities: [], tiers: [] }
 }
 
 export function orList(values, suffix = "") {
@@ -20,63 +17,42 @@ export function orList(values, suffix = "") {
 	return `${values.slice(0, -1).join(", ")} or ${values[values.length - 1]}${suffix}`
 }
 
-// One pick reads as its label; none or both means either works (work_label() in
-// customer_project/answers.py words the partner's card the same way).
-export function workCriterion(work) {
-	const picked = WORK_OPTIONS.filter((o) => work.length !== 1 || o.value === work[0])
-	return picked.map((o, i) => (i ? o.label.toLowerCase() : o.label)).join(" or ")
-}
-
 // The summary list, as { icon, label } rows.
-export function criteriaSummary(criteria, goLive) {
+export function criteriaSummary(criteria) {
 	const c = { ...blankCriteria(), ...(criteria || {}) }
 	const place = c.cities.length ? c.cities : c.countries
 	return [
-		{ icon: "lucide-map-pin", label: place.length ? `Based in ${orList(place)}` : "Based in any region" },
+		{ icon: "lucide-map-pin", label: place.length ? `Based in ${orList(place)}` : "Based anywhere" },
 		{
 			icon: "lucide-building-2",
 			label: c.industries.length
 				? `Offer services for ${orList(c.industries)}`
 				: "Offer services for any industry",
 		},
-		{ icon: "lucide-calendar", label: goLiveCriterion(goLive) },
 		{ icon: "lucide-award", label: c.tiers.length ? orList(c.tiers, " tier") : "All tiers" },
-		{ icon: "lucide-users", label: workCriterion(c.work) },
 	]
 }
 
-// The Edit criteria chips over a draft copy of `saved()`. `saved` and `goLive` are getters
-// for what the page holds now; nothing changes there until the page takes `draft` back.
-export function partnerCriteria(context, { saved, goLive }) {
+// The Edit criteria chips over a draft copy of `saved()`, a getter for what the page holds
+// now; nothing changes there until the page takes `draftFilters()` back.
+export function partnerCriteria(context, { saved }) {
 	const { call } = context
 
-	const facets = ref({ cities: [], tiers: [], work: [], total: null })
-	const draft = ref({ ...blankCriteria(), go_live: "" })
-
-	function filtersOf(value) {
-		const { go_live, ...filters } = value
-		return filters
-	}
+	const facets = ref({ cities: [], tiers: [], total: null })
+	const draft = ref(blankCriteria())
 
 	function loadFacets() {
-		call("connect.api.projects.partner_criteria", { criteria: JSON.stringify(filtersOf(draft.value)) })
+		call("connect.api.projects.partner_criteria", { criteria: JSON.stringify(draft.value) })
 			.then((data) => {
 				facets.value = data
 			})
 			.catch(() => {})
 	}
 
-	// Starts the chips from what's saved, keeping the countries and industries the chips
-	// don't show.
+	// Starts the chips from what's saved, keeping the answers the chips don't show.
 	function startEditing() {
 		const c = { ...blankCriteria(), ...(saved() || {}) }
-		draft.value = {
-			...c,
-			cities: [...c.cities],
-			tiers: [...c.tiers],
-			work: [...c.work],
-			go_live: goLive() || "",
-		}
+		draft.value = { ...c, cities: [...c.cities], tiers: [...c.tiers] }
 		loadFacets()
 	}
 
@@ -86,11 +62,7 @@ export function partnerCriteria(context, { saved, goLive }) {
 		loadFacets()
 	}
 
-	function setGoLive(value) {
-		draft.value.go_live = value
-	}
-
-	// Clear lifts the chip filters; countries, industries and go-live are answers, so they stay.
+	// Clear lifts the chip filters; the answers stay.
 	function clearCriteria() {
 		const cleared = { ...draft.value }
 		for (const group of CHIP_GROUPS) cleared[group] = []
@@ -107,10 +79,6 @@ export function partnerCriteria(context, { saved, goLive }) {
 	})
 	const cityChips = computed(() => facets.value.cities.map(chip("cities")))
 	const tierChips = computed(() => facets.value.tiers.map(chip("tiers")))
-	const workChips = computed(() => facets.value.work.map(chip("work")))
-	const goLiveChips = computed(() =>
-		GO_LIVE_OPTIONS.map((o) => ({ ...o, picked: draft.value.go_live === o.value })),
-	)
 
 	const partnersLeft = computed(() => {
 		const n = facets.value.total
@@ -121,15 +89,12 @@ export function partnerCriteria(context, { saved, goLive }) {
 	return {
 		criteriaDraft: draft,
 		criteriaFacets: facets,
-		draftFilters: () => filtersOf(draft.value),
+		draftFilters: () => ({ ...draft.value }),
 		startEditing,
 		toggleCriterion,
-		setGoLive,
 		clearCriteria,
 		cityChips,
 		tierChips,
-		workChips,
-		goLiveChips,
 		partnersLeft,
 	}
 }

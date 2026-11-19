@@ -1,7 +1,7 @@
-// The customer's projects: draft projects (a Customer Project, made from the New project
+// The customer's projects: shared projects (a Customer Project, made from the New project
 // dialog) and paid Starter Packs (a Starter Pack Order), newest first, from
-// connect.api.projects.list_projects. A paid one opens its implementation steps; a draft
-// opens whichever page its answers recommended.
+// connect.api.projects.list_projects. A paid one opens its implementation steps; a project
+// opens on its quotes.
 
 import { computed } from "vue"
 import { projectDialog, projectPath } from "@app/utils/projectDialog"
@@ -9,7 +9,7 @@ import { startTracking } from "@app/utils/tracking"
 
 export default function setup(context) {
 	startTracking(context)
-	const { route, router, call, toast, myProjects } = context
+	const { router, myProjects } = context
 
 	// The repeater needs one key across both kinds of row.
 	const projects = computed(() =>
@@ -39,19 +39,8 @@ export default function setup(context) {
 		return at.toLocaleDateString("en-US", options)
 	}
 
-	// A shared project opens on its quotes; a saved draft on the page its answers recommended.
-	const dialog = projectDialog(context, {
-		onSaved: (project) =>
-			router.push(projectPath({ kind: "project", project: project.name, verdict: project.verdict, status: project.status })),
-	})
-
-	// Older links sent "Change my answers" here as /projects?edit=CP-…; still honoured.
-	if (route.query.edit) {
-		call("connect.api.projects.get_project", { name: String(route.query.edit) })
-			.then((project) => dialog.editProject(project))
-			.catch(() => toast.error("Couldn't open that project."))
-		router.replace({ path: route.path })
-	}
+	// New project: shared with every matching partner, then opens on its quotes.
+	const dialog = projectDialog()
 
 	return {
 		...dialog,

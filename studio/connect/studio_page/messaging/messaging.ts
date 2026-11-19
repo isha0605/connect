@@ -100,10 +100,7 @@ export default function setup(context) {
 	const showMediaDialog = ref(false)
 	const showTemplatesDialog = ref(false)
 	// ---- Profile settings popup (sidebar avatar) ----
-	// Two-pane popup, mirroring Raven's own profile settings — distinct from the pre-existing
-	// "Settings" SidebarItem above (which edits the customer's saved Requirement via
-	// settingsOpen/settingsCompanyName/etc., Studio Variables predating this .ts file's
-	// convention of declaring state here instead — left untouched, just named around).
+	// Two-pane popup, mirroring Raven's own profile settings.
 	// Profile is self-service rename; Users is a read-only roster of the caller's own company
 	// (customer or partner side — get_my_team auto-detects which).
 	const showProfileSettingsDialog = ref(false)
@@ -1488,7 +1485,7 @@ export default function setup(context) {
 
 	function quoteCardTitle() {
 		const brief = chosenBrief()
-		const verb = brief.status === "Quoted" ? "Update quote" : "Quote"
+		const verb = brief.status === "Quoted" || brief.quoted_before_update ? "Update quote" : "Quote"
 		return quotableBriefs.value.length > 1 ? verb : `${verb} for ${brief.project_name || "this brief"}`
 	}
 
@@ -1562,6 +1559,29 @@ export default function setup(context) {
 		if (!brief) return
 		quoteOpen.value = true
 		selectQuoteBrief(brief.name)
+	}
+
+	// After the customer edits their requirements, a quote made before then waits on its
+	// partner: Send new quote redoes it, Quote still stands keeps the figure for the new version.
+	function canConfirmQuote(item) {
+		return Boolean(briefOfCard(item)?.quoted_before_update)
+	}
+
+	const confirmingQuote = ref(false)
+	function confirmQuote(item) {
+		const brief = briefOfCard(item)
+		if (!brief || confirmingQuote.value) return
+		confirmingQuote.value = true
+		call("connect.api.projects.confirm_quote", { quote: brief.name })
+			.then(() => {
+				toast.success("The customer has been told")
+				context.messages.reload()
+				loadQuotableBriefs()
+			})
+			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't save your answer. Try again."))
+			.finally(() => {
+				confirmingQuote.value = false
+			})
 	}
 
 	const showDeclineBriefDialog = ref(false)
@@ -1653,24 +1673,35 @@ export default function setup(context) {
 
 	const requirementDetailOpen = ref(false)
 	const requirementDetailItem = ref(null)
-	const requirementDetail = computed(() => requirementView(requirementDetailItem.value))
+	// The version that message carried, for the Requirements dialog (RequirementsDialog.vue).
+	const requirementDetailCard = computed(() =>
+		requirementDetailItem.value ? parseRequirementContent(requirementDetailItem.value) : null,
+	)
+
+	// The card's message text: what they need, else the project's name for an older card.
+	function requirementText(item) {
+		const view = requirementView(item)
+		return view.built || view.title
+	}
 
 	function openRequirementDetails(item) {
 		requirementDetailItem.value = item
 		requirementDetailOpen.value = true
 	}
 
+	// The project questions' answers, in their order. Looking for is only on cards sent before
+	// they existed; what they need shows above these rows.
 	const REQUIREMENT_FIELD_LABELS = [
 		["company_name", "Company"],
 		["country", "Country"],
 		["industry", "Industry"],
-		["looking_for", "Looking for"],
-		["company_size", "Company size"],
-		["current_situation", "Current setup"],
-		["timeline", "Timeline"],
-		["delivery_preference", "Delivery"],
-		["budget", "Budget"],
+		["company_size", "Number of employees"],
 		["apps", "Apps"],
+		["timeline", "Go live"],
+		["delivery_preference", "Work mode"],
+		["current_situation", "Current setup"],
+		["budget", "Budget"],
+		["looking_for", "Looking for"],
 	]
 
 	function requirementFieldRows(req) {
@@ -1679,30 +1710,6 @@ export default function setup(context) {
 			if (key === "apps") value = Array.isArray(value) ? value.join(", ") : value
 			return [label, value]
 		}).filter(([, value]) => value)
-	}
-
-	// The requirement card renders as two stacked boxes rather than one long one — "who they
-	// are" up top, "what they need" below.
-	const REQUIREMENT_FIELD_KEYS_PRIMARY = new Set(["company_name", "country", "industry", "company_size"])
-
-	function splitRequirementFieldRows(req) {
-		const primary = []
-		const secondary = []
-		REQUIREMENT_FIELD_LABELS.forEach(([key, label]) => {
-			let value = req[key]
-			if (key === "apps") value = Array.isArray(value) ? value.join(", ") : value
-			if (!value) return
-			;(REQUIREMENT_FIELD_KEYS_PRIMARY.has(key) ? primary : secondary).push([label, value])
-		})
-		return { primary, secondary }
-	}
-
-	function requirementPrimaryRows(item) {
-		return splitRequirementFieldRows(parseRequirementContent(item)).primary
-	}
-
-	function requirementSecondaryRows(item) {
-		return splitRequirementFieldRows(parseRequirementContent(item)).secondary
 	}
 
 	// preview_title-style header for the card — same fallback order a viewer would look for.
@@ -1910,81 +1917,6 @@ export default function setup(context) {
 		} catch (e) {
 			toast.error("Could not download", { description: e.message })
 		}
-	}
-
-	// ---- Requirement draft (Contact Partner composer card) ----
-	// Landing on a brand-new thread via "Contact Partner" seeds this instead of auto-sending —
-	// same staged-before-send pattern as a file attachment: the customer reviews/edits it in a
-	// popup, and it only ever becomes a real message once Send is pressed.
-	const draftRequirement = ref(null)
-	const showRequirementPreviewDialog = ref(false)
-	const editCompanyName = ref("")
-	const editCountry = ref("")
-	const editIndustry = ref("")
-	const editLookingFor = ref("")
-	const editCompanySize = ref("")
-	const editCurrentSituation = ref("")
-	const editTimeline = ref("")
-	const editDeliveryPreference = ref("")
-	const editBudget = ref("")
-	const editAppsText = ref("")
-
-	async function fetchRequirementDraft() {
-		try {
-			const snapshot = await call("connect.api.threads.get_requirement_snapshot")
-			if (snapshot) draftRequirement.value = snapshot
-		} catch (e) {
-			// no saved requirement to prefill — composer just starts empty, same as before
-		}
-	}
-
-	function requirementDraftSummary() {
-		if (!draftRequirement.value) return ""
-		const req = draftRequirement.value
-		return [req.industry, req.looking_for].filter(Boolean).join(" · ") || "Tap to review"
-	}
-
-	function openRequirementPreview() {
-		if (!draftRequirement.value) return
-		const req = draftRequirement.value
-		editCompanyName.value = req.company_name || ""
-		editCountry.value = req.country || ""
-		editIndustry.value = req.industry || ""
-		editLookingFor.value = req.looking_for || ""
-		editCompanySize.value = req.company_size || ""
-		editCurrentSituation.value = req.current_situation || ""
-		editTimeline.value = req.timeline || ""
-		editDeliveryPreference.value = req.delivery_preference || ""
-		editBudget.value = req.budget || ""
-		editAppsText.value = (req.apps || []).join(", ")
-		showRequirementPreviewDialog.value = true
-	}
-
-	function closeRequirementPreview() {
-		showRequirementPreviewDialog.value = false
-	}
-
-	function saveRequirementDraftEdits() {
-		draftRequirement.value = {
-			company_name: editCompanyName.value.trim(),
-			country: editCountry.value.trim(),
-			industry: editIndustry.value.trim(),
-			looking_for: editLookingFor.value.trim(),
-			company_size: editCompanySize.value,
-			current_situation: editCurrentSituation.value.trim(),
-			timeline: editTimeline.value.trim(),
-			delivery_preference: editDeliveryPreference.value.trim(),
-			budget: editBudget.value.trim(),
-			apps: editAppsText.value
-				.split(",")
-				.map((a) => a.trim())
-				.filter(Boolean),
-		}
-		showRequirementPreviewDialog.value = false
-	}
-
-	function removeRequirementDraft() {
-		draftRequirement.value = null
 	}
 
 	// ---- Profile settings popup ----
@@ -2695,14 +2627,12 @@ export default function setup(context) {
 		}
 		const readyAttachments = draftAttachments.value.filter((a) => a.file_url)
 		const content = currentDraft().trim()
-		if (!content && !readyAttachments.length && !draftRequirement.value) return
+		if (!content && !readyAttachments.length) return
 
 		const thread = selectedThread.value
-		const requirementToSend = draftRequirement.value
 		const replyToSend = replyToMessage.value ? replyToMessage.value.name : null
 		setDraft("")
 		draftAttachments.value = []
-		draftRequirement.value = null
 		replyToMessage.value = null
 
 		try {
@@ -2719,9 +2649,6 @@ export default function setup(context) {
 					file_size: a.file_size,
 					silent: silentFlag,
 				})
-			}
-			if (requirementToSend) {
-				await call("connect.api.messages.send_message", { thread, requirement_data: requirementToSend })
 			}
 			context.messages.reload()
 			context.myThreads.reload()
@@ -3662,7 +3589,7 @@ export default function setup(context) {
 	// this race — its own resource fetch beats myThreads' reload to the client, so requiring
 	// it to already be *in* that list here would intermittently fall through to the "most
 	// recent" fallback instead (usually landing on the same thread by coincidence, since it
-	// IS the newest — but skipping the ?requirement=1 handling that only lives in this branch).
+	// IS the newest).
 	// selectThread() itself needs nothing but the name; it fetches everything else by thread.
 	// Placed here (right before return, not up near its own declaration) deliberately: with
 	// immediate:true this can fire selectThread() synchronously during setup()'s own execution,
@@ -3706,16 +3633,6 @@ export default function setup(context) {
 				}
 				if (requested) {
 					selectThread(requested)
-					// set by start_partner_thread's is_new_thread — a brand-new Contact-Partner thread
-					// seeds the composer with a reviewable Requirement draft instead of auto-sending one.
-					// Consumed once: stripped from the URL right after, so a later reload of this same
-					// link (or revisiting the thread) doesn't keep re-seeding an already-sent draft.
-					if (params.get("requirement") === "1") {
-						fetchRequirementDraft()
-						params.delete("requirement")
-						const newSearch = params.toString()
-						window.history.replaceState({}, "", window.location.pathname + (newSearch ? "?" + newSearch : ""))
-					}
 					return
 				}
 				// On phone-width screens the page opens on the thread list (master-detail), so skip
@@ -3797,11 +3714,10 @@ export default function setup(context) {
 		quoteNoteText,
 		requirementView,
 		requirementDetailOpen,
-		requirementDetail,
 		openRequirementDetails,
+		requirementDetailCard,
+		requirementText,
 		requirementFieldRows,
-		requirementPrimaryRows,
-		requirementSecondaryRows,
 		copyRequirementDetails,
 		downloadRequirementDetails,
 		showProfileSettingsDialog,
@@ -3818,23 +3734,6 @@ export default function setup(context) {
 		selectProfileSettingsSection,
 		saveMyProfile,
 		openProfileImagePicker,
-		draftRequirement,
-		showRequirementPreviewDialog,
-		editCompanyName,
-		editCountry,
-		editIndustry,
-		editLookingFor,
-		editCompanySize,
-		editCurrentSituation,
-		editTimeline,
-		editDeliveryPreference,
-		editBudget,
-		editAppsText,
-		requirementDraftSummary,
-		openRequirementPreview,
-		closeRequirementPreview,
-		saveRequirementDraftEdits,
-		removeRequirementDraft,
 		openFilePicker,
 		removeAttachment,
 		formatFileSize,
@@ -4006,6 +3905,9 @@ export default function setup(context) {
 		canAnswerBrief,
 		answerInterested,
 		openDeclineBrief,
+		canConfirmQuote,
+		confirmQuote,
+		confirmingQuote,
 		showDeclineBriefDialog,
 		decliningBrief,
 		declineBrief,
