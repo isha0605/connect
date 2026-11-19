@@ -1673,7 +1673,16 @@ export default function setup(context) {
 
 	const requirementDetailOpen = ref(false)
 	const requirementDetailItem = ref(null)
-	const requirementDetail = computed(() => requirementView(requirementDetailItem.value))
+	// The version that message carried, for the Requirements dialog (RequirementsDialog.vue).
+	const requirementDetailCard = computed(() =>
+		requirementDetailItem.value ? parseRequirementContent(requirementDetailItem.value) : null,
+	)
+
+	// The card's message text: what they need, else the project's name for an older card.
+	function requirementText(item) {
+		const view = requirementView(item)
+		return view.built || view.title
+	}
 
 	function openRequirementDetails(item) {
 		requirementDetailItem.value = item
@@ -1701,30 +1710,6 @@ export default function setup(context) {
 			if (key === "apps") value = Array.isArray(value) ? value.join(", ") : value
 			return [label, value]
 		}).filter(([, value]) => value)
-	}
-
-	// The requirement card renders as two stacked boxes rather than one long one — "who they
-	// are" up top, "what they need" below.
-	const REQUIREMENT_FIELD_KEYS_PRIMARY = new Set(["company_name", "country", "industry", "company_size"])
-
-	function splitRequirementFieldRows(req) {
-		const primary = []
-		const secondary = []
-		REQUIREMENT_FIELD_LABELS.forEach(([key, label]) => {
-			let value = req[key]
-			if (key === "apps") value = Array.isArray(value) ? value.join(", ") : value
-			if (!value) return
-			;(REQUIREMENT_FIELD_KEYS_PRIMARY.has(key) ? primary : secondary).push([label, value])
-		})
-		return { primary, secondary }
-	}
-
-	function requirementPrimaryRows(item) {
-		return splitRequirementFieldRows(parseRequirementContent(item)).primary
-	}
-
-	function requirementSecondaryRows(item) {
-		return splitRequirementFieldRows(parseRequirementContent(item)).secondary
 	}
 
 	// preview_title-style header for the card — same fallback order a viewer would look for.
@@ -3729,11 +3714,10 @@ export default function setup(context) {
 		quoteNoteText,
 		requirementView,
 		requirementDetailOpen,
-		requirementDetail,
 		openRequirementDetails,
+		requirementDetailCard,
+		requirementText,
 		requirementFieldRows,
-		requirementPrimaryRows,
-		requirementSecondaryRows,
 		copyRequirementDetails,
 		downloadRequirementDetails,
 		showProfileSettingsDialog,

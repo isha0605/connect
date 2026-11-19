@@ -11,9 +11,8 @@ import {
 	OPERATION_OPTIONS,
 	PROBLEM_OPTIONS,
 	SYSTEM_OPTIONS,
-	goLiveCriterion,
 } from "@app/utils/recommendation"
-import { blankCriteria, orList, workCriterion } from "@app/utils/partnerCriteria"
+import { blankCriteria } from "@app/utils/partnerCriteria"
 import {
 	MISSING_ANSWERS,
 	WORK_CHOICES,
@@ -27,8 +26,10 @@ import AppsSelect from "./AppsSelect.vue"
 const props = defineProps({
 	// Whether the dialog is open (v-model).
 	modelValue: { type: Boolean, default: false },
-	// The project, as get_project returns it.
+	// The project, as get_project returns it: the latest version, which its owner can edit.
 	project: { type: Object, default: null },
+	// Or a Requirement card from a chat: the version that message carried, to read only.
+	card: { type: Object, default: null },
 })
 const emit = defineEmits(["update:modelValue", "updated"])
 
@@ -52,8 +53,9 @@ let readingHeight = 0
 const SAFETY_GAP = 16
 
 const criteria = computed(() => ({ ...blankCriteria(), ...(props.project?.criteria || {}) }))
-const canEdit = computed(() => props.project?.status === "Shared")
+const canEdit = computed(() => !props.card && props.project?.status === "Shared")
 const lockNote = computed(() => {
+	if (props.card) return ""
 	const partner = props.project?.hired?.partner_name || "your partner"
 	if (props.project?.status === "Hiring") return `Waiting on ${partner} to answer your hire request`
 	if (["Hired", "Completed"].includes(props.project?.status)) return `Hired. Changes go through ${partner} now`
@@ -68,28 +70,26 @@ const recipients = computed(() => props.project?.update_recipients || 0)
 const sendLabel = computed(() => `Send to ${recipients.value} ${recipients.value === 1 ? "partner" : "partners"}`)
 const errors = computed(() => (tried.value ? missingAnswers(form.value, EDITED) : {}))
 
-// The requirements as partners got them: one row per answer, blank ones left out.
+// The rows come from the server (brief.requirement_rows), the same for the project and each
+// card. A card sent before the rows were kept falls back to the fields it carried.
 const rows = computed(() => {
-	const current = props.project || {}
-	const c = criteria.value
-	const place = c.cities.length ? c.cities : c.countries
-	const tier = c.tiers.length ? `${orList(c.tiers)} tier` : "Any tier"
-	const operations = labelIn(OPERATION_OPTIONS, current.operations)
-	const systems = (current.systems || []).length ? `You use ${andList(current.systems)}` : ""
-	const size = labelIn(EMPLOYEE_OPTIONS, current.company_size)
+	if (!props.card) return props.project?.requirement_rows || []
+	if (props.card.rows) return props.card.rows
+	const c = props.card
+	// "Spreadsheets…. Wants to solve: payroll…" (or "Wants fixed:") holds both Today and To fix.
+	const [today, toFix = ""] = String(c.current_situation || "").split(/\.\s*Wants (?:to solve|fixed):\s*/)
+	const size = labelIn(EMPLOYEE_OPTIONS, c.company_size) || c.company_size
 	return [
-		{ label: "Budget", text: current.budget || "" },
-		{ label: "Timeline", text: current.go_live ? goLiveCriterion(current.go_live) : "" },
-		{ label: "Apps", text: andList(current.apps || []) },
-		{ label: "Today", text: [operations, systems].filter(Boolean).join(". ") },
-		{ label: "To fix", text: (current.problems || []).map((v) => labelIn(PROBLEM_OPTIONS, v)).filter(Boolean).join(", ") },
-		{
-			label: "Looking for",
-			text: [tier, place.length ? `in ${orList(place)}` : "anywhere", workCriterion(c.work).toLowerCase()].join(", "),
-		},
-		{ label: "Company", text: [andList(current.industries || []), size && `${size} employees`].filter(Boolean).join(" · ") },
+		{ label: "Budget", text: c.budget },
+		{ label: "Timeline", text: c.timeline },
+		{ label: "Apps", text: andList(Array.isArray(c.apps) ? c.apps : []) },
+		{ label: "Today", text: today },
+		{ label: "To fix", text: toFix ? toFix.charAt(0).toUpperCase() + toFix.slice(1) : "" },
+		{ label: "Looking for", text: c.partner_brief },
+		{ label: "Company", text: [c.industry, size && `${size} employees`].filter(Boolean).join(" · ") },
 	].filter((row) => row.text)
 })
+const description = computed(() => (props.card ? props.card.description : props.project?.description) || "")
 
 // Sentence-long options, so two don't fit the field: one reads in full, more as a count.
 const fixedSummary = computed(() => {
@@ -270,7 +270,7 @@ function andList(values) {
 	>
 		<template #default>
 			<!-- frappe-ui's ScrollArea: a thin scrollbar, shown while scrolling, in place of the browser's. -->
-			<ScrollArea v-if="project" ref="scroller" class="-mr-4 sm:-mr-6" viewport-class="pr-4 sm:pr-6">
+			<ScrollArea v-if="project || card" ref="scroller" class="-mr-4 sm:-mr-6" viewport-class="pr-4 sm:pr-6">
 				<div v-if="editing" class="space-y-6">
 					<Alert theme="blue" title="Partners who quoted will confirm or re-quote" />
 					<form novalidate class="space-y-4" @submit.prevent="send">
@@ -378,9 +378,9 @@ function andList(values) {
 							<dd class="whitespace-pre-line text-ink-gray-8">{{ row.text }}</dd>
 						</template>
 					</dl>
-					<section v-if="project.description" class="flex flex-col gap-2">
+					<section v-if="description" class="flex flex-col gap-2">
 						<h4 class="text-base font-medium text-ink-gray-8">Description</h4>
-						<p class="whitespace-pre-line text-p-base leading-relaxed text-ink-gray-6">{{ project.description }}</p>
+						<p class="whitespace-pre-line text-p-base leading-relaxed text-ink-gray-6">{{ description }}</p>
 					</section>
 				</div>
 			</ScrollArea>

@@ -1623,154 +1623,65 @@
                         },
                         {
                          "baseStyles": {
-                          "backgroundColor": "var(--surface-base)",
-                          "border": "1px solid var(--outline-gray-1)",
-                          "borderRadius": "8px",
-                          "boxSizing": "border-box",
+                          "alignItems": "flex-end",
                           "display": "flex",
                           "flexDirection": "column",
+                          "gap": "8px",
                           "marginTop": "0px",
-                          "maxWidth": "100%",
-                          "padding": "14px",
-                          "width": "480px"
+                          "maxWidth": "100%"
                          },
+                         "classes": [],
+                         "componentId": "message-requirement-card",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "visibilityCondition": "dataItem.message_type === 'Requirement'",
                          "children": [
                           {
-                           "baseStyles": {
-                            "color": "var(--ink-gray-7)",
-                            "fontWeight": "500"
-                           },
-                           "classes": [
-                            "font-medium"
-                           ],
-                           "componentId": "req-card-title",
-                           "componentName": "TextBlock",
-                           "componentProps": {
-                            "fontSize": "text-base",
-                            "tag": "p",
-                            "text": "{{ requirementView(dataItem).title }}"
-                           },
-                           "componentSlots": {}
-                          },
-                          {
-                           "baseStyles": {
-                            "color": "var(--ink-gray-6)",
-                            "display": "{{ requirementView(dataItem).summary ? '-webkit-box' : 'none' }}",
-                            "marginTop": "6px"
-                           },
-                           "classes": [
-                            "line-clamp-2"
-                           ],
-                           "componentId": "req-card-summary",
-                           "componentName": "TextBlock",
-                           "componentProps": {
-                            "fontSize": "text-base",
-                            "tag": "p",
-                            "text": "{{ requirementView(dataItem).summary }}"
-                           },
-                           "componentSlots": {}
-                          },
-                          {
-                           "baseStyles": {
-                            "display": "flex",
-                            "flexDirection": "column",
-                            "gap": "7px",
-                            "marginTop": "12px"
-                           },
-                           "children": [
-                            {
-                             "baseStyles": {
-                              "alignItems": "center",
-                              "display": "{{ requirementView(dataItem).budget ? 'flex' : 'none' }}",
-                              "gap": "8px"
-                             },
-                             "children": [
-                              {
-                               "baseStyles": {
-                                "color": "var(--ink-gray-6)",
-                                "flexShrink": "0",
-                                "height": "16px",
-                                "width": "16px"
-                               },
-                               "componentId": "req-card-budget-icon",
-                               "componentName": "Icon",
-                               "componentProps": {
-                                "icon": "lucide-wallet"
-                               },
-                               "componentSlots": {}
-                              },
-                              {
-                               "baseStyles": {
-                                "color": "var(--ink-gray-6)"
-                               },
-                               "componentId": "req-card-budget-text",
-                               "componentName": "TextBlock",
-                               "componentProps": {
-                                "fontSize": "text-md",
-                                "tag": "p",
-                                "text": "{{ requirementView(dataItem).budget }}"
-                               },
-                               "componentSlots": {}
-                              }
-                             ],
-                             "componentId": "req-card-budget",
-                             "componentName": "container",
-                             "componentProps": {},
-                             "componentSlots": {},
-                             "originalElement": "div"
-                            },
-                            {
-                             "baseStyles": {
-                              "alignItems": "center",
-                              "display": "{{ requirementView(dataItem).industry ? 'flex' : 'none' }}",
-                              "gap": "8px"
-                             },
-                             "children": [
-                              {
-                               "baseStyles": {
-                                "color": "var(--ink-gray-6)",
-                                "flexShrink": "0",
-                                "height": "16px",
-                                "width": "16px"
-                               },
-                               "componentId": "req-card-industry-icon",
-                               "componentName": "Icon",
-                               "componentProps": {
-                                "icon": "lucide-factory"
-                               },
-                               "componentSlots": {}
-                              },
-                              {
-                               "baseStyles": {
-                                "color": "var(--ink-gray-6)"
-                               },
-                               "componentId": "req-card-industry-text",
-                               "componentName": "TextBlock",
-                               "componentProps": {
-                                "fontSize": "text-md",
-                                "tag": "p",
-                                "text": "{{ requirementView(dataItem).industry }}"
-                               },
-                               "componentSlots": {}
-                              }
-                             ],
-                             "componentId": "req-card-industry",
-                             "componentName": "container",
-                             "componentProps": {},
-                             "componentSlots": {},
-                             "originalElement": "div"
-                            }
-                           ],
-                           "componentId": "req-card-rows",
+                           "componentId": "req-card-bubble",
                            "componentName": "container",
                            "componentProps": {},
                            "componentSlots": {},
-                           "originalElement": "div"
+                           "originalElement": "div",
+                           "baseStyles": {
+                            "backgroundColor": "var(--surface-gray-1)",
+                            "borderRadius": "18px",
+                            "display": "inline-block",
+                            "maxWidth": "480px",
+                            "padding": "8px 12px"
+                           },
+                           "mobileStyles": {
+                            "maxWidth": "85vw"
+                           },
+                           "children": [
+                            {
+                             "componentId": "req-card-text",
+                             "componentName": "TextBlock",
+                             "componentSlots": {},
+                             "componentProps": {
+                              "tag": "p",
+                              "text": "{{ requirementText(dataItem) }}",
+                              "fontSize": "text-p-sm"
+                             },
+                             "baseStyles": {
+                              "color": "var(--ink-gray-7)",
+                              "textAlign": "left",
+                              "whiteSpace": "pre-wrap"
+                             }
+                            }
+                           ]
                           },
                           {
-                           "baseStyles": {
-                            "alignSelf": "flex-start",
-                            "marginTop": "12px"
+                           "componentId": "req-card-details",
+                           "componentName": "Button",
+                           "componentSlots": {},
+                           "componentProps": {
+                            "label": "Requirements",
+                            "iconLeft": "lucide-file-text",
+                            "size": "sm",
+                            "variant": "subtle"
                            },
                            "componentEvents": {
                             "click": {
@@ -1778,44 +1689,9 @@
                              "event": "click",
                              "script": "openRequirementDetails(dataItem);"
                             }
-                           },
-                           "componentId": "req-card-details",
-                           "componentName": "Button",
-                           "componentProps": {
-                            "label": "View details",
-                            "size": "sm",
-                            "variant": "subtle"
-                           },
-                           "componentSlots": {}
-                          },
-                          {
-                           "baseStyles": {
-                            "color": "var(--ink-gray-5)",
-                            "marginTop": "10px"
-                           },
-                           "componentId": "req-card-anonymous-note",
-                           "componentName": "TextBlock",
-                           "componentProps": {
-                            "fontSize": "text-sm",
-                            "tag": "p",
-                            "text": "Partners see you as an anonymous company. They see your name and contact details once you're interested in their quote."
-                           },
-                           "componentSlots": {},
-                           "visibilityCondition": "isAnonymousToPartners()"
+                           }
                           }
-                         ],
-                         "classes": [
-                          "shadow-xsm"
-                         ],
-                         "componentId": "message-requirement-card",
-                         "componentName": "container",
-                         "componentProps": {},
-                         "componentSlots": {},
-                         "mobileStyles": {
-                          "width": "100%"
-                         },
-                         "originalElement": "div",
-                         "visibilityCondition": "dataItem.message_type === 'Requirement'"
+                         ]
                         },
                         {
                          "baseStyles": {
@@ -2482,154 +2358,65 @@
                         },
                         {
                          "baseStyles": {
-                          "backgroundColor": "var(--surface-base)",
-                          "border": "1px solid var(--outline-gray-1)",
-                          "borderRadius": "8px",
-                          "boxSizing": "border-box",
+                          "alignItems": "flex-start",
                           "display": "flex",
                           "flexDirection": "column",
+                          "gap": "8px",
                           "marginTop": "0px",
-                          "maxWidth": "100%",
-                          "padding": "14px",
-                          "width": "480px"
+                          "maxWidth": "100%"
                          },
+                         "classes": [],
+                         "componentId": "message-requirement-card-o",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {},
+                         "originalElement": "div",
+                         "visibilityCondition": "dataItem.message_type === 'Requirement'",
                          "children": [
                           {
-                           "baseStyles": {
-                            "color": "var(--ink-gray-7)",
-                            "fontWeight": "500"
-                           },
-                           "classes": [
-                            "font-medium"
-                           ],
-                           "componentId": "req-card-title-o",
-                           "componentName": "TextBlock",
-                           "componentProps": {
-                            "fontSize": "text-base",
-                            "tag": "p",
-                            "text": "{{ requirementView(dataItem).title }}"
-                           },
-                           "componentSlots": {}
-                          },
-                          {
-                           "baseStyles": {
-                            "color": "var(--ink-gray-6)",
-                            "display": "{{ requirementView(dataItem).summary ? '-webkit-box' : 'none' }}",
-                            "marginTop": "6px"
-                           },
-                           "classes": [
-                            "line-clamp-2"
-                           ],
-                           "componentId": "req-card-summary-o",
-                           "componentName": "TextBlock",
-                           "componentProps": {
-                            "fontSize": "text-base",
-                            "tag": "p",
-                            "text": "{{ requirementView(dataItem).summary }}"
-                           },
-                           "componentSlots": {}
-                          },
-                          {
-                           "baseStyles": {
-                            "display": "flex",
-                            "flexDirection": "column",
-                            "gap": "7px",
-                            "marginTop": "12px"
-                           },
-                           "children": [
-                            {
-                             "baseStyles": {
-                              "alignItems": "center",
-                              "display": "{{ requirementView(dataItem).budget ? 'flex' : 'none' }}",
-                              "gap": "8px"
-                             },
-                             "children": [
-                              {
-                               "baseStyles": {
-                                "color": "var(--ink-gray-6)",
-                                "flexShrink": "0",
-                                "height": "16px",
-                                "width": "16px"
-                               },
-                               "componentId": "req-card-budget-o-icon",
-                               "componentName": "Icon",
-                               "componentProps": {
-                                "icon": "lucide-wallet"
-                               },
-                               "componentSlots": {}
-                              },
-                              {
-                               "baseStyles": {
-                                "color": "var(--ink-gray-6)"
-                               },
-                               "componentId": "req-card-budget-o-text",
-                               "componentName": "TextBlock",
-                               "componentProps": {
-                                "fontSize": "text-md",
-                                "tag": "p",
-                                "text": "{{ requirementView(dataItem).budget }}"
-                               },
-                               "componentSlots": {}
-                              }
-                             ],
-                             "componentId": "req-card-budget-o",
-                             "componentName": "container",
-                             "componentProps": {},
-                             "componentSlots": {},
-                             "originalElement": "div"
-                            },
-                            {
-                             "baseStyles": {
-                              "alignItems": "center",
-                              "display": "{{ requirementView(dataItem).industry ? 'flex' : 'none' }}",
-                              "gap": "8px"
-                             },
-                             "children": [
-                              {
-                               "baseStyles": {
-                                "color": "var(--ink-gray-6)",
-                                "flexShrink": "0",
-                                "height": "16px",
-                                "width": "16px"
-                               },
-                               "componentId": "req-card-industry-o-icon",
-                               "componentName": "Icon",
-                               "componentProps": {
-                                "icon": "lucide-factory"
-                               },
-                               "componentSlots": {}
-                              },
-                              {
-                               "baseStyles": {
-                                "color": "var(--ink-gray-6)"
-                               },
-                               "componentId": "req-card-industry-o-text",
-                               "componentName": "TextBlock",
-                               "componentProps": {
-                                "fontSize": "text-md",
-                                "tag": "p",
-                                "text": "{{ requirementView(dataItem).industry }}"
-                               },
-                               "componentSlots": {}
-                              }
-                             ],
-                             "componentId": "req-card-industry-o",
-                             "componentName": "container",
-                             "componentProps": {},
-                             "componentSlots": {},
-                             "originalElement": "div"
-                            }
-                           ],
-                           "componentId": "req-card-rows-o",
+                           "componentId": "req-card-bubble-o",
                            "componentName": "container",
                            "componentProps": {},
                            "componentSlots": {},
-                           "originalElement": "div"
+                           "originalElement": "div",
+                           "baseStyles": {
+                            "backgroundColor": "var(--surface-gray-1)",
+                            "borderRadius": "18px",
+                            "display": "inline-block",
+                            "maxWidth": "480px",
+                            "padding": "8px 12px"
+                           },
+                           "mobileStyles": {
+                            "maxWidth": "85vw"
+                           },
+                           "children": [
+                            {
+                             "componentId": "req-card-text-o",
+                             "componentName": "TextBlock",
+                             "componentSlots": {},
+                             "componentProps": {
+                              "tag": "p",
+                              "text": "{{ requirementText(dataItem) }}",
+                              "fontSize": "text-p-sm"
+                             },
+                             "baseStyles": {
+                              "color": "var(--ink-gray-7)",
+                              "textAlign": "left",
+                              "whiteSpace": "pre-wrap"
+                             }
+                            }
+                           ]
                           },
                           {
-                           "baseStyles": {
-                            "alignSelf": "flex-start",
-                            "marginTop": "12px"
+                           "componentId": "req-card-details-o",
+                           "componentName": "Button",
+                           "componentSlots": {},
+                           "componentProps": {
+                            "label": "Requirements",
+                            "iconLeft": "lucide-file-text",
+                            "size": "sm",
+                            "variant": "subtle"
                            },
                            "componentEvents": {
                             "click": {
@@ -2637,22 +2424,14 @@
                              "event": "click",
                              "script": "openRequirementDetails(dataItem);"
                             }
-                           },
-                           "componentId": "req-card-details-o",
-                           "componentName": "Button",
-                           "componentProps": {
-                            "label": "View details",
-                            "size": "sm",
-                            "variant": "subtle"
-                           },
-                           "componentSlots": {}
+                           }
                           },
                           {
                            "baseStyles": {
                             "display": "flex",
                             "flexWrap": "wrap",
                             "gap": "8px",
-                            "marginTop": "12px"
+                            "marginTop": "4px"
                            },
                            "children": [
                             {
@@ -2704,7 +2483,7 @@
                             "display": "flex",
                             "flexWrap": "wrap",
                             "gap": "8px",
-                            "marginTop": "12px"
+                            "marginTop": "4px"
                            },
                            "componentId": "message-quote-check-o",
                            "componentName": "container",
@@ -2751,19 +2530,7 @@
                             }
                            ]
                           }
-                         ],
-                         "classes": [
-                          "shadow-xsm"
-                         ],
-                         "componentId": "message-requirement-card-o",
-                         "componentName": "container",
-                         "componentProps": {},
-                         "componentSlots": {},
-                         "mobileStyles": {
-                          "width": "100%"
-                         },
-                         "originalElement": "div",
-                         "visibilityCondition": "dataItem.message_type === 'Requirement'"
+                         ]
                         },
                         {
                          "baseStyles": {
@@ -14824,323 +14591,18 @@
      "componentSlots": {}
     },
     {
-     "children": [
-      {
-       "baseStyles": {
-        "display": "flex",
-        "flexDirection": "column"
-       },
-       "children": [
-        {
-         "baseStyles": {
-          "display": "flex",
-          "flexDirection": "column",
-          "gap": "8px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "display": "{{ requirementDetail.industry ? 'flex' : 'none' }}",
-            "gap": "8px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-5)",
-              "flexShrink": "0",
-              "height": "16px",
-              "width": "16px"
-             },
-             "componentId": "req-detail-industry-icon",
-             "componentName": "Icon",
-             "componentProps": {
-              "icon": "lucide-factory"
-             },
-             "componentSlots": {}
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-6)"
-             },
-             "componentId": "req-detail-industry-text",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-md",
-              "tag": "p",
-              "text": "{{ requirementDetail.industry }}"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "req-detail-industry",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "display": "{{ requirementDetail.size ? 'flex' : 'none' }}",
-            "gap": "8px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-5)",
-              "flexShrink": "0",
-              "height": "16px",
-              "width": "16px"
-             },
-             "componentId": "req-detail-size-icon",
-             "componentName": "Icon",
-             "componentProps": {
-              "icon": "lucide-users"
-             },
-             "componentSlots": {}
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-6)"
-             },
-             "componentId": "req-detail-size-text",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-md",
-              "tag": "p",
-              "text": "{{ requirementDetail.size }}"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "req-detail-size",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "display": "{{ requirementDetail.budget ? 'flex' : 'none' }}",
-            "gap": "8px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-5)",
-              "flexShrink": "0",
-              "height": "16px",
-              "width": "16px"
-             },
-             "componentId": "req-detail-budget-icon",
-             "componentName": "Icon",
-             "componentProps": {
-              "icon": "lucide-wallet"
-             },
-             "componentSlots": {}
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-6)"
-             },
-             "componentId": "req-detail-budget-text",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-md",
-              "tag": "p",
-              "text": "{{ requirementDetail.budget }}"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "req-detail-budget",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          }
-         ],
-         "componentId": "req-detail-rows",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "display": "{{ requirementDetail.built ? 'flex' : 'none' }}",
-          "flexDirection": "column",
-          "gap": "6px",
-          "marginTop": "26px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-9)"
-           },
-           "classes": [
-            "font-medium"
-           ],
-           "componentId": "req-detail-built-heading",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-md",
-            "tag": "p",
-            "text": "What they need built"
-           },
-           "componentSlots": {}
-          },
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-6)"
-           },
-           "componentId": "req-detail-built-text",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-p-md",
-            "tag": "p",
-            "text": "{{ requirementDetail.built }}"
-           },
-           "componentSlots": {}
-          }
-         ],
-         "componentId": "req-detail-built",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "display": "{{ requirementDetail.situation.length ? 'flex' : 'none' }}",
-          "flexDirection": "column",
-          "gap": "6px",
-          "marginTop": "26px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-9)"
-           },
-           "classes": [
-            "font-medium"
-           ],
-           "componentId": "req-detail-situation-heading",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-md",
-            "tag": "p",
-            "text": "How they run today"
-           },
-           "componentSlots": {}
-          },
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flexDirection": "column",
-            "gap": "7px"
-           },
-           "componentId": "req-detail-situation-lines",
-           "componentName": "Repeater",
-           "componentProps": {
-            "data": "{{ requirementDetail.situation }}",
-            "emptyStateMessage": ""
-           },
-           "componentSlots": {
-            "default": {
-             "parentBlockId": "req-detail-situation-lines",
-             "slotContent": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-6)"
-               },
-               "componentId": "req-detail-situation-line",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-p-md",
-                "tag": "p",
-                "text": "{{ dataItem }}"
-               },
-               "componentSlots": {}
-              }
-             ],
-             "slotId": "req-detail-situation-lines:default",
-             "slotName": "default"
-            }
-           }
-          }
-         ],
-         "componentId": "req-detail-situation",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
-        },
-        {
-         "baseStyles": {
-          "display": "{{ requirementDetail.lookingFor ? 'flex' : 'none' }}",
-          "flexDirection": "column",
-          "gap": "6px",
-          "marginTop": "26px"
-         },
-         "children": [
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-9)"
-           },
-           "classes": [
-            "font-medium"
-           ],
-           "componentId": "req-detail-looking-heading",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-md",
-            "tag": "p",
-            "text": "Looking for"
-           },
-           "componentSlots": {}
-          },
-          {
-           "baseStyles": {
-            "color": "var(--ink-gray-6)"
-           },
-           "componentId": "req-detail-looking-text",
-           "componentName": "TextBlock",
-           "componentProps": {
-            "fontSize": "text-p-md",
-            "tag": "p",
-            "text": "{{ requirementDetail.lookingFor }}"
-           },
-           "componentSlots": {}
-          }
-         ],
-         "componentId": "req-detail-looking",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
-        }
-       ],
-       "componentId": "req-detail-body",
-       "componentName": "container",
-       "componentProps": {},
-       "componentSlots": {},
-       "originalElement": "div"
-      }
-     ],
-     "componentId": "req-detail-dialog",
-     "componentName": "Dialog",
+     "blockName": "RequirementsDialog",
+     "componentId": "requirements-dialog",
+     "componentName": "RequirementsDialog",
      "componentProps": {
       "modelValue": {
        "$type": "variable",
        "name": "requirementDetailOpen"
       },
-      "size": "md",
-      "title": "{{ requirementDetail.title }}"
+      "card": "{{ requirementDetailCard }}"
      },
-     "componentSlots": {}
+     "componentSlots": {},
+     "isCustomVueComponent": true
     },
     {
      "blockName": "Decline Hire Dialog",
@@ -15476,7 +14938,7 @@
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-11-19 10:00:00.000000",
+ "modified": "2026-11-19 12:00:00.000000",
  "modified_by": "tridots@example.com",
  "name": "messaging",
  "owner": "Administrator",
