@@ -10,27 +10,28 @@ class Customer(Document):
 	def get_industries(self) -> list[str]:
 		return [row.industry for row in self.industries]
 
-	def set_company_facts(self, company_size: str, industries: list[str]) -> None:
-		"""What the project questions ask about the company: its size and industries. Every
-		project starts from these, and a change in one project updates them for the next."""
-		if self._apply_company_facts(company_size, industries):
+	def get_company_facts(self) -> dict:
+		"""What the project questions ask about the company: where it's based, its size and
+		its industries. Every project starts from these."""
+		return {"country": self.country or "", "company_size": self.company_size or "", "industries": self.get_industries()}
+
+	def set_company_facts(self, facts: dict) -> None:
+		"""A change in one project's answers updates the company's facts for the next."""
+		if self._apply_company_facts(facts):
 			# The caller's own company (get_customer_for_user); _apply_company_facts checked who may change it.
 			self.save(ignore_permissions=True)
 
 	def set_company_details(self, details: dict) -> None:
-		"""Settings → Company details: where the company is, what it uses, and its facts."""
-		self.country = (details.get("country") or "").strip()
+		"""Settings → Company details: its facts, and what it uses today."""
 		self.current_system = details.get("current_system") or ""
-		self._apply_company_facts(details.get("company_size") or "", list(details.get("industries") or []))
+		self._apply_company_facts(details)
 		# The caller's own company (get_customer_for_user); _apply_company_facts checked who may change it.
 		self.save(ignore_permissions=True)
 
 	def get_company_details(self) -> dict:
 		return {
 			"company_name": self.customer_name,
-			"country": self.country,
-			"company_size": self.company_size,
-			"industries": self.get_industries(),
+			**self.get_company_facts(),
 			"current_system": self.current_system,
 			"can_change_facts": self.can_change_facts(frappe.session.user),
 		}
@@ -39,23 +40,36 @@ class Customer(Document):
 		"""Any member may fill in blank facts; only the Owner or an Admin may change set ones."""
 		from connect.permissions import _is_customer_admin
 
-		return not (self.company_size and self.industries) or _is_customer_admin(self.name, user)
+		facts = self.get_company_facts()
+		return not all(facts.values()) or _is_customer_admin(self.name, user)
 
-	def _apply_company_facts(self, company_size: str, industries: list[str]) -> bool:
-		"""Sets the facts, if this user may; returns whether they changed."""
-		size_changed = bool(self.company_size) and self.company_size != company_size
-		industries_changed = bool(self.industries) and self.get_industries() != industries
-		if (size_changed or industries_changed) and not self.can_change_facts(frappe.session.user):
+	def _apply_company_facts(self, given: dict) -> bool:
+		"""Sets the facts given, if this user may; returns whether they changed."""
+		current = self.get_company_facts()
+		facts = {
+			"country": _country_name(given.get("country")) if "country" in given else current["country"],
+			"company_size": (given.get("company_size") or "") if "company_size" in given else current["company_size"],
+			"industries": list(given.get("industries") or []) if "industries" in given else current["industries"],
+		}
+		changed = [field for field, value in facts.items() if current[field] and current[field] != value]
+		if changed and not self.can_change_facts(frappe.session.user):
 			frappe.throw(
-				_("Only your company's Owner or an Admin can change its number of employees or industries."),
+				_("Only your company's Owner or an Admin can change where it's based, its size or its industries."),
 				frappe.PermissionError,
 			)
-		if self.company_size == company_size and self.get_industries() == industries:
+		if facts == current:
 			return False
 
-		self.company_size = company_size
-		self.set("industries", [{"industry": industry} for industry in industries])
+		self.country = facts["country"]
+		self.company_size = facts["company_size"]
+		self.set("industries", [{"industry": industry} for industry in facts["industries"]])
 		return True
+
+
+def _country_name(country: str | None) -> str:
+	"""The Country as Frappe names it ("india" is India), so it matches the partners' country."""
+	country = (country or "").strip()
+	return (frappe.db.get_value("Country", country, "name") if country else "") or country
 
 
 def get_permission_query_conditions(user):

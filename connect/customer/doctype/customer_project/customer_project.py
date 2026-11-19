@@ -12,6 +12,7 @@ from frappe.utils import now_datetime
 
 from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.customer.doctype.customer_project.questions import (
+	NOT_ASKED_BY_CONTACT_PARTNERS,
 	check_answers,
 	get_answers,
 	get_changes,
@@ -106,8 +107,8 @@ class CustomerProject(Document):
 	def set_answers(self, answers: dict) -> None:
 		set_answers(self, answers)
 
-	def check_answers(self) -> None:
-		check_answers(self)
+	def check_answers(self, not_asked: tuple[str, ...] = ()) -> None:
+		check_answers(self, not_asked)
 
 	def _get_next_project_name(self) -> str:
 		"""Implementation for {company}, then (2), (3) for the same user: one more than the
@@ -207,10 +208,11 @@ def get_project(name: str) -> dict:
 	return project_dict(get_own_project(name))
 
 
-def share_requirements(answers: str | dict) -> dict:
+def share_requirements(answers: str | dict, contact_partners: bool = False) -> dict:
 	"""New project: saves the answers as a project and sends it to every partner they match, as
 	the customer's own Requirement card. With no partner to send to, nothing is saved, so the
-	customer can widen their answers and try again."""
+	customer can widen their answers and try again. `contact_partners` is Get started's wizard,
+	which doesn't ask what they want fixed or the apps."""
 	from connect.customer.doctype.customer_project.brief import send_to_partners
 	from connect.customer.doctype.customer_project.partner_matching import get_brief_recipients
 
@@ -220,9 +222,9 @@ def share_requirements(answers: str | dict) -> dict:
 
 	doc = frappe.new_doc("Customer Project")
 	doc.set_answers(frappe.parse_json(answers))
-	doc.check_answers()
+	doc.check_answers(NOT_ASKED_BY_CONTACT_PARTNERS if contact_partners else ())
 	if not get_brief_recipients(get_partner_criteria(doc)):
-		frappe.throw(_("No partners match these answers yet. Try more regions or apps."))
+		frappe.throw(_("No partners match these answers yet. Try more apps."))
 
 	# Only System Managers write projects; this one is the caller's own.
 	doc.insert(ignore_permissions=True)
@@ -300,14 +302,13 @@ def project_dict(doc: CustomerProject) -> dict:
 		"project_name": doc.project_name,
 		"status": doc.status,
 		"verdict": VERDICT_KEYS.get(doc.verdict, ""),
-		"regions": frappe.parse_json(doc.regions) or [],
 		"company_size": company.company_size if company else "",
 		"industries": company.get_industries() if company else [],
 		"apps": [row.app for row in doc.apps],
-		"go_live": doc.go_live,
-		"work_modes": frappe.parse_json(doc.work_modes) or [],
 		"operations": doc.operations,
 		"systems": frappe.parse_json(doc.systems) or [],
+		"other_system": doc.other_system,
+		"country": company.country if company else "",
 		"problems": frappe.parse_json(doc.problems) or [],
 		"criteria": get_partner_criteria(doc),
 		"shared_count": doc.shared_count or 0,

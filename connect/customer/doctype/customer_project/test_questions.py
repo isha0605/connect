@@ -75,31 +75,42 @@ class TestProjectQuestions(IntegrationTestCase):
 		doc.set_answers({"budget": "Over ₹40 lakh"})
 
 		self.assertEqual(
-			(doc.budget, doc.go_live, [row.app for row in doc.apps]),
-			("Over ₹40 lakh", "one_to_three_months", ["ERPNext"]),
+			(doc.budget, doc.operations, [row.app for row in doc.apps]),
+			("Over ₹40 lakh", "spreadsheets", ["ERPNext"]),
 		)
 		customer = frappe.get_doc("Customer", COMPANY)
-		self.assertEqual((customer.company_size, customer.get_industries()), ("11-50", ["Retail"]))
+		self.assertEqual(
+			customer.get_company_facts(),
+			{"country": "India", "company_size": "11-50", "industries": ["Retail"]},
+		)
 
 	def test_every_question_must_be_answered(self):
 		for question, message in (
-			("regions", "where your partners"),
 			("apps", "apps"),
-			("problems", "solve"),
+			("problems", "trying to fix"),
+			("budget", "budget range"),
 		):
 			with self.subTest(question), self.assertRaisesRegex(frappe.ValidationError, message):
-				make_project(**{question: []})
+				make_project(**{question: [] if question != "budget" else ""})
 
-	def test_systems_are_asked_only_when_not_on_spreadsheets(self):
-		with self.assertRaisesRegex(frappe.ValidationError, "systems"):
-			make_project(operations="outgrown_erp", systems=[])
+	def test_how_they_run_today_is_optional(self):
+		project = make_project(operations="", systems=[])
+		self.assertEqual(project.operations, "")
 
+	def test_systems_and_what_else_follow_the_operations_answer(self):
 		project = make_project(operations="spreadsheets", systems=["Tally"])
 		self.assertEqual(frappe.parse_json(project.systems), [])
 
+		named = make_project(
+			operations="outgrown_erp", systems=["Something else"], other_system="Our own WMS"
+		)
+		self.assertEqual(named.other_system, "Our own WMS")
+		unnamed = make_project(operations="outgrown_erp", systems=["Tally"], other_system="Our own WMS")
+		self.assertEqual(unnamed.other_system, "")
+
 	def test_an_answer_outside_the_options_is_refused(self):
 		with self.assertRaisesRegex(frappe.ValidationError, "not one of the answers"):
-			make_project(go_live="tomorrow")
+			make_project(operations="tomorrow")
 
 	def test_share_dialog_extras_are_kept_beside_the_answers(self):
 		project = make_project(criteria={"cities": ["Pune"], "tiers": ["Gold"], "industries": ["Healthcare"]})
@@ -132,10 +143,22 @@ class TestShareRequirements(IntegrationTestCase):
 			frappe.db.exists("Project Quote", {"customer_project": project["name"], "partner": MATCHING})
 		)
 
+	def test_contact_partners_sends_without_fix_and_apps(self):
+		frappe.set_user(BUYER)
+		try:
+			project = share_requirements({**PROJECT_ANSWERS, "problems": [], "apps": []}, contact_partners=True)
+		finally:
+			frappe.set_user("Administrator")
+		self.assertEqual(project["status"], "Shared")
+
+	def test_the_project_questions_still_need_fix_and_apps(self):
+		with self.assertRaisesRegex(frappe.ValidationError, "trying to fix"):
+			self.share(problems=[])
+
 	def test_with_no_partner_to_send_to_nothing_is_saved(self):
 		before = frappe.db.count("Customer Project", {"user": BUYER})
 		with self.assertRaisesRegex(frappe.ValidationError, "No partners match"):
-			self.share(regions=["_Test Nowhere"])
+			self.share(apps=["_Test No Such App"])
 		self.assertEqual(frappe.db.count("Customer Project", {"user": BUYER}), before)
 
 
@@ -177,6 +200,7 @@ class TestWhoChangesCompanyFacts(IntegrationTestCase):
 		frappe.db.set_value("Customer Team Member", {"user": BUYER}, "access", "Owner")
 		frappe.db.set_value("Customer Team Member", {"user": self.MEMBER}, "access", "Member")
 		customer = frappe.get_doc("Customer", COMPANY)
+		customer.country = ""
 		customer.company_size = ""
 		customer.set("industries", [])
 		customer.save(ignore_permissions=True)
@@ -210,14 +234,12 @@ class TestWhoChangesCompanyFacts(IntegrationTestCase):
 		self.save_as(self.MEMBER)
 		frappe.set_user(self.MEMBER)
 		details = {
-			"country": "Kenya",
+			"country": "India",
 			"company_size": "11-50",
 			"industries": ["Retail"],
 			"current_system": "Tally",
 		}
 		saved = save_my_company_details(details)
-		self.assertEqual(
-			(saved["country"], saved["current_system"], saved["can_change_facts"]), ("Kenya", "Tally", False)
-		)
+		self.assertEqual((saved["current_system"], saved["can_change_facts"]), ("Tally", False))
 		with self.assertRaises(frappe.PermissionError):
-			save_my_company_details({**details, "industries": ["Healthcare"]})
+			save_my_company_details({**details, "country": "Kenya"})

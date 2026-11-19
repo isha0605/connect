@@ -31,6 +31,15 @@ export const COUNTRIES_BY_REGION = {
 	Americas: ["Canada", "United States"],
 }
 
+// "Where is your business based?": one country, searched, under its region's heading.
+export const COUNTRY_GROUPS = [
+	...Object.entries(COUNTRIES_BY_REGION).map(([group, countries]) => ({
+		group,
+		options: [...countries].sort().map((v) => ({ label: v, value: v })),
+	})),
+	{ group: "Elsewhere", options: [{ label: "Somewhere else", value: "Other" }] },
+]
+
 export const COUNTRY_OPTIONS = [
 	...Object.values(COUNTRIES_BY_REGION)
 		.flat()
@@ -83,13 +92,7 @@ export const SYSTEM_OPTIONS = [
 	"Salesforce", "An in-house system", "Something else",
 ].map((v) => ({ label: v, value: v }))
 
-// "When do you need it live?" — the New project dialog's first question.
-export const GO_LIVE_OPTIONS = ANSWER_OPTIONS.go_live
-
 export const PROBLEM_OPTIONS = ANSWER_OPTIONS.problems
-
-// "How do you want to work" in the Edit criteria chips.
-export const WORK_OPTIONS = ANSWER_OPTIONS.work
 
 const labelOf = (options, value) => options.find((o) => o.value === value)?.label ?? ""
 
@@ -117,10 +120,6 @@ const CUSTOM_TRIGGERS = [
 	{
 		test: (a) => a.problems.includes("tools_dont_fit"),
 		reason: () => "You need the software to bend to how you work, and a pack is ERPNext exactly as it ships.",
-	},
-	{
-		test: (a) => a.go_live === "no_deadline",
-		reason: () => "There's no fixed deadline, so there's room to scope it around how you work instead of a fixed pack.",
 	},
 	{
 		test: (a) => a.operations === "disconnected_systems",
@@ -175,7 +174,6 @@ function normalize(answers) {
 		employees: answers?.employees ?? "",
 		// A single `industry` is what links made before this was a multi-select carry.
 		industries: answers?.industries ?? (answers?.industry ? [answers.industry] : []),
-		go_live: answers?.go_live ?? "",
 		operations: answers?.operations ?? "",
 		systems: answers?.systems ?? [],
 		problems: answers?.problems ?? [],
@@ -214,15 +212,10 @@ export function recommend(answers) {
 export function answersFromProject(project) {
 	if (!project) return null
 	return normalize({
-		go_live: project.go_live,
 		operations: project.operations,
 		systems: project.systems || [],
 		problems: project.problems || [],
 	})
-}
-
-export function goLiveCriterion(value) {
-	return labelOf(GO_LIVE_OPTIONS, value) || "No fixed deadline"
 }
 
 export const CUSTOM_HOW_IT_WORKS = [

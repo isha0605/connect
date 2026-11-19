@@ -7,7 +7,6 @@ import { Alert, Button, Dialog, ErrorMessage, FormControl, MultiSelect, ScrollAr
 import {
 	BUDGET_OPTIONS,
 	EMPLOYEE_OPTIONS,
-	GO_LIVE_OPTIONS,
 	OPERATION_OPTIONS,
 	PROBLEM_OPTIONS,
 	SYSTEM_OPTIONS,
@@ -15,11 +14,9 @@ import {
 import { blankCriteria } from "@app/utils/partnerCriteria"
 import {
 	MISSING_ANSWERS,
-	WORK_CHOICES,
+	OTHER_SYSTEM,
 	missingAnswers,
 	usesOtherSystems,
-	workChoiceOf,
-	workModesOf,
 } from "@app/utils/projectDialog"
 import AppsSelect from "./AppsSelect.vue"
 
@@ -42,7 +39,6 @@ let initial = ""
 const tried = ref(false)
 const sending = ref(false)
 const sendError = ref("")
-const regionOptions = ref([])
 const cityOptions = ref([])
 const tierOptions = ref([])
 const descriptionField = ref(null)
@@ -81,7 +77,6 @@ const rows = computed(() => {
 	const size = labelIn(EMPLOYEE_OPTIONS, c.company_size) || c.company_size
 	return [
 		{ label: "Budget", text: c.budget },
-		{ label: "Timeline", text: c.timeline },
 		{ label: "Apps", text: andList(Array.isArray(c.apps) ? c.apps : []) },
 		{ label: "Today", text: today },
 		{ label: "To fix", text: toFix ? toFix.charAt(0).toUpperCase() + toFix.slice(1) : "" },
@@ -96,10 +91,7 @@ const fixedSummary = computed(() => {
 	const picked = form.value.problems || []
 	return picked.length > 1 ? `${picked.length} picked` : namesOf(picked, PROBLEM_OPTIONS, "Nothing picked")
 })
-const workChoice = computed({
-	get: () => workChoiceOf(form.value.work_modes),
-	set: (choice) => (form.value.work_modes = workModesOf(choice)),
-})
+
 
 // Back to reading each time it opens.
 watch(
@@ -119,12 +111,10 @@ function startEditing() {
 	const current = props.project || {}
 	form.value = {
 		budget: current.budget || "",
-		go_live: current.go_live || "",
 		apps: [...(current.apps || [])],
-		regions: [...(current.regions || [])],
-		work_modes: [...(current.work_modes || [])],
 		operations: current.operations || "",
 		systems: [...(current.systems || [])],
+		other_system: current.other_system || "",
 		problems: [...(current.problems || [])],
 		cities: [...criteria.value.cities],
 		tiers: [...criteria.value.tiers],
@@ -140,9 +130,6 @@ function startEditing() {
 
 // City and tier carry no counts here: an edit goes to the same partners whatever is picked.
 function loadOptions() {
-	call("connect.api.partner.list_partner_countries")
-		.then((countries) => (regionOptions.value = (countries || []).map((c) => ({ label: c, value: c }))))
-		.catch(() => {})
 	call("connect.api.projects.partner_criteria", { criteria: JSON.stringify(criteria.value) })
 		.then((facets) => {
 			cityOptions.value = (facets?.cities || []).map((c) => ({ label: c.value, value: c.value }))
@@ -274,52 +261,22 @@ function andList(values) {
 				<div v-if="editing" class="space-y-6">
 					<Alert theme="blue" title="Partners who quoted will confirm or re-quote" />
 					<form novalidate class="space-y-4" @submit.prevent="send">
-						<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-							<FormControl
-								v-model="form.budget"
-								type="select"
-								label="Your budget"
-								placeholder="Select a range"
-								required
-								:options="BUDGET_OPTIONS"
-								:error="errors.budget"
-							/>
-							<FormControl
-								v-model="form.go_live"
-								type="select"
-								label="When do you need it live?"
-								placeholder="Select"
-								required
-								:options="GO_LIVE_OPTIONS"
-								:error="errors.go_live"
-							/>
-						</div>
-						<AppsSelect v-model="form.apps" required :error="errors.apps" />
-						<MultiSelect
-							v-model="form.regions"
-							label="Which regions should your partners be from?"
-							:options="regionOptions"
-							placeholder="Select"
-							required
-							:error="errors.regions"
-						/>
 						<FormControl
-							v-model="workChoice"
+							v-model="form.budget"
 							type="select"
-							label="How do you want to work?"
-							placeholder="Select"
+							label="Your budget"
+							placeholder="Select a range"
 							required
-							:options="WORK_CHOICES"
-							:error="errors.work_modes"
+							:options="BUDGET_OPTIONS"
+							:error="errors.budget"
 						/>
+						<AppsSelect v-model="form.apps" required :error="errors.apps" />
 						<FormControl
 							v-model="form.operations"
 							type="select"
 							label="How you handle this today"
 							placeholder="Select one"
-							required
 							:options="OPERATION_OPTIONS"
-							:error="errors.operations"
 						/>
 						<MultiSelect
 							v-if="usesOtherSystems(form.operations)"
@@ -327,8 +284,13 @@ function andList(values) {
 							label="Which systems do you use?"
 							:options="SYSTEM_OPTIONS"
 							placeholder="Select"
-							required
-							:error="errors.systems"
+						/>
+						<FormControl
+							v-if="usesOtherSystems(form.operations) && form.systems.includes(OTHER_SYSTEM)"
+							v-model="form.other_system"
+							type="text"
+							label="What else do you use?"
+							placeholder="e.g. a custom system built in-house"
 						/>
 						<MultiSelect
 							v-model="form.problems"

@@ -275,12 +275,10 @@ class TestHiring(IntegrationTestCase):
 
 # What the project questions send, every question answered.
 PROJECT_ANSWERS = {
-	"regions": ["India"],
+	"country": "India",
 	"company_size": "11-50",
 	"industries": ["Retail"],
 	"apps": ["ERPNext"],
-	"go_live": "one_to_three_months",
-	"work_modes": ["remote"],
 	"operations": "spreadsheets",
 	"problems": ["stock_visibility"],
 	"budget": "₹5 to 15 lakh",

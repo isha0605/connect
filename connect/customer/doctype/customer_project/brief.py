@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 
-from connect.customer.doctype.customer_project.answers import answer_label, work_label
+from connect.customer.doctype.customer_project.answers import answer_label
 from connect.customer.doctype.customer_project.partner_matching import get_brief_recipients
 from connect.customer.doctype.customer_project.questions import get_partner_criteria
 from connect.customer.doctype.project_quote.project_quote import QUOTED_STATUSES
@@ -103,8 +103,6 @@ def requirement_card(doc, customer: str) -> dict:
 		"industry": ", ".join(company.get_industries()),
 		"company_size": company.company_size,
 		"apps": criteria["apps"],
-		"timeline": answer_label("go_live", doc.go_live),
-		"delivery_preference": work_label(criteria["work"]),
 		"current_situation": _current_situation(doc),
 		"budget": doc.budget,
 		"description": doc.description,
@@ -120,19 +118,20 @@ def requirement_rows(doc, company) -> list[dict]:
 	criteria = get_partner_criteria(doc)
 	place = criteria["cities"] or criteria["countries"]
 	tier = _("{0} tier").format(_listed(criteria["tiers"], _("or"))) if criteria["tiers"] else _("Any tier")
-	looking_for = [tier, _("in {0}").format(_listed(place, _("or"))) if place else _("anywhere"), work_label(criteria["work"]).lower()]
-	systems = frappe.parse_json(doc.systems) or []
-	today = [answer_label("operations", doc.operations), _("You use {0}").format(_listed(systems)) if systems else ""]
+	looking_for = [tier, _("in {0}").format(_listed(place, _("or"))) if place else _("anywhere")]
+	today = [answer_label("operations", doc.operations), _uses(doc)]
 	size = answer_label("employees", company.company_size) if company else ""
 	industries = company.get_industries() if company else []
 	rows = [
 		(_("Budget"), doc.budget),
-		(_("Timeline"), answer_label("go_live", doc.go_live)),
 		(_("Apps"), _listed(criteria["apps"])),
 		(_("Today"), ". ".join(filter(None, today))),
 		(_("To fix"), ", ".join(filter(None, (answer_label("problems", p) for p in frappe.parse_json(doc.problems) or [])))),
 		(_("Looking for"), ", ".join(looking_for)),
-		(_("Company"), " · ".join(filter(None, [_listed(industries), size and _("{0} employees").format(size)]))),
+		(
+			_("Company"),
+			" · ".join(filter(None, [_listed(industries), size and _("{0} employees").format(size), company and company.country])),
+		),
 	]
 	return [{"label": label, "text": text} for label, text in rows if text]
 
@@ -159,18 +158,24 @@ def partner_brief(criteria: dict) -> str:
 		who += " " + _("who offers services for {0}").format(either(criteria["industries"]))
 
 	tier = _("{0} tier").format(either(criteria["tiers"])) if criteria["tiers"] else _("Any tier")
-	work = work_label(criteria["work"]).lower()
 	# "A partner." says nothing on its own, so it's only there with a place or industry
-	return (_("A partner") + who + ". " if who else "") + f"{tier}, {work}."
+	return (_("A partner") + who + ". " if who else "") + f"{tier}."
+
+
+def _uses(doc) -> str:
+	"""The systems they use today, with what else they named for "Something else"."""
+	systems = [system for system in frappe.parse_json(doc.systems) or [] if system != "Something else"]
+	if doc.other_system:
+		systems.append(doc.other_system)
+	return _("You use {0}").format(_listed(systems)) if systems else ""
 
 
 def _current_situation(doc) -> str:
 	situation = answer_label("operations", doc.operations)
-	systems = frappe.parse_json(doc.systems) or []
 	problems = frappe.parse_json(doc.problems) or []
 
-	if systems:
-		situation = "; ".join(filter(None, [situation, _("uses {0}").format(", ".join(systems))]))
+	if _uses(doc):
+		situation = "; ".join(filter(None, [situation, _uses(doc).lower()]))
 	if problems:
 		solve = ", ".join(filter(None, (answer_label("problems", p).lower() for p in problems)))
 		situation = ". ".join(filter(None, [situation, _("Wants to solve: {0}").format(solve)]))

@@ -43,18 +43,18 @@ class TestRequirementsUpdate(IntegrationTestCase):
 		self.quote.db_set({"status": status, "amount": 500000, "timeline_weeks": 10})
 
 	def test_the_new_version_goes_to_each_partner_with_what_changed(self):
-		self.update(budget="Over ₹40 lakh", go_live="within_month")
+		self.update(budget="Over ₹40 lakh", problems=["slow_close"])
 
 		quote = frappe.get_doc("Project Quote", self.quote.name)
 		card = frappe.parse_json(frappe.db.get_value("Connect Message", quote.brief_message, "content"))
 		self.assertNotEqual(quote.brief_message, self.quote.brief_message)
 		self.assertEqual(
-			(card["update"], card["changes"], card["budget"]), (True, ["budget", "timeline"], "Over ₹40 lakh")
+			(card["update"], card["changes"], card["budget"]), (True, ["budget", "to fix"], "Over ₹40 lakh")
 		)
 		line = frappe.get_all(
 			"Connect Message", filters={"thread": quote.thread, "message_type": "System"}, pluck="content"
 		)
-		self.assertIn("Requirements updated · Changed: budget, timeline", line)
+		self.assertIn("Requirements updated · Changed: budget, to fix", line)
 		self.assertTrue(frappe.db.get_value("Customer Project", self.project, "requirements_updated_on"))
 
 	def test_nothing_changed_sends_nothing(self):

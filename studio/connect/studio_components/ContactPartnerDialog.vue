@@ -8,7 +8,6 @@ import { computed, getCurrentInstance, ref, watch } from "vue"
 import { Button, Dialog, ErrorMessage, FormControl, LoadingIndicator, call } from "frappe-ui"
 import { DialogDescription } from "reka-ui"
 import { missingAnswers } from "@app/utils/projectDialog"
-import { GO_LIVE_OPTIONS } from "@app/utils/recommendation"
 import ProjectQuestionsDialog from "./ProjectQuestionsDialog.vue"
 
 const props = defineProps({
@@ -48,7 +47,6 @@ const details = computed(() => {
 		{ label: "What you need", text: current.description, long: true },
 		{ label: "Apps", text: (current.apps || []).join(", ") },
 		{ label: "Budget", text: current.budget },
-		{ label: "Timeline", text: GO_LIVE_OPTIONS.find((o) => o.value === current.go_live)?.label },
 	].filter((row) => row.text)
 })
 

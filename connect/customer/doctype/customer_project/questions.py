@@ -8,31 +8,25 @@ from connect.customer.doctype.customer.customer import get_customer_for_user
 from connect.customer.doctype.customer_project.answers import answer_label
 from connect.customer.doctype.customer_project.partner_matching import normalize_criteria
 
-# The project questions every entry point asks, all required. Number of employees and
+# The project questions every entry point asks. Where the company is based, its size and its
 # industries describe the company, so they are kept on its Customer, not on the project.
-TEXT_ANSWERS = ("go_live", "operations", "budget", "description")
-LIST_ANSWERS = ("regions", "work_modes", "systems", "problems")
+TEXT_ANSWERS = ("operations", "other_system", "budget", "description")
+LIST_ANSWERS = ("systems", "problems")
+COMPANY_FACTS = ("country", "company_size", "industries")
 # Answers picked from answerOptions.json, which the form shows too.
-OPTION_ANSWERS = {
-	"go_live": "go_live",
-	"operations": "operations",
-	"problems": "problems",
-	"work_modes": "work",
-}
-# The one operations answer with no systems to name.
+OPTION_ANSWERS = {"operations": "operations", "problems": "problems"}
+# The one operations answer with no systems to name, and the system that asks for its name.
 NO_SYSTEMS = "spreadsheets"
+OTHER_SYSTEM = "Something else"
 
+# The required questions. How they run today (operations, systems, what else) is optional.
 MISSING_ANSWER_MESSAGES = {
-	"regions": "Pick where your partners should be from.",
+	"country": "Pick where your business is based.",
 	"company_size": "Pick the number of employees.",
 	"industries": "Pick your industry.",
-	"apps": "Pick the apps you need.",
-	"go_live": "Pick when you need it live.",
-	"work_modes": "Pick how you want to work.",
-	"operations": "Pick how you run your operations today.",
-	"systems": "Pick the systems you use.",
-	"problems": "Pick what you are trying to solve.",
+	"problems": "Pick what you are trying to fix.",
 	"budget": "Pick a budget range.",
+	"apps": "Pick the apps you need.",
 	"description": "Tell partners what you need.",
 }
 
@@ -41,13 +35,11 @@ MISSING_ANSWER_MESSAGES = {
 CHANGE_NAMES = {
 	"description": "description",
 	"budget": "budget",
-	"go_live": "timeline",
 	"apps": "apps",
 	"operations": "today",
 	"systems": "today",
+	"other_system": "today",
 	"problems": "to fix",
-	"regions": "looking for",
-	"work_modes": "looking for",
 	"criteria": "looking for",
 }
 
@@ -64,30 +56,36 @@ def set_answers(doc, answers: dict) -> None:
 	if "apps" in answers:
 		doc.set("apps", [{"app": app} for app in _clean_list(answers["apps"])])
 	if "criteria" in answers:
-		# Edit criteria's extras in the share dialog; regions and work mode are answers above.
+		# Edit criteria's extras: partner cities and tiers.
 		extras = normalize_criteria(answers["criteria"])
 		doc.criteria = frappe.as_json({"cities": extras["cities"], "tiers": extras["tiers"]})
 	if not uses_other_systems(doc.operations):
 		doc.systems = frappe.as_json([])
+	if OTHER_SYSTEM not in (frappe.parse_json(doc.systems) or []):
+		doc.other_system = ""
 	check_options(doc)
-	_set_company_facts(get_customer(doc), answers)
-
-
-def check_answers(doc) -> None:
-	"""Stops a project from being saved or sent with any question unanswered."""
 	customer = get_customer(doc)
+	facts = {field: answers[field] for field in COMPANY_FACTS if field in answers}
+	if "industries" in facts:
+		facts["industries"] = _clean_list(facts["industries"])
+	customer.set_company_facts(facts)
+
+
+# Get started's Contact partners wizard doesn't ask what they want fixed or the apps.
+NOT_ASKED_BY_CONTACT_PARTNERS = ("problems", "apps")
+
+
+def check_answers(doc, not_asked: tuple[str, ...] = ()) -> None:
+	"""Stops a project from being saved or sent with any question unanswered, other than those
+	its entry point doesn't ask (`not_asked`)."""
 	given = {
 		**{field: doc.get(field) for field in TEXT_ANSWERS},
 		**{field: frappe.parse_json(doc.get(field)) or [] for field in LIST_ANSWERS},
 		"apps": doc.apps,
-		"company_size": customer.company_size,
-		"industries": customer.industries,
+		**get_customer(doc).get_company_facts(),
 	}
-	if not uses_other_systems(doc.operations):
-		given.pop("systems")
-
 	for field, message in MISSING_ANSWER_MESSAGES.items():
-		if field in given and not given[field]:
+		if field not in not_asked and not given[field]:
 			frappe.throw(_(message), title=_("Answer every question"))
 
 
@@ -108,15 +106,16 @@ def get_changes(before: dict, after: dict) -> list[str]:
 
 
 def get_partner_criteria(doc) -> dict:
-	"""Who the brief goes to, from the answers and the share dialog's extras."""
+	"""Who the brief goes to: partners with the apps and the company's industries, in the
+	company's country when partners are there and anywhere otherwise, and Edit criteria's extras."""
 	extras = frappe.parse_json(doc.criteria) or {}
 	company = get_company(doc)
+	country = company.country if company else ""
 	return normalize_criteria(
 		{
-			"countries": frappe.parse_json(doc.regions) or [],
+			"countries": [country] if country and _has_partners_in(country) else [],
 			"industries": company.get_industries() if company else [],
 			"apps": [row.app for row in doc.apps],
-			"work": frappe.parse_json(doc.work_modes) or [],
 			"cities": extras.get("cities"),
 			"tiers": extras.get("tiers"),
 		}
@@ -143,7 +142,7 @@ def uses_other_systems(operations: str | None) -> bool:
 
 
 def check_options(doc) -> None:
-	"""Stops an answer that isn't one of the form's options, such as a go-live of "tomorrow"."""
+	"""Stops an answer that isn't one of the form's options, such as an operations of "tomorrow"."""
 	for field, question in OPTION_ANSWERS.items():
 		value = doc.get(field)
 		values = frappe.parse_json(value) if field in LIST_ANSWERS else [value]
@@ -152,10 +151,10 @@ def check_options(doc) -> None:
 			frappe.throw(_("{0} is not one of the answers.").format(", ".join(unknown)))
 
 
-def _set_company_facts(customer, answers: dict) -> None:
-	size = (answers.get("company_size") or "").strip() if "company_size" in answers else customer.company_size
-	industries = _clean_list(answers["industries"]) if "industries" in answers else customer.get_industries()
-	customer.set_company_facts(size, industries)
+def _has_partners_in(country: str) -> bool:
+	from connect.partner.doctype.partner.partner import BASE_PARTNER_FILTERS
+
+	return bool(frappe.get_all("Partner", filters=[*BASE_PARTNER_FILTERS, ["Partner", "country", "=", country]], limit=1))
 
 
 def _clean_list(value) -> list[str]:

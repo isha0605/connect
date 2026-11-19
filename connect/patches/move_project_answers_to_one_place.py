@@ -16,46 +16,42 @@ COMPANY_SIZES = set(COMPANY_SIZE_VALUES.values())
 
 
 def execute():
-	"""Moves each answer to its one place: regions and work mode out of a project's criteria,
-	and the number of employees and industries from projects onto their Customer. A company
-	whose projects disagree keeps what its newest project said. Safe to re-run."""
+	"""Moves each answer to its one place: where the company is based, its size and industries
+	from projects onto their Customer, and a project's criteria down to the cities and tiers
+	Edit criteria adds. A company whose projects disagree keeps what its newest project said.
+	Safe to re-run."""
 	# Company facts first: they fall back to the industries Edit criteria kept in criteria.
 	for customer in frappe.get_all("Customer", pluck="name"):
 		_move_company_facts(customer)
 		_copy_requirement_apps(customer)
 
-	for project in frappe.get_all("Customer Project", fields=["name", "criteria", "regions"]):
-		_split_criteria(project)
+	for project in frappe.get_all("Customer Project", fields=["name", "criteria"]):
+		_keep_criteria_extras(project)
 
 
-def _split_criteria(project) -> None:
+def _keep_criteria_extras(project) -> None:
+	"""Countries, industries and work mode in criteria were answers; now the company's facts
+	and the apps are, so criteria keeps only the cities and tiers Edit criteria adds."""
 	criteria = frappe.parse_json(project.criteria or "{}") or {}
-	if project.regions or not criteria:
+	extras = {"cities": criteria.get("cities") or [], "tiers": criteria.get("tiers") or []}
+	if not criteria or criteria == extras:
 		return
-	frappe.db.set_value(
-		"Customer Project",
-		project.name,
-		{
-			"regions": frappe.as_json(criteria.get("countries") or []),
-			"work_modes": frappe.as_json(criteria.get("work") or []),
-			"criteria": frappe.as_json(
-				{"cities": criteria.get("cities") or [], "tiers": criteria.get("tiers") or []}
-			),
-		},
-		update_modified=False,
-	)
+	frappe.db.set_value("Customer Project", project.name, "criteria", frappe.as_json(extras), update_modified=False)
 
 
 def _move_company_facts(customer: str) -> None:
 	doc = frappe.get_doc("Customer", customer)
-	if doc.company_size and doc.industries:
+	if doc.country and doc.company_size and doc.industries:
 		return
 	projects = _team_project_answers(customer)
+	country = doc.country or _newest_country(projects)
 	size = doc.company_size or _newest_company_size(projects) or _requirement_company_size(customer)
 	industries = doc.get_industries() or _newest_industries(customer, projects)
-	if (size or "") == (doc.company_size or "") and industries == doc.get_industries():
+	unchanged = (country or "") == (doc.country or "") and (size or "") == (doc.company_size or "")
+	if unchanged and industries == doc.get_industries():
 		return
 
+	doc.country = country or ""
 	doc.company_size = size or ""
 	doc.set("industries", [{"industry": name} for name in industries])
 	# A migration, with nobody signed in whose access applies.
@@ -107,6 +103,15 @@ def _team_project_answers(customer: str) -> list[dict]:
 		.orderby(Project.creation, order=Order.desc)
 		.run(as_dict=True)
 	)
+
+
+def _newest_country(projects: list[dict]) -> str | None:
+	"""The first country the newest project with any asked for its partners to be in."""
+	for project in projects:
+		countries = (frappe.parse_json(project.criteria or "{}") or {}).get("countries")
+		if countries:
+			return countries[0]
+	return None
 
 
 def _newest_company_size(projects: list[dict]) -> str | None:

@@ -35,9 +35,9 @@ def update_requirements(name, answers):
 
 
 @frappe.whitelist(methods=["POST"])
-def share_requirements(answers):
+def share_requirements(answers, contact_partners=False):
 	from connect.customer.doctype.customer_project.customer_project import share_requirements
-	return share_requirements(answers)
+	return share_requirements(answers, frappe.utils.sbool(contact_partners))
 
 
 # Guests too: the Find Partners questions show the live count before anyone signs up. It

@@ -1,29 +1,39 @@
 <script setup>
 // The project questions every entry point asks, in four steps. Without a partner the project is
 // shared with every partner it matches; with one (Connect) it goes to that partner, as a new
-// project or, given `project`, one of theirs with any answers it lacks filled in here. The
-// number of employees and industries are the company's: filled in from it, and once set only
-// its Owner or an Admin can change them. A guest answers first: Share keeps the answers in
+// project or, given `project`, one of theirs with any answers it lacks filled in here. Where
+// the business is based, its size and industries are the company's: filled in from it, and
+// once set only its Owner or an Admin can change them. A guest answers first: Share keeps the answers in
 // this tab and signs them up, and Home reopens this on the last step (?contact=1).
 import { computed, getCurrentInstance, ref, watch } from "vue"
-import { Button, Dialog, ErrorMessage, FormControl, FormLabel, MultiSelect, Radio, RadioGroup, call, toast } from "frappe-ui"
+import {
+	Button,
+	Checkbox,
+	Combobox,
+	Dialog,
+	ErrorMessage,
+	FormControl,
+	FormLabel,
+	MultiSelect,
+	Radio,
+	RadioGroup,
+	call,
+	toast,
+} from "frappe-ui"
 import {
 	BUDGET_OPTIONS,
+	COUNTRY_GROUPS,
 	EMPLOYEE_OPTIONS,
-	GO_LIVE_OPTIONS,
 	INDUSTRY_OPTIONS,
 	OPERATION_OPTIONS,
 	PROBLEM_OPTIONS,
 	SYSTEM_OPTIONS,
 } from "@app/utils/recommendation"
 import {
-	MISSING_ANSWERS,
+	OTHER_SYSTEM,
 	PROJECT_QUESTION_STEPS,
-	WORK_CHOICES,
 	missingAnswers,
 	usesOtherSystems as needsSystems,
-	workChoiceOf,
-	workModesOf,
 } from "@app/utils/projectDialog"
 import { goToSignIn } from "@app/utils/signIn"
 import AppsSelect from "./AppsSelect.vue"
@@ -41,7 +51,8 @@ const emit = defineEmits(["update:modelValue"])
 const router = getCurrentInstance()?.appContext.config.globalProperties.$router
 
 const STEPS = PROJECT_QUESTION_STEPS
-const LIST_ANSWERS = ["regions", "industries", "apps", "work_modes", "systems", "problems"]
+const ANSWER_FIELDS = PROJECT_QUESTION_STEPS.flat()
+const LIST_ANSWERS = ["industries", "apps", "systems", "problems"]
 // A guest's answers, kept in this tab across signing up: the sign-up page reloads the app.
 const KEPT_ANSWERS = "connect.projectQuestions.answers"
 const AFTER_SIGN_UP = "/connect/home?contact=1"
@@ -53,16 +64,12 @@ const sendError = ref("")
 const sending = ref(false)
 const canChangeFacts = ref(true)
 const isGuest = ref(false)
-const regionOptions = ref([])
 
 const partnerName = computed(() => props.partner?.partner_name || props.partner?.name || "")
 const title = computed(() => (partnerName.value ? `New project for ${partnerName.value}` : "New project"))
 const sendLabel = computed(() => (partnerName.value ? `Send to ${partnerName.value}` : "Share requirements"))
 const usesOtherSystems = computed(() => needsSystems(answers.value.operations))
-const workChoice = computed({
-	get: () => workChoiceOf(answers.value.work_modes),
-	set: (choice) => (answers.value.work_modes = workModesOf(choice)),
-})
+const namesOtherSystem = computed(() => usesOtherSystems.value && answers.value.systems.includes(OTHER_SYSTEM))
 const descriptionNote = computed(() =>
 	partnerName.value
 		? `${partnerName.value} quotes from this, and sees your company details.`
@@ -82,7 +89,6 @@ watch(
 		sendError.value = ""
 		answers.value = { ...blankAnswers(), ...projectAnswers(props.project) }
 		if (!props.project && restoreKept()) step.value = STEPS.length
-		loadOptions()
 		loadCompany()
 	},
 	{ immediate: true },
@@ -90,22 +96,15 @@ watch(
 
 function blankAnswers() {
 	return {
-		regions: [], company_size: "", industries: [], apps: [], go_live: "", work_modes: [],
-		operations: "", systems: [], problems: [], budget: "", description: "",
+		country: "", company_size: "", industries: [], operations: "", systems: [], other_system: "",
+		problems: [], budget: "", apps: [], description: "",
 	}
 }
 
 function projectAnswers(project) {
 	if (!project) return {}
-	const given = Object.keys(MISSING_ANSWERS).filter((field) => project[field] !== undefined)
+	const given = ANSWER_FIELDS.filter((field) => project[field] !== undefined)
 	return Object.fromEntries(given.map((field) => [field, project[field] ?? (LIST_ANSWERS.includes(field) ? [] : "")]))
-}
-
-function loadOptions() {
-	if (regionOptions.value.length) return
-	call("connect.api.partner.list_partner_countries")
-		.then((countries) => (regionOptions.value = (countries || []).map((c) => ({ label: c, value: c }))))
-		.catch(() => {})
 }
 
 // Who is answering: a guest, or a customer whose company facts fill the first step.
@@ -115,8 +114,9 @@ function loadCompany() {
 			isGuest.value = !me?.user || me.user === "Guest"
 			const company = me?.customer
 			if (!company) return
-			const factsSet = !!(company.company_size && company.industries?.length)
+			const factsSet = !!(company.country && company.company_size && company.industries?.length)
 			canChangeFacts.value = company.is_admin || !factsSet
+			answers.value.country = answers.value.country || company.country || ""
 			answers.value.company_size = answers.value.company_size || company.company_size || ""
 			if (!answers.value.industries.length) answers.value.industries = company.industries || []
 		})
@@ -169,7 +169,17 @@ function payload() {
 	const given = { ...answers.value, description: answers.value.description.trim() }
 	// a spreadsheet shop's earlier pick isn't a system they use
 	if (!usesOtherSystems.value) given.systems = []
+	if (!namesOtherSystem.value) given.other_system = ""
 	return JSON.stringify(given)
+}
+
+function hasProblem(value) {
+	return answers.value.problems.includes(value)
+}
+
+function toggleProblem(value) {
+	const picked = answers.value.problems
+	answers.value.problems = picked.includes(value) ? picked.filter((p) => p !== value) : [...picked, value]
 }
 
 function send() {
@@ -226,13 +236,15 @@ function send() {
 				</div>
 
 				<div v-if="step === 1" class="mt-6 flex flex-col gap-4">
-					<MultiSelect
-						v-model="answers.regions"
-						label="Which regions should your partners be from?"
-						:options="regionOptions"
-						placeholder="Select"
+					<Combobox
+						v-model="answers.country"
+						label="Where is your business based?"
+						:options="COUNTRY_GROUPS"
+						placeholder="Select a country"
 						required
-						:error="errors.regions"
+						:disabled="!canChangeFacts"
+						:description="factsNote"
+						:error="errors.country"
 					/>
 					<FormControl
 						v-model="answers.company_size"
@@ -257,31 +269,9 @@ function send() {
 					/>
 				</div>
 
-				<div v-else-if="step === 2" class="mt-6 flex flex-col gap-4">
-					<AppsSelect v-model="answers.apps" required :error="errors.apps" />
-					<FormControl
-						v-model="answers.go_live"
-						type="select"
-						label="When do you need it live?"
-						:options="GO_LIVE_OPTIONS"
-						placeholder="Select"
-						required
-						:error="errors.go_live"
-					/>
-					<FormControl
-						v-model="workChoice"
-						type="select"
-						label="How do you want to work?"
-						:options="WORK_CHOICES"
-						placeholder="Select"
-						required
-						:error="errors.work_modes"
-					/>
-				</div>
-
-				<div v-else-if="step === 3" class="mt-[21px] flex flex-col">
+				<div v-else-if="step === 2" class="mt-[21px] flex flex-col">
 					<div id="operations-question">
-						<FormLabel label="How would you describe your operations today?" required />
+						<FormLabel label="How would you describe your operations today?" />
 					</div>
 					<RadioGroup v-model="answers.operations" class="mt-1 w-full" size="md" padded aria-labelledby="operations-question">
 						<Radio
@@ -292,7 +282,6 @@ function send() {
 							:value="option.value"
 						/>
 					</RadioGroup>
-					<ErrorMessage v-if="errors.operations" class="mt-1" :message="errors.operations" />
 					<MultiSelect
 						v-if="usesOtherSystems"
 						v-model="answers.systems"
@@ -300,18 +289,34 @@ function send() {
 						label="Which systems do you use?"
 						:options="SYSTEM_OPTIONS"
 						placeholder="Select"
-						required
-						:error="errors.systems"
 					/>
-					<MultiSelect
-						v-model="answers.problems"
-						class="mt-5"
-						label="What are you trying to solve?"
-						:options="PROBLEM_OPTIONS"
-						placeholder="Select"
-						required
-						:error="errors.problems"
+					<FormControl
+						v-if="namesOtherSystem"
+						v-model="answers.other_system"
+						class="mt-4"
+						type="text"
+						label="What else do you use?"
+						placeholder="e.g. a custom system built in-house"
 					/>
+				</div>
+
+				<div v-else-if="step === 3" class="mt-[21px] flex flex-col">
+					<div id="problems-question">
+						<FormLabel label="What are you trying to fix?" required />
+					</div>
+					<div class="mt-1 flex w-full flex-col" role="group" aria-labelledby="problems-question">
+						<Checkbox
+							v-for="option in PROBLEM_OPTIONS"
+							:key="option.value"
+							class="-ml-3 min-h-8 px-3 py-[5.5px]"
+							size="md"
+							padded
+							:label="option.label"
+							:model-value="hasProblem(option.value)"
+							@update:model-value="toggleProblem(option.value)"
+						/>
+					</div>
+					<ErrorMessage v-if="errors.problems" class="mt-1" :message="errors.problems" />
 				</div>
 
 				<div v-else class="mt-6 flex flex-col gap-4">
@@ -324,6 +329,7 @@ function send() {
 						required
 						:error="errors.budget"
 					/>
+					<AppsSelect v-model="answers.apps" required :error="errors.apps" />
 					<FormControl
 						v-model="answers.description"
 						type="textarea"
@@ -337,8 +343,11 @@ function send() {
 					<ErrorMessage v-if="sendError" :message="sendError" />
 				</div>
 
-				<div class="mt-8 flex w-full justify-end gap-2">
-					<Button v-if="step > 1" variant="subtle" size="sm" label="Back" icon-left="lucide-chevron-left" @click="back" />
+				<div v-if="step === 1" class="mt-8">
+					<Button class="w-full" variant="solid" size="sm" label="Continue" type="submit" />
+				</div>
+				<div v-else class="mt-8 flex w-full justify-end gap-2">
+					<Button variant="subtle" size="sm" label="Back" icon-left="lucide-chevron-left" @click="back" />
 					<Button v-if="step < STEPS.length" variant="solid" size="sm" label="Continue" type="submit" />
 					<Button v-else variant="solid" size="sm" :label="sendLabel" icon-left="lucide-send" type="submit" :loading="sending" />
 				</div>

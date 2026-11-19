@@ -2,7 +2,6 @@
 // /custom-implementation?project=CP-…, which is where the project questions land once shared.
 
 import { computed, h, onScopeDispose, ref } from "vue"
-import { goLiveCriterion } from "@app/utils/recommendation"
 import { startTracking } from "@app/utils/tracking"
 import { tierSeal } from "@app/utils/tierSeal"
 
@@ -550,10 +549,8 @@ export default function setup(context) {
 		const n = project.value?.shared_count || 0
 		return `Sent to ${n} partner${n === 1 ? "" : "s"}`
 	})
-	// Once hired, the timeline is the partner's quoted one.
-	const timelineLabel = computed(() =>
-		hired.value?.timeline_weeks ? quoteTimeline(hired.value) : goLiveCriterion(project.value?.go_live),
-	)
+	// The hired partner's quoted timeline.
+	const timelineLabel = computed(() => (hired.value?.timeline_weeks ? quoteTimeline(hired.value) : ""))
 	const createdOn = computed(() => {
 		const at = project.value?.created_on
 		return at ? new Date(at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""

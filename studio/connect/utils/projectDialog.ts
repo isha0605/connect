@@ -3,52 +3,39 @@
 // into their setup() return and render the ProjectQuestionsDialog block bound to it.
 
 import { ref } from "vue"
-import { STARTER_PACKS_ENABLED, WORK_OPTIONS } from "@app/utils/recommendation"
+import { STARTER_PACKS_ENABLED } from "@app/utils/recommendation"
 
-// The project questions, a step each, and what each says when left unanswered. The server
-// (questions.py) refuses a project missing any of them, with the same words.
+// The project questions, a step each (Pragati's CompanyQuestions + brief), and what each
+// required one says when left unanswered. How they run today (operations, systems, what
+// else) is optional. The server (questions.py) refuses a project missing any required one.
 export const PROJECT_QUESTION_STEPS = [
-	["regions", "company_size", "industries"],
-	["apps", "go_live", "work_modes"],
-	["operations", "systems", "problems"],
-	["budget", "description"],
+	["country", "company_size", "industries"],
+	["operations", "systems", "other_system"],
+	["problems"],
+	["budget", "apps", "description"],
 ]
 export const MISSING_ANSWERS = {
-	regions: "Pick where your partners should be from.",
+	country: "Pick where your business is based.",
 	company_size: "Pick the number of employees.",
 	industries: "Pick your industry.",
-	apps: "Pick the apps you need.",
-	go_live: "Pick when you need it live.",
-	work_modes: "Pick how you want to work.",
-	operations: "Pick how you run your operations today.",
-	systems: "Pick the systems you use.",
-	problems: "Pick what you are trying to solve.",
+	problems: "Pick what you are trying to fix.",
 	budget: "Pick a budget range.",
+	apps: "Pick the apps you need.",
 	description: "Tell partners what you need.",
 }
+// The system that asks "What else do you use?".
+export const OTHER_SYSTEM = "Something else"
 
-// { field: message } for each of `fields` that `answers` leaves unanswered.
+// { field: message } for each required one of `fields` that `answers` leaves unanswered.
 export function missingAnswers(answers, fields = Object.keys(MISSING_ANSWERS)) {
 	const found = {}
 	for (const field of fields) {
-		if (field === "systems" && !usesOtherSystems(answers.operations)) continue
+		if (!MISSING_ANSWERS[field]) continue
 		const value = answers[field]
 		const empty = Array.isArray(value) ? !value.length : !String(value || "").trim()
 		if (empty) found[field] = MISSING_ANSWERS[field]
 	}
 	return found
-}
-
-// "How do you want to work?" is one choice, kept as the work modes it allows: either is both.
-export const WORK_CHOICES = [...WORK_OPTIONS, { label: "Either works", value: "either" }]
-
-export function workChoiceOf(modes) {
-	return (modes || []).length > 1 ? "either" : (modes || [])[0] || ""
-}
-
-export function workModesOf(choice) {
-	if (choice === "either") return WORK_OPTIONS.map((option) => option.value)
-	return choice ? [choice] : []
 }
 
 // Same rule as the Find Partners wizard: anyone not on spreadsheets has systems to name.

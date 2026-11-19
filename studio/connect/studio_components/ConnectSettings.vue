@@ -760,7 +760,7 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 					<template v-else-if="tab === 'company'">
 						<div class="mb-[14px] flex flex-col gap-3 sm:flex-row">
 							<FormControl :model-value="company.company_name" class="min-w-0 flex-1" label="Company name" size="md" variant="outline" disabled />
-							<FormControl v-model="company.country" class="min-w-0 flex-1" label="Country" type="combobox" :options="countryOptions" placeholder="Select" size="md" variant="outline" />
+							<FormControl v-model="company.country" class="min-w-0 flex-1" label="Country" type="combobox" :options="countryOptions" placeholder="Select" size="md" variant="outline" :disabled="!company.canChangeFacts" />
 						</div>
 						<div class="mb-[14px] flex flex-col gap-3 sm:flex-row">
 							<FormControl
@@ -786,7 +786,7 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 							/>
 						</div>
 						<p v-if="!company.canChangeFacts" class="-mt-2 mb-[14px] text-p-sm text-ink-gray-5">
-							Only your company's Owner or an Admin can change the number of employees or industries.
+							Only your company's Owner or an Admin can change the country, number of employees or industries.
 						</p>
 						<FormControl v-model="company.system" label="What do you use today?" type="select" :options="systemOptions" placeholder="Select" size="md" variant="outline" />
 						<div class="mt-5 flex justify-end">
