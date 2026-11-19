@@ -39,13 +39,8 @@ export const COUNTRY_OPTIONS = [
 	{ label: "Somewhere else", value: "Other" },
 ]
 
-export const EMPLOYEE_OPTIONS = [
-	{ label: "1 to 10", value: "1-10" },
-	{ label: "11 to 50", value: "11-50" },
-	{ label: "51 to 200", value: "51-200" },
-	{ label: "201 to 500", value: "201-500" },
-	{ label: "More than 500", value: "500+" },
-]
+// In answerOptions.json, so the server labels a company's size the same way.
+export const EMPLOYEE_OPTIONS = ANSWER_OPTIONS.employees
 
 // Values are the directory's industry filter values (success-story categories), so
 // the custom path can pass the answers straight through. Grouped the way the earlier

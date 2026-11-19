@@ -291,6 +291,7 @@ def my_projects() -> list[dict]:
 
 
 def project_dict(doc: CustomerProject) -> dict:
+	from connect.customer.doctype.customer_project.brief import requirement_rows
 	from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import with_timezone
 
 	company = get_company(doc)
@@ -313,6 +314,7 @@ def project_dict(doc: CustomerProject) -> dict:
 		"brief_thread": first_brief_thread(doc.name),
 		"shared_on": with_timezone(doc.shared_on),
 		"requirements_updated_on": with_timezone(doc.requirements_updated_on),
+		"requirement_rows": requirement_rows(doc, company),
 		"budget": doc.budget,
 		"description": doc.description,
 		"created_on": with_timezone(doc.creation),

@@ -109,7 +109,39 @@ def requirement_card(doc, customer: str) -> dict:
 		"budget": doc.budget,
 		"description": doc.description,
 		"partner_brief": partner_brief(criteria),
+		# The version this card carries, as the Requirements dialog reads it.
+		"rows": requirement_rows(doc, company),
 	}
+
+
+def requirement_rows(doc, company) -> list[dict]:
+	"""The requirements as one label and value per answer, blank ones left out: what the
+	Requirements dialog shows, on the project page and from each card in a chat."""
+	criteria = get_partner_criteria(doc)
+	place = criteria["cities"] or criteria["countries"]
+	tier = _("{0} tier").format(_listed(criteria["tiers"], _("or"))) if criteria["tiers"] else _("Any tier")
+	looking_for = [tier, _("in {0}").format(_listed(place, _("or"))) if place else _("anywhere"), work_label(criteria["work"]).lower()]
+	systems = frappe.parse_json(doc.systems) or []
+	today = [answer_label("operations", doc.operations), _("You use {0}").format(_listed(systems)) if systems else ""]
+	size = answer_label("employees", company.company_size) if company else ""
+	industries = company.get_industries() if company else []
+	rows = [
+		(_("Budget"), doc.budget),
+		(_("Timeline"), answer_label("go_live", doc.go_live)),
+		(_("Apps"), _listed(criteria["apps"])),
+		(_("Today"), ". ".join(filter(None, today))),
+		(_("To fix"), ", ".join(filter(None, (answer_label("problems", p) for p in frappe.parse_json(doc.problems) or [])))),
+		(_("Looking for"), ", ".join(looking_for)),
+		(_("Company"), " · ".join(filter(None, [_listed(industries), size and _("{0} employees").format(size)]))),
+	]
+	return [{"label": label, "text": text} for label, text in rows if text]
+
+
+def _listed(values: list[str], joiner: str | None = None) -> str:
+	"""The values joined as "A, B and C", or with `joiner` as "A, B or C"."""
+	if len(values) <= 1:
+		return "".join(values)
+	return f"{', '.join(values[:-1])} {joiner or _('and')} {values[-1]}"
 
 
 def partner_brief(criteria: dict) -> str:
