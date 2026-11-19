@@ -258,6 +258,12 @@ class IntegrationTestTierFields(IntegrationTestCase):
 		partner.save()
 		self.assertEqual(str(partner.listed_on), "2026-01-01")
 
+	def test_imported_partner_keeps_its_listing_date(self):
+		listed = {"show_in_website": 1, "listed_on": "2025-03-14"}
+		save_imported_partner("_Test Listed Import LLP", {**partner_values("_Test Listed Import"), **listed})
+
+		self.assertEqual(str(frappe.db.get_value("Partner", "_Test Listed Import LLP", "listed_on")), "2025-03-14")
+
 	def test_currency_patch_fills_only_empty_currencies(self):
 		insert_signup_partner(INDIAN)
 		frappe.get_doc({"doctype": "Partner", **partner_values(KENYAN), "country": "Kenya"}).insert()

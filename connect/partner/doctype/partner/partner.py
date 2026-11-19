@@ -135,8 +135,13 @@ class Partner(Document):
 		self.set_listed_on()
 
 	def set_listed_on(self):
-		"""Delisting gives a newly listed partner 90 days, counted from this date."""
-		if self.show_in_website and (self.is_new() or self.has_value_changed("show_in_website")):
+		"""Delisting gives a newly listed partner 90 days, counted from this date. A partner imported
+		from frappe.io keeps the listing date it brings."""
+		if not self.show_in_website:
+			return
+		if self.is_new() and self.listed_on:
+			return
+		if self.is_new() or self.has_value_changed("show_in_website"):
 			self.listed_on = today()
 
 	@frappe.whitelist()
