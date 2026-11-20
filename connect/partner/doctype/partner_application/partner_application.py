@@ -164,6 +164,8 @@ class PartnerApplication(Document):
 		updates = {"verification_status": VERIFIED}
 		if self.company_logo:
 			updates["logo"] = self.company_logo
+		if self.registered_state:
+			updates["state"] = self.registered_state
 		frappe.db.set_value("Partner", self.partner, updates)
 
 	def _apply_rejection(self):
