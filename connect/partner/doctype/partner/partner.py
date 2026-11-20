@@ -46,9 +46,9 @@ class Partner(Document):
 	def autoname(self):
 		"""A partner who signs up in Connect is named by their display name. Partners from frappe.io
 		keep their frappe.io ID instead, so they may share a display name (see save_imported_partner)."""
-		name = (self.partner_name or "").strip()
+		name = (self.company_name or "").strip()
 		if not name:
-			frappe.throw(_("Partner Name is required."), frappe.MandatoryError)
+			frappe.throw(_("Company Name is required."), frappe.MandatoryError)
 		if frappe.db.exists("Partner", name):
 			frappe.throw(_("A partner named {0} already exists.").format(frappe.bold(name)), frappe.DuplicateEntryError)
 		self.name = name
@@ -109,7 +109,7 @@ class Partner(Document):
 		taken_by = frappe.db.get_value(
 			"Partner",
 			{"starter_pack": 1, "starter_pack_sequence": self.starter_pack_sequence, "name": ["!=", self.name]},
-			"partner_name",
+			"company_name",
 		)
 		if taken_by:
 			frappe.throw(
@@ -189,9 +189,9 @@ def save_imported_partner(frappe_io_id: str, values: dict) -> str:
 	return doc.name
 
 
-def recompute_rating_from_reviews(partner_name, exclude=None):
+def recompute_rating_from_reviews(partner, exclude=None):
 	"""Recomputes a Partner's rating and dimension scores from its shown Partner Review records."""
-	filters = {"partner": partner_name, "is_hidden": 0}
+	filters = {"partner": partner, "is_hidden": 0}
 	if exclude:
 		filters["name"] = ["!=", exclude]
 	reviews = frappe.get_all(
@@ -206,7 +206,7 @@ def recompute_rating_from_reviews(partner_name, exclude=None):
 		dim_values = [flt(r.get(dimension)) for r in reviews if r.get(dimension)]
 		values[f"{dimension}_score"] = sum(dim_values) / len(dim_values) if dim_values else 0
 
-	frappe.db.set_value("Partner", partner_name, values, update_modified=False)
+	frappe.db.set_value("Partner", partner, values, update_modified=False)
 
 
 def _normalize_multi(value):
@@ -228,8 +228,8 @@ def _normalize_multi(value):
 
 
 PARTNER_FIELDS = [
-	"name", "partner_name", "logo", "logo_icon", "tagline", "tier", "specialist",
-	"rating", "country", "city", "rollouts", "hourly_rate",
+	"name", "company_name", "logo", "logo_icon", "tagline", "tier", "specialist",
+	"rating", "country", "city", "successful_projects_count", "hourly_rate",
 	"response_time_hours",
 ]
 # The "is this partner visible at all" gate — combined as AND with whatever
@@ -257,7 +257,9 @@ BASE_PARTNER_FILTERS = [
 # details, and the partner's revenue and tier history.
 PRIVATE_PROFILE_FIELDS = (
 	"profile_draft", "cloud_registration", "cloud_registration_sent_on", "show_in_website", "starter_pack_sequence",
-	"email",
+	"email", "contact_email",
+	# The Owner's own name: personal, so customers see only the company.
+	"partner_name",
 	"currency", "revenue_last_month", "revenue_this_month", "revenue_updated_on", "next_tier", "previous_tier",
 	"tier_changed_on", "reviewed_tier", "keep_tier", "keep_tier_reason", "listed_on", "listing_review",
 	"keep_listing", "keep_listing_reason",
@@ -388,8 +390,8 @@ def _sqlite_rank(search_term, allowed_names):
 
 SORT_OPTIONS = {
 	"rating_desc": ("rating", True),
-	"rollouts_desc": ("rollouts", True),
-	"name_asc": ("partner_name", False),
+	"successful_projects_count_desc": ("successful_projects_count", True),
+	"name_asc": ("company_name", False),
 }
 
 
@@ -496,7 +498,7 @@ def search_partners(
 			term = search.lower()
 			substring_matches = [
 				c for c in candidates
-				if c.name not in ranked_set and term in (c.partner_name or "").lower()
+				if c.name not in ranked_set and term in (c.company_name or "").lower()
 			]
 			partners = (ranked + substring_matches)[:limit]
 		if sort in SORT_OPTIONS:
@@ -910,9 +912,9 @@ def list_partner_filter_options():
 def get_partner_preview(partner):
 	"""Returns a lightweight partner snapshot for the quick-preview drawer, fetched only when needed."""
 	fields = [
-		"name", "partner_name", "logo", "description", "tier", "specialist",
+		"name", "company_name", "logo", "description", "tier", "specialist",
 		"rating", "city", "country", "pmm_level", "hourly_rate", "response_time_hours",
-		"certs_erpnext", "certs_frappe_framework",
+		"erpnext_certified", "framework_certified",
 	]
 	check_profile_visible(partner)
 	doc = frappe.db.get_value("Partner", partner, fields, as_dict=True)
@@ -1106,13 +1108,14 @@ _PROFILE_ROW_FIELDS = {
 }
 
 _PROFILE_SIMPLE_FIELDS = (
-	# partner_name is deliberately excluded: the name customers see is set by Frappe, from the
+	# company_name is deliberately excluded: the name customers see is set by Frappe, from the
 	# partner's application or frappe.io, not by the partner.
 	# starter_pack is excluded too: it decides who Frappe may assign paid Starter Pack
-	# orders to, so a partner must not be able to enrol themselves. So are certs_erpnext and
-	# certs_frappe_framework: they're counted from linked certificates (recount_certificates),
-	# and countries_served, counted from served_countries. rollouts, sites_deployed, certified_experts
-	# and references_count come from frappe.io's import, so partners can't overwrite them.
+	# orders to, so a partner must not be able to enrol themselves. So are erpnext_certified and
+	# framework_certified: they're counted from linked certificates (recount_certificates),
+	# and countries_served, counted from served_countries. successful_projects_count,
+	# total_sites_count, number_of_certified_members and references_count come from frappe.io's
+	# import, so partners can't overwrite them.
 	"tagline", "description", "country", "city", "website",
 	"foundation_date", "hourly_rate", "typical_project_size", "proposal_timeline",
 	"demo_available", "logo_position_x", "logo_position_y", "phone", "team_size", "journey_blog_url",
@@ -1122,7 +1125,7 @@ _PROFILE_SIMPLE_FIELDS = (
 # What the partner's Profile builder edits, beyond the lists below.
 _BUILDER_FIELDS = (
 	"tagline", "website", "phone", "journey_blog_url", "logo", "logo_icon", "description", "foundation_date",
-	"team_size", "certs_erpnext", "certs_frappe_framework", "city", "country",
+	"team_size", "erpnext_certified", "framework_certified", "city", "country",
 	"hourly_rate", "why_choose_them", "how_we_work", "successful_implementation", "origin_story",
 )
 # Longest text each profile field may hold, so every partner's profile lays out the same way.
@@ -1158,7 +1161,7 @@ def get_my_profile(with_draft=False) -> dict:
 	attach_normalized_logos(stories)
 	return {
 		"partner": doc.name,
-		"partner_name": doc.partner_name,
+		"company_name": doc.company_name,
 		**{fieldname: doc.get(fieldname) for fieldname in _BUILDER_FIELDS},
 		"apps": [row.app for row in doc.apps],
 		"migrations": [row.migration_path for row in doc.migrations],
@@ -1255,7 +1258,7 @@ def update_my_partner_profile(
 	changes wait in the partner's unpublished changes until publish_my_profile_draft."""
 	partner = _my_admin_partner()
 
-	# Fields Frappe or the frappe.io import own (partner_name, starter_pack, certificate counts, Starter
+	# Fields Frappe or the frappe.io import own (company_name, partner_name, starter_pack, certificate counts, Starter
 	# Pack prices, the imported numbers) are not parameters; frappe.call drops what a caller sends for them.
 	changes = dict(
 		tagline=tagline, description=description, country=country,

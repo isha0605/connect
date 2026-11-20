@@ -94,7 +94,7 @@ export default function setup(context) {
 	// Both Connects on the page: the one beside the partner's name and the header's.
 	const connecting = partnerConnect(context)
 	function connect() {
-		connecting.connectWith({ name: route.params.partner_id, partner_name: partner.data?.partner_name })
+		connecting.connectWith({ name: route.params.partner_id, company_name: partner.data?.company_name })
 	}
 
 	// Watch the hero's Connect button against the area below the header: when it has

@@ -343,7 +343,7 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 				partner.save(ignore_permissions=True)
 
 	def test_partners_cannot_type_numbers_frappe_owns(self):
-		owned = {"certs_erpnext": 0, "rollouts": 12, "sites_deployed": 30, "certified_experts": 4, "references_count": 5}
+		owned = {"erpnext_certified": 0, "successful_projects_count": 12, "total_sites_count": 30, "number_of_certified_members": 4, "references_count": 5}
 		frappe.db.set_value("Partner", PARTNER, dict(owned))
 		frappe.set_user(ADMIN)
 

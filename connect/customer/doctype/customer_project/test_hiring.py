@@ -27,15 +27,15 @@ BUYER = "hiring.buyer@example.test"
 PARTNER_ADMIN = "hiring.partner.admin@example.test"
 
 
-def make_partner(partner_name):
+def make_partner(company_name):
 	"""An approved partner: only those are listed and can be sent work."""
-	if not frappe.db.exists("Partner", partner_name):
+	if not frappe.db.exists("Partner", company_name):
 		tier = "Gold"
 		frappe.get_doc(
-			{"doctype": "Partner", "partner_name": partner_name, "tier": tier, "country": "India"}
+			{"doctype": "Partner", "company_name": company_name, "tier": tier, "country": "India"}
 		).insert(ignore_permissions=True)
-	frappe.db.set_value("Partner", partner_name, "verification_status", "Verified")
-	return partner_name
+	frappe.db.set_value("Partner", company_name, "verification_status", "Verified")
+	return company_name
 
 
 def make_buyer(email, company):
@@ -178,7 +178,7 @@ class TestHiring(IntegrationTestCase):
 		project = get_project(self.project.name)
 		self.assertIsNone(project["hired"])
 		self.assertEqual(
-			project["declined_hire"], {"partner_name": PARTNER, "reason": "We're fully booked until March."}
+			project["declined_hire"], {"company_name": PARTNER, "reason": "We're fully booked until March."}
 		)
 
 	def hire_cards(self):

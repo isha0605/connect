@@ -46,7 +46,7 @@ ALTERNATIVE_PACKS = {"core", "core-manufacturing"}
 # What the Confirmed page's partner card shows, with the industries its profile shows.
 PARTNER_CARD_FIELDS = [
 	"name",
-	"partner_name",
+	"company_name",
 	"logo",
 	"tier",
 	"city",
@@ -537,10 +537,10 @@ def _order_card(doc):
 	"""Who a project row shows: the consultant Frappe gave it, else its partner, else Frappe,
 	which implements the Starter Packs until a partner is assigned."""
 	if consultant := consultant_card(doc.consultant):
-		return {"partner_name": consultant["label"], "partner_logo": consultant["photo"]}
+		return {"company_name": consultant["label"], "partner_logo": consultant["photo"]}
 	partner = get_assigned_partner(doc.partner) if doc.partner else None
 	return {
-		"partner_name": (partner or {}).get("partner_name") or "Frappe",
+		"company_name": (partner or {}).get("company_name") or "Frappe",
 		"partner_logo": (partner or {}).get("logo") or FRAPPE_LOGO,
 	}
 

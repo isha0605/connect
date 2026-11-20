@@ -17,7 +17,7 @@ const send = (name, detail) => () => window.dispatchEvent(new CustomEvent(name, 
 
 const partner = computed(() => props.context?.partner || null)
 const customer = computed(() => props.context?.customer || null)
-const companyName = computed(() => partner.value?.partner_name || customer.value?.customer_name || props.context?.full_name || "")
+const companyName = computed(() => partner.value?.company_name || customer.value?.customer_name || props.context?.full_name || "")
 
 // A partner's settings open on its team; a customer's on its company details.
 const settings = computed(() => {

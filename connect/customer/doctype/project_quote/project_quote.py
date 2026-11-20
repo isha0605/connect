@@ -123,9 +123,9 @@ class ProjectQuote(Document):
 		self.quoted_before_update = 0
 		# Partners have no Desk write on briefs; the check above made sure this one is theirs.
 		self.save(ignore_permissions=True)
-		partner_name = frappe.db.get_value("Partner", self.partner, "partner_name") or self.partner
+		company_name = frappe.db.get_value("Partner", self.partner, "company_name") or self.partner
 		frappe.get_doc("Connect Thread", self.thread).post_system_message(
-			_("{0} confirmed their quote").format(partner_name)
+			_("{0} confirmed their quote").format(company_name)
 		)
 
 	def _is_project_choosing(self) -> bool:
@@ -146,9 +146,9 @@ class ProjectQuote(Document):
 	def _tell_customer_of_decline(self):
 		if not self.thread:
 			return
-		partner_name = frappe.db.get_value("Partner", self.partner, "partner_name") or self.partner
+		company_name = frappe.db.get_value("Partner", self.partner, "company_name") or self.partner
 		frappe.get_doc("Connect Thread", self.thread).post_system_message(
-			_("{0} is not available to take on new clients right now.").format(partner_name)
+			_("{0} is not available to take on new clients right now.").format(company_name)
 		)
 
 	def _lose_lead(self):

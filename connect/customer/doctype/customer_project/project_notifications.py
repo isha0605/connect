@@ -6,8 +6,8 @@ from frappe.desk.doctype.notification_log.notification_log import enqueue_create
 # the first time, since a declined or withdrawn hire also puts the project back to Shared.
 STATUS_SUBJECTS = {
 	"Shared": lambda doc: shared_subject(doc.shared_count or 0),
-	"Hiring": lambda doc: _("Hire request sent to {0}").format(partner_name(doc.partner)),
-	"Hired": lambda doc: _("{0} accepted your project").format(partner_name(doc.partner)),
+	"Hiring": lambda doc: _("Hire request sent to {0}").format(company_name(doc.partner)),
+	"Hired": lambda doc: _("{0} accepted your project").format(company_name(doc.partner)),
 	"Completed": lambda doc: _("Project completed"),
 }
 
@@ -41,17 +41,17 @@ def notify_quote_update(quote) -> None:
 
 	project = frappe.get_doc("Customer Project", quote.customer_project)
 	if quote.status == "Quoted" and before.status == "Awaiting":
-		notify_customer(project, _("New quote from {0}").format(partner_name(quote.partner)), quote_summary(project, quote))
+		notify_customer(project, _("New quote from {0}").format(company_name(quote.partner)), quote_summary(project, quote))
 	elif quote.status == "Partner Declined":
 		notify_customer(
 			project,
-			_("{0} is not available to take on new clients").format(partner_name(quote.partner)),
+			_("{0} is not available to take on new clients").format(company_name(quote.partner)),
 			project.project_name,
 		)
 	elif quote.status == "Hire Declined":
 		notify_customer(
 			project,
-			_("{0} declined your hire request").format(partner_name(quote.partner)),
+			_("{0} declined your hire request").format(company_name(quote.partner)),
 			quote.decline_reason or project.project_name,
 		)
 
@@ -86,5 +86,5 @@ def quote_summary(project, quote) -> str:
 	return " · ".join(parts)
 
 
-def partner_name(partner: str | None) -> str:
-	return (partner and frappe.db.get_value("Partner", partner, "partner_name")) or partner or _("A partner")
+def company_name(partner: str | None) -> str:
+	return (partner and frappe.db.get_value("Partner", partner, "company_name")) or partner or _("A partner")

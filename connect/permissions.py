@@ -207,9 +207,9 @@ def _check_can_read(thread, user):
 		return
 	partner = frappe.db.get_value("Connect Thread", thread, "partner")
 	if partner in _switched_away_partners(user):
-		partner_name = frappe.db.get_value("Partner", partner, "partner_name") or partner
+		company_name = frappe.db.get_value("Partner", partner, "company_name") or partner
 		frappe.throw(
-			_("This chat belongs to {0}. Switch to that company to open it.").format(partner_name),
+			_("This chat belongs to {0}. Switch to that company to open it.").format(company_name),
 			frappe.PermissionError,
 		)
 	frappe.throw(_("You don't have access to this thread"), frappe.PermissionError)

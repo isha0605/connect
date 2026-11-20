@@ -56,11 +56,11 @@ def _recipient_cards(criteria: dict) -> list[dict]:
 	partners = frappe.get_all(
 		"Partner",
 		filters=_recipient_filters(criteria),
-		fields=["name", "partner_name", "logo", "logo_icon"],
-		order_by="partner_name asc",
+		fields=["name", "company_name", "logo", "logo_icon"],
+		order_by="company_name asc",
 	)
 	return [
-		{"name": p.name, "partner_name": p.partner_name or p.name, "logo": p.logo_icon or p.logo}
+		{"name": p.name, "company_name": p.company_name or p.name, "logo": p.logo_icon or p.logo}
 		for p in partners
 	]
 

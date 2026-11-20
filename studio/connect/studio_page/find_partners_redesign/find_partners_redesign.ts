@@ -468,9 +468,9 @@ function partnerAvatar(partner, i) {
 	return {
 		key: partner.name,
 		image: partner.logo,
-		label: partner.partner_name,
-		tooltip: partner.partner_name,
-		theme: avatarTheme(partner.partner_name),
+		label: partner.company_name,
+		tooltip: partner.company_name,
+		theme: avatarTheme(partner.company_name),
 		first: i === 0,
 		more: false,
 	}
@@ -481,7 +481,7 @@ function partnerAvatar(partner, i) {
 // `tooltip` shows on hover and `first` drops the overlap margin.
 // The tooltip bubble doesn't wrap, so name a few and count the rest.
 function hiddenNames(partners) {
-	const names = partners.slice(0, 2).map((p) => p.partner_name)
+	const names = partners.slice(0, 2).map((p) => p.company_name)
 	const rest = partners.length - names.length
 	if (rest) return `${names.join(", ")} and ${rest} more`
 	return names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`

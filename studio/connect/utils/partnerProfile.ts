@@ -34,15 +34,15 @@ const DRAFT_FIELDS = [
 // What the editor shows when its user is on no partner's team, such as Administrator.
 export const SAMPLE_PROFILE = {
 	partner: "Sample Partner",
-	partner_name: "Sample Partner",
+	company_name: "Sample Partner",
 	tagline: "ERPNext implementations for manufacturers",
 	website: "https://www.example.com",
 	phone: "+91 98400 00000",
 	description: "Sample Partner builds custom ERPNext solutions for businesses of all sizes.",
 	foundation_date: "2015-01-01",
 	team_size: "51-200",
-	certs_erpnext: 8,
-	certs_frappe_framework: 3,
+	erpnext_certified: 8,
+	framework_certified: 3,
 	offices: [{ city: "Chennai", address: "No. 100, Lake View Estate, Main Road, Chennai, Tamil Nadu 600116, India" }],
 	city: "Chennai",
 	country: "India",

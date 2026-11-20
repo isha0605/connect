@@ -3397,7 +3397,7 @@ export default function setup(context) {
 	}
 
 	function afterHoursBannerText() {
-		const partnerName = (context.partnerWorkHours.data && context.partnerWorkHours.data.partner_name) || "They"
+		const partnerName = (context.partnerWorkHours.data && context.partnerWorkHours.data.company_name) || "They"
 		return "It's outside " + partnerName + "'s working hours"
 	}
 

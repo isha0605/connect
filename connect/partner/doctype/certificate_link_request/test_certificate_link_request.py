@@ -47,7 +47,7 @@ class IntegrationTestCertificateLinkRequest(IntegrationTestCase):
 		return request, sendmail.call_args.kwargs["message"]
 
 	def counts(self, partner):
-		return frappe.db.get_value("Partner", partner, ["certs_erpnext", "certs_frappe_framework"])
+		return frappe.db.get_value("Partner", partner, ["erpnext_certified", "framework_certified"])
 
 	def test_email_links_to_the_approval_page(self):
 		request, message = self.request_link()

@@ -214,7 +214,7 @@ class IntegrationTestPartnerApplication(IntegrationTestCase):
 		unregister()
 		self.assertFalse(frappe.db.exists("Partner Application", self.application.name))
 		self.assertIsNone(frappe.db.get_value("Partner Certificate", self.certificate.name, "partner"))
-		self.assertEqual(frappe.db.get_value("Partner", UNREGISTER_PARTNER, "certs_erpnext"), 0)
+		self.assertEqual(frappe.db.get_value("Partner", UNREGISTER_PARTNER, "erpnext_certified"), 0)
 
 	def test_approved_partnership_cannot_be_undone(self):
 		self.application.db_set({"docstatus": 1, "status": "Approved"})

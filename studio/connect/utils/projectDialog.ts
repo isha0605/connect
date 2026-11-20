@@ -59,7 +59,7 @@ export function projectPath(row) {
 
 export function projectDialog() {
 	const projectDialogOpen = ref(false)
-	// { name, partner_name } the project goes to; null shares it with every match.
+	// { name, company_name } the project goes to; null shares it with every match.
 	const projectDialogPartner = ref(null)
 	// One of the customer's projects to send to that partner, with its missing answers asked.
 	const projectDialogProject = ref(null)

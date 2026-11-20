@@ -22,7 +22,7 @@ const tried = ref(false)
 const busy = ref(false)
 const error = ref("")
 
-const partnerName = computed(() => request.value?.partner_name || "the partner")
+const partnerName = computed(() => request.value?.partner_company_name || "the partner")
 const needsSignIn = computed(() => request.value?.has_account && !request.value?.is_signed_in_as_contact)
 const errors = computed(() => {
 	if (!tried.value) return {}

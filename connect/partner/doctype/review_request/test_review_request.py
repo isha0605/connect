@@ -63,7 +63,7 @@ class TestReviewRequest(IntegrationTestCase):
 
 		self.assertEqual(request["status"], "Sent")
 		self.assertEqual(self.sendmail.call_args.kwargs["recipients"], [self.customer_email])
-		self.assertEqual(requests.open_request(self.link_token())["partner_name"], PARTNER)
+		self.assertEqual(requests.open_request(self.link_token())["partner_company_name"], PARTNER)
 		self.assertEqual(frappe.db.get_value("Review Request", request["name"], "status"), "Opened")
 
 	def test_only_owners_and_sales_ask_and_only_for_their_partner(self):

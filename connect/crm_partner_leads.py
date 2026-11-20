@@ -90,7 +90,7 @@ def _partner_leads(customer: str, frappe_partner: str) -> list[dict]:
 		.on(User.name == Lead.assigned_to)
 		.select(
 			Lead.name, Lead.stage, Lead.probability, Lead.lost_reason, Lead.frappe_crm_note,
-			Partner.partner_name, User.full_name.as_("owner_name"),
+			Partner.company_name, User.full_name.as_("owner_name"),
 		)
 		.where((Lead.customer == customer) & (Lead.partner != frappe_partner))
 		.orderby(Lead.creation)
@@ -187,7 +187,7 @@ def _brief_line(brief) -> str:
 
 def _write_note(settings, crm_lead: str, lead) -> None:
 	"""Updates the partner's note on the Lead, or writes it when there's none (or it was deleted there)."""
-	note = {"title": lead.partner_name, "content": note_content(lead)}
+	note = {"title": lead.company_name, "content": note_content(lead)}
 	if lead.frappe_crm_note:
 		try:
 			crm_request(settings, "PUT", f"/api/resource/FCRM Note/{quote(lead.frappe_crm_note)}", json=note)

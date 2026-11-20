@@ -52,7 +52,7 @@ const criteria = computed(() => ({ ...blankCriteria(), ...(props.project?.criter
 const canEdit = computed(() => !props.card && props.project?.status === "Shared")
 const lockNote = computed(() => {
 	if (props.card) return ""
-	const partner = props.project?.hired?.partner_name || "your partner"
+	const partner = props.project?.hired?.company_name || "your partner"
 	if (props.project?.status === "Hiring") return `Waiting on ${partner} to answer your hire request`
 	if (["Hired", "Completed"].includes(props.project?.status)) return `Hired. Changes go through ${partner} now`
 	return ""

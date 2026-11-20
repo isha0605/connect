@@ -73,7 +73,7 @@ export default function setup(context) {
 		{ key: "partner", label: "Partner A–Z" },
 	]
 	const COMPARE = {
-		partner: (a, b) => (a.partner_name || "").localeCompare(b.partner_name || ""),
+		partner: (a, b) => (a.company_name || "").localeCompare(b.company_name || ""),
 		quote: (a, b) => a.amount - b.amount,
 		timeline: (a, b) => a.timeline_weeks - b.timeline_weeks || a.amount - b.amount,
 	}
@@ -173,7 +173,7 @@ export default function setup(context) {
 
 	function shareDetails(row) {
 		setQuoteStatus(row, "Interested")
-			.then(() => toast.success(`Details shared with ${row.partner_name}`))
+			.then(() => toast.success(`Details shared with ${row.company_name}`))
 			.catch(() => {})
 	}
 
@@ -181,7 +181,7 @@ export default function setup(context) {
 		const before = row.status
 		setQuoteStatus(row, "Not Interested")
 			.then(() => {
-				toast(`${row.partner_name} moved to Not interested`, {
+				toast(`${row.company_name} moved to Not interested`, {
 					action: { label: "Undo", onClick: () => setQuoteStatus(row, before).catch(() => {}) },
 				})
 			})
@@ -190,7 +190,7 @@ export default function setup(context) {
 
 	function restoreQuote(row) {
 		setQuoteStatus(row, "Quoted")
-			.then(() => toast.success(`${row.partner_name} restored`))
+			.then(() => toast.success(`${row.company_name} restored`))
 			.catch(() => {})
 	}
 
@@ -228,7 +228,7 @@ export default function setup(context) {
 	const hireReasonError = ref("")
 	// Kept out of reactive state: a returned ref re-renders the whole page on every keystroke.
 	let hireNoteText = ""
-	const hireName = computed(() => hireRow.value?.partner_name || "this partner")
+	const hireName = computed(() => hireRow.value?.company_name || "this partner")
 	const hireTitle = computed(() => (hireStep.value === "terms" ? "Confirm the hire" : ""))
 	const hasOtherReason = computed(() => pickedReasons.value.includes(OTHER_REASON))
 	// Frappe not being a party comes first: it is the one a customer would otherwise assume the opposite of.
@@ -374,18 +374,18 @@ export default function setup(context) {
 	const pinsQuoteList = computed(() => hasQuotes.value && isChoosing.value)
 	const stageTitle = computed(() => {
 		if (isHired.value) return "Set up hosting"
-		if (isAwaitingPartner.value) return `Waiting for ${hired.value?.partner_name || "your partner"}`
+		if (isAwaitingPartner.value) return `Waiting for ${hired.value?.company_name || "your partner"}`
 		return "Choosing a partner"
 	})
 	const stageStep = computed(() => (isHired.value ? "Step 2 of 2" : "Step 1 of 2"))
 	const awaitingLine = computed(() => {
-		const name = hired.value?.partner_name || "Your partner"
+		const name = hired.value?.company_name || "Your partner"
 		return `${name} has 7 days to accept or decline your hire request. You'll get a notification either way.`
 	})
 	const declinedLine = computed(() => {
 		if (!declinedHire.value) return ""
 		const reason = (declinedHire.value.reason || "").trim().replace(/[.!]+$/, "")
-		return `${declinedHire.value.partner_name} declined: ${reason}. Pick another partner from your quotes.`
+		return `${declinedHire.value.company_name} declined: ${reason}. Pick another partner from your quotes.`
 	})
 
 	const cancelling = ref(false)
@@ -396,7 +396,7 @@ export default function setup(context) {
 			.then((data) => {
 				project.value = data
 				loadQuotes()
-				toast.success(`Hire request to ${data.partner_name} cancelled`)
+				toast.success(`Hire request to ${data.company_name} cancelled`)
 			})
 			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't cancel the request. Try again."))
 			.finally(() => {
@@ -416,7 +416,7 @@ export default function setup(context) {
 	// The path shows from the hire request on: until the partner accepts, its first step is the
 	// request itself, and the work after it is still to come.
 	const hiredCardTitle = computed(() => {
-		const name = hired.value?.partner_name || "your partner"
+		const name = hired.value?.company_name || "your partner"
 		return isAwaitingPartner.value ? `Hiring ${name}` : `Working with ${name}`
 	})
 
@@ -441,7 +441,7 @@ export default function setup(context) {
 	}
 
 	const hiredSteps = computed(() => {
-		const name = hired.value?.partner_name || "your partner"
+		const name = hired.value?.company_name || "your partner"
 		const done = isCompleted.value
 		const built = isLive.value || done
 		const waiting = isAwaitingPartner.value
@@ -501,7 +501,7 @@ export default function setup(context) {
 		call("connect.api.projects.not_live_yet", { name: projectName })
 			.then((data) => {
 				project.value = data
-				toast.success(`Note sent to ${hired.value?.partner_name || "your partner"}`)
+				toast.success(`Note sent to ${hired.value?.company_name || "your partner"}`)
 			})
 			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't send that. Try again."))
 			.finally(() => {

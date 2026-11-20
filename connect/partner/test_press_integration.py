@@ -102,10 +102,10 @@ class TestUpdatePartnerRevenue(IntegrationTestCase):
 		self.assertEqual(revenue_of(INDIAN), (500, 0))
 
 
-def make_partner(partner_name, country, email):
-	frappe.delete_doc("Partner", partner_name, force=True, ignore_missing=True)
+def make_partner(company_name, country, email):
+	frappe.delete_doc("Partner", company_name, force=True, ignore_missing=True)
 	frappe.get_doc(
-		{"doctype": "Partner", "partner_name": partner_name, "tier": "Gold", "country": country, "email": email}
+		{"doctype": "Partner", "company_name": company_name, "tier": "Gold", "country": country, "email": email}
 	).insert()
 
 

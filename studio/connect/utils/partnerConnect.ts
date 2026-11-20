@@ -52,7 +52,7 @@ export function partnerConnect(context) {
 			.catch(() => toast.error("Couldn't load your projects. Try again."))
 	}
 
-	// partner: { name, partner_name }
+	// partner: { name, company_name }
 	function connectWith(partner) {
 		const me = myContext.data
 		if (!me) {
@@ -63,7 +63,7 @@ export function partnerConnect(context) {
 		if (isGuest(me)) {
 			const back = new URL(window.location.href)
 			back.searchParams.set(CONNECT_QUERY, partner.name)
-			back.searchParams.set(CONNECT_NAME_QUERY, partner.partner_name || "")
+			back.searchParams.set(CONNECT_NAME_QUERY, partner.company_name || "")
 			goToSignIn({ next: back.pathname + back.search })
 			return
 		}
@@ -88,7 +88,7 @@ export function partnerConnect(context) {
 				router.replace({ query: rest })
 				if (isGuest(me)) return
 				if (!me.customer) toast.error(NO_COMPANY)
-				else openContact({ name: String(pending), partner_name: String(partnerName || "") })
+				else openContact({ name: String(pending), company_name: String(partnerName || "") })
 			},
 			{ immediate: true },
 		)

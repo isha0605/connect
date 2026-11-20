@@ -19,6 +19,7 @@ from connect.partner.doctype.partner_review.partner_review import list_partner_r
 from connect.patches.move_partner_year_founded_to_foundation_date import execute as move_year_founded
 from connect.patches.rename_partner_is_featured_to_show_in_website import execute as rename_is_featured
 from connect.patches.set_partner_listed_on import execute as set_partner_listed_on
+from connect.patches.use_frappe_io_partner_field_names import move_column
 from connect.patches.set_partner_target_currency import execute as set_partner_target_currency
 from connect.patches.use_press_team_size_ranges import execute as use_press_team_size_ranges
 
@@ -27,15 +28,15 @@ PENDING = "_Test Visibility Pending Partner"
 PENDING_MEMBER = "visibility.pending.member@example.test"
 
 
-def make_partner(partner_name, verification_status):
-	if not frappe.db.exists("Partner", partner_name):
+def make_partner(company_name, verification_status):
+	if not frappe.db.exists("Partner", company_name):
 		tier = "Gold"
 		frappe.get_doc(
-			{"doctype": "Partner", "partner_name": partner_name, "tier": tier, "country": "India", "enabled": 1}
+			{"doctype": "Partner", "company_name": company_name, "tier": tier, "country": "India", "enabled": 1}
 		).insert(ignore_permissions=True)
 	frappe.db.set_value(
 		"Partner",
-		partner_name,
+		company_name,
 		{"verification_status": verification_status, "show_in_website": 1, "profile_draft": '{"tagline": "Draft"}'},
 	)
 
@@ -80,7 +81,7 @@ class IntegrationTestPartner(IntegrationTestCase):
 
 		doc = get_partner_document(LISTED)
 
-		self.assertEqual(doc["partner_name"], LISTED)
+		self.assertEqual(doc["company_name"], LISTED)
 		for fieldname in PRIVATE_PROFILE_FIELDS:
 			self.assertNotIn(fieldname, doc)
 		self.assertEqual(get_partner_preview(LISTED)["name"], LISTED)
@@ -96,7 +97,7 @@ class IntegrationTestPartner(IntegrationTestCase):
 
 	def test_member_and_staff_can_open_an_unlisted_profile(self):
 		frappe.set_user(PENDING_MEMBER)
-		self.assertEqual(get_partner_document(PENDING)["partner_name"], PENDING)
+		self.assertEqual(get_partner_document(PENDING)["company_name"], PENDING)
 
 		frappe.set_user("Administrator")
 		self.assertEqual(get_partner_preview(PENDING)["name"], PENDING)
@@ -115,9 +116,9 @@ class IntegrationTestPartnerID(IntegrationTestCase):
 		self.assertEqual(insert_signup_partner("  _Test Signup Partner  "), "_Test Signup Partner")
 
 	def test_signup_partner_needs_a_display_name(self):
-		for partner_name in (None, "   "):
+		for company_name in (None, "   "):
 			with self.assertRaises(frappe.MandatoryError):
-				insert_signup_partner(partner_name)
+				insert_signup_partner(company_name)
 
 	def test_signup_partner_cannot_take_a_used_name(self):
 		remove_partners("_Test Taken Name", "_Test Imported Taken LLP")
@@ -134,7 +135,7 @@ class IntegrationTestPartnerID(IntegrationTestCase):
 		name = save_imported_partner("_Test Apex Softnet Private Limited", partner_values("_Test Apex"))
 
 		self.assertEqual(name, "_Test Apex Softnet Private Limited")
-		self.assertEqual(frappe.db.get_value("Partner", name, "partner_name"), "_Test Apex")
+		self.assertEqual(frappe.db.get_value("Partner", name, "company_name"), "_Test Apex")
 
 	def test_importing_again_updates_the_same_partner(self):
 		remove_partners("_Test Rerun Private Limited")
@@ -143,7 +144,7 @@ class IntegrationTestPartnerID(IntegrationTestCase):
 		save_imported_partner("_Test Rerun Private Limited", partner_values("_Test Rerun Renamed"))
 
 		self.assertEqual(frappe.db.count("Partner", {"name": "_Test Rerun Private Limited"}), 1)
-		self.assertEqual(frappe.db.get_value("Partner", "_Test Rerun Private Limited", "partner_name"), "_Test Rerun Renamed")
+		self.assertEqual(frappe.db.get_value("Partner", "_Test Rerun Private Limited", "company_name"), "_Test Rerun Renamed")
 
 	def test_imported_partners_can_share_a_display_name(self):
 		remove_partners("_Test Shared Apex Softnet Private Limited", "_Test Shared Apex Enterprise LLP")
@@ -151,7 +152,7 @@ class IntegrationTestPartnerID(IntegrationTestCase):
 		save_imported_partner("_Test Shared Apex Softnet Private Limited", partner_values("_Test Shared Apex"))
 		save_imported_partner("_Test Shared Apex Enterprise LLP", partner_values("_Test Shared Apex"))
 
-		self.assertEqual(frappe.db.count("Partner", {"partner_name": "_Test Shared Apex"}), 2)
+		self.assertEqual(frappe.db.count("Partner", {"company_name": "_Test Shared Apex"}), 2)
 
 
 class IntegrationTestPartnerTier(IntegrationTestCase):
@@ -223,6 +224,37 @@ class IntegrationTestFoundationDate(IntegrationTestCase):
 		moved_draft = frappe.parse_json(frappe.db.get_value("Partner", FOUNDED, "profile_draft"))
 		self.assertEqual(moved_draft, {"tagline": "Drafted", "foundation_date": "2019-01-01"})
 		self.assertFalse(frappe.db.has_column("Partner", "year_founded"))
+
+
+class IntegrationTestFrappeIoFieldNames(IntegrationTestCase):
+	"""Imported counts keep their values when their fields take frappe.io's names."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		remove_partners(FOUNDED)
+		save_imported_partner(FOUNDED, partner_values("_Test Founded Partner"))
+		self.addCleanup(remove_old_count_column_and_partner)
+
+	def test_patch_moves_an_old_count_and_drops_its_column(self):
+		frappe.db.sql_ddl("alter table `tabPartner` add column `rollouts` int(11) not null default 0")
+		frappe.client_cache.delete_value("table_columns::tabPartner")
+		# Every partner keeps its current value, so the copy in the patch changes only the test partner.
+		frappe.db.sql("update `tabPartner` set rollouts = successful_projects_count")
+		frappe.db.sql("update `tabPartner` set rollouts = 35 where name = %s", FOUNDED)
+
+		move_column("rollouts", "successful_projects_count")
+
+		self.assertEqual(frappe.db.get_value("Partner", FOUNDED, "successful_projects_count"), 35)
+		self.assertFalse(frappe.db.has_column("Partner", "rollouts"))
+
+
+def remove_old_count_column_and_partner():
+	# Adding and dropping a column commits, so this test cleans up and commits by itself.
+	if frappe.db.has_column("Partner", "rollouts"):
+		frappe.db.sql_ddl("alter table `tabPartner` drop column `rollouts`")
+		frappe.client_cache.delete_value("table_columns::tabPartner")
+	remove_partners(FOUNDED)
+	frappe.db.commit()  # nosemgrep: the DDL above already committed this test's rows
 
 
 def remove_year_column_and_partner():
@@ -353,13 +385,13 @@ class IntegrationTestTierFields(IntegrationTestCase):
 		self.assertEqual(frappe.db.get_value("Partner", KENYAN, "team_size"), "51-200")
 
 
-def partner_values(partner_name):
+def partner_values(company_name):
 	tier = "Gold"
-	return {"partner_name": partner_name, "tier": tier, "country": "India"}
+	return {"company_name": company_name, "tier": tier, "country": "India"}
 
 
-def insert_signup_partner(partner_name):
-	doc = frappe.get_doc({"doctype": "Partner", **partner_values(partner_name)})
+def insert_signup_partner(company_name):
+	doc = frappe.get_doc({"doctype": "Partner", **partner_values(company_name)})
 	return doc.insert(ignore_permissions=True).name
 
 

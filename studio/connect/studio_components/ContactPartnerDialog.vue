@@ -13,7 +13,7 @@ import ProjectQuestionsDialog from "./ProjectQuestionsDialog.vue"
 const props = defineProps({
 	// Whether the dialog is open (v-model).
 	modelValue: { type: Boolean, default: false },
-	// { name, partner_name }
+	// { name, company_name }
 	partner: { type: Object, default: null },
 	// The customer's projects that can be sent, newest first: list_projects rows.
 	projects: { type: Array, default: () => [] },
@@ -34,7 +34,7 @@ const answering = ref(false)
 // The questions open for this project, or for a new one (null).
 const answeringProject = ref(null)
 
-const partnerName = computed(() => props.partner?.partner_name || props.partner?.name || "")
+const partnerName = computed(() => props.partner?.company_name || props.partner?.name || "")
 const projectOptions = computed(() => [
 	...props.projects.map((p) => ({ label: p.project_title, value: p.project })),
 	{ label: "Create new project", value: NEW_PROJECT },

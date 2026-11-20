@@ -20,7 +20,7 @@ HIDE = "Hide"
 # A listed partner short of certificates has this long, from Listed On, to certify someone new.
 LISTING_GRACE_DAYS = 90
 PARTNER_FIELDS = [
-	"name", "tier", "show_in_website", "listed_on", "keep_listing", "certs_erpnext", "certs_frappe_framework",
+	"name", "tier", "show_in_website", "listed_on", "keep_listing", "erpnext_certified", "framework_certified",
 ]
 
 
@@ -73,7 +73,7 @@ def get_certificates_needed(ladder: TierLadder, tier: str) -> int:
 
 
 def get_certificate_count(partner) -> int:
-	return cint(partner.certs_erpnext) + cint(partner.certs_frappe_framework)
+	return cint(partner.erpnext_certified) + cint(partner.framework_certified)
 
 
 def change_listing(ladder: TierLadder, partner: str, show: bool) -> None:
@@ -86,18 +86,18 @@ def change_listing(ladder: TierLadder, partner: str, show: bool) -> None:
 
 
 def _listed_email(doc) -> tuple[str, str]:
-	name = escape_html(doc.partner_name)
+	name = escape_html(doc.company_name)
 	listed = _("Customers can now find {0} in the Frappe partner directory.").format(name)
-	subject = _("{0} is now in the Frappe partner directory").format(doc.partner_name)
+	subject = _("{0} is now in the Frappe partner directory").format(doc.company_name)
 	return subject, f"<p>{listed}</p>"
 
 
 def _hidden_email(ladder: TierLadder, doc) -> tuple[str, str]:
 	"""Says how many certificates the partner has and needs, so it knows how to come back."""
-	name = escape_html(doc.partner_name)
+	name = escape_html(doc.company_name)
 	short = _("{0} has {1} certified team members, and a {2} partner in the directory needs {3}.").format(
 		name, get_certificate_count(doc), doc.tier, get_certificates_needed(ladder, doc.tier)
 	)
 	back = _("Add certified team members and {0} is listed again at the next daily review.").format(name)
-	subject = _("{0} has been taken off the Frappe partner directory").format(doc.partner_name)
+	subject = _("{0} has been taken off the Frappe partner directory").format(doc.company_name)
 	return subject, f"<p>{short}</p><p>{back}</p>"

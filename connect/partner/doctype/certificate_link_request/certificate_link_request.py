@@ -44,7 +44,7 @@ class CertificateLinkRequest(Document):
 	def before_insert(self):
 		self.status = "Pending"
 		self.key = frappe.generate_hash(length=15)
-		self.partner_name = frappe.db.get_value("Partner", self.partner, "partner_name")
+		self.partner_name = frappe.db.get_value("Partner", self.partner, "company_name")
 
 	def after_insert(self):
 		self._send_email()
@@ -102,7 +102,7 @@ class CertificateLinkRequest(Document):
 			"Partner Certificate", {"partner_member_email": self.user_email, "course": self.course}, "partner"
 		)
 		if linked_to and linked_to != self.partner:
-			linked_name = frappe.db.get_value("Partner", linked_to, "partner_name") or linked_to
+			linked_name = frappe.db.get_value("Partner", linked_to, "company_name") or linked_to
 			ask += " " + _("It's linked to {0} now, and confirming moves it.").format(escape_html(linked_name))
 		frappe.sendmail(
 			recipients=[self.user_email],

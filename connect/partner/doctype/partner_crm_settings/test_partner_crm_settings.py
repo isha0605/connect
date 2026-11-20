@@ -558,7 +558,7 @@ def make_partner():
 		frappe.get_doc(
 			{
 				"doctype": "Partner",
-				"partner_name": "_test_crm_partner",
+				"company_name": "_test_crm_partner",
 				"tier": "Gold",
 				"country": "India",
 			}

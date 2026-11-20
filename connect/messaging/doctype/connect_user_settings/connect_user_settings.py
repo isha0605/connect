@@ -108,7 +108,7 @@ def get_partner_hours_for_thread(thread=None, dm_thread=None):
 	and only if the other party happens to be a partner at all. Empty `members` means there's
 	nothing to show: no partner on the thread yet, or (for a DM) the other person isn't a partner.
 	"""
-	partner_name = None
+	company_name = None
 	partner_users = []
 
 	if thread:
@@ -120,21 +120,21 @@ def get_partner_hours_for_thread(thread=None, dm_thread=None):
 		partner_users = [m.user for m in members]
 		partner = frappe.db.get_value("Connect Thread", thread, "partner")
 		if partner:
-			partner_name = frappe.db.get_value("Partner", partner, "partner_name")
+			company_name = frappe.db.get_value("Partner", partner, "company_name")
 	elif dm_thread:
 		user_a, user_b = frappe.db.get_value("Connect DM Thread", dm_thread, ["user_a", "user_b"])
 		other = user_b if user_a == frappe.session.user else user_a
 		partner = get_current_partners([other]).get(other)
 		if partner:
 			partner_users = [other]
-			partner_name = frappe.db.get_value("Partner", partner, "partner_name")
+			company_name = frappe.db.get_value("Partner", partner, "company_name")
 
 	if not partner_users:
-		return {"partner_name": None, "members": []}
+		return {"company_name": None, "members": []}
 
 	settings = get_settings_for_users(partner_users)
 	return {
-		"partner_name": partner_name,
+		"company_name": company_name,
 		"members": [
 			{"work_start": s["work_start"], "work_end": s["work_end"], "work_days": s["work_days"]}
 			for s in settings.values()

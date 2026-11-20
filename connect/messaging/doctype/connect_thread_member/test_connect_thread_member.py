@@ -70,7 +70,7 @@ def make_thread(customer_name):
 	"""A fresh thread per test: the class only rolls back once all its tests have run."""
 	partner = "_Test Unread Partner"
 	if not frappe.db.exists("Partner", partner):
-		frappe.get_doc({"doctype": "Partner", "partner_name": partner, "tier": "Gold", "country": "India"}).insert(
+		frappe.get_doc({"doctype": "Partner", "company_name": partner, "tier": "Gold", "country": "India"}).insert(
 			ignore_permissions=True
 		)
 	customer = frappe.get_doc({"doctype": "Customer", "customer_name": customer_name}).insert(ignore_permissions=True)

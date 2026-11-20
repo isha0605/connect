@@ -100,17 +100,17 @@ class ReviewRequest(Document):
 		self.save(ignore_permissions=True)
 		self._notify(
 			[*self._partner_recipients(), *reviewers()],
-			_("{0} said they didn't work with {1}").format(self.contact_name, self.partner_name()),
+			_("{0} said they didn't work with {1}").format(self.contact_name, self.get_partner_company_name()),
 		)
 
 	def mark_reviewed(self, review: str) -> None:
 		self.review = review
 		self.status = "Reviewed"
 		self.save(ignore_permissions=True)
-		self._notify(self._partner_recipients(), _("{0} reviewed {1}").format(self.contact_name, self.partner_name()))
+		self._notify(self._partner_recipients(), _("{0} reviewed {1}").format(self.contact_name, self.get_partner_company_name()))
 
-	def partner_name(self) -> str:
-		return frappe.db.get_value("Partner", self.partner, "partner_name") or self.partner
+	def get_partner_company_name(self) -> str:
+		return frappe.db.get_value("Partner", self.partner, "company_name") or self.partner
 
 	def _check_not_the_partners_own(self):
 		if frappe.db.exists("Connect Partner Member", {"user": self.contact_email, "is_removed": 0}):
@@ -150,7 +150,7 @@ class ReviewRequest(Document):
 		self.expires_on = add_days(now_datetime(), LINK_DAYS)
 		self.save(ignore_permissions=True)
 
-		partner = self.partner_name()
+		partner = self.get_partner_company_name()
 		# Queued, not sent now: if the save fails, the email is rolled back with it.
 		frappe.sendmail(
 			recipients=[self.contact_email],
@@ -319,7 +319,7 @@ def open_request(token: str) -> dict:
 	user = find_user(doc.contact_email)
 	return {
 		"partner": doc.partner,
-		"partner_name": doc.partner_name(),
+		"partner_company_name": doc.get_partner_company_name(),
 		"project_title": doc.project_title,
 		"project_summary": doc.project_summary,
 		"contact_name": doc.contact_name,

@@ -21,14 +21,14 @@ BUYER = "access.buyer@example.test"
 CUSTOMER = "_Test Access Customer"
 
 
-def make_partner(partner_name):
+def make_partner(company_name):
 	"""An approved partner: only those invite a team."""
-	if not frappe.db.exists("Partner", partner_name):
+	if not frappe.db.exists("Partner", company_name):
 		tier = "Gold"
-		frappe.get_doc({"doctype": "Partner", "partner_name": partner_name, "tier": tier, "country": "India"}).insert(
+		frappe.get_doc({"doctype": "Partner", "company_name": company_name, "tier": tier, "country": "India"}).insert(
 			ignore_permissions=True
 		)
-	frappe.db.set_value("Partner", partner_name, "verification_status", "Verified")
+	frappe.db.set_value("Partner", company_name, "verification_status", "Verified")
 
 
 def make_member(partner, email, access="Member"):
@@ -39,6 +39,14 @@ def make_member(partner, email, access="Member"):
 	return frappe.get_doc(
 		{"doctype": "Connect Partner Member", "partner": partner, "user": email, "access": access}
 	).insert(ignore_permissions=True)
+
+
+def owner_name_on(partner) -> str:
+	return frappe.db.get_value("Partner", partner, "partner_name")
+
+
+def full_name(user) -> str:
+	return frappe.db.get_value("User", user, "full_name")
 
 
 def access_of(member) -> str:
@@ -67,6 +75,24 @@ class IntegrationTestConnectPartnerMember(IntegrationTestCase):
 
 		self.assertEqual((access_of(self.sales), access_of(self.owner)), ("Owner", "Admin"))
 		self.assertEqual(_get_partner_admins(PARTNER), [SALES, OWNER, ADMIN])
+
+	def test_the_partner_name_is_the_owners_full_name(self):
+		self.assertEqual(owner_name_on(PARTNER), full_name(OWNER))
+
+	def test_a_transfer_shows_the_new_owners_name(self):
+		frappe.set_user(OWNER)
+		set_team_member_access(self.sales.name, "Owner")
+
+		self.assertEqual(owner_name_on(PARTNER), full_name(SALES))
+
+	def test_a_renamed_owner_shows_the_new_name(self):
+		user = frappe.get_doc("User", OWNER)
+		self.addCleanup(frappe.db.set_value, "User", OWNER, "first_name", user.first_name)
+		user.first_name = "Renamed"
+		user.save(ignore_permissions=True)
+
+		self.assertEqual(owner_name_on(PARTNER), full_name(OWNER))
+		self.assertIn("Renamed", owner_name_on(PARTNER))
 
 	def test_the_owner_and_admins_see_leads_and_customers(self):
 		for user in (OWNER, ADMIN):

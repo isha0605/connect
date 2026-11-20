@@ -63,10 +63,10 @@ def cancel_hire_request(name: str) -> dict:
 	if doc.status != "Hiring":
 		frappe.throw(_("There's no hire request waiting for an answer."))
 
-	partner_name = _partner_name(doc.partner)
+	company_name = _company_name(doc.partner)
 	_withdraw(doc, _("The hire request for {0} was cancelled.").format(doc.project_name))
 	doc.reload()
-	return {"partner_name": partner_name, **project_dict(doc)}
+	return {"company_name": company_name, **project_dict(doc)}
 
 
 def hire_request_statuses(thread: str) -> dict:
@@ -122,7 +122,7 @@ def expire_hire_requests() -> None:
 			_withdraw(
 				doc,
 				_("{0} didn't answer the hire request for {1} within {2} days, so it was withdrawn.").format(
-					_partner_name(doc.partner), doc.project_name, HIRE_REQUEST_EXPIRY_DAYS
+					_company_name(doc.partner), doc.project_name, HIRE_REQUEST_EXPIRY_DAYS
 				),
 			)
 			frappe.db.commit()  # nosemgrep: one project's failure shouldn't undo the others
@@ -145,7 +145,7 @@ def _accept(doc, row):
 	row.save(ignore_permissions=True)
 	_post_system_message(
 		row.thread,
-		_("{0} accepted the hire for {1}.").format(_partner_name(row.partner), doc.project_name),
+		_("{0} accepted the hire for {1}.").format(_company_name(row.partner), doc.project_name),
 	)
 
 
@@ -158,7 +158,7 @@ def _decline(doc, row, reason: str):
 	row.save(ignore_permissions=True)
 	_post_system_message(
 		row.thread,
-		_("{0} declined the hire for {1}: {2}").format(_partner_name(row.partner), doc.project_name, reason),
+		_("{0} declined the hire for {1}: {2}").format(_company_name(row.partner), doc.project_name, reason),
 	)
 
 
@@ -233,5 +233,5 @@ def send_hire_request_email(admin: str, project: str, quote: str):
 		frappe.log_error(title=f"Hire request email failed for {quote}")
 
 
-def _partner_name(partner: str | None) -> str:
-	return (frappe.db.get_value("Partner", partner, "partner_name") if partner else None) or partner or ""
+def _company_name(partner: str | None) -> str:
+	return (frappe.db.get_value("Partner", partner, "company_name") if partner else None) or partner or ""

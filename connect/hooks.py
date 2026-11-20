@@ -272,7 +272,10 @@ doc_events = {
 	# The Frappe Consultant role: see connect.partner.consultants.
 	"User": {
 		"validate": "connect.partner.consultants.validate_user",
-		"on_update": "connect.partner.consultants.on_user_update",
+		"on_update": [
+			"connect.partner.consultants.on_user_update",
+			"connect.partner.doctype.connect_partner_member.connect_partner_member.update_owner_name_from_user",
+		],
 	},
 }
 

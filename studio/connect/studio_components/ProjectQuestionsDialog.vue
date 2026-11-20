@@ -41,7 +41,7 @@ import AppsSelect from "./AppsSelect.vue"
 const props = defineProps({
 	// Whether the dialog is open (v-model).
 	modelValue: { type: Boolean, default: false },
-	// { name, partner_name } to send the project to that partner; null to share it with all.
+	// { name, company_name } to send the project to that partner; null to share it with all.
 	partner: { type: Object, default: null },
 	// An existing project (get_project's shape) to send to `partner` once it has every answer.
 	project: { type: Object, default: null },
@@ -65,7 +65,7 @@ const sending = ref(false)
 const canChangeFacts = ref(true)
 const isGuest = ref(false)
 
-const partnerName = computed(() => props.partner?.partner_name || props.partner?.name || "")
+const partnerName = computed(() => props.partner?.company_name || props.partner?.name || "")
 const title = computed(() => (partnerName.value ? `New project for ${partnerName.value}` : "New project"))
 const sendLabel = computed(() => (partnerName.value ? `Send to ${partnerName.value}` : "Share requirements"))
 const usesOtherSystems = computed(() => needsSystems(answers.value.operations))

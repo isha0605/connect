@@ -281,7 +281,7 @@ def my_projects() -> list[dict]:
 			"hired": row.status in ("Hired", "Completed"),
 			"awaiting_partner": row.status == "Hiring",
 			"hire_days_left": get_hire_days_left(row.hire_requested_on) if row.status == "Hiring" else None,
-			"partner_name": (row.partner_name or row.partner) if row.partner else "Frappe",
+			"company_name": (row.company_name or row.partner) if row.partner else "Frappe",
 			"partner_logo": (row.logo_icon or row.logo) if row.partner else FRAPPE_LOGO,
 			"created_on": with_timezone(row.creation),
 			# The brief, for the Contact dialog to show or ask for.
@@ -372,7 +372,7 @@ def list_quotes(name: str) -> list[dict]:
 		.select(
 			Quote.name, Quote.partner, Quote.thread, Quote.status, Quote.amount, Quote.timeline_weeks, Quote.note,
 			Quote.quoted_on, Quote.quoted_before_update,
-			Partner.partner_name, Partner.tier, Partner.city, Partner.country, Partner.logo,
+			Partner.company_name, Partner.tier, Partner.city, Partner.country, Partner.logo,
 			Partner.verification_status,
 		)
 		.where(Quote.customer_project == doc.name)
@@ -381,7 +381,7 @@ def list_quotes(name: str) -> list[dict]:
 		.run(as_dict=True)
 	)
 	for row in rows:
-		row.partner_name = row.partner_name or row.partner
+		row.company_name = row.company_name or row.partner
 		row.verified = row.pop("verification_status") == "Verified"
 	return rows
 
@@ -461,14 +461,14 @@ def hired_partner(doc: CustomerProject) -> dict | None:
 		frappe.qb.from_(Partner)
 		.left_join(Quote)
 		.on(Quote.name == doc.hired_quote)
-		.select(Partner.partner_name, Partner.logo, Partner.logo_icon, Quote.amount, Quote.timeline_weeks, Quote.thread)
+		.select(Partner.company_name, Partner.logo, Partner.logo_icon, Quote.amount, Quote.timeline_weeks, Quote.thread)
 		.where(Partner.name == doc.partner)
 		.run(as_dict=True)
 	)
 	row = rows[0] if rows else frappe._dict()
 	return {
 		"partner": doc.partner,
-		"partner_name": row.partner_name or doc.partner,
+		"company_name": row.company_name or doc.partner,
 		"logo": row.logo_icon or row.logo,
 		"amount": row.amount,
 		"timeline_weeks": row.timeline_weeks,
@@ -501,7 +501,7 @@ def declined_hire(doc: CustomerProject) -> dict | None:
 		frappe.qb.from_(Quote)
 		.left_join(Partner)
 		.on(Partner.name == Quote.partner)
-		.select(Quote.partner, Partner.partner_name, Quote.decline_reason, Quote.responded_on)
+		.select(Quote.partner, Partner.company_name, Quote.decline_reason, Quote.responded_on)
 		.where(Quote.customer_project == doc.name)
 		.where(Quote.status == "Hire Declined")
 		.orderby(Quote.responded_on, order=Order.desc)
@@ -511,7 +511,7 @@ def declined_hire(doc: CustomerProject) -> dict | None:
 	if not rows:
 		return None
 	row = rows[0]
-	return {"partner_name": row.partner_name or row.partner, "reason": row.decline_reason}
+	return {"company_name": row.company_name or row.partner, "reason": row.decline_reason}
 
 
 def referral_code(project: str, partner: str) -> str:
@@ -545,7 +545,7 @@ def _project_rows(user: str) -> list[dict]:
 		.select(
 			Project.name, Project.project_name, Project.status, Project.verdict, Project.partner, Project.creation,
 			Project.hire_requested_on, Project.budget, Project.description,
-			Partner.partner_name, Partner.logo, Partner.logo_icon,
+			Partner.company_name, Partner.logo, Partner.logo_icon,
 			_count_where(Quote.status.isin(OPEN_QUOTE_STATUSES)).as_("quotes"),
 			_count_where(Quote.status == "Interested").as_("shortlisted"),
 		)
