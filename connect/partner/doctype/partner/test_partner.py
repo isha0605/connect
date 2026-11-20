@@ -19,6 +19,7 @@ from connect.partner.doctype.partner_review.partner_review import list_partner_r
 from connect.patches.rename_partner_is_featured_to_show_in_website import execute as rename_is_featured
 from connect.patches.set_partner_listed_on import execute as set_partner_listed_on
 from connect.patches.set_partner_target_currency import execute as set_partner_target_currency
+from connect.patches.use_press_team_size_ranges import execute as use_press_team_size_ranges
 
 LISTED = "_Test Visibility Listed Partner"
 PENDING = "_Test Visibility Pending Partner"
@@ -297,6 +298,17 @@ class IntegrationTestTierFields(IntegrationTestCase):
 
 		self.assertEqual(frappe.db.get_value("Partner", INDIAN, "listed_on"), getdate())
 		self.assertEqual(frappe.db.get_value("Partner", KENYAN, "listed_on"), getdate("2026-01-01"))
+
+	def test_team_size_patch_moves_only_sizes_above_200(self):
+		insert_signup_partner(INDIAN)
+		frappe.get_doc({"doctype": "Partner", **partner_values(KENYAN), "country": "Kenya"}).insert()
+		frappe.db.set_value("Partner", INDIAN, "team_size", "500+")
+		frappe.db.set_value("Partner", KENYAN, "team_size", "51-200")
+
+		use_press_team_size_ranges()
+
+		self.assertEqual(frappe.db.get_value("Partner", INDIAN, "team_size"), "201+")
+		self.assertEqual(frappe.db.get_value("Partner", KENYAN, "team_size"), "51-200")
 
 
 def partner_values(partner_name):
