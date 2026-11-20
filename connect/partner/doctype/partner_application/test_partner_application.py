@@ -14,6 +14,7 @@ from connect.partner.doctype.partner_application.partner_application import (
 	unregister,
 )
 from connect.partner.doctype.partner_certificate.partner_certificate import recount_certificates
+from connect.patches.set_partner_state import execute as set_partner_state
 
 PARTNER = "_Test Application Partner"
 OWNER = "application.owner@example.test"
@@ -62,6 +63,27 @@ class TestPartnerApplicationMRR(IntegrationTestCase):
 		frappe.get_doc("Partner Application", application.name).approve()
 
 		self.assertEqual(frappe.db.get_value("Partner Application", application.name, "status"), "Approved")
+
+	def indian_application(self, status):
+		values = {"partner": PARTNER, "company_name": PARTNER, "registered_country": "India", "registered_state": "Gujarat"}
+		application = frappe.get_doc({"doctype": "Partner Application", **values}).insert(ignore_permissions=True)
+		application.db_set({"docstatus": 1, "status": status})
+		return application
+
+	def test_approval_copies_the_state_to_the_partner(self):
+		application = self.indian_application("Pending Review")
+
+		frappe.get_doc("Partner Application", application.name).approve()
+
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER, "state"), "Gujarat")
+
+	def test_state_patch_fills_partners_approved_before(self):
+		self.indian_application("Approved")
+		frappe.db.set_value("Partner", PARTNER, "state", None)
+
+		set_partner_state()
+
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER, "state"), "Gujarat")
 
 	def test_an_indian_partner_needs_ten_thousand_rupees(self):
 		self.apply("INR", 4000)
