@@ -30,7 +30,7 @@ class IntegrationTestPartnerTier(IntegrationTestCase):
 
 	def test_partner_needs_a_tier_that_exists(self):
 		partner = frappe.get_doc(
-			{"doctype": "Partner", "partner_name": "_Test Tierless Partner", "tier": "Platinum", "country": "India"}
+			{"doctype": "Partner", "company_name": "_Test Tierless Partner", "tier": "Platinum", "country": "India"}
 		)
 
 		self.assertRaises(frappe.LinkValidationError, partner.insert)

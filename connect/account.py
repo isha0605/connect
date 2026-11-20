@@ -119,12 +119,12 @@ def get_my_context():
 def partner_access(membership) -> dict:
 	"""What the partner's sidebar shows this person, by their access level."""
 	level = access_level_of(membership)
-	partner_name, verification_status = frappe.db.get_value(
-		"Partner", membership.partner, ["partner_name", "verification_status"]
+	company_name, verification_status = frappe.db.get_value(
+		"Partner", membership.partner, ["company_name", "verification_status"]
 	)
 	is_approved = verification_status == VERIFIED
 	return {
-		"partner_name": partner_name,
+		"company_name": company_name,
 		# Approving the partner's application verifies the partner. Until then the sidebar has only
 		# Overview, the onboarding checklist; after, the partner pages and no checklist.
 		"is_approved": is_approved,

@@ -62,7 +62,7 @@ class IntegrationTestFrappeConsultants(IntegrationTestCase):
 		# Only this class's consultants take part; the class's rollback puts the site's back.
 		frappe.db.set_value("Frappe Consultant", {"name": ["not in", [ONE, TWO]]}, "enabled", 0)
 		if not frappe.db.exists("Partner", FRAPPE):
-			frappe.get_doc({"doctype": "Partner", "partner_name": FRAPPE, "tier": "Gold", "country": "India"}).insert(
+			frappe.get_doc({"doctype": "Partner", "company_name": FRAPPE, "tier": "Gold", "country": "India"}).insert(
 				ignore_permissions=True
 			)
 		make_user(FRAPPE_ADMIN)
@@ -132,7 +132,7 @@ class IntegrationTestFrappeConsultants(IntegrationTestCase):
 			)
 		)
 		self.assertIn(PARTNER_ROLE, frappe.get_roles(ONE))
-		self.assertFalse(frappe.db.exists("Partner", {"partner_name": ["like", "%Consultant-One%"]}))
+		self.assertFalse(frappe.db.exists("Partner", {"company_name": ["like", "%Consultant-One%"]}))
 
 	def test_messaging_sees_a_consultant_as_frappes_side(self):
 		frappe.set_user(ONE)
@@ -225,7 +225,7 @@ class IntegrationTestFrappeConsultants(IntegrationTestCase):
 		self.assertEqual(get_order(order.name)["consultant"]["label"], full_name)
 		frappe.set_user(buyer[0])
 		project = next(p for p in my_orders() if p["order"] == order.name)
-		self.assertEqual(project["partner_name"], full_name)
+		self.assertEqual(project["company_name"], full_name)
 
 	# ---- Nobody enabled ----
 
@@ -287,7 +287,7 @@ class IntegrationTestFrappeConsultants(IntegrationTestCase):
 		other = "_Test Other Starter Pack Partner"
 		if not frappe.db.exists("Partner", other):
 			frappe.get_doc(
-				{"doctype": "Partner", "partner_name": other, "tier": "Gold", "country": "India", "starter_pack": 1}
+				{"doctype": "Partner", "company_name": other, "tier": "Gold", "country": "India", "starter_pack": 1}
 			).insert(ignore_permissions=True)
 
 		order.reload()

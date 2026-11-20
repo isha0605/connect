@@ -13,7 +13,7 @@ CERTIFICATE_COURSES = {
 	"erpnext": ["erpnext-distribution", "erpnext-training"],
 }
 # The Partner field that counts each type's linked certificates.
-COUNT_FIELDS = {"erpnext": "certs_erpnext", "frappe": "certs_frappe_framework"}
+COUNT_FIELDS = {"erpnext": "erpnext_certified", "frappe": "framework_certified"}
 # The type each label stands for, as partners pick it.
 CERTIFICATE_TYPES = {"ERPNext": "erpnext", "Framework": "frappe"}
 # The Frappe School course a team member takes for each type.
@@ -26,7 +26,7 @@ class PartnerCertificate(Document):
 		Partner = frappe.qb.DocType("Partner")
 		PartnerCertificate = frappe.qb.DocType("Partner Certificate")
 		return query.left_join(Partner).on(PartnerCertificate.partner == Partner.name).select(
-			Partner.partner_name
+			Partner.company_name
 		)
 
 
@@ -106,7 +106,7 @@ def cancel_approved_requests(partner: str, user_email: str, course: str) -> None
 	)
 
 
-def tell_partner_certificate_moved(old_partner: str, new_partner_name: str, holder: str, course: str) -> None:
+def tell_partner_certificate_moved(old_partner: str, new_company_name: str, holder: str, course: str) -> None:
 	"""The holder confirmed their certificate for another partner, so the old one loses it."""
 	from connect.permissions import _get_partner_admins
 
@@ -117,6 +117,6 @@ def tell_partner_certificate_moved(old_partner: str, new_partner_name: str, hold
 		recipients=owners,
 		subject=_("A certificate moved to another partner"),
 		message=_("{0} confirmed that their {1} certificate now belongs to {2}, so it no longer counts for your partnership.").format(
-			escape_html(holder), course_label(course), escape_html(new_partner_name)
+			escape_html(holder), course_label(course), escape_html(new_company_name)
 		),
 	)

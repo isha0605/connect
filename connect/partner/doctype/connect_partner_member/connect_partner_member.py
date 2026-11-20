@@ -71,7 +71,7 @@ def list_my_partners(user: str) -> list[dict]:
 		frappe.qb.from_(member)
 		.join(partner)
 		.on(partner.name == member.partner)
-		.select(member.partner, partner.partner_name, partner.logo, member.access)
+		.select(member.partner, partner.company_name, partner.logo, member.access)
 		.where((member.user == user) & (member.is_removed == 0))
 		.orderby(member.creation, order=frappe.qb.desc)
 	).run(as_dict=True)
@@ -79,14 +79,14 @@ def list_my_partners(user: str) -> list[dict]:
 	firms = [
 		{
 			"partner": row.partner,
-			"partner_name": row.partner_name,
+			"company_name": row.company_name,
 			"logo": row.logo,
 			"access_level": access_level_of(row),
 			"is_current": row is current,
 		}
 		for row in rows
 	]
-	return sorted(firms, key=lambda firm: (firm["partner_name"] or "").lower())
+	return sorted(firms, key=lambda firm: (firm["company_name"] or "").lower())
 
 
 def switch_partner(user: str, partner: str) -> None:
@@ -136,3 +136,30 @@ class ConnectPartnerMember(CompanyMembership, Document):
 		from connect.permissions import _current_access_at
 
 		return _current_access_at(self.partner, user)
+
+	def on_update(self):
+		if self.is_new() or self.has_value_changed("access") or self.has_value_changed("is_removed"):
+			set_owner_name_on_partner(self.partner)
+
+	def on_trash(self):
+		if self.access == OWNER:
+			# The row is still in the table now, so the partner is left with no Owner name.
+			frappe.db.set_value("Partner", self.partner, "partner_name", None, update_modified=False)
+
+
+def set_owner_name_on_partner(partner: str) -> None:
+	"""Keeps Partner.partner_name the full name of the partner's one Owner, like frappe.io's Partner
+	Name. Set without saving the Partner, so its own save hooks (CRM sync) don't run for it."""
+	owner = frappe.db.get_value("Connect Partner Member", {"partner": partner, "access": OWNER, "is_removed": 0}, "user")
+	full_name = frappe.db.get_value("User", owner, "full_name") if owner else None
+	frappe.db.set_value("Partner", partner, "partner_name", full_name, update_modified=False)
+
+
+def update_owner_name_from_user(doc, method=None) -> None:
+	"""User on_update: a renamed Owner's new name shows on each partner they own."""
+	if not doc.has_value_changed("full_name"):
+		return
+	for partner in frappe.get_all(
+		"Connect Partner Member", filters={"user": doc.name, "access": OWNER, "is_removed": 0}, pluck="partner"
+	):
+		set_owner_name_on_partner(partner)

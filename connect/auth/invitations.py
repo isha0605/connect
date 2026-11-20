@@ -13,7 +13,7 @@ INVITE_DAYS = 7
 SIGN_IN_PAGE = "/connect/login-signup-redesign"
 # The company each kind of member row belongs to: (link field, doctype, name field).
 COMPANIES = {
-	"Connect Partner Member": ("partner", "Partner", "partner_name"),
+	"Connect Partner Member": ("partner", "Partner", "company_name"),
 	"Customer Team Member": ("customer", "Customer", "customer_name"),
 }
 THREAD_MEMBER = "Connect Thread Member"

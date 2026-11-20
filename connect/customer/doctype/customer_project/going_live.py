@@ -3,7 +3,7 @@ from frappe import _
 from frappe.utils import now_datetime
 
 from connect.customer.doctype.customer_project.customer_project import get_own_project, project_dict
-from connect.customer.doctype.customer_project.project_notifications import notify_customer, partner_name
+from connect.customer.doctype.customer_project.project_notifications import notify_customer, company_name
 
 # The partner's customer stage that says the project is built, and the one it goes back to.
 LIVE = "Live"
@@ -20,7 +20,7 @@ def mark_projects_live(partner_customer) -> None:
 		doc.save(ignore_permissions=True)
 		notify_customer(
 			doc,
-			_("{0} marked {1} live").format(partner_name(doc.partner), doc.project_name),
+			_("{0} marked {1} live").format(company_name(doc.partner), doc.project_name),
 			_("Check your site, then confirm it's working."),
 		)
 
@@ -40,7 +40,7 @@ def not_live_yet(name: str) -> dict:
 	built, the partner's customer back to Onboarding, and the partner reads why in their chat."""
 	doc = get_own_project(name)
 	if doc.status != "Hired" or not doc.live_on:
-		frappe.throw(_("{0} hasn't marked this project live.").format(partner_name(doc.partner)))
+		frappe.throw(_("{0} hasn't marked this project live.").format(company_name(doc.partner)))
 
 	doc.live_on = None
 	# get_own_project checked the caller owns this project.

@@ -111,15 +111,15 @@ class TestTierReview(IntegrationTestCase):
 		self.assertIsNone(frappe.db.get_value("Partner", APPLYING, "reviewed_tier"))
 
 
-def make_reviewed_partner(partner_name, verification_status):
+def make_reviewed_partner(company_name, verification_status):
 	"""A Silver partner whose revenue was read today and came to nothing, with no certificates."""
-	frappe.delete_doc("Partner", partner_name, force=True, ignore_missing=True)
+	frappe.delete_doc("Partner", company_name, force=True, ignore_missing=True)
 	frappe.get_doc(
-		{"doctype": "Partner", "partner_name": partner_name, "tier": "Silver", "country": "India"}
+		{"doctype": "Partner", "company_name": company_name, "tier": "Silver", "country": "India"}
 	).insert()
 	frappe.db.set_value(
 		"Partner",
-		partner_name,
+		company_name,
 		{
 			"verification_status": verification_status,
 			"revenue_last_month": 0,

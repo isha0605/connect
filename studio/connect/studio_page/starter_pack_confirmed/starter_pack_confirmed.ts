@@ -86,7 +86,7 @@ export default function setup(context) {
 	const manyPacks = computed(() => packs.value.length > 1)
 
 	const partner = computed(() => order.value?.partner || null)
-	const partnerFirstName = computed(() => partner.value?.partner_name.split(" ")[0] || "your partner")
+	const partnerFirstName = computed(() => partner.value?.company_name.split(" ")[0] || "your partner")
 
 	const isRefunded = computed(() => order.value?.payment_status === "Refunded")
 	const heading = computed(() => (isRefunded.value ? "Refunded" : "Confirmed"))
@@ -151,7 +151,7 @@ export default function setup(context) {
 			items.push({
 				key: "partner",
 				icon: "lucide-user-check",
-				title: `Matched with ${partner.value.partner_name}`,
+				title: `Matched with ${partner.value.company_name}`,
 				when: ago(o.partner_assigned_on),
 				cardIcon: "lucide-message-square",
 				label: `Message ${partnerFirstName.value} to agree a kickoff date`,

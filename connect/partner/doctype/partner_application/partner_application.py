@@ -244,7 +244,7 @@ def _register_partner(details: frappe._dict) -> str:
 	partner = frappe.get_doc(
 		{
 			"doctype": "Partner",
-			"partner_name": details.company_name,
+			"company_name": details.company_name,
 			"country": details.registered_country,
 			"tier": NEW_PARTNER_TIER,
 		}

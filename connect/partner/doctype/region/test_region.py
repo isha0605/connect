@@ -39,7 +39,7 @@ def make_partner(country):
 
 	tier = "Gold"
 	return frappe.get_doc(
-		{"doctype": "Partner", "partner_name": PARTNER, "tier": tier, "country": country, "enabled": 1}
+		{"doctype": "Partner", "company_name": PARTNER, "tier": tier, "country": country, "enabled": 1}
 	).insert(ignore_permissions=True)
 
 

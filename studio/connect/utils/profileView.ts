@@ -56,8 +56,8 @@ export function useProfileView({ profile, stories, isEditing, selectedStoryIndus
 		return {
 			pmm: pmm ? String(pmm) : "Not rated yet",
 			certified: [
-				p.certs_erpnext ? `${p.certs_erpnext} ERPNext` : "",
-				p.certs_frappe_framework ? `${p.certs_frappe_framework} Framework` : "",
+				p.erpnext_certified ? `${p.erpnext_certified} ERPNext` : "",
+				p.framework_certified ? `${p.framework_certified} Framework` : "",
 			].filter(Boolean),
 			offices: p.offices || [],
 			rate: p.hourly_rate ? `From ₹${Number(p.hourly_rate).toLocaleString("en-IN")}/hr` : "Not added yet",

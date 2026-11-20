@@ -17,8 +17,8 @@ ENTRY = "Entry"
 PMM_FREE_UP_TO = "Emerging"
 TIER_EMAIL_CC = "partner@frappe.io"
 PARTNER_FIELDS = [
-	"name", "partner_name", "tier", "currency", "keep_tier", "pmm_level",
-	"certs_erpnext", "certs_frappe_framework", "revenue_last_month", "revenue_this_month", "revenue_updated_on",
+	"name", "company_name", "tier", "currency", "keep_tier", "pmm_level",
+	"erpnext_certified", "framework_certified", "revenue_last_month", "revenue_this_month", "revenue_updated_on",
 ]
 
 
@@ -76,7 +76,7 @@ def review_partner(ladder: TierLadder, partner: frappe._dict, apply_changes: boo
 	tier changes are on and its tier isn't kept."""
 	# Revenue not read today is unknown: the partner may then only move up to Entry, never down.
 	revenue_is_known = bool(partner.revenue_updated_on) and getdate(partner.revenue_updated_on) == getdate()
-	certificates = cint(partner.certs_erpnext) + cint(partner.certs_frappe_framework)
+	certificates = cint(partner.erpnext_certified) + cint(partner.framework_certified)
 
 	def earned_with(revenue):
 		known_revenue = revenue if revenue_is_known else None
@@ -165,13 +165,13 @@ def email_partner_admins(partner: str, subject: str, message: str) -> None:
 
 def _upgrade_email(ladder: TierLadder, doc, old_tier: str) -> tuple[str, str]:
 	moved = _("Congratulations! {0} has moved from {1} to {2} in the Frappe Partner Program.").format(
-		escape_html(doc.partner_name), old_tier, doc.tier
+		escape_html(doc.company_name), old_tier, doc.tier
 	)
 	follows = _(
 		"Your tier follows last month's revenue from your Frappe Cloud customers, your certified team "
 		"members and your PMM level."
 	)
-	subject = _("{0} is now a {1} partner").format(doc.partner_name, doc.tier)
+	subject = _("{0} is now a {1} partner").format(doc.company_name, doc.tier)
 	return subject, f"<p>{moved}</p><p>{follows}</p>"
 
 
@@ -188,7 +188,7 @@ def _downgrade_email(ladder: TierLadder, doc, old_tier: str) -> tuple[str, str]:
 		(
 			_("Certified team members"),
 			cint(needs.certificates_required),
-			cint(doc.certs_erpnext) + cint(doc.certs_frappe_framework),
+			cint(doc.erpnext_certified) + cint(doc.framework_certified),
 		),
 		(_("PMM level"), flt(needs.pmm_required), flt(doc.pmm_level)),
 	)
@@ -198,9 +198,9 @@ def _downgrade_email(ladder: TierLadder, doc, old_tier: str) -> tuple[str, str]:
 	)
 
 	moved = _("{0} has moved from {1} to {2} in the Frappe Partner Program.").format(
-		escape_html(doc.partner_name), old_tier, doc.tier
+		escape_html(doc.company_name), old_tier, doc.tier
 	)
 	needed = _("A {0} partner needs:").format(old_tier)
 	again = _("Once you reach these again, your tier moves back up at the next daily review.")
-	subject = _("{0}'s partner tier has changed to {1}").format(doc.partner_name, doc.tier)
+	subject = _("{0}'s partner tier has changed to {1}").format(doc.company_name, doc.tier)
 	return subject, f"<p>{moved}</p><p>{needed}</p><ul>{items}</ul><p>{again}</p>"

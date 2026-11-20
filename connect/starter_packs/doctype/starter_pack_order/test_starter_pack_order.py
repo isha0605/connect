@@ -496,14 +496,14 @@ def make_pack(pack_key, price, total_hours):
 	return pack_key
 
 
-def make_partner(partner_name, starter_pack):
-	if not frappe.db.exists("Partner", partner_name):
+def make_partner(company_name, starter_pack):
+	if not frappe.db.exists("Partner", company_name):
 		tier = "Gold"
 		frappe.get_doc(
-			{"doctype": "Partner", "partner_name": partner_name, "tier": tier, "country": "India"}
+			{"doctype": "Partner", "company_name": company_name, "tier": tier, "country": "India"}
 		).insert(ignore_permissions=True)
-	frappe.db.set_value("Partner", partner_name, "starter_pack", starter_pack)
-	return partner_name
+	frappe.db.set_value("Partner", company_name, "starter_pack", starter_pack)
+	return company_name
 
 
 def make_order(packs, sent_price=None):
@@ -971,7 +971,7 @@ class IntegrationTestStarterPackImplementation(IntegrationTestCase):
 		self.assertNotIn(unpaid.name, [p["order"] for p in projects])
 		project = next(p for p in projects if p["order"] == paid.name)
 		self.assertEqual(project["project_title"], "ERPNext implementation for Test Co")
-		self.assertEqual(project["partner_name"], frappe.db.get_value("Partner", self.partner, "partner_name"))
+		self.assertEqual(project["company_name"], frappe.db.get_value("Partner", self.partner, "company_name"))
 		self.assertNotEqual(project["status"], "Completed")
 
 	def test_a_teammate_does_not_see_the_buyers_projects(self):

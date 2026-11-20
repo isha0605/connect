@@ -200,11 +200,12 @@ def get_quote(name: str) -> dict:
 def get_partner_properties(partner: str) -> dict:
 	"""What the dashboard filters by. Industries are one text, so a filter on one industry
 	matches with "contains" and a partner in several is still counted once."""
-	values = frappe.db.get_value("Partner", partner, ["partner_name", "country", "tier"], as_dict=True) or {}
+	values = frappe.db.get_value("Partner", partner, ["company_name", "country", "tier"], as_dict=True) or {}
 	industries = frappe.get_all("Partner Industry", filters={"parent": partner}, pluck="industry", order_by="idx")
 	return {
 		"partner": partner,
-		"partner_name": values.get("partner_name") or partner,
+		# Stored events and the dashboard filters use this key, so it keeps its name.
+		"partner_name": values.get("company_name") or partner,
 		"partner_country": values.get("country") or "",
 		"partner_tier": values.get("tier") or "",
 		"partner_industries": ", ".join(industries),

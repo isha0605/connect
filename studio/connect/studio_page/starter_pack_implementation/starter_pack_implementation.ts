@@ -99,7 +99,7 @@ export default function setup(context) {
 	const partner = computed(() => order.value?.partner || null)
 	// With Frappe, the buyer works with one of its consultants: "Priya Sharma · Frappe".
 	const consultant = computed(() => order.value?.consultant || null)
-	const partnerName = computed(() => consultant.value?.label || partner.value?.partner_name || "Frappe")
+	const partnerName = computed(() => consultant.value?.label || partner.value?.company_name || "Frappe")
 	// The consultant's photo (their initial without one), else the partner's logo; before
 	// either is assigned, Frappe's own.
 	const partnerLogo = computed(() => {

@@ -22,7 +22,7 @@ from connect.partner.doctype.partner_tier.tier_review import BEGINNER, ENTRY, is
 
 CRM_PARTNER = "CRM Partner"
 # The Partner fields the CRM shows. A change to any other field isn't sent.
-SENT_FIELDS = ("tier", "enabled", "verification_status", "email", "partner_name", "country")
+SENT_FIELDS = ("tier", "enabled", "verification_status", "email", "company_name", "country")
 WAITING = ("Queued", "Failed")
 
 
@@ -73,7 +73,7 @@ def _sync_partner(partner: str, settings) -> None:
 			path = f"/api/resource/{quote(CRM_PARTNER)}/{quote(crm_partner)}"
 			crm_request(settings, "PUT", path, json=partner_payload(doc))
 		else:
-			body = {"name": doc.partner_name, **partner_payload(doc)}
+			body = {"name": doc.company_name, **partner_payload(doc)}
 			response = crm_request(settings, "POST", f"/api/resource/{quote(CRM_PARTNER)}", json=body)
 			crm_partner = response.json()["data"]["name"]
 	except Exception:
@@ -115,8 +115,9 @@ def partner_payload(doc) -> dict:
 	status: Connect has no values for them."""
 	values = {
 		"enabled": int(bool(doc.enabled) and doc.verification_status == VERIFIED),
-		"partner_name": doc.partner_name,
-		"company_name": doc.partner_name,
+		# Frappe CRM's own field names: both hold the company, as before.
+		"partner_name": doc.company_name,
+		"company_name": doc.company_name,
 		# The CRM has no Beginner tier; like Entry, it is a partner with fewer than 2 certificates.
 		"partner_type": ENTRY if doc.tier == BEGINNER else doc.tier,
 		"country": doc.country,

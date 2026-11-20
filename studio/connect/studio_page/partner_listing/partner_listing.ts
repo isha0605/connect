@@ -108,7 +108,7 @@ export default function setup(context) {
 	const view = useProfileView({ profile, stories, isEditing, selectedStoryIndustry })
 
 	// ---- Name and tagline ----
-	const listingName = computed(() => profile.value?.partner_name || "")
+	const listingName = computed(() => profile.value?.company_name || "")
 	const markImage = computed(() => imageTile(draft.value.logo_icon || draft.value.logo))
 
 	function copyProfileLink() {

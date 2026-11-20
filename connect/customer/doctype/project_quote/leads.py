@@ -75,7 +75,7 @@ def get_lead(name: str) -> dict:
 			**_brief_fields(_brief_card(latest, row.customer)),
 			"thread": row.thread,
 			"thread_closed": row.thread_status == "Closed",
-			"partner_name": row.partner_name,
+			"company_name": row.company_name,
 			# Until the customer is interested in the partner's quote, they stay anonymous.
 			"contact": _contact(latest.customer_user) if row.is_customer_revealed else {},
 			"requirements": [_requirement_row(requirement) for requirement in requirements],
@@ -230,7 +230,7 @@ def _get_lead_row(name: str):
 		_lead_query(_my_partner_with_access(frappe.session.user, LEAD_ACCESS))
 		.left_join(Partner)
 		.on(Partner.name == Lead.partner)
-		.select(Partner.partner_name)
+		.select(Partner.company_name)
 		.where(Lead.name == name)
 		.run(as_dict=True)
 	)

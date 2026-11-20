@@ -5,6 +5,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "company_name",
   "partner_name",
   "logo",
   "logo_icon",
@@ -17,6 +18,7 @@
   "cloud_registration",
   "cloud_registration_sent_on",
   "email",
+  "contact_email",
   "enabled",
   "show_in_website",
   "specialist",
@@ -60,20 +62,20 @@
   "industries",
   "team_size",
   "section_break_metrics",
-  "rollouts",
+  "successful_projects_count",
   "pmm_level",
   "pmm_listing_url",
   "hourly_rate",
   "response_time_hours",
   "column_break_metrics",
   "foundation_date",
-  "sites_deployed",
+  "total_sites_count",
   "typical_project_size",
   "proposal_timeline",
   "section_break_certs",
-  "certified_experts",
-  "certs_erpnext",
-  "certs_frappe_framework",
+  "number_of_certified_members",
+  "erpnext_certified",
+  "framework_certified",
   "free_certifications",
   "column_break_certs",
   "countries_served",
@@ -132,11 +134,19 @@
  ],
  "fields": [
   {
-   "fieldname": "partner_name",
+   "description": "The company's name that customers see.",
+   "fieldname": "company_name",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Partner Name",
+   "label": "Company Name",
    "reqd": 1
+  },
+  {
+   "description": "The full name of the partner's Owner. Set from the Owner in the team, so it changes when the Owner changes.",
+   "fieldname": "partner_name",
+   "fieldtype": "Data",
+   "label": "Partner Name",
+   "read_only": 1
   },
   {
    "fieldname": "logo",
@@ -194,21 +204,21 @@
    "permlevel": 1
   },
   {
+   "description": "Pending while the partner's admin picks their Frappe Cloud team. Completed once Frappe Cloud knows the team, so hires can be linked there.",
    "fieldname": "cloud_registration",
    "fieldtype": "Select",
    "label": "Frappe Cloud Registration",
-   "options": "\nPending\nCompleted",
-   "read_only": 1,
    "no_copy": 1,
-   "description": "Pending while the partner's admin picks their Frappe Cloud team. Completed once Frappe Cloud knows the team, so hires can be linked there."
+   "options": "\nPending\nCompleted",
+   "read_only": 1
   },
   {
+   "description": "When the admin was last emailed the registration link. A new link replaces the old one, so Connect sends one only after the old one expires.",
    "fieldname": "cloud_registration_sent_on",
    "fieldtype": "Datetime",
    "label": "Frappe Cloud Registration Sent On",
-   "read_only": 1,
    "no_copy": 1,
-   "description": "When the admin was last emailed the registration link. A new link replaces the old one, so Connect sends one only after the old one expires."
+   "read_only": 1
   },
   {
    "description": "The partner's main email for Frappe. Frappe Cloud marks the invoices of the partner's customers with it, so Connect finds the partner's revenue by it.",
@@ -219,6 +229,14 @@
    "options": "Email",
    "permlevel": 1,
    "search_index": 1
+  },
+  {
+   "description": "The partner's contact email from frappe.io. Not shown on the public profile.",
+   "fieldname": "contact_email",
+   "fieldtype": "Data",
+   "label": "Contact Email",
+   "options": "Email",
+   "permlevel": 1
   },
   {
    "default": "1",
@@ -524,9 +542,9 @@
   },
   {
    "description": "From the frappe.io import. Partners cannot change it.",
-   "fieldname": "rollouts",
+   "fieldname": "successful_projects_count",
    "fieldtype": "Int",
-   "label": "Implementations / Rollouts",
+   "label": "Successful Projects Count",
    "read_only": 1
   },
   {
@@ -568,9 +586,9 @@
   },
   {
    "description": "From the frappe.io import. Partners cannot change it.",
-   "fieldname": "sites_deployed",
+   "fieldname": "total_sites_count",
    "fieldtype": "Int",
-   "label": "Sites Deployed",
+   "label": "Total Sites Count",
    "read_only": 1
   },
   {
@@ -590,21 +608,21 @@
   },
   {
    "description": "From the frappe.io import. Partners cannot change it.",
-   "fieldname": "certified_experts",
+   "fieldname": "number_of_certified_members",
    "fieldtype": "Int",
-   "label": "Certified Experts",
+   "label": "Number of Certified Members",
    "read_only": 1
   },
   {
    "description": "Counted from this partner's linked, unexpired certificates.",
-   "fieldname": "certs_erpnext",
+   "fieldname": "erpnext_certified",
    "fieldtype": "Int",
    "label": "ERPNext Certifications",
    "read_only": 1
   },
   {
    "description": "Counted from this partner's linked, unexpired certificates.",
-   "fieldname": "certs_frappe_framework",
+   "fieldname": "framework_certified",
    "fieldtype": "Int",
    "label": "Frappe Framework Certifications",
    "read_only": 1
@@ -959,7 +977,7 @@
    "link_fieldname": "partner"
   }
  ],
- "modified": "2026-11-21 14:00:00.000000",
+ "modified": "2026-11-21 15:00:00.000000",
  "modified_by": "Administrator",
  "module": "Partner",
  "name": "Partner",
@@ -990,6 +1008,6 @@
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "title_field": "partner_name",
+ "title_field": "company_name",
  "track_changes": 1
 }

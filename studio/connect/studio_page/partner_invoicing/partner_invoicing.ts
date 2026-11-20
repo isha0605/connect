@@ -81,7 +81,7 @@ export default function setup(context) {
 
 	// ---- The list, largest first unless the partner flips it ----
 	// The partner's own bill shows as "Your account", with their company's initial.
-	const ownName = computed(() => myContext?.data?.partner?.partner_name || "Your account")
+	const ownName = computed(() => myContext?.data?.partner?.company_name || "Your account")
 	const descending = ref(true)
 	const rows = computed(() =>
 		[...bill.value.invoices]

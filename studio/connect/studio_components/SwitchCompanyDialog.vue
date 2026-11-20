@@ -21,7 +21,7 @@ const current = computed(() => companies.value.find((company) => company.is_curr
 const shownCompanies = computed(() => {
 	const text = query.value.trim().toLowerCase()
 	if (!text) return companies.value
-	return companies.value.filter((company) => (company.partner_name || company.partner).toLowerCase().includes(text))
+	return companies.value.filter((company) => (company.company_name || company.partner).toLowerCase().includes(text))
 })
 
 const errorText = (e, fallback) => (e && e.messages && e.messages[0]) || (e && e.message) || fallback
@@ -50,7 +50,7 @@ async function switchTo(company) {
 	switchingTo.value = company.partner
 	try {
 		const context = await call("connect.api.partner.switch_partner", { partner: company.partner })
-		toast.success(`Now working for ${company.partner_name}`)
+		toast.success(`Now working for ${company.company_name}`)
 		// Pages hold the old company's data, so start again from the new company's partner home.
 		window.location.assign(`/connect${context?.partner?.home_route || "/partner-listing"}`)
 	} catch (e) {
@@ -69,7 +69,7 @@ onBeforeUnmount(() => window.removeEventListener("connect:switch-company", openD
 			<div class="flex flex-col gap-4">
 				<Alert
 					:title="`Signed in as ${user}`"
-					:description="current ? `Working for ${current.partner_name}` : undefined"
+					:description="current ? `Working for ${current.company_name}` : undefined"
 					theme="gray"
 				/>
 
@@ -101,9 +101,9 @@ onBeforeUnmount(() => window.removeEventListener("connect:switch-company", openD
 						:key="company.partner"
 						class="flex items-center gap-3 py-2.5"
 					>
-						<Avatar :image="company.logo" :label="company.partner_name" shape="square" size="lg" />
+						<Avatar :image="company.logo" :label="company.company_name" shape="square" size="lg" />
 						<div class="flex min-w-0 flex-1 flex-col gap-0.5">
-							<span class="truncate text-base font-medium text-ink-gray-8">{{ company.partner_name }}</span>
+							<span class="truncate text-base font-medium text-ink-gray-8">{{ company.company_name }}</span>
 							<span class="text-sm text-ink-gray-5">{{ company.access_level }}</span>
 						</div>
 						<Badge v-if="company.is_current" label="Active" theme="green" variant="subtle" />
@@ -114,7 +114,7 @@ onBeforeUnmount(() => window.removeEventListener("connect:switch-company", openD
 							theme="gray"
 							:loading="switchingTo === company.partner"
 							:disabled="!!switchingTo && switchingTo !== company.partner"
-							:aria-label="`Switch to ${company.partner_name}`"
+							:aria-label="`Switch to ${company.company_name}`"
 							@click="switchTo(company)"
 						>
 							Switch

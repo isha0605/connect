@@ -39,20 +39,20 @@ class TestListingReview(IntegrationTestCase):
 		return frappe.db.get_value("Partner", PARTNER, fields, as_dict=True)
 
 	def test_a_partner_with_the_certificates_its_tier_needs_is_listed(self):
-		partner = self.review(certs_erpnext=2)
+		partner = self.review(erpnext_certified=2)
 
 		self.assertEqual((partner.show_in_website, partner.listing_review), (1, "Show"))
 		self.assertEqual(partner.listed_on, getdate(today()))
 		self.assertIn("now in the Frappe partner directory", listing_emails()[0].message)
 
 	def test_a_beginner_needs_entrys_certificates_to_be_listed(self):
-		self.assertEqual(self.review(tier="Beginner", certs_erpnext=1).show_in_website, 0)
-		self.assertEqual(self.review(tier="Beginner", certs_erpnext=2).show_in_website, 1)
+		self.assertEqual(self.review(tier="Beginner", erpnext_certified=1).show_in_website, 0)
+		self.assertEqual(self.review(tier="Beginner", erpnext_certified=2).show_in_website, 1)
 
 	def test_a_partner_short_for_over_90_days_is_hidden(self):
 		long_ago = add_days(today(), -91)
 
-		partner = self.review(tier="Silver", certs_erpnext=2, show_in_website=1, listed_on=long_ago)
+		partner = self.review(tier="Silver", erpnext_certified=2, show_in_website=1, listed_on=long_ago)
 
 		self.assertEqual((partner.show_in_website, partner.listing_review), (0, "Hide"))
 		message = listing_emails()[0].message
@@ -62,13 +62,13 @@ class TestListingReview(IntegrationTestCase):
 	def test_a_partner_short_within_90_days_stays_listed(self):
 		recently = add_days(today(), -10)
 
-		partner = self.review(tier="Silver", certs_erpnext=2, show_in_website=1, listed_on=recently)
+		partner = self.review(tier="Silver", erpnext_certified=2, show_in_website=1, listed_on=recently)
 
 		self.assertEqual((partner.show_in_website, partner.listing_review), (1, "Show"))
 		self.assertFalse(listing_emails())
 
 	def test_a_kept_listing_is_not_changed(self):
-		partner = self.review(certs_erpnext=2, keep_listing=1, keep_listing_reason="Hidden after a complaint")
+		partner = self.review(erpnext_certified=2, keep_listing=1, keep_listing_reason="Hidden after a complaint")
 
 		self.assertEqual((partner.show_in_website, partner.listing_review), (0, "Show"))
 		self.assertFalse(listing_emails())
@@ -81,7 +81,7 @@ class TestListingReview(IntegrationTestCase):
 			doc.save()
 
 	def test_with_changes_off_only_the_review_is_saved(self):
-		partner = self.review(apply_changes=False, certs_erpnext=2)
+		partner = self.review(apply_changes=False, erpnext_certified=2)
 
 		self.assertEqual((partner.show_in_website, partner.listing_review), (0, "Show"))
 		self.assertFalse(listing_emails())
@@ -107,13 +107,13 @@ class TestListingReview(IntegrationTestCase):
 		self.assertEqual(order, [revenue, tiers, listings])
 
 
-def make_listing_partner(partner_name, verification_status):
+def make_listing_partner(company_name, verification_status):
 	"""An Entry partner off the directory, with no certificates."""
-	frappe.delete_doc("Partner", partner_name, force=True, ignore_missing=True)
+	frappe.delete_doc("Partner", company_name, force=True, ignore_missing=True)
 	frappe.get_doc(
-		{"doctype": "Partner", "partner_name": partner_name, "tier": "Entry", "country": "India"}
+		{"doctype": "Partner", "company_name": company_name, "tier": "Entry", "country": "India"}
 	).insert()
-	frappe.db.set_value("Partner", partner_name, "verification_status", verification_status)
+	frappe.db.set_value("Partner", company_name, "verification_status", verification_status)
 
 
 def listing_emails():

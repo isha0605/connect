@@ -133,5 +133,5 @@ def _company_name(company):
 	if not company:
 		return ""
 	if frappe.db.exists("Partner", company):
-		return frappe.db.get_value("Partner", company, "partner_name") or company
+		return frappe.db.get_value("Partner", company, "company_name") or company
 	return frappe.db.get_value("Customer", company, "customer_name") or company

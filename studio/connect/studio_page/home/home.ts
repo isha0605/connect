@@ -99,7 +99,7 @@ export default function setup(context) {
 			...row,
 			key: row.order || row.project,
 			title: row.project_title,
-			partner: { partner_name: row.partner_name, logo: row.partner_logo },
+			partner: { company_name: row.company_name, logo: row.partner_logo },
 		})),
 	)
 	const hasMoreProjects = computed(() => allProjects.value.length > HOME_PROJECTS)

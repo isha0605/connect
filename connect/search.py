@@ -15,10 +15,10 @@ class PartnerSearch(SQLiteSearch):
 	INDEX_NAME = "connect_partner_search.db"
 
 	INDEX_SCHEMA = {
-		# "content" is aliased to partner_name (see INDEXABLE_DOCTYPES below) rather
+		# "content" is aliased to company_name (see INDEXABLE_DOCTYPES below) rather
 		# than description, because SQLiteSearch silently drops a document from the
 		# index if its content field is empty — and some partners have no description
-		# yet. partner_name is never empty, so no partner can vanish
+		# yet. company_name is never empty, so no partner can vanish
 		# from search purely for being sparsely profiled; tagline/description/
 		# industry/city/country are still indexed as plain (empty-safe) text fields.
 		"text_fields": ["title", "content", "tagline", "description", "industry", "city", "country"],
@@ -29,8 +29,8 @@ class PartnerSearch(SQLiteSearch):
 		"Partner": {
 			"fields": [
 				"name",
-				{"title": "partner_name"},
-				{"content": "partner_name"},
+				{"title": "company_name"},
+				{"content": "company_name"},
 				"tagline", "description", "city", "country",
 			],
 		},

@@ -88,16 +88,16 @@ def email_invite(name: str) -> None:
 	)
 	if not recipients:
 		return
-	partner_name = frappe.db.get_value("Partner", doc.partner, "partner_name") or doc.partner
+	company_name = frappe.db.get_value("Partner", doc.partner, "company_name") or doc.partner
 	frappe.sendmail(
 		recipients=recipients,
-		subject=_("{0} invited you to “{1}”").format(partner_name, doc.title),
-		message=_invite_email_body(doc, partner_name),
+		subject=_("{0} invited you to “{1}”").format(company_name, doc.title),
+		message=_invite_email_body(doc, company_name),
 		attachments=[{"fname": "invite.ics", "fcontent": _calendar_file(doc)}],
 	)
 
 
-def _invite_email_body(doc, partner_name: str) -> str:
+def _invite_email_body(doc, company_name: str) -> str:
 	when = frappe.utils.format_datetime(doc.followed_up_on, "EEE, d MMM yyyy, h:mm a")
 	rows = [
 		(_("When"), f"{when} ({frappe.utils.get_system_timezone()})"),
@@ -107,7 +107,7 @@ def _invite_email_body(doc, partner_name: str) -> str:
 	]
 	details = "<br>".join(f"<b>{label}:</b> {escape_html(str(value))}" for label, value in rows if value)
 	return (
-		f"<p>{escape_html(_('{0} would like to meet you.').format(partner_name))}</p>"
+		f"<p>{escape_html(_('{0} would like to meet you.').format(company_name))}</p>"
 		f"<p>{details}</p>"
 		f"<p>{escape_html(_('Join from the invite in your conversation with them on Connect, or from your calendar.'))}</p>"
 	)

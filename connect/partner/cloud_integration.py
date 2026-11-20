@@ -145,7 +145,7 @@ def _ensure_registration(client, partner: str) -> bool:
 	pick it, at most once per registration link. Partners listed before onboarding asked for
 	Frappe Cloud get here on their first hire."""
 	row = frappe.db.get_value(
-		"Partner", partner, ["partner_name", "cloud_registration", "cloud_registration_sent_on"], as_dict=True
+		"Partner", partner, ["company_name", "cloud_registration", "cloud_registration_sent_on"], as_dict=True
 	)
 	if row.cloud_registration == "Completed":
 		return True
@@ -157,12 +157,12 @@ def _ensure_registration(client, partner: str) -> bool:
 	# Frappe Cloud registers one person for the team: the partner's earliest owner.
 	owners = _get_partner_admins(partner)
 	if not owners:
-		frappe.throw(_("{0} has no admin to register on Frappe Cloud.").format(row.partner_name))
+		frappe.throw(_("{0} has no admin to register on Frappe Cloud.").format(row.company_name))
 
 	email = frappe.db.get_value("User", owners[0], "email") or owners[0]
 	url = _request_registration(client, partner, email)
 	if url:
-		_send_registration_email(email, row.partner_name, url)
+		_send_registration_email(email, row.company_name, url)
 	return not url
 
 
@@ -173,7 +173,7 @@ def _request_registration(client, partner: str, email: str, return_url: str | No
 		"central.api.connect.register_partner",
 		{
 			"connect_partner_id": partner,
-			"partner_name": frappe.db.get_value("Partner", partner, "partner_name"),
+			"company_name": frappe.db.get_value("Partner", partner, "company_name"),
 			"owner_email": email,
 			"return_url": return_url,
 		},
@@ -227,13 +227,13 @@ def connect_cloud_account() -> dict:
 	return {"completed": not url, "url": url}
 
 
-def _send_registration_email(email: str, partner_name: str, url: str) -> None:
+def _send_registration_email(email: str, company_name: str, url: str) -> None:
 	frappe.sendmail(
 		recipients=[email],
-		subject=_("Set up {0} on Frappe Cloud").format(partner_name),
+		subject=_("Set up {0} on Frappe Cloud").format(company_name),
 		message=(
-			f"<p>{_('A customer hired {0} on Frappe Connect.').format(escape_html(partner_name))}</p>"
-			f"<p>{_('Pick the Frappe Cloud team that is {0}, so your customers can add you to their accounts.').format(escape_html(partner_name))}</p>"
+			f"<p>{_('A customer hired {0} on Frappe Connect.').format(escape_html(company_name))}</p>"
+			f"<p>{_('Pick the Frappe Cloud team that is {0}, so your customers can add you to their accounts.').format(escape_html(company_name))}</p>"
 			f"<p><a href='{url}'>{_('Pick your Frappe Cloud team')}</a></p>"
 			f"<p>{_('The link works only for {0} and stays open for {1} days.').format(escape_html(email), REGISTRATION_RESEND_DAYS)}</p>"
 		),

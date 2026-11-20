@@ -17,13 +17,13 @@ ADMIN = "brief.partner.admin@example.test"
 CRITERIA = {"cities": [CITY]}
 
 
-def make_listed_partner(partner_name):
-	if not frappe.db.exists("Partner", partner_name):
+def make_listed_partner(company_name):
+	if not frappe.db.exists("Partner", company_name):
 		tier = "Gold"
 		frappe.get_doc(
 			{
 				"doctype": "Partner",
-				"partner_name": partner_name,
+				"company_name": company_name,
 				"tier": tier,
 				"country": "India",
 				"city": CITY,
@@ -32,7 +32,7 @@ def make_listed_partner(partner_name):
 			}
 		).insert(ignore_permissions=True)
 	# Only an approved partner is listed and sent briefs.
-	frappe.db.set_value("Partner", partner_name, "verification_status", "Verified")
+	frappe.db.set_value("Partner", company_name, "verification_status", "Verified")
 
 
 def make_admin(partner, email):
