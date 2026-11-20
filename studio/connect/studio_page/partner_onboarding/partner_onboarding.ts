@@ -37,10 +37,9 @@ const SELECT_OPTIONS = {
 		{ label: "USD (US Dollar)", value: "USD" },
 		{ label: "EUR (Euro)", value: "EUR" },
 	],
-	// These four match Partner Application's own Select field options exactly (partner_application.json)
-	// -- connect's doctype diverged from Press's Team.employee_range etc. free-text ranges, and the
-	// server rejects a value that isn't one of the doctype's declared options.
-	employee_range: rangeOptions("1-10", "11-50", "51-200", "201-500", "500+"),
+	// These match Partner Application's own Select field options exactly (partner_application.json),
+	// since the server rejects a value that isn't one of them. They are Press's ranges too.
+	employee_range: rangeOptions("1-10", "11-50", "51-200", "201+"),
 	certified_employees_range: rangeOptions("0", "1-5", "6-20", "21+"),
 	customer_count_range: rangeOptions("1-10", "11-50", "51-200", "201+"),
 	erpnext_customer_count_range: rangeOptions("1-10", "11-50", "51-200", "201+"),
