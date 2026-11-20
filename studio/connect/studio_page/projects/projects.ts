@@ -6,6 +6,7 @@
 import { computed } from "vue"
 import { projectDialog, projectPath } from "@app/utils/projectDialog"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 export default function setup(context) {
 	startTracking(context)
@@ -43,6 +44,7 @@ export default function setup(context) {
 	const dialog = projectDialog()
 
 	return {
+		myContext: useMyContext(),
 		...dialog,
 		projects,
 		projectCount,

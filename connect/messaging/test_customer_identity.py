@@ -98,3 +98,11 @@ class TestCustomerIdentity(IntegrationTestCase):
 		self.as_user(BUYER)
 		open_contact_thread(COMPANY, PARTNER, BUYER)
 		self.assertTrue(frappe.db.get_value("Connect Thread", self.thread, "is_customer_revealed"))
+
+	def test_the_customer_sees_the_partner_logo_icon(self):
+		frappe.db.set_value("Partner", PARTNER, "logo", "/files/wordmark.png")
+		self.as_user(BUYER)
+		self.assertEqual(self.my_thread()["partner_logo"], "/files/wordmark.png")
+
+		frappe.db.set_value("Partner", PARTNER, "logo_icon", "/files/icon.png")
+		self.assertEqual(self.my_thread()["partner_logo"], "/files/icon.png")

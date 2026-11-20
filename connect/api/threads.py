@@ -176,9 +176,11 @@ def get_my_threads():
 	hidden = hidden_threads([t.name for t in threads], user)
 	customers_hidden = _hidden_customer_senders(hidden)
 	partner_logos = {
-		p.name: p.logo
+		p.name: p.logo_icon or p.logo
 		for p in frappe.get_all(
-			"Partner", filters={"name": ["in", [t.partner for t in threads]]}, fields=["name", "logo"]
+			"Partner",
+			filters={"name": ["in", [t.partner for t in threads]]},
+			fields=["name", "logo", "logo_icon"],
 		)
 	}
 	# the partner side sees the customer by name; a Customer's ID can be a number series (CUST-00069)

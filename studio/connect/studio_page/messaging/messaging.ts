@@ -5,6 +5,7 @@ import { installScrollFade } from "@app/utils/scrollFade"
 import { goToSignIn, signOut } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
 import { usePartnerRegistration } from "@app/utils/partnerRegistration"
+import { useMyContext } from "@app/utils/myContext"
 
 // connect.messaging.customer_identity.ANONYMOUS_USER: who the partner side sees in place of an
 // anonymous customer's people.
@@ -63,10 +64,10 @@ const DEFAULT_FILE_TILE = { bg: "var(--gray-500)", glyph: lucideSvg("file") }
 // Partners write to a customer from that customer's lead or customer page, so Messaging is
 // for customers only. A partner who still lands here (an old link, an email, a notification)
 // goes to the page that holds that chat, or else to their partner home.
-function sendPartnersToTheirPages(context) {
+function sendPartnersToTheirPages(context, myContext) {
 	let checked = false
 	watch(
-		() => context.myContext.data,
+		() => myContext.data,
 		async (data) => {
 			if (!data || checked) return
 			checked = true
@@ -86,10 +87,11 @@ function sendPartnersToTheirPages(context) {
 }
 
 export default function setup(context) {
+	const myContext = useMyContext()
 	startTracking(context)
 	// the thread list's thin scrollbar that fades when idle (see @app/utils/scrollFade)
 	installScrollFade()
-	sendPartnersToTheirPages(context)
+	sendPartnersToTheirPages(context, myContext)
 	// ---- State ----
 	const selectedThread = ref("")
 	const draftMessage = ref("")
@@ -153,7 +155,7 @@ export default function setup(context) {
 	// The customer's own Requirement card says so while the partner still sees them anonymously.
 	function isAnonymousToPartners() {
 		const thread = currentThread()
-		const amCustomer = context.myContext.data && context.myContext.data.customer
+		const amCustomer = myContext.data && myContext.data.customer
 		return Boolean(amCustomer) && thread.convType !== "dm" && thread.is_customer_revealed === 0
 	}
 
@@ -161,7 +163,7 @@ export default function setup(context) {
 		if (thread && thread.convType === "dm") {
 			return capitalizeName(thread.other_user_full_name) || memberDisplayName(thread.other_user)
 		}
-		const amPartner = context.myContext.data && context.myContext.data.partner
+		const amPartner = myContext.data && myContext.data.partner
 		if (amPartner) return thread.customer_name || thread.customer
 		// A Starter Pack thread with Frappe is with one of its consultants (see get_my_threads).
 		return thread.consultant_name || thread.partner
@@ -173,7 +175,7 @@ export default function setup(context) {
 	function threadAvatarImage(thread) {
 		if (!thread) return ""
 		if (thread.convType === "dm") return thread.other_user_image || ""
-		const amPartner = context.myContext.data && context.myContext.data.partner
+		const amPartner = myContext.data && myContext.data.partner
 		return amPartner ? "" : thread.consultant_photo || thread.partner_logo || ""
 	}
 
@@ -228,7 +230,7 @@ export default function setup(context) {
 	// resolvable name at all, rather than showing that in place of an actual name that exists.
 	function threadListPreview(thread) {
 		if (!thread || !thread.last_message) return "No messages yet"
-		const me = context.myContext.data && context.myContext.data.user
+		const me = myContext.data && myContext.data.user
 		const sender = thread.last_message_sender
 		let label = sender === me ? "You" : thread.last_message_sender_name || (sender || "").split("@")[0]
 		if (label && label !== "You") label = capitalizeName(label)
@@ -1029,15 +1031,15 @@ export default function setup(context) {
 
 	// ---- Admin checks ----
 	function amPartner() {
-		return !!(context.myContext.data && context.myContext.data.partner)
+		return !!(myContext.data && myContext.data.partner)
 	}
 
 	function isPartnerAdmin() {
-		return !!(context.myContext.data && context.myContext.data.partner && context.myContext.data.partner.is_admin)
+		return !!(myContext.data && myContext.data.partner && myContext.data.partner.is_admin)
 	}
 
 	function isCustomerAdmin() {
-		return !!(context.myContext.data && context.myContext.data.customer && context.myContext.data.customer.is_admin)
+		return !!(myContext.data && myContext.data.customer && myContext.data.customer.is_admin)
 	}
 
 	function isAnyAdmin() {
@@ -1050,7 +1052,7 @@ export default function setup(context) {
 
 	// Only a company's one Owner hands it over; an Admin manages members but not ownership.
 	function isRowOwner(item) {
-		const membership = context.myContext.data && context.myContext.data[item.side === "Partner" ? "partner" : "customer"]
+		const membership = myContext.data && myContext.data[item.side === "Partner" ? "partner" : "customer"]
 		return !!(membership && membership.access_level === "Owner")
 	}
 
@@ -1058,7 +1060,7 @@ export default function setup(context) {
 	// myContext.data.user is frappe.session.user -- "Guest" for a visitor Frappe never
 	// authenticated, same test the framework itself uses (frappe.session.user == "Guest").
 	function isSignedIn() {
-		return !!(context.myContext.data && context.myContext.data.user && context.myContext.data.user !== "Guest")
+		return !!(myContext.data && myContext.data.user && myContext.data.user !== "Guest")
 	}
 
 	function accountMenuOptions() {
@@ -1312,7 +1314,7 @@ export default function setup(context) {
 	// again replaces the older cards for that order. A partner's invite from a lead carries
 	// { follow_up, title, link, starts_at, duration_minutes, agenda } (see Partner Follow Up).
 	function canShareMeeting() {
-		const me = context.myContext.data && context.myContext.data.user
+		const me = myContext.data && myContext.data.user
 		const thread = currentThread()
 		return selectedThreadType.value === "company" && !!thread.consultant && thread.consultant === me
 	}
@@ -1999,9 +2001,9 @@ export default function setup(context) {
 			return
 		}
 		const side =
-			context.myContext.data && context.myContext.data.customer
+			myContext.data && myContext.data.customer
 				? "Customer"
-				: context.myContext.data && context.myContext.data.partner
+				: myContext.data && myContext.data.partner
 					? "Partner"
 					: null
 		if (!side) {
@@ -2030,7 +2032,7 @@ export default function setup(context) {
 		if (!window.confirm(`Make ${item.user} the Owner? You become an Admin, and only they can manage Admins or hand the company over again.`)) return
 		call("connect.api.threads.make_thread_admin", { thread: selectedThread.value, member: item.name })
 			.then(() => {
-				context.myContext.reload()
+				myContext.reload()
 				context.threadAdmins.reload()
 				toast.success(`${item.user} is now the Owner`)
 			})
@@ -2085,7 +2087,7 @@ export default function setup(context) {
 	}
 
 	function teamRowOptions(item) {
-		const me = context.myContext.data && context.myContext.data.user
+		const me = myContext.data && myContext.data.user
 		const disabled = !isAnyAdmin() || item.user === me
 		return [
 			{ label: "Disable", icon: "lucide-user-minus", theme: "red", disabled, onClick: () => confirmDisableTeamMember(item) },
@@ -2985,7 +2987,7 @@ export default function setup(context) {
 	watch(draftMessage, () => nextTick(autoResizeComposer))
 
 	function isMine(sender) {
-		return sender === (context.myContext.data && context.myContext.data.user)
+		return sender === (myContext.data && myContext.data.user)
 	}
 
 	// Requirement and Quote cards span the whole chat width on phones
@@ -3001,7 +3003,7 @@ export default function setup(context) {
 	// be a thread member without also having a Connect Customer/Partner Member row, and in that
 	// case myContext's side fields are both null, which would show every badge instead of none.
 	function myOwnSide() {
-		return senderSide({ sender: context.myContext.data && context.myContext.data.user })
+		return senderSide({ sender: myContext.data && myContext.data.user })
 	}
 
 	function senderSide(item) {
@@ -3168,7 +3170,7 @@ export default function setup(context) {
 	// 1:1 with them and selects it into the SAME sidebar/chat pane as every other conversation
 	// (no separate inbox or popup — see unifiedThreadList).
 	async function connectWithUser(email) {
-		if (!email || email === (context.myContext.data && context.myContext.data.user)) return
+		if (!email || email === (myContext.data && myContext.data.user)) return
 		// An anonymous customer has no one to message directly until they're revealed.
 		if (email === ANONYMOUS_CUSTOMER) return
 		try {
@@ -3658,9 +3660,10 @@ export default function setup(context) {
 	// ---- "Become a partner": the shared registration form ----
 	const registration = usePartnerRegistration(() => context.partnershipCountries?.data || [])
 
-	// A partner who has already registered carries on in Partner Onboarding instead.
+	// Someone already on a partner's team carries on in Partner Onboarding instead. Read from
+	// myContext, not get_partner_application, which throws for everyone else (Messaging's customers).
 	function openPartnership() {
-		if (context.partnerApplication?.data) {
+		if (myContext.data && myContext.data.partner) {
 			context.router.push("/partner-onboarding")
 			return
 		}
@@ -3680,7 +3683,8 @@ export default function setup(context) {
 		registration.partnershipSaving.value = true
 		call("connect.api.partner.save_partner_application", { details: registration.partnershipDetails() })
 			.then(() => {
-				context.partnerApplication?.reload()
+				// saving registers a partner with this person as its Owner
+				myContext.reload()
 				if (editing) {
 					registration.partnershipWizardOpen.value = false
 					toast.success("Registration details updated")
@@ -3695,6 +3699,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext,
 		...registration,
 		openPartnership,
 		proceedPartnership,
