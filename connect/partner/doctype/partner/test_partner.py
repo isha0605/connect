@@ -264,6 +264,18 @@ class IntegrationTestTierFields(IntegrationTestCase):
 
 		self.assertEqual(str(frappe.db.get_value("Partner", "_Test Listed Import LLP", "listed_on")), "2025-03-14")
 
+	def test_one_frappe_io_page_belongs_to_one_partner(self):
+		old_page = {"frappe_io_route": "partners/india/_test-old-page"}
+		self.addCleanup(remove_partners, "_Test Old Page LLP", "_Test Same Page LLP", "_Test No Page LLP")
+		save_imported_partner("_Test Old Page LLP", {**partner_values("_Test Old Page"), **old_page})
+
+		with self.assertRaises(frappe.UniqueValidationError):
+			save_imported_partner("_Test Same Page LLP", {**partner_values("_Test Same Page"), **old_page})
+
+		# Partners that never had a frappe.io page don't clash with each other.
+		insert_signup_partner("_Test No Page LLP")
+		self.assertIsNone(frappe.db.get_value("Partner", "_Test No Page LLP", "frappe_io_route"))
+
 	def test_currency_patch_fills_only_empty_currencies(self):
 		insert_signup_partner(INDIAN)
 		frappe.get_doc({"doctype": "Partner", **partner_values(KENYAN), "country": "Kenya"}).insert()
