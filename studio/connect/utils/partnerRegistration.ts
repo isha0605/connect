@@ -3,7 +3,7 @@
 // connect.api.partner.save_partner_application live here once. Each page decides what Proceed does
 // once the form is valid.
 
-import { computed, ref } from "vue"
+import { computed, ref, watch } from "vue"
 
 type Country = { name: string; isd?: string }
 type RegistrationDetails = {
@@ -33,6 +33,8 @@ export function usePartnerRegistration(countries: () => Country[]) {
 		partnershipCountry: ref(""),
 		partnershipState: ref(""),
 		partnershipEmail: ref(""),
+		// The server's refusal of the email (a customer's), shown under the field until it changes.
+		partnershipEmailTaken: ref(""),
 		partnershipContact: ref(""),
 		partnershipIsdCountry: ref(""),
 		partnershipIsdSearch: ref(""),
@@ -61,7 +63,7 @@ export function usePartnerRegistration(countries: () => Country[]) {
 			company_name: companyNameError(details.company_name),
 			country: details.registered_country ? "" : "Registered country is required.",
 			state: details.registered_country === "India" && !details.registered_state ? "Registered state is required." : "",
-			email: emailError(details.company_email),
+			email: emailError(details.company_email) || state.partnershipEmailTaken.value,
 			contact: contactError(state.partnershipContact.value, details.contact),
 		}
 	}
@@ -91,7 +93,25 @@ export function usePartnerRegistration(countries: () => Country[]) {
 		state.partnershipContact.value = rest.length ? rest.join("-") : isd
 	}
 
-	return { ...state, partnershipErrors, partnershipDetails, isPartnershipValid, fillPartnership }
+	watch(state.partnershipEmail, () => {
+		state.partnershipEmailTaken.value = ""
+	})
+
+	// A failed save or check: a customer's email shows under the email field, anything else
+	// under the form.
+	function showPartnershipError(error: any, fallback: string) {
+		if (error?.exc_type === "CustomerEmailError") state.partnershipEmailTaken.value = plainError(error, fallback)
+		else state.partnershipSubmitError.value = plainError(error, fallback)
+	}
+
+	return {
+		...state,
+		partnershipErrors,
+		partnershipDetails,
+		isPartnershipValid,
+		fillPartnership,
+		showPartnershipError,
+	}
 }
 
 // A logged-out visitor's details wait in this tab while they sign up; Partner Onboarding then

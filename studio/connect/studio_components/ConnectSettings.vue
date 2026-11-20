@@ -123,8 +123,9 @@ async function loadTeam() {
 		team.value = (rows || []).filter((m) => !m.is_removed)
 		me.value = context?.user || ""
 		isPartner.value = !!context?.partner
+		isPendingPartner.value = !!context?.partner && !context.partner.is_approved
 		isCustomer.value = !!context?.customer && !context?.partner
-		isPartnerAdmin.value = !!(context?.partner && context.partner.is_admin)
+		isPartnerAdmin.value = !!(context?.partner && context.partner.is_admin && context.partner.is_approved)
 		if (isPartnerAdmin.value) loadCrm()
 	} catch (e) {
 		team.value = []
@@ -136,6 +137,8 @@ async function loadTeam() {
 // One access level each, as a menu that saves on pick, and Remove sits in the ⋯ menu. A company
 // has one Owner: only they manage Admins and hand the company over. An Admin manages everyone else.
 const isPartner = ref(false)
+// A partner Frappe hasn't approved yet: no team invites, working hours or CRM until it is.
+const isPendingPartner = ref(false)
 const PARTNER_LEVELS = [
 	{ key: "Owner", icon: "lucide-crown", description: "Everything. The only one who manages Admins and hands over the firm" },
 	{ key: "Admin", icon: "lucide-shield", description: "Everything, including the team, audits, link requests and settings" },
@@ -522,7 +525,7 @@ const sections = computed(() =>
 	[
 		{ value: "profile", label: "Profile", icon: "lucide-user" },
 		{ value: "users", label: "Users", icon: "lucide-users" },
-		{ value: "hours", label: "Working hours", icon: "lucide-clock" },
+		!isPendingPartner.value && { value: "hours", label: "Working hours", icon: "lucide-clock" },
 		isCustomer.value && { value: "company", label: "Company details", icon: "lucide-building-2" },
 		isPartnerAdmin.value && { value: "crm", label: "CRM", icon: "lucide-link" },
 	].filter(Boolean),
@@ -564,6 +567,11 @@ function openSettings(event) {
 	loadCompany()
 	open.value = true
 }
+
+// A tab that's gone once the team loads (an unapproved partner's hours) falls back to Profile.
+watch(sections, (list) => {
+	if (!list.some((item) => item.value === tab.value)) tab.value = "profile"
+})
 
 onMounted(() => window.addEventListener("connect:open-settings", openSettings))
 onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSettings))
@@ -610,7 +618,7 @@ onBeforeUnmount(() => window.removeEventListener("connect:open-settings", openSe
 						<p v-if="heading.description" class="text-base text-ink-gray-6">{{ heading.description }}</p>
 					</div>
 					<Button
-						v-if="tab === 'users' && amAdmin"
+						v-if="tab === 'users' && amAdmin && !isPendingPartner"
 						class="shrink-0"
 						variant="solid"
 						label="Invite"

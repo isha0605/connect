@@ -258,6 +258,14 @@ def save_partner_application(details=None):
 	return save_partner_application(details=details)
 
 
+# Open to guests: "Become a partner" checks the email before a visitor signs up.
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def check_partner_registration(company_email=None):
+	from connect.partner.doctype.partner_application.partner_application import check_can_register_partner
+
+	check_can_register_partner(company_email)
+
+
 @frappe.whitelist(methods=["POST"])
 def submit_partner_application_for_approval():
 	from connect.partner.doctype.partner_application.partner_application import submit_for_approval

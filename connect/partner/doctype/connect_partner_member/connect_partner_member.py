@@ -124,6 +124,12 @@ class ConnectPartnerMember(CompanyMembership, Document):
 
 		self.validate_owner()
 
+	def check_can_invite(self, invited_by: str):
+		from connect.partner.doctype.partner.partner import check_partner_is_approved
+
+		check_partner_is_approved(self.partner)
+		super().check_can_invite(invited_by)
+
 	def get_access_of(self, user: str) -> str | None:
 		"""Someone who works for two firms acts for one at a time, so they act here only while
 		this firm is the one they work for now."""

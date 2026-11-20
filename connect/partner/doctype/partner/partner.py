@@ -239,6 +239,15 @@ PARTNER_FIELDS = [
 # Guests have no read on Partner, so the directory reads with frappe.get_all and these filters
 # decide what is public.
 VERIFIED = "Verified"
+
+
+def check_partner_is_approved(partner: str) -> None:
+	"""A team, a CRM and working hours wait for Frappe to approve the partner: until then only
+	its Owner works on the application."""
+	if frappe.db.get_value("Partner", partner, "verification_status") != VERIFIED:
+		frappe.throw(_("This is available once Frappe approves your partnership."), frappe.PermissionError)
+
+
 BASE_PARTNER_FILTERS = [
 	["Partner", "show_in_website", "=", 1],
 	["Partner", "enabled", "=", 1],

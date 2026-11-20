@@ -8,7 +8,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from connect.api.auth import send_code, verify_code
-from connect.auth.accounts import is_own_path, landing_page
+from connect.auth.accounts import CustomerEmailError, is_own_path, landing_page
 from connect.auth.email_code import EmailCode, EmailCodeError
 from connect.partner.doctype.partner.partner import VERIFIED
 from connect.partner.doctype.partner.test_partner import make_partner
@@ -160,6 +160,23 @@ class IntegrationTestEmailCodeSignIn(IntegrationTestCase):
 		verify_code(email, self.code_sent())
 		self.assertTrue(frappe.db.exists("User", email))
 		self.assertFalse(frappe.db.exists("Customer Team Member", {"user": email}))
+
+	def test_a_customer_email_cannot_sign_up_as_a_partner(self):
+		email = self.known_user(new_email("customer"))
+		company = f"_Test Auth Customer {frappe.generate_hash(length=6)}"
+		frappe.get_doc({"doctype": "Customer", "customer_name": company}).insert(ignore_permissions=True)
+		frappe.get_doc({"doctype": "Customer Team Member", "customer": company, "user": email}).insert(
+			ignore_permissions=True
+		)
+		self.sendmail.reset_mock()  # joining the team emailed an invitation
+
+		with self.assertRaises(CustomerEmailError):
+			send_code(email, flow="partner")
+		self.sendmail.assert_not_called()
+
+		# The same customer still signs in as a buyer.
+		send_code(email)
+		self.sendmail.assert_called_once()
 
 	def test_a_company_already_here_is_refused(self):
 		company = f"_Test Auth Taken {frappe.generate_hash(length=6)}"

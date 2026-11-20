@@ -41,10 +41,10 @@ const SELECT_OPTIONS = {
 	// -- connect's doctype diverged from Press's Team.employee_range etc. free-text ranges, and the
 	// server rejects a value that isn't one of the doctype's declared options.
 	employee_range: rangeOptions("1-10", "11-50", "51-200", "201-500", "500+"),
-	certified_employees_range: rangeOptions("0", "1-2", "3-5", "6-10", "10+"),
-	customer_count_range: rangeOptions("0-5", "6-20", "21-50", "51+"),
-	erpnext_customer_count_range: rangeOptions("0-5", "6-20", "21-50", "51+"),
-	erp_implementations_range: rangeOptions("0-5", "6-20", "21-50", "51+"),
+	certified_employees_range: rangeOptions("0", "1-5", "6-20", "21+"),
+	customer_count_range: rangeOptions("1-10", "11-50", "51-200", "201+"),
+	erpnext_customer_count_range: rangeOptions("1-10", "11-50", "51-200", "201+"),
+	erp_implementations_range: rangeOptions("1-10", "11-50", "51-200", "201+"),
 	verticals_served: rangeOptions(
 		"Manufacturing",
 		"Retail",
@@ -473,9 +473,7 @@ export default function setup(context) {
 					partnershipRegistered.value = true
 				}
 			})
-			.catch((e) => {
-				partnershipSubmitError.value = errorMessage(e, "Could not save your registration.")
-			})
+			.catch((e) => registration.showPartnershipError(e, "Could not save your registration."))
 			.finally(() => {
 				partnershipSaving.value = false
 			})
@@ -513,6 +511,11 @@ export default function setup(context) {
 	const companyInfoSaving = ref(false)
 	const uploadingLogo = ref(false)
 	const uploadingCertificate = ref(false)
+	// Percent uploaded, shown on the upload buttons as Press does.
+	const logoProgress = ref(0)
+	const certificateProgress = ref(0)
+	// A failed save stays in the dialog, beside its buttons.
+	const companyInfoSaveError = ref("")
 	// A ref, not reactive(): Studio writes nested v-model paths ("draft.address") only into refs.
 	const draft = ref({})
 
@@ -528,6 +531,7 @@ export default function setup(context) {
 		draft.value.agreed_to_partnership_agreement = !!doc.agreed_to_partnership_agreement
 		companyInfoStep.value = 0
 		companyInfoSubmitted.value = [false, false, false]
+		companyInfoSaveError.value = ""
 		companyInfoOpen.value = true
 	}
 
@@ -598,13 +602,19 @@ export default function setup(context) {
 			return
 		}
 		companyInfoSaving.value = true
-		call(`${API}.save_partner_application`, { details: { ...draft.value } })
+		companyInfoSaveError.value = ""
+		// Verticals is a multi-select in the form but one comma-separated text field on the
+		// application, as openCompanyInfo splits it.
+		const details = { ...draft.value, verticals_served: [].concat(draft.value.verticals_served || []).join(", ") }
+		call(`${API}.save_partner_application`, { details })
 			.then(() => Promise.all([reloadApplication(), loadMRRStatus()]))
 			.then(() => {
 				toast.success("Company details updated")
 				companyInfoOpen.value = false
 			})
-			.catch((e) => toast.error(errorMessage(e, "Could not save company details")))
+			.catch((e) => {
+				companyInfoSaveError.value = errorMessage(e, "Could not save company details")
+			})
 			.finally(() => {
 				companyInfoSaving.value = false
 			})
@@ -651,14 +661,15 @@ export default function setup(context) {
 		return (app() && app().registered_country) === "India" ? "₹10,000" : "$100"
 	}
 
-	function uploadDraftFile(field, file, isPrivate, maxBytes, uploadingRef) {
+	function uploadDraftFile(field, file, isPrivate, maxBytes, uploadingRef, progressRef) {
 		if (file.size > maxBytes) {
 			toast.error(`File size must be under ${maxBytes / (1024 * 1024)} MB.`)
 			return
 		}
 		uploadingRef.value = true
+		progressRef.value = 0
 		useFileUpload()
-			.upload(file, { private: isPrivate })
+			.upload(file, { private: isPrivate, onProgress: ({ percent }) => (progressRef.value = Math.round(percent)) })
 			.then((uploaded) => {
 				draft.value[field] = uploaded.file_url || ""
 			})
@@ -669,22 +680,22 @@ export default function setup(context) {
 	}
 
 	function uploadLogo() {
-		pickFile("image/*", (file) => uploadDraftFile("company_logo", file, false, 5 * 1024 * 1024, uploadingLogo))
+		pickFile("image/*", (file) => uploadDraftFile("company_logo", file, false, 5 * 1024 * 1024, uploadingLogo, logoProgress))
 	}
 
 	function uploadCertificate() {
 		pickFile("application/pdf,image/*", (file) =>
-			uploadDraftFile("incorporation_certificate", file, true, 10 * 1024 * 1024, uploadingCertificate),
+			uploadDraftFile("incorporation_certificate", file, true, 10 * 1024 * 1024, uploadingCertificate, certificateProgress),
 		)
 	}
 
 	function logoButtonLabel() {
-		if (uploadingLogo.value) return "Uploading..."
+		if (uploadingLogo.value) return `Uploading ${logoProgress.value}%`
 		return draft.value.company_logo ? "Replace logo" : "Upload logo"
 	}
 
 	function certificateButtonLabel() {
-		if (uploadingCertificate.value) return "Uploading..."
+		if (uploadingCertificate.value) return `Uploading ${certificateProgress.value}%`
 		return draft.value.incorporation_certificate ? "Replace document" : "Attach document"
 	}
 
@@ -846,6 +857,7 @@ export default function setup(context) {
 		companyInfoOpen,
 		companyInfoStep,
 		companyInfoSaving,
+		companyInfoSaveError,
 		draft,
 		openCompanyInfo,
 		companyInfoTitle,

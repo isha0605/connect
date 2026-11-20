@@ -39,6 +39,8 @@ def send_sign_in_code(email, details=None):
 	if user and not user.enabled:
 		send_disabled_notice(email)
 	elif user:
+		if (details or {}).get("flow") == PARTNER:
+			check_email_is_not_a_customer(email)
 		return EmailCode(email).send(_("{0} is your Frappe Connect sign-in code"), _("Sign in to Frappe Connect"))
 	else:
 		if (details or {}).get("company_name"):
@@ -164,6 +166,22 @@ def check_company_is_free(company_name):
 			_("{0} is already registered. Ask your team admin to add you instead.").format(company_name),
 			frappe.ValidationError,
 		)
+
+
+class CustomerEmailError(frappe.ValidationError):
+	"""A partner's email that is already on a customer's team."""
+
+
+def check_email_is_not_a_customer(email):
+	"""An account works on one side of the marketplace: a customer's email can't register or
+	sign up a partner. Plain text, since the forms show it as text."""
+	if is_customer_email(email):
+		frappe.throw(_("This email is already registered as a customer. Use another email."), CustomerEmailError)
+
+
+def is_customer_email(email) -> bool:
+	email = (email or "").strip().lower()
+	return bool(email) and bool(frappe.db.exists("Customer Team Member", {"user": email, "is_removed": 0}))
 
 
 def enforce_signup_limit():

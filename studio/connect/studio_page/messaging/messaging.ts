@@ -4,7 +4,7 @@ import { avatarTheme } from "@app/utils/avatarTheme"
 import { installScrollFade } from "@app/utils/scrollFade"
 import { goToSignIn, signOut } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
-import { plainError, usePartnerRegistration } from "@app/utils/partnerRegistration"
+import { usePartnerRegistration } from "@app/utils/partnerRegistration"
 
 // connect.messaging.customer_identity.ANONYMOUS_USER: who the partner side sees in place of an
 // anonymous customer's people.
@@ -3688,9 +3688,7 @@ export default function setup(context) {
 					registration.partnershipRegistered.value = true
 				}
 			})
-			.catch((error) => {
-				registration.partnershipSubmitError.value = plainError(error, "Could not save your registration.")
-			})
+			.catch((error) => registration.showPartnershipError(error, "Could not save your registration."))
 			.finally(() => {
 				registration.partnershipSaving.value = false
 			})

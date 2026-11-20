@@ -22,11 +22,13 @@ CUSTOMER = "_Test Access Customer"
 
 
 def make_partner(partner_name):
+	"""An approved partner: only those invite a team."""
 	if not frappe.db.exists("Partner", partner_name):
 		tier = "Gold"
 		frappe.get_doc({"doctype": "Partner", "partner_name": partner_name, "tier": tier, "country": "India"}).insert(
 			ignore_permissions=True
 		)
+	frappe.db.set_value("Partner", partner_name, "verification_status", "Verified")
 
 
 def make_member(partner, email, access="Member"):
@@ -131,6 +133,13 @@ class IntegrationTestConnectPartnerMember(IntegrationTestCase):
 		member = frappe.get_doc("Connect Partner Member", {"partner": PARTNER, "user": "access.new@example.test"})
 		self.assertEqual(member.access, "Admin")
 		self.assertEqual(frappe.db.get_value("User", "access.new@example.test", "first_name"), "New Person")
+
+	def test_a_partner_frappe_has_not_approved_cannot_invite(self):
+		frappe.db.set_value("Partner", PARTNER, "verification_status", "Pending Review")
+		frappe.set_user(OWNER)
+		with self.assertRaisesRegex(frappe.PermissionError, "once Frappe approves"):
+			add_team_member("access.early@example.test", access_level="Member")
+		self.assertFalse(frappe.db.exists("Connect Partner Member", {"user": "access.early@example.test"}))
 
 	def test_an_invite_cannot_make_an_owner_and_only_the_owner_adds_an_admin(self):
 		frappe.set_user(OWNER)

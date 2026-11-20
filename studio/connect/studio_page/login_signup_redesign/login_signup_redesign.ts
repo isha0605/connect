@@ -242,15 +242,30 @@ export default function setup(context) {
 		showScreen("signup")
 	}
 
-	// Proceed on the "Become a partner" form: Partner Onboarding registers the details, straight
-	// away for someone signed in, after signing up for anyone else.
+	// Proceed on the "Become a partner" form: once the server accepts the email, Partner Onboarding
+	// registers the details, straight away for someone signed in, after signing up for anyone else.
 	function proceedPartnership() {
 		if (!registration.isPartnershipValid()) return
-		stashRegistration(registration.partnershipDetails())
+		const details = registration.partnershipDetails()
+		registration.partnershipSaving.value = true
+		call("connect.api.partner.check_partner_registration", { company_email: details.company_email })
+			.then(() => goToPartnerOnboarding(details))
+			.catch((error) => registration.showPartnershipError(error, "Could not check your registration."))
+			.finally(() => {
+				registration.partnershipSaving.value = false
+			})
+	}
+
+	function goToPartnerOnboarding(details) {
+		stashRegistration(details)
 		const target = window.location.pathname.replace(/[^/]*\/?$/, "partner-onboarding")
 		const user = context.myContext.data?.user
-		if (user && user !== "Guest") window.location.href = target
-		else startPartnerSignup(target)
+		if (user && user !== "Guest") {
+			window.location.href = target
+			return
+		}
+		toast.info("Create an account to continue your partner registration.")
+		startPartnerSignup(target)
 	}
 
 	// frappe-ui's TextInput puts `class` and `style` on its wrapper div and forwards every

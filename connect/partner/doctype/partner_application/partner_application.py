@@ -6,6 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, now_datetime
 
+from connect.auth.accounts import check_email_is_not_a_customer, is_customer_email
 from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_membership
 from connect.partner.doctype.partner.partner import VERIFIED
 from connect.permissions import _is_partner_admin
@@ -55,6 +56,10 @@ _REQUIRED_PROFILE_FIELDS = (
 
 class PartnerApplication(Document):
 	def validate(self):
+		# Only a changed email: applications from before this check keep saving.
+		if self.has_value_changed("company_email"):
+			check_email_is_not_a_customer(self.company_email)
+
 		if self.registered_country != "India":
 			self.registered_state = None
 			return
@@ -231,6 +236,8 @@ def _partner_to_apply_for(details: frappe._dict) -> str:
 def _register_partner(details: frappe._dict) -> str:
 	"""A new partner, owned by the caller. It stays off the directory until its application is
 	approved (verification_status starts at Pending Review)."""
+	check_can_register_partner(details.company_email)
+
 	# A new applicant has no partner yet, so no permission can let them create one or join it.
 	partner = frappe.get_doc(
 		{
@@ -244,6 +251,13 @@ def _register_partner(details: frappe._dict) -> str:
 		{"doctype": "Connect Partner Member", "partner": partner.name, "user": frappe.session.user, "access": "Owner"}
 	).insert(ignore_permissions=True)
 	return partner.name
+
+
+def check_can_register_partner(company_email: str) -> None:
+	"""A customer can't become a partner, nor register one with a customer's email."""
+	if is_customer_email(frappe.session.user):
+		frappe.throw(_("You're signed in as a customer, and a customer account can't become a partner."))
+	check_email_is_not_a_customer(company_email)
 
 
 @frappe.whitelist(methods=["POST"])

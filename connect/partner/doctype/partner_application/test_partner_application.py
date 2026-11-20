@@ -6,7 +6,9 @@ from frappe.tests import IntegrationTestCase
 
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
 from connect.partner.doctype.certificate_application.test_certificate_application import make_staff_user
+from connect.auth.accounts import CustomerEmailError
 from connect.partner.doctype.partner_application.partner_application import (
+	check_can_register_partner,
 	get_mrr_status,
 	save_partner_application,
 	unregister,
@@ -25,6 +27,7 @@ ADMIN = "unregister.admin@example.test"
 MEMBER = "unregister.member@example.test"
 APPLICANT = "new.applicant@example.test"
 NEW_COMPANY = "_Test Newly Registered Partner"
+REGISTER_BUYER = "register.buyer@example.test"
 
 
 class TestPartnerApplicationMRR(IntegrationTestCase):
@@ -212,13 +215,13 @@ class TestRegisterPartner(IntegrationTestCase):
 				ignore_permissions=True
 			)
 
-	def register(self, company_name=NEW_COMPANY):
+	def register(self, company_name=NEW_COMPANY, company_email="hello@newpartner.example.test"):
 		frappe.set_user(APPLICANT)
 		return save_partner_application(
 			{
 				"company_name": company_name,
 				"registered_country": "Germany",
-				"company_email": "hello@newpartner.example.test",
+				"company_email": company_email,
 				"contact": "+49-1234567890",
 			}
 		)
@@ -245,3 +248,21 @@ class TestRegisterPartner(IntegrationTestCase):
 		with self.assertRaises(frappe.DuplicateEntryError):
 			self.register(company_name=PARTNER)
 		self.assertFalse(frappe.db.exists("Connect Partner Member", {"user": APPLICANT}))
+
+	def test_a_customer_email_cannot_register_a_partner(self):
+		make_buyer(REGISTER_BUYER, "_Test Register Buyer Co")
+		with self.assertRaises(CustomerEmailError):
+			self.register(company_email=REGISTER_BUYER)
+		self.assertFalse(frappe.db.exists("Partner", NEW_COMPANY))
+
+	def test_a_signed_in_customer_cannot_become_a_partner(self):
+		make_buyer(REGISTER_BUYER, "_Test Register Buyer Co")
+		frappe.set_user(REGISTER_BUYER)
+		with self.assertRaisesRegex(frappe.ValidationError, "signed in as a customer"):
+			check_can_register_partner("hello@newpartner.example.test")
+
+	def test_a_removed_team_member_can_become_a_partner(self):
+		make_buyer(REGISTER_BUYER, "_Test Register Buyer Co")
+		frappe.db.set_value("Customer Team Member", {"user": REGISTER_BUYER}, "is_removed", 1)
+		self.register(company_email=REGISTER_BUYER)
+		self.assertTrue(frappe.db.exists("Partner", NEW_COMPANY))

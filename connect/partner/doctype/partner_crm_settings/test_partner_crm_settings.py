@@ -27,6 +27,7 @@ from connect.crm_integration import (
 from connect.crm_lead_owner import sync_lead_owner
 from connect.crm_reply import _fetch_crm_attachments, reply_author
 from connect.messaging.doctype.connect_thread.connect_thread import ensure_thread_member
+from connect.partner.doctype.partner_crm_settings.partner_crm_settings import get_my_settings
 
 WEBHOOK_MODULE = "connect.api.crm_webhook"
 REPLY_MODULE = "connect.crm_reply"
@@ -70,6 +71,12 @@ class IntegrationTestPartnerCRMSettings(IntegrationTestCase):
 		# Each test replays a delivery, and receive_crm_reply drops one whose Communication it has
 		# already synced — so last test's messages have to go before the next one runs.
 		drop_test_messages()
+
+	def test_a_partner_frappe_has_not_approved_cannot_open_its_crm_settings(self):
+		frappe.set_user(self.admin)
+		self.addCleanup(frappe.set_user, "Administrator")
+		with self.assertRaisesRegex(frappe.PermissionError, "once Frappe approves"):
+			get_my_settings()
 
 	def _deliver(self, communication, content="", attachments=None, failed=None, raises=False, enqueue=None):
 		"""Drives the webhook the way the partner's CRM does, without a live CRM to fetch from.

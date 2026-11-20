@@ -6,7 +6,10 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import get_time
 
-from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_partners
+from connect.partner.doctype.connect_partner_member.connect_partner_member import (
+	get_current_membership,
+	get_current_partners,
+)
 
 WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 AFTER_HOURS_BEHAVIORS = ("Do nothing", "Suggest sending silently", "Always send silently")
@@ -18,6 +21,15 @@ class ConnectUserSettings(Document):
 			frappe.throw(_("Your work day must end after it starts"))
 		if not any(self.get(day) for day in WEEKDAYS):
 			frappe.throw(_("Pick at least one working day"))
+
+
+def _check_partner_is_approved(user):
+	"""Someone at a partner sets working hours once Frappe approves it; customers always can."""
+	from connect.partner.doctype.partner.partner import check_partner_is_approved
+
+	membership = get_current_membership(user)
+	if membership:
+		check_partner_is_approved(membership.partner)
 
 
 def _hhmm(value):
@@ -57,6 +69,7 @@ def get_settings_for_users(users):
 def update_my_settings(work_start, work_end, work_days, after_hours_behavior):
 	"""Saves the caller's own settings, keyed to the session user so nobody can change someone else's."""
 	user = frappe.session.user
+	_check_partner_is_approved(user)
 	work_days = frappe.parse_json(work_days) if isinstance(work_days, str) else work_days
 	if after_hours_behavior not in AFTER_HOURS_BEHAVIORS:
 		frappe.throw(_("Unknown after-hours behavior"))
