@@ -9,7 +9,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.query_builder.functions import Max
-from frappe.utils import cint, flt, now_datetime, today
+from frappe.utils import cint, flt, getdate, now_datetime, today
 from frappe.utils.data import cast
 
 from connect.partner.industries import (
@@ -935,9 +935,9 @@ def get_partner_document(partner):
 	for fieldname in PRIVATE_PROFILE_FIELDS:
 		doc.pop(fieldname, None)
 	# computed, not stored — "founded_years_ago" would silently go stale every
-	# year if we persisted it instead of deriving it from year_founded on read
+	# year if we persisted it instead of deriving it from foundation_date on read
 	doc["founded_years_ago"] = (
-		now_datetime().year - doc["year_founded"] if doc.get("year_founded") else None
+		now_datetime().year - getdate(doc["foundation_date"]).year if doc.get("foundation_date") else None
 	)
 	# Frappe sets pack hours, the same for every partner, so the pricing card reads them from Starter Pack
 	doc["starter_pack_hours"] = get_hours_range() if doc.get("starter_pack") else None
@@ -1114,14 +1114,14 @@ _PROFILE_SIMPLE_FIELDS = (
 	# and countries_served, counted from served_countries. rollouts, sites_deployed, certified_experts
 	# and references_count come from frappe.io's import, so partners can't overwrite them.
 	"tagline", "description", "country", "city", "website",
-	"year_founded", "hourly_rate", "typical_project_size", "proposal_timeline",
+	"foundation_date", "hourly_rate", "typical_project_size", "proposal_timeline",
 	"demo_available", "logo_position_x", "logo_position_y", "phone", "team_size", "journey_blog_url",
 	"logo", "logo_icon", "why_choose_them", "how_we_work", "successful_implementation", "origin_story",
 )
 
 # What the partner's Profile builder edits, beyond the lists below.
 _BUILDER_FIELDS = (
-	"tagline", "website", "phone", "journey_blog_url", "logo", "logo_icon", "description", "year_founded",
+	"tagline", "website", "phone", "journey_blog_url", "logo", "logo_icon", "description", "foundation_date",
 	"team_size", "certs_erpnext", "certs_frappe_framework", "city", "country",
 	"hourly_rate", "why_choose_them", "how_we_work", "successful_implementation", "origin_story",
 )
@@ -1238,7 +1238,7 @@ def _check_gallery_size(doc, live) -> None:
 
 def update_my_partner_profile(
 	tagline=None, description=None, country=None, city=None,
-	website=None, year_founded=None,
+	website=None, foundation_date=None,
 	hourly_rate=None,
 	typical_project_size=None, proposal_timeline=None,
 	demo_available=None,
@@ -1259,7 +1259,7 @@ def update_my_partner_profile(
 	# Pack prices, the imported numbers) are not parameters; frappe.call drops what a caller sends for them.
 	changes = dict(
 		tagline=tagline, description=description, country=country,
-		city=city, website=website, year_founded=year_founded,
+		city=city, website=website, foundation_date=foundation_date,
 		hourly_rate=hourly_rate, typical_project_size=typical_project_size,
 		proposal_timeline=proposal_timeline,
 		demo_available=demo_available,

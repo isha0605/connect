@@ -20,7 +20,7 @@ const DRAFT_FIELDS = [
 	"logo",
 	"logo_icon",
 	"description",
-	"year_founded",
+	"foundation_date",
 	"team_size",
 	"city",
 	"country",
@@ -39,7 +39,7 @@ export const SAMPLE_PROFILE = {
 	website: "https://www.example.com",
 	phone: "+91 98400 00000",
 	description: "Sample Partner builds custom ERPNext solutions for businesses of all sizes.",
-	year_founded: 2015,
+	foundation_date: "2015-01-01",
 	team_size: "51-200",
 	certs_erpnext: 8,
 	certs_frappe_framework: 3,
@@ -203,8 +203,8 @@ export function overLimitPaths(draft, saved) {
 export function draftProblem(draft, saved) {
 	const over = overLimitPaths(draft, saved)[0]
 	if (over) return `Shorten ${LIMITS[over].label} to ${LIMITS[over].limit} characters before saving.`
-	const year = String(draft.year_founded || "").trim()
-	if (year && !/^\d{4}$/.test(year)) return "Enter the year founded as four digits, like 2015."
+	const founded = String(draft.foundation_date || "").trim()
+	if (founded && !/^\d{4}-\d{2}-\d{2}$/.test(founded)) return "Enter the foundation date as a date, like 2015-04-01."
 	if (Number(draft.hourly_rate) < 0) return "Hourly rate can't be negative."
 	if ((draft.industries || []).length > MAX_INDUSTRIES) return `Pick up to ${MAX_INDUSTRIES} industries.`
 	return ""
@@ -214,8 +214,9 @@ export function toSavePayload(draft) {
 	const { apps, migrations, industries, delivery_options, founder, photos, offices, success_stories, ...fields } = draft
 	return {
 		...fields,
-		// number fields: an empty box saves as 0, which the profile shows as unset
-		year_founded: String(fields.year_founded || "").trim() || 0,
+		// an empty date saves as "" (null would be dropped and keep the old date); an empty number box
+		// saves as 0, which the profile shows as unset
+		foundation_date: String(fields.foundation_date || "").trim(),
 		hourly_rate: fields.hourly_rate || 0,
 		apps: JSON.stringify(apps),
 		migrations: JSON.stringify(migrations),
