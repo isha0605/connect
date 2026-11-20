@@ -39,6 +39,17 @@
   "listing_review",
   "keep_listing",
   "keep_listing_reason",
+  "section_break_contract",
+  "contract_start_date",
+  "contract_end_date",
+  "contract_end_date_as_per_payment",
+  "contract_renewed",
+  "commitment_scrutiny_date",
+  "signup_date",
+  "column_break_contract",
+  "apply_legacy_contract",
+  "legacy_partner_type",
+  "legacy_contract_end_date",
   "section_break_features",
   "features",
   "section_break_managers",
@@ -399,6 +410,88 @@
    "fieldtype": "Small Text",
    "label": "Keep Listing Reason",
    "mandatory_depends_on": "keep_listing",
+   "permlevel": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_contract",
+   "fieldtype": "Section Break",
+   "label": "Contract"
+  },
+  {
+   "description": "Copied from frappe.io. Frappe Cloud will update it when the partner renews.",
+   "fieldname": "contract_start_date",
+   "fieldtype": "Date",
+   "label": "Contract Start Date",
+   "no_copy": 1,
+   "permlevel": 1
+  },
+  {
+   "description": "Copied from frappe.io. Connect does not disable a partner after this date yet.",
+   "fieldname": "contract_end_date",
+   "fieldtype": "Date",
+   "label": "Contract End Date",
+   "no_copy": 1,
+   "permlevel": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "contract_end_date_as_per_payment",
+   "fieldtype": "Date",
+   "label": "Contract End Date as per Payment",
+   "no_copy": 1,
+   "permlevel": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "contract_renewed",
+   "fieldtype": "Check",
+   "label": "Contract Renewed",
+   "no_copy": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "commitment_scrutiny_date",
+   "fieldtype": "Date",
+   "label": "Commitment Scrutiny Date",
+   "no_copy": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "signup_date",
+   "fieldtype": "Date",
+   "label": "Signup Date",
+   "no_copy": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_contract",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "The partner is on an older contract. frappe.io's daily tier review skips these partners.",
+   "fieldname": "apply_legacy_contract",
+   "fieldtype": "Check",
+   "label": "Apply Legacy Contract",
+   "no_copy": 1,
+   "permlevel": 1
+  },
+  {
+   "depends_on": "apply_legacy_contract",
+   "fieldname": "legacy_partner_type",
+   "fieldtype": "Link",
+   "label": "Legacy Partner Type",
+   "no_copy": 1,
+   "options": "Partner Tier",
+   "permlevel": 1
+  },
+  {
+   "depends_on": "apply_legacy_contract",
+   "fieldname": "legacy_contract_end_date",
+   "fieldtype": "Date",
+   "label": "Legacy Contract End Date",
+   "no_copy": 1,
    "permlevel": 1
   },
   {
@@ -977,7 +1070,7 @@
    "link_fieldname": "partner"
   }
  ],
- "modified": "2026-11-21 15:00:00.000000",
+ "modified": "2026-11-21 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Partner",
  "name": "Partner",

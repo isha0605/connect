@@ -264,6 +264,9 @@ PRIVATE_PROFILE_FIELDS = (
 	"tier_changed_on", "reviewed_tier", "keep_tier", "keep_tier_reason", "listed_on", "listing_review",
 	"keep_listing", "keep_listing_reason",
 	"frappe_crm_partner", "frappe_crm_sync_status", "frappe_crm_sync_error",
+	"contract_start_date", "contract_end_date", "contract_end_date_as_per_payment", "contract_renewed",
+	"commitment_scrutiny_date", "signup_date", "apply_legacy_contract", "legacy_partner_type",
+	"legacy_contract_end_date",
 )
 
 
