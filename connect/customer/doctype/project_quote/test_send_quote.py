@@ -76,6 +76,18 @@ class IntegrationTestSendQuote(IntegrationTestCase):
 		# whoever quotes is in the thread, to answer the customer's questions
 		self.assertTrue(frappe.db.exists("Connect Thread Member", {"thread": self.thread, "user": SALES, "is_removed": 0}))
 
+	def test_a_quote_is_in_its_partners_currency(self):
+		frappe.db.set_value("Partner", OTHER_PARTNER, "currency", "USD")
+		customer = frappe.db.get_value("Customer Team Member", {"user": BUYER}, "customer")
+		project = frappe.get_doc(
+			{"doctype": "Customer Project", "project_name": "Dealer portal", "status": "Shared", "user": BUYER}
+		).insert(ignore_permissions=True)
+		send_brief(project, customer, OTHER_PARTNER)
+
+		quote = frappe.db.get_value("Project Quote", {"customer_project": project.name}, "currency")
+		self.assertEqual(quote, "USD")
+		self.assertEqual(frappe.db.get_value("Project Quote", self.quote, "currency"), "INR")
+
 	def test_a_quote_changes_until_the_customer_answers(self):
 		first = self.quote_as(OWNER)
 		second = self.quote_as(OWNER, amount=350000, weeks=8, note="")
