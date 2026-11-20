@@ -16,6 +16,7 @@ from connect.partner.doctype.partner.partner import (
 	search_partners,
 )
 from connect.partner.doctype.partner_review.partner_review import list_partner_reviews
+from connect.patches.move_partner_year_founded_to_foundation_date import execute as move_year_founded
 from connect.patches.rename_partner_is_featured_to_show_in_website import execute as rename_is_featured
 from connect.patches.set_partner_listed_on import execute as set_partner_listed_on
 from connect.patches.set_partner_target_currency import execute as set_partner_target_currency
@@ -190,6 +191,47 @@ class IntegrationTestShowInWebsitePatch(IntegrationTestCase):
 
 		self.assertEqual(frappe.db.get_value("Partner", "_Test Patch Listed LLP", "show_in_website"), 1)
 		self.assertFalse(frappe.db.has_column("Partner", "is_featured"))
+
+
+FOUNDED = "_Test Founded Partner LLP"
+
+
+class IntegrationTestFoundationDate(IntegrationTestCase):
+	"""A partner keeps the full date it was founded, and shows how many years ago that was."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		remove_partners(FOUNDED)
+		save_imported_partner(FOUNDED, partner_values("_Test Founded Partner"))
+		self.addCleanup(remove_year_column_and_partner)
+
+	def test_years_ago_comes_from_the_foundation_date(self):
+		frappe.db.set_value("Partner", FOUNDED, "foundation_date", f"{getdate().year - 12}-06-30")
+
+		self.assertEqual(get_partner_document(FOUNDED)["founded_years_ago"], 12)
+
+	def test_patch_moves_the_year_to_a_date_and_drops_the_old_column(self):
+		frappe.db.sql_ddl("alter table `tabPartner` add column `year_founded` int(11) not null default 0")
+		frappe.client_cache.delete_value("table_columns::tabPartner")
+		frappe.db.sql("update `tabPartner` set year_founded = 2015 where name = %s", FOUNDED)
+		draft = frappe.as_json({"tagline": "Drafted", "year_founded": 2019})
+		frappe.db.set_value("Partner", FOUNDED, "profile_draft", draft)
+
+		move_year_founded()
+
+		self.assertEqual(frappe.db.get_value("Partner", FOUNDED, "foundation_date"), getdate("2015-01-01"))
+		moved_draft = frappe.parse_json(frappe.db.get_value("Partner", FOUNDED, "profile_draft"))
+		self.assertEqual(moved_draft, {"tagline": "Drafted", "foundation_date": "2019-01-01"})
+		self.assertFalse(frappe.db.has_column("Partner", "year_founded"))
+
+
+def remove_year_column_and_partner():
+	# Adding and dropping a column commits, so this test cleans up and commits by itself.
+	if frappe.db.has_column("Partner", "year_founded"):
+		frappe.db.sql_ddl("alter table `tabPartner` drop column `year_founded`")
+		frappe.client_cache.delete_value("table_columns::tabPartner")
+	remove_partners(FOUNDED)
+	frappe.db.commit()  # nosemgrep: the DDL above already committed this test's rows
 
 
 SERVING = "_Test Serving Partner LLP"

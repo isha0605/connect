@@ -231,7 +231,7 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 	def save_listing_section(self, **changes):
 		"""Saves like a Listing dialog: the whole profile as the page shows it, with `changes`."""
 		profile = get_my_profile(with_draft=True)
-		fields = ("tagline", "description", "website", "year_founded", "hourly_rate")
+		fields = ("tagline", "description", "website", "foundation_date", "hourly_rate")
 		payload = {field: profile[field] for field in fields}
 		for field in ("apps", "migrations", "industries", "founder", "photos", "offices", "success_stories"):
 			payload[field] = frappe.as_json(profile[field])

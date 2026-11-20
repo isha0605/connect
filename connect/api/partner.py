@@ -162,7 +162,7 @@ def upload_partner_asset():
 @frappe.whitelist()
 def update_my_partner_profile(
 	tagline=None, description=None, country=None, city=None,
-	website=None, year_founded=None,
+	website=None, foundation_date=None,
 	hourly_rate=None,
 	typical_project_size=None, proposal_timeline=None,
 	demo_available=None,
@@ -176,7 +176,7 @@ def update_my_partner_profile(
 	from connect.partner.doctype.partner.partner import update_my_partner_profile
 	return update_my_partner_profile(
 		tagline=tagline, description=description, country=country,
-		city=city, website=website, year_founded=year_founded,
+		city=city, website=website, foundation_date=foundation_date,
 		hourly_rate=hourly_rate, typical_project_size=typical_project_size,
 		proposal_timeline=proposal_timeline,
 		demo_available=demo_available,
