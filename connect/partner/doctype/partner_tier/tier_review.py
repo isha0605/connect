@@ -55,11 +55,14 @@ def is_applying_changes() -> bool:
 
 
 def review_partner_tiers() -> None:
-	"""Reviews every approved partner's tier. A partner that fails is logged and the rest carry on."""
+	"""Reviews every approved partner's tier. A partner that fails is logged and the rest carry on.
+	A partner on a legacy contract keeps the tier that contract gives it, as on frappe.io."""
 	ladder = TierLadder()
 	apply_changes = is_applying_changes()
 	partners = frappe.get_all(
-		"Partner", filters={"enabled": 1, "verification_status": VERIFIED}, fields=PARTNER_FIELDS
+		"Partner",
+		filters={"enabled": 1, "verification_status": VERIFIED, "apply_legacy_contract": 0},
+		fields=PARTNER_FIELDS,
 	)
 
 	for partner in partners:
