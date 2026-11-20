@@ -110,6 +110,15 @@ class TestTierReview(IntegrationTestCase):
 		self.assertEqual(frappe.db.get_value("Partner", PARTNER, "reviewed_tier"), "Entry")
 		self.assertIsNone(frappe.db.get_value("Partner", APPLYING, "reviewed_tier"))
 
+	def test_a_partner_on_a_legacy_contract_is_not_reviewed(self):
+		frappe.db.set_value("Partner", PARTNER, "apply_legacy_contract", 1)
+
+		review_partner_tiers()
+
+		partner = frappe.db.get_value("Partner", PARTNER, ["tier", "reviewed_tier"], as_dict=True)
+		self.assertEqual((partner.tier, partner.reviewed_tier), ("Silver", None))
+		self.assertFalse(tier_emails())
+
 
 def make_reviewed_partner(company_name, verification_status):
 	"""A Silver partner whose revenue was read today and came to nothing, with no certificates."""
