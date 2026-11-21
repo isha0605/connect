@@ -202,14 +202,21 @@ export default function setup(context) {
 		router.push(`/partner-profile-redesign/${encodeURIComponent(row.partner)}`)
 	}
 
-	// Message is on every row, so More holds Share details (until it's done) and Not interested.
+	// Message is on every row, so More holds the brochure, Share details (until it's done) and Not interested.
 	// On a narrow screen Message moves into More too.
 	function quoteMenu(row) {
 		return [
 			isNarrow.value && { label: "Message", icon: "lucide-message-square", onClick: () => readThread(row) },
+			row.brochure && { label: "Open brochure", icon: "lucide-file-text", onClick: () => openBrochure(row) },
 			row.status === "Quoted" && { label: "Share details", icon: "lucide-send", onClick: () => shareDetails(row) },
 			row.status !== "Not Interested" && { label: "Not interested", icon: "lucide-ban", onClick: () => notInterested(row) },
 		].filter(Boolean)
+	}
+
+	// The brochure the partner attached to their quote, in a new tab: it is a private file the
+	// customer can open as a member of the chat.
+	function openBrochure(row) {
+		window.open(row.brochure, "_blank", "noopener")
 	}
 
 	// ---- Hire: the shared dialog (HireDialog.vue) agrees the terms, then asks why them ----
