@@ -52,6 +52,7 @@ PARTNER_CARD_FIELDS = [
 	"city",
 	"country",
 	"hourly_rate",
+	"currency",
 	"rating",
 	"response_time_hours",
 ]

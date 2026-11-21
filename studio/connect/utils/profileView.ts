@@ -6,6 +6,7 @@
 // note speaks to the partner ("Add your founder…"); the partner's own Listing keeps the notes.
 
 import { computed, ref } from "vue"
+import { currencySymbol, hourlyRate } from "@app/utils/money"
 import {
 	DEFAULT_ANSWERS,
 	MIN_CLIENT_LOGOS,
@@ -60,7 +61,7 @@ export function useProfileView({ profile, stories, isEditing, selectedStoryIndus
 				p.framework_certified ? `${p.framework_certified} Framework` : "",
 			].filter(Boolean),
 			offices: p.offices || [],
-			rate: p.hourly_rate ? `From ₹${Number(p.hourly_rate).toLocaleString("en-IN")}/hr` : "Not added yet",
+			rate: p.hourly_rate ? hourlyRate(p.hourly_rate, p.currency) : "Not added yet",
 			industries: p.industry_badges || [],
 			// The partner's own picks, then the apps their success stories name on frappe.io.
 			apps: [...new Set([...(p.apps || []), ...(p.story_apps || [])])],
@@ -103,6 +104,8 @@ export function useProfileView({ profile, stories, isEditing, selectedStoryIndus
 		clientLogos: computed(() => clientLogoRow(stories.value)),
 		clientLogosNote,
 		details,
+		// Beside the rate box in the Listing editor: the partner types their rate in their currency.
+		rateSymbol: computed(() => currencySymbol(profile.value?.currency)),
 		founder: computed(() => profile.value?.founder || {}),
 		answers,
 		featureRows: computed(() => featureRows(profile.value?.features)),

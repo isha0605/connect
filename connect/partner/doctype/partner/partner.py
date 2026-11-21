@@ -231,7 +231,7 @@ def _normalize_multi(value):
 
 PARTNER_FIELDS = [
 	"name", "company_name", "logo", "logo_icon", "tagline", "tier", "specialist",
-	"rating", "country", "city", "successful_projects_count", "hourly_rate",
+	"rating", "country", "city", "successful_projects_count", "hourly_rate", "currency",
 	"response_time_hours",
 ]
 # The "is this partner visible at all" gate — combined as AND with whatever
@@ -256,13 +256,13 @@ BASE_PARTNER_FILTERS = [
 	["Partner", "verification_status", "=", VERIFIED],
 ]
 # What the public profile never shows: unpublished edits, Frappe-side flags, contact and account
-# details, and the partner's revenue and tier history.
+# details, and the partner's revenue and tier history. Their currency shows: the hourly rate is in it.
 PRIVATE_PROFILE_FIELDS = (
 	"profile_draft", "cloud_registration", "cloud_registration_sent_on", "show_in_website", "starter_pack_sequence",
 	"email", "contact_email",
 	# The Owner's own name: personal, so customers see only the company.
 	"partner_name",
-	"currency", "revenue_last_month", "revenue_this_month", "revenue_updated_on", "next_tier", "previous_tier",
+	"revenue_last_month", "revenue_this_month", "revenue_updated_on", "next_tier", "previous_tier",
 	"tier_changed_on", "reviewed_tier", "keep_tier", "keep_tier_reason", "listed_on", "listing_review",
 	"keep_listing", "keep_listing_reason",
 	"frappe_crm_partner", "frappe_crm_sync_status", "frappe_crm_sync_error",
@@ -1171,6 +1171,8 @@ def get_my_profile(with_draft=False) -> dict:
 	return {
 		"partner": doc.name,
 		"company_name": doc.company_name,
+		# set by Frappe from the country; the hourly rate is in it
+		"currency": doc.currency,
 		**{fieldname: doc.get(fieldname) for fieldname in _BUILDER_FIELDS},
 		"apps": [row.app for row in doc.apps],
 		"story_apps": apps_from_stories(stories),

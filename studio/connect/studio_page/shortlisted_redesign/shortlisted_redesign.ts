@@ -3,6 +3,7 @@
 // sign in.
 
 import { carryGuestShortlist } from "@app/utils/guestShortlist"
+import { hourlyRate } from "@app/utils/money"
 import { partnerConnect } from "@app/utils/partnerConnect"
 
 export default function setup(context) {
@@ -13,5 +14,6 @@ export default function setup(context) {
 			context.myShortlistFull.reload()
 		},
 	})
-	return partnerConnect(context)
+	// The cards show each partner's rate in their own currency.
+	return { ...partnerConnect(context), hourlyRate }
 }

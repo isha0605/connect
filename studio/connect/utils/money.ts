@@ -25,6 +25,11 @@ export function formatMoney(amount, currency = DEFAULT_CURRENCY) {
 	return format.format(amount || 0)
 }
 
+// A partner's hourly rate, in their currency: "From ₹2,000/hr" or "From $25/hr".
+export function hourlyRate(amount, currency) {
+	return `From ${formatMoney(amount, currency)}/hr`
+}
+
 // The example in a quote box: about the same project in either currency.
 const EXAMPLE_QUOTES = { INR: 400000, USD: 5000 }
 

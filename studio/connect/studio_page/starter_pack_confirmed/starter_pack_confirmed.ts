@@ -7,6 +7,7 @@ import { computed } from "vue"
 import { MODULE_ICONS, OUR_NEEDS, PACK_PITCHES, commercialTerms } from "@app/utils/recommendation"
 import { orderKey } from "@app/utils/checkoutSession"
 import { keyboardAccess } from "@app/utils/keyboard"
+import { hourlyRate } from "@app/utils/money"
 import { startTracking } from "@app/utils/tracking"
 
 const ORDER_STATUS_BADGES = {
@@ -107,8 +108,8 @@ export default function setup(context) {
 			{
 				key: "rate",
 				icon: "lucide-circle-dollar-sign",
-				// In rupees, as the partner directory shows it.
-				text: p.hourly_rate ? `From ₹${Number(p.hourly_rate).toLocaleString("en-IN")}/hr` : "Undisclosed",
+				// In the partner's currency, as the partner directory shows it.
+				text: p.hourly_rate ? hourlyRate(p.hourly_rate, p.currency) : "Undisclosed",
 				sub: "",
 				muted: !p.hourly_rate,
 			},
