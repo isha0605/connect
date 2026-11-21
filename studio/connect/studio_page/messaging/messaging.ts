@@ -6,6 +6,7 @@ import { goToSignIn, signOut } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
 import { usePartnerRegistration } from "@app/utils/partnerRegistration"
 import { useMyContext } from "@app/utils/myContext"
+import { useQuoteBrochure } from "@app/utils/quoteBrochure"
 
 // connect.messaging.customer_identity.ANONYMOUS_USER: who the partner side sees in place of an
 // anonymous customer's people.
@@ -1432,6 +1433,7 @@ export default function setup(context) {
 	const quoteWeeks = ref("")
 	const quoteSendError = ref("")
 	const sendingQuote = ref(false)
+	const quoteBrochure = useQuoteBrochure({ call, toast, thread: () => selectedThread.value })
 
 	function loadQuotableBriefs() {
 		quotableBriefs.value = []
@@ -1449,7 +1451,7 @@ export default function setup(context) {
 	watch(
 		[selectedThread, selectedThreadType, amPartner],
 		() => {
-			quoteOpen.value = false
+			closeQuoteCard()
 			loadQuotableBriefs()
 		},
 		{ immediate: true },
@@ -1477,12 +1479,14 @@ export default function setup(context) {
 		quoteAmount.value = brief.amount ? String(brief.amount) : ""
 		quoteWeeks.value = brief.weeks ? String(brief.weeks) : ""
 		quoteSendError.value = ""
+		quoteBrochure.startBrochure(brief)
 		if (brief.note && !currentDraft().trim()) setDraft(brief.note)
 	}
 
 	function closeQuoteCard() {
 		quoteOpen.value = false
 		quoteSendError.value = ""
+		quoteBrochure.removeQuoteBrochure()
 	}
 
 	function quoteCardTitle() {
@@ -1518,7 +1522,11 @@ export default function setup(context) {
 
 	function isQuoteReady() {
 		return (
-			Number(quoteAmount.value) > 0 && Number(quoteWeeks.value) > 0 && !quoteFieldError() && !sendingQuote.value
+			Number(quoteAmount.value) > 0 &&
+			Number(quoteWeeks.value) > 0 &&
+			!quoteFieldError() &&
+			!sendingQuote.value &&
+			!quoteBrochure.isQuoteBrochureUploading.value
 		)
 	}
 
@@ -1532,7 +1540,9 @@ export default function setup(context) {
 				amount: Number(quoteAmount.value),
 				weeks: Number(quoteWeeks.value),
 				note: currentDraft().trim(),
+				brochure: quoteBrochure.quoteBrochureUrl.value || undefined,
 			})
+			quoteBrochure.brochureSent()
 			quoteOpen.value = false
 			setDraft("")
 			context.messages.reload()
@@ -3851,6 +3861,10 @@ export default function setup(context) {
 		selectQuoteBrief,
 		closeQuoteCard,
 		quoteCardTitle,
+		hasQuoteBrochure: quoteBrochure.hasQuoteBrochure,
+		quoteBrochureLabel: quoteBrochure.quoteBrochureLabel,
+		pickQuoteBrochure: quoteBrochure.pickQuoteBrochure,
+		removeQuoteBrochure: quoteBrochure.removeQuoteBrochure,
 		quoteBriefOptions,
 		quoteFieldError,
 		isQuoteReady,
