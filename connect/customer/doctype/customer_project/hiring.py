@@ -13,6 +13,7 @@ from connect.customer.doctype.customer_project.customer_project import (
 	get_own_project,
 	project_dict,
 )
+from connect.customer.doctype.customer_project.project_notifications import quote_amount
 from connect.permissions import _check_can_read, _get_partner_admins, _is_partner_admin
 
 # A request the partner hasn't answered by then is withdrawn, so the customer can hire someone else.
@@ -255,7 +256,7 @@ def send_hire_request_email(admin: str, project: str, quote: str):
 	doc = frappe.get_doc("Customer Project", project)
 	row = frappe.get_doc("Project Quote", quote)
 	company = frappe.db.get_value("Customer", get_customer_for_user(doc.user), "customer_name") or doc.user
-	amount = frappe.utils.fmt_money(row.amount or 0, currency="INR", precision=0)
+	amount = quote_amount(row.amount, row.currency)
 	try:
 		frappe.sendmail(
 			recipients=[frappe.db.get_value("User", admin, "email") or admin],
