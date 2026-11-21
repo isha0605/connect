@@ -1,11 +1,14 @@
 # Copyright (c) 2026, Isha and contributors
 # For license information, please see license.txt
 
+import mimetypes
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, flt, now_datetime
 
+from connect.api.attachments import _attach_file_to_message, _claim_staged_attachment, _copy_message_attachment
 from connect.customer.doctype.customer_project.project_notifications import notify_quote_update
 from connect.partner.doctype.connect_partner_member.connect_partner_member import LEAD_ACCESS
 from connect.partner.chat_sla import hand_chat_clock_to_quote
@@ -28,6 +31,8 @@ OPEN_FOR_PARTNER_STATUSES = ("Awaiting", "Quoted", "Interested", "Hire Requested
 DECLINED_LOST_REASON = "Not taking new clients"
 MAX_WEEKS = 104
 NOTE_LIMIT = 300
+# A brochure opens in the customer's browser, so only types that can't run scripts there: no SVG.
+BROCHURE_TYPES = ("application/pdf", "image/png", "image/jpeg", "image/webp", "image/gif")
 
 
 class ProjectQuote(Document):
@@ -79,10 +84,11 @@ class ProjectQuote(Document):
 
 			queue_partner_lead_sync(self.lead)
 
-	def send_quote(self, amount, weeks, note: str | None = None) -> str:
+	def send_quote(self, amount, weeks, note: str | None = None, brochure: str | None = None) -> str:
 		"""The caller's quote on this brief, from the chat: posted as a Quote card in the customer's
 		thread and kept on the brief. Sending again before the customer answers replaces it.
-		Returns the Quote message."""
+		`brochure` is the file_url of the caller's staged chat upload, or of the current quote's
+		brochure to keep it. Returns the Quote message."""
 		user = frappe.session.user
 		if not _has_partner_access(self.partner, user, LEAD_ACCESS):
 			frappe.throw(_("Only your firm's owners and sales can send quotes."), frappe.PermissionError)
@@ -96,12 +102,28 @@ class ProjectQuote(Document):
 			frappe.throw(_("Enter a timeline between 1 and {0} weeks.").format(MAX_WEEKS))
 		if len(note) > NOTE_LIMIT:
 			frappe.throw(_("Keep the note to {0} characters.").format(NOTE_LIMIT))
+		brochure_file = self._brochure_file(brochure)
 
 		from connect.messaging.doctype.connect_thread.connect_thread import ensure_partner_member
 
 		# Whoever quotes answers the customer's questions about it, so they join the thread.
 		ensure_partner_member(self.thread, user, user)
-		return post_quote(self, user, amount, weeks, note)
+		return post_quote(self, user, amount, weeks, note, brochure_file)
+
+	def _brochure_file(self, file_url: str | None):
+		"""The File to post with the quote: a copy of the current quote's brochure when it is kept,
+		since each Quote message owns its File, else the caller's own staged upload."""
+		if not file_url:
+			return None
+		if self.quote_message and file_url == frappe.db.get_value("Connect Message", self.quote_message, "attachment"):
+			return _copy_message_attachment(file_url)
+
+		file_doc = frappe.get_doc("File", _claim_staged_attachment(file_url, frappe.session.user))
+		if file_doc.attached_to_name:
+			frappe.throw(_("Attachment not found"))
+		if mimetypes.guess_type(file_doc.file_name or "")[0] not in BROCHURE_TYPES:
+			frappe.throw(_("Attach the brochure as a PDF or an image."))
+		return file_doc
 
 	def is_quotable(self) -> bool:
 		"""Until the customer answers a quote, the partner can change it. After the customer edits
@@ -193,9 +215,10 @@ class ProjectQuote(Document):
 		add_won_customer(self)
 
 
-def post_quote(quote, sender: str, amount: float, weeks: int, note: str) -> str:
+def post_quote(quote, sender: str, amount: float, weeks: int, note: str, brochure=None) -> str:
 	"""Posts the Quote card in the brief's thread as `sender` and records the quote on the brief.
-	The demo quotes use it too, so both look the same to the customer."""
+	A brochure File goes on the card as its attachment. The demo quotes use it too, so both look
+	the same to the customer."""
 	# A card, not a typed message; send_quote checked the sender may quote for this partner.
 	message = frappe.get_doc(
 		{
@@ -206,8 +229,11 @@ def post_quote(quote, sender: str, amount: float, weeks: int, note: str) -> str:
 			"content": frappe.as_json(
 				{"quote": quote.name, "project": quote.customer_project, "amount": amount, "weeks": weeks, "note": note}
 			),
+			**_brochure_fields(brochure),
 		}
 	).insert(ignore_permissions=True)
+	if brochure:
+		_attach_file_to_message(brochure.name, "Connect Message", message.name)
 
 	quote.update(
 		{
@@ -226,6 +252,17 @@ def post_quote(quote, sender: str, amount: float, weeks: int, note: str) -> str:
 	return message.name
 
 
+def _brochure_fields(brochure) -> dict:
+	if not brochure:
+		return {}
+	return {
+		"attachment": brochure.file_url,
+		"file_name": brochure.file_name,
+		"file_type": mimetypes.guess_type(brochure.file_name or "")[0],
+		"file_size": brochure.file_size,
+	}
+
+
 def quotable_briefs(thread: str) -> list[dict]:
 	"""The briefs in this thread the caller can quote on, oldest first: none unless they are an
 	owner or in sales at the thread's partner."""
@@ -235,13 +272,18 @@ def quotable_briefs(thread: str) -> list[dict]:
 
 	Quote = frappe.qb.DocType("Project Quote")
 	Project = frappe.qb.DocType("Customer Project")
+	Message = frappe.qb.DocType("Connect Message")
 	return (
 		frappe.qb.from_(Quote)
 		.join(Project)
 		.on(Project.name == Quote.customer_project)
+		# the current quote's brochure, so an update starts with it
+		.left_join(Message)
+		.on(Message.name == Quote.quote_message)
 		.select(
 			Quote.name, Project.project_name, Quote.status, Quote.amount, Quote.timeline_weeks.as_("weeks"), Quote.note,
 			Quote.brief_message, Quote.quoted_before_update,
+			Message.attachment.as_("brochure"), Message.file_name.as_("brochure_name"), Message.file_size.as_("brochure_size"),
 		)
 		.where(Quote.thread == thread)
 		.where(

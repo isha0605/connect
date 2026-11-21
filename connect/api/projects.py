@@ -98,8 +98,8 @@ def quotable_briefs(thread):
 
 
 @frappe.whitelist(methods=["POST"])
-def send_quote(quote, amount, weeks, note=None):
-	return {"message": frappe.get_doc("Project Quote", quote).send_quote(amount, weeks, note)}
+def send_quote(quote, amount, weeks, note=None, brochure=None):
+	return {"message": frappe.get_doc("Project Quote", quote).send_quote(amount, weeks, note, brochure)}
 
 
 @frappe.whitelist(methods=["POST"])
