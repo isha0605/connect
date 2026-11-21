@@ -21,7 +21,6 @@ import {
 	toast,
 } from "frappe-ui"
 import {
-	BUDGET_OPTIONS,
 	COUNTRY_GROUPS,
 	EMPLOYEE_OPTIONS,
 	INDUSTRY_OPTIONS,
@@ -37,6 +36,7 @@ import {
 } from "@app/utils/projectDialog"
 import { goToSignIn } from "@app/utils/signIn"
 import AppsSelect from "./AppsSelect.vue"
+import BudgetSelect from "./BudgetSelect.vue"
 
 const props = defineProps({
 	// Whether the dialog is open (v-model).
@@ -320,15 +320,7 @@ function send() {
 				</div>
 
 				<div v-else class="mt-6 flex flex-col gap-4">
-					<FormControl
-						v-model="answers.budget"
-						type="select"
-						label="Your budget"
-						:options="BUDGET_OPTIONS"
-						placeholder="Select a range"
-						required
-						:error="errors.budget"
-					/>
+					<BudgetSelect v-model="answers.budget" :country="answers.country" required :error="errors.budget" />
 					<AppsSelect v-model="answers.apps" required :error="errors.apps" />
 					<FormControl
 						v-model="answers.description"

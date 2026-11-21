@@ -13,7 +13,7 @@ import { call, toast } from "frappe-ui"
 import { avatarTheme } from "@app/utils/avatarTheme"
 import { blankCriteria, criteriaSummary, partnerCriteria } from "@app/utils/partnerCriteria"
 import {
-	BUDGET_OPTIONS,
+	BUDGET_RANGES,
 	COUNTRY_OPTIONS,
 	EMPLOYEE_OPTIONS,
 	INDUSTRY_OPTIONS,
@@ -318,7 +318,7 @@ export default function setup(context) {
 	// dialog, so it gets a sample brief and the real partners in India (enough for a "+N").
 	const inEditor = window.location.pathname.startsWith("/studio/")
 	if (inEditor) {
-		briefBudget.value = BUDGET_OPTIONS[1].value
+		briefBudget.value = BUDGET_RANGES.INR[1]
 		briefDescription.value = "Dealer orders, billing and stock across three warehouses."
 		employeeCount.value = "11-50"
 		shareCriteria.value = { ...blankCriteria(), countries: ["India"] }
@@ -405,7 +405,6 @@ export default function setup(context) {
 		briefBudget,
 		briefDescription,
 		otherSystem,
-		budgetOptions: BUDGET_OPTIONS,
 		finishStep3,
 		shareOpen,
 		shareSummary,

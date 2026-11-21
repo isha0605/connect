@@ -224,10 +224,39 @@ export const CUSTOM_HOW_IT_WORKS = [
 	{ title: "Pay per milestone", body: "Agreed with them" },
 ]
 
-// The custom page's "Your budget" ranges, as the prototype words them.
-export const BUDGET_OPTIONS = [
-	"Under ₹5 lakh", "₹5 to 15 lakh", "₹15 to 40 lakh", "Over ₹40 lakh", "Not decided yet",
-].map((v) => ({ label: v, value: v }))
+// A project's budget ranges, in rupees or dollars: the dollar ranges are about the rupee ones at the
+// company rate of 83. The lists line up, so switching currency keeps the same range. A budget is
+// saved as its words, so partners read exactly what the customer picked. BUDGET_RANGES in
+// demo_quotes.py and Requirement's budget options list the same words.
+const NOT_DECIDED = "Not decided yet"
+export const BUDGET_RANGES = {
+	INR: ["Under ₹5 lakh", "₹5 to 15 lakh", "₹15 to 40 lakh", "Over ₹40 lakh", NOT_DECIDED],
+	USD: ["Under $6k", "$6k to $18k", "$18k to $50k", "Over $50k", NOT_DECIDED],
+}
+const INDIAN_TIME_ZONES = ["Asia/Kolkata", "Asia/Calcutta"]
+
+export function budgetOptions(currency) {
+	return BUDGET_RANGES[currency].map((range) => ({ label: range, value: range }))
+}
+
+// The currency a budget is in; "" for none, or "Not decided yet", which is in both.
+export function budgetCurrency(budget) {
+	if (!budget || budget === NOT_DECIDED) return ""
+	return Object.keys(BUDGET_RANGES).find((currency) => BUDGET_RANGES[currency].includes(budget)) || ""
+}
+
+// The same range in `currency`.
+export function budgetIn(budget, currency) {
+	const from = BUDGET_RANGES[budgetCurrency(budget)]
+	return from ? BUDGET_RANGES[currency][from.indexOf(budget)] : budget
+}
+
+// Where the ₹ / $ switch starts: the customer's country when they've given one, else their browser's
+// time zone, since a guest hasn't said where they are.
+export function startingBudgetCurrency(country) {
+	if (country) return country === "India" ? "INR" : "USD"
+	return INDIAN_TIME_ZONES.includes(Intl.DateTimeFormat().resolvedOptions().timeZone) ? "INR" : "USD"
+}
 
 // Answers travel in the URL, so the recommendation survives a reload and "Change my
 // answers" can hand them back to the questionnaire.
