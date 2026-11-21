@@ -84,9 +84,13 @@ class IntegrationTestSendQuote(IntegrationTestCase):
 		).insert(ignore_permissions=True)
 		send_brief(project, customer, OTHER_PARTNER)
 
-		quote = frappe.db.get_value("Project Quote", {"customer_project": project.name}, "currency")
-		self.assertEqual(quote, "USD")
+		quote = frappe.db.get_value("Project Quote", {"customer_project": project.name}, ["name", "currency"], as_dict=True)
+		self.assertEqual(quote.currency, "USD")
 		self.assertEqual(frappe.db.get_value("Project Quote", self.quote, "currency"), "INR")
+
+		frappe.set_user(OTHER_OWNER)
+		card = frappe.get_doc("Connect Message", send_quote(quote.name, 4800, 6, "")["message"])
+		self.assertEqual(frappe.parse_json(card.content)["currency"], "USD")
 
 	def test_a_quote_changes_until_the_customer_answers(self):
 		first = self.quote_as(OWNER)

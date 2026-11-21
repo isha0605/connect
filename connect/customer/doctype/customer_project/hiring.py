@@ -225,6 +225,7 @@ def _post_hire_request(doc, row):
 					"project": doc.name,
 					"project_name": doc.project_name,
 					"amount": row.amount,
+					"currency": row.currency,
 					"weeks": row.timeline_weeks,
 				}
 			),

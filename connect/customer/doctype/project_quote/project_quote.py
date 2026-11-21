@@ -237,7 +237,14 @@ def post_quote(quote, sender: str, amount: float, weeks: int, note: str, brochur
 			"sender": sender,
 			"message_type": "Quote",
 			"content": frappe.as_json(
-				{"quote": quote.name, "project": quote.customer_project, "amount": amount, "weeks": weeks, "note": note}
+				{
+					"quote": quote.name,
+					"project": quote.customer_project,
+					"amount": amount,
+					"currency": quote.currency,
+					"weeks": weeks,
+					"note": note,
+				}
 			),
 			**_brochure_fields(brochure),
 		}
@@ -291,8 +298,8 @@ def quotable_briefs(thread: str) -> list[dict]:
 		.left_join(Message)
 		.on(Message.name == Quote.quote_message)
 		.select(
-			Quote.name, Project.project_name, Quote.status, Quote.amount, Quote.timeline_weeks.as_("weeks"), Quote.note,
-			Quote.brief_message, Quote.quoted_before_update,
+			Quote.name, Project.project_name, Quote.status, Quote.amount, Quote.currency,
+			Quote.timeline_weeks.as_("weeks"), Quote.note, Quote.brief_message, Quote.quoted_before_update,
 			Message.attachment.as_("brochure"), Message.file_name.as_("brochure_name"), Message.file_size.as_("brochure_size"),
 		)
 		.where(Quote.thread == thread)
