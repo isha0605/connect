@@ -15,6 +15,9 @@ APP_ICONS = {
 	"Frappe Drive": "frappe-drive.png",
 	"Frappe Builder": "frappe-builder.png",
 	"Wiki": "wiki.png",
+	"Frappe Framework": "framework.png",
+	"Frappe Lending": "lending.png",
+	"Frappe Education": "education.png",
 }
 
 

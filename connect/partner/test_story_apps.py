@@ -3,9 +3,11 @@
 
 from unittest.mock import patch
 
+import frappe
 from frappe.tests import IntegrationTestCase
 
 from connect.partner.story_apps import apps_from_stories, apps_in_story_page, queue_missing_story_apps
+from connect.patches.add_lending_and_education_apps import execute as add_lending_and_education_apps
 
 KNOWN_APPS = ["ERPNext", "Frappe HR", "Helpdesk", "Frappe Insights"]
 
@@ -29,6 +31,17 @@ class IntegrationTestStoryApps(IntegrationTestCase):
 
 	def test_reads_known_apps_once_and_stops_at_the_next_heading(self):
 		self.assertEqual(apps_in_story_page(STORY_PAGE, KNOWN_APPS), ["ERPNext", "Frappe HR", "Helpdesk"])
+
+	def test_lending_and_education_are_apps_with_their_logos(self):
+		add_lending_and_education_apps()
+
+		for app, icon in (("Frappe Lending", "lending.png"), ("Frappe Education", "education.png")):
+			self.assertEqual(frappe.db.get_value("App", app, "logo"), f"/assets/connect/images/app_icons/{icon}")
+		page = STORY_PAGE.replace("Some Other App", "Lending").replace("Frappe HR", "Education")
+		self.assertEqual(
+			apps_in_story_page(page, [*KNOWN_APPS, "Frappe Lending", "Frappe Education"]),
+			["ERPNext", "Frappe Education", "Helpdesk", "Frappe Lending"],
+		)
 
 	def test_a_page_without_the_list_has_no_apps(self):
 		self.assertEqual(apps_in_story_page("<p>Industry</p><div>ERPNext</div>", KNOWN_APPS), [])
