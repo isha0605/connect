@@ -44,6 +44,19 @@ def _normalize_url(url: str) -> str:
 
 def fetch_og_image(story_url: str) -> str | None:
 	"""Fetches story_url and returns its og:image URL, or None."""
+	html = fetch_story_page(story_url)
+	if not html:
+		return None
+
+	for pattern in _OG_IMAGE_PATTERNS:
+		match = pattern.search(html)
+		if match:
+			return _normalize_url(match.group(1))
+	return None
+
+
+def fetch_story_page(story_url: str) -> str | None:
+	"""The HTML of a success story's page, or None when it can't be fetched (the error is logged)."""
 	if not story_url or not story_url.startswith(("http://", "https://")):
 		return None
 
@@ -60,16 +73,10 @@ def fetch_og_image(story_url: str) -> str | None:
 		# decode_content=True is required here: reading .raw directly otherwise
 		# returns the raw (often gzip-compressed) transfer bytes unchanged, not
 		# the decoded HTML — every og:image lookup silently failed without it.
-		html = response.raw.read(MAX_HTML_BYTES + 1, decode_content=True).decode("utf-8", "ignore")
+		return response.raw.read(MAX_HTML_BYTES + 1, decode_content=True).decode("utf-8", "ignore")
 	except Exception:
 		frappe.log_error(title="Connect: could not fetch success story page", message=frappe.get_traceback())
 		return None
-
-	for pattern in _OG_IMAGE_PATTERNS:
-		match = pattern.search(html)
-		if match:
-			return _normalize_url(match.group(1))
-	return None
 
 
 def build_story_image(row_name: str, story_url: str) -> str | None:
