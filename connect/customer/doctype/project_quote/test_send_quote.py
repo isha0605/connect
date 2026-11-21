@@ -149,7 +149,7 @@ class IntegrationTestSendQuote(IntegrationTestCase):
 		cards = self.card_statuses_as(BUYER)
 		self.assertNotIn(first, cards)
 		self.assertEqual(cards[current]["status"], "Quoted")
-		self.assertEqual(cards[current]["project_name"], "Batch tracking")
+		self.assertEqual((cards[current]["project_name"], cards[current]["amount"]), ("Batch tracking", 350000))
 		self.assertTrue(cards[current]["can_hire"])
 		self.assertFalse(self.card_statuses_as(OWNER)[current]["can_hire"])
 

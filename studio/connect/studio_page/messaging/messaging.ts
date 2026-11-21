@@ -1252,6 +1252,32 @@ export default function setup(context) {
 		return QUOTE_STATUS_LABELS[quoteCardState(item)?.status] || ""
 	}
 
+	// The customer hires from the current quote, in the project page's own dialog (HireDialog.vue).
+	const hireDialogOpen = ref(false)
+	const hireDialogQuote = ref(null)
+
+	function canHireFromQuote(item) {
+		return Boolean(quoteCardState(item)?.can_hire) && !isQuoteReplaced(item)
+	}
+
+	function quoteHireLabel(item) {
+		return `Hire ${quoteCardState(item)?.company_name || "this partner"}`
+	}
+
+	function hireFromQuote(item) {
+		const state = quoteCardState(item)
+		if (!state) return
+		hireDialogQuote.value = { ...state, name: state.quote }
+		hireDialogOpen.value = true
+	}
+
+	// The hire request is a new card in the thread, and this quote's card now says so.
+	function onHiredFromQuote() {
+		context.messages.reload()
+		loadQuoteCardStatuses()
+		loadHireRequestStatuses()
+	}
+
 	// ---- Hire Request card: a customer asking the partner to take the project on ----
 	// message_type "Hire Request"; content is { quote, project, project_name, amount, weeks }
 	// (see hiring.py). The snapshot doesn't change, so the card reads where the request stands
@@ -3896,6 +3922,12 @@ export default function setup(context) {
 		quoteCardTitle,
 		quoteCardKicker,
 		quoteCardStatus,
+		canHireFromQuote,
+		quoteHireLabel,
+		hireFromQuote,
+		hireDialogOpen,
+		hireDialogQuote,
+		onHiredFromQuote,
 		hasQuoteBrochure: quoteBrochure.hasQuoteBrochure,
 		quoteBrochureLabel: quoteBrochure.quoteBrochureLabel,
 		pickQuoteBrochure: quoteBrochure.pickQuoteBrochure,

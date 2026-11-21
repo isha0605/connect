@@ -113,9 +113,9 @@ def hire_card_statuses(thread: str) -> dict:
 
 def quote_card_statuses(thread: str) -> dict:
 	"""Where each brief's current Quote card in a thread stands, by message: the quote's status,
-	its project and partner, and whether the caller can hire from it. Only the project's owner
-	can, while it has no partner and the quote is open. Older cards were replaced, so they have
-	no entry."""
+	its project, the quote and its partner as the hire dialog shows them, and whether the caller
+	can hire from it. Only the project's owner can, while it has no partner and the quote is open.
+	Older cards were replaced, so they have no entry."""
 	user = frappe.session.user
 	_check_can_read(thread, user)
 
@@ -129,8 +129,8 @@ def quote_card_statuses(thread: str) -> dict:
 		.left_join(Partner)
 		.on(Partner.name == Quote.partner)
 		.select(
-			Quote.name, Quote.status, Quote.quote_message, Quote.partner, Partner.company_name,
-			Project.project_name, Project.status.as_("project_status"), Project.user.as_("project_owner"),
+			Quote.name, Quote.status, Quote.quote_message, Quote.partner, Quote.amount, Quote.timeline_weeks,
+			Partner.company_name, Partner.logo, Partner.tier, Partner.city, Partner.country, Project.project_name, Project.status.as_("project_status"), Project.user.as_("project_owner"),
 		)
 		.where((Quote.thread == thread) & Quote.quote_message.isnotnull())
 		.run(as_dict=True)
@@ -141,6 +141,7 @@ def quote_card_statuses(thread: str) -> dict:
 			"status": row.status,
 			"project_name": row.project_name,
 			"company_name": row.company_name or row.partner,
+			**{field: row[field] for field in ("amount", "timeline_weeks", "logo", "tier", "city", "country")},
 			"can_hire": row.project_owner == user
 			and row.project_status == "Shared"
 			and row.status in OPEN_QUOTE_STATUSES,

@@ -3033,6 +3033,39 @@
                            },
                            "componentSlots": {},
                            "visibilityCondition": "quoteCardStatus(dataItem)"
+                          },
+                          {
+                           "baseStyles": {
+                            "display": "flex",
+                            "flexWrap": "wrap",
+                            "gap": "8px",
+                            "marginTop": "2px"
+                           },
+                           "children": [
+                            {
+                             "componentEvents": {
+                              "click": {
+                               "action": "Run Script",
+                               "event": "click",
+                               "script": "hireFromQuote(dataItem);"
+                              }
+                             },
+                             "componentId": "message-quote-hire-o",
+                             "componentName": "Button",
+                             "componentProps": {
+                              "iconLeft": "lucide-handshake",
+                              "label": "{{ quoteHireLabel(dataItem) }}",
+                              "variant": "solid"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "message-quote-actions-o",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div",
+                           "visibilityCondition": "canHireFromQuote(dataItem)"
                           }
                          ],
                          "componentId": "message-quote-card-o",
@@ -15130,6 +15163,21 @@
      "isCustomVueComponent": true
     },
     {
+     "blockName": "HireDialog",
+     "componentId": "hire-dialog",
+     "componentName": "HireDialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "hireDialogOpen"
+      },
+      "quote": "{{ hireDialogQuote }}",
+      "onHired": "{{ onHiredFromQuote }}"
+     },
+     "componentSlots": {},
+     "isCustomVueComponent": true
+    },
+    {
      "blockName": "Decline Hire Dialog",
      "children": [
       {
@@ -15463,7 +15511,7 @@
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-11-21 20:00:00.000000",
+ "modified": "2026-11-21 20:30:00.000000",
  "modified_by": "tridots@example.com",
  "name": "messaging",
  "owner": "Administrator",
