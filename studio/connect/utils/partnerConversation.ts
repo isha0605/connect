@@ -110,7 +110,8 @@ export function useConversation({ call, toast, record, reload, followUpMethod, m
 			avatarLabel: m.from === "you" ? "P" : "C",
 			isWaiting: m.kind === "bid" && !current.is_customer_revealed,
 			...(m.kind === "meeting" ? meetingCard(m, followUps) : {}),
-			...(m.kind === "file" ? fileCard(m) : {}),
+			// a file, and a quote's brochure
+			...(m.attachment ? fileCard(m) : {}),
 			body: messageBody(m),
 			price: m.amount ? RUPEES.format(m.amount) : "",
 			weeksLabel: m.weeks ? `about ${m.weeks} weeks` : "",

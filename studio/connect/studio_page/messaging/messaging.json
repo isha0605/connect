@@ -1713,6 +1713,53 @@
                          "children": [
                           {
                            "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "gap": "6px",
+                            "minWidth": "0px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "flexShrink": "0",
+                              "height": "14px",
+                              "width": "14px"
+                             },
+                             "componentId": "message-quote-icon",
+                             "componentName": "Icon",
+                             "componentProps": {
+                              "icon": "lucide-receipt"
+                             },
+                             "componentSlots": {}
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "fontWeight": "500",
+                              "minWidth": "0px",
+                              "overflow": "hidden",
+                              "textOverflow": "ellipsis",
+                              "whiteSpace": "nowrap"
+                             },
+                             "componentId": "message-quote-kicker",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-sm",
+                              "tag": "span",
+                              "text": "{{ quoteCardKicker(dataItem) }}"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "message-quote-label",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
                             "alignItems": "baseline",
                             "columnGap": "12px",
                             "display": "flex",
@@ -1769,20 +1816,177 @@
                             "tag": "span",
                             "text": "{{ quoteNoteText(dataItem) }}"
                            },
-                           "componentSlots": {}
+                           "componentSlots": {},
+                           "visibilityCondition": "quoteNoteText(dataItem)"
                           },
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)"
+                            "alignItems": "center",
+                            "backgroundColor": "var(--surface-gray-1)",
+                            "border": "1px solid var(--outline-gray-2)",
+                            "borderRadius": "8px",
+                            "display": "flex",
+                            "flexDirection": "row",
+                            "gap": "10px",
+                            "padding": "8px 10px",
+                            "width": "100%",
+                            "boxSizing": "border-box",
+                            "maxWidth": "100%"
                            },
-                           "componentId": "message-quote-replaced",
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "alignItems": "center",
+                              "cursor": "pointer",
+                              "display": "flex",
+                              "flex": "1",
+                              "flexDirection": "row",
+                              "gap": "10px",
+                              "minWidth": "0px"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "alignItems": "center",
+                                "backgroundColor": "{{ attachmentIconBg(dataItem) }}",
+                                "borderRadius": "6px",
+                                "display": "flex",
+                                "flexShrink": "0",
+                                "height": "32px",
+                                "justifyContent": "center",
+                                "width": "32px"
+                               },
+                               "children": [
+                                {
+                                 "baseStyles": {
+                                  "color": "{{ attachmentIconColor(dataItem) }}",
+                                  "height": "16px",
+                                  "width": "16px"
+                                 },
+                                 "componentId": "message-quote-file-icon",
+                                 "componentName": "Icon",
+                                 "componentProps": {
+                                  "icon": "{{ attachmentIcon(dataItem) }}"
+                                 },
+                                 "componentSlots": {}
+                                }
+                               ],
+                               "componentId": "message-quote-file-icon-box",
+                               "componentName": "container",
+                               "componentProps": {},
+                               "componentSlots": {},
+                               "originalElement": "div"
+                              },
+                              {
+                               "baseStyles": {
+                                "display": "flex",
+                                "flex": "1",
+                                "flexDirection": "column",
+                                "minWidth": "0px",
+                                "textAlign": "left"
+                               },
+                               "children": [
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-9)",
+                                  "fontWeight": "500",
+                                  "overflow": "hidden",
+                                  "textOverflow": "ellipsis",
+                                  "whiteSpace": "nowrap"
+                                 },
+                                 "componentId": "message-quote-file-name",
+                                 "componentName": "TextBlock",
+                                 "componentProps": {
+                                  "fontSize": "text-sm",
+                                  "tag": "span",
+                                  "text": "{{ dataItem.file_name }}"
+                                 },
+                                 "componentSlots": {}
+                                },
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-5)"
+                                 },
+                                 "componentId": "message-quote-file-size",
+                                 "componentName": "TextBlock",
+                                 "componentProps": {
+                                  "fontSize": "text-xs",
+                                  "tag": "span",
+                                  "text": "{{ formatFileSize(dataItem.file_size) }}"
+                                 },
+                                 "componentSlots": {}
+                                }
+                               ],
+                               "componentId": "message-quote-file-info",
+                               "componentName": "container",
+                               "componentProps": {},
+                               "componentSlots": {},
+                               "originalElement": "div"
+                              }
+                             ],
+                             "componentEvents": {
+                              "click": {
+                               "action": "Run Script",
+                               "event": "click",
+                               "script": "openFilePreview(dataItem);"
+                              }
+                             },
+                             "componentId": "message-quote-file-preview-trigger",
+                             "componentName": "container",
+                             "componentProps": {},
+                             "componentSlots": {},
+                             "originalElement": "div"
+                            },
+                            {
+                             "attributes": {
+                              "aria-label": "Download"
+                             },
+                             "baseStyles": {
+                              "flexShrink": "0"
+                             },
+                             "componentEvents": {
+                              "click": {
+                               "action": "Run Script",
+                               "event": "click",
+                               "script": "downloadFile(dataItem, eventArgs[0]);"
+                              }
+                             },
+                             "componentId": "message-quote-file-download",
+                             "componentName": "Button",
+                             "componentProps": {
+                              "icon": "lucide-download",
+                              "theme": "gray",
+                              "tooltip": "Download",
+                              "variant": "ghost"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "message-quote-file-attachment",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "mobileStyles": {
+                            "maxWidth": "100%",
+                            "width": "calc(100% - 40px)"
+                           },
+                           "originalElement": "div",
+                           "visibilityCondition": "dataItem.attachment"
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-7)",
+                            "lineHeight": "20px"
+                           },
+                           "componentId": "message-quote-status",
                            "componentName": "TextBlock",
                            "componentProps": {
-                            "fontSize": "text-xs",
+                            "fontSize": "text-sm",
                             "tag": "span",
-                            "text": "Replaced by a newer quote"
+                            "text": "{{ quoteCardStatus(dataItem) }}"
                            },
-                           "visibilityCondition": "isQuoteReplaced(dataItem)"
+                           "componentSlots": {},
+                           "visibilityCondition": "quoteCardStatus(dataItem)"
                           }
                          ],
                          "componentId": "message-quote-card",
@@ -2555,6 +2759,53 @@
                          "children": [
                           {
                            "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "gap": "6px",
+                            "minWidth": "0px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "flexShrink": "0",
+                              "height": "14px",
+                              "width": "14px"
+                             },
+                             "componentId": "message-quote-icon-o",
+                             "componentName": "Icon",
+                             "componentProps": {
+                              "icon": "lucide-receipt"
+                             },
+                             "componentSlots": {}
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "fontWeight": "500",
+                              "minWidth": "0px",
+                              "overflow": "hidden",
+                              "textOverflow": "ellipsis",
+                              "whiteSpace": "nowrap"
+                             },
+                             "componentId": "message-quote-kicker-o",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-sm",
+                              "tag": "span",
+                              "text": "{{ quoteCardKicker(dataItem) }}"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "message-quote-label-o",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
                             "alignItems": "baseline",
                             "columnGap": "12px",
                             "display": "flex",
@@ -2611,20 +2862,177 @@
                             "tag": "span",
                             "text": "{{ quoteNoteText(dataItem) }}"
                            },
-                           "componentSlots": {}
+                           "componentSlots": {},
+                           "visibilityCondition": "quoteNoteText(dataItem)"
                           },
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)"
+                            "alignItems": "center",
+                            "backgroundColor": "var(--surface-gray-1)",
+                            "border": "1px solid var(--outline-gray-2)",
+                            "borderRadius": "8px",
+                            "display": "flex",
+                            "flexDirection": "row",
+                            "gap": "10px",
+                            "padding": "8px 10px",
+                            "width": "100%",
+                            "boxSizing": "border-box",
+                            "maxWidth": "100%"
                            },
-                           "componentId": "message-quote-replaced-o",
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "alignItems": "center",
+                              "cursor": "pointer",
+                              "display": "flex",
+                              "flex": "1",
+                              "flexDirection": "row",
+                              "gap": "10px",
+                              "minWidth": "0px"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "alignItems": "center",
+                                "backgroundColor": "{{ attachmentIconBg(dataItem) }}",
+                                "borderRadius": "6px",
+                                "display": "flex",
+                                "flexShrink": "0",
+                                "height": "32px",
+                                "justifyContent": "center",
+                                "width": "32px"
+                               },
+                               "children": [
+                                {
+                                 "baseStyles": {
+                                  "color": "{{ attachmentIconColor(dataItem) }}",
+                                  "height": "16px",
+                                  "width": "16px"
+                                 },
+                                 "componentId": "message-quote-file-icon-o",
+                                 "componentName": "Icon",
+                                 "componentProps": {
+                                  "icon": "{{ attachmentIcon(dataItem) }}"
+                                 },
+                                 "componentSlots": {}
+                                }
+                               ],
+                               "componentId": "message-quote-file-icon-box-o",
+                               "componentName": "container",
+                               "componentProps": {},
+                               "componentSlots": {},
+                               "originalElement": "div"
+                              },
+                              {
+                               "baseStyles": {
+                                "display": "flex",
+                                "flex": "1",
+                                "flexDirection": "column",
+                                "minWidth": "0px",
+                                "textAlign": "left"
+                               },
+                               "children": [
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-9)",
+                                  "fontWeight": "500",
+                                  "overflow": "hidden",
+                                  "textOverflow": "ellipsis",
+                                  "whiteSpace": "nowrap"
+                                 },
+                                 "componentId": "message-quote-file-name-o",
+                                 "componentName": "TextBlock",
+                                 "componentProps": {
+                                  "fontSize": "text-sm",
+                                  "tag": "span",
+                                  "text": "{{ dataItem.file_name }}"
+                                 },
+                                 "componentSlots": {}
+                                },
+                                {
+                                 "baseStyles": {
+                                  "color": "var(--ink-gray-5)"
+                                 },
+                                 "componentId": "message-quote-file-size-o",
+                                 "componentName": "TextBlock",
+                                 "componentProps": {
+                                  "fontSize": "text-xs",
+                                  "tag": "span",
+                                  "text": "{{ formatFileSize(dataItem.file_size) }}"
+                                 },
+                                 "componentSlots": {}
+                                }
+                               ],
+                               "componentId": "message-quote-file-info-o",
+                               "componentName": "container",
+                               "componentProps": {},
+                               "componentSlots": {},
+                               "originalElement": "div"
+                              }
+                             ],
+                             "componentEvents": {
+                              "click": {
+                               "action": "Run Script",
+                               "event": "click",
+                               "script": "openFilePreview(dataItem);"
+                              }
+                             },
+                             "componentId": "message-quote-file-preview-trigger-o",
+                             "componentName": "container",
+                             "componentProps": {},
+                             "componentSlots": {},
+                             "originalElement": "div"
+                            },
+                            {
+                             "attributes": {
+                              "aria-label": "Download"
+                             },
+                             "baseStyles": {
+                              "flexShrink": "0"
+                             },
+                             "componentEvents": {
+                              "click": {
+                               "action": "Run Script",
+                               "event": "click",
+                               "script": "downloadFile(dataItem, eventArgs[0]);"
+                              }
+                             },
+                             "componentId": "message-quote-file-download-o",
+                             "componentName": "Button",
+                             "componentProps": {
+                              "icon": "lucide-download",
+                              "theme": "gray",
+                              "tooltip": "Download",
+                              "variant": "ghost"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "message-quote-file-attachment-o",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "mobileStyles": {
+                            "maxWidth": "100%",
+                            "width": "calc(100% - 40px)"
+                           },
+                           "originalElement": "div",
+                           "visibilityCondition": "dataItem.attachment"
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-7)",
+                            "lineHeight": "20px"
+                           },
+                           "componentId": "message-quote-status-o",
                            "componentName": "TextBlock",
                            "componentProps": {
-                            "fontSize": "text-xs",
+                            "fontSize": "text-sm",
                             "tag": "span",
-                            "text": "Replaced by a newer quote"
+                            "text": "{{ quoteCardStatus(dataItem) }}"
                            },
-                           "visibilityCondition": "isQuoteReplaced(dataItem)"
+                           "componentSlots": {},
+                           "visibilityCondition": "quoteCardStatus(dataItem)"
                           }
                          ],
                          "componentId": "message-quote-card-o",

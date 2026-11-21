@@ -815,6 +815,7 @@ export default function setup(context) {
 			context.messages.reload()
 			// An answer to a hire request arrives as a message, so its card's status may have moved.
 			loadHireRequestStatuses()
+			loadQuoteCardStatuses()
 		}
 		context.myThreads.reload()
 	}
@@ -1221,6 +1222,36 @@ export default function setup(context) {
 		return parseRequirementContent(item).note || ""
 	}
 
+	// Where each brief's current Quote card stands, by message (quote_card_statuses): its status,
+	// project and partner, and whether this customer can hire from it. Replaced cards have none.
+	const QUOTE_STATUS_LABELS = { "Hire Requested": "Hire requested", Hired: "Hired", "Not Interested": "Not taken forward" }
+	const quoteCardStatuses = ref({})
+	function loadQuoteCardStatuses() {
+		quoteCardStatuses.value = {}
+		if (selectedThreadType.value !== "company" || !selectedThread.value) return
+		const thread = selectedThread.value
+		call("connect.api.projects.quote_card_statuses", { thread })
+			.then((data) => {
+				if (thread === selectedThread.value) quoteCardStatuses.value = data || {}
+			})
+			.catch(() => {})
+	}
+	watch([selectedThread, selectedThreadType], loadQuoteCardStatuses, { immediate: true })
+
+	function quoteCardState(item) {
+		return quoteCardStatuses.value[item.name] || null
+	}
+
+	function quoteCardKicker(item) {
+		const project = quoteCardState(item)?.project_name
+		return project ? `Quote · ${project}` : "Quote"
+	}
+
+	function quoteCardStatus(item) {
+		if (isQuoteReplaced(item)) return "Replaced by a newer quote"
+		return QUOTE_STATUS_LABELS[quoteCardState(item)?.status] || ""
+	}
+
 	// ---- Hire Request card: a customer asking the partner to take the project on ----
 	// message_type "Hire Request"; content is { quote, project, project_name, amount, weeks }
 	// (see hiring.py). The snapshot doesn't change, so the card reads where the request stands
@@ -1273,6 +1304,7 @@ export default function setup(context) {
 			.then(() => {
 				toast.success(accept ? "Hire accepted" : "Hire declined")
 				loadHireRequestStatuses()
+				loadQuoteCardStatuses()
 				return true
 			})
 			.catch((error) => {
@@ -1546,6 +1578,7 @@ export default function setup(context) {
 			quoteOpen.value = false
 			setDraft("")
 			context.messages.reload()
+			loadQuoteCardStatuses()
 			context.myThreads.reload()
 			loadQuotableBriefs()
 		} catch (e) {
@@ -3861,6 +3894,8 @@ export default function setup(context) {
 		selectQuoteBrief,
 		closeQuoteCard,
 		quoteCardTitle,
+		quoteCardKicker,
+		quoteCardStatus,
 		hasQuoteBrochure: quoteBrochure.hasQuoteBrochure,
 		quoteBrochureLabel: quoteBrochure.quoteBrochureLabel,
 		pickQuoteBrochure: quoteBrochure.pickQuoteBrochure,

@@ -111,6 +111,44 @@ def hire_card_statuses(thread: str) -> dict:
 	return statuses
 
 
+def quote_card_statuses(thread: str) -> dict:
+	"""Where each brief's current Quote card in a thread stands, by message: the quote's status,
+	its project and partner, and whether the caller can hire from it. Only the project's owner
+	can, while it has no partner and the quote is open. Older cards were replaced, so they have
+	no entry."""
+	user = frappe.session.user
+	_check_can_read(thread, user)
+
+	Quote = frappe.qb.DocType("Project Quote")
+	Project = frappe.qb.DocType("Customer Project")
+	Partner = frappe.qb.DocType("Partner")
+	rows = (
+		frappe.qb.from_(Quote)
+		.join(Project)
+		.on(Project.name == Quote.customer_project)
+		.left_join(Partner)
+		.on(Partner.name == Quote.partner)
+		.select(
+			Quote.name, Quote.status, Quote.quote_message, Quote.partner, Partner.company_name,
+			Project.project_name, Project.status.as_("project_status"), Project.user.as_("project_owner"),
+		)
+		.where((Quote.thread == thread) & Quote.quote_message.isnotnull())
+		.run(as_dict=True)
+	)
+	return {
+		row.quote_message: {
+			"quote": row.name,
+			"status": row.status,
+			"project_name": row.project_name,
+			"company_name": row.company_name or row.partner,
+			"can_hire": row.project_owner == user
+			and row.project_status == "Shared"
+			and row.status in OPEN_QUOTE_STATUSES,
+		}
+		for row in rows
+	}
+
+
 def expire_hire_requests() -> None:
 	"""Daily: withdraws the hire requests nobody answered in time."""
 	cutoff = add_days(now_datetime(), -HIRE_REQUEST_EXPIRY_DAYS)

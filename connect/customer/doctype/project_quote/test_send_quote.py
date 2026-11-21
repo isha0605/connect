@@ -6,7 +6,7 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from connect.api.projects import quotable_briefs, send_quote
+from connect.api.projects import hire_partner, quotable_briefs, quote_card_statuses, send_quote
 from connect.customer.doctype.customer_project.brief import send_brief
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
 from connect.customer.doctype.project_quote.test_leads import make_member
@@ -134,3 +134,31 @@ class IntegrationTestSendQuote(IntegrationTestCase):
 		self.assertRaises(frappe.ValidationError, self.quote_as, OWNER, brochure=self.upload_as(OWNER, "logo.svg"))
 		self.assertRaises(frappe.ValidationError, self.quote_as, OWNER, brochure=self.upload_as(OWNER, "setup.exe"))
 		self.assertEqual(frappe.db.get_value("Project Quote", self.quote, "status"), "Awaiting")
+
+	def card_statuses_as(self, user):
+		frappe.set_user(user)
+		try:
+			return quote_card_statuses(self.thread)
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_the_customer_hires_from_the_current_quote_card(self):
+		first = self.quote_as(OWNER)
+		current = self.quote_as(OWNER, amount=350000)
+
+		cards = self.card_statuses_as(BUYER)
+		self.assertNotIn(first, cards)
+		self.assertEqual(cards[current]["status"], "Quoted")
+		self.assertEqual(cards[current]["project_name"], "Batch tracking")
+		self.assertTrue(cards[current]["can_hire"])
+		self.assertFalse(self.card_statuses_as(OWNER)[current]["can_hire"])
+
+		frappe.set_user(BUYER)
+		hire_partner(self.quote)
+		frappe.set_user("Administrator")
+		self.assertEqual(self.card_statuses_as(BUYER)[current]["status"], "Hire Requested")
+		self.assertFalse(self.card_statuses_as(BUYER)[current]["can_hire"])
+
+	def test_only_the_threads_members_read_the_quote_cards(self):
+		self.quote_as(OWNER)
+		self.assertRaises(frappe.PermissionError, self.card_statuses_as, OTHER_OWNER)
