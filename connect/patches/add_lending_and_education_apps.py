@@ -11,7 +11,7 @@ NEW_APPS = ("Frappe Lending", "Frappe Education")
 
 def execute():
 	"""Adds the apps success stories name that Connect lacks, then gives every app without a logo
-	its icon, Frappe Framework's included."""
+	its icon, Frappe Framework's and Learning's included."""
 	for app in NEW_APPS:
 		if not frappe.db.exists("App", app):
 			frappe.get_doc({"doctype": "App", "title": app}).insert()

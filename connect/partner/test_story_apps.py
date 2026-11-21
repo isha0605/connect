@@ -43,6 +43,15 @@ class IntegrationTestStoryApps(IntegrationTestCase):
 			["ERPNext", "Frappe Education", "Helpdesk", "Frappe Lending"],
 		)
 
+	def test_the_learning_app_gets_its_logo(self):
+		if not frappe.db.exists("App", "Learning"):
+			frappe.get_doc({"doctype": "App", "title": "Learning"}).insert()
+		frappe.db.set_value("App", "Learning", "logo", None)
+
+		add_lending_and_education_apps()
+
+		self.assertEqual(frappe.db.get_value("App", "Learning", "logo"), "/assets/connect/images/app_icons/learning.png")
+
 	def test_a_page_without_the_list_has_no_apps(self):
 		self.assertEqual(apps_in_story_page("<p>Industry</p><div>ERPNext</div>", KNOWN_APPS), [])
 

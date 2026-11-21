@@ -10,7 +10,7 @@ APP_ICONS = {
 	"Frappe CRM": "crm.png",
 	"Helpdesk": "helpdesk.png",
 	"Frappe Insights": "insights.png",
-	"Frappe LMS": "learning.png",
+	"Learning": "learning.png",
 	"Frappe Books": "frappe-books.png",
 	"Frappe Drive": "frappe-drive.png",
 	"Frappe Builder": "frappe-builder.png",
