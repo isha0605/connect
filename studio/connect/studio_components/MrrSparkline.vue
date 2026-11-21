@@ -3,11 +3,12 @@
 // on hover or focus, and screen readers get the same numbers as a table.
 
 import { computed, ref, useId } from "vue"
+import { DEFAULT_CURRENCY, formatMoney } from "@app/utils/money"
 
 const props = defineProps({
 	// [{ month: "Nov 2026", amount: 504640 }], oldest first
 	points: { type: Array, default: () => [] },
-	currency: { type: String, default: "INR" },
+	currency: { type: String, default: DEFAULT_CURRENCY },
 })
 
 // The highest month sits this far below the top, so the line never touches the card's edge.
@@ -16,9 +17,6 @@ const HEADROOM = 0.25
 const gradientId = `mrr-fill-${useId()}`
 const hovered = ref(null)
 
-const money = computed(
-	() => new Intl.NumberFormat("en-IN", { style: "currency", currency: props.currency, maximumFractionDigits: 0 }),
-)
 
 // The scale starts below the lowest month, not at zero, so a small dip still shows. The lowest month
 // sits a third of the way up, keeping the area under the line.
@@ -37,7 +35,7 @@ const plotted = computed(() => {
 		...point,
 		x: last > 0 ? index * step : 50,
 		y: 100 - ((point.amount - range.value.floor) / range.value.span) * (1 - HEADROOM) * 100,
-		text: `${point.month}: ${money.value.format(point.amount)}`,
+		text: `${point.month}: ${formatMoney(point.amount, props.currency)}`,
 		hitLeft: Math.max(index * step - step / 2, 0),
 		hitWidth: index === 0 || index === last ? step / 2 : step,
 	}))
@@ -83,7 +81,7 @@ const active = computed(() => (hovered.value === null ? null : plotted.value[hov
 			:style="{ left: `${active.x}%`, transform: active.x > 60 ? 'translate(calc(-100% - 8px), 0)' : 'translate(8px, 0)' }"
 		>
 			<span class="tip-month">{{ active.month }}</span>
-			<span class="tip-amount">{{ money.format(active.amount) }}</span>
+			<span class="tip-amount">{{ formatMoney(active.amount, currency) }}</span>
 		</div>
 
 		<table class="visually-hidden">
@@ -91,7 +89,7 @@ const active = computed(() => (hovered.value === null ? null : plotted.value[hov
 			<tbody>
 				<tr v-for="point in points" :key="point.month">
 					<th scope="row">{{ point.month }}</th>
-					<td>{{ money.format(point.amount) }}</td>
+					<td>{{ formatMoney(point.amount, currency) }}</td>
 				</tr>
 			</tbody>
 		</table>

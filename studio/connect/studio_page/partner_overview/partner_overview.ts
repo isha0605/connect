@@ -3,19 +3,29 @@
 // doesn't yet read the partner's own revenue, audits, partner code or partner managers here.
 
 import { computed } from "vue"
+import { DEFAULT_CURRENCY, compactMoney, formatMoney, sampleAmount } from "@app/utils/money"
 import { startTracking } from "@app/utils/tracking"
 
 const STEPS_SHOWN = 3
 
-// The tiers, lowest first, with the targets from Partner Tier. Perks are sample text; a tier
-// without known perks shows none.
+// The tiers, lowest first, with the targets from Partner Tier: MRR in each currency. Perks are
+// sample text; a tier without known perks shows none.
 const TIERS = [
-	{ name: "Beginner", perks: "", mrr: 0, certified: 0, pmm: 0 },
-	{ name: "Entry", perks: "", mrr: 0, certified: 2, pmm: 2 },
-	{ name: "Emerging", perks: "", mrr: 30000, certified: 2, pmm: 2 },
-	{ name: "Bronze", perks: "10% off Frappe Cloud · Listed in the directory", mrr: 63000, certified: 2, pmm: 3 },
-	{ name: "Silver", perks: "20% off Frappe Cloud · Full directory profile", mrr: 250000, certified: 3, pmm: 4 },
-	{ name: "Gold", perks: "30% off Frappe Cloud · Featured in the directory", mrr: 630000, certified: 4, pmm: 5 },
+	{ name: "Beginner", perks: "", mrr: { INR: 0, USD: 0 }, certified: 0, pmm: 0 },
+	{ name: "Entry", perks: "", mrr: { INR: 0, USD: 0 }, certified: 2, pmm: 2 },
+	{ name: "Emerging", perks: "", mrr: { INR: 30000, USD: 350 }, certified: 2, pmm: 2 },
+	{
+		name: "Bronze", perks: "10% off Frappe Cloud · Listed in the directory",
+		mrr: { INR: 63000, USD: 750 }, certified: 2, pmm: 3,
+	},
+	{
+		name: "Silver", perks: "20% off Frappe Cloud · Full directory profile",
+		mrr: { INR: 250000, USD: 3150 }, certified: 3, pmm: 4,
+	},
+	{
+		name: "Gold", perks: "30% off Frappe Cloud · Featured in the directory",
+		mrr: { INR: 630000, USD: 7500 }, certified: 4, pmm: 5,
+	},
 ]
 
 // The tiers partners know as levels. The ones below Bronze are steps on the way.
@@ -106,14 +116,11 @@ const LOGOS_TO_SHOW = 4
 
 const REQUIREMENT_NAMES = { mrr: "MRR", certified: "certified consultants", pmm: "PMM" }
 
-const rupees = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 const shortDate = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" })
 
-// ₹5.05L, ₹45k, ₹0: short enough to read at a glance on a card.
-function compactRupees(amount) {
-	if (amount >= 100000) return `₹${Number((amount / 100000).toFixed(2))}L`
-	if (amount >= 1000) return `₹${Math.round(amount / 1000)}k`
-	return `₹${amount}`
+// The tier with its MRR target in the partner's currency.
+function inCurrency(tier, currency) {
+	return tier && { ...tier, mrr: tier.mrr[currency] }
 }
 
 function formatDate(isoDate) {
@@ -147,13 +154,13 @@ function shortfall(target, data, mrr) {
 }
 
 // Steps that keep the current tier: the tier review moves a partner down when they fall short of it.
-function keepSteps(tier, short, mrr) {
+function keepSteps(tier, short, mrr, currency) {
 	const steps = []
 	if (short.mrr) {
 		steps.push({
 			key: "keep-mrr", icon: "lucide-circle-alert", route: "/customers", action: "See customers",
-			title: `Keep ${tier.name}: bring MRR back to ${rupees.format(tier.mrr)}`,
-			detail: `Last month was ${rupees.format(mrr)}. The tier review uses last month's Frappe Cloud revenue.`,
+			title: `Keep ${tier.name}: bring MRR back to ${formatMoney(tier.mrr, currency)}`,
+			detail: `Last month was ${formatMoney(mrr, currency)}. The tier review uses last month's Frappe Cloud revenue.`,
 		})
 	}
 	if (short.certified) {
@@ -204,15 +211,15 @@ function certificationStep(data, nextTier, missing) {
 }
 
 // A partner whose tier never needed revenue is bringing their first customers, not growing.
-function revenueStep(tier, nextTier, missing, mrr) {
+function revenueStep(tier, nextTier, missing, mrr, currency) {
 	const isFirstRevenue = tier.mrr === 0
 	return {
 		key: "mrr", icon: "lucide-trending-up", route: "/customers", action: "See customers",
 		title: isFirstRevenue
 			? "Bring your first customers to Frappe Cloud"
-			: `Grow Frappe Cloud MRR by ${rupees.format(missing)}`,
+			: `Grow Frappe Cloud MRR by ${formatMoney(missing, currency)}`,
 		detail: isFirstRevenue
-			? `${nextTier.name} needs ${rupees.format(nextTier.mrr)} a month. You're at ${rupees.format(mrr)}.`
+			? `${nextTier.name} needs ${formatMoney(nextTier.mrr, currency)} a month. You're at ${formatMoney(mrr, currency)}.`
 			: "Bring new customers to Frappe Cloud, or move existing ones to bigger plans.",
 	}
 }
@@ -262,20 +269,28 @@ function listingSteps(data) {
 
 export default function setup(context) {
 	startTracking(context)
-	const { route, router, toast } = context
+	const { route, router, toast, myContext } = context
 
 	const data = SAMPLES[route.query.tier] || SAMPLES[DEFAULT_SAMPLE]
 	const tierIndex = TIERS.findIndex((tier) => tier.name === data.tier)
 	const tier = TIERS[tierIndex]
 	const nextTier = TIERS[tierIndex + 1] || null
-	const mrr = data.mrr.at(-1)?.amount || 0
 
-	// The cards compare against the next tier, or against the current one at the top.
-	const target = nextTier || tier
-	const toKeep = shortfall(tier, data, mrr)
-	const toReach = nextTier ? shortfall(nextTier, data, mrr) : null
-	const toTarget = toReach || toKeep
-	const left = Object.keys(REQUIREMENT_NAMES).filter((key) => toTarget[key]).map((key) => REQUIREMENT_NAMES[key])
+	// The partner's currency arrives with the page's context, after the page first shows.
+	const currency = computed(() => myContext?.data?.partner?.currency || DEFAULT_CURRENCY)
+	const progress = computed(() => {
+		const points = data.mrr.map((point) => ({ ...point, amount: sampleAmount(point.amount, currency.value) }))
+		const mrr = points.at(-1)?.amount || 0
+		const current = inCurrency(tier, currency.value)
+		const next = inCurrency(nextTier, currency.value)
+		const toKeep = shortfall(current, data, mrr)
+		const toReach = next ? shortfall(next, data, mrr) : null
+		// The cards compare against the next tier, or against the current one at the top.
+		const target = next || current
+		const toTarget = toReach || toKeep
+		const left = Object.keys(REQUIREMENT_NAMES).filter((key) => toTarget[key]).map((key) => REQUIREMENT_NAMES[key])
+		return { points, mrr, current, next, toKeep, toReach, target, left }
+	})
 
 	// The banner shows the partner levels only. Below Bronze, all three are still ahead.
 	const tierSteps = TIERS.map((step, index) => ({ step, index }))
@@ -290,11 +305,12 @@ export default function setup(context) {
 
 	// Keeping the tier comes first, then the next tier's gaps from slowest to fix to fastest.
 	const doNext = computed(() => {
-		const steps = keepSteps(tier, toKeep, mrr)
+		const { mrr, current, next, toKeep, toReach } = progress.value
+		const steps = keepSteps(current, toKeep, mrr, currency.value)
 		if (toReach) {
-			if (toReach.pmm) steps.push(...auditSteps(data, nextTier))
-			if (toReach.certified) steps.push(certificationStep(data, nextTier, toReach.certified))
-			if (toReach.mrr) steps.push(revenueStep(tier, nextTier, toReach.mrr, mrr))
+			if (toReach.pmm) steps.push(...auditSteps(data, next))
+			if (toReach.certified) steps.push(certificationStep(data, next, toReach.certified))
+			if (toReach.mrr) steps.push(revenueStep(current, next, toReach.mrr, mrr, currency.value))
 		}
 		// Free slots go to protecting the tier, then to strengthening the listing.
 		const safety = safetyStep(tier, TIERS[tierIndex - 1], data)
@@ -329,7 +345,7 @@ export default function setup(context) {
 		nextTier,
 		doNext,
 		attention,
-		allMet: !left.length,
+		allMet: computed(() => !progress.value.left.length),
 		allMetText: nextTier
 			? `You meet everything for ${nextTier.name}. The next tier review moves you up.`
 			: `You're ${tier.name}. Keep all three to stay here.`,
@@ -338,16 +354,23 @@ export default function setup(context) {
 		openOnEnter: (event, path) => event.key === "Enter" && router.push(path),
 		openStepOnEnter: (event, step) => event.key === "Enter" && !step.isPrimary && router.push(step.route),
 		progressTitle: nextTier ? `Progress to ${nextTier.name}` : `Staying ${tier.name}`,
-		leftLabel: left.length ? `${left.length} ${nextTier ? "to go" : "at risk"}: ${joinNames(left)}` : "All three met",
-		mrr: {
-			points: data.mrr,
-			amount: compactRupees(mrr),
-			target: target.mrr ? `/ ${compactRupees(target.mrr)}` : "",
-		},
-		certs: { count: String(data.certified), target: `/ ${target.certified}` },
+		leftLabel: computed(() => {
+			const { left } = progress.value
+			return left.length ? `${left.length} ${nextTier ? "to go" : "at risk"}: ${joinNames(left)}` : "All three met"
+		}),
+		mrr: computed(() => {
+			const { points, mrr, target } = progress.value
+			return {
+				points,
+				currency: currency.value,
+				amount: compactMoney(mrr, currency.value),
+				target: target.mrr ? `/ ${compactMoney(target.mrr, currency.value)}` : "",
+			}
+		}),
+		certs: { count: String(data.certified), target: `/ ${(nextTier || tier).certified}` },
 		pmm: {
 			level: String(data.pmm),
-			target: `/ ${target.pmm}`,
+			target: `/ ${(nextTier || tier).pmm}`,
 			auditBadge: data.upcoming_audit ? `Audit ${formatDate(data.upcoming_audit)}` : "",
 			meta: data.open_findings ? `${lastAudit} · ${data.open_findings} open` : lastAudit,
 		},
