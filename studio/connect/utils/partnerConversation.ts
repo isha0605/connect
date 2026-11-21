@@ -19,8 +19,8 @@ import {
 	toTime,
 } from "@app/utils/partnerRecords"
 import { useQuoteBrochure } from "@app/utils/quoteBrochure"
+import { currencySymbol, exampleQuote, formatMoney } from "@app/utils/money"
 
-const RUPEES = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 const MAX_QUOTE_WEEKS = 104
 const QUOTE_NOTE_LIMIT = 300
 const HIRE_STATUS_LABELS = { "Hire Requested": "Waiting for your answer", Hired: "Accepted" }
@@ -113,7 +113,7 @@ export function useConversation({ call, toast, record, reload, followUpMethod, m
 			// a file, and a quote's brochure
 			...(m.attachment ? fileCard(m) : {}),
 			body: messageBody(m),
-			price: m.amount ? RUPEES.format(m.amount) : "",
+			price: m.amount ? formatMoney(m.amount, m.currency) : "",
 			weeksLabel: m.weeks ? `about ${m.weeks} weeks` : "",
 			hireStatus: m.kind === "hire" ? hireStatusLabel(m) : "",
 			menu: m.kind === "text" ? messageMenu(m) : [],
@@ -307,6 +307,8 @@ export function useConversation({ call, toast, record, reload, followUpMethod, m
 	const quoteAmount = ref("")
 	const quoteWeeks = ref("")
 	const brochure = useQuoteBrochure({ call, toast, thread: () => thread.value })
+	// The quote is in the partner's currency, which each brief carries.
+	const quoteCurrency = computed(() => quotableBriefs.value.find((row) => row.name === quoteBrief.value)?.currency)
 
 	function loadQuotableBriefs() {
 		quotableBriefs.value = []
@@ -458,6 +460,8 @@ export function useConversation({ call, toast, record, reload, followUpMethod, m
 		quoteOpen,
 		quoteBrief,
 		quoteAmount,
+		quoteAmountLabel: computed(() => `Amount (${currencySymbol(quoteCurrency.value)})`),
+		quoteAmountPlaceholder: computed(() => exampleQuote(quoteCurrency.value)),
 		quoteWeeks,
 		quoteBriefOptions: computed(() => quotableBriefs.value.map((brief) => ({ label: brief.project_name, value: brief.name }))),
 		openQuote,

@@ -14,9 +14,22 @@ function localeOf(currency) {
 	return LOCALES[currency] || LOCALES[DEFAULT_CURRENCY]
 }
 
+// "₹" or "$", for a field's label.
+export function currencySymbol(currency = DEFAULT_CURRENCY) {
+	const parts = new Intl.NumberFormat(localeOf(currency), { style: "currency", currency }).formatToParts(0)
+	return parts.find((part) => part.type === "currency")?.value || currency
+}
+
 export function formatMoney(amount, currency = DEFAULT_CURRENCY) {
 	const format = new Intl.NumberFormat(localeOf(currency), { style: "currency", currency, maximumFractionDigits: 0 })
 	return format.format(amount || 0)
+}
+
+// The example in a quote box: about the same project in either currency.
+const EXAMPLE_QUOTES = { INR: 400000, USD: 5000 }
+
+export function exampleQuote(currency = DEFAULT_CURRENCY) {
+	return String(EXAMPLE_QUOTES[currency] || EXAMPLE_QUOTES[DEFAULT_CURRENCY])
 }
 
 // Short enough to read at a glance on a card: ₹5.05L and ₹45k, or $7.5k and $1.2M.
