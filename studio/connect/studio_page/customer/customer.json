@@ -1021,7 +1021,163 @@
                           "fontSize": "text-p-base",
                           "tag": "p",
                           "text": "{{ dataItem.note }}"
-                         }
+                         },
+                         "visibilityCondition": "dataItem.note"
+                        },
+                        {
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "backgroundColor": "var(--surface-gray-1)",
+                          "border": "1px solid var(--outline-gray-2)",
+                          "borderRadius": "8px",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "gap": "10px",
+                          "padding": "8px 10px",
+                          "width": "100%",
+                          "boxSizing": "border-box",
+                          "marginTop": "12px",
+                          "maxWidth": "100%"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "cursor": "pointer",
+                            "display": "flex",
+                            "flex": "1",
+                            "flexDirection": "row",
+                            "gap": "10px",
+                            "minWidth": "0px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "alignItems": "center",
+                              "backgroundColor": "{{ dataItem.iconBg }}",
+                              "borderRadius": "6px",
+                              "display": "flex",
+                              "flexShrink": "0",
+                              "height": "32px",
+                              "justifyContent": "center",
+                              "width": "32px"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "color": "{{ dataItem.iconColor }}",
+                                "height": "16px",
+                                "width": "16px"
+                               },
+                               "componentId": "cd-msg-bid-file-icon",
+                               "componentName": "Icon",
+                               "componentProps": {
+                                "icon": "{{ dataItem.icon }}"
+                               },
+                               "componentSlots": {}
+                              }
+                             ],
+                             "componentId": "cd-msg-bid-file-icon-box",
+                             "componentName": "container",
+                             "componentProps": {},
+                             "componentSlots": {},
+                             "originalElement": "div"
+                            },
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flex": "1",
+                              "flexDirection": "column",
+                              "minWidth": "0px",
+                              "textAlign": "left"
+                             },
+                             "children": [
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-7)",
+                                "fontWeight": "500",
+                                "overflow": "hidden",
+                                "textOverflow": "ellipsis",
+                                "whiteSpace": "nowrap"
+                               },
+                               "componentId": "cd-msg-bid-file-name",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "fontSize": "text-sm",
+                                "tag": "span",
+                                "text": "{{ dataItem.file_name }}"
+                               },
+                               "componentSlots": {}
+                              },
+                              {
+                               "baseStyles": {
+                                "color": "var(--ink-gray-5)"
+                               },
+                               "componentId": "cd-msg-bid-file-size",
+                               "componentName": "TextBlock",
+                               "componentProps": {
+                                "fontSize": "text-xs",
+                                "tag": "span",
+                                "text": "{{ dataItem.sizeLabel }}"
+                               },
+                               "componentSlots": {}
+                              }
+                             ],
+                             "componentId": "cd-msg-bid-file-info",
+                             "componentName": "container",
+                             "componentProps": {},
+                             "componentSlots": {},
+                             "originalElement": "div"
+                            }
+                           ],
+                           "componentEvents": {
+                            "click": {
+                             "action": "Run Script",
+                             "event": "click",
+                             "script": "openFilePreview(dataItem);"
+                            }
+                           },
+                           "componentId": "cd-msg-bid-file-preview-trigger",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div"
+                          },
+                          {
+                           "attributes": {
+                            "aria-label": "Download"
+                           },
+                           "baseStyles": {
+                            "flexShrink": "0"
+                           },
+                           "componentEvents": {
+                            "click": {
+                             "action": "Run Script",
+                             "event": "click",
+                             "script": "downloadFile(dataItem, eventArgs[0]);"
+                            }
+                           },
+                           "componentId": "cd-msg-bid-file-download",
+                           "componentName": "Button",
+                           "componentProps": {
+                            "icon": "lucide-download",
+                            "theme": "gray",
+                            "tooltip": "Download",
+                            "variant": "ghost"
+                           },
+                           "componentSlots": {}
+                          }
+                         ],
+                         "componentId": "cd-msg-bid-file-attachment",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "mobileStyles": {
+                          "maxWidth": "70vw",
+                          "width": "100%"
+                         },
+                         "originalElement": "div",
+                         "visibilityCondition": "dataItem.attachment"
                         },
                         {
                          "classes": [
@@ -1861,6 +2017,117 @@
                    "componentId": "cd-composer-quote-fields",
                    "componentName": "container",
                    "componentProps": {},
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "alignItems": "center",
+                    "display": "flex",
+                    "flexDirection": "row",
+                    "flexWrap": "wrap",
+                    "gap": "8px"
+                   },
+                   "children": [
+                    {
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "pickQuoteBrochure();"
+                      }
+                     },
+                     "componentId": "cd-composer-quote-brochure-add",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "iconLeft": "lucide-paperclip",
+                      "label": "Attach brochure",
+                      "variant": "subtle"
+                     },
+                     "visibilityCondition": "!hasQuoteBrochure"
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-5)"
+                     },
+                     "componentId": "cd-composer-quote-brochure-hint",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-xs",
+                      "tag": "span",
+                      "text": "Optional. A PDF or an image the customer can open from the quote."
+                     },
+                     "visibilityCondition": "!hasQuoteBrochure"
+                    },
+                    {
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "backgroundColor": "var(--surface-gray-2)",
+                      "borderRadius": "8px",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "8px",
+                      "maxWidth": "100%",
+                      "minWidth": "0px",
+                      "padding": "2px 2px 2px 10px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "height": "14px",
+                        "width": "14px"
+                       },
+                       "componentId": "cd-composer-quote-brochure-icon",
+                       "componentName": "Icon",
+                       "componentProps": {
+                        "icon": "lucide-file-text"
+                       }
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-8)",
+                        "minWidth": "0px",
+                        "overflow": "hidden",
+                        "textOverflow": "ellipsis",
+                        "whiteSpace": "nowrap"
+                       },
+                       "componentId": "cd-composer-quote-brochure-name",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-sm",
+                        "tag": "span",
+                        "text": "{{ quoteBrochureLabel }}"
+                       }
+                      },
+                      {
+                       "attributes": {
+                        "aria-label": "Remove the brochure"
+                       },
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "removeQuoteBrochure();"
+                        }
+                       },
+                       "componentId": "cd-composer-quote-brochure-remove",
+                       "componentName": "Button",
+                       "componentProps": {
+                        "icon": "lucide-x",
+                        "tooltip": "Remove the brochure",
+                        "variant": "ghost"
+                       }
+                      }
+                     ],
+                     "componentId": "cd-composer-quote-brochure-file",
+                     "componentName": "container",
+                     "originalElement": "div",
+                     "visibilityCondition": "hasQuoteBrochure"
+                    }
+                   ],
+                   "componentId": "cd-composer-quote-brochure",
+                   "componentName": "container",
                    "originalElement": "div"
                   }
                  ],

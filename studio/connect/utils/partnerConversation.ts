@@ -18,6 +18,7 @@ import {
 	toFollowUpRows,
 	toTime,
 } from "@app/utils/partnerRecords"
+import { useQuoteBrochure } from "@app/utils/quoteBrochure"
 
 const RUPEES = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 const MAX_QUOTE_WEEKS = 104
@@ -109,7 +110,8 @@ export function useConversation({ call, toast, record, reload, followUpMethod, m
 			avatarLabel: m.from === "you" ? "P" : "C",
 			isWaiting: m.kind === "bid" && !current.is_customer_revealed,
 			...(m.kind === "meeting" ? meetingCard(m, followUps) : {}),
-			...(m.kind === "file" ? fileCard(m) : {}),
+			// a file, and a quote's brochure
+			...(m.attachment ? fileCard(m) : {}),
 			body: messageBody(m),
 			price: m.amount ? RUPEES.format(m.amount) : "",
 			weeksLabel: m.weeks ? `about ${m.weeks} weeks` : "",
@@ -233,7 +235,9 @@ export function useConversation({ call, toast, record, reload, followUpMethod, m
 
 	const canSend = computed(() => {
 		if (sending.value || isUploading.value) return false
-		if (quoteOpen.value) return Number(quoteAmount.value) > 0 && Number(quoteWeeks.value) > 0
+		if (quoteOpen.value) {
+			return Number(quoteAmount.value) > 0 && Number(quoteWeeks.value) > 0 && !brochure.isQuoteBrochureUploading.value
+		}
 		return Boolean(messageDraft.value.trim() || draftAttachments.value.length)
 	})
 
@@ -302,6 +306,7 @@ export function useConversation({ call, toast, record, reload, followUpMethod, m
 	const quoteBrief = ref("")
 	const quoteAmount = ref("")
 	const quoteWeeks = ref("")
+	const brochure = useQuoteBrochure({ call, toast, thread: () => thread.value })
 
 	function loadQuotableBriefs() {
 		quotableBriefs.value = []
@@ -320,16 +325,29 @@ export function useConversation({ call, toast, record, reload, followUpMethod, m
 		quoteBrief.value = brief.name
 		quoteAmount.value = brief.amount ? String(brief.amount) : ""
 		quoteWeeks.value = brief.weeks ? String(brief.weeks) : ""
+		brochure.startBrochure(brief)
 		if (brief.note && !messageDraft.value.trim()) messageDraft.value = brief.note
 		quoteOpen.value = true
+	}
+
+	function closeQuote() {
+		quoteOpen.value = false
+		brochure.removeQuoteBrochure()
 	}
 
 	async function sendQuote() {
 		const note = messageDraft.value.trim()
 		const error = quoteError(quoteAmount.value, Number(quoteWeeks.value), note)
 		if (error) throw { messages: [error] }
-		const args = { quote: quoteBrief.value, amount: Number(quoteAmount.value), weeks: Number(quoteWeeks.value), note }
+		const args = {
+			quote: quoteBrief.value,
+			amount: Number(quoteAmount.value),
+			weeks: Number(quoteWeeks.value),
+			note,
+			brochure: brochure.quoteBrochureUrl.value || undefined,
+		}
 		await call("connect.api.projects.send_quote", args)
+		brochure.brochureSent()
 		resetDraft()
 		toast.success("Quote sent")
 	}
@@ -444,7 +462,11 @@ export function useConversation({ call, toast, record, reload, followUpMethod, m
 		quoteBriefOptions: computed(() => quotableBriefs.value.map((brief) => ({ label: brief.project_name, value: brief.name }))),
 		openQuote,
 		startQuote: (message) => openQuote(message.quote),
-		closeQuote: () => (quoteOpen.value = false),
+		closeQuote,
+		hasQuoteBrochure: brochure.hasQuoteBrochure,
+		quoteBrochureLabel: brochure.quoteBrochureLabel,
+		pickQuoteBrochure: brochure.pickQuoteBrochure,
+		removeQuoteBrochure: brochure.removeQuoteBrochure,
 		meetingOpen,
 		meetingForm,
 		meetingDurations: MEETING_DURATIONS,

@@ -6,6 +6,7 @@ import { goToSignIn, signOut } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
 import { usePartnerRegistration } from "@app/utils/partnerRegistration"
 import { useMyContext } from "@app/utils/myContext"
+import { useQuoteBrochure } from "@app/utils/quoteBrochure"
 
 // connect.messaging.customer_identity.ANONYMOUS_USER: who the partner side sees in place of an
 // anonymous customer's people.
@@ -814,6 +815,7 @@ export default function setup(context) {
 			context.messages.reload()
 			// An answer to a hire request arrives as a message, so its card's status may have moved.
 			loadHireRequestStatuses()
+			loadQuoteCardStatuses()
 		}
 		context.myThreads.reload()
 	}
@@ -1220,6 +1222,62 @@ export default function setup(context) {
 		return parseRequirementContent(item).note || ""
 	}
 
+	// Where each brief's current Quote card stands, by message (quote_card_statuses): its status,
+	// project and partner, and whether this customer can hire from it. Replaced cards have none.
+	const QUOTE_STATUS_LABELS = { "Hire Requested": "Hire requested", Hired: "Hired", "Not Interested": "Not taken forward" }
+	const quoteCardStatuses = ref({})
+	function loadQuoteCardStatuses() {
+		quoteCardStatuses.value = {}
+		if (selectedThreadType.value !== "company" || !selectedThread.value) return
+		const thread = selectedThread.value
+		call("connect.api.projects.quote_card_statuses", { thread })
+			.then((data) => {
+				if (thread === selectedThread.value) quoteCardStatuses.value = data || {}
+			})
+			.catch(() => {})
+	}
+	watch([selectedThread, selectedThreadType], loadQuoteCardStatuses, { immediate: true })
+
+	function quoteCardState(item) {
+		return quoteCardStatuses.value[item.name] || null
+	}
+
+	function quoteCardKicker(item) {
+		const project = quoteCardState(item)?.project_name
+		return project ? `Quote · ${project}` : "Quote"
+	}
+
+	function quoteCardStatus(item) {
+		if (isQuoteReplaced(item)) return "Replaced by a newer quote"
+		return QUOTE_STATUS_LABELS[quoteCardState(item)?.status] || ""
+	}
+
+	// The customer hires from the current quote, in the project page's own dialog (HireDialog.vue).
+	const hireDialogOpen = ref(false)
+	const hireDialogQuote = ref(null)
+
+	function canHireFromQuote(item) {
+		return Boolean(quoteCardState(item)?.can_hire) && !isQuoteReplaced(item)
+	}
+
+	function quoteHireLabel(item) {
+		return `Hire ${quoteCardState(item)?.company_name || "this partner"}`
+	}
+
+	function hireFromQuote(item) {
+		const state = quoteCardState(item)
+		if (!state) return
+		hireDialogQuote.value = { ...state, name: state.quote }
+		hireDialogOpen.value = true
+	}
+
+	// The hire request is a new card in the thread, and this quote's card now says so.
+	function onHiredFromQuote() {
+		context.messages.reload()
+		loadQuoteCardStatuses()
+		loadHireRequestStatuses()
+	}
+
 	// ---- Hire Request card: a customer asking the partner to take the project on ----
 	// message_type "Hire Request"; content is { quote, project, project_name, amount, weeks }
 	// (see hiring.py). The snapshot doesn't change, so the card reads where the request stands
@@ -1272,6 +1330,7 @@ export default function setup(context) {
 			.then(() => {
 				toast.success(accept ? "Hire accepted" : "Hire declined")
 				loadHireRequestStatuses()
+				loadQuoteCardStatuses()
 				return true
 			})
 			.catch((error) => {
@@ -1432,6 +1491,7 @@ export default function setup(context) {
 	const quoteWeeks = ref("")
 	const quoteSendError = ref("")
 	const sendingQuote = ref(false)
+	const quoteBrochure = useQuoteBrochure({ call, toast, thread: () => selectedThread.value })
 
 	function loadQuotableBriefs() {
 		quotableBriefs.value = []
@@ -1449,7 +1509,7 @@ export default function setup(context) {
 	watch(
 		[selectedThread, selectedThreadType, amPartner],
 		() => {
-			quoteOpen.value = false
+			closeQuoteCard()
 			loadQuotableBriefs()
 		},
 		{ immediate: true },
@@ -1477,12 +1537,14 @@ export default function setup(context) {
 		quoteAmount.value = brief.amount ? String(brief.amount) : ""
 		quoteWeeks.value = brief.weeks ? String(brief.weeks) : ""
 		quoteSendError.value = ""
+		quoteBrochure.startBrochure(brief)
 		if (brief.note && !currentDraft().trim()) setDraft(brief.note)
 	}
 
 	function closeQuoteCard() {
 		quoteOpen.value = false
 		quoteSendError.value = ""
+		quoteBrochure.removeQuoteBrochure()
 	}
 
 	function quoteCardTitle() {
@@ -1518,7 +1580,11 @@ export default function setup(context) {
 
 	function isQuoteReady() {
 		return (
-			Number(quoteAmount.value) > 0 && Number(quoteWeeks.value) > 0 && !quoteFieldError() && !sendingQuote.value
+			Number(quoteAmount.value) > 0 &&
+			Number(quoteWeeks.value) > 0 &&
+			!quoteFieldError() &&
+			!sendingQuote.value &&
+			!quoteBrochure.isQuoteBrochureUploading.value
 		)
 	}
 
@@ -1532,10 +1598,13 @@ export default function setup(context) {
 				amount: Number(quoteAmount.value),
 				weeks: Number(quoteWeeks.value),
 				note: currentDraft().trim(),
+				brochure: quoteBrochure.quoteBrochureUrl.value || undefined,
 			})
+			quoteBrochure.brochureSent()
 			quoteOpen.value = false
 			setDraft("")
 			context.messages.reload()
+			loadQuoteCardStatuses()
 			context.myThreads.reload()
 			loadQuotableBriefs()
 		} catch (e) {
@@ -3851,6 +3920,18 @@ export default function setup(context) {
 		selectQuoteBrief,
 		closeQuoteCard,
 		quoteCardTitle,
+		quoteCardKicker,
+		quoteCardStatus,
+		canHireFromQuote,
+		quoteHireLabel,
+		hireFromQuote,
+		hireDialogOpen,
+		hireDialogQuote,
+		onHiredFromQuote,
+		hasQuoteBrochure: quoteBrochure.hasQuoteBrochure,
+		quoteBrochureLabel: quoteBrochure.quoteBrochureLabel,
+		pickQuoteBrochure: quoteBrochure.pickQuoteBrochure,
+		removeQuoteBrochure: quoteBrochure.removeQuoteBrochure,
 		quoteBriefOptions,
 		quoteFieldError,
 		isQuoteReady,

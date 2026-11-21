@@ -85,6 +85,12 @@ def hire_request_statuses(thread):
 	return hire_request_statuses(thread)
 
 
+@frappe.whitelist()
+def quote_card_statuses(thread):
+	from connect.customer.doctype.customer_project.hiring import quote_card_statuses
+	return quote_card_statuses(thread)
+
+
 # The partner's side: their owners and sales quote on a brief from the chat.
 @frappe.whitelist(methods=["POST"])
 def decline_brief(quote):
@@ -98,8 +104,8 @@ def quotable_briefs(thread):
 
 
 @frappe.whitelist(methods=["POST"])
-def send_quote(quote, amount, weeks, note=None):
-	return {"message": frappe.get_doc("Project Quote", quote).send_quote(amount, weeks, note)}
+def send_quote(quote, amount, weeks, note=None, brochure=None):
+	return {"message": frappe.get_doc("Project Quote", quote).send_quote(amount, weeks, note, brochure)}
 
 
 @frappe.whitelist(methods=["POST"])

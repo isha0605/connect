@@ -202,116 +202,34 @@ export default function setup(context) {
 		router.push(`/partner-profile-redesign/${encodeURIComponent(row.partner)}`)
 	}
 
-	// Message is on every row, so More holds Share details (until it's done) and Not interested.
+	// Message is on every row, so More holds the brochure, Share details (until it's done) and Not interested.
 	// On a narrow screen Message moves into More too.
 	function quoteMenu(row) {
 		return [
 			isNarrow.value && { label: "Message", icon: "lucide-message-square", onClick: () => readThread(row) },
+			row.brochure && { label: "Open brochure", icon: "lucide-file-text", onClick: () => openBrochure(row) },
 			row.status === "Quoted" && { label: "Share details", icon: "lucide-send", onClick: () => shareDetails(row) },
 			row.status !== "Not Interested" && { label: "Not interested", icon: "lucide-ban", onClick: () => notInterested(row) },
 		].filter(Boolean)
 	}
 
-	// ---- Hire: agree to the terms, then say what made you choose them ----
-	const OTHER_REASON = "Other"
+	// The brochure the partner attached to their quote, in a new tab: it is a private file the
+	// customer can open as a member of the chat.
+	function openBrochure(row) {
+		window.open(row.brochure, "_blank", "noopener")
+	}
+
+	// ---- Hire: the shared dialog (HireDialog.vue) agrees the terms, then asks why them ----
 	const hireOpen = ref(false)
-	const hireStep = ref("terms")
-	const hireAgreed = ref(false)
-	const hireNeedsAgreement = ref(false)
 	const hireRow = ref(null)
-	const hiring = ref(false)
-	// The reasons come from the server, which checks them; Other opens a note of its own.
-	const hireReasons = computed(() => [...(project.value?.hire_reasons || []), OTHER_REASON])
-	const hireNoteLimit = computed(() => project.value?.hire_note_limit || 500)
-	const pickedReasons = ref([])
-	const savingHireReasons = ref(false)
-	const hireReasonError = ref("")
-	// Kept out of reactive state: a returned ref re-renders the whole page on every keystroke.
-	let hireNoteText = ""
-	const hireName = computed(() => hireRow.value?.company_name || "this partner")
-	const hireTitle = computed(() => (hireStep.value === "terms" ? "Confirm the hire" : ""))
-	const hasOtherReason = computed(() => pickedReasons.value.includes(OTHER_REASON))
-	// Frappe not being a party comes first: it is the one a customer would otherwise assume the opposite of.
-	const hireTerms = computed(() =>
-		[
-			{ icon: "lucide-wallet", text: `Pay ${hireName.value} directly, Frappe isn’t a party` },
-			{ icon: "lucide-file-check", text: "Scope, price and timeline are as quoted" },
-			{ icon: "lucide-cloud", text: `Host with ${hireName.value}, Frappe Cloud or elsewhere` },
-			{ icon: "lucide-lock", text: "Frappe sees this project, not your site" },
-			// Hire is on every quote, so it can be the first time this partner learns who you are.
-			hireRow.value?.status !== "Interested" && {
-				icon: "lucide-building-2",
-				text: `${hireName.value} gets your company name and contact details`,
-			},
-		].filter(Boolean),
-	)
 
 	function hirePartner(row) {
 		hireRow.value = row
-		hireAgreed.value = false
-		hireNeedsAgreement.value = false
-		pickedReasons.value = []
-		hireNoteText = ""
-		hireReasonError.value = ""
-		hireStep.value = "terms"
 		hireOpen.value = true
 	}
 
-	// Hire stays enabled, since a disabled button can't say why; pressing it unticked says so instead.
-	function confirmHire() {
-		if (!hireAgreed.value) {
-			hireNeedsAgreement.value = true
-			return
-		}
-		if (hiring.value || !hireRow.value) return
-		hiring.value = true
-		call("connect.api.projects.hire_partner", { quote: hireRow.value.name })
-			.then((data) => {
-				project.value = data
-				hireStep.value = "why"
-				toast.success(`Hire request sent to ${hireName.value}`)
-			})
-			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't hire this partner. Try again."))
-			.finally(() => {
-				hiring.value = false
-			})
-	}
-
-	function toggleHireReason(reason) {
-		const picked = pickedReasons.value
-		pickedReasons.value = picked.includes(reason) ? picked.filter((item) => item !== reason) : [...picked, reason]
-	}
-
-	function rememberHireNote(text) {
-		hireNoteText = text || ""
-	}
-
-	// Done is the one action: with nothing picked it just closes. A failed save keeps the dialog
-	// open with the reason, so the answer isn't lost.
-	function sendHireReasons() {
-		if (savingHireReasons.value) return
-		const reasons = pickedReasons.value.filter((reason) => reason !== OTHER_REASON)
-		const note = hasOtherReason.value ? hireNoteText.trim() : ""
-		if (!project.value || (!reasons.length && !note)) {
-			hireOpen.value = false
-			return
-		}
-		savingHireReasons.value = true
-		hireReasonError.value = ""
-		call("connect.api.projects.set_hire_reason", {
-			name: project.value.name,
-			reasons: JSON.stringify(reasons),
-			note,
-		})
-			.then(() => {
-				hireOpen.value = false
-			})
-			.catch((error) => {
-				hireReasonError.value = error?.messages?.[0] || "Couldn't save that. Try again."
-			})
-			.finally(() => {
-				savingHireReasons.value = false
-			})
+	function onHired(data) {
+		project.value = data
 	}
 
 	// Demo only: partners can't send quotes yet, so this makes every partner the brief went
@@ -599,23 +517,7 @@ export default function setup(context) {
 		hirePartner,
 		hireOpen,
 		hireRow,
-		hireStep,
-		hireAgreed,
-		hireNeedsAgreement,
-		hiring,
-		hireName,
-		hireTitle,
-		hireTerms,
-		hireReasons,
-		pickedReasons,
-		rememberHireNote,
-		hireNoteLimit,
-		savingHireReasons,
-		hireReasonError,
-		hasOtherReason,
-		toggleHireReason,
-		sendHireReasons,
-		confirmHire,
+		onHired,
 		quoteMenu,
 		simulating,
 		simulateQuotes,

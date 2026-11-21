@@ -365,15 +365,19 @@ def list_quotes(name: str) -> list[dict]:
 	doc = get_own_project(name)
 	Quote = frappe.qb.DocType("Project Quote")
 	Partner = frappe.qb.DocType("Partner")
+	Message = frappe.qb.DocType("Connect Message")
 	rows = (
 		frappe.qb.from_(Quote)
 		.left_join(Partner)
 		.on(Partner.name == Quote.partner)
+		.left_join(Message)
+		.on(Message.name == Quote.quote_message)
 		.select(
 			Quote.name, Quote.partner, Quote.thread, Quote.status, Quote.amount, Quote.timeline_weeks, Quote.note,
 			Quote.quoted_on, Quote.quoted_before_update,
 			Partner.company_name, Partner.tier, Partner.city, Partner.country, Partner.logo,
 			Partner.verification_status,
+			Message.attachment.as_("brochure"), Message.file_name.as_("brochure_name"),
 		)
 		.where(Quote.customer_project == doc.name)
 		.where(Quote.status.isin(QUOTE_STATUSES + INVITED_QUOTE_STATUSES))

@@ -6,7 +6,7 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from connect.api.projects import quotable_briefs, send_quote
+from connect.api.projects import hire_partner, quotable_briefs, quote_card_statuses, send_quote
 from connect.customer.doctype.customer_project.brief import send_brief
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
 from connect.customer.doctype.project_quote.test_leads import make_member
@@ -43,10 +43,20 @@ class IntegrationTestSendQuote(IntegrationTestCase):
 		self.thread = send_brief(project, customer, PARTNER)
 		self.quote = frappe.db.get_value("Project Quote", {"customer_project": project.name}, "name")
 
-	def quote_as(self, user, amount=400000, weeks=6, note="Includes data migration."):
+	def quote_as(self, user, amount=400000, weeks=6, note="Includes data migration.", brochure=None):
 		frappe.set_user(user)
 		try:
-			return send_quote(self.quote, amount, weeks, note)["message"]
+			return send_quote(self.quote, amount, weeks, note, brochure)["message"]
+		finally:
+			frappe.set_user("Administrator")
+
+	def upload_as(self, user, file_name="proposal.pdf"):
+		"""A file the user staged in the chat composer, not yet on any message."""
+		frappe.set_user(user)
+		try:
+			return frappe.get_doc(
+				{"doctype": "File", "file_name": file_name, "content": b"%PDF-1.4 brochure", "is_private": 1}
+			).insert(ignore_permissions=True).file_url
 		finally:
 			frappe.set_user("Administrator")
 
@@ -89,3 +99,74 @@ class IntegrationTestSendQuote(IntegrationTestCase):
 		for values in ({"amount": 0}, {"weeks": 0}, {"weeks": 105}, {"note": "x" * 301}):
 			self.assertRaises(frappe.ValidationError, self.quote_as, OWNER, **values)
 		self.assertEqual(frappe.db.get_value("Project Quote", self.quote, "status"), "Awaiting")
+
+	def test_a_quote_carries_its_brochure(self):
+		brochure = self.upload_as(SALES)
+		message = self.quote_as(SALES, brochure=brochure)
+
+		card = frappe.get_doc("Connect Message", message)
+		self.assertEqual((card.attachment, card.file_name, card.file_type), (brochure, "proposal.pdf", "application/pdf"))
+		file_doc = frappe.get_doc("File", {"file_url": brochure})
+		self.assertEqual((file_doc.attached_to_doctype, file_doc.attached_to_name), ("Connect Message", message))
+		frappe.set_user(SALES)
+		self.assertEqual(quotable_briefs(self.thread)[0].brochure, brochure)
+
+	def test_only_the_thread_sees_the_brochure(self):
+		message = self.quote_as(OWNER, brochure=self.upload_as(OWNER))
+		file_doc = frappe.get_doc("File", {"attached_to_name": message})
+
+		self.assertTrue(frappe.has_permission("File", "read", doc=file_doc, user=BUYER))
+		self.assertFalse(frappe.has_permission("File", "read", doc=file_doc, user=OTHER_OWNER))
+
+	def test_an_updated_quote_keeps_its_brochure(self):
+		brochure = self.upload_as(OWNER)
+		first = self.quote_as(OWNER, brochure=brochure)
+		second = self.quote_as(OWNER, amount=350000, brochure=brochure)
+
+		self.assertTrue(frappe.db.get_value("Connect Message", second, "attachment"))
+		# each card owns its file, so deleting one leaves the other's
+		self.assertTrue(frappe.db.exists("File", {"attached_to_name": first}))
+		self.assertTrue(frappe.db.exists("File", {"attached_to_name": second}))
+		self.assertFalse(frappe.db.get_value("Connect Message", self.quote_as(OWNER, amount=300000), "attachment"))
+
+	def test_the_same_brochure_goes_on_two_quotes(self):
+		self.quote_as(OWNER, brochure=self.upload_as(OWNER))
+		frappe.db.set_value("Project Quote", self.quote, {"status": "Awaiting", "quote_message": None})
+
+		# the same file again has the same file_url as the one already on a card
+		message = self.quote_as(OWNER, brochure=self.upload_as(OWNER))
+		self.assertTrue(frappe.db.get_value("Connect Message", message, "attachment"))
+
+	def test_a_brochure_is_the_quoters_own_pdf_or_image(self):
+		self.assertRaises(frappe.ValidationError, self.quote_as, OWNER, brochure=self.upload_as(SALES))
+		self.assertRaises(frappe.ValidationError, self.quote_as, OWNER, brochure=self.upload_as(OWNER, "logo.svg"))
+		self.assertRaises(frappe.ValidationError, self.quote_as, OWNER, brochure=self.upload_as(OWNER, "setup.exe"))
+		self.assertEqual(frappe.db.get_value("Project Quote", self.quote, "status"), "Awaiting")
+
+	def card_statuses_as(self, user):
+		frappe.set_user(user)
+		try:
+			return quote_card_statuses(self.thread)
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_the_customer_hires_from_the_current_quote_card(self):
+		first = self.quote_as(OWNER)
+		current = self.quote_as(OWNER, amount=350000)
+
+		cards = self.card_statuses_as(BUYER)
+		self.assertNotIn(first, cards)
+		self.assertEqual(cards[current]["status"], "Quoted")
+		self.assertEqual((cards[current]["project_name"], cards[current]["amount"]), ("Batch tracking", 350000))
+		self.assertTrue(cards[current]["can_hire"])
+		self.assertFalse(self.card_statuses_as(OWNER)[current]["can_hire"])
+
+		frappe.set_user(BUYER)
+		hire_partner(self.quote)
+		frappe.set_user("Administrator")
+		self.assertEqual(self.card_statuses_as(BUYER)[current]["status"], "Hire Requested")
+		self.assertFalse(self.card_statuses_as(BUYER)[current]["can_hire"])
+
+	def test_only_the_threads_members_read_the_quote_cards(self):
+		self.quote_as(OWNER)
+		self.assertRaises(frappe.PermissionError, self.card_statuses_as, OTHER_OWNER)

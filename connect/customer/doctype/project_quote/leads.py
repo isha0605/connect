@@ -424,6 +424,11 @@ def _message_body(message) -> dict:
 			"amount": quote.get("amount"),
 			"weeks": quote.get("weeks"),
 			"note": quote.get("note"),
+			# the quote's brochure, when it has one
+			"attachment": message.attachment,
+			"file_name": message.file_name,
+			"file_type": message.file_type,
+			"file_size": message.file_size,
 		}
 	if message.message_type == "Hire Request":
 		request = frappe.parse_json(message.content or "{}") or {}
