@@ -4,19 +4,19 @@
 // either. `quote` is a quote row as list_quotes or quote_card_statuses gives it.
 import { computed, ref, watch } from "vue"
 import { Avatar, Badge, Button, Checkbox, Dialog, ErrorMessage, Textarea, Tooltip, call, toast } from "frappe-ui"
+import { formatMoney } from "@app/utils/money"
 import { tierSeal } from "@app/utils/tierSeal"
 
 const props = defineProps({
 	// Whether the dialog is open (v-model).
 	modelValue: { type: Boolean, default: false },
-	// { name, company_name, logo, tier, city, country, amount, timeline_weeks, status }
+	// { name, company_name, logo, tier, city, country, amount, currency, timeline_weeks, status }
 	quote: { type: Object, default: null },
 })
 // `hired` carries the project as hire_partner returns it.
 const emit = defineEmits(["update:modelValue", "hired"])
 
 const OTHER_REASON = "Other"
-const RUPEES = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 
 const step = ref("terms")
 const agreed = ref(false)
@@ -29,7 +29,7 @@ const savingReasons = ref(false)
 const reasonError = ref("")
 
 const name = computed(() => props.quote?.company_name || "this partner")
-const amount = computed(() => RUPEES.format(props.quote?.amount || 0))
+const amount = computed(() => formatMoney(props.quote?.amount, props.quote?.currency))
 const timeline = computed(() => {
 	const weeks = props.quote?.timeline_weeks || 0
 	return `${weeks} week${weeks === 1 ? "" : "s"}`

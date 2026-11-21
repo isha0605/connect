@@ -361,7 +361,8 @@ def quote_counts(project: str) -> dict:
 
 def list_quotes(name: str) -> list[dict]:
 	"""The project's quotes, cheapest first, including those set aside as Not Interested, and
-	the invited partners who have not quoted, listed below the quotes."""
+	the invited partners who have not quoted, listed below the quotes. Quotes in different
+	currencies can't be compared, so they're grouped by currency, rupees first."""
 	doc = get_own_project(name)
 	Quote = frappe.qb.DocType("Project Quote")
 	Partner = frappe.qb.DocType("Partner")
@@ -373,14 +374,15 @@ def list_quotes(name: str) -> list[dict]:
 		.left_join(Message)
 		.on(Message.name == Quote.quote_message)
 		.select(
-			Quote.name, Quote.partner, Quote.thread, Quote.status, Quote.amount, Quote.timeline_weeks, Quote.note,
-			Quote.quoted_on, Quote.quoted_before_update,
+			Quote.name, Quote.partner, Quote.thread, Quote.status, Quote.amount, Quote.currency,
+			Quote.timeline_weeks, Quote.note, Quote.quoted_on, Quote.quoted_before_update,
 			Partner.company_name, Partner.tier, Partner.city, Partner.country, Partner.logo,
 			Partner.verification_status,
 			Message.attachment.as_("brochure"), Message.file_name.as_("brochure_name"),
 		)
 		.where(Quote.customer_project == doc.name)
 		.where(Quote.status.isin(QUOTE_STATUSES + INVITED_QUOTE_STATUSES))
+		.orderby(Quote.currency, order=Order.asc)
 		.orderby(Quote.amount, order=Order.asc)
 		.run(as_dict=True)
 	)
@@ -465,7 +467,10 @@ def hired_partner(doc: CustomerProject) -> dict | None:
 		frappe.qb.from_(Partner)
 		.left_join(Quote)
 		.on(Quote.name == doc.hired_quote)
-		.select(Partner.company_name, Partner.logo, Partner.logo_icon, Quote.amount, Quote.timeline_weeks, Quote.thread)
+		.select(
+			Partner.company_name, Partner.logo, Partner.logo_icon, Quote.amount, Quote.currency, Quote.timeline_weeks,
+			Quote.thread,
+		)
 		.where(Partner.name == doc.partner)
 		.run(as_dict=True)
 	)
@@ -475,6 +480,7 @@ def hired_partner(doc: CustomerProject) -> dict | None:
 		"company_name": row.company_name or doc.partner,
 		"logo": row.logo_icon or row.logo,
 		"amount": row.amount,
+		"currency": row.currency,
 		"timeline_weeks": row.timeline_weeks,
 		"thread": row.thread,
 		"confirmed": confirmed,

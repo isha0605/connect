@@ -130,7 +130,7 @@ def quote_card_statuses(thread: str) -> dict:
 		.left_join(Partner)
 		.on(Partner.name == Quote.partner)
 		.select(
-			Quote.name, Quote.status, Quote.quote_message, Quote.partner, Quote.amount, Quote.timeline_weeks,
+			Quote.name, Quote.status, Quote.quote_message, Quote.partner, Quote.amount, Quote.currency, Quote.timeline_weeks,
 			Partner.company_name, Partner.logo, Partner.tier, Partner.city, Partner.country, Project.project_name, Project.status.as_("project_status"), Project.user.as_("project_owner"),
 		)
 		.where((Quote.thread == thread) & Quote.quote_message.isnotnull())
@@ -142,7 +142,7 @@ def quote_card_statuses(thread: str) -> dict:
 			"status": row.status,
 			"project_name": row.project_name,
 			"company_name": row.company_name or row.partner,
-			**{field: row[field] for field in ("amount", "timeline_weeks", "logo", "tier", "city", "country")},
+			**{field: row[field] for field in ("amount", "currency", "timeline_weeks", "logo", "tier", "city", "country")},
 			"can_hire": row.project_owner == user
 			and row.project_status == "Shared"
 			and row.status in OPEN_QUOTE_STATUSES,

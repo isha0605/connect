@@ -2,6 +2,7 @@
 // /custom-implementation?project=CP-…, which is where the project questions land once shared.
 
 import { computed, h, onScopeDispose, ref } from "vue"
+import { formatMoney } from "@app/utils/money"
 import { startTracking } from "@app/utils/tracking"
 import { tierSeal } from "@app/utils/tierSeal"
 
@@ -140,9 +141,7 @@ export default function setup(context) {
 
 	function quoteAmount(row) {
 		if (row?.isInvited) return ""
-		return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(
-			row?.amount || 0,
-		)
+		return formatMoney(row?.amount, row?.currency)
 	}
 	function quoteTimeline(row) {
 		if (row?.isInvited) return ""
