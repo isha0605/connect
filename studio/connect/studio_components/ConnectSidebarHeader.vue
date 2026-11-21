@@ -2,8 +2,10 @@
 // The sidebar's company menu: the company the person works for, its settings, the Frappe staff who
 // look after a partner, Switch company and Give feedback. Settings, Switch company and feedback
 // open their own dialogs (ConnectSettings, SwitchCompanyDialog, ConnectFeedback) through window events.
+// A guest has no company: their menu is Log in and the theme, which the account menu holds once signed in.
 import { computed } from "vue"
 import { SidebarHeader } from "frappe-ui"
+import { useThemeMenu } from "@app/utils/themeMenu"
 
 const props = defineProps({
 	// connect.api.account.get_my_context
@@ -14,6 +16,9 @@ const props = defineProps({
 })
 
 const send = (name, detail) => () => window.dispatchEvent(new CustomEvent(name, { detail }))
+const themeMenu = useThemeMenu(() => props.icons)
+
+const isGuest = computed(() => !props.context?.user || props.context.user === "Guest")
 
 const partner = computed(() => props.context?.partner || null)
 const customer = computed(() => props.context?.customer || null)
@@ -26,7 +31,14 @@ const settings = computed(() => {
 	return { label: "Settings", tab: "profile" }
 })
 
+// Log in returns them to their own home, not this page (see connect.auth.accounts.landing_page).
+const guestMenuItems = computed(() => [
+	{ label: "Log in", icon: props.icons.logIn, onClick: () => (window.location.href = "/connect/login-signup-redesign?screen=login") },
+	themeMenu.value,
+])
+
 const menuItems = computed(() => {
+	if (isGuest.value) return guestMenuItems.value
 	const managers = partner.value?.managers || []
 	return [
 		{ label: settings.value.label, icon: props.icons.settings, onClick: send("connect:open-settings", { tab: settings.value.tab }) },
