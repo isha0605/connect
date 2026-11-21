@@ -8,7 +8,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, flt, now_datetime
 
-from connect.api.attachments import _attach_file_to_message, _claim_staged_attachment, _copy_message_attachment
+from connect.api.attachments import _attach_file_to_message, _copy_message_attachment
 from connect.customer.doctype.customer_project.project_notifications import notify_quote_update
 from connect.partner.doctype.connect_partner_member.connect_partner_member import LEAD_ACCESS
 from connect.partner.chat_sla import hand_chat_clock_to_quote
@@ -118,9 +118,14 @@ class ProjectQuote(Document):
 		if self.quote_message and file_url == frappe.db.get_value("Connect Message", self.quote_message, "attachment"):
 			return _copy_message_attachment(file_url)
 
-		file_doc = frappe.get_doc("File", _claim_staged_attachment(file_url, frappe.session.user))
-		if file_doc.attached_to_name:
-			frappe.throw(_("Attachment not found"))
+		# The same content uploaded twice shares a file_url, so look for the caller's own upload that
+		# no message has taken yet, not any File at that address.
+		staged = frappe.db.get_value(
+			"File", {"file_url": file_url, "owner": frappe.session.user, "attached_to_name": ["is", "not set"]}, "name"
+		)
+		if not staged:
+			frappe.throw(_("Upload the brochure again."))
+		file_doc = frappe.get_doc("File", staged)
 		if mimetypes.guess_type(file_doc.file_name or "")[0] not in BROCHURE_TYPES:
 			frappe.throw(_("Attach the brochure as a PDF or an image."))
 		return file_doc

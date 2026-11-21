@@ -129,6 +129,14 @@ class IntegrationTestSendQuote(IntegrationTestCase):
 		self.assertTrue(frappe.db.exists("File", {"attached_to_name": second}))
 		self.assertFalse(frappe.db.get_value("Connect Message", self.quote_as(OWNER, amount=300000), "attachment"))
 
+	def test_the_same_brochure_goes_on_two_quotes(self):
+		self.quote_as(OWNER, brochure=self.upload_as(OWNER))
+		frappe.db.set_value("Project Quote", self.quote, {"status": "Awaiting", "quote_message": None})
+
+		# the same file again has the same file_url as the one already on a card
+		message = self.quote_as(OWNER, brochure=self.upload_as(OWNER))
+		self.assertTrue(frappe.db.get_value("Connect Message", message, "attachment"))
+
 	def test_a_brochure_is_the_quoters_own_pdf_or_image(self):
 		self.assertRaises(frappe.ValidationError, self.quote_as, OWNER, brochure=self.upload_as(SALES))
 		self.assertRaises(frappe.ValidationError, self.quote_as, OWNER, brochure=self.upload_as(OWNER, "logo.svg"))
