@@ -1,7 +1,8 @@
 <script setup>
 // The person signed in, at the foot of the sidebar, with their theme and Log out.
 import { computed, inject } from "vue"
-import { Avatar, Dropdown, call, sidebarCollapsedKey, useColorScheme } from "frappe-ui"
+import { Avatar, Dropdown, call, sidebarCollapsedKey } from "frappe-ui"
+import { useThemeMenu } from "@app/utils/themeMenu"
 
 const props = defineProps({
 	// connect.api.account.get_my_context
@@ -11,29 +12,11 @@ const props = defineProps({
 	icons: { type: Object, default: () => ({}) },
 })
 
-const THEMES = [
-	{ value: "light", label: "Light" },
-	{ value: "dark", label: "Dark" },
-	{ value: "system", label: "System" },
-]
-
 const isCollapsed = inject(sidebarCollapsedKey, computed(() => false))
-const { colorScheme, setColorScheme } = useColorScheme()
+const themeMenu = useThemeMenu(() => props.icons)
 const name = computed(() => props.context?.full_name || props.context?.user || "")
 
-const menuItems = computed(() => [
-	{
-		label: "Theme",
-		icon: props.icons.theme,
-		submenu: THEMES.map((theme) => ({
-			label: theme.label,
-			icon: props.icons[theme.value],
-			selected: colorScheme.value === theme.value,
-			onClick: () => setColorScheme(theme.value),
-		})),
-	},
-	{ label: "Log out", icon: props.icons.logOut, onClick: logOut },
-])
+const menuItems = computed(() => [themeMenu.value, { label: "Log out", icon: props.icons.logOut, onClick: logOut }])
 
 function logOut() {
 	call("logout").then(() => (window.location.href = "/connect/partner-directory-redesign"))
