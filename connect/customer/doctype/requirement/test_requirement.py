@@ -12,6 +12,8 @@ from connect.customer.doctype.requirement.requirement import (
 )
 from connect.patches.use_one_set_of_company_sizes import OLD_TO_NEW
 from connect.patches.use_one_set_of_company_sizes import execute as use_one_set_of_company_sizes
+from connect.patches.use_project_budget_ranges_for_requirements import OLD_TO_NEW as OLD_TO_NEW_BUDGETS
+from connect.patches.use_project_budget_ranges_for_requirements import execute as use_project_budget_ranges
 
 BUYER = "requirement.buyer@example.test"
 COMPANY = "_Test Requirement Co"
@@ -29,7 +31,7 @@ class IntegrationTestCompanyDetails(IntegrationTestCase):
 				"industry": "Manufacturing",
 				"looking_for": "Replace Existing ERP",
 				"timeline": "Within 3 months",
-				"budget": "₹2L–₹10L",  # noqa: RUF001
+				"budget": "$6k to $18k",
 			}
 		).insert(ignore_permissions=True)
 		frappe.set_user(BUYER)
@@ -54,7 +56,7 @@ class IntegrationTestCompanyDetails(IntegrationTestCase):
 		self.assertEqual(saved.additional_notes, "Two warehouses")
 		self.assertEqual(saved.looking_for, "Replace Existing ERP")
 		self.assertEqual(saved.timeline, "Within 3 months")
-		self.assertEqual(saved.budget, "₹2L–₹10L")  # noqa: RUF001
+		self.assertEqual(saved.budget, "$6k to $18k")
 
 	def test_rejects_an_industry_outside_the_list(self):
 		with self.assertRaises(frappe.LinkValidationError):
@@ -76,6 +78,13 @@ class IntegrationTestCompanyDetails(IntegrationTestCase):
 			frappe.db.set_value("Requirement", requirement, "company_size", old)
 			use_one_set_of_company_sizes()
 			self.assertEqual(frappe.db.get_value("Requirement", requirement, "company_size"), new)
+
+	def test_the_patch_moves_old_budgets_to_the_project_ranges(self):
+		requirement = frappe.db.get_value("Requirement", {"customer": COMPANY}, "name")
+		for old, new in OLD_TO_NEW_BUDGETS.items():
+			frappe.db.set_value("Requirement", requirement, "budget", old)
+			use_project_budget_ranges()
+			self.assertEqual(frappe.db.get_value("Requirement", requirement, "budget"), new)
 
 	def test_refuses_an_industry_not_on_the_list(self):
 		with self.assertRaises(frappe.ValidationError):
