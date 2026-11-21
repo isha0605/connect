@@ -1,6 +1,7 @@
 import { ref, computed, watch, onScopeDispose, nextTick, h } from "vue"
 import { toast, call, useFileUpload, setConfig } from "frappe-ui"
 import { avatarTheme } from "@app/utils/avatarTheme"
+import { currencySymbol, exampleQuote, formatMoney } from "@app/utils/money"
 import { installScrollFade } from "@app/utils/scrollFade"
 import { goToSignIn, signOut } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
@@ -1169,12 +1170,10 @@ export default function setup(context) {
 	}
 
 	// A partner's quote on a customer's brief (message_type "Quote"; content is
-	// { amount, weeks, note } — see simulate_quotes in customer_project.py).
+	// { amount, currency, weeks, note } — see post_quote in project_quote.py).
 	function quoteAmountText(item) {
-		const amount = parseRequirementContent(item).amount || 0
-		return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(
-			amount,
-		)
+		const { amount, currency } = parseRequirementContent(item)
+		return formatMoney(amount, currency)
 	}
 
 	function quoteWeeksText(item) {
@@ -3746,6 +3745,9 @@ export default function setup(context) {
 		requirementAppItems,
 		parseRequirementContent,
 		quoteAmountText,
+		// The quote is in the partner's currency, which each brief carries.
+		quoteAmountLabel: computed(() => `Amount (${currencySymbol(chosenBrief().currency)})`),
+		quoteAmountPlaceholder: computed(() => exampleQuote(chosenBrief().currency)),
 		quoteWeeksText,
 		quoteNoteText,
 		requirementView,

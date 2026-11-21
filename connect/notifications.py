@@ -2,6 +2,7 @@ import frappe
 from frappe import _
 from frappe.desk.doctype.notification_log.notification_log import enqueue_create_notification
 
+from connect.customer.doctype.customer_project.project_notifications import quote_amount
 from connect.messaging.customer_identity import (
 	anonymous_company,
 	customer_users,
@@ -55,7 +56,7 @@ def _message_preview_text(message):
 		text = "📹 " + (meeting.get("title") or _("Kickoff call"))
 	elif message.get("message_type") == "Quote":
 		quote = frappe.parse_json(message.get("content") or "{}") or {}
-		text = _("Quoted {0}").format(frappe.utils.fmt_money(quote.get("amount") or 0, currency="INR", precision=0).replace("₹ ", "₹"))
+		text = _("Quoted {0}").format(quote_amount(quote.get("amount"), quote.get("currency")))
 	else:
 		text = message.get("content") or ""
 	return text[:140]

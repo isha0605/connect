@@ -17,6 +17,7 @@ from connect.partner.doctype.partner.partner import (
 )
 from connect.partner.doctype.partner_review.partner_review import list_partner_reviews
 from connect.patches.move_partner_year_founded_to_foundation_date import execute as move_year_founded
+from connect.patches.convert_usd_hourly_rates import execute as convert_usd_hourly_rates
 from connect.patches.rename_partner_is_featured_to_show_in_website import execute as rename_is_featured
 from connect.patches.set_partner_listed_on import execute as set_partner_listed_on
 from connect.patches.use_frappe_io_partner_field_names import move_column
@@ -361,6 +362,17 @@ class IntegrationTestTierFields(IntegrationTestCase):
 
 		self.assertEqual(frappe.db.get_value("Partner", INDIAN, "currency"), "INR")
 		self.assertEqual(frappe.db.get_value("Partner", KENYAN, "currency"), "INR")
+
+	def test_hourly_rate_patch_converts_only_usd_partners(self):
+		insert_signup_partner(INDIAN)
+		frappe.get_doc({"doctype": "Partner", **partner_values(KENYAN), "country": "Kenya"}).insert()
+		frappe.db.set_value("Partner", INDIAN, "hourly_rate", 2000)
+		frappe.db.set_value("Partner", KENYAN, "hourly_rate", 4600)
+
+		convert_usd_hourly_rates()
+
+		self.assertEqual(frappe.db.get_value("Partner", INDIAN, "hourly_rate"), 2000)
+		self.assertEqual(frappe.db.get_value("Partner", KENYAN, "hourly_rate"), 55)
 
 	def test_listed_on_patch_fills_only_empty_dates(self):
 		insert_signup_partner(INDIAN)

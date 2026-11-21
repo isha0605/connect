@@ -422,6 +422,7 @@ def _message_body(message) -> dict:
 			"kind": "bid",
 			"title": quote.get("project_name"),
 			"amount": quote.get("amount"),
+			"currency": quote.get("currency"),
 			"weeks": quote.get("weeks"),
 			"note": quote.get("note"),
 			# the quote's brochure, when it has one
@@ -437,6 +438,7 @@ def _message_body(message) -> dict:
 			"title": request.get("project_name") or _("Hire request"),
 			"quote": request.get("quote"),
 			"amount": request.get("amount"),
+			"currency": request.get("currency"),
 			"weeks": request.get("weeks"),
 		}
 	if message.message_type == "Meeting":

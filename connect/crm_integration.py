@@ -14,6 +14,7 @@ from frappe.utils import add_to_date, escape_html, now_datetime
 from frappe.utils.password import get_decrypted_password, set_encrypted_password
 from frappe.utils.synchronization import filelock
 
+from connect.customer.doctype.customer_project.project_notifications import quote_amount
 from connect.messaging.customer_identity import anonymous_company
 from connect.permissions import _get_customer_owner
 
@@ -449,7 +450,7 @@ def _card_fields(message_type, card):
 		weeks = card.get("weeks")
 		return "Quote" if message_type == "Quote" else "Hire request", [
 			("Project", card.get("project_name")),
-			("Amount", amount and frappe.utils.fmt_money(amount, currency="INR", precision=0)),
+			("Amount", amount and quote_amount(amount, card.get("currency"))),
 			("Timeline", weeks and f"{weeks} weeks"),
 			("Note", card.get("note")),
 		]

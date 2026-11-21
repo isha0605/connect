@@ -78,9 +78,13 @@ def project_link(project) -> str:
 	return f"{page}?project={project.name}"
 
 
+def quote_amount(amount, currency: str) -> str:
+	"""A quote's amount as messages and emails show it, in the quote's currency: ₹4,00,000 or $4,800."""
+	return frappe.utils.fmt_money(amount or 0, currency=currency, precision=0).replace(" ", "", 1)
+
+
 def quote_summary(project, quote) -> str:
-	amount = frappe.utils.fmt_money(quote.amount or 0, currency="INR", precision=0).replace("₹ ", "₹")
-	parts = [project.project_name, amount]
+	parts = [project.project_name, quote_amount(quote.amount, quote.currency)]
 	if quote.timeline_weeks:
 		parts.append(_("{0} weeks").format(quote.timeline_weeks))
 	return " · ".join(parts)

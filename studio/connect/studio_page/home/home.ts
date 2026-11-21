@@ -1,5 +1,6 @@
 import { computed } from "vue"
 import { call, toast } from "frappe-ui"
+import { hourlyRate } from "@app/utils/money"
 import { projectDialog, projectPath } from "@app/utils/projectDialog"
 import { startTracking } from "@app/utils/tracking"
 import { tierSeal } from "@app/utils/tierSeal"
@@ -139,9 +140,9 @@ export default function setup(context) {
 		return [p.city, p.country].filter(Boolean).join(", ")
 	}
 
-	// In rupees, as the partner directory shows it.
+	// In the partner's currency, as the partner directory shows it.
 	function partnerRate(p) {
-		return p.hourly_rate ? `From ₹${Number(p.hourly_rate).toLocaleString("en-IN")}/hr` : "Undisclosed"
+		return p.hourly_rate ? hourlyRate(p.hourly_rate, p.currency) : "Undisclosed"
 	}
 
 	function partnerRating(p) {

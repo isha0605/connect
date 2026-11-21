@@ -33,6 +33,8 @@ MAX_WEEKS = 104
 NOTE_LIMIT = 300
 # A brochure opens in the customer's browser, so only types that can't run scripts there: no SVG.
 BROCHURE_TYPES = ("application/pdf", "image/png", "image/jpeg", "image/webp", "image/gif")
+# A partner with no country yet has no currency. Every quote before quotes had a currency was in rupees.
+DEFAULT_CURRENCY = "INR"
 
 
 class ProjectQuote(Document):
@@ -53,6 +55,9 @@ class ProjectQuote(Document):
 
 			self.lead = lead_for_requirement(self.partner, self.thread)
 
+		# The partner quotes in their own currency. Kept on the quote, so a later change to the
+		# partner's currency doesn't change what they quoted.
+		self.currency = frappe.db.get_value("Partner", self.partner, "currency") or DEFAULT_CURRENCY
 		assign_answer_deadline(self)
 
 	def after_insert(self):
@@ -232,7 +237,14 @@ def post_quote(quote, sender: str, amount: float, weeks: int, note: str, brochur
 			"sender": sender,
 			"message_type": "Quote",
 			"content": frappe.as_json(
-				{"quote": quote.name, "project": quote.customer_project, "amount": amount, "weeks": weeks, "note": note}
+				{
+					"quote": quote.name,
+					"project": quote.customer_project,
+					"amount": amount,
+					"currency": quote.currency,
+					"weeks": weeks,
+					"note": note,
+				}
 			),
 			**_brochure_fields(brochure),
 		}
@@ -286,8 +298,8 @@ def quotable_briefs(thread: str) -> list[dict]:
 		.left_join(Message)
 		.on(Message.name == Quote.quote_message)
 		.select(
-			Quote.name, Project.project_name, Quote.status, Quote.amount, Quote.timeline_weeks.as_("weeks"), Quote.note,
-			Quote.brief_message, Quote.quoted_before_update,
+			Quote.name, Project.project_name, Quote.status, Quote.amount, Quote.currency,
+			Quote.timeline_weeks.as_("weeks"), Quote.note, Quote.brief_message, Quote.quoted_before_update,
 			Message.attachment.as_("brochure"), Message.file_name.as_("brochure_name"), Message.file_size.as_("brochure_size"),
 		)
 		.where(Quote.thread == thread)

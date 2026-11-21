@@ -5,7 +5,6 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { Alert, Button, Dialog, ErrorMessage, FormControl, MultiSelect, ScrollArea, call, dialog, toast } from "frappe-ui"
 import {
-	BUDGET_OPTIONS,
 	EMPLOYEE_OPTIONS,
 	OPERATION_OPTIONS,
 	PROBLEM_OPTIONS,
@@ -19,6 +18,7 @@ import {
 	usesOtherSystems,
 } from "@app/utils/projectDialog"
 import AppsSelect from "./AppsSelect.vue"
+import BudgetSelect from "./BudgetSelect.vue"
 
 const props = defineProps({
 	// Whether the dialog is open (v-model).
@@ -261,15 +261,7 @@ function andList(values) {
 				<div v-if="editing" class="space-y-6">
 					<Alert theme="blue" title="Partners who quoted will confirm or re-quote" />
 					<form novalidate class="space-y-4" @submit.prevent="send">
-						<FormControl
-							v-model="form.budget"
-							type="select"
-							label="Your budget"
-							placeholder="Select a range"
-							required
-							:options="BUDGET_OPTIONS"
-							:error="errors.budget"
-						/>
+						<BudgetSelect v-model="form.budget" required :error="errors.budget" />
 						<AppsSelect v-model="form.apps" required :error="errors.apps" />
 						<FormControl
 							v-model="form.operations"

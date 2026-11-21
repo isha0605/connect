@@ -8,6 +8,7 @@ from frappe.tests import IntegrationTestCase
 
 from connect.api.projects import hire_partner, quotable_briefs, quote_card_statuses, send_quote
 from connect.customer.doctype.customer_project.brief import send_brief
+from connect.customer.doctype.customer_project.project_notifications import quote_amount
 from connect.customer.doctype.customer_project.test_hiring import make_buyer, make_partner, make_partner_admin
 from connect.customer.doctype.project_quote.test_leads import make_member
 
@@ -75,6 +76,29 @@ class IntegrationTestSendQuote(IntegrationTestCase):
 		self.assertEqual(quote.quote_message, message)
 		# whoever quotes is in the thread, to answer the customer's questions
 		self.assertTrue(frappe.db.exists("Connect Thread Member", {"thread": self.thread, "user": SALES, "is_removed": 0}))
+
+	def test_a_quote_is_in_its_partners_currency(self):
+		frappe.db.set_value("Partner", OTHER_PARTNER, "currency", "USD")
+		customer = frappe.db.get_value("Customer Team Member", {"user": BUYER}, "customer")
+		project = frappe.get_doc(
+			{"doctype": "Customer Project", "project_name": "Dealer portal", "status": "Shared", "user": BUYER}
+		).insert(ignore_permissions=True)
+		thread = send_brief(project, customer, OTHER_PARTNER)
+
+		quote = frappe.db.get_value("Project Quote", {"customer_project": project.name}, ["name", "currency"], as_dict=True)
+		self.assertEqual(quote.currency, "USD")
+		self.assertEqual(frappe.db.get_value("Project Quote", self.quote, "currency"), "INR")
+
+		frappe.set_user(OTHER_OWNER)
+		card = frappe.get_doc("Connect Message", send_quote(quote.name, 4800, 6, "")["message"])
+		self.assertEqual(frappe.parse_json(card.content)["currency"], "USD")
+		# the hire dialog shows the quote in its currency
+		frappe.set_user("Administrator")
+		self.assertEqual(quote_card_statuses(thread)[card.name]["currency"], "USD")
+
+	def test_quote_amounts_show_their_currency(self):
+		self.assertEqual(quote_amount(400000, "INR"), "₹4,00,000")
+		self.assertEqual(quote_amount(4800, "USD"), "$4,800")
 
 	def test_a_quote_changes_until_the_customer_answers(self):
 		first = self.quote_as(OWNER)

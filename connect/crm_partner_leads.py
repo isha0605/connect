@@ -9,11 +9,12 @@ from urllib.parse import quote
 
 import frappe
 from frappe import _
-from frappe.utils import escape_html, fmt_money
+from frappe.utils import escape_html
 from frappe.utils.synchronization import filelock
 
 from connect.crm_enquiries import frappe_crm
 from connect.crm_integration import CRMRequestError, crm_has, crm_request, lead_source
+from connect.customer.doctype.customer_project.project_notifications import quote_amount
 from connect.permissions import _get_customer_owner
 
 PARTNER_LEAD_SOURCE = "Connect Partner Lead"
@@ -113,7 +114,8 @@ def _briefs(leads: list[str]) -> dict[str, list[dict]]:
 		.join(Project)
 		.on(Project.name == Quote.customer_project)
 		.select(
-			Quote.lead, Project.project_name, Quote.status, Quote.amount, Quote.timeline_weeks, Quote.quoted_before_update
+			Quote.lead, Project.project_name, Quote.status, Quote.amount, Quote.currency, Quote.timeline_weeks,
+			Quote.quoted_before_update,
 		)
 		.where(Quote.lead.isin(leads))
 		.orderby(Quote.creation)
@@ -177,7 +179,7 @@ def note_content(lead) -> str:
 def _brief_line(brief) -> str:
 	parts = [brief.status]
 	if brief.amount:
-		parts.append(fmt_money(brief.amount, currency="INR"))
+		parts.append(quote_amount(brief.amount, brief.currency))
 	if brief.timeline_weeks:
 		parts.append(_("{0} weeks").format(brief.timeline_weeks))
 	if brief.quoted_before_update:

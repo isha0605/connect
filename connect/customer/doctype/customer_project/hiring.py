@@ -13,6 +13,7 @@ from connect.customer.doctype.customer_project.customer_project import (
 	get_own_project,
 	project_dict,
 )
+from connect.customer.doctype.customer_project.project_notifications import quote_amount
 from connect.permissions import _check_can_read, _get_partner_admins, _is_partner_admin
 
 # A request the partner hasn't answered by then is withdrawn, so the customer can hire someone else.
@@ -129,7 +130,7 @@ def quote_card_statuses(thread: str) -> dict:
 		.left_join(Partner)
 		.on(Partner.name == Quote.partner)
 		.select(
-			Quote.name, Quote.status, Quote.quote_message, Quote.partner, Quote.amount, Quote.timeline_weeks,
+			Quote.name, Quote.status, Quote.quote_message, Quote.partner, Quote.amount, Quote.currency, Quote.timeline_weeks,
 			Partner.company_name, Partner.logo, Partner.tier, Partner.city, Partner.country, Project.project_name, Project.status.as_("project_status"), Project.user.as_("project_owner"),
 		)
 		.where((Quote.thread == thread) & Quote.quote_message.isnotnull())
@@ -141,7 +142,7 @@ def quote_card_statuses(thread: str) -> dict:
 			"status": row.status,
 			"project_name": row.project_name,
 			"company_name": row.company_name or row.partner,
-			**{field: row[field] for field in ("amount", "timeline_weeks", "logo", "tier", "city", "country")},
+			**{field: row[field] for field in ("amount", "currency", "timeline_weeks", "logo", "tier", "city", "country")},
 			"can_hire": row.project_owner == user
 			and row.project_status == "Shared"
 			and row.status in OPEN_QUOTE_STATUSES,
@@ -225,6 +226,7 @@ def _post_hire_request(doc, row):
 					"project": doc.name,
 					"project_name": doc.project_name,
 					"amount": row.amount,
+					"currency": row.currency,
 					"weeks": row.timeline_weeks,
 				}
 			),
@@ -254,7 +256,7 @@ def send_hire_request_email(admin: str, project: str, quote: str):
 	doc = frappe.get_doc("Customer Project", project)
 	row = frappe.get_doc("Project Quote", quote)
 	company = frappe.db.get_value("Customer", get_customer_for_user(doc.user), "customer_name") or doc.user
-	amount = frappe.utils.fmt_money(row.amount or 0, currency="INR", precision=0)
+	amount = quote_amount(row.amount, row.currency)
 	try:
 		frappe.sendmail(
 			recipients=[frappe.db.get_value("User", admin, "email") or admin],
