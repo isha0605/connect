@@ -12,6 +12,7 @@ from connect.customer.doctype.customer_project.test_hiring import complete_a_pro
 from connect.partner.doctype.connect_partner_member.test_switch_partner import add_member
 from connect.partner.doctype.partner_review.partner_review import submit_partner_review
 from connect.partner.doctype.review_request import review_request as requests
+from connect.roles import PARTNER_MANAGER_ROLE
 
 PARTNER = "_Test Review Partner"
 OTHER_PARTNER = "_Test Review Other Partner"
@@ -202,7 +203,7 @@ class TestReviewRequest(IntegrationTestCase):
 def make_reviewer(email):
 	if not frappe.db.exists("User", email):
 		frappe.get_doc({"doctype": "User", "email": email, "first_name": "Reviewer"}).insert(ignore_permissions=True)
-	frappe.get_doc("User", email).add_roles("Partner Reviewer")
+	frappe.get_doc("User", email).add_roles(PARTNER_MANAGER_ROLE)
 	# A role list read before the role was added stays cached for the user.
 	frappe.clear_cache(user=email)
 	return email

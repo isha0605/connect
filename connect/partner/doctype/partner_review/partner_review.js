@@ -3,7 +3,7 @@
 
 frappe.ui.form.on("Partner Review", {
 	refresh(frm) {
-		if (frm.is_new() || !(frappe.user.has_role("Partner Reviewer") || frappe.user.has_role("System Manager"))) return;
+		if (frm.is_new() || !(frappe.user.has_role("Partner Manager") || frappe.user.has_role("System Manager"))) return;
 
 		if (frm.doc.is_hidden) {
 			frm.add_custom_button(__("Show review"), () => {

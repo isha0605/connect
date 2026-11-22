@@ -1,12 +1,14 @@
 import frappe
 
+from connect.roles import PARTNER_MANAGER_ROLE
+
 REVIEWED_DOCTYPES = ("Partner Application", "Certificate Application", "Partner Review")
 
 
 def execute():
 	"""A site that customised these doctypes' permissions keeps Custom DocPerm rows, and those hide
 	the doctype's own rows, so the new Review right is granted there too. Without it, Partner
-	Reviewers would lose approvals and review emails on such a site."""
+	Managers would lose approvals and review emails on such a site."""
 	if not frappe.db.has_column("Custom DocPerm", "review"):
 		return
 
@@ -16,7 +18,7 @@ def execute():
 		.set(Perm.review, 1)
 		.where(
 			Perm.parent.isin(REVIEWED_DOCTYPES)
-			& Perm.role.isin(("Partner Reviewer", "System Manager"))
+			& Perm.role.isin((PARTNER_MANAGER_ROLE, "System Manager"))
 			& (Perm.permlevel == 0)
 		)
 	).run()

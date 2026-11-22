@@ -3,7 +3,7 @@
 
 frappe.ui.form.on("Certificate Application", {
 	refresh(frm) {
-		if (frm.doc.status !== "Applied" || !frappe.user.has_role("Partner Reviewer")) return;
+		if (frm.doc.status !== "Applied" || !frappe.user.has_role("Partner Manager")) return;
 
 		// After approving, give the member free exam access on Frappe School; Connect can't do that part.
 		frm.add_custom_button(__("Approve"), () => {

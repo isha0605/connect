@@ -107,7 +107,7 @@ def _has_partner_access(partner, user, levels) -> bool:
 
 
 def _can_review(doctype, user) -> bool:
-	"""Whether the user holds the Review right on `doctype`: Partner Reviewer by default, or any
+	"""Whether the user holds the Review right on `doctype`: Partner Manager by default, or any
 	staff role a System Manager gives it in Role Permissions Manager."""
 	return frappe.has_permission(doctype, "review", user=user)
 

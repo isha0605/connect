@@ -14,7 +14,7 @@ from connect.partner.doctype.certificate_application.certificate_application imp
 	free_certification_status,
 	reviewer_emails,
 )
-from connect.roles import REVIEWER_ROLE
+from connect.roles import PARTNER_MANAGER_ROLE
 
 PARTNER = "_Test Free Cert Partner"
 OTHER_PARTNER = "_Test Free Cert Other Partner"
@@ -56,7 +56,7 @@ class IntegrationTestCertificateApplication(IntegrationTestCase):
 		make_partner_admin(OTHER_PARTNER, OTHER_ADMIN)
 		if not frappe.db.exists("User", REVIEWER):
 			frappe.get_doc({"doctype": "User", "email": REVIEWER, "first_name": "Reviewer"}).insert(ignore_permissions=True)
-		frappe.get_doc("User", REVIEWER).add_roles(REVIEWER_ROLE)
+		frappe.get_doc("User", REVIEWER).add_roles(PARTNER_MANAGER_ROLE)
 
 		frappe.db.delete("Certificate Application", {"partner": ["in", [PARTNER, OTHER_PARTNER]]})
 		frappe.db.delete("Certificate Link Request", {"partner": ["in", [PARTNER, OTHER_PARTNER]]})
@@ -149,7 +149,7 @@ class IntegrationTestCertificateApplication(IntegrationTestCase):
 		from connect.patches.grant_review_on_custom_permissions import execute
 
 		setup_custom_perms("Certificate Application")
-		saved = {"parent": "Certificate Application", "role": REVIEWER_ROLE, "permlevel": 0}
+		saved = {"parent": "Certificate Application", "role": PARTNER_MANAGER_ROLE, "permlevel": 0}
 		frappe.db.set_value("Custom DocPerm", saved, "review", 0)
 		frappe.clear_cache(doctype="Certificate Application")
 		self.assertNotIn(REVIEWER, reviewer_emails())
