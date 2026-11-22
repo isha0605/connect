@@ -195,6 +195,8 @@ fixtures = [
 		"doctype": "Custom DocPerm",
 		"filters": [["parent", "in", ["Studio Page", "Studio Component"]]],
 	},
+	# One profile per Frappe staff role, so an admin sets a new hire's access in one field.
+	{"doctype": "Role Profile", "filters": [["name", "in", ["Partner Manager", "Staff"]]]},
 ]
 
 # Stops a Starter Pack Order being refunded after kickoff. It has to be a class override:
