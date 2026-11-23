@@ -22,7 +22,7 @@ const PARTNER_PAGES = [
 	{ label: "Invoices", icon: "lucide-receipt", route: "/partner-invoicing" },
 ]
 const CUSTOMER_PAGES = [
-	{ label: "Projects", icon: "lucide-briefcase", route: "/projects", isShown: (context) => context.has_projects },
+	{ label: "Implementations", icon: "lucide-briefcase", route: "/projects", isShown: (context) => context.has_projects },
 	{ label: "Messages", icon: "lucide-inbox", route: "/messaging" },
 	{ label: "Partners", icon: "lucide-building-2", route: "/partner-directory-redesign" },
 ]
@@ -40,11 +40,11 @@ const SEARCHES = {
 		],
 	},
 	customer: {
-		placeholder: "Search projects, partners and pages",
+		placeholder: "Search implementations, partners and pages",
 		pages: CUSTOMER_PAGES,
 		load: loadCustomerLists,
 		results: (lists, matches) => [
-			{ title: "Projects", rows: lists.projects.filter((p) => matches(p.project_title, p.company_name)).map(projectRow) },
+			{ title: "Implementations", rows: lists.projects.filter((p) => matches(p.project_title, p.company_name)).map(projectRow) },
 			{ title: "Partners", rows: lists.partners.filter((p) => matches(p.company_name)).map(partnerRow) },
 		],
 	},

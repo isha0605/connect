@@ -291,7 +291,7 @@ export default function setup(context) {
 	)
 
 
-	const projectTitle = computed(() => project.value?.project_name || "Project")
+	const projectTitle = computed(() => project.value?.project_name || "Implementation")
 	const breadcrumbItems = computed(() => [{ label: projectTitle.value }])
 
 
@@ -454,9 +454,9 @@ export default function setup(context) {
 				// Completed is what lets the customer start another, so the header learns of it now.
 				switcher.refreshProjects(projectName)
 				if (data.hired && !data.hired.is_reviewed) reviewAskOpen.value = true
-				else toast.success("Project completed")
+				else toast.success("Implementation completed")
 			})
-			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't complete the project. Try again."))
+			.catch((error) => toast.error(error?.messages?.[0] || "Couldn't complete the implementation. Try again."))
 			.finally(() => {
 				completing.value = false
 			})

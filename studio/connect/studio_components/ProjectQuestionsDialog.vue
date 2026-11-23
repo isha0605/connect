@@ -66,7 +66,7 @@ const canChangeFacts = ref(true)
 const isGuest = ref(false)
 
 const partnerName = computed(() => props.partner?.company_name || props.partner?.name || "")
-const title = computed(() => (partnerName.value ? `New project for ${partnerName.value}` : "New project"))
+const title = computed(() => (partnerName.value ? `New implementation with ${partnerName.value}` : "New implementation"))
 const sendLabel = computed(() => (partnerName.value ? `Send to ${partnerName.value}` : "Share requirements"))
 const usesOtherSystems = computed(() => needsSystems(answers.value.operations))
 const namesOtherSystem = computed(() => usesOtherSystems.value && answers.value.systems.includes(OTHER_SYSTEM))

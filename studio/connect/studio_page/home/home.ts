@@ -106,8 +106,8 @@ export default function setup(context) {
 	const hasMoreProjects = computed(() => allProjects.value.length > HOME_PROJECTS)
 	const projectsSummary = computed(() => {
 		const active = allProjects.value.filter((p) => p.status !== "Completed").length
-		if (!active) return "No active projects yet"
-		return `You have ${active} active project${active === 1 ? "" : "s"}`
+		if (!active) return "No active implementations yet"
+		return `You have ${active} active implementation${active === 1 ? "" : "s"}`
 	})
 
 	const relative = new Intl.RelativeTimeFormat("en", { numeric: "auto" })

@@ -33,13 +33,13 @@ export function projectSwitcher({ call, router }, openNewProject) {
 	)
 	const hasProjectSwitcher = computed(() => projects.value.length > 1)
 	const openProjectTitle = computed(
-		() => projects.value.find((row) => row.project === openProject.value)?.project_title || "Project",
+		() => projects.value.find((row) => row.project === openProject.value)?.project_title || "Implementation",
 	)
 
 	const switcherOptions = computed(() => {
-		const groups = [{ group: "Projects", options: projects.value.map(switcherItem) }]
+		const groups = [{ group: "Implementations", options: projects.value.map(switcherItem) }]
 		if (canStartNewProject.value) {
-			groups.push({ group: "", options: [{ label: "New project", icon: "lucide-plus", onClick: () => openNewProject() }] })
+			groups.push({ group: "", options: [{ label: "New implementation", icon: "lucide-plus", onClick: () => openNewProject() }] })
 		}
 		return groups
 	})

@@ -44,7 +44,7 @@ const terms = computed(() =>
 		{ icon: "lucide-wallet", text: `Pay ${name.value} directly, Frappe isn’t a party` },
 		{ icon: "lucide-file-check", text: "Scope, price and timeline are as quoted" },
 		{ icon: "lucide-cloud", text: `Host with ${name.value}, Frappe Cloud or elsewhere` },
-		{ icon: "lucide-lock", text: "Frappe sees this project, not your site" },
+		{ icon: "lucide-lock", text: "Frappe sees this implementation, not your site" },
 		// Hire is on every quote, so it can be the first time this partner learns who you are.
 		props.quote?.status !== "Interested" && {
 			icon: "lucide-building-2",
