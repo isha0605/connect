@@ -330,12 +330,12 @@ function andList(values) {
 					<dl class="grid grid-cols-[7rem_minmax(0,1fr)] gap-x-3 gap-y-4 text-base">
 						<template v-for="row in rows" :key="row.label">
 							<dt class="text-ink-gray-6">{{ row.label }}</dt>
-							<dd class="whitespace-pre-line text-ink-gray-8">{{ row.text }}</dd>
+							<dd class="whitespace-pre-line break-words text-ink-gray-8">{{ row.text }}</dd>
 						</template>
 					</dl>
 					<section v-if="description" class="flex flex-col gap-2">
 						<h4 class="text-base font-medium text-ink-gray-8">Description</h4>
-						<p class="whitespace-pre-line text-p-base leading-relaxed text-ink-gray-6">{{ description }}</p>
+						<p class="whitespace-pre-line break-words text-p-base leading-relaxed text-ink-gray-6">{{ description }}</p>
 					</section>
 				</div>
 			</ScrollArea>
