@@ -133,7 +133,11 @@ export default function setup(context) {
 	const editLogosNote = computed(() => {
 		if (view.clientLogosNote.value) return view.clientLogosNote.value
 		const isTrimmed = editLogos.value.some((logo) => logo.faded)
-		return isTrimmed ? `Your profile shows the first ${CLIENT_LOGOS_SHOWN} logos you haven't hidden.` : ""
+		const notes = [
+			editLogos.value.length > 1 ? "Drag to reorder, or use each logo's menu." : "",
+			isTrimmed ? `Your profile shows the first ${CLIENT_LOGOS_SHOWN} logos you haven't hidden.` : "",
+		]
+		return notes.filter(Boolean).join(" ")
 	})
 
 	// A logo's order is its own, so moving one never changes which story is featured.
@@ -141,6 +145,31 @@ export default function setup(context) {
 		const ordered = [...editLogos.value]
 		ordered.splice(to, 0, ...ordered.splice(from, 1))
 		ordered.forEach((logo, index) => (draft.value.success_stories[logo.position].logo_position = index + 1))
+	}
+
+	// Dropping a logo on another puts it there, as with the photos and videos.
+	const draggedLogo = ref(null)
+	const logoDropIndex = ref(null)
+
+	function onLogoDragStart(index, event) {
+		draggedLogo.value = index
+		event.dataTransfer.effectAllowed = "move"
+		// Firefox starts a drag only when it carries data.
+		event.dataTransfer.setData("text/plain", String(index))
+	}
+
+	function onLogoDragOver(index) {
+		if (draggedLogo.value !== null) logoDropIndex.value = index
+	}
+
+	function onLogoDrop(index) {
+		if (draggedLogo.value !== null && draggedLogo.value !== index) moveLogo(draggedLogo.value, index)
+		onLogoDragEnd()
+	}
+
+	function onLogoDragEnd() {
+		draggedLogo.value = null
+		logoDropIndex.value = null
 	}
 
 	function clientLogoMenu(logo) {
@@ -308,6 +337,12 @@ export default function setup(context) {
 		editLogos,
 		editLogosNote,
 		clientLogoMenu,
+		draggedLogo,
+		logoDropIndex,
+		onLogoDragStart,
+		onLogoDragOver,
+		onLogoDrop,
+		onLogoDragEnd,
 		officeRows: computed(() => (draft.value.offices || []).map((office, index) => ({ ...office, index }))),
 		canAddOffice: computed(() => (draft.value.offices || []).length < MAX_OFFICES),
 		officeDialogOpen,

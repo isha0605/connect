@@ -424,7 +424,10 @@
          "height": "64px",
          "justifyContent": "center",
          "position": "relative",
-         "padding": "0 40px"
+         "padding": "0 40px",
+         "boxShadow": "{{ logoDropIndex === dataItem.index && draggedLogo !== dataItem.index ? '0 0 0 2px var(--outline-gray-4)' : 'none' }}",
+         "cursor": "grab",
+         "opacity": "{{ draggedLogo === dataItem.index ? '0.4' : '1' }}"
         },
         "children": [
          {
@@ -501,7 +504,32 @@
            }
           ]
          }
-        ]
+        ],
+        "attributes": {
+         "draggable": "true"
+        },
+        "componentEvents": {
+         "dragstart": {
+          "action": "Run Script",
+          "event": "dragstart",
+          "script": "onLogoDragStart(dataItem.index, eventArgs[0]);"
+         },
+         "dragover.prevent": {
+          "action": "Run Script",
+          "event": "dragover.prevent",
+          "script": "onLogoDragOver(dataItem.index);"
+         },
+         "drop.prevent": {
+          "action": "Run Script",
+          "event": "drop.prevent",
+          "script": "onLogoDrop(dataItem.index);"
+         },
+         "dragend": {
+          "action": "Run Script",
+          "event": "dragend",
+          "script": "onLogoDragEnd();"
+         }
+        }
        }
       ]
      },
@@ -3051,7 +3079,7 @@
  "inputs": [],
  "is_disabled": 0,
  "is_standard": 1,
- "modified": "2026-11-23 23:30:00.000000",
+ "modified": "2026-11-23 23:40:00.000000",
  "modified_by": "Administrator",
  "name": "partnerprofilesections",
  "owner": "Administrator"
