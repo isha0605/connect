@@ -30,8 +30,9 @@ const props = defineProps({
 })
 const emit = defineEmits(["update:modelValue", "updated"])
 
-// The company's size and industries change in Settings, not here.
-const EDITED = Object.keys(MISSING_ANSWERS).filter((field) => !["company_size", "industries"].includes(field))
+// The company's country, size and industries change in Settings, not here.
+const COMPANY_FIELDS = ["country", "company_size", "industries"]
+const EDITED = Object.keys(MISSING_ANSWERS).filter((field) => !COMPANY_FIELDS.includes(field))
 
 const editing = ref(false)
 const form = ref({})
