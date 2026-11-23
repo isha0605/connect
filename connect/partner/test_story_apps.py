@@ -14,6 +14,7 @@ from connect.partner.story_apps import (
 	queue_missing_story_apps,
 )
 from connect.patches.add_lending_and_education_apps import execute as add_lending_and_education_apps
+from connect.patches.rebuild_partner_apps_from_stories import execute as rebuild_partner_apps_from_stories
 
 KNOWN_APPS = ["ERPNext", "Frappe HR", "Helpdesk", "Frappe Insights"]
 PARTNER = "_Test Story Apps Partner"
@@ -128,3 +129,14 @@ class IntegrationTestPartnerAppsFromStories(IntegrationTestCase):
 			build_story_apps(row, "https://frappe.io/stories/Client%200")
 
 		self.assertEqual(partner_apps(), ["ERPNext", "Frappe HR", "Helpdesk"])
+
+	def test_the_patch_drops_apps_picked_by_hand(self):
+		partner_with_stories(["ERPNext"])
+		# As a partner who picked an app by hand before this change: written past Partner.validate.
+		frappe.get_doc(
+			{"doctype": "Partner App", "parent": PARTNER, "parenttype": "Partner", "parentfield": "apps", "app": "Helpdesk", "idx": 2}
+		).db_insert()
+
+		rebuild_partner_apps_from_stories()
+
+		self.assertEqual(partner_apps(), ["ERPNext"])
