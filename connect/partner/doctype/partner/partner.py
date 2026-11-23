@@ -62,6 +62,7 @@ class Partner(Document):
 		self.validate_served_countries()
 		validate_industries(self)
 		self.set_starter_pack_sequence()
+		self.set_apps_from_stories()
 
 	def validate_keep_reasons(self):
 		"""Staff who stop the daily review changing a partner say why, so others know."""
@@ -128,6 +129,17 @@ class Partner(Document):
 		repeated = {country for country, count in counts.items() if count > 1}
 		if repeated:
 			frappe.throw(_("{0} is listed more than once in Countries Served.").format(", ".join(sorted(repeated))))
+
+	def set_apps_from_stories(self) -> bool:
+		"""A partner's apps are the apps its success stories name, so the Apps filter and matching
+		only count work the partner has shown. Returns whether they changed."""
+		known = set(frappe.get_all("App", pluck="name"))
+		apps = [app for app in apps_from_stories(self.get("success_stories")) if app in known]
+		if [row.app for row in self.get("apps")] == apps:
+			return False
+
+		self.set("apps", [{"app": app} for app in apps])
+		return True
 
 	def before_save(self):
 		self.region = get_region_of_country(self.country)
@@ -952,7 +964,7 @@ def get_partner_document(partner):
 	# the picked industries, each with the verified tick its success stories earn
 	doc["industry_badges"] = industry_badges(industries, doc.get("success_stories"))
 	doc["display_industries"] = industries
-	# shown with the partner's own apps, never used to match or filter partners
+	# the same apps as doc["apps"], which Partner.set_apps_from_stories keeps in step with the stories
 	doc["story_apps"] = apps_from_stories(doc.get("success_stories"))
 	# adds client_logo_display per success story — a greyscale-normalized copy of
 	# the client logo where one has been built, else the original URL
