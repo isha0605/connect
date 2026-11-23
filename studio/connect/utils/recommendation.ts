@@ -251,8 +251,8 @@ export function budgetIn(budget, currency) {
 	return from ? BUDGET_RANGES[currency][from.indexOf(budget)] : budget
 }
 
-// Where the ₹ / $ switch starts: the customer's country when they've given one, else their browser's
-// time zone, since a guest hasn't said where they are.
+// The currency of a customer's budget ranges: their country when they've given one, else their
+// browser's time zone, since a guest hasn't said where they are.
 export function startingBudgetCurrency(country) {
 	if (country) return country === "India" ? "INR" : "USD"
 	return INDIAN_TIME_ZONES.includes(Intl.DateTimeFormat().resolvedOptions().timeZone) ? "INR" : "USD"
