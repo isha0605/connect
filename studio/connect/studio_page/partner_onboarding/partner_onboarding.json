@@ -70,1136 +70,1153 @@
        },
        "children": [
         {
+         "blockName": "ConnectScrollArea",
+         "componentId": "left-scroll",
+         "componentName": "ConnectScrollArea",
+         "componentProps": {},
          "baseStyles": {
           "flex": "1",
           "margin": "0 auto",
           "maxWidth": "1280px",
           "minWidth": "0px",
-          "overflowY": "auto",
-          "padding": "0 48px",
           "width": "100%"
          },
-         "children": [
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flexDirection": "column",
-            "gap": "24px",
-            "paddingTop": "8px"
-           },
-           "children": [
+         "componentSlots": {
+          "default": {
+           "parentBlockId": "left-scroll",
+           "slotContent": [
             {
              "baseStyles": {
-              "color": "var(--ink-gray-8)",
-              "fontSize": "18px",
-              "fontWeight": "600",
-              "letterSpacing": "0.01em",
-              "lineHeight": "1.15"
-             },
-             "componentId": "journey-title",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "tag": "p",
-              "text": "Your journey to becoming a Frappe partner"
-             }
-            },
-            {
-             "baseStyles": {
-              "border": "1px solid var(--outline-gray-1)",
-              "borderRadius": "8px",
-              "display": "{{ (notPartner()) ? 'block' : 'none' }}",
-              "maxWidth": "65ch",
-              "padding": "16px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-8)",
-                "fontSize": "14px",
-                "fontWeight": "500",
-                "letterSpacing": "0.02em",
-                "lineHeight": "1.5"
-               },
-               "componentId": "not-partner-title",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "tag": "p",
-                "text": "Only partner companies can apply"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-6)",
-                "fontSize": "14px",
-                "fontWeight": "420",
-                "letterSpacing": "0.02em",
-                "lineHeight": "1.5",
-                "marginTop": "4px"
-               },
-               "componentId": "not-partner-body",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "tag": "p",
-                "text": "Your account isn't a member of a partner company, so there's no application to start here. Ask your company's admin to add you, or contact sales@frappe.io."
-               }
-              }
-             ],
-             "componentId": "not-partner",
-             "componentName": "container",
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "display": "{{ (!notPartner()) ? 'flex' : 'none' }}",
-              "flexDirection": "column",
-              "gap": "24px",
-              "width": "100%"
+              "padding": "0 48px"
              },
              "children": [
               {
                "baseStyles": {
                 "display": "flex",
-                "flexDirection": "column"
+                "flexDirection": "column",
+                "gap": "24px",
+                "paddingTop": "8px"
                },
                "children": [
                 {
                  "baseStyles": {
-                  "borderBottom": "1px solid var(--outline-gray-1)"
+                  "color": "var(--ink-gray-8)",
+                  "fontSize": "18px",
+                  "fontWeight": "600",
+                  "letterSpacing": "0.01em",
+                  "lineHeight": "1.15"
+                 },
+                 "componentId": "journey-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "Your journey to becoming a Frappe partner"
+                 }
+                },
+                {
+                 "baseStyles": {
+                  "border": "1px solid var(--outline-gray-1)",
+                  "borderRadius": "8px",
+                  "display": "{{ (notPartner()) ? 'block' : 'none' }}",
+                  "maxWidth": "65ch",
+                  "padding": "16px"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "alignItems": "center",
-                    "cursor": "pointer",
-                    "display": "flex",
-                    "gap": "12px",
-                    "padding": "12px 0"
+                    "color": "var(--ink-gray-8)",
+                    "fontSize": "14px",
+                    "fontWeight": "500",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "1.5"
                    },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "{{ stepStatus('step-register') === 'completed' ? 'var(--ink-green-7)' : 'var(--ink-gray-5)' }}",
-                      "flexShrink": "0",
-                      "fontSize": "16px",
-                      "height": "16px",
-                      "width": "16px"
-                     },
-                     "componentId": "step-register-status-icon",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "{{ stepStatus('step-register') === 'completed' ? 'lucide-circle-check' : 'lucide-circle-dashed' }}"
-                     }
-                    },
-                    {
-                     "baseStyles": {
-                      "flex": "1",
-                      "minWidth": "0px"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "{{ stepStatus('step-register') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
-                        "fontSize": "14px",
-                        "fontWeight": "500",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.15",
-                        "textDecoration": "{{ stepStatus('step-register') === 'completed' ? 'line-through' : 'none' }}"
-                       },
-                       "componentId": "step-register-title",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "span",
-                        "text": "Register as a Frappe Partner"
-                       }
-                      },
-                      {
-                       "baseStyles": {
-                        "color": "var(--ink-red-7)",
-                        "fontSize": "14px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.15"
-                       },
-                       "componentId": "step-register-required",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "span",
-                        "text": " *"
-                       }
-                      }
-                     ],
-                     "componentId": "step-register-title-wrap",
-                     "componentName": "container",
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-6)",
-                      "flexShrink": "0",
-                      "fontSize": "16px",
-                      "height": "16px",
-                      "transform": "{{ isStepOpen('step-register') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
-                      "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
-                      "width": "16px"
-                     },
-                     "componentId": "step-register-chevron",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "lucide-chevron-down"
-                     }
-                    }
-                   ],
-                   "componentEvents": {
-                    "click": {
-                     "action": "Run Script",
-                     "event": "click",
-                     "script": "toggleStep('step-register');"
-                    }
-                   },
-                   "componentId": "step-register-trigger",
-                   "componentName": "container",
-                   "originalElement": "div"
+                   "componentId": "not-partner-title",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "p",
+                    "text": "Only partner companies can apply"
+                   }
                   },
                   {
                    "baseStyles": {
-                    "display": "{{ (isStepOpen('step-register') && (true)) ? 'block' : 'none' }}",
-                    "padding": "0 4px 16px 28px"
+                    "color": "var(--ink-gray-6)",
+                    "fontSize": "14px",
+                    "fontWeight": "420",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "1.5",
+                    "marginTop": "4px"
                    },
-                   "children": [
-                    {
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "openRegistration();"
-                      }
-                     },
-                     "componentId": "step-register-btn",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "disabled": "{{ isRegistered() && !canEditDraft() }}",
-                      "label": "{{ registerActionLabel() }}",
-                      "variant": "solid"
-                     }
-                    }
-                   ],
-                   "componentId": "step-register-content",
-                   "componentName": "container",
-                   "originalElement": "div"
+                   "componentId": "not-partner-body",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "tag": "p",
+                    "text": "Your account isn't a member of a partner company, so there's no application to start here. Ask your company's admin to add you, or contact sales@frappe.io."
+                   }
                   }
                  ],
-                 "componentId": "step-register-item",
+                 "componentId": "not-partner",
                  "componentName": "container",
                  "originalElement": "div"
                 },
                 {
                  "baseStyles": {
-                  "borderBottom": "1px solid var(--outline-gray-1)"
+                  "display": "{{ (!notPartner()) ? 'flex' : 'none' }}",
+                  "flexDirection": "column",
+                  "gap": "24px",
+                  "width": "100%"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "alignItems": "center",
-                    "cursor": "pointer",
                     "display": "flex",
-                    "gap": "12px",
-                    "padding": "12px 0"
+                    "flexDirection": "column"
                    },
                    "children": [
                     {
                      "baseStyles": {
-                      "color": "{{ stepStatus('step-profile') === 'completed' ? 'var(--ink-green-7)' : 'var(--ink-gray-5)' }}",
-                      "flexShrink": "0",
-                      "fontSize": "16px",
-                      "height": "16px",
-                      "width": "16px"
-                     },
-                     "componentId": "step-profile-status-icon",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "{{ stepStatus('step-profile') === 'completed' ? 'lucide-circle-check' : 'lucide-circle-dashed' }}"
-                     }
-                    },
-                    {
-                     "baseStyles": {
-                      "flex": "1",
-                      "minWidth": "0px"
+                      "borderBottom": "1px solid var(--outline-gray-1)"
                      },
                      "children": [
                       {
                        "baseStyles": {
-                        "color": "{{ stepStatus('step-profile') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
-                        "fontSize": "14px",
-                        "fontWeight": "500",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.15",
-                        "textDecoration": "{{ stepStatus('step-profile') === 'completed' ? 'line-through' : 'none' }}"
-                       },
-                       "componentId": "step-profile-title",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "span",
-                        "text": "Complete your company profile"
-                       }
-                      },
-                      {
-                       "baseStyles": {
-                        "color": "var(--ink-red-7)",
-                        "fontSize": "14px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.15"
-                       },
-                       "componentId": "step-profile-required",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "span",
-                        "text": " *"
-                       }
-                      }
-                     ],
-                     "componentId": "step-profile-title-wrap",
-                     "componentName": "container",
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-6)",
-                      "flexShrink": "0",
-                      "fontSize": "16px",
-                      "height": "16px",
-                      "transform": "{{ isStepOpen('step-profile') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
-                      "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
-                      "width": "16px"
-                     },
-                     "componentId": "step-profile-chevron",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "lucide-chevron-down"
-                     }
-                    }
-                   ],
-                   "componentEvents": {
-                    "click": {
-                     "action": "Run Script",
-                     "event": "click",
-                     "script": "toggleStep('step-profile');"
-                    }
-                   },
-                   "componentId": "step-profile-trigger",
-                   "componentName": "container",
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "display": "{{ (isStepOpen('step-profile') && (true)) ? 'block' : 'none' }}",
-                    "padding": "0 4px 16px 28px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-6)",
-                      "marginBottom": "8px",
-                      "maxWidth": "65ch"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "var(--ink-gray-6)",
-                        "fontSize": "14px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.5"
-                       },
-                       "componentId": "step-profile-description-text",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "p",
-                        "text": "Before you continue, we need to know more about your company to understand how your company can benefit from becoming a Frappe Partner."
-                       }
-                      }
-                     ],
-                     "componentId": "step-profile-description",
-                     "componentName": "container",
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "display": "{{ (isRegistered() && canEditDraft()) ? 'flex' : 'none' }}"
-                     },
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "openCompanyInfo();"
-                      }
-                     },
-                     "componentId": "step-profile-btn",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "label": "Fill out company information",
-                      "variant": "solid"
-                     }
-                    }
-                   ],
-                   "componentId": "step-profile-content",
-                   "componentName": "container",
-                   "originalElement": "div"
-                  }
-                 ],
-                 "componentId": "step-profile-item",
-                 "componentName": "container",
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "borderBottom": "1px solid var(--outline-gray-1)"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "cursor": "pointer",
-                    "display": "flex",
-                    "gap": "12px",
-                    "padding": "12px 0"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "{{ stepStatus('step-certificates') === 'completed' ? 'var(--ink-green-7)' : 'var(--ink-gray-5)' }}",
-                      "flexShrink": "0",
-                      "fontSize": "16px",
-                      "height": "16px",
-                      "width": "16px"
-                     },
-                     "componentId": "step-certificates-status-icon",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "{{ stepStatus('step-certificates') === 'completed' ? 'lucide-circle-check' : 'lucide-circle-dashed' }}"
-                     }
-                    },
-                    {
-                     "baseStyles": {
-                      "flex": "1",
-                      "minWidth": "0px"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "{{ stepStatus('step-certificates') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
-                        "fontSize": "14px",
-                        "fontWeight": "500",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.15",
-                        "textDecoration": "{{ stepStatus('step-certificates') === 'completed' ? 'line-through' : 'none' }}"
-                       },
-                       "componentId": "step-certificates-title",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "span",
-                        "text": "Link at least two Frappe School certificates"
-                       }
-                      },
-                      {
-                       "baseStyles": {
-                        "color": "var(--ink-red-7)",
-                        "fontSize": "14px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.15"
-                       },
-                       "componentId": "step-certificates-required",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "span",
-                        "text": " *"
-                       }
-                      }
-                     ],
-                     "componentId": "step-certificates-title-wrap",
-                     "componentName": "container",
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-6)",
-                      "display": "{{ (certificatesSummary()) ? 'block' : 'none' }}",
-                      "fontSize": "13px",
-                      "fontWeight": "420",
-                      "letterSpacing": "0.02em",
-                      "lineHeight": "1.15",
-                      "paddingRight": "8px",
-                      "whiteSpace": "nowrap"
-                     },
-                     "componentId": "step-certificates-summary",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "tag": "span",
-                      "text": "{{ certificatesSummary() }}"
-                     }
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-6)",
-                      "flexShrink": "0",
-                      "fontSize": "16px",
-                      "height": "16px",
-                      "transform": "{{ isStepOpen('step-certificates') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
-                      "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
-                      "width": "16px"
-                     },
-                     "componentId": "step-certificates-chevron",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "lucide-chevron-down"
-                     }
-                    }
-                   ],
-                   "componentEvents": {
-                    "click": {
-                     "action": "Run Script",
-                     "event": "click",
-                     "script": "toggleStep('step-certificates');"
-                    }
-                   },
-                   "componentId": "step-certificates-trigger",
-                   "componentName": "container",
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "display": "{{ (isStepOpen('step-certificates') && (true)) ? 'block' : 'none' }}",
-                    "padding": "0 4px 16px 28px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-6)",
-                      "marginBottom": "8px",
-                      "maxWidth": "65ch"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "var(--ink-gray-6)",
-                        "fontSize": "14px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.5"
-                       },
-                       "componentId": "step-certificates-description-text",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "p",
-                        "text": "Link two Framework or ERPNext certificates from Frappe School. We will send a verification email to each certificate holder to confirm the link."
-                       }
-                      },
-                      {
-                       "baseStyles": {
-                        "color": "var(--ink-gray-6)",
-                        "fontSize": "14px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.5"
-                       },
-                       "componentId": "step-certificates-link",
-                       "componentName": "HTML",
-                       "componentProps": {
-                        "html": "<p style=\"margin-top:8px\">Don't have certification? <a href=\"https://school.frappe.io/lms/batches\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"text-decoration:underline\">Browse upcoming batches</a></p>"
-                       }
-                      }
-                     ],
-                     "componentId": "step-certificates-description",
-                     "componentName": "container",
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "display": "flex",
-                      "gap": "8px"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "display": "{{ (isRegistered() && canEditDraft()) ? 'flex' : 'none' }}"
-                       },
-                       "componentEvents": {
-                        "click": {
-                         "action": "Run Script",
-                         "event": "click",
-                         "script": "openLinkCertificate();"
-                        }
-                       },
-                       "componentId": "step-certificates-link-btn",
-                       "componentName": "Button",
-                       "componentProps": {
-                        "label": "Link certificate",
-                        "variant": "solid"
-                       }
-                      },
-                      {
-                       "baseStyles": {
-                        "display": "{{ (hasCertificateActivity()) ? 'flex' : 'none' }}"
-                       },
-                       "componentEvents": {
-                        "click": {
-                         "action": "Run Script",
-                         "event": "click",
-                         "script": "openCertificateStatus();"
-                        }
-                       },
-                       "componentId": "step-certificates-status-btn",
-                       "componentName": "Button",
-                       "componentProps": {
-                        "label": "Check link status",
-                        "variant": "subtle"
-                       }
-                      }
-                     ],
-                     "componentId": "step-certificates-actions",
-                     "componentName": "container",
-                     "originalElement": "div"
-                    }
-                   ],
-                   "componentId": "step-certificates-content",
-                   "componentName": "container",
-                   "originalElement": "div"
-                  }
-                 ],
-                 "componentId": "step-certificates-item",
-                 "componentName": "container",
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "borderBottom": "1px solid var(--outline-gray-1)",
-                  "display": "{{ isCloudStepShown() ? 'block' : 'none' }}"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "cursor": "pointer",
-                    "display": "flex",
-                    "gap": "12px",
-                    "padding": "12px 0"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "{{ stepStatus('step-cloud') === 'completed' ? 'var(--ink-green-7)' : 'var(--ink-gray-5)' }}",
-                      "flexShrink": "0",
-                      "fontSize": "16px",
-                      "height": "16px",
-                      "width": "16px"
-                     },
-                     "componentId": "step-cloud-status-icon",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "{{ stepStatus('step-cloud') === 'completed' ? 'lucide-circle-check' : 'lucide-circle-dashed' }}"
-                     }
-                    },
-                    {
-                     "baseStyles": {
-                      "flex": "1",
-                      "minWidth": "0px"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "{{ stepStatus('step-cloud') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
-                        "fontSize": "14px",
-                        "fontWeight": "500",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.15",
-                        "textDecoration": "{{ stepStatus('step-cloud') === 'completed' ? 'line-through' : 'none' }}"
-                       },
-                       "componentId": "step-cloud-title",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "span",
-                        "text": "Connect your Frappe Cloud account"
-                       }
-                      },
-                      {
-                       "baseStyles": {
-                        "color": "var(--ink-red-7)",
-                        "fontSize": "14px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.15"
-                       },
-                       "componentId": "step-cloud-required",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "span",
-                        "text": " *"
-                       }
-                      }
-                     ],
-                     "componentId": "step-cloud-title-wrap",
-                     "componentName": "container",
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-6)",
-                      "flexShrink": "0",
-                      "fontSize": "16px",
-                      "height": "16px",
-                      "transform": "{{ isStepOpen('step-cloud') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
-                      "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
-                      "width": "16px"
-                     },
-                     "componentId": "step-cloud-chevron",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "lucide-chevron-down"
-                     }
-                    }
-                   ],
-                   "componentEvents": {
-                    "click": {
-                     "action": "Run Script",
-                     "event": "click",
-                     "script": "toggleStep('step-cloud');"
-                    }
-                   },
-                   "componentId": "step-cloud-trigger",
-                   "componentName": "container",
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "display": "{{ (isStepOpen('step-cloud') && (true)) ? 'block' : 'none' }}",
-                    "padding": "0 4px 16px 28px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-6)",
-                      "marginBottom": "8px",
-                      "maxWidth": "65ch"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "var(--ink-gray-6)",
-                        "fontSize": "14px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.5"
-                       },
-                       "componentId": "step-cloud-description-text",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "p",
-                        "text": "Customers who hire you add you to their Frappe Cloud account, so your company needs its team there. Sign in or create your account, then pick your company's team. Only your company's admin can do this."
-                       }
-                      }
-                     ],
-                     "componentId": "step-cloud-description",
-                     "componentName": "container",
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-7)",
-                      "display": "{{ isCloudReady() ? 'block' : 'none' }}",
-                      "fontSize": "14px",
-                      "fontWeight": "420",
-                      "letterSpacing": "0.02em",
-                      "lineHeight": "1.5"
-                     },
-                     "componentId": "step-cloud-done-text",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "tag": "p",
-                      "text": "Your company's Frappe Cloud team is connected."
-                     }
-                    },
-                    {
-                     "baseStyles": {
-                      "display": "{{ (isRegistered() && !isCloudReady()) ? 'flex' : 'none' }}"
-                     },
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "connectCloud();"
-                      }
-                     },
-                     "componentId": "step-cloud-connect-btn",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "label": "Connect Frappe Cloud",
-                      "loading": "{{ connectingCloud }}",
-                      "variant": "solid"
-                     }
-                    }
-                   ],
-                   "componentId": "step-cloud-content",
-                   "componentName": "container",
-                   "originalElement": "div"
-                  }
-                 ],
-                 "componentId": "step-cloud-item",
-                 "componentName": "container",
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "borderBottom": "1px solid var(--outline-gray-1)"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "cursor": "pointer",
-                    "display": "flex",
-                    "gap": "12px",
-                    "padding": "12px 0"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "{{ stepStatus('step-mrr') === 'completed' ? 'var(--ink-green-7)' : 'var(--ink-gray-5)' }}",
-                      "flexShrink": "0",
-                      "fontSize": "16px",
-                      "height": "16px",
-                      "width": "16px"
-                     },
-                     "componentId": "step-mrr-status-icon",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "{{ stepStatus('step-mrr') === 'completed' ? 'lucide-circle-check' : 'lucide-circle-dashed' }}"
-                     }
-                    },
-                    {
-                     "baseStyles": {
-                      "flex": "1",
-                      "minWidth": "0px"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "{{ stepStatus('step-mrr') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
-                        "fontSize": "14px",
-                        "fontWeight": "500",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.15",
-                        "textDecoration": "{{ stepStatus('step-mrr') === 'completed' ? 'line-through' : 'none' }}"
-                       },
-                       "componentId": "step-mrr-title",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "span",
-                        "text": "{{ 'Reach ' + mrrTargetLabel() + ' MRR on Frappe Cloud' }}"
-                       }
-                      },
-                      {
-                       "baseStyles": {
-                        "color": "var(--ink-red-7)",
-                        "fontSize": "14px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.15"
-                       },
-                       "componentId": "step-mrr-required",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "span",
-                        "text": " *"
-                       }
-                      }
-                     ],
-                     "componentId": "step-mrr-title-wrap",
-                     "componentName": "container",
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-6)",
-                      "display": "{{ (mrrSummary()) ? 'block' : 'none' }}",
-                      "fontSize": "13px",
-                      "fontWeight": "420",
-                      "letterSpacing": "0.02em",
-                      "lineHeight": "1.15",
-                      "paddingRight": "8px",
-                      "whiteSpace": "nowrap"
-                     },
-                     "componentId": "step-mrr-summary",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "tag": "span",
-                      "text": "{{ mrrSummary() }}"
-                     }
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-6)",
-                      "flexShrink": "0",
-                      "fontSize": "16px",
-                      "height": "16px",
-                      "transform": "{{ isStepOpen('step-mrr') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
-                      "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
-                      "width": "16px"
-                     },
-                     "componentId": "step-mrr-chevron",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "lucide-chevron-down"
-                     }
-                    }
-                   ],
-                   "componentEvents": {
-                    "click": {
-                     "action": "Run Script",
-                     "event": "click",
-                     "script": "toggleStep('step-mrr');"
-                    }
-                   },
-                   "componentId": "step-mrr-trigger",
-                   "componentName": "container",
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "display": "{{ (isStepOpen('step-mrr') && (true)) ? 'block' : 'none' }}",
-                    "padding": "0 4px 16px 28px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-6)",
-                      "marginBottom": "8px",
-                      "maxWidth": "65ch"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "var(--ink-gray-6)",
-                        "fontSize": "14px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "1.5"
-                       },
-                       "componentId": "step-mrr-description-text",
-                       "componentName": "TextBlock",
-                       "componentProps": {
-                        "tag": "p",
-                        "text": "The Frappe team updates this from your customers' Frappe Cloud subscriptions as they're billed. No manual update is needed."
-                       }
-                      }
-                     ],
-                     "componentId": "step-mrr-description",
-                     "componentName": "container",
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "display": "flex",
-                      "flexDirection": "column",
-                      "gap": "8px",
-                      "marginBottom": "16px",
-                      "maxWidth": "65ch"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "backgroundColor": "var(--surface-gray-2)",
-                        "borderRadius": "9999px",
-                        "height": "8px",
-                        "overflow": "hidden"
+                        "alignItems": "center",
+                        "cursor": "pointer",
+                        "display": "flex",
+                        "gap": "12px",
+                        "padding": "12px 0"
                        },
                        "children": [
                         {
                          "baseStyles": {
-                          "backgroundColor": "var(--ink-gray-8)",
-                          "borderRadius": "9999px",
-                          "height": "100%",
-                          "transition": "width 200ms",
-                          "width": "{{ mrrProgressWidth() }}"
+                          "color": "{{ stepStatus('step-register') === 'completed' ? 'var(--ink-green-7)' : 'var(--ink-gray-5)' }}",
+                          "flexShrink": "0",
+                          "fontSize": "16px",
+                          "height": "16px",
+                          "width": "16px"
                          },
-                         "componentId": "step-mrr-fill",
+                         "componentId": "step-register-status-icon",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "{{ stepStatus('step-register') === 'completed' ? 'lucide-circle-check' : 'lucide-circle-dashed' }}"
+                         }
+                        },
+                        {
+                         "baseStyles": {
+                          "flex": "1",
+                          "minWidth": "0px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "{{ stepStatus('step-register') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
+                            "fontSize": "14px",
+                            "fontWeight": "500",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.15",
+                            "textDecoration": "{{ stepStatus('step-register') === 'completed' ? 'line-through' : 'none' }}"
+                           },
+                           "componentId": "step-register-title",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "span",
+                            "text": "Register as a Frappe Partner"
+                           }
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-red-7)",
+                            "fontSize": "14px",
+                            "fontWeight": "420",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.15"
+                           },
+                           "componentId": "step-register-required",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "span",
+                            "text": " *"
+                           }
+                          }
+                         ],
+                         "componentId": "step-register-title-wrap",
                          "componentName": "container",
                          "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6)",
+                          "flexShrink": "0",
+                          "fontSize": "16px",
+                          "height": "16px",
+                          "transform": "{{ isStepOpen('step-register') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
+                          "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+                          "width": "16px"
+                         },
+                         "componentId": "step-register-chevron",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "lucide-chevron-down"
+                         }
                         }
                        ],
-                       "componentId": "step-mrr-track",
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "toggleStep('step-register');"
+                        }
+                       },
+                       "componentId": "step-register-trigger",
                        "componentName": "container",
                        "originalElement": "div"
                       },
                       {
                        "baseStyles": {
+                        "display": "{{ (isStepOpen('step-register') && (true)) ? 'block' : 'none' }}",
+                        "padding": "0 4px 16px 28px"
+                       },
+                       "children": [
+                        {
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "openRegistration();"
+                          }
+                         },
+                         "componentId": "step-register-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "disabled": "{{ isRegistered() && !canEditDraft() }}",
+                          "label": "{{ registerActionLabel() }}",
+                          "variant": "solid"
+                         }
+                        }
+                       ],
+                       "componentId": "step-register-content",
+                       "componentName": "container",
+                       "originalElement": "div"
+                      }
+                     ],
+                     "componentId": "step-register-item",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "borderBottom": "1px solid var(--outline-gray-1)"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
                         "alignItems": "center",
+                        "cursor": "pointer",
                         "display": "flex",
-                        "justifyContent": "space-between"
+                        "gap": "12px",
+                        "padding": "12px 0"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "{{ stepStatus('step-profile') === 'completed' ? 'var(--ink-green-7)' : 'var(--ink-gray-5)' }}",
+                          "flexShrink": "0",
+                          "fontSize": "16px",
+                          "height": "16px",
+                          "width": "16px"
+                         },
+                         "componentId": "step-profile-status-icon",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "{{ stepStatus('step-profile') === 'completed' ? 'lucide-circle-check' : 'lucide-circle-dashed' }}"
+                         }
+                        },
+                        {
+                         "baseStyles": {
+                          "flex": "1",
+                          "minWidth": "0px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "{{ stepStatus('step-profile') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
+                            "fontSize": "14px",
+                            "fontWeight": "500",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.15",
+                            "textDecoration": "{{ stepStatus('step-profile') === 'completed' ? 'line-through' : 'none' }}"
+                           },
+                           "componentId": "step-profile-title",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "span",
+                            "text": "Complete your company profile"
+                           }
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-red-7)",
+                            "fontSize": "14px",
+                            "fontWeight": "420",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.15"
+                           },
+                           "componentId": "step-profile-required",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "span",
+                            "text": " *"
+                           }
+                          }
+                         ],
+                         "componentId": "step-profile-title-wrap",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6)",
+                          "flexShrink": "0",
+                          "fontSize": "16px",
+                          "height": "16px",
+                          "transform": "{{ isStepOpen('step-profile') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
+                          "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+                          "width": "16px"
+                         },
+                         "componentId": "step-profile-chevron",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "lucide-chevron-down"
+                         }
+                        }
+                       ],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "toggleStep('step-profile');"
+                        }
+                       },
+                       "componentId": "step-profile-trigger",
+                       "componentName": "container",
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "display": "{{ (isStepOpen('step-profile') && (true)) ? 'block' : 'none' }}",
+                        "padding": "0 4px 16px 28px"
                        },
                        "children": [
                         {
                          "baseStyles": {
                           "color": "var(--ink-gray-6)",
+                          "marginBottom": "8px",
+                          "maxWidth": "65ch"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-6)",
+                            "fontSize": "14px",
+                            "fontWeight": "420",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.5"
+                           },
+                           "componentId": "step-profile-description-text",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "p",
+                            "text": "Before you continue, we need to know more about your company to understand how your company can benefit from becoming a Frappe Partner."
+                           }
+                          }
+                         ],
+                         "componentId": "step-profile-description",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "display": "{{ (isRegistered() && canEditDraft()) ? 'flex' : 'none' }}"
+                         },
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "openCompanyInfo();"
+                          }
+                         },
+                         "componentId": "step-profile-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "label": "Fill out company information",
+                          "variant": "solid"
+                         }
+                        }
+                       ],
+                       "componentId": "step-profile-content",
+                       "componentName": "container",
+                       "originalElement": "div"
+                      }
+                     ],
+                     "componentId": "step-profile-item",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "borderBottom": "1px solid var(--outline-gray-1)"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "cursor": "pointer",
+                        "display": "flex",
+                        "gap": "12px",
+                        "padding": "12px 0"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "{{ stepStatus('step-certificates') === 'completed' ? 'var(--ink-green-7)' : 'var(--ink-gray-5)' }}",
+                          "flexShrink": "0",
+                          "fontSize": "16px",
+                          "height": "16px",
+                          "width": "16px"
+                         },
+                         "componentId": "step-certificates-status-icon",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "{{ stepStatus('step-certificates') === 'completed' ? 'lucide-circle-check' : 'lucide-circle-dashed' }}"
+                         }
+                        },
+                        {
+                         "baseStyles": {
+                          "flex": "1",
+                          "minWidth": "0px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "{{ stepStatus('step-certificates') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
+                            "fontSize": "14px",
+                            "fontWeight": "500",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.15",
+                            "textDecoration": "{{ stepStatus('step-certificates') === 'completed' ? 'line-through' : 'none' }}"
+                           },
+                           "componentId": "step-certificates-title",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "span",
+                            "text": "Link at least two Frappe School certificates"
+                           }
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-red-7)",
+                            "fontSize": "14px",
+                            "fontWeight": "420",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.15"
+                           },
+                           "componentId": "step-certificates-required",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "span",
+                            "text": " *"
+                           }
+                          }
+                         ],
+                         "componentId": "step-certificates-title-wrap",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6)",
+                          "display": "{{ (certificatesSummary()) ? 'block' : 'none' }}",
                           "fontSize": "13px",
                           "fontWeight": "420",
                           "letterSpacing": "0.02em",
-                          "lineHeight": "1.15"
+                          "lineHeight": "1.15",
+                          "paddingRight": "8px",
+                          "whiteSpace": "nowrap"
                          },
-                         "componentId": "step-mrr-current",
+                         "componentId": "step-certificates-summary",
                          "componentName": "TextBlock",
                          "componentProps": {
                           "tag": "span",
-                          "text": "{{ mrrCurrentLabel() + ' current MRR' }}"
+                          "text": "{{ certificatesSummary() }}"
                          }
                         },
                         {
                          "baseStyles": {
                           "color": "var(--ink-gray-6)",
-                          "fontSize": "13px",
-                          "fontWeight": "420",
-                          "letterSpacing": "0.02em",
-                          "lineHeight": "1.15"
+                          "flexShrink": "0",
+                          "fontSize": "16px",
+                          "height": "16px",
+                          "transform": "{{ isStepOpen('step-certificates') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
+                          "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+                          "width": "16px"
                          },
-                         "componentId": "step-mrr-target",
-                         "componentName": "TextBlock",
+                         "componentId": "step-certificates-chevron",
+                         "componentName": "Icon",
                          "componentProps": {
-                          "tag": "span",
-                          "text": "{{ mrrTargetLabel() + ' target' }}"
+                          "icon": "lucide-chevron-down"
                          }
                         }
                        ],
-                       "componentId": "step-mrr-labels",
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "toggleStep('step-certificates');"
+                        }
+                       },
+                       "componentId": "step-certificates-trigger",
+                       "componentName": "container",
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "display": "{{ (isStepOpen('step-certificates') && (true)) ? 'block' : 'none' }}",
+                        "padding": "0 4px 16px 28px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6)",
+                          "marginBottom": "8px",
+                          "maxWidth": "65ch"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-6)",
+                            "fontSize": "14px",
+                            "fontWeight": "420",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.5"
+                           },
+                           "componentId": "step-certificates-description-text",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "p",
+                            "text": "Link two Framework or ERPNext certificates from Frappe School. We will send a verification email to each certificate holder to confirm the link."
+                           }
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-6)",
+                            "fontSize": "14px",
+                            "fontWeight": "420",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.5"
+                           },
+                           "componentId": "step-certificates-link",
+                           "componentName": "HTML",
+                           "componentProps": {
+                            "html": "<p style=\"margin-top:8px\">Don't have certification? <a href=\"https://school.frappe.io/lms/batches\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"text-decoration:underline\">Browse upcoming batches</a></p>"
+                           }
+                          }
+                         ],
+                         "componentId": "step-certificates-description",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "display": "flex",
+                          "gap": "8px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "display": "{{ (isRegistered() && canEditDraft()) ? 'flex' : 'none' }}"
+                           },
+                           "componentEvents": {
+                            "click": {
+                             "action": "Run Script",
+                             "event": "click",
+                             "script": "openLinkCertificate();"
+                            }
+                           },
+                           "componentId": "step-certificates-link-btn",
+                           "componentName": "Button",
+                           "componentProps": {
+                            "label": "Link certificate",
+                            "variant": "solid"
+                           }
+                          },
+                          {
+                           "baseStyles": {
+                            "display": "{{ (hasCertificateActivity()) ? 'flex' : 'none' }}"
+                           },
+                           "componentEvents": {
+                            "click": {
+                             "action": "Run Script",
+                             "event": "click",
+                             "script": "openCertificateStatus();"
+                            }
+                           },
+                           "componentId": "step-certificates-status-btn",
+                           "componentName": "Button",
+                           "componentProps": {
+                            "label": "Check link status",
+                            "variant": "subtle"
+                           }
+                          }
+                         ],
+                         "componentId": "step-certificates-actions",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        }
+                       ],
+                       "componentId": "step-certificates-content",
                        "componentName": "container",
                        "originalElement": "div"
                       }
                      ],
-                     "componentId": "step-mrr-progress",
+                     "componentId": "step-certificates-item",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "borderBottom": "1px solid var(--outline-gray-1)",
+                      "display": "{{ isCloudStepShown() ? 'block' : 'none' }}"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "cursor": "pointer",
+                        "display": "flex",
+                        "gap": "12px",
+                        "padding": "12px 0"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "{{ stepStatus('step-cloud') === 'completed' ? 'var(--ink-green-7)' : 'var(--ink-gray-5)' }}",
+                          "flexShrink": "0",
+                          "fontSize": "16px",
+                          "height": "16px",
+                          "width": "16px"
+                         },
+                         "componentId": "step-cloud-status-icon",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "{{ stepStatus('step-cloud') === 'completed' ? 'lucide-circle-check' : 'lucide-circle-dashed' }}"
+                         }
+                        },
+                        {
+                         "baseStyles": {
+                          "flex": "1",
+                          "minWidth": "0px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "{{ stepStatus('step-cloud') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
+                            "fontSize": "14px",
+                            "fontWeight": "500",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.15",
+                            "textDecoration": "{{ stepStatus('step-cloud') === 'completed' ? 'line-through' : 'none' }}"
+                           },
+                           "componentId": "step-cloud-title",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "span",
+                            "text": "Connect your Frappe Cloud account"
+                           }
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-red-7)",
+                            "fontSize": "14px",
+                            "fontWeight": "420",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.15"
+                           },
+                           "componentId": "step-cloud-required",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "span",
+                            "text": " *"
+                           }
+                          }
+                         ],
+                         "componentId": "step-cloud-title-wrap",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6)",
+                          "flexShrink": "0",
+                          "fontSize": "16px",
+                          "height": "16px",
+                          "transform": "{{ isStepOpen('step-cloud') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
+                          "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+                          "width": "16px"
+                         },
+                         "componentId": "step-cloud-chevron",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "lucide-chevron-down"
+                         }
+                        }
+                       ],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "toggleStep('step-cloud');"
+                        }
+                       },
+                       "componentId": "step-cloud-trigger",
+                       "componentName": "container",
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "display": "{{ (isStepOpen('step-cloud') && (true)) ? 'block' : 'none' }}",
+                        "padding": "0 4px 16px 28px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6)",
+                          "marginBottom": "8px",
+                          "maxWidth": "65ch"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-6)",
+                            "fontSize": "14px",
+                            "fontWeight": "420",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.5"
+                           },
+                           "componentId": "step-cloud-description-text",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "p",
+                            "text": "Customers who hire you add you to their Frappe Cloud account, so your company needs its team there. Sign in or create your account, then pick your company's team. Only your company's admin can do this."
+                           }
+                          }
+                         ],
+                         "componentId": "step-cloud-description",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-7)",
+                          "display": "{{ isCloudReady() ? 'block' : 'none' }}",
+                          "fontSize": "14px",
+                          "fontWeight": "420",
+                          "letterSpacing": "0.02em",
+                          "lineHeight": "1.5"
+                         },
+                         "componentId": "step-cloud-done-text",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "tag": "p",
+                          "text": "Your company's Frappe Cloud team is connected."
+                         }
+                        },
+                        {
+                         "baseStyles": {
+                          "display": "{{ (isRegistered() && !isCloudReady()) ? 'flex' : 'none' }}"
+                         },
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "connectCloud();"
+                          }
+                         },
+                         "componentId": "step-cloud-connect-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "label": "Connect Frappe Cloud",
+                          "loading": "{{ connectingCloud }}",
+                          "variant": "solid"
+                         }
+                        }
+                       ],
+                       "componentId": "step-cloud-content",
+                       "componentName": "container",
+                       "originalElement": "div"
+                      }
+                     ],
+                     "componentId": "step-cloud-item",
+                     "componentName": "container",
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "borderBottom": "1px solid var(--outline-gray-1)"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "cursor": "pointer",
+                        "display": "flex",
+                        "gap": "12px",
+                        "padding": "12px 0"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "{{ stepStatus('step-mrr') === 'completed' ? 'var(--ink-green-7)' : 'var(--ink-gray-5)' }}",
+                          "flexShrink": "0",
+                          "fontSize": "16px",
+                          "height": "16px",
+                          "width": "16px"
+                         },
+                         "componentId": "step-mrr-status-icon",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "{{ stepStatus('step-mrr') === 'completed' ? 'lucide-circle-check' : 'lucide-circle-dashed' }}"
+                         }
+                        },
+                        {
+                         "baseStyles": {
+                          "flex": "1",
+                          "minWidth": "0px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "{{ stepStatus('step-mrr') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
+                            "fontSize": "14px",
+                            "fontWeight": "500",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.15",
+                            "textDecoration": "{{ stepStatus('step-mrr') === 'completed' ? 'line-through' : 'none' }}"
+                           },
+                           "componentId": "step-mrr-title",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "span",
+                            "text": "{{ 'Reach ' + mrrTargetLabel() + ' MRR on Frappe Cloud' }}"
+                           }
+                          },
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-red-7)",
+                            "fontSize": "14px",
+                            "fontWeight": "420",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.15"
+                           },
+                           "componentId": "step-mrr-required",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "span",
+                            "text": " *"
+                           }
+                          }
+                         ],
+                         "componentId": "step-mrr-title-wrap",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6)",
+                          "display": "{{ (mrrSummary()) ? 'block' : 'none' }}",
+                          "fontSize": "13px",
+                          "fontWeight": "420",
+                          "letterSpacing": "0.02em",
+                          "lineHeight": "1.15",
+                          "paddingRight": "8px",
+                          "whiteSpace": "nowrap"
+                         },
+                         "componentId": "step-mrr-summary",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "tag": "span",
+                          "text": "{{ mrrSummary() }}"
+                         }
+                        },
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6)",
+                          "flexShrink": "0",
+                          "fontSize": "16px",
+                          "height": "16px",
+                          "transform": "{{ isStepOpen('step-mrr') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
+                          "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+                          "width": "16px"
+                         },
+                         "componentId": "step-mrr-chevron",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "lucide-chevron-down"
+                         }
+                        }
+                       ],
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "toggleStep('step-mrr');"
+                        }
+                       },
+                       "componentId": "step-mrr-trigger",
+                       "componentName": "container",
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "display": "{{ (isStepOpen('step-mrr') && (true)) ? 'block' : 'none' }}",
+                        "padding": "0 4px 16px 28px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-6)",
+                          "marginBottom": "8px",
+                          "maxWidth": "65ch"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-6)",
+                            "fontSize": "14px",
+                            "fontWeight": "420",
+                            "letterSpacing": "0.02em",
+                            "lineHeight": "1.5"
+                           },
+                           "componentId": "step-mrr-description-text",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "tag": "p",
+                            "text": "The Frappe team updates this from your customers' Frappe Cloud subscriptions as they're billed. No manual update is needed."
+                           }
+                          }
+                         ],
+                         "componentId": "step-mrr-description",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "display": "flex",
+                          "flexDirection": "column",
+                          "gap": "8px",
+                          "marginBottom": "16px",
+                          "maxWidth": "65ch"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "backgroundColor": "var(--surface-gray-2)",
+                            "borderRadius": "9999px",
+                            "height": "8px",
+                            "overflow": "hidden"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "backgroundColor": "var(--ink-gray-8)",
+                              "borderRadius": "9999px",
+                              "height": "100%",
+                              "transition": "width 200ms",
+                              "width": "{{ mrrProgressWidth() }}"
+                             },
+                             "componentId": "step-mrr-fill",
+                             "componentName": "container",
+                             "originalElement": "div"
+                            }
+                           ],
+                           "componentId": "step-mrr-track",
+                           "componentName": "container",
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "justifyContent": "space-between"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "fontSize": "13px",
+                              "fontWeight": "420",
+                              "letterSpacing": "0.02em",
+                              "lineHeight": "1.15"
+                             },
+                             "componentId": "step-mrr-current",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "tag": "span",
+                              "text": "{{ mrrCurrentLabel() + ' current MRR' }}"
+                             }
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "fontSize": "13px",
+                              "fontWeight": "420",
+                              "letterSpacing": "0.02em",
+                              "lineHeight": "1.15"
+                             },
+                             "componentId": "step-mrr-target",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "tag": "span",
+                              "text": "{{ mrrTargetLabel() + ' target' }}"
+                             }
+                            }
+                           ],
+                           "componentId": "step-mrr-labels",
+                           "componentName": "container",
+                           "originalElement": "div"
+                          }
+                         ],
+                         "componentId": "step-mrr-progress",
+                         "componentName": "container",
+                         "originalElement": "div"
+                        }
+                       ],
+                       "componentId": "step-mrr-content",
+                       "componentName": "container",
+                       "originalElement": "div"
+                      }
+                     ],
+                     "componentId": "step-mrr-item",
                      "componentName": "container",
                      "originalElement": "div"
                     }
                    ],
-                   "componentId": "step-mrr-content",
+                   "componentId": "steps",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "backgroundColor": "var(--surface-red-2)",
+                    "border": "1px solid var(--outline-gray-2)",
+                    "borderRadius": "8px",
+                    "display": "{{ (isRejected()) ? 'block' : 'none' }}",
+                    "maxWidth": "65ch",
+                    "padding": "16px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-red-7)",
+                      "fontSize": "14px",
+                      "fontWeight": "500",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "1.5"
+                     },
+                     "componentId": "rejected-title",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "Your application was rejected"
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-7)",
+                      "fontSize": "14px",
+                      "fontWeight": "420",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "1.5",
+                      "marginTop": "4px"
+                     },
+                     "componentId": "rejected-body",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "Review the feedback, make the required changes, and start a new application when you are ready."
+                     }
+                    },
+                    {
+                     "baseStyles": {
+                      "color": "var(--ink-gray-8)",
+                      "display": "{{ (reviewerComments()) ? 'block' : 'none' }}",
+                      "fontSize": "14px",
+                      "fontWeight": "420",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "1.5",
+                      "marginTop": "12px",
+                      "whiteSpace": "pre-wrap"
+                     },
+                     "componentId": "rejected-comments",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "tag": "p",
+                      "text": "{{ reviewerComments() }}"
+                     }
+                    }
+                   ],
+                   "componentId": "rejected-box",
+                   "componentName": "container",
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "display": "flex",
+                    "justifyContent": "flex-start"
+                   },
+                   "children": [
+                    {
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "primaryAction();"
+                      }
+                     },
+                     "componentId": "submit-btn",
+                     "componentName": "Button",
+                     "componentProps": {
+                      "disabled": "{{ !canClickPrimary() }}",
+                      "iconLeft": "{{ submitIcon() }}",
+                      "label": "{{ submitLabel() }}",
+                      "loading": "{{ submitting || unregistering }}",
+                      "variant": "solid"
+                     }
+                    }
+                   ],
+                   "componentId": "submit-row",
                    "componentName": "container",
                    "originalElement": "div"
                   }
                  ],
-                 "componentId": "step-mrr-item",
+                 "componentId": "journey",
                  "componentName": "container",
                  "originalElement": "div"
                 }
                ],
-               "componentId": "steps",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "backgroundColor": "var(--surface-red-2)",
-                "border": "1px solid var(--outline-gray-2)",
-                "borderRadius": "8px",
-                "display": "{{ (isRejected()) ? 'block' : 'none' }}",
-                "maxWidth": "65ch",
-                "padding": "16px"
-               },
-               "children": [
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-red-7)",
-                  "fontSize": "14px",
-                  "fontWeight": "500",
-                  "letterSpacing": "0.02em",
-                  "lineHeight": "1.5"
-                 },
-                 "componentId": "rejected-title",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "tag": "p",
-                  "text": "Your application was rejected"
-                 }
-                },
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-7)",
-                  "fontSize": "14px",
-                  "fontWeight": "420",
-                  "letterSpacing": "0.02em",
-                  "lineHeight": "1.5",
-                  "marginTop": "4px"
-                 },
-                 "componentId": "rejected-body",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "tag": "p",
-                  "text": "Review the feedback, make the required changes, and start a new application when you are ready."
-                 }
-                },
-                {
-                 "baseStyles": {
-                  "color": "var(--ink-gray-8)",
-                  "display": "{{ (reviewerComments()) ? 'block' : 'none' }}",
-                  "fontSize": "14px",
-                  "fontWeight": "420",
-                  "letterSpacing": "0.02em",
-                  "lineHeight": "1.5",
-                  "marginTop": "12px",
-                  "whiteSpace": "pre-wrap"
-                 },
-                 "componentId": "rejected-comments",
-                 "componentName": "TextBlock",
-                 "componentProps": {
-                  "tag": "p",
-                  "text": "{{ reviewerComments() }}"
-                 }
-                }
-               ],
-               "componentId": "rejected-box",
-               "componentName": "container",
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "display": "flex",
-                "justifyContent": "flex-start"
-               },
-               "children": [
-                {
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "primaryAction();"
-                  }
-                 },
-                 "componentId": "submit-btn",
-                 "componentName": "Button",
-                 "componentProps": {
-                  "disabled": "{{ !canClickPrimary() }}",
-                  "iconLeft": "{{ submitIcon() }}",
-                  "label": "{{ submitLabel() }}",
-                  "loading": "{{ submitting || unregistering }}",
-                  "variant": "solid"
-                 }
-                }
-               ],
-               "componentId": "submit-row",
+               "componentId": "left-inner",
                "componentName": "container",
                "originalElement": "div"
               }
              ],
-             "componentId": "journey",
+             "componentId": "left",
              "componentName": "container",
              "originalElement": "div"
             }
            ],
-           "componentId": "left-inner",
-           "componentName": "container",
-           "originalElement": "div"
+           "slotId": "left-scroll:default",
+           "slotName": "default"
           }
-         ],
-         "componentId": "left",
-         "componentName": "container",
-         "originalElement": "div"
+         },
+         "isCustomVueComponent": true
         },
         {
          "baseStyles": {
@@ -8602,7 +8619,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-20 22:00:00.000000",
+ "modified": "2026-11-23 23:30:00.000000",
  "modified_by": "Administrator",
  "name": "partner_onboarding",
  "owner": "Administrator",
