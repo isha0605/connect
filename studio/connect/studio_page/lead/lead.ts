@@ -17,7 +17,7 @@ import {
 	toFollowUpRows,
 	toNoteRows,
 } from "@app/utils/partnerRecords"
-import { useConversation } from "@app/utils/partnerConversation"
+import { revealLatestMessage, useConversation } from "@app/utils/partnerConversation"
 import { startTracking } from "@app/utils/tracking"
 
 const TABS = [
@@ -150,6 +150,10 @@ export default function setup(context) {
 
 	// ── Tabs ────────────────────────────────────────────────────────────────
 	const tab = ref("messages")
+	// Opening Messages (or the lead, which starts there) eases down to the newest message.
+	watch([tab, loading], ([current, busy]) => {
+		if (current === "messages" && !busy) revealLatestMessage("le-msg")
+	})
 	const sideOpen = ref(false)
 
 	// ── Messages ────────────────────────────────────────────────────────────

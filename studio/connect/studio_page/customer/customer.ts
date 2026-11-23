@@ -26,7 +26,7 @@ import {
 	toFollowUpRows,
 	toNoteRows,
 } from "@app/utils/partnerRecords"
-import { useConversation } from "@app/utils/partnerConversation"
+import { revealLatestMessage, useConversation } from "@app/utils/partnerConversation"
 import { startTracking } from "@app/utils/tracking"
 
 const CONTACT_FIELDS = [
@@ -112,6 +112,10 @@ export default function setup(context) {
 
 	// ── Tabs ────────────────────────────────────────────────────────────────
 	const tab = ref("sites")
+	// Opening Messages eases down to the newest message.
+	watch([tab, loading], ([current, busy]) => {
+		if (current === "messages" && !busy) revealLatestMessage("cd-msg")
+	})
 
 	// ── Messages: their chat with the partner, the same one their lead showed ──
 	const conversation = useConversation({
