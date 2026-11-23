@@ -205,13 +205,15 @@ function send() {
 		.then((result) => {
 			forgetKept()
 			emit("update:modelValue", false)
+			// Sent to one partner, the project is under result.project; shared, it is the result itself.
+			const project = props.partner ? result.project : result
 			if (props.partner) {
-				router?.push({ path: "/messaging", query: { thread: result.thread } })
-				return
+				toast.success(`Requirements sent to ${props.partner.company_name}. Their quote arrives here and in Messages.`)
+			} else {
+				const count = result.shared_count || 0
+				toast.success(`Sent to ${count} partner${count === 1 ? "" : "s"}. Their quotes arrive here and in Messages.`)
 			}
-			const count = result.shared_count || 0
-			toast.success(`Sent to ${count} partner${count === 1 ? "" : "s"}. Their quotes arrive here and in Messages.`)
-			router?.push({ path: "/custom-implementation", query: { project: result.name } })
+			router?.push({ path: "/custom-implementation", query: { project: project.name } })
 		})
 		.catch((error) => {
 			sendError.value = error?.messages?.[0] || "Couldn't send your requirements. Try again."

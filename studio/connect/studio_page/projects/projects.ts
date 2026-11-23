@@ -1,54 +1,34 @@
-// The customer's projects: shared projects (a Customer Project, made from the New project
-// dialog) and paid Starter Packs (a Starter Pack Order), newest first, from
-// connect.api.projects.list_projects. A paid one opens its implementation steps; a project
-// opens on its quotes.
+// Projects has no list: it opens the customer's current project (see projectSwitcher.ts),
+// whose header switches between them. It only says so itself when there is none to open.
 
-import { computed } from "vue"
-import { projectDialog, projectPath } from "@app/utils/projectDialog"
+import { ref } from "vue"
+import { projectPath } from "@app/utils/projectDialog"
+import { currentProject, loadProjects } from "@app/utils/projectSwitcher"
 import { startTracking } from "@app/utils/tracking"
 import { useMyContext } from "@app/utils/myContext"
 
 export default function setup(context) {
 	startTracking(context)
-	const { router, myProjects } = context
+	const { router, call } = context
 
-	// The repeater needs one key across both kinds of row.
-	const projects = computed(() =>
-		(myProjects?.data || []).map((row) => ({ ...row, key: row.order || row.project })),
-	)
+	// The editor opens pages to design them, so it must not be sent elsewhere.
+	const inEditor = window.location.pathname.startsWith("/studio/")
+	const noProject = ref(false)
+	const loadError = ref(false)
 
-	const projectCount = computed(() => {
-		const count = projects.value.length
-		return `${count} project${count === 1 ? "" : "s"}, newest first`
-	})
-
-	function openProject(row) {
-		if (row) router.push(projectPath(row))
+	if (!inEditor) {
+		loadProjects(call)
+			.then((projects) => {
+				const project = currentProject(projects)
+				if (project) router.replace(projectPath(project))
+				else noProject.value = true
+			})
+			.catch(() => (loadError.value = true))
 	}
-
-	// The list only ever shows a date, so recent ones read better as words.
-	function projectDate(value) {
-		if (!value) return ""
-		const at = new Date(value)
-		const today = new Date()
-		if (at.toDateString() === today.toDateString()) return "Today"
-		const yesterday = new Date(today)
-		yesterday.setDate(today.getDate() - 1)
-		if (at.toDateString() === yesterday.toDateString()) return "Yesterday"
-		const options = { month: "short", day: "numeric" }
-		if (at.getFullYear() !== today.getFullYear()) options.year = "numeric"
-		return at.toLocaleDateString("en-US", options)
-	}
-
-	// New project: shared with every matching partner, then opens on its quotes.
-	const dialog = projectDialog()
 
 	return {
 		myContext: useMyContext(),
-		...dialog,
-		projects,
-		projectCount,
-		openProject,
-		projectDate,
+		noProject,
+		loadError,
 	}
 }

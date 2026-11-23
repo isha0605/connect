@@ -1,8 +1,10 @@
 // A shared project (Customer Project): its quotes, the hire and going live. Opened as
 // /custom-implementation?project=CP-…, which is where the project questions land once shared.
 
-import { computed, h, onScopeDispose, ref } from "vue"
+import { computed, h, onScopeDispose, ref, watch } from "vue"
 import { formatMoney } from "@app/utils/money"
+import { projectDialog } from "@app/utils/projectDialog"
+import { projectSwitcher } from "@app/utils/projectSwitcher"
 import { startTracking } from "@app/utils/tracking"
 import { tierSeal } from "@app/utils/tierSeal"
 
@@ -34,10 +36,19 @@ export default function setup(context) {
 	const project = ref(null)
 	const loadError = ref(false)
 
+	// The header's project switcher, and New project once every project is Completed.
+	const dialog = projectDialog()
+	const switcher = projectSwitcher(context, dialog.openNewProject)
+
 	function loadProject(name) {
 		projectName = name
+		quotes.value = []
+		quotesLoaded.value = false
+		switcher.refreshProjects(name)
 		call("connect.api.projects.get_project", { name })
 			.then((data) => {
+				// A quick switch can answer out of order; only the open project's answer counts.
+				if (name !== projectName) return
 				project.value = data
 				if (data.status === "Shared") loadQuotes()
 			})
@@ -135,6 +146,8 @@ export default function setup(context) {
 	const showQuoteHead = computed(() => visibleQuotes.value.length > 0)
 	const emptyView = computed(() => {
 		if (!quotesLoaded.value || visibleQuotes.value.length) return null
+		// Before any quote, the invited partners show straight under the heading instead.
+		if (view.value === "all" && invitedPartners.value.length) return null
 		const empty = EMPTY_VIEWS[view.value]
 		return view.value === "all" ? { ...empty, text: sentLine.value } : empty
 	})
@@ -269,12 +282,17 @@ export default function setup(context) {
 		loadError.value = true
 	}
 
+	// The switcher and a newly created project open here, on the same page.
+	watch(
+		() => route.query.project,
+		(name) => {
+			if (name && String(name) !== projectName) loadProject(String(name))
+		},
+	)
+
 
 	const projectTitle = computed(() => project.value?.project_name || "Project")
-	const breadcrumbItems = computed(() => [
-		{ label: "Projects", route: { path: "/projects" } },
-		{ label: projectTitle.value },
-	])
+	const breadcrumbItems = computed(() => [{ label: projectTitle.value }])
 
 
 	// ---- Choosing a partner, step 1 of 2 ----
@@ -433,6 +451,8 @@ export default function setup(context) {
 		call("connect.api.projects.complete_project", { name: projectName })
 			.then((data) => {
 				project.value = data
+				// Completed is what lets the customer start another, so the header learns of it now.
+				switcher.refreshProjects(projectName)
 				if (data.hired && !data.hired.is_reviewed) reviewAskOpen.value = true
 				else toast.success("Project completed")
 			})
@@ -494,6 +514,8 @@ export default function setup(context) {
 	})
 
 	return {
+		...dialog,
+		...switcher,
 		quotes,
 		hasQuotes,
 		hasQuoteRows,

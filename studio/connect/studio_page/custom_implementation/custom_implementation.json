@@ -43,7 +43,9 @@
         "flexShrink": "0",
         "height": "48px",
         "padding": "0px 20px",
-        "width": "100%"
+        "width": "100%",
+        "justifyContent": "space-between",
+        "gap": "12px"
        },
        "children": [
         {
@@ -53,6 +55,46 @@
           "items": "{{ breadcrumbItems }}"
          },
          "componentSlots": {}
+        },
+        {
+         "componentId": "ci-project-switcher",
+         "componentName": "Dropdown",
+         "componentProps": {
+          "options": "{{ switcherOptions }}",
+          "align": "end"
+         },
+         "componentSlots": {},
+         "visibilityCondition": "hasProjectSwitcher",
+         "children": [
+          {
+           "componentId": "ci-project-switcher-btn",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "{{ openProjectTitle }}",
+            "iconLeft": "lucide-folder",
+            "iconRight": "lucide-chevron-down"
+           },
+           "componentSlots": {}
+          }
+         ]
+        },
+        {
+         "componentEvents": {
+          "click": {
+           "action": "Run Script",
+           "event": "click",
+           "script": "openNewProject();"
+          }
+         },
+         "componentId": "ci-new-project",
+         "componentName": "Button",
+         "componentProps": {
+          "label": "New project",
+          "iconLeft": "lucide-plus",
+          "variant": "subtle"
+         },
+         "componentSlots": {},
+         "visibilityCondition": "canStartNewProject && !hasProjectSwitcher"
         }
        ],
        "componentId": "proj-header",
@@ -2267,6 +2309,21 @@
      },
      "componentSlots": {},
      "isCustomVueComponent": true
+    },
+    {
+     "blockName": "ProjectQuestionsDialog",
+     "componentId": "project-questions-dialog",
+     "componentName": "ProjectQuestionsDialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "projectDialogOpen"
+      },
+      "partner": "{{ projectDialogPartner }}",
+      "project": "{{ projectDialogProject }}"
+     },
+     "componentSlots": {},
+     "isCustomVueComponent": true
     }
    ],
    "componentId": "proj-body",
@@ -2282,7 +2339,7 @@
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-11-21 20:00:00.000000",
+ "modified": "2026-11-23 14:00:00.000000",
  "modified_by": "Administrator",
  "name": "custom_implementation",
  "owner": "Administrator",
