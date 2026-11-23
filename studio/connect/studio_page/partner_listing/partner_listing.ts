@@ -352,7 +352,6 @@ export default function setup(context) {
 			const picked = draft.value.industries || []
 			if (picked.length < MAX_INDUSTRIES && !picked.includes(industry)) draft.value.industries = [...picked, industry]
 		},
-		appOptions: computed(() => toOptions(options.value.apps)),
 		migrationOptions: computed(() => toOptions(options.value.migrations)),
 	}
 }

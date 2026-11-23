@@ -239,7 +239,7 @@ class IntegrationTestMyProfile(IntegrationTestCase):
 		profile = get_my_profile(with_draft=True)
 		fields = ("tagline", "description", "website", "foundation_date", "hourly_rate")
 		payload = {field: profile[field] for field in fields}
-		for field in ("apps", "migrations", "industries", "founder", "photos", "offices", "success_stories"):
+		for field in ("migrations", "industries", "founder", "photos", "offices", "success_stories"):
 			payload[field] = frappe.as_json(profile[field])
 		update_my_partner_profile(**{**payload, **changes}, as_draft=1)
 

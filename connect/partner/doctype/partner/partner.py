@@ -1104,7 +1104,6 @@ def upload_partner_asset():
 # (matching what get_partner_document returns from _apps_by_partner-style helpers) — this maps
 # each to the single non-standard fieldname on its child doctype so doc.set() gets proper rows.
 _PROFILE_MULTISELECT_FIELDS = {
-	"apps": "app",
 	"migrations": "migration_path",
 	"business_processes": "business_process",
 	"implementation_types": "implementation_type",
@@ -1211,7 +1210,6 @@ def get_my_profile(with_draft=False) -> dict:
 
 def _profile_options() -> dict:
 	return {
-		"apps": frappe.get_all("App", pluck="name", order_by="name asc"),
 		"countries": frappe.get_all("Country", pluck="name", order_by="name asc"),
 		"migrations": frappe.get_all("Migration Path", pluck="name", order_by="name asc"),
 		"industries": frappe.get_all("Industry", pluck="name", order_by="name asc"),
@@ -1270,7 +1268,7 @@ def update_my_partner_profile(
 	typical_project_size=None, proposal_timeline=None,
 	demo_available=None,
 	logo_position_x=None, logo_position_y=None,
-	apps=None, migrations=None, business_processes=None, implementation_types=None, languages=None,
+	migrations=None, business_processes=None, implementation_types=None, languages=None,
 	founder=None, success_stories=None, offices=None, addons=None,
 	phone=None, team_size=None, journey_blog_url=None,
 	logo=None, logo_icon=None, why_choose_them=None, origin_story=None, photos=None,
@@ -1294,7 +1292,7 @@ def update_my_partner_profile(
 		phone=phone, team_size=team_size, journey_blog_url=journey_blog_url,
 		logo=logo, logo_icon=logo_icon, why_choose_them=why_choose_them, origin_story=origin_story,
 		how_we_work=how_we_work, successful_implementation=successful_implementation,
-		apps=apps, migrations=migrations, business_processes=business_processes,
+		migrations=migrations, business_processes=business_processes,
 		implementation_types=implementation_types, languages=languages, industries=industries,
 		delivery_options=delivery_options, founder=founder, success_stories=success_stories, offices=offices, photos=photos,
 		addons=addons,
