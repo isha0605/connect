@@ -49,6 +49,25 @@ def get_update_recipients(project: str) -> list[str]:
 	)
 
 
+def editable_briefs(thread: str) -> list[dict]:
+	"""The Requirement cards in this thread the caller can edit from: the current card of each of
+	their own projects still choosing a partner, sent to a partner an edit goes to."""
+	Quote = frappe.qb.DocType("Project Quote")
+	Project = frappe.qb.DocType("Customer Project")
+	return (
+		frappe.qb.from_(Quote)
+		.join(Project)
+		.on(Project.name == Quote.customer_project)
+		.select(Quote.brief_message, Project.name.as_("project"))
+		.where(Quote.thread == thread)
+		.where(Quote.brief_message.isnotnull())
+		.where(Quote.status != "Not Interested")
+		.where(Project.user == frappe.session.user)
+		.where(Project.status == "Shared")
+		.run(as_dict=True)
+	)
+
+
 def send_brief(doc, customer: str, partner: str, card: dict | None = None) -> str:
 	"""Sends the brief to one partner, as the customer's Requirement card in their thread with
 	that partner, and returns the thread."""
