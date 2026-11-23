@@ -156,10 +156,10 @@ export default function setup(context) {
 		return [row?.city || row?.country, shared].filter(Boolean).join(" · ")
 	}
 
-	function setQuoteStatus(row, status) {
+	function setQuoteStatus(row, status, answer = {}) {
 		const before = row.status
 		row.status = status
-		return call("connect.api.projects.set_quote_status", { quote: row.name, status })
+		return call("connect.api.projects.set_quote_status", { quote: row.name, status, ...answer })
 			.then((counts) => {
 				if (project.value) project.value = { ...project.value, ...counts }
 			})
@@ -176,15 +176,40 @@ export default function setup(context) {
 			.catch(() => {})
 	}
 
+	// ---- Not interested: the customer says why; the partner is emailed and their lead closes ----
+	// The dialog is the confirmation, so there's no Undo: Restore brings a quote back.
+	const declineOpen = ref(false)
+	const declineRow = ref(null)
+	const declineReason = ref("")
+	const declineNote = ref("")
+	const declining = ref(false)
+	const declineReasons = computed(() => (project.value?.not_interested_reasons || []).map((value) => ({ value })))
+	const declineTitle = computed(() => `Not interested in ${declineRow.value?.company_name || "this quote"}?`)
+
 	function notInterested(row) {
-		const before = row.status
-		setQuoteStatus(row, "Not Interested")
+		declineRow.value = row
+		declineReason.value = ""
+		declineNote.value = ""
+		declineOpen.value = true
+	}
+
+	function pickDeclineReason(reason) {
+		declineReason.value = reason
+	}
+
+	function confirmNotInterested() {
+		const row = declineRow.value
+		if (!row || !declineReason.value || declining.value) return
+		declining.value = true
+		setQuoteStatus(row, "Not Interested", { reason: declineReason.value, note: declineNote.value })
 			.then(() => {
-				toast(`${row.company_name} moved to Not interested`, {
-					action: { label: "Undo", onClick: () => setQuoteStatus(row, before).catch(() => {}) },
-				})
+				declineOpen.value = false
+				toast.success(`${row.company_name} will be told you're not interested`)
 			})
 			.catch(() => {})
+			.finally(() => {
+				declining.value = false
+			})
 	}
 
 	function restoreQuote(row) {
@@ -510,6 +535,15 @@ export default function setup(context) {
 		quoteTimeline,
 		quoteSubline,
 		restoreQuote,
+		declineOpen,
+		declineRow,
+		declineReason,
+		declineNote,
+		declining,
+		declineReasons,
+		declineTitle,
+		pickDeclineReason,
+		confirmNotInterested,
 		readThread,
 		openPartnerProfile,
 		tierSeal,
