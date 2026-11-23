@@ -132,16 +132,13 @@ export default function setup(context) {
 		tab.value = "sites"
 		conversation.resetDraft()
 	})
-	const tabs = computed(() =>
-		[
-			{ value: "sites", label: "Sites", iconLeft: "lucide-globe" },
-			{ value: "messages", label: "Messages", iconLeft: "lucide-message-square" },
-			{ value: "followups", label: "Follow-ups", iconLeft: "lucide-phone" },
-			{ value: "activity", label: "Activity", iconLeft: "lucide-history" },
-			{ value: "notes", label: "Notes", iconLeft: "lucide-notebook-pen" },
-			customer.value?.source === "Connect" && { value: "connect", label: "Connect", iconLeft: "lucide-message-square" },
-		].filter(Boolean),
-	)
+	const tabs = [
+		{ value: "sites", label: "Sites", iconLeft: "lucide-globe" },
+		{ value: "messages", label: "Messages", iconLeft: "lucide-message-square" },
+		{ value: "followups", label: "Follow-ups", iconLeft: "lucide-phone" },
+		{ value: "activity", label: "Activity", iconLeft: "lucide-history" },
+		{ value: "notes", label: "Notes", iconLeft: "lucide-notebook-pen" },
+	]
 
 	const isPartnerPays = computed(() => customer.value?.billing === "Partner")
 	const sites = computed(() =>
