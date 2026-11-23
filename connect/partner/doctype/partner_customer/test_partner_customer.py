@@ -158,3 +158,16 @@ class TestPartnerCustomer(IntegrationTestCase):
 		self.assertRaises(frappe.PermissionError, my_customers)
 		self.as_user(OWNER)
 		self.assertRaises(frappe.ValidationError, update_customer, customer, assigned_to=MEMBER)
+
+
+class TestActivityOrder(IntegrationTestCase):
+	"""The Activity tab reads like a feed: the newest entry first."""
+
+	def test_newest_entry_comes_first(self):
+		from connect.partner.doctype.partner_customer.customer_records import activity_of
+
+		briefs = [
+			{"name": "older", "at": "2026-11-01 10:00:00", "by": "A", "project_name": "First"},
+			{"name": "newer", "at": "2026-11-20 10:00:00", "by": "A", "project_name": "Second"},
+		]
+		self.assertEqual([entry["id"] for entry in activity_of({}, briefs, [])], ["brief-newer", "brief-older"])

@@ -97,7 +97,7 @@ def log_follow_up(
 
 
 def activity_of(records: dict[str, list[str]], briefs: list[dict], follow_ups: list[dict]) -> list[dict]:
-	"""The Activity tab, oldest first: each brief arriving, the changes Frappe recorded on the
+	"""The Activity tab, newest first: each brief arriving, the changes Frappe recorded on the
 	`records` ({DocType: [names]}), and the follow-ups logged."""
 	entries = [
 		{
@@ -123,7 +123,7 @@ def activity_of(records: dict[str, list[str]], briefs: list[dict], follow_ups: l
 		}
 		for row in follow_ups
 	]
-	return sorted(entries, key=lambda entry: get_datetime(entry["at"]))
+	return sorted(entries, key=lambda entry: get_datetime(entry["at"]), reverse=True)
 
 
 def _changes(doctype: str, names: list[str]) -> list[dict]:
