@@ -6,10 +6,38 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from connect.partner.story_apps import apps_from_stories, apps_in_story_page, queue_missing_story_apps
+from connect.customer.doctype.customer_project.test_hiring import make_partner
+from connect.partner.story_apps import (
+	apps_from_stories,
+	apps_in_story_page,
+	build_story_apps,
+	queue_missing_story_apps,
+)
 from connect.patches.add_lending_and_education_apps import execute as add_lending_and_education_apps
+from connect.patches.rebuild_partner_apps_from_stories import execute as rebuild_partner_apps_from_stories
 
 KNOWN_APPS = ["ERPNext", "Frappe HR", "Helpdesk", "Frappe Insights"]
+PARTNER = "_Test Story Apps Partner"
+
+
+def make_apps():
+	for app in KNOWN_APPS:
+		if not frappe.db.exists("App", app):
+			frappe.get_doc({"doctype": "App", "title": app}).insert(ignore_permissions=True)
+
+
+def partner_with_stories(*story_apps):
+	"""The test partner with one success story per entry in `story_apps`, each a list of apps."""
+	make_apps()
+	make_partner(PARTNER)
+	doc = frappe.get_doc("Partner", PARTNER)
+	doc.set("success_stories", [{"client_name": f"Client {index}", "apps": "\n".join(apps)} for index, apps in enumerate(story_apps)])
+	doc.save(ignore_permissions=True)
+	return doc
+
+
+def partner_apps():
+	return frappe.get_all("Partner App", filters={"parent": PARTNER, "parenttype": "Partner"}, pluck="app", order_by="idx")
 
 # The shape of a frappe.io story page: the heading, one block per app, then the next heading.
 STORY_PAGE = """
@@ -70,3 +98,45 @@ class IntegrationTestStoryApps(IntegrationTestCase):
 
 		enqueue.assert_called_once()
 		self.assertEqual(enqueue.call_args.kwargs["row_name"], "row-1")
+
+
+class IntegrationTestPartnerAppsFromStories(IntegrationTestCase):
+	"""A partner's apps are only the apps its success stories name."""
+
+	def test_saving_a_partner_sets_its_apps_from_its_stories(self):
+		partner_with_stories(["ERPNext", "Frappe HR"], ["Frappe HR", "Helpdesk"])
+		self.assertEqual(partner_apps(), ["ERPNext", "Frappe HR", "Helpdesk"])
+
+	def test_an_app_no_story_names_is_dropped(self):
+		doc = partner_with_stories(["ERPNext"])
+		doc.append("apps", {"app": "Frappe Insights"})
+		doc.save(ignore_permissions=True)
+
+		self.assertEqual(partner_apps(), ["ERPNext"])
+
+	def test_removing_a_story_removes_its_apps(self):
+		doc = partner_with_stories(["ERPNext"], ["Helpdesk"])
+		doc.success_stories.pop()
+		doc.save(ignore_permissions=True)
+
+		self.assertEqual(partner_apps(), ["ERPNext"])
+
+	def test_a_fetched_story_page_updates_the_partner_apps(self):
+		doc = partner_with_stories([])
+		row = doc.success_stories[0].name
+
+		with patch("connect.partner.story_apps.fetch_story_page", return_value=STORY_PAGE):
+			build_story_apps(row, "https://frappe.io/stories/Client%200")
+
+		self.assertEqual(partner_apps(), ["ERPNext", "Frappe HR", "Helpdesk"])
+
+	def test_the_patch_drops_apps_picked_by_hand(self):
+		partner_with_stories(["ERPNext"])
+		# As a partner who picked an app by hand before this change: written past Partner.validate.
+		frappe.get_doc(
+			{"doctype": "Partner App", "parent": PARTNER, "parenttype": "Partner", "parentfield": "apps", "app": "Helpdesk", "idx": 2}
+		).db_insert()
+
+		rebuild_partner_apps_from_stories()
+
+		self.assertEqual(partner_apps(), ["ERPNext"])

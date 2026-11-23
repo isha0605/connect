@@ -57,8 +57,17 @@ def build_story_apps(row_name: str, story_url: str) -> list[str]:
 	apps = apps_in_story_page(page_html, frappe.get_all("App", pluck="name"))
 	if apps:
 		frappe.db.set_value("Partner Success Story", row_name, "apps", "\n".join(apps), update_modified=False)
+		refresh_partner_apps(frappe.db.get_value("Partner Success Story", row_name, "parent"))
 		frappe.db.commit()  # nosemgrep: the backfill fetches a page per row; keep each row's apps if the run stops partway
 	return apps
+
+
+def refresh_partner_apps(partner: str) -> None:
+	"""Brings the partner's apps in line with its stories. Writes only the apps table: a full save
+	would also resend the partner to Frappe CRM, which doesn't hold apps."""
+	doc = frappe.get_doc("Partner", partner)
+	if doc.set_apps_from_stories():
+		doc.update_child_table("apps")
 
 
 def queue_missing_story_apps(success_stories) -> None:

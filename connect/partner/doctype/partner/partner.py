@@ -62,6 +62,7 @@ class Partner(Document):
 		self.validate_served_countries()
 		validate_industries(self)
 		self.set_starter_pack_sequence()
+		self.set_apps_from_stories()
 
 	def validate_keep_reasons(self):
 		"""Staff who stop the daily review changing a partner say why, so others know."""
@@ -128,6 +129,17 @@ class Partner(Document):
 		repeated = {country for country, count in counts.items() if count > 1}
 		if repeated:
 			frappe.throw(_("{0} is listed more than once in Countries Served.").format(", ".join(sorted(repeated))))
+
+	def set_apps_from_stories(self) -> bool:
+		"""A partner's apps are the apps its success stories name, so the Apps filter and matching
+		only count work the partner has shown. Returns whether they changed."""
+		known = set(frappe.get_all("App", pluck="name"))
+		apps = [app for app in apps_from_stories(self.get("success_stories")) if app in known]
+		if [row.app for row in self.get("apps")] == apps:
+			return False
+
+		self.set("apps", [{"app": app} for app in apps])
+		return True
 
 	def before_save(self):
 		self.region = get_region_of_country(self.country)
@@ -952,7 +964,7 @@ def get_partner_document(partner):
 	# the picked industries, each with the verified tick its success stories earn
 	doc["industry_badges"] = industry_badges(industries, doc.get("success_stories"))
 	doc["display_industries"] = industries
-	# shown with the partner's own apps, never used to match or filter partners
+	# the same apps as doc["apps"], which Partner.set_apps_from_stories keeps in step with the stories
 	doc["story_apps"] = apps_from_stories(doc.get("success_stories"))
 	# adds client_logo_display per success story — a greyscale-normalized copy of
 	# the client logo where one has been built, else the original URL
@@ -1092,7 +1104,6 @@ def upload_partner_asset():
 # (matching what get_partner_document returns from _apps_by_partner-style helpers) — this maps
 # each to the single non-standard fieldname on its child doctype so doc.set() gets proper rows.
 _PROFILE_MULTISELECT_FIELDS = {
-	"apps": "app",
 	"migrations": "migration_path",
 	"business_processes": "business_process",
 	"implementation_types": "implementation_type",
@@ -1199,7 +1210,6 @@ def get_my_profile(with_draft=False) -> dict:
 
 def _profile_options() -> dict:
 	return {
-		"apps": frappe.get_all("App", pluck="name", order_by="name asc"),
 		"countries": frappe.get_all("Country", pluck="name", order_by="name asc"),
 		"migrations": frappe.get_all("Migration Path", pluck="name", order_by="name asc"),
 		"industries": frappe.get_all("Industry", pluck="name", order_by="name asc"),
@@ -1258,7 +1268,7 @@ def update_my_partner_profile(
 	typical_project_size=None, proposal_timeline=None,
 	demo_available=None,
 	logo_position_x=None, logo_position_y=None,
-	apps=None, migrations=None, business_processes=None, implementation_types=None, languages=None,
+	migrations=None, business_processes=None, implementation_types=None, languages=None,
 	founder=None, success_stories=None, offices=None, addons=None,
 	phone=None, team_size=None, journey_blog_url=None,
 	logo=None, logo_icon=None, why_choose_them=None, origin_story=None, photos=None,
@@ -1282,7 +1292,7 @@ def update_my_partner_profile(
 		phone=phone, team_size=team_size, journey_blog_url=journey_blog_url,
 		logo=logo, logo_icon=logo_icon, why_choose_them=why_choose_them, origin_story=origin_story,
 		how_we_work=how_we_work, successful_implementation=successful_implementation,
-		apps=apps, migrations=migrations, business_processes=business_processes,
+		migrations=migrations, business_processes=business_processes,
 		implementation_types=implementation_types, languages=languages, industries=industries,
 		delivery_options=delivery_options, founder=founder, success_stories=success_stories, offices=offices, photos=photos,
 		addons=addons,

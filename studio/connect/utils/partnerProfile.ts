@@ -66,7 +66,7 @@ export const SAMPLE_PROFILE = {
 	is_verified: true,
 	can_edit: true,
 	has_unpublished_changes: true,
-	options: { apps: ["ERPNext", "Frappe HR"], countries: ["India", "United States"], migrations: ["Tally to ERPNext"], industries: ["Agriculture", "Manufacturing", "Retail", "Textile Manufacturing"], categories: ["Manufacturing"] },
+	options: { countries: ["India", "United States"], migrations: ["Tally to ERPNext"], industries: ["Agriculture", "Manufacturing", "Retail", "Textile Manufacturing"], categories: ["Manufacturing"] },
 }
 
 // The same limits update_my_partner_profile enforces, with the label and builder tab to point at.
@@ -113,7 +113,6 @@ export function toDraft(data) {
 	const fields = Object.fromEntries(DRAFT_FIELDS.map((field) => [field, data[field] || ""]))
 	return {
 		...fields,
-		apps: [...(data.apps || [])],
 		migrations: [...(data.migrations || [])],
 		industries: [...(data.industries || [])],
 		delivery_options: [...(data.delivery_options || [])],
@@ -211,14 +210,13 @@ export function draftProblem(draft, saved) {
 }
 
 export function toSavePayload(draft) {
-	const { apps, migrations, industries, delivery_options, founder, photos, offices, success_stories, ...fields } = draft
+	const { migrations, industries, delivery_options, founder, photos, offices, success_stories, ...fields } = draft
 	return {
 		...fields,
 		// an empty date saves as "" (null would be dropped and keep the old date); an empty number box
 		// saves as 0, which the profile shows as unset
 		foundation_date: String(fields.foundation_date || "").trim(),
 		hourly_rate: fields.hourly_rate || 0,
-		apps: JSON.stringify(apps),
 		migrations: JSON.stringify(migrations),
 		industries: JSON.stringify(industries || []),
 		delivery_options: JSON.stringify(delivery_options || []),
