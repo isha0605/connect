@@ -182,15 +182,24 @@ export default function setup(context) {
 				dot: THEME_DOTS[AUDIT_THEMES[audit.status]] || GRAY,
 			})),
 	)
+	const isListFiltered = computed(() => !!dateFilter.value || statusFilter.value !== "All")
+
+	function resetListFilters() {
+		dateFilter.value = ""
+		statusFilter.value = "All"
+	}
 
 	// ---- One audit and its non-conformances ----
 	const audit = computed(() => audits.value.find((row) => row.name === openAudit.value) || null)
 	const ncStatusFilter = ref("All")
 	const departmentFilter = ref("All")
-	watch(openAudit, () => {
+	const isNcFiltered = computed(() => ncStatusFilter.value !== "All" || departmentFilter.value !== "All")
+
+	function resetNcFilters() {
 		ncStatusFilter.value = "All"
 		departmentFilter.value = "All"
-	})
+	}
+	watch(openAudit, resetNcFilters)
 
 	const auditDetails = computed(() => {
 		const row = audit.value
@@ -338,12 +347,16 @@ export default function setup(context) {
 		dateFilter,
 		statusFilter,
 		statusOptions: options(AUDIT_STATUSES, "All statuses"),
+		isListFiltered,
+		resetListFilters,
 		showAudit,
 		audit,
 		auditDetails,
 		ncRows,
 		ncStatusFilter,
 		departmentFilter,
+		isNcFiltered,
+		resetNcFilters,
 		ncStatusOptions: options(NC_STATUSES, "All statuses"),
 		departmentOptions: computed(() =>
 			options([...new Set((audit.value?.non_conformances || []).map((row) => row.department))].sort(), "All departments"),
