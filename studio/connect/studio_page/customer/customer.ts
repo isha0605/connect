@@ -184,19 +184,31 @@ export default function setup(context) {
 	}
 
 	// ── Notes: the team's own about this customer, never sent to them ─────
+	// Written in a dialog; the list shows it once saved.
 	const noteDraft = ref("")
+	const noteOpen = ref(false)
+	const savingNote = ref(false)
+
+	function openNote() {
+		noteDraft.value = ""
+		noteOpen.value = true
+	}
 
 	async function addNote() {
 		const text = noteDraft.value.trim()
-		if (!text) return
+		if (!text || savingNote.value) return
+		savingNote.value = true
 		try {
 			const notes = await call("connect.api.partner_customers.add_customer_note", { name: customerId.value, content: text })
 			record.value = { ...record.value, notes }
 		} catch (error) {
 			toast.error(error?.messages?.[0] || "Couldn't add the note.")
 			return
+		} finally {
+			savingNote.value = false
 		}
 		noteDraft.value = ""
+		noteOpen.value = false
 		toast.success("Note added")
 	}
 
@@ -254,6 +266,10 @@ export default function setup(context) {
 		toggleGroup,
 		notes: computed(() => toNoteRows(record.value?.notes || [])),
 		noteDraft,
+		noteOpen,
+		savingNote,
+		openNote,
+		closeNote: () => (noteOpen.value = false),
 		addNote,
 		draft,
 		commit,

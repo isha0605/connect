@@ -2192,13 +2192,12 @@
                   "click": {
                    "action": "Run Script",
                    "event": "click",
-                   "script": "addNote()"
+                   "script": "openNote()"
                   }
                  },
                  "componentId": "le-notes-add",
                  "componentName": "Button",
                  "componentProps": {
-                  "disabled": "{{ !noteDraft.trim() }}",
                   "iconLeft": "lucide-plus",
                   "label": "Add note",
                   "variant": "solid"
@@ -2220,19 +2219,6 @@
                "componentName": "container",
                "componentProps": {},
                "originalElement": "div"
-              },
-              {
-               "componentId": "le-notes-input",
-               "componentName": "Textarea",
-               "componentProps": {
-                "modelValue": {
-                 "$type": "variable",
-                 "name": "noteDraft"
-                },
-                "placeholder": "Add a note for your team",
-                "rows": 3
-               },
-               "visibilityCondition": "!closed"
               },
               {
                "baseStyles": {
@@ -4739,6 +4725,89 @@
       },
       "title": "Log follow-up"
      }
+    },
+    {
+     "componentId": "le-note-dialog",
+     "componentName": "Dialog",
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "noteOpen"
+      },
+      "title": "Add note"
+     },
+     "children": [
+      {
+       "componentId": "le-note-dialog-body",
+       "componentName": "container",
+       "componentProps": {},
+       "originalElement": "div",
+       "classes": [
+        "flex",
+        "flex-col",
+        "gap-4"
+       ],
+       "children": [
+        {
+         "componentId": "le-note-dialog-input",
+         "componentName": "Textarea",
+         "componentProps": {
+          "modelValue": {
+           "$type": "variable",
+           "name": "noteDraft"
+          },
+          "placeholder": "Add a note for your team",
+          "rows": 6
+         }
+        },
+        {
+         "componentId": "le-note-dialog-actions",
+         "componentName": "container",
+         "componentProps": {},
+         "originalElement": "div",
+         "classes": [
+          "flex",
+          "justify-end",
+          "gap-2",
+          "pt-2"
+         ],
+         "children": [
+          {
+           "componentId": "le-note-dialog-cancel",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel"
+           },
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "closeNote()"
+            }
+           }
+          },
+          {
+           "componentId": "le-note-dialog-save",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Add note",
+            "variant": "solid",
+            "disabled": "{{ !noteDraft.trim() }}",
+            "loading": "{{ savingNote }}"
+           },
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "addNote()"
+            }
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
     },
     {
      "componentId": "le-meeting-dialog",
