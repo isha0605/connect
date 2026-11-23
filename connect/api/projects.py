@@ -34,6 +34,13 @@ def update_requirements(name, answers):
 	return update_requirements(name, answers)
 
 
+# The customer's side: Edit on their own Requirement card in a chat.
+@frappe.whitelist()
+def editable_briefs(thread):
+	from connect.customer.doctype.customer_project.brief import editable_briefs
+	return editable_briefs(thread)
+
+
 @frappe.whitelist(methods=["POST"])
 def share_requirements(answers, contact_partners=False):
 	from connect.customer.doctype.customer_project.customer_project import share_requirements

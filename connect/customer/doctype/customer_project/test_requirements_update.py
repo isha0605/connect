@@ -114,6 +114,23 @@ class TestRequirementsUpdate(IntegrationTestCase):
 		self.assertEqual(self.update(description="We also need payroll.")["update_sent_to"], recipients)
 		self.assertEqual(self.update(description="We also need payroll.")["update_sent_to"], 0)
 
+	def test_only_the_owner_edits_from_the_current_card(self):
+		from connect.customer.doctype.customer_project.brief import editable_briefs
+
+		self.update(description="We also need payroll.")
+		current = frappe.db.get_value("Project Quote", self.quote.name, "brief_message")
+		self.assertEqual(
+			self.as_buyer(editable_briefs, self.quote.thread), [{"brief_message": current, "project": self.project}]
+		)
+		frappe.set_user(PARTNER_ADMIN)
+		self.assertEqual(editable_briefs(self.quote.thread), [])
+
+	def test_no_card_edits_once_a_hire_is_asked(self):
+		from connect.customer.doctype.customer_project.brief import editable_briefs
+
+		frappe.db.set_value("Customer Project", self.project, "status", "Hiring")
+		self.assertEqual(self.as_buyer(editable_briefs, self.quote.thread), [])
+
 	def test_setting_a_quote_aside_clears_its_flag(self):
 		self.quoted()
 		self.update(description="We also need payroll.")
