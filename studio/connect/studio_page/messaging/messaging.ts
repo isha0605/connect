@@ -1718,9 +1718,47 @@ export default function setup(context) {
 		return view.built || view.title
 	}
 
+	// The customer's current card opens the project itself, as on the project page, so its
+	// Requirements dialog has Edit; any other card shows the version it carried.
 	function openRequirementDetails(item) {
+		const brief = editableBriefOf(item)
+		if (!brief) return showRequirements(item, null)
+		call("connect.api.projects.get_project", { name: brief.project })
+			.then((project) => showRequirements(null, project))
+			.catch(() => showRequirements(item, null))
+	}
+
+	function showRequirements(item, project) {
 		requirementDetailItem.value = item
+		requirementEditProject.value = project
 		requirementDetailOpen.value = true
+	}
+
+	// Only the current card of the customer's own project still choosing a partner can be
+	// edited from (brief.editable_briefs).
+	const editableBriefs = ref([])
+	const requirementEditProject = ref(null)
+
+	function loadEditableBriefs() {
+		editableBriefs.value = []
+		const thread = selectedThread.value
+		if (!thread || amPartner() || selectedThreadType.value !== "company") return
+		call("connect.api.projects.editable_briefs", { thread })
+			.then((rows) => {
+				if (selectedThread.value === thread) editableBriefs.value = rows || []
+			})
+			.catch(() => {})
+	}
+	watch([selectedThread, selectedThreadType, amPartner], loadEditableBriefs, { immediate: true })
+
+	function editableBriefOf(item) {
+		return editableBriefs.value.find((brief) => brief.brief_message === item?.name)
+	}
+
+	// The edit posts a new card here, which is now the one to edit from.
+	function onRequirementsEdited(project) {
+		requirementEditProject.value = project
+		loadEditableBriefs()
 	}
 
 	// The project questions' answers, in their order. Looking for is only on cards sent before
@@ -3753,6 +3791,8 @@ export default function setup(context) {
 		requirementView,
 		requirementDetailOpen,
 		openRequirementDetails,
+		requirementEditProject,
+		onRequirementsEdited,
 		requirementDetailCard,
 		requirementText,
 		requirementFieldRows,
