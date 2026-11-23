@@ -14,7 +14,11 @@ const props = defineProps({
 
 const isCollapsed = inject(sidebarCollapsedKey, computed(() => false))
 const themeMenu = useThemeMenu(() => props.icons)
-const name = computed(() => props.context?.full_name || props.context?.user || "")
+// People sign up as "tanak"; the sidebar shows "Tanak". Only the first letter, so "McKay" stays.
+const name = computed(() => {
+	const shown = props.context?.full_name || props.context?.user || ""
+	return shown.charAt(0).toUpperCase() + shown.slice(1)
+})
 
 const menuItems = computed(() => [themeMenu.value, { label: "Log out", icon: props.icons.logOut, onClick: logOut }])
 
