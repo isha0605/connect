@@ -97,7 +97,6 @@
           "marginTop": "0px",
           "maxWidth": "800px",
           "padding": "0 20px",
-          "paddingRight": "19px",
           "paddingTop": "20px",
           "width": "100%"
          },
@@ -123,7 +122,7 @@
             "flexDirection": "row",
             "flexWrap": "nowrap",
             "gap": "10px",
-            "marginTop": "20px"
+            "marginTop": "12px"
            },
            "children": [
             {
@@ -173,13 +172,13 @@
             {
              "baseStyles": {
               "flex": "1",
-              "minWidth": "14rem"
+              "minWidth": "12rem"
              },
              "componentEvents": {
               "update:modelValue": {
                "action": "Run Script",
                "event": "update:modelValue",
-               "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
+               "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); if ((selectedCountries.value || []).length) { countryFallback.update({ params: { ...params, country: '', exclude: JSON.stringify(excludeNames) } }); countryFallback.reload(); } appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
               }
              },
              "componentId": "TextInput-yix6k299g",
@@ -206,39 +205,7 @@
               "update:modelValue": {
                "action": "Run Script",
                "event": "update:modelValue",
-               "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
-              }
-             },
-             "componentId": "Select-cfbfoxmob",
-             "componentName": "Select",
-             "componentProps": {
-              "modelValue": {
-               "$type": "variable",
-               "name": "tierFilter"
-              },
-              "options": [
-               "Gold",
-               "Silver",
-               "Bronze"
-              ],
-              "placeholder": "Tier",
-              "variant": "subtle"
-             },
-             "mobileStyles": {
-              "flexShrink": "1",
-              "width": "calc(50% - 4px)"
-             }
-            },
-            {
-             "baseStyles": {
-              "flexShrink": "0",
-              "width": "8rem"
-             },
-             "componentEvents": {
-              "update:modelValue": {
-               "action": "Run Script",
-               "event": "update:modelValue",
-               "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value };\nconst params = { ...baseParams, category: JSON.stringify(selectedCategories.value) };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload(); appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();\ntry { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
+               "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value };\nconst params = { ...baseParams, category: JSON.stringify(selectedCategories.value) };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload(); if ((selectedCountries.value || []).length) { countryFallback.update({ params: { ...params, country: '', exclude: JSON.stringify(excludeNames) } }); countryFallback.reload(); } appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();\ntry { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
               }
              },
              "componentId": "MultiSelect-country-filter",
@@ -254,18 +221,61 @@
               "variant": "subtle"
              },
              "componentSlots": {
+              "footer": {
+               "parentBlockId": "MultiSelect-country-filter",
+               "slotContent": [
+                {
+                 "baseStyles": {
+                  "alignItems": "center",
+                  "borderTop": "1px solid var(--outline-gray-1)",
+                  "display": "{{ (selectedCountries || []).length ? 'flex' : 'none' }}",
+                  "paddingBottom": "6px",
+                  "paddingLeft": "8px",
+                  "paddingRight": "8px",
+                  "paddingTop": "6px"
+                 },
+                 "blockName": "container",
+                 "children": [
+                  {
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "selectedCountries.value = [];\nconst baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value };\nconst params = { ...baseParams, category: JSON.stringify(selectedCategories.value) };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload(); if ((selectedCountries.value || []).length) { countryFallback.update({ params: { ...params, country: '', exclude: JSON.stringify(excludeNames) } }); countryFallback.reload(); } appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();\ntry { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
+                    }
+                   },
+                   "componentId": "Button-country-clear-all",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "label": "Clear all",
+                    "size": "sm",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {}
+                  }
+                 ],
+                 "componentId": "container-country-filter-footer",
+                 "componentName": "container",
+                 "componentSlots": {},
+                 "originalElement": "div"
+                }
+               ],
+               "slotId": "MultiSelect-country-filter:footer",
+               "slotName": "footer"
+              },
               "item-suffix": {
                "parentBlockId": "MultiSelect-country-filter",
                "slotContent": [
                 {
                  "baseStyles": {
                   "color": "var(--ink-gray-5)",
-                  "flexShrink": "0"
+                  "flexShrink": "0",
+                  "fontVariantNumeric": "tabular-nums"
                  },
                  "componentId": "country-filter-count-suffix",
                  "componentName": "TextBlock",
                  "componentProps": {
-                  "fontSize": "text-xs",
+                  "fontSize": "text-base",
                   "tag": "span",
                   "text": "{{ item.count }}"
                  },
@@ -290,7 +300,7 @@
               "update:modelValue": {
                "action": "Run Script",
                "event": "update:modelValue",
-               "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value };\nconst params = { ...baseParams, category: JSON.stringify(selectedCategories.value) };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload(); appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();\ntry { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
+               "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value };\nconst params = { ...baseParams, category: JSON.stringify(selectedCategories.value) };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload(); if ((selectedCountries.value || []).length) { countryFallback.update({ params: { ...params, country: '', exclude: JSON.stringify(excludeNames) } }); countryFallback.reload(); } appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();\ntry { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
               }
              },
              "componentId": "MultiSelect-industry-filter",
@@ -312,12 +322,13 @@
                 {
                  "baseStyles": {
                   "color": "var(--ink-gray-5)",
-                  "flexShrink": "0"
+                  "flexShrink": "0",
+                  "fontVariantNumeric": "tabular-nums"
                  },
                  "componentId": "industry-filter-count-suffix",
                  "componentName": "TextBlock",
                  "componentProps": {
-                  "fontSize": "text-xs",
+                  "fontSize": "text-base",
                   "tag": "span",
                   "text": "{{ item.count }}"
                  },
@@ -326,6 +337,51 @@
                ],
                "slotId": "MultiSelect-industry-filter:item-suffix"
               }
+             },
+             "mobileStyles": {
+              "flexShrink": "1",
+              "width": "calc(50% - 4px)"
+             }
+            },
+            {
+             "baseStyles": {
+              "flexShrink": "0",
+              "width": "8rem"
+             },
+             "componentEvents": {
+              "update:modelValue": {
+               "action": "Run Script",
+               "event": "update:modelValue",
+               "script": "if (tierFilter.value === 'any') tierFilter.value = '';\nconst baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); if ((selectedCountries.value || []).length) { countryFallback.update({ params: { ...params, country: '', exclude: JSON.stringify(excludeNames) } }); countryFallback.reload(); } appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
+              }
+             },
+             "componentId": "Select-cfbfoxmob",
+             "componentName": "Select",
+             "componentProps": {
+              "modelValue": {
+               "$type": "variable",
+               "name": "tierFilter"
+              },
+              "options": [
+               {
+                "label": "Any tier",
+                "value": "any"
+               },
+               {
+                "label": "Gold",
+                "value": "Gold"
+               },
+               {
+                "label": "Silver",
+                "value": "Silver"
+               },
+               {
+                "label": "Bronze",
+                "value": "Bronze"
+               }
+              ],
+              "placeholder": "Tier",
+              "variant": "subtle"
              },
              "mobileStyles": {
               "flexShrink": "1",
@@ -388,7 +444,7 @@
                         "update:modelValue": {
                          "action": "Run Script",
                          "event": "update:modelValue",
-                         "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
+                         "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); if ((selectedCountries.value || []).length) { countryFallback.update({ params: { ...params, country: '', exclude: JSON.stringify(excludeNames) } }); countryFallback.reload(); } appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
                         }
                        },
                        "componentId": "Select-flt-lang",
@@ -402,7 +458,7 @@
                         "options": "{{ (filterOptions.data ? filterOptions.data.languages : []) || [] }}",
                         "placeholder": "Any",
                         "size": "sm",
-                        "variant": "outline"
+                        "variant": "subtle"
                        },
                        "componentSlots": {}
                       }
@@ -430,7 +486,7 @@
                        "componentProps": {
                         "fontSize": "text-xs",
                         "tag": "span",
-                        "text": "Minimum Rating"
+                        "text": "Minimum rating"
                        },
                        "componentSlots": {}
                       },
@@ -442,7 +498,7 @@
                         "update:modelValue": {
                          "action": "Run Script",
                          "event": "update:modelValue",
-                         "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
+                         "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); if ((selectedCountries.value || []).length) { countryFallback.update({ params: { ...params, country: '', exclude: JSON.stringify(excludeNames) } }); countryFallback.reload(); } appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
                         }
                        },
                        "componentId": "Select-flt-rating",
@@ -459,7 +515,7 @@
                         ],
                         "placeholder": "Any",
                         "size": "sm",
-                        "variant": "outline"
+                        "variant": "subtle"
                        },
                        "componentSlots": {}
                       }
@@ -487,7 +543,7 @@
                        "componentProps": {
                         "fontSize": "text-xs",
                         "tag": "span",
-                        "text": "Response Time (hours)"
+                        "text": "Response time"
                        },
                        "componentSlots": {}
                       },
@@ -499,7 +555,7 @@
                         "update:modelValue": {
                          "action": "Run Script",
                          "event": "update:modelValue",
-                         "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
+                         "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); if ((selectedCountries.value || []).length) { countryFallback.update({ params: { ...params, country: '', exclude: JSON.stringify(excludeNames) } }); countryFallback.reload(); } appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
                         }
                        },
                        "componentId": "Select-flt-response",
@@ -517,7 +573,7 @@
                         ],
                         "placeholder": "Any",
                         "size": "sm",
-                        "variant": "outline"
+                        "variant": "subtle"
                        },
                        "componentSlots": {}
                       }
@@ -557,7 +613,7 @@
                         "update:modelValue": {
                          "action": "Run Script",
                          "event": "update:modelValue",
-                         "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value };\nconst params = { ...baseParams, category: JSON.stringify(selectedCategories.value) };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload(); appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();\ntry { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
+                         "script": "const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value };\nconst params = { ...baseParams, category: JSON.stringify(selectedCategories.value) };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload(); if ((selectedCountries.value || []).length) { countryFallback.update({ params: { ...params, country: '', exclude: JSON.stringify(excludeNames) } }); countryFallback.reload(); } appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();\ntry { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
                         }
                        },
                        "componentId": "MultiSelect-flt-apps",
@@ -570,7 +626,7 @@
                         "options": "{{ [{ label: 'ERPNext', value: 'ERPNext', icon: '/assets/connect/images/app_icons/erpnext.png' }, { label: 'Frappe HR', value: 'Frappe HR', icon: '/assets/connect/images/app_icons/frappe-hr.png' }, { label: 'CRM', value: 'Frappe CRM', icon: '/assets/connect/images/app_icons/crm.png' }, { label: 'Helpdesk', value: 'Helpdesk', icon: '/assets/connect/images/app_icons/helpdesk.png' }, { label: 'Insights', value: 'Frappe Insights', icon: '/assets/connect/images/app_icons/insights.png' }, { label: 'Learning', value: 'Learning', icon: '/assets/connect/images/app_icons/learning.png' }, { label: 'Framework', value: 'Frappe Framework', icon: '/assets/connect/images/app_icons/framework.png' }] }}",
                         "placeholder": "Any",
                         "size": "sm",
-                        "variant": "outline"
+                        "variant": "subtle"
                        },
                        "componentSlots": {
                         "item-prefix": {
@@ -620,7 +676,7 @@
                     "click": {
                      "action": "Run Script",
                      "event": "click",
-                     "script": "searchTerm.value = ''; tierFilter.value = ''; selectedCountries.value = []; selectedCategories.value = []; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = ''; const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload(); try { localStorage.setItem('connect_directory_filters', JSON.stringify({ searchTerm: searchTerm.value, tierFilter: tierFilter.value, selectedCountries: selectedCountries.value, selectedCategories: selectedCategories.value, selectedApps: selectedApps.value })); } catch (e) {}"
+                     "script": "searchTerm.value = ''; tierFilter.value = ''; selectedCountries.value = []; selectedCategories.value = []; selectedApps.value = []; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = '';\ntry { localStorage.removeItem('connect_directory_filters'); } catch (e) {}\nconst baseParams = { limit: 9, search: '', tier: '', country: '[]', product: '[]', business_process: '', implementation_type: '', language: '', min_rating: '', max_response_time: '' };\nconst params = { ...baseParams, category: '[]' };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload(); if ((selectedCountries.value || []).length) { countryFallback.update({ params: { ...params, country: '', exclude: JSON.stringify(excludeNames) } }); countryFallback.reload(); } appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();"
                     }
                    },
                    "componentId": "Button-flt-clear",
@@ -654,7 +710,7 @@
                  "componentId": "Button-filter-trigger",
                  "componentName": "Button",
                  "componentProps": {
-                  "iconLeft": "lucide-filter",
+                  "iconLeft": "lucide-list-filter",
                   "label": "Filter",
                   "variant": "subtle"
                  },
@@ -678,42 +734,41 @@
           {
            "baseStyles": {
             "alignItems": "center",
-            "display": "flex",
-            "justifyContent": "space-between",
-            "marginBottom": "8px",
-            "marginTop": "16px"
+            "display": "{{ directoryPartners.data && !directoryPartners.error ? 'flex' : 'none' }}",
+            "gap": "4px",
+            "justifyContent": "flex-start",
+            "marginBottom": "4px",
+            "marginTop": "24px",
+            "minHeight": "28px"
            },
            "children": [
             {
              "baseStyles": {
-              "color": "var(--ink-gray-5, #a6a6a6)",
-              "marginLeft": "6px"
+              "color": "var(--ink-gray-6)"
              },
              "componentId": "text-result-count",
              "componentName": "TextBlock",
              "componentProps": {
-              "fontSize": "text-sm",
+              "fontSize": "text-p-base",
               "tag": "span",
-              "text": "{{ (directoryPartners.data || []).length === 1 ? '1 partner' : (directoryPartners.data || []).length + ' partners' }}"
+              "text": "{{ (directoryPartners.data || []).length ? ((directoryPartners.data || []).length === 1 ? '1 partner' : (directoryPartners.data || []).length + ' partners') : ((searchTerm || tierFilter || (selectedCountries && selectedCountries.length) || (selectedCategories && selectedCategories.length) || (selectedApps && selectedApps.length) || businessProcessFilter || implementationTypeFilter || languageFilter || minRatingFilter || maxResponseTimeFilter) ? 'No partners match every filter' : 'No partners yet') }}"
              }
             },
             {
              "baseStyles": {
-              "color": "var(--ink-gray-5, oklch(0.586 0 0))",
-              "display": "{{ (searchTerm || tierFilter || (selectedCountries && selectedCountries.length) || (selectedCategories && selectedCategories.length) || businessProcessFilter || implementationTypeFilter || languageFilter || minRatingFilter || maxResponseTimeFilter) ? 'inline-flex' : 'none' }}",
-              "fontWeight": "500"
+              "display": "{{ directoryPartners.data && (searchTerm || tierFilter || (selectedCountries && selectedCountries.length) || (selectedCategories && selectedCategories.length) || (selectedApps && selectedApps.length) || businessProcessFilter || implementationTypeFilter || languageFilter || minRatingFilter || maxResponseTimeFilter) ? 'inline-flex' : 'none' }}"
              },
              "componentEvents": {
               "click": {
                "action": "Run Script",
                "event": "click",
-               "script": "searchTerm.value = ''; tierFilter.value = ''; selectedCountries.value = []; selectedCategories.value = []; selectedApps.value = []; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = '';\ntry { localStorage.removeItem('connect_directory_filters'); } catch (e) {}\nconst baseParams = { limit: 9, search: '', tier: '', country: '[]', product: '[]', business_process: '', implementation_type: '', language: '', min_rating: '', max_response_time: '' };\nconst params = { ...baseParams, category: '[]' };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload(); appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();"
+               "script": "searchTerm.value = ''; tierFilter.value = ''; selectedCountries.value = []; selectedCategories.value = []; selectedApps.value = []; businessProcessFilter.value = ''; implementationTypeFilter.value = ''; languageFilter.value = ''; minRatingFilter.value = ''; maxResponseTimeFilter.value = '';\ntry { localStorage.removeItem('connect_directory_filters'); } catch (e) {}\nconst baseParams = { limit: 9, search: '', tier: '', country: '[]', product: '[]', business_process: '', implementation_type: '', language: '', min_rating: '', max_response_time: '' };\nconst params = { ...baseParams, category: '[]' };\ndirectoryPartners.update({ params });\ndirectoryPartners.reload().then(() => {\n  const excludeNames = (directoryPartners.data || []).map(p => p.name);\n  categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } });\n  categoryFallback.reload(); if ((selectedCountries.value || []).length) { countryFallback.update({ params: { ...params, country: '', exclude: JSON.stringify(excludeNames) } }); countryFallback.reload(); } appFallback.update({ params: { ...params, product: '', exclude: JSON.stringify(excludeNames) } }); appFallback.reload();\n});\nfilterFacets.update({ params });\nfilterFacets.reload();"
               }
              },
-             "componentId": "Button-reset-count-row",
+             "componentId": "Button-empty-clear-filters",
              "componentName": "Button",
              "componentProps": {
-              "label": "Reset",
+              "label": "Clear filters",
               "size": "sm",
               "variant": "ghost"
              }
@@ -736,16 +791,115 @@
          "baseStyles": {
           "display": "flex",
           "flexDirection": "column",
+          "flexGrow": "1",
           "margin": "0 auto",
           "maxWidth": "800px",
-          "padding": "0 20px",
+          "paddingBottom": "0px",
+          "paddingLeft": "8px",
+          "paddingRight": "8px",
+          "paddingTop": "0px",
           "width": "100%"
          },
          "children": [
           {
            "baseStyles": {
-            "--list-gap": "14px",
-            "display": "{{ directoryPartners.data ? 'block' : 'none' }}",
+            "display": "{{ !directoryPartners.data && !directoryPartners.error ? 'block' : 'none' }}",
+            "marginTop": "56px"
+           },
+           "blockName": "PartnerRowSkeleton",
+           "componentId": "partner-row-skeleton",
+           "componentName": "PartnerRowSkeleton",
+           "componentProps": {
+            "rows": 3
+           },
+           "isCustomVueComponent": true
+          },
+          {
+           "baseStyles": {
+            "alignItems": "center",
+            "display": "{{ directoryPartners.error ? 'flex' : 'none' }}",
+            "flex": "1",
+            "flexDirection": "column",
+            "justifyContent": "center",
+            "paddingBottom": "64px",
+            "paddingTop": "64px",
+            "textAlign": "center"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "alignItems": "center",
+              "backgroundColor": "var(--surface-gray-2)",
+              "borderRadius": "9999px",
+              "color": "var(--ink-gray-5)",
+              "display": "flex",
+              "justifyContent": "center",
+              "paddingBottom": "12px",
+              "paddingLeft": "12px",
+              "paddingRight": "12px",
+              "paddingTop": "12px"
+             },
+             "blockName": "container",
+             "children": [
+              {
+               "baseStyles": {
+                "flexShrink": "0",
+                "height": "24px",
+                "width": "24px"
+               },
+               "componentId": "icon-error-pd",
+               "componentName": "Icon",
+               "componentProps": {
+                "icon": "lucide-circle-alert"
+               },
+               "componentSlots": {}
+              }
+             ],
+             "componentId": "container-error-icon-pd",
+             "componentName": "container",
+             "componentSlots": {},
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "color": "var(--ink-gray-7)",
+              "marginTop": "12px"
+             },
+             "componentId": "error-title-pd",
+             "componentName": "TextBlock",
+             "componentProps": {
+              "fontSize": "text-base",
+              "tag": "p",
+              "text": "Couldn't load partners"
+             }
+            },
+            {
+             "baseStyles": {
+              "marginTop": "20px"
+             },
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "directoryPartners.reload()"
+              }
+             },
+             "componentId": "Button-error-retry",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "Retry",
+              "variant": "subtle"
+             }
+            }
+           ],
+           "componentId": "container-error-pd",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "--list-gap": "12px",
+            "display": "{{ directoryPartners.error ? 'none' : 'block' }}",
             "isolation": "isolate"
            },
            "children": [
@@ -779,7 +933,7 @@
                     {
                      "baseStyles": {
                       "alignSelf": "flex-start",
-                      "paddingTop": "24px"
+                      "paddingTop": "28px"
                      },
                      "children": [
                       {
@@ -837,14 +991,14 @@
                       "gap": "0px",
                       "gridRow": "span 1",
                       "margin": "0px",
-                      "paddingTop": "24px"
+                      "paddingTop": "28px"
                      },
                      "children": [
                       {
                        "baseStyles": {
                         "display": "flex",
                         "flexDirection": "column",
-                        "gap": "4px"
+                        "gap": "2px"
                        },
                        "children": [
                         {
@@ -936,26 +1090,12 @@
                          "children": [
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)",
-                            "flexShrink": "0",
-                            "height": "12px",
-                            "width": "12px"
-                           },
-                           "componentId": "row-gold-location-icon",
-                           "componentName": "Icon",
-                           "componentProps": {
-                            "icon": "lucide-map-pin"
-                           },
-                           "componentSlots": {}
-                          },
-                          {
-                           "baseStyles": {
-                            "color": "var(--ink-gray-5)"
+                            "color": "var(--ink-gray-6)"
                            },
                            "componentId": "row-gold-location-text",
                            "componentName": "TextBlock",
                            "componentProps": {
-                            "fontSize": "text-sm",
+                            "fontSize": "text-p-sm",
                             "tag": "p",
                             "text": "{{ item.city ? item.city + ', ' + item.country : item.country }}"
                            },
@@ -984,7 +1124,7 @@
                     {
                      "baseStyles": {
                       "alignSelf": "flex-start",
-                      "paddingTop": "24px"
+                      "paddingTop": "28px"
                      },
                      "children": [
                       {
@@ -997,11 +1137,10 @@
                        "children": [
                         {
                          "attributes": {
-                          "aria-label": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove from shortlist' : 'Add to shortlist' }}"
+                          "aria-label": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove ' + item.company_name + ' from saved' : 'Save ' + item.company_name }}"
                          },
                          "baseStyles": {
                           "alignItems": "center",
-                          "color": "{{ (myShortlist.data || []).includes(item.name) ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}",
                           "display": "flex",
                           "flexShrink": "0",
                           "height": "32px",
@@ -1012,23 +1151,41 @@
                           "click": {
                            "action": "Run Script",
                            "event": "click",
-                           "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nif (!(myContext.data && myContext.data.customer)) {\n  const prevLocal = localShortlist.value || [];\n  localShortlist.value = prevLocal.includes(partner) ? prevLocal.filter((n) => n !== partner) : [...prevLocal, partner];\n  try { localStorage.setItem('connect_local_shortlist', JSON.stringify(localShortlist.value)); } catch (e) {}\n  return;\n}\nconst prevReal = myShortlist.data || [];\nconst already = prevReal.includes(partner);\nmyShortlist.data = already ? prevReal.filter((n) => n !== partner) : [...prevReal, partner];\nconst fn = already ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = prevReal;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                           "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nif (!(myContext.data && myContext.data.customer)) {\n  const prevLocal = localShortlist.value || [];\n  localShortlist.value = prevLocal.includes(partner) ? prevLocal.filter((n) => n !== partner) : [...prevLocal, partner];\n  try { localStorage.setItem('connect_local_shortlist', JSON.stringify(localShortlist.value)); } catch (e) {}\n  return;\n}\nconst prevReal = myShortlist.data || [];\nconst already = prevReal.includes(partner);\nmyShortlist.data = already ? prevReal.filter((n) => n !== partner) : [...prevReal, partner];\nconst fn = already ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = prevReal;\n  toast({ title: \"Couldn't save partner\", text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                           }
                          },
                          "componentId": "Button-shortlist-gold",
                          "componentName": "Button",
                          "componentProps": {
-                          "icon": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'lucide-bookmark-check' : 'lucide-bookmark' }}",
                           "size": "md",
-                          "tooltip": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove from shortlist' : 'Add to shortlist' }}",
+                          "tooltip": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove from saved' : 'Save' }}",
                           "variant": "ghost"
                          },
-                         "componentSlots": {}
+                         "componentSlots": {
+                          "icon": {
+                           "parentBlockId": "Button-shortlist-gold",
+                           "slotContent": [
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flexShrink": "0",
+                              "height": "16px",
+                              "width": "16px"
+                             },
+                             "componentId": "Button-shortlist-gold-icon",
+                             "componentName": "HTML",
+                             "componentProps": {
+                              "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"' + (((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'currentColor' : 'none') + '\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z\"/></svg>' }}"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "slotId": "Button-shortlist-gold:icon"
+                          }
+                         }
                         },
                         {
-                         "baseStyles": {
-                          "color": "var(--ink-gray-6, oklch(0.439 0 0))"
-                         },
+                         "baseStyles": {},
                          "componentEvents": {
                           "click": {
                            "action": "Run Script",
@@ -1072,7 +1229,7 @@
                       "gap": "4px",
                       "gridColumn": "1 / -1",
                       "marginTop": "12px",
-                      "paddingBottom": "24px"
+                      "paddingBottom": "29px"
                      },
                      "children": [
                       {
@@ -1081,7 +1238,7 @@
                         "display": "flex",
                         "flexDirection": "row",
                         "flexWrap": "wrap",
-                        "gap": "24px"
+                        "gap": "16px"
                        },
                        "children": [
                         {
@@ -1094,10 +1251,10 @@
                          "children": [
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)",
+                            "color": "var(--ink-gray-6)",
                             "flexShrink": "0",
-                            "height": "12px",
-                            "width": "12px"
+                            "height": "14px",
+                            "width": "14px"
                            },
                            "componentId": "row-gold-rate-icon",
                            "componentName": "Icon",
@@ -1108,12 +1265,12 @@
                           },
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)"
+                            "color": "var(--ink-gray-6)"
                            },
                            "componentId": "row-gold-rate-text",
                            "componentName": "TextBlock",
                            "componentProps": {
-                            "fontSize": "text-sm",
+                            "fontSize": "text-p-sm",
                             "tag": "p",
                             "text": "{{ item.hourly_rate ? hourlyRate(item.hourly_rate, item.currency) : 'Rate on request' }}"
                            },
@@ -1136,10 +1293,10 @@
                          "children": [
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)",
+                            "color": "var(--ink-gray-6)",
                             "flexShrink": "0",
-                            "height": "12px",
-                            "width": "12px"
+                            "height": "14px",
+                            "width": "14px"
                            },
                            "componentId": "row-gold-rating-icon",
                            "componentName": "Icon",
@@ -1150,12 +1307,12 @@
                           },
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)"
+                            "color": "var(--ink-gray-6)"
                            },
                            "componentId": "row-gold-rating-text",
                            "componentName": "TextBlock",
                            "componentProps": {
-                            "fontSize": "text-sm",
+                            "fontSize": "text-p-sm",
                             "tag": "p",
                             "text": "{{ item.rating ? item.rating + ' (' + (item.review_count || 0) + ')' : 'No ratings yet' }}"
                            },
@@ -1178,10 +1335,10 @@
                          "children": [
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)",
+                            "color": "var(--ink-gray-6)",
                             "flexShrink": "0",
-                            "height": "12px",
-                            "width": "12px"
+                            "height": "14px",
+                            "width": "14px"
                            },
                            "componentId": "row-gold-response-icon",
                            "componentName": "Icon",
@@ -1192,13 +1349,13 @@
                           },
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)"
+                            "color": "var(--ink-gray-6)"
                            },
                            "componentId": "row-gold-response-text",
                            "componentName": "TextBlock",
                            "componentProps": {
-                            "fontSize": "text-xs",
-                            "tag": "span",
+                            "fontSize": "text-p-sm",
+                            "tag": "p",
                             "text": "{{ 'Typically ' + item.response_time_hours + 'h' }}"
                            },
                            "componentSlots": {}
@@ -1220,15 +1377,14 @@
                       {
                        "baseStyles": {
                         "alignSelf": "flex-start",
-                        "color": "var(--ink-gray-5)",
+                        "color": "var(--ink-gray-6)",
                         "display": "{{ item.success_story_count || (item.business_processes && item.business_processes.length) || item.industry ? 'inline-block' : 'none' }}",
-                        "lineHeight": "1.35",
                         "margin": "0px"
                        },
                        "componentId": "row-gold-stories",
                        "componentName": "TextBlock",
                        "componentProps": {
-                        "fontSize": "text-sm",
+                        "fontSize": "text-p-sm",
                         "tag": "p",
                         "text": "{{ item.success_story_count ? (item.success_story_count + ' success ' + (item.success_story_count === 1 ? 'story' : 'stories') + ' across ' + (item.success_story_categories || []).slice(0, 2).join(', ') + ((item.success_story_categories || []).length > 2 ? ' +' + ((item.success_story_categories.length) - 2) + ' more' : '')) : (item.business_processes && item.business_processes.length) ? ('Expertise across ' + item.business_processes.slice(0, 2).join(', ') + (item.business_processes.length > 2 ? ' +' + (item.business_processes.length - 2) + ' more' : '')) : item.industry ? ('Expertise in ' + item.industry) : '' }}"
                        },
@@ -1276,7 +1432,7 @@
                     {
                      "baseStyles": {
                       "alignSelf": "flex-start",
-                      "paddingTop": "24px"
+                      "paddingTop": "28px"
                      },
                      "children": [
                       {
@@ -1333,14 +1489,14 @@
                       "gap": "0px",
                       "gridRow": "span 1",
                       "margin": "0px",
-                      "paddingTop": "24px"
+                      "paddingTop": "28px"
                      },
                      "children": [
                       {
                        "baseStyles": {
                         "display": "flex",
                         "flexDirection": "column",
-                        "gap": "8px"
+                        "gap": "2px"
                        },
                        "children": [
                         {
@@ -1431,26 +1587,12 @@
                          "children": [
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)",
-                            "flexShrink": "0",
-                            "height": "12px",
-                            "width": "12px"
-                           },
-                           "componentId": "row-gold-location-icon-b2",
-                           "componentName": "Icon",
-                           "componentProps": {
-                            "icon": "lucide-map-pin"
-                           },
-                           "componentSlots": {}
-                          },
-                          {
-                           "baseStyles": {
-                            "color": "var(--ink-gray-5)"
+                            "color": "var(--ink-gray-6)"
                            },
                            "componentId": "row-gold-location-text-b2",
                            "componentName": "TextBlock",
                            "componentProps": {
-                            "fontSize": "text-xs",
+                            "fontSize": "text-p-sm",
                             "tag": "span",
                             "text": "{{ item.city ? item.city + ', ' + item.country : item.country }}"
                            },
@@ -1479,7 +1621,7 @@
                     {
                      "baseStyles": {
                       "alignSelf": "flex-start",
-                      "paddingTop": "24px"
+                      "paddingTop": "28px"
                      },
                      "children": [
                       {
@@ -1492,11 +1634,10 @@
                        "children": [
                         {
                          "attributes": {
-                          "aria-label": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove from shortlist' : 'Add to shortlist' }}"
+                          "aria-label": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove ' + item.company_name + ' from saved' : 'Save ' + item.company_name }}"
                          },
                          "baseStyles": {
                           "alignItems": "center",
-                          "color": "{{ (myShortlist.data || []).includes(item.name) ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}",
                           "display": "flex",
                           "flexShrink": "0",
                           "height": "32px",
@@ -1507,23 +1648,41 @@
                           "click": {
                            "action": "Run Script",
                            "event": "click",
-                           "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nif (!(myContext.data && myContext.data.customer)) {\n  const prevLocal = localShortlist.value || [];\n  localShortlist.value = prevLocal.includes(partner) ? prevLocal.filter((n) => n !== partner) : [...prevLocal, partner];\n  try { localStorage.setItem('connect_local_shortlist', JSON.stringify(localShortlist.value)); } catch (e) {}\n  return;\n}\nconst prevReal = myShortlist.data || [];\nconst already = prevReal.includes(partner);\nmyShortlist.data = already ? prevReal.filter((n) => n !== partner) : [...prevReal, partner];\nconst fn = already ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = prevReal;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                           "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nif (!(myContext.data && myContext.data.customer)) {\n  const prevLocal = localShortlist.value || [];\n  localShortlist.value = prevLocal.includes(partner) ? prevLocal.filter((n) => n !== partner) : [...prevLocal, partner];\n  try { localStorage.setItem('connect_local_shortlist', JSON.stringify(localShortlist.value)); } catch (e) {}\n  return;\n}\nconst prevReal = myShortlist.data || [];\nconst already = prevReal.includes(partner);\nmyShortlist.data = already ? prevReal.filter((n) => n !== partner) : [...prevReal, partner];\nconst fn = already ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = prevReal;\n  toast({ title: \"Couldn't save partner\", text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                           }
                          },
                          "componentId": "Button-shortlist-gold-b2",
                          "componentName": "Button",
                          "componentProps": {
-                          "icon": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'lucide-bookmark-check' : 'lucide-bookmark' }}",
                           "size": "md",
-                          "tooltip": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove from shortlist' : 'Add to shortlist' }}",
+                          "tooltip": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove from saved' : 'Save' }}",
                           "variant": "ghost"
                          },
-                         "componentSlots": {}
+                         "componentSlots": {
+                          "icon": {
+                           "parentBlockId": "Button-shortlist-gold-b2",
+                           "slotContent": [
+                            {
+                             "baseStyles": {
+                              "display": "flex",
+                              "flexShrink": "0",
+                              "height": "16px",
+                              "width": "16px"
+                             },
+                             "componentId": "Button-shortlist-gold-icon-b2",
+                             "componentName": "HTML",
+                             "componentProps": {
+                              "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"' + (((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'currentColor' : 'none') + '\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z\"/></svg>' }}"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "slotId": "Button-shortlist-gold-b2:icon"
+                          }
+                         }
                         },
                         {
-                         "baseStyles": {
-                          "color": "var(--ink-gray-6, oklch(0.439 0 0))"
-                         },
+                         "baseStyles": {},
                          "componentEvents": {
                           "click": {
                            "action": "Run Script",
@@ -1567,7 +1726,7 @@
                       "gap": "4px",
                       "gridColumn": "1 / -1",
                       "marginTop": "12px",
-                      "paddingBottom": "24px"
+                      "paddingBottom": "29px"
                      },
                      "children": [
                       {
@@ -1576,7 +1735,7 @@
                         "display": "flex",
                         "flexDirection": "row",
                         "flexWrap": "wrap",
-                        "gap": "24px"
+                        "gap": "16px"
                        },
                        "children": [
                         {
@@ -1589,10 +1748,10 @@
                          "children": [
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)",
+                            "color": "var(--ink-gray-6)",
                             "flexShrink": "0",
-                            "height": "12px",
-                            "width": "12px"
+                            "height": "14px",
+                            "width": "14px"
                            },
                            "componentId": "row-gold-rate-icon-b2",
                            "componentName": "Icon",
@@ -1603,12 +1762,12 @@
                           },
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)"
+                            "color": "var(--ink-gray-6)"
                            },
                            "componentId": "row-gold-rate-text-b2",
                            "componentName": "TextBlock",
                            "componentProps": {
-                            "fontSize": "text-xs",
+                            "fontSize": "text-p-sm",
                             "tag": "span",
                             "text": "{{ item.hourly_rate ? hourlyRate(item.hourly_rate, item.currency) : 'Rate on request' }}"
                            },
@@ -1631,10 +1790,10 @@
                          "children": [
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)",
+                            "color": "var(--ink-gray-6)",
                             "flexShrink": "0",
-                            "height": "12px",
-                            "width": "12px"
+                            "height": "14px",
+                            "width": "14px"
                            },
                            "componentId": "row-gold-rating-icon-b2",
                            "componentName": "Icon",
@@ -1645,12 +1804,12 @@
                           },
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)"
+                            "color": "var(--ink-gray-6)"
                            },
                            "componentId": "row-gold-rating-text-b2",
                            "componentName": "TextBlock",
                            "componentProps": {
-                            "fontSize": "text-xs",
+                            "fontSize": "text-p-sm",
                             "tag": "span",
                             "text": "{{ item.rating ? item.rating + ' (' + (item.review_count || 0) + ')' : 'No ratings yet' }}"
                            },
@@ -1673,10 +1832,10 @@
                          "children": [
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)",
+                            "color": "var(--ink-gray-6)",
                             "flexShrink": "0",
-                            "height": "12px",
-                            "width": "12px"
+                            "height": "14px",
+                            "width": "14px"
                            },
                            "componentId": "row-gold-response-icon-b2",
                            "componentName": "Icon",
@@ -1687,13 +1846,13 @@
                           },
                           {
                            "baseStyles": {
-                            "color": "var(--ink-gray-5)"
+                            "color": "var(--ink-gray-6)"
                            },
                            "componentId": "row-gold-response-text-b2",
                            "componentName": "TextBlock",
                            "componentProps": {
-                            "fontSize": "text-xs",
-                            "tag": "span",
+                            "fontSize": "text-p-sm",
+                            "tag": "p",
                             "text": "{{ 'Typically ' + item.response_time_hours + 'h' }}"
                            },
                            "componentSlots": {}
@@ -1715,15 +1874,14 @@
                       {
                        "baseStyles": {
                         "alignSelf": "flex-start",
-                        "color": "var(--ink-gray-5)",
+                        "color": "var(--ink-gray-6)",
                         "display": "{{ item.success_story_count || (item.business_processes && item.business_processes.length) || item.industry ? 'inline-block' : 'none' }}",
-                        "lineHeight": "1.35",
                         "margin": "0px"
                        },
                        "componentId": "row-gold-stories-b2",
                        "componentName": "TextBlock",
                        "componentProps": {
-                        "fontSize": "text-xs",
+                        "fontSize": "text-p-sm",
                         "tag": "span",
                         "text": "{{ item.success_story_count ? (item.success_story_count + ' success ' + (item.success_story_count === 1 ? 'story' : 'stories') + ' across ' + (item.success_story_categories || []).slice(0, 2).join(', ') + ((item.success_story_categories || []).length > 2 ? ' +' + ((item.success_story_categories.length) - 2) + ' more' : '')) : (item.business_processes && item.business_processes.length) ? ('Expertise across ' + item.business_processes.slice(0, 2).join(', ') + (item.business_processes.length > 2 ? ' +' + (item.business_processes.length - 2) + ' more' : '')) : item.industry ? ('Expertise in ' + item.industry) : '' }}"
                        },
@@ -1774,62 +1932,597 @@
           },
           {
            "baseStyles": {
-            "alignItems": "center",
-            "display": "{{ directoryPartners.data && !directoryPartners.data.length ? 'flex' : 'none' }}",
+            "display": "{{ (selectedCountries && selectedCountries.length && countryFallback.data && countryFallback.data.length) ? 'flex' : 'none' }}",
             "flexDirection": "column",
-            "gap": "4px",
-            "justifyContent": "center",
-            "padding": "60px 0px",
-            "textAlign": "center"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-8)",
-              "fontWeight": "500"
-             },
-             "componentId": "empty-title-pd",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-base",
-              "tag": "p",
-              "text": "No partners found"
-             }
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-6)"
-             },
-             "componentId": "empty-text-pd",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "p",
-              "text": "Try removing a filter or searching for something else."
-             }
-            }
-           ],
-           "componentId": "container-empty-pd",
-           "componentName": "container",
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "borderTop": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-            "display": "{{ (selectedCategories && selectedCategories.length && categoryFallback.data && categoryFallback.data.length) ? 'flex' : 'none' }}",
-            "flexDirection": "column",
-            "marginTop": "32px",
-            "paddingTop": "24px"
+            "marginTop": "48px",
+            "paddingTop": "0px"
            },
            "children": [
             {
              "baseStyles": {
               "display": "flex",
               "flexDirection": "column",
-              "flexShrink": 1,
+              "flexShrink": "1",
               "height": "fit-content",
-              "marginLeft": "10px",
-              "width": "343px"
+              "paddingLeft": "12px"
+             },
+             "blockName": "container",
+             "children": [
+              {
+               "baseStyles": {
+                "color": "var(--ink-gray-9)",
+                "fontWeight": "600",
+                "marginBottom": "4px"
+               },
+               "componentId": "wizard-country-fallback-heading",
+               "componentName": "TextBlock",
+               "componentProps": {
+                "fontSize": "text-lg",
+                "tag": "span",
+                "text": "Partners in other countries"
+               }
+              }
+             ],
+             "componentId": "container-mcvpr3mog-ctryfb",
+             "componentName": "container",
+             "mobileStyles": {
+              "width": "100%"
+             },
+             "originalElement": "div"
+            },
+            {
+             "baseStyles": {
+              "--list-gap": "12px",
+              "display": "{{ (countryFallback.data && countryFallback.data.length) ? 'block' : 'none' }}",
+              "isolation": "isolate"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "flex-start",
+                "display": "flex",
+                "flexDirection": "column",
+                "flexShrink": "1",
+                "flexWrap": "nowrap",
+                "gap": "8px",
+                "height": "fit-content",
+                "justifyContent": "flex-start",
+                "width": "100%"
+               },
+               "blockName": "container",
+               "children": [
+                {
+                 "componentId": "ListRows-91e783f6b-ctryfb",
+                 "componentName": "ListRows",
+                 "componentProps": {
+                  "items": "{{ countryFallback.data || [] }}",
+                  "rowKey": "name"
+                 },
+                 "componentSlots": {
+                  "default": {
+                   "parentBlockId": "ListRows-91e783f6b-ctryfb",
+                   "slotContent": [
+                    {
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "alignSelf": "flex-start",
+                        "paddingTop": "28px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "backgroundColor": "{{ (item.logo_icon || item.logo) ? '#ffffff' : 'var(--surface-gray-2)' }}",
+                          "backgroundImage": "{{ (item.logo_icon || item.logo) ? 'url(\"' + (item.logo_icon || item.logo) + '\")' : 'none' }}",
+                          "backgroundPosition": "center",
+                          "backgroundRepeat": "no-repeat",
+                          "backgroundSize": "contain",
+                          "borderRadius": "8px",
+                          "display": "flex",
+                          "flexShrink": "0",
+                          "height": "40px",
+                          "justifyContent": "center",
+                          "margin": "0px",
+                          "overflow": "hidden",
+                          "padding": "0px",
+                          "width": "40px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "var(--ink-gray-6)",
+                            "display": "{{ (item.logo_icon || item.logo) ? 'none' : 'flex' }}",
+                            "fontWeight": "600"
+                           },
+                           "componentId": "LogoView-gold-initial-ctryfb",
+                           "componentName": "TextBlock",
+                           "componentProps": {
+                            "fontSize": "text-sm",
+                            "tag": "span",
+                            "text": "{{ (item.company_name || '?').charAt(0).toUpperCase() }}"
+                           },
+                           "componentSlots": {}
+                          }
+                         ],
+                         "componentId": "LogoView-gold-ctryfb",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "originalElement": "div"
+                        }
+                       ],
+                       "componentId": "ListCell-avatar-gold-ctryfb",
+                       "componentName": "ListCell",
+                       "componentProps": {},
+                       "componentSlots": {}
+                      },
+                      {
+                       "baseStyles": {
+                        "gap": "0px",
+                        "gridRow": "span 1",
+                        "margin": "0px",
+                        "paddingTop": "28px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "display": "flex",
+                          "flexDirection": "column",
+                          "gap": "2px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "flexDirection": "row",
+                            "flexWrap": "wrap",
+                            "gap": "10px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-8)",
+                              "fontWeight": "600"
+                             },
+                             "componentId": "row-gold-name-ctryfb",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-base",
+                              "tag": "span",
+                              "text": "{{ item.company_name }}"
+                             },
+                             "componentSlots": {}
+                            },
+                            {
+                             "baseStyles": {
+                              "display": "{{ (item.tier) === 'Gold' ? 'flex' : 'none' }}"
+                             },
+                             "componentId": "row-gold-tier-badge-ctryfb",
+                             "componentName": "Badge",
+                             "componentProps": {
+                              "label": "{{ item.tier }}",
+                              "theme": "{{ item.tier === 'Gold' ? 'amber' : item.tier === 'Silver' ? 'gray' : item.tier === 'Bronze' ? 'orange' : 'gray' }}",
+                              "variant": "subtle"
+                             },
+                             "componentSlots": {
+                              "prefix": {
+                               "parentBlockId": "row-gold-tier-badge-ctryfb",
+                               "slotContent": [
+                                {
+                                 "baseStyles": {
+                                  "display": "flex",
+                                  "flexShrink": "0",
+                                  "height": "11px",
+                                  "width": "11px"
+                                 },
+                                 "componentId": "row-gold-tier-badge-fb-icon-ctryfb",
+                                 "componentName": "HTML",
+                                 "componentProps": {
+                                  "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 28 28\" fill=\"none\"><path d=\"M13.4912 0.226893C13.7636 -0.0756311 14.236 -0.0756311 14.509 0.226893L16.4868 2.42128C16.6752 2.62965 16.969 2.70274 17.2316 2.60614L19.9959 1.58885C20.3773 1.44859 20.7952 1.66961 20.8973 2.06512L21.6363 4.9339C21.7064 5.20632 21.9337 5.40882 22.2102 5.44612L25.1275 5.83898C25.5298 5.89314 25.7981 6.28454 25.706 6.68242L25.0359 9.56839C24.9727 9.84243 25.08 10.128 25.3083 10.2906L27.7098 12.0036C28.0408 12.2398 28.0982 12.7119 27.8327 13.021L25.9077 15.263C25.7251 15.4759 25.6886 15.7791 25.8155 16.0298L27.1516 18.6705C27.3354 19.0347 27.1678 19.4793 26.7905 19.6288L24.0511 20.7133C23.7914 20.8162 23.6193 21.0676 23.6158 21.349L23.5798 24.3125C23.5752 24.721 23.2216 25.0364 22.8182 24.992L19.8922 24.6705C19.6145 24.64 19.3461 24.7819 19.2134 25.0295L17.8141 27.6368C17.6211 27.9963 17.1626 28.1101 16.8259 27.8821L14.3833 26.2282C14.1514 26.0711 13.8482 26.0711 13.6164 26.2282L11.1744 27.8821C10.8376 28.1101 10.3791 27.9963 10.1861 27.6368L8.78682 25.0295C8.65408 24.7819 8.38512 24.64 8.10748 24.6705L5.18144 24.992C4.77859 25.0364 4.42501 24.721 4.4198 24.3125L4.38444 21.349C4.38096 21.0676 4.2088 20.8162 3.94855 20.7133L1.20916 19.6288C0.831813 19.4793 0.664291 19.0347 0.848617 18.6705L2.1847 16.0298C2.31164 15.7791 2.27512 15.4759 2.09195 15.263L0.167536 13.021C-0.0979398 12.7119 -0.0411269 12.2398 0.289849 12.0036L2.69188 10.2906C2.91968 10.128 3.02749 9.84243 2.96373 9.56839L2.29425 6.68242C2.2015 6.28454 2.46987 5.89314 2.87214 5.83898L5.78948 5.44612C6.06655 5.40882 6.2932 5.20632 6.36333 4.9339L7.10237 2.06512C7.20439 1.66961 7.62232 1.44859 8.00372 1.58885L10.768 2.60614C11.0306 2.70274 11.3251 2.62965 11.5129 2.42128L13.4912 0.226893Z\" fill=\"' + (item.tier === 'Gold' ? '#D4A017' : item.tier === 'Silver' ? '#A6A6A6' : item.tier === 'Bronze' ? '#7A4A28' : '#A6A6A6') + '\"></path><path d=\"M18.0202 9.62684C18.324 9.27238 18.8561 9.23364 19.2079 9.53963C19.5603 9.84586 19.5992 10.3815 19.2955 10.7361L13.0521 18.015C12.8945 18.1993 12.6649 18.3066 12.4232 18.3092C12.1815 18.3116 11.9502 18.2091 11.7885 18.0282L8.83117 14.7193C8.52048 14.3711 8.54773 13.835 8.8932 13.5217C9.23925 13.2084 9.77193 13.2365 10.0832 13.5844L12.4012 16.1779L18.0202 9.62684Z\" fill=\"white\"></path></svg>' }}"
+                                 },
+                                 "componentSlots": {}
+                                }
+                               ],
+                               "slotId": "row-gold-tier-badge-ctryfb:prefix"
+                              }
+                             }
+                            },
+                            {
+                             "baseStyles": {
+                              "display": "{{ ((item.tier) === 'Silver' || (item.tier) === 'Bronze') ? 'flex' : 'none' }}",
+                              "flexShrink": "0",
+                              "height": "14px",
+                              "width": "14px"
+                             },
+                             "componentId": "row-gold-tier-badge-ctryfb-tick",
+                             "componentName": "HTML",
+                             "componentProps": {
+                              "html": "{{ '<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" width=\\\"14\\\" height=\\\"14\\\" viewBox=\\\"0 0 28 28\\\" fill=\\\"none\\\"><path d=\\\"M13.4912 0.226893C13.7636 -0.0756311 14.236 -0.0756311 14.509 0.226893L16.4868 2.42128C16.6752 2.62965 16.969 2.70274 17.2316 2.60614L19.9959 1.58885C20.3773 1.44859 20.7952 1.66961 20.8973 2.06512L21.6363 4.9339C21.7064 5.20632 21.9337 5.40882 22.2102 5.44612L25.1275 5.83898C25.5298 5.89314 25.7981 6.28454 25.706 6.68242L25.0359 9.56839C24.9727 9.84243 25.08 10.128 25.3083 10.2906L27.7098 12.0036C28.0408 12.2398 28.0982 12.7119 27.8327 13.021L25.9077 15.263C25.7251 15.4759 25.6886 15.7791 25.8155 16.0298L27.1516 18.6705C27.3354 19.0347 27.1678 19.4793 26.7905 19.6288L24.0511 20.7133C23.7914 20.8162 23.6193 21.0676 23.6158 21.349L23.5798 24.3125C23.5752 24.721 23.2216 25.0364 22.8182 24.992L19.8922 24.6705C19.6145 24.64 19.3461 24.7819 19.2134 25.0295L17.8141 27.6368C17.6211 27.9963 17.1626 28.1101 16.8259 27.8821L14.3833 26.2282C14.1514 26.0711 13.8482 26.0711 13.6164 26.2282L11.1744 27.8821C10.8376 28.1101 10.3791 27.9963 10.1861 27.6368L8.78682 25.0295C8.65408 24.7819 8.38512 24.64 8.10748 24.6705L5.18144 24.992C4.77859 25.0364 4.42501 24.721 4.4198 24.3125L4.38444 21.349C4.38096 21.0676 4.2088 20.8162 3.94855 20.7133L1.20916 19.6288C0.831813 19.4793 0.664291 19.0347 0.848617 18.6705L2.1847 16.0298C2.31164 15.7791 2.27512 15.4759 2.09195 15.263L0.167536 13.021C-0.0979398 12.7119 -0.0411269 12.2398 0.289849 12.0036L2.69188 10.2906C2.91968 10.128 3.02749 9.84243 2.96373 9.56839L2.29425 6.68242C2.2015 6.28454 2.46987 5.89314 2.87214 5.83898L5.78948 5.44612C6.06655 5.40882 6.2932 5.20632 6.36333 4.9339L7.10237 2.06512C7.20439 1.66961 7.62232 1.44859 8.00372 1.58885L10.768 2.60614C11.0306 2.70274 11.3251 2.62965 11.5129 2.42128L13.4912 0.226893Z\\\" fill=\\\"' + ((item.tier) === 'Silver' ? '#A6A6A6' : '#7A4A28') + '\\\"></path><path d=\\\"M18.0202 9.62684C18.324 9.27238 18.8561 9.23364 19.2079 9.53963C19.5603 9.84586 19.5992 10.3815 19.2955 10.7361L13.0521 18.015C12.8945 18.1993 12.6649 18.3066 12.4232 18.3092C12.1815 18.3116 11.9502 18.2091 11.7885 18.0282L8.83117 14.7193C8.52048 14.3711 8.54773 13.835 8.8932 13.5217C9.23925 13.2084 9.77193 13.2365 10.0832 13.5844L12.4012 16.1779L18.0202 9.62684Z\\\" fill=\\\"white\\\"></path></svg>' }}"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "row-gold-name-row-ctryfb",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "flexDirection": "row",
+                            "gap": "4px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)"
+                             },
+                             "componentId": "row-gold-location-text-ctryfb",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-p-sm",
+                              "tag": "span",
+                              "text": "{{ item.city ? item.city + ', ' + item.country : item.country }}"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "row-gold-location-ctryfb",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div"
+                          }
+                         ],
+                         "componentId": "row-gold-details-ctryfb",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "originalElement": "div"
+                        }
+                       ],
+                       "componentId": "ListCell-details-gold-ctryfb",
+                       "componentName": "ListCell",
+                       "componentProps": {},
+                       "componentSlots": {}
+                      },
+                      {
+                       "baseStyles": {
+                        "alignSelf": "flex-start",
+                        "paddingTop": "28px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "gap": "8px"
+                         },
+                         "children": [
+                          {
+                           "attributes": {
+                            "aria-label": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove ' + item.company_name + ' from saved' : 'Save ' + item.company_name }}"
+                           },
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "flexShrink": "0",
+                            "height": "32px",
+                            "justifyContent": "center",
+                            "width": "32px"
+                           },
+                           "componentEvents": {
+                            "click": {
+                             "action": "Run Script",
+                             "event": "click",
+                             "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nif (!(myContext.data && myContext.data.customer)) {\n  const prevLocal = localShortlist.value || [];\n  localShortlist.value = prevLocal.includes(partner) ? prevLocal.filter((n) => n !== partner) : [...prevLocal, partner];\n  try { localStorage.setItem('connect_local_shortlist', JSON.stringify(localShortlist.value)); } catch (e) {}\n  return;\n}\nconst prevReal = myShortlist.data || [];\nconst already = prevReal.includes(partner);\nmyShortlist.data = already ? prevReal.filter((n) => n !== partner) : [...prevReal, partner];\nconst fn = already ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = prevReal;\n  toast({ title: \"Couldn't save partner\", text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                            }
+                           },
+                           "componentId": "Button-shortlist-gold-ctryfb",
+                           "componentName": "Button",
+                           "componentProps": {
+                            "size": "md",
+                            "tooltip": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove from saved' : 'Save' }}",
+                            "variant": "ghost"
+                           },
+                           "componentSlots": {
+                            "icon": {
+                             "parentBlockId": "Button-shortlist-gold-ctryfb",
+                             "slotContent": [
+                              {
+                               "baseStyles": {
+                                "display": "flex",
+                                "flexShrink": "0",
+                                "height": "16px",
+                                "width": "16px"
+                               },
+                               "componentId": "Button-shortlist-gold-icon-ctryfb",
+                               "componentName": "HTML",
+                               "componentProps": {
+                                "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"' + (((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'currentColor' : 'none') + '\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z\"/></svg>' }}"
+                               },
+                               "componentSlots": {}
+                              }
+                             ],
+                             "slotId": "Button-shortlist-gold-ctryfb:icon"
+                            }
+                           }
+                          },
+                          {
+                           "baseStyles": {},
+                           "componentEvents": {
+                            "click": {
+                             "action": "Run Script",
+                             "event": "click",
+                             "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconnectWith({ name: item.name, company_name: item.company_name });"
+                            }
+                           },
+                           "componentId": "Button-contact-gold-ctryfb",
+                           "componentName": "Button",
+                           "componentProps": {
+                            "iconLeft": "lucide-message-square",
+                            "label": "Connect",
+                            "variant": "subtle"
+                           },
+                           "componentSlots": {}
+                          }
+                         ],
+                         "componentId": "row-gold-actions-ctryfb",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "originalElement": "div"
+                        }
+                       ],
+                       "componentId": "ListCell-actions-gold-ctryfb",
+                       "componentName": "ListCell",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {
+                        "gridColumn": "1 / -1",
+                        "order": "2",
+                        "paddingBottom": "20px",
+                        "paddingTop": "0px"
+                       }
+                      },
+                      {
+                       "baseStyles": {
+                        "alignItems": "flex-start",
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "gap": "4px",
+                        "gridColumn": "1 / -1",
+                        "marginTop": "12px",
+                        "paddingBottom": "29px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "display": "flex",
+                          "flexDirection": "row",
+                          "flexWrap": "wrap",
+                          "gap": "16px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "flexDirection": "row",
+                            "gap": "4px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "flexShrink": "0",
+                              "height": "14px",
+                              "width": "14px"
+                             },
+                             "componentId": "row-gold-rate-icon-ctryfb",
+                             "componentName": "Icon",
+                             "componentProps": {
+                              "icon": "lucide-dollar-sign"
+                             },
+                             "componentSlots": {}
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)"
+                             },
+                             "componentId": "row-gold-rate-text-ctryfb",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-p-sm",
+                              "tag": "span",
+                              "text": "{{ item.hourly_rate ? hourlyRate(item.hourly_rate, item.currency) : 'Rate on request' }}"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "row-gold-rate-ctryfb",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "flex",
+                            "flexDirection": "row",
+                            "gap": "4px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "flexShrink": "0",
+                              "height": "14px",
+                              "width": "14px"
+                             },
+                             "componentId": "row-gold-rating-icon-ctryfb",
+                             "componentName": "Icon",
+                             "componentProps": {
+                              "icon": "lucide-star"
+                             },
+                             "componentSlots": {}
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)"
+                             },
+                             "componentId": "row-gold-rating-text-ctryfb",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-p-sm",
+                              "tag": "span",
+                              "text": "{{ item.rating ? item.rating + ' (' + (item.review_count || 0) + ')' : 'No ratings yet' }}"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "row-gold-rating-ctryfb",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div"
+                          },
+                          {
+                           "baseStyles": {
+                            "alignItems": "center",
+                            "display": "{{ item.response_time_hours ? 'flex' : 'none' }}",
+                            "flexDirection": "row",
+                            "gap": "4px"
+                           },
+                           "children": [
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)",
+                              "flexShrink": "0",
+                              "height": "14px",
+                              "width": "14px"
+                             },
+                             "componentId": "row-gold-response-icon-ctryfb",
+                             "componentName": "Icon",
+                             "componentProps": {
+                              "icon": "lucide-clock"
+                             },
+                             "componentSlots": {}
+                            },
+                            {
+                             "baseStyles": {
+                              "color": "var(--ink-gray-6)"
+                             },
+                             "componentId": "row-gold-response-text-ctryfb",
+                             "componentName": "TextBlock",
+                             "componentProps": {
+                              "fontSize": "text-p-sm",
+                              "tag": "p",
+                              "text": "{{ 'Typically ' + item.response_time_hours + 'h' }}"
+                             },
+                             "componentSlots": {}
+                            }
+                           ],
+                           "componentId": "row-gold-response-ctryfb",
+                           "componentName": "container",
+                           "componentProps": {},
+                           "componentSlots": {},
+                           "originalElement": "div"
+                          }
+                         ],
+                         "componentId": "row-gold-stats-row-ctryfb",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "alignSelf": "flex-start",
+                          "color": "var(--ink-gray-6)",
+                          "display": "{{ item.success_story_count || (item.business_processes && item.business_processes.length) || item.industry ? 'inline-block' : 'none' }}",
+                          "margin": "0px"
+                         },
+                         "componentId": "row-gold-stories-ctryfb",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "fontSize": "text-p-sm",
+                          "tag": "span",
+                          "text": "{{ item.success_story_count ? (item.success_story_count + ' success ' + (item.success_story_count === 1 ? 'story' : 'stories') + ' across ' + (item.success_story_categories || []).slice(0, 2).join(', ') + ((item.success_story_categories || []).length > 2 ? ' +' + ((item.success_story_categories.length) - 2) + ' more' : '')) : (item.business_processes && item.business_processes.length) ? ('Expertise across ' + item.business_processes.slice(0, 2).join(', ') + (item.business_processes.length > 2 ? ' +' + (item.business_processes.length - 2) + ' more' : '')) : item.industry ? ('Expertise in ' + item.industry) : '' }}"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "row-meta-gold-ctryfb",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "mobileStyles": {
+                        "order": "1",
+                        "paddingBottom": "12px"
+                       },
+                       "originalElement": "div"
+                      }
+                     ],
+                     "componentId": "ListRow-gold-ctryfb",
+                     "componentName": "ListRow",
+                     "componentProps": {
+                      "route": "{{ '/partner-profile-redesign/' + item.name }}",
+                      "value": "{{ value }}"
+                     },
+                     "componentSlots": {}
+                    }
+                   ],
+                   "slotId": "ListRows-91e783f6b-ctryfb:default",
+                   "slotName": "default"
+                  }
+                 }
+                }
+               ],
+               "componentId": "container-npica7qj3-ctryfb",
+               "componentName": "container",
+               "originalElement": "div"
+              }
+             ],
+             "componentId": "List-pd-ctryfb",
+             "componentName": "List",
+             "componentProps": {
+              "columns": [
+               "auto",
+               "minmax(0,1fr)",
+               "auto"
+              ],
+              "divider": "full"
+             }
+            }
+           ],
+           "componentId": "wizard-country-fallback-section",
+           "componentName": "container",
+           "originalElement": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "{{ (selectedCategories && selectedCategories.length && categoryFallback.data && categoryFallback.data.length) ? 'flex' : 'none' }}",
+            "flexDirection": "column",
+            "marginTop": "48px",
+            "paddingTop": "0px"
+           },
+           "children": [
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "flexShrink": "1",
+              "height": "fit-content",
+              "paddingLeft": "12px"
              },
              "blockName": "container",
              "children": [
@@ -1844,20 +2537,7 @@
                "componentProps": {
                 "fontSize": "text-lg",
                 "tag": "span",
-                "text": "Proven in other industries"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-6)",
-                "marginBottom": "12px"
-               },
-               "componentId": "wizard-fallback-message",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-sm",
-                "tag": "span",
-                "text": "{{ 'No published ' + ((selectedCategories || []).join(', ')) + ' work yet.' }}"
+                "text": "Partners in other industries"
                }
               }
              ],
@@ -1870,7 +2550,7 @@
             },
             {
              "baseStyles": {
-              "--list-gap": "14px",
+              "--list-gap": "12px",
               "display": "{{ (categoryFallback.data && categoryFallback.data.length) ? 'block' : 'none' }}",
               "isolation": "isolate"
              },
@@ -1905,7 +2585,7 @@
                       {
                        "baseStyles": {
                         "alignSelf": "flex-start",
-                        "paddingTop": "24px"
+                        "paddingTop": "28px"
                        },
                        "children": [
                         {
@@ -1960,14 +2640,14 @@
                         "gap": "0px",
                         "gridRow": "span 1",
                         "margin": "0px",
-                        "paddingTop": "24px"
+                        "paddingTop": "28px"
                        },
                        "children": [
                         {
                          "baseStyles": {
                           "display": "flex",
                           "flexDirection": "column",
-                          "gap": "8px"
+                          "gap": "2px"
                          },
                          "children": [
                           {
@@ -2058,26 +2738,12 @@
                            "children": [
                             {
                              "baseStyles": {
-                              "color": "var(--ink-gray-5)",
-                              "flexShrink": "0",
-                              "height": "12px",
-                              "width": "12px"
-                             },
-                             "componentId": "row-gold-location-icon-fb",
-                             "componentName": "Icon",
-                             "componentProps": {
-                              "icon": "lucide-map-pin"
-                             },
-                             "componentSlots": {}
-                            },
-                            {
-                             "baseStyles": {
-                              "color": "var(--ink-gray-5)"
+                              "color": "var(--ink-gray-6)"
                              },
                              "componentId": "row-gold-location-text-fb",
                              "componentName": "TextBlock",
                              "componentProps": {
-                              "fontSize": "text-xs",
+                              "fontSize": "text-p-sm",
                               "tag": "span",
                               "text": "{{ item.city ? item.city + ', ' + item.country : item.country }}"
                              },
@@ -2106,7 +2772,7 @@
                       {
                        "baseStyles": {
                         "alignSelf": "flex-start",
-                        "paddingTop": "24px"
+                        "paddingTop": "28px"
                        },
                        "children": [
                         {
@@ -2119,11 +2785,10 @@
                          "children": [
                           {
                            "attributes": {
-                            "aria-label": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove from shortlist' : 'Add to shortlist' }}"
+                            "aria-label": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove ' + item.company_name + ' from saved' : 'Save ' + item.company_name }}"
                            },
                            "baseStyles": {
                             "alignItems": "center",
-                            "color": "{{ (myShortlist.data || []).includes(item.name) ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}",
                             "display": "flex",
                             "flexShrink": "0",
                             "height": "32px",
@@ -2134,23 +2799,41 @@
                             "click": {
                              "action": "Run Script",
                              "event": "click",
-                             "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nif (!(myContext.data && myContext.data.customer)) {\n  const prevLocal = localShortlist.value || [];\n  localShortlist.value = prevLocal.includes(partner) ? prevLocal.filter((n) => n !== partner) : [...prevLocal, partner];\n  try { localStorage.setItem('connect_local_shortlist', JSON.stringify(localShortlist.value)); } catch (e) {}\n  return;\n}\nconst prevReal = myShortlist.data || [];\nconst already = prevReal.includes(partner);\nmyShortlist.data = already ? prevReal.filter((n) => n !== partner) : [...prevReal, partner];\nconst fn = already ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = prevReal;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                             "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nif (!(myContext.data && myContext.data.customer)) {\n  const prevLocal = localShortlist.value || [];\n  localShortlist.value = prevLocal.includes(partner) ? prevLocal.filter((n) => n !== partner) : [...prevLocal, partner];\n  try { localStorage.setItem('connect_local_shortlist', JSON.stringify(localShortlist.value)); } catch (e) {}\n  return;\n}\nconst prevReal = myShortlist.data || [];\nconst already = prevReal.includes(partner);\nmyShortlist.data = already ? prevReal.filter((n) => n !== partner) : [...prevReal, partner];\nconst fn = already ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = prevReal;\n  toast({ title: \"Couldn't save partner\", text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                             }
                            },
                            "componentId": "Button-shortlist-gold-fb",
                            "componentName": "Button",
                            "componentProps": {
-                            "icon": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'lucide-bookmark-check' : 'lucide-bookmark' }}",
                             "size": "md",
-                            "tooltip": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove from shortlist' : 'Add to shortlist' }}",
+                            "tooltip": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove from saved' : 'Save' }}",
                             "variant": "ghost"
                            },
-                           "componentSlots": {}
+                           "componentSlots": {
+                            "icon": {
+                             "parentBlockId": "Button-shortlist-gold-fb",
+                             "slotContent": [
+                              {
+                               "baseStyles": {
+                                "display": "flex",
+                                "flexShrink": "0",
+                                "height": "16px",
+                                "width": "16px"
+                               },
+                               "componentId": "Button-shortlist-gold-icon-fb",
+                               "componentName": "HTML",
+                               "componentProps": {
+                                "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"' + (((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'currentColor' : 'none') + '\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z\"/></svg>' }}"
+                               },
+                               "componentSlots": {}
+                              }
+                             ],
+                             "slotId": "Button-shortlist-gold-fb:icon"
+                            }
+                           }
                           },
                           {
-                           "baseStyles": {
-                            "color": "var(--ink-gray-6, oklch(0.439 0 0))"
-                           },
+                           "baseStyles": {},
                            "componentEvents": {
                             "click": {
                              "action": "Run Script",
@@ -2194,7 +2877,7 @@
                         "gap": "4px",
                         "gridColumn": "1 / -1",
                         "marginTop": "12px",
-                        "paddingBottom": "24px"
+                        "paddingBottom": "29px"
                        },
                        "children": [
                         {
@@ -2203,7 +2886,7 @@
                           "display": "flex",
                           "flexDirection": "row",
                           "flexWrap": "wrap",
-                          "gap": "24px"
+                          "gap": "16px"
                          },
                          "children": [
                           {
@@ -2216,10 +2899,10 @@
                            "children": [
                             {
                              "baseStyles": {
-                              "color": "var(--ink-gray-5)",
+                              "color": "var(--ink-gray-6)",
                               "flexShrink": "0",
-                              "height": "12px",
-                              "width": "12px"
+                              "height": "14px",
+                              "width": "14px"
                              },
                              "componentId": "row-gold-rate-icon-fb",
                              "componentName": "Icon",
@@ -2230,12 +2913,12 @@
                             },
                             {
                              "baseStyles": {
-                              "color": "var(--ink-gray-5)"
+                              "color": "var(--ink-gray-6)"
                              },
                              "componentId": "row-gold-rate-text-fb",
                              "componentName": "TextBlock",
                              "componentProps": {
-                              "fontSize": "text-xs",
+                              "fontSize": "text-p-sm",
                               "tag": "span",
                               "text": "{{ item.hourly_rate ? hourlyRate(item.hourly_rate, item.currency) : 'Rate on request' }}"
                              },
@@ -2258,10 +2941,10 @@
                            "children": [
                             {
                              "baseStyles": {
-                              "color": "var(--ink-gray-5)",
+                              "color": "var(--ink-gray-6)",
                               "flexShrink": "0",
-                              "height": "12px",
-                              "width": "12px"
+                              "height": "14px",
+                              "width": "14px"
                              },
                              "componentId": "row-gold-rating-icon-fb",
                              "componentName": "Icon",
@@ -2272,12 +2955,12 @@
                             },
                             {
                              "baseStyles": {
-                              "color": "var(--ink-gray-5)"
+                              "color": "var(--ink-gray-6)"
                              },
                              "componentId": "row-gold-rating-text-fb",
                              "componentName": "TextBlock",
                              "componentProps": {
-                              "fontSize": "text-xs",
+                              "fontSize": "text-p-sm",
                               "tag": "span",
                               "text": "{{ item.rating ? item.rating + ' (' + (item.review_count || 0) + ')' : 'No ratings yet' }}"
                              },
@@ -2300,10 +2983,10 @@
                            "children": [
                             {
                              "baseStyles": {
-                              "color": "var(--ink-gray-5)",
+                              "color": "var(--ink-gray-6)",
                               "flexShrink": "0",
-                              "height": "12px",
-                              "width": "12px"
+                              "height": "14px",
+                              "width": "14px"
                              },
                              "componentId": "row-gold-response-icon-fb",
                              "componentName": "Icon",
@@ -2314,13 +2997,13 @@
                             },
                             {
                              "baseStyles": {
-                              "color": "var(--ink-gray-5)"
+                              "color": "var(--ink-gray-6)"
                              },
                              "componentId": "row-gold-response-text-fb",
                              "componentName": "TextBlock",
                              "componentProps": {
-                              "fontSize": "text-xs",
-                              "tag": "span",
+                              "fontSize": "text-p-sm",
+                              "tag": "p",
                               "text": "{{ 'Typically ' + item.response_time_hours + 'h' }}"
                              },
                              "componentSlots": {}
@@ -2342,15 +3025,14 @@
                         {
                          "baseStyles": {
                           "alignSelf": "flex-start",
-                          "color": "var(--ink-gray-5)",
+                          "color": "var(--ink-gray-6)",
                           "display": "{{ item.success_story_count || (item.business_processes && item.business_processes.length) || item.industry ? 'inline-block' : 'none' }}",
-                          "lineHeight": "1.35",
                           "margin": "0px"
                          },
                          "componentId": "row-gold-stories-fb",
                          "componentName": "TextBlock",
                          "componentProps": {
-                          "fontSize": "text-xs",
+                          "fontSize": "text-p-sm",
                           "tag": "span",
                           "text": "{{ item.success_story_count ? (item.success_story_count + ' success ' + (item.success_story_count === 1 ? 'story' : 'stories') + ' across ' + (item.success_story_categories || []).slice(0, 2).join(', ') + ((item.success_story_categories || []).length > 2 ? ' +' + ((item.success_story_categories.length) - 2) + ' more' : '')) : (item.business_processes && item.business_processes.length) ? ('Expertise across ' + item.business_processes.slice(0, 2).join(', ') + (item.business_processes.length > 2 ? ' +' + (item.business_processes.length - 2) + ' more' : '')) : item.industry ? ('Expertise in ' + item.industry) : '' }}"
                          },
@@ -2406,21 +3088,19 @@
           },
           {
            "baseStyles": {
-            "borderTop": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
             "display": "{{ (selectedApps && selectedApps.length && appFallback.data && appFallback.data.length) ? 'flex' : 'none' }}",
             "flexDirection": "column",
-            "marginTop": "32px",
-            "paddingTop": "24px"
+            "marginTop": "48px",
+            "paddingTop": "0px"
            },
            "children": [
             {
              "baseStyles": {
               "display": "flex",
               "flexDirection": "column",
-              "flexShrink": 1,
+              "flexShrink": "1",
               "height": "fit-content",
-              "marginLeft": "10px",
-              "width": "343px"
+              "paddingLeft": "12px"
              },
              "blockName": "container",
              "children": [
@@ -2435,20 +3115,7 @@
                "componentProps": {
                 "fontSize": "text-lg",
                 "tag": "span",
-                "text": "Proven in other apps"
-               }
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-6)",
-                "marginBottom": "12px"
-               },
-               "componentId": "wizard-app-fallback-message",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-sm",
-                "tag": "span",
-                "text": "{{ 'No published ' + ((selectedApps || []).join(', ')) + ' work yet.' }}"
+                "text": "Partners who work with other apps"
                }
               }
              ],
@@ -2461,7 +3128,7 @@
             },
             {
              "baseStyles": {
-              "--list-gap": "14px",
+              "--list-gap": "12px",
               "display": "{{ (appFallback.data && appFallback.data.length) ? 'block' : 'none' }}",
               "isolation": "isolate"
              },
@@ -2496,7 +3163,7 @@
                       {
                        "baseStyles": {
                         "alignSelf": "flex-start",
-                        "paddingTop": "24px"
+                        "paddingTop": "28px"
                        },
                        "children": [
                         {
@@ -2551,14 +3218,14 @@
                         "gap": "0px",
                         "gridRow": "span 1",
                         "margin": "0px",
-                        "paddingTop": "24px"
+                        "paddingTop": "28px"
                        },
                        "children": [
                         {
                          "baseStyles": {
                           "display": "flex",
                           "flexDirection": "column",
-                          "gap": "8px"
+                          "gap": "2px"
                          },
                          "children": [
                           {
@@ -2649,26 +3316,12 @@
                            "children": [
                             {
                              "baseStyles": {
-                              "color": "var(--ink-gray-5)",
-                              "flexShrink": "0",
-                              "height": "12px",
-                              "width": "12px"
-                             },
-                             "componentId": "row-gold-location-icon-appfb",
-                             "componentName": "Icon",
-                             "componentProps": {
-                              "icon": "lucide-map-pin"
-                             },
-                             "componentSlots": {}
-                            },
-                            {
-                             "baseStyles": {
-                              "color": "var(--ink-gray-5)"
+                              "color": "var(--ink-gray-6)"
                              },
                              "componentId": "row-gold-location-text-appfb",
                              "componentName": "TextBlock",
                              "componentProps": {
-                              "fontSize": "text-xs",
+                              "fontSize": "text-p-sm",
                               "tag": "span",
                               "text": "{{ item.city ? item.city + ', ' + item.country : item.country }}"
                              },
@@ -2697,7 +3350,7 @@
                       {
                        "baseStyles": {
                         "alignSelf": "flex-start",
-                        "paddingTop": "24px"
+                        "paddingTop": "28px"
                        },
                        "children": [
                         {
@@ -2710,11 +3363,10 @@
                          "children": [
                           {
                            "attributes": {
-                            "aria-label": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove from shortlist' : 'Add to shortlist' }}"
+                            "aria-label": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove ' + item.company_name + ' from saved' : 'Save ' + item.company_name }}"
                            },
                            "baseStyles": {
                             "alignItems": "center",
-                            "color": "{{ (myShortlist.data || []).includes(item.name) ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}",
                             "display": "flex",
                             "flexShrink": "0",
                             "height": "32px",
@@ -2725,23 +3377,41 @@
                             "click": {
                              "action": "Run Script",
                              "event": "click",
-                             "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nif (!(myContext.data && myContext.data.customer)) {\n  const prevLocal = localShortlist.value || [];\n  localShortlist.value = prevLocal.includes(partner) ? prevLocal.filter((n) => n !== partner) : [...prevLocal, partner];\n  try { localStorage.setItem('connect_local_shortlist', JSON.stringify(localShortlist.value)); } catch (e) {}\n  return;\n}\nconst prevReal = myShortlist.data || [];\nconst already = prevReal.includes(partner);\nmyShortlist.data = already ? prevReal.filter((n) => n !== partner) : [...prevReal, partner];\nconst fn = already ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = prevReal;\n  toast({ title: 'Could not update shortlist', text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
+                             "script": "if (eventArgs && eventArgs[0]) { eventArgs[0].preventDefault(); eventArgs[0].stopPropagation(); }\nconst partner = item.name;\nif (!(myContext.data && myContext.data.customer)) {\n  const prevLocal = localShortlist.value || [];\n  localShortlist.value = prevLocal.includes(partner) ? prevLocal.filter((n) => n !== partner) : [...prevLocal, partner];\n  try { localStorage.setItem('connect_local_shortlist', JSON.stringify(localShortlist.value)); } catch (e) {}\n  return;\n}\nconst prevReal = myShortlist.data || [];\nconst already = prevReal.includes(partner);\nmyShortlist.data = already ? prevReal.filter((n) => n !== partner) : [...prevReal, partner];\nconst fn = already ? 'connect.api.customer.remove_from_shortlist' : 'connect.api.customer.add_to_shortlist';\ncall(fn, { partner }).then(() => { myShortlist.reload(); }).catch((err) => {\n  myShortlist.data = prevReal;\n  toast({ title: \"Couldn't save partner\", text: (err && err.message) || 'Please try again', icon: 'x' });\n});"
                             }
                            },
                            "componentId": "Button-shortlist-gold-appfb",
                            "componentName": "Button",
                            "componentProps": {
-                            "icon": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'lucide-bookmark-check' : 'lucide-bookmark' }}",
                             "size": "md",
-                            "tooltip": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove from shortlist' : 'Add to shortlist' }}",
+                            "tooltip": "{{ ((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'Remove from saved' : 'Save' }}",
                             "variant": "ghost"
                            },
-                           "componentSlots": {}
+                           "componentSlots": {
+                            "icon": {
+                             "parentBlockId": "Button-shortlist-gold-appfb",
+                             "slotContent": [
+                              {
+                               "baseStyles": {
+                                "display": "flex",
+                                "flexShrink": "0",
+                                "height": "16px",
+                                "width": "16px"
+                               },
+                               "componentId": "Button-shortlist-gold-icon-appfb",
+                               "componentName": "HTML",
+                               "componentProps": {
+                                "html": "{{ '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"' + (((myShortlist.data || []).includes(item.name) || (localShortlist || []).includes(item.name)) ? 'currentColor' : 'none') + '\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z\"/></svg>' }}"
+                               },
+                               "componentSlots": {}
+                              }
+                             ],
+                             "slotId": "Button-shortlist-gold-appfb:icon"
+                            }
+                           }
                           },
                           {
-                           "baseStyles": {
-                            "color": "var(--ink-gray-6, oklch(0.439 0 0))"
-                           },
+                           "baseStyles": {},
                            "componentEvents": {
                             "click": {
                              "action": "Run Script",
@@ -2785,7 +3455,7 @@
                         "gap": "4px",
                         "gridColumn": "1 / -1",
                         "marginTop": "12px",
-                        "paddingBottom": "24px"
+                        "paddingBottom": "29px"
                        },
                        "children": [
                         {
@@ -2794,7 +3464,7 @@
                           "display": "flex",
                           "flexDirection": "row",
                           "flexWrap": "wrap",
-                          "gap": "24px"
+                          "gap": "16px"
                          },
                          "children": [
                           {
@@ -2807,10 +3477,10 @@
                            "children": [
                             {
                              "baseStyles": {
-                              "color": "var(--ink-gray-5)",
+                              "color": "var(--ink-gray-6)",
                               "flexShrink": "0",
-                              "height": "12px",
-                              "width": "12px"
+                              "height": "14px",
+                              "width": "14px"
                              },
                              "componentId": "row-gold-rate-icon-appfb",
                              "componentName": "Icon",
@@ -2821,12 +3491,12 @@
                             },
                             {
                              "baseStyles": {
-                              "color": "var(--ink-gray-5)"
+                              "color": "var(--ink-gray-6)"
                              },
                              "componentId": "row-gold-rate-text-appfb",
                              "componentName": "TextBlock",
                              "componentProps": {
-                              "fontSize": "text-xs",
+                              "fontSize": "text-p-sm",
                               "tag": "span",
                               "text": "{{ item.hourly_rate ? hourlyRate(item.hourly_rate, item.currency) : 'Rate on request' }}"
                              },
@@ -2849,10 +3519,10 @@
                            "children": [
                             {
                              "baseStyles": {
-                              "color": "var(--ink-gray-5)",
+                              "color": "var(--ink-gray-6)",
                               "flexShrink": "0",
-                              "height": "12px",
-                              "width": "12px"
+                              "height": "14px",
+                              "width": "14px"
                              },
                              "componentId": "row-gold-rating-icon-appfb",
                              "componentName": "Icon",
@@ -2863,12 +3533,12 @@
                             },
                             {
                              "baseStyles": {
-                              "color": "var(--ink-gray-5)"
+                              "color": "var(--ink-gray-6)"
                              },
                              "componentId": "row-gold-rating-text-appfb",
                              "componentName": "TextBlock",
                              "componentProps": {
-                              "fontSize": "text-xs",
+                              "fontSize": "text-p-sm",
                               "tag": "span",
                               "text": "{{ item.rating ? item.rating + ' (' + (item.review_count || 0) + ')' : 'No ratings yet' }}"
                              },
@@ -2891,10 +3561,10 @@
                            "children": [
                             {
                              "baseStyles": {
-                              "color": "var(--ink-gray-5)",
+                              "color": "var(--ink-gray-6)",
                               "flexShrink": "0",
-                              "height": "12px",
-                              "width": "12px"
+                              "height": "14px",
+                              "width": "14px"
                              },
                              "componentId": "row-gold-response-icon-appfb",
                              "componentName": "Icon",
@@ -2905,13 +3575,13 @@
                             },
                             {
                              "baseStyles": {
-                              "color": "var(--ink-gray-5)"
+                              "color": "var(--ink-gray-6)"
                              },
                              "componentId": "row-gold-response-text-appfb",
                              "componentName": "TextBlock",
                              "componentProps": {
-                              "fontSize": "text-xs",
-                              "tag": "span",
+                              "fontSize": "text-p-sm",
+                              "tag": "p",
                               "text": "{{ 'Typically ' + item.response_time_hours + 'h' }}"
                              },
                              "componentSlots": {}
@@ -2933,15 +3603,14 @@
                         {
                          "baseStyles": {
                           "alignSelf": "flex-start",
-                          "color": "var(--ink-gray-5)",
+                          "color": "var(--ink-gray-6)",
                           "display": "{{ item.success_story_count || (item.business_processes && item.business_processes.length) || item.industry ? 'inline-block' : 'none' }}",
-                          "lineHeight": "1.35",
                           "margin": "0px"
                          },
                          "componentId": "row-gold-stories-appfb",
                          "componentName": "TextBlock",
                          "componentProps": {
-                          "fontSize": "text-xs",
+                          "fontSize": "text-p-sm",
                           "tag": "span",
                           "text": "{{ item.success_story_count ? (item.success_story_count + ' success ' + (item.success_story_count === 1 ? 'story' : 'stories') + ' across ' + (item.success_story_categories || []).slice(0, 2).join(', ') + ((item.success_story_categories || []).length > 2 ? ' +' + ((item.success_story_categories.length) - 2) + ' more' : '')) : (item.business_processes && item.business_processes.length) ? ('Expertise across ' + item.business_processes.slice(0, 2).join(', ') + (item.business_processes.length > 2 ? ' +' + (item.business_processes.length - 2) + ' more' : '')) : item.industry ? ('Expertise in ' + item.industry) : '' }}"
                          },
@@ -3006,25 +3675,29 @@
         },
         {
          "baseStyles": {
-          "alignItems": "flex-start",
-          "borderTop": "1px solid var(--outline-gray-2, oklch(0.89 0 0))",
-          "display": "flex",
-          "flexDirection": "column",
-          "gap": "10px",
-          "margin": "24px auto 0",
+          "alignItems": "center",
+          "display": "{{ directoryPartners.data && !directoryPartners.error ? 'flex' : 'none' }}",
+          "flexDirection": "row",
+          "flexWrap": "wrap",
+          "gap": "12px",
+          "justifyContent": "space-between",
+          "margin": "auto auto 0",
           "maxWidth": "800px",
-          "padding": "32px 20px 40px",
+          "paddingBottom": "40px",
+          "paddingLeft": "20px",
+          "paddingRight": "20px",
+          "paddingTop": "64px",
           "width": "100%"
          },
          "children": [
           {
            "baseStyles": {
-            "color": "var(--ink-gray-6, #6b6b6b)"
+            "color": "var(--ink-gray-7)"
            },
            "componentId": "text-feedback-copy",
            "componentName": "TextBlock",
            "componentProps": {
-            "fontSize": "text-sm",
+            "fontSize": "text-p-base",
             "tag": "span",
             "text": "Help us improve by providing feedback on your search experience"
            }
@@ -3100,7 +3773,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-21 20:36:00.000000",
+ "modified": "2026-11-23 10:10:22.181052",
  "modified_by": "Administrator",
  "name": "partner_directory_redesign",
  "owner": "Administrator",
@@ -3199,7 +3872,7 @@
    "fetch_document_using_filters": 0,
    "limit": 0,
    "method": "GET",
-   "on_success": "function onSuccess(data) {\n  if (bootstrapped.value) return;\n  bootstrapped.value = true;\n  if (route.query.category || route.query.region || route.query.country) {\n    if (route.query.category) { selectedCategories.value = [].concat(route.query.category); }\n    if (route.query.country) { selectedCountries.value = [route.query.country]; }\n    if (route.query.region) { const REGION_TO_COUNTRIES = { 'India': ['India'], 'Asia': ['Philippines','Indonesia','Myanmar','Pakistan','Singapore','Australia','Bangladesh','China','Sri Lanka','Thailand','Vietnam'], 'Middle East': ['Saudi Arabia','United Arab Emirates','Egypt','Qatar','Kuwait','Oman','Bahrain','Iraq','Jordan','Libya','Yemen'], 'Africa': ['Kenya','Tanzania','Congo, The Democratic Republic of the','Ghana','Mauritius','Nigeria','South Africa','Uganda'], 'Europe': ['Germany','France','Italy','Malta','Netherlands','Spain','Switzerland','United Kingdom'], 'Americas': ['United States','Canada'] }; let wizardRegions = []; try { wizardRegions = JSON.parse(route.query.region); } catch (e) { wizardRegions = [route.query.region]; } const mappedCountries = wizardRegions.flatMap(r => REGION_TO_COUNTRIES[r] || []); if (mappedCountries.length) { selectedCountries.value = mappedCountries; } }\n  } else { try { const saved = JSON.parse(localStorage.getItem('connect_directory_filters') || 'null'); if (saved) { searchTerm.value = saved.searchTerm || ''; tierFilter.value = saved.tierFilter || ''; selectedCountries.value = saved.selectedCountries || []; selectedCategories.value = saved.selectedCategories || []; selectedApps.value = saved.selectedApps || []; } } catch (e) {} }\n  try { mockLoggedIn.value = localStorage.getItem('connect_mock_logged_in') === '1'; } catch (e) {}\n  try { localShortlist.value = JSON.parse(localStorage.getItem('connect_local_shortlist') || '[]'); } catch (e) { localShortlist.value = []; }\n  const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); }); filterFacets.update({ params }); filterFacets.reload();\n}",
+   "on_success": "function onSuccess(data) {\n  if (bootstrapped.value) return;\n  bootstrapped.value = true;\n  if (route.query.category || route.query.region || route.query.country) {\n    if (route.query.category) { selectedCategories.value = [].concat(route.query.category); }\n    if (route.query.country) { selectedCountries.value = [route.query.country]; }\n    if (route.query.region) { const REGION_TO_COUNTRIES = { 'India': ['India'], 'Asia': ['Philippines','Indonesia','Myanmar','Pakistan','Singapore','Australia','Bangladesh','China','Sri Lanka','Thailand','Vietnam'], 'Middle East': ['Saudi Arabia','United Arab Emirates','Egypt','Qatar','Kuwait','Oman','Bahrain','Iraq','Jordan','Libya','Yemen'], 'Africa': ['Kenya','Tanzania','Congo, The Democratic Republic of the','Ghana','Mauritius','Nigeria','South Africa','Uganda'], 'Europe': ['Germany','France','Italy','Malta','Netherlands','Spain','Switzerland','United Kingdom'], 'Americas': ['United States','Canada'] }; let wizardRegions = []; try { wizardRegions = JSON.parse(route.query.region); } catch (e) { wizardRegions = [route.query.region]; } const mappedCountries = wizardRegions.flatMap(r => REGION_TO_COUNTRIES[r] || []); if (mappedCountries.length) { selectedCountries.value = mappedCountries; } }\n  } else { try { const saved = JSON.parse(localStorage.getItem('connect_directory_filters') || 'null'); if (saved) { searchTerm.value = saved.searchTerm || ''; tierFilter.value = saved.tierFilter || ''; selectedCountries.value = saved.selectedCountries || []; selectedCategories.value = saved.selectedCategories || []; selectedApps.value = saved.selectedApps || []; } } catch (e) {} }\n  try { mockLoggedIn.value = localStorage.getItem('connect_mock_logged_in') === '1'; } catch (e) {}\n  try { localShortlist.value = JSON.parse(localStorage.getItem('connect_local_shortlist') || '[]'); } catch (e) { localShortlist.value = []; }\n  const baseParams = { limit: 9, search: searchTerm.value, tier: tierFilter.value, country: JSON.stringify(selectedCountries.value), product: JSON.stringify(selectedApps.value), business_process: businessProcessFilter.value, implementation_type: implementationTypeFilter.value, language: languageFilter.value, min_rating: minRatingFilter.value, max_response_time: maxResponseTimeFilter.value }; const params = { ...baseParams, category: JSON.stringify(selectedCategories.value) }; directoryPartners.update({ params }); directoryPartners.reload().then(() => { const excludeNames = (directoryPartners.data || []).map(p => p.name); categoryFallback.update({ params: { ...baseParams, category: '', exclude: JSON.stringify(excludeNames) } }); categoryFallback.reload(); if ((selectedCountries.value || []).length) { countryFallback.update({ params: { ...params, country: '', exclude: JSON.stringify(excludeNames) } }); countryFallback.reload(); } }); filterFacets.update({ params }); filterFacets.reload();\n}",
    "resource_name": "filterFacets",
    "resource_type": "API Resource",
    "url": "/api/method/connect.api.partner.list_directory_filter_facets"
@@ -3210,6 +3883,15 @@
    "limit": 0,
    "method": "GET",
    "resource_name": "appFallback",
+   "resource_type": "API Resource",
+   "url": "/api/method/connect.api.partner.list_directory_partners"
+  },
+  {
+   "auto": 1,
+   "fetch_document_using_filters": 0,
+   "limit": 0,
+   "method": "GET",
+   "resource_name": "countryFallback",
    "resource_type": "API Resource",
    "url": "/api/method/connect.api.partner.list_directory_partners"
   }
