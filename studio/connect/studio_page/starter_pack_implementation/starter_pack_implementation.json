@@ -74,1430 +74,1447 @@
        },
        "children": [
         {
+         "blockName": "ConnectScrollArea",
+         "componentId": "left-scroll",
+         "componentName": "ConnectScrollArea",
+         "componentProps": {},
          "baseStyles": {
           "flex": "1",
           "margin": "0 auto",
           "maxWidth": "760px",
           "minWidth": "0px",
-          "overflowY": "auto",
-          "padding": "0 8px",
-          "paddingTop": "32px",
-          "scrollbarColor": "var(--outline-gray-3) transparent",
-          "scrollbarWidth": "thin",
           "width": "54%"
          },
-         "children": [
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flexDirection": "column",
-            "gap": "20px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-8)",
-              "fontSize": "18px",
-              "fontWeight": "600",
-              "letterSpacing": "0.01em",
-              "lineHeight": "1.3"
-             },
-             "componentId": "page-title",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "",
-              "tag": "p",
-              "text": "Set up your Starter Pack"
-             },
-             "componentSlots": {}
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-6)",
-              "display": "{{ loadError ? 'block' : 'none' }}",
-              "fontSize": "14px",
-              "lineHeight": "1.5"
-             },
-             "componentId": "load-error",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "tag": "p",
-              "text": "We couldn't load this order. Open it again from the checkout page, or contact Frappe."
-             },
-             "componentSlots": {}
-            },
-            {
-             "baseStyles": {
-              "display": "{{ loadError ? 'none' : 'flex' }}",
-              "flexDirection": "column"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "borderBottom": "1px solid var(--outline-gray-1)"
-               },
-               "children": [
-                {
-                 "attributes": {
-                  "aria-expanded": "{{ (openStep === 'pay-upfront') ? 'true' : 'false' }}",
-                  "role": "button",
-                  "tabindex": "0"
-                 },
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "cursor": "pointer",
-                  "display": "flex",
-                  "gap": "12px",
-                  "padding": "12px 0"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "display": "flex",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "justifyContent": "center",
-                    "width": "16px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "alignItems": "center",
-                      "backgroundColor": "var(--ink-gray-7)",
-                      "borderRadius": "50%",
-                      "display": "{{ stepStatus('pay-upfront') === 'completed' ? 'flex' : 'none' }}",
-                      "flexShrink": "0",
-                      "height": "16px",
-                      "justifyContent": "center",
-                      "width": "16px"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "white",
-                        "height": "10px",
-                        "width": "10px"
-                       },
-                       "componentId": "step-pay-upfront-status-check",
-                       "componentName": "Icon",
-                       "componentProps": {
-                        "icon": "lucide-check"
-                       },
-                       "componentSlots": {}
-                      }
-                     ],
-                     "componentId": "step-pay-upfront-status-done",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-4)",
-                      "display": "{{ stepStatus('pay-upfront') === 'completed' ? 'none' : 'flex' }}",
-                      "flexShrink": "0",
-                      "height": "16px",
-                      "width": "16px"
-                     },
-                     "componentId": "step-pay-upfront-status-pending",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "lucide-circle-dashed"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-pay-upfront-status-icon",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "flex": "1",
-                    "minWidth": "0px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "{{ stepStatus('pay-upfront') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
-                      "fontSize": "14px",
-                      "fontWeight": "500",
-                      "letterSpacing": "0.02em",
-                      "lineHeight": "1.15",
-                      "textDecoration": "{{ stepStatus('pay-upfront') === 'completed' ? 'line-through' : 'none' }}"
-                     },
-                     "componentId": "step-pay-upfront-title",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "tag": "span",
-                      "text": "Pay upfront"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-pay-upfront-title-wrap",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "transform": "{{ isStepOpen('pay-upfront') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
-                    "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
-                    "width": "16px"
-                   },
-                   "componentId": "step-pay-upfront-chevron",
-                   "componentName": "Icon",
-                   "componentProps": {
-                    "icon": "lucide-chevron-down"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "toggleStep('pay-upfront');"
-                  }
-                 },
-                 "componentId": "step-pay-upfront-trigger",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "{{ isStepOpen('pay-upfront') ? 'block' : 'none' }}",
-                  "padding": "0 4px 16px 28px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)",
-                    "fontSize": "14px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "1.5",
-                    "maxWidth": "65ch"
-                   },
-                   "componentId": "step-pay-upfront-description",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "p",
-                    "text": "{{ paidLine }}"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentId": "step-pay-upfront-content",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div",
-                 "mobileStyles": {
-                  "padding": "0px 0px 16px 28px"
-                 },
-                 "tabletStyles": {
-                  "padding": "0px 0px 16px 28px"
-                 }
-                }
-               ],
-               "componentId": "step-pay-upfront-item",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "borderBottom": "1px solid var(--outline-gray-1)"
-               },
-               "children": [
-                {
-                 "attributes": {
-                  "aria-expanded": "{{ (openStep === 'company') ? 'true' : 'false' }}",
-                  "role": "button",
-                  "tabindex": "0"
-                 },
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "cursor": "pointer",
-                  "display": "flex",
-                  "gap": "12px",
-                  "padding": "12px 0"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "display": "flex",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "justifyContent": "center",
-                    "width": "16px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "alignItems": "center",
-                      "backgroundColor": "var(--ink-gray-7)",
-                      "borderRadius": "50%",
-                      "display": "{{ stepStatus('company') === 'completed' ? 'flex' : 'none' }}",
-                      "flexShrink": "0",
-                      "height": "16px",
-                      "justifyContent": "center",
-                      "width": "16px"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "white",
-                        "height": "10px",
-                        "width": "10px"
-                       },
-                       "componentId": "step-company-status-check",
-                       "componentName": "Icon",
-                       "componentProps": {
-                        "icon": "lucide-check"
-                       },
-                       "componentSlots": {}
-                      }
-                     ],
-                     "componentId": "step-company-status-done",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-4)",
-                      "display": "{{ stepStatus('company') === 'completed' ? 'none' : 'flex' }}",
-                      "flexShrink": "0",
-                      "height": "16px",
-                      "width": "16px"
-                     },
-                     "componentId": "step-company-status-pending",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "lucide-circle-dashed"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-company-status-icon",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "flex": "1",
-                    "minWidth": "0px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "{{ stepStatus('company') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
-                      "fontSize": "14px",
-                      "fontWeight": "500",
-                      "letterSpacing": "0.02em",
-                      "lineHeight": "1.15",
-                      "textDecoration": "{{ stepStatus('company') === 'completed' ? 'line-through' : 'none' }}"
-                     },
-                     "componentId": "step-company-title",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "tag": "span",
-                      "text": "Tell us about your company"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-company-title-wrap",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "transform": "{{ isStepOpen('company') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
-                    "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
-                    "width": "16px"
-                   },
-                   "componentId": "step-company-chevron",
-                   "componentName": "Icon",
-                   "componentProps": {
-                    "icon": "lucide-chevron-down"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "toggleStep('company');"
-                  }
-                 },
-                 "componentId": "step-company-trigger",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "{{ isStepOpen('company') ? 'block' : 'none' }}",
-                  "padding": "0 4px 16px 28px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "{{ stepStatus('company') === 'completed' ? 'var(--ink-gray-7)' : 'var(--ink-gray-6)' }}",
-                    "fontSize": "14px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "1.5",
-                    "maxWidth": "65ch"
-                   },
-                   "componentId": "step-company-description",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "p",
-                    "text": "{{ stepStatus('company') === 'completed' ? companySummary : 'This helps Frappe\u2019s team prepare for your sessions.' }}"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "display": "flex",
-                    "gap": "8px",
-                    "marginTop": "12px"
-                   },
-                   "children": [
-                    {
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "openCompany();"
-                      }
-                     },
-                     "componentId": "step-company-action-btn",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "label": "{{ stepStatus('company') === 'completed' ? 'Edit' : 'Add details' }}",
-                      "variant": "{{ stepStatus('company') === 'completed' ? 'subtle' : 'solid' }}"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-company-actions",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  }
-                 ],
-                 "componentId": "step-company-content",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div",
-                 "mobileStyles": {
-                  "padding": "0px 0px 16px 28px"
-                 },
-                 "tabletStyles": {
-                  "padding": "0px 0px 16px 28px"
-                 }
-                }
-               ],
-               "componentId": "step-company-item",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "borderBottom": "1px solid var(--outline-gray-1)"
-               },
-               "children": [
-                {
-                 "attributes": {
-                  "aria-expanded": "{{ (openStep === 'kickoff') ? 'true' : 'false' }}",
-                  "role": "button",
-                  "tabindex": "0"
-                 },
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "cursor": "pointer",
-                  "display": "flex",
-                  "gap": "12px",
-                  "padding": "12px 0"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "display": "flex",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "justifyContent": "center",
-                    "width": "16px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "alignItems": "center",
-                      "backgroundColor": "var(--ink-gray-7)",
-                      "borderRadius": "50%",
-                      "display": "{{ stepStatus('kickoff') === 'completed' ? 'flex' : 'none' }}",
-                      "flexShrink": "0",
-                      "height": "16px",
-                      "justifyContent": "center",
-                      "width": "16px"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "white",
-                        "height": "10px",
-                        "width": "10px"
-                       },
-                       "componentId": "step-kickoff-status-check",
-                       "componentName": "Icon",
-                       "componentProps": {
-                        "icon": "lucide-check"
-                       },
-                       "componentSlots": {}
-                      }
-                     ],
-                     "componentId": "step-kickoff-status-done",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-4)",
-                      "display": "{{ stepStatus('kickoff') === 'completed' ? 'none' : 'flex' }}",
-                      "flexShrink": "0",
-                      "height": "16px",
-                      "width": "16px"
-                     },
-                     "componentId": "step-kickoff-status-pending",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "lucide-circle-dashed"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-kickoff-status-icon",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "flex": "1",
-                    "minWidth": "0px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "{{ stepStatus('kickoff') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
-                      "fontSize": "14px",
-                      "fontWeight": "500",
-                      "letterSpacing": "0.02em",
-                      "lineHeight": "1.15",
-                      "textDecoration": "{{ stepStatus('kickoff') === 'completed' ? 'line-through' : 'none' }}"
-                     },
-                     "componentId": "step-kickoff-title",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "tag": "span",
-                      "text": "Schedule your kickoff call"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-kickoff-title-wrap",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "transform": "{{ isStepOpen('kickoff') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
-                    "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
-                    "width": "16px"
-                   },
-                   "componentId": "step-kickoff-chevron",
-                   "componentName": "Icon",
-                   "componentProps": {
-                    "icon": "lucide-chevron-down"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "toggleStep('kickoff');"
-                  }
-                 },
-                 "componentId": "step-kickoff-trigger",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "{{ isStepOpen('kickoff') ? 'block' : 'none' }}",
-                  "padding": "0 4px 16px 28px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)",
-                    "fontSize": "14px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "1.5",
-                    "maxWidth": "65ch"
-                   },
-                   "componentId": "step-kickoff-description",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "p",
-                    "text": "{{ kickoffDescription }}"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "display": "flex",
-                    "gap": "8px",
-                    "marginTop": "12px"
-                   },
-                   "children": [
-                    {
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "joinCall();"
-                      }
-                     },
-                     "componentId": "step-kickoff-join-btn",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "iconLeft": "lucide-video",
-                      "label": "Join call",
-                      "variant": "solid"
-                     },
-                     "componentSlots": {},
-                     "visibilityCondition": "meetingLink"
-                    },
-                    {
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "openThread();"
-                      }
-                     },
-                     "componentId": "step-kickoff-action-btn",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "label": "{{ 'Message ' + partnerName }}",
-                      "variant": "{{ meetingLink ? 'subtle' : 'solid' }}"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-kickoff-actions",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  }
-                 ],
-                 "componentId": "step-kickoff-content",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div",
-                 "mobileStyles": {
-                  "padding": "0px 0px 16px 28px"
-                 },
-                 "tabletStyles": {
-                  "padding": "0px 0px 16px 28px"
-                 }
-                }
-               ],
-               "componentId": "step-kickoff-item",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "borderBottom": "1px solid var(--outline-gray-1)"
-               },
-               "children": [
-                {
-                 "attributes": {
-                  "aria-expanded": "{{ (openStep === 'login') ? 'true' : 'false' }}",
-                  "role": "button",
-                  "tabindex": "0"
-                 },
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "cursor": "pointer",
-                  "display": "flex",
-                  "gap": "12px",
-                  "padding": "12px 0"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "display": "flex",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "justifyContent": "center",
-                    "width": "16px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "alignItems": "center",
-                      "backgroundColor": "var(--ink-gray-7)",
-                      "borderRadius": "50%",
-                      "display": "{{ stepStatus('login') === 'completed' ? 'flex' : 'none' }}",
-                      "flexShrink": "0",
-                      "height": "16px",
-                      "justifyContent": "center",
-                      "width": "16px"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "white",
-                        "height": "10px",
-                        "width": "10px"
-                       },
-                       "componentId": "step-login-status-check",
-                       "componentName": "Icon",
-                       "componentProps": {
-                        "icon": "lucide-check"
-                       },
-                       "componentSlots": {}
-                      }
-                     ],
-                     "componentId": "step-login-status-done",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-4)",
-                      "display": "{{ stepStatus('login') === 'completed' ? 'none' : 'flex' }}",
-                      "flexShrink": "0",
-                      "height": "16px",
-                      "width": "16px"
-                     },
-                     "componentId": "step-login-status-pending",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "lucide-circle-dashed"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-login-status-icon",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "flex": "1",
-                    "minWidth": "0px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "{{ stepStatus('login') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
-                      "fontSize": "14px",
-                      "fontWeight": "500",
-                      "letterSpacing": "0.02em",
-                      "lineHeight": "1.15",
-                      "textDecoration": "{{ stepStatus('login') === 'completed' ? 'line-through' : 'none' }}"
-                     },
-                     "componentId": "step-login-title",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "tag": "span",
-                      "text": "Log in to Frappe Cloud using your Frappe login credentials"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-login-title-wrap",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "transform": "{{ isStepOpen('login') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
-                    "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
-                    "width": "16px"
-                   },
-                   "componentId": "step-login-chevron",
-                   "componentName": "Icon",
-                   "componentProps": {
-                    "icon": "lucide-chevron-down"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "toggleStep('login');"
-                  }
-                 },
-                 "componentId": "step-login-trigger",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "{{ isStepOpen('login') ? 'block' : 'none' }}",
-                  "padding": "0 4px 16px 28px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)",
-                    "fontSize": "14px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "1.5",
-                    "maxWidth": "65ch"
-                   },
-                   "componentId": "step-login-description",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "p",
-                    "text": "Use the same email you paid with to log in to Frappe Cloud. This links your Starter Pack to your Frappe Cloud account."
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "display": "flex",
-                    "gap": "8px",
-                    "marginTop": "12px"
-                   },
-                   "children": [
-                    {
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "window.open('https://frappecloud.com/dashboard/login', '_blank');"
-                      }
-                     },
-                     "componentId": "step-login-action-btn",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "label": "Log in to Frappe Cloud",
-                      "variant": "solid"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-login-actions",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  }
-                 ],
-                 "componentId": "step-login-content",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div",
-                 "mobileStyles": {
-                  "padding": "0px 0px 16px 28px"
-                 },
-                 "tabletStyles": {
-                  "padding": "0px 0px 16px 28px"
-                 }
-                }
-               ],
-               "componentId": "step-login-item",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "borderBottom": "1px solid var(--outline-gray-1)"
-               },
-               "children": [
-                {
-                 "attributes": {
-                  "aria-expanded": "{{ (openStep === 'billing') ? 'true' : 'false' }}",
-                  "role": "button",
-                  "tabindex": "0"
-                 },
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "cursor": "pointer",
-                  "display": "flex",
-                  "gap": "12px",
-                  "padding": "12px 0"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "display": "flex",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "justifyContent": "center",
-                    "width": "16px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "alignItems": "center",
-                      "backgroundColor": "var(--ink-gray-7)",
-                      "borderRadius": "50%",
-                      "display": "{{ stepStatus('billing') === 'completed' ? 'flex' : 'none' }}",
-                      "flexShrink": "0",
-                      "height": "16px",
-                      "justifyContent": "center",
-                      "width": "16px"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "white",
-                        "height": "10px",
-                        "width": "10px"
-                       },
-                       "componentId": "step-billing-status-check",
-                       "componentName": "Icon",
-                       "componentProps": {
-                        "icon": "lucide-check"
-                       },
-                       "componentSlots": {}
-                      }
-                     ],
-                     "componentId": "step-billing-status-done",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-4)",
-                      "display": "{{ stepStatus('billing') === 'completed' ? 'none' : 'flex' }}",
-                      "flexShrink": "0",
-                      "height": "16px",
-                      "width": "16px"
-                     },
-                     "componentId": "step-billing-status-pending",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "lucide-circle-dashed"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-billing-status-icon",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "flex": "1",
-                    "minWidth": "0px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "{{ stepStatus('billing') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
-                      "fontSize": "14px",
-                      "fontWeight": "500",
-                      "letterSpacing": "0.02em",
-                      "lineHeight": "1.15",
-                      "textDecoration": "{{ stepStatus('billing') === 'completed' ? 'line-through' : 'none' }}"
-                     },
-                     "componentId": "step-billing-title",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "tag": "span",
-                      "text": "Add a payment method and set up a plan of at least \u20b9820/month"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-billing-title-wrap",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "transform": "{{ isStepOpen('billing') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
-                    "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
-                    "width": "16px"
-                   },
-                   "componentId": "step-billing-chevron",
-                   "componentName": "Icon",
-                   "componentProps": {
-                    "icon": "lucide-chevron-down"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "toggleStep('billing');"
-                  }
-                 },
-                 "componentId": "step-billing-trigger",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "{{ isStepOpen('billing') ? 'block' : 'none' }}",
-                  "padding": "0 4px 16px 28px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)",
-                    "fontSize": "14px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "1.5",
-                    "maxWidth": "65ch"
-                   },
-                   "componentId": "step-billing-description",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "p",
-                    "text": "Add a payment method in Frappe Cloud, then create a site or server on a plan of at least $25 a month. This is where your implementation will live."
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "display": "flex",
-                    "gap": "8px",
-                    "marginTop": "12px"
-                   },
-                   "children": [
-                    {
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "window.open('https://frappecloud.com/dashboard/settings/billing', '_blank');"
-                      }
-                     },
-                     "componentId": "step-billing-action-btn",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "label": "Set up billing",
-                      "variant": "solid"
-                     },
-                     "componentSlots": {}
-                    },
-                    {
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "window.open('https://frappecloud.com/dashboard/sites/new', '_blank');"
-                      }
-                     },
-                     "componentId": "step-site-action-btn",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "label": "Create a site",
-                      "variant": "subtle"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-billing-actions",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  }
-                 ],
-                 "componentId": "step-billing-content",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div",
-                 "mobileStyles": {
-                  "padding": "0px 0px 16px 28px"
-                 },
-                 "tabletStyles": {
-                  "padding": "0px 0px 16px 28px"
-                 }
-                }
-               ],
-               "componentId": "step-billing-item",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              },
-              {
-               "baseStyles": {
-                "borderBottom": "1px solid var(--outline-gray-1)"
-               },
-               "children": [
-                {
-                 "attributes": {
-                  "aria-expanded": "{{ (openStep === 'share-url') ? 'true' : 'false' }}",
-                  "role": "button",
-                  "tabindex": "0"
-                 },
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "cursor": "pointer",
-                  "display": "flex",
-                  "gap": "12px",
-                  "padding": "12px 0"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "alignItems": "center",
-                    "display": "flex",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "justifyContent": "center",
-                    "width": "16px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "alignItems": "center",
-                      "backgroundColor": "var(--ink-gray-7)",
-                      "borderRadius": "50%",
-                      "display": "{{ stepStatus('share-url') === 'completed' ? 'flex' : 'none' }}",
-                      "flexShrink": "0",
-                      "height": "16px",
-                      "justifyContent": "center",
-                      "width": "16px"
-                     },
-                     "children": [
-                      {
-                       "baseStyles": {
-                        "color": "white",
-                        "height": "10px",
-                        "width": "10px"
-                       },
-                       "componentId": "step-share-url-status-check",
-                       "componentName": "Icon",
-                       "componentProps": {
-                        "icon": "lucide-check"
-                       },
-                       "componentSlots": {}
-                      }
-                     ],
-                     "componentId": "step-share-url-status-done",
-                     "componentName": "container",
-                     "componentProps": {},
-                     "componentSlots": {},
-                     "originalElement": "div"
-                    },
-                    {
-                     "baseStyles": {
-                      "color": "var(--ink-gray-4)",
-                      "display": "{{ stepStatus('share-url') === 'completed' ? 'none' : 'flex' }}",
-                      "flexShrink": "0",
-                      "height": "16px",
-                      "width": "16px"
-                     },
-                     "componentId": "step-share-url-status-pending",
-                     "componentName": "Icon",
-                     "componentProps": {
-                      "icon": "lucide-circle-dashed"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-share-url-status-icon",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "flex": "1",
-                    "minWidth": "0px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "color": "{{ stepStatus('share-url') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
-                      "fontSize": "14px",
-                      "fontWeight": "500",
-                      "letterSpacing": "0.02em",
-                      "lineHeight": "1.15",
-                      "textDecoration": "{{ stepStatus('share-url') === 'completed' ? 'line-through' : 'none' }}"
-                     },
-                     "componentId": "step-share-url-title",
-                     "componentName": "TextBlock",
-                     "componentProps": {
-                      "tag": "span",
-                      "text": "Share the URL of your hosted site"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-share-url-title-wrap",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "transform": "{{ isStepOpen('share-url') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
-                    "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
-                    "width": "16px"
-                   },
-                   "componentId": "step-share-url-chevron",
-                   "componentName": "Icon",
-                   "componentProps": {
-                    "icon": "lucide-chevron-down"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "toggleStep('share-url');"
-                  }
-                 },
-                 "componentId": "step-share-url-trigger",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "display": "{{ isStepOpen('share-url') ? 'block' : 'none' }}",
-                  "padding": "0 4px 16px 28px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-6)",
-                    "fontSize": "14px",
-                    "fontWeight": "420",
-                    "letterSpacing": "0.02em",
-                    "lineHeight": "1.5",
-                    "maxWidth": "65ch"
-                   },
-                   "componentId": "step-share-url-description",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "tag": "p",
-                    "text": "Once your site is live, share its URL so we can start the implementation."
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "baseStyles": {
-                    "display": "flex",
-                    "gap": "8px",
-                    "marginTop": "12px"
-                   },
-                   "children": [
-                    {
-                     "baseStyles": {
-                      "flex": "1"
-                     },
-                     "classes": [
-                      "[&_input]:text-ink-gray-7"
-                     ],
-                     "componentId": "step-share-url-input",
-                     "componentName": "FormControl",
-                     "componentProps": {
-                      "modelValue": {
-                       "$type": "variable",
-                       "name": "hostedSiteUrl"
-                      },
-                      "placeholder": "https://yoursite.frappe.cloud",
-                      "size": "sm",
-                      "type": "text",
-                      "variant": "outline"
-                     },
-                     "componentSlots": {}
-                    },
-                    {
-                     "baseStyles": {
-                      "flexShrink": "0"
-                     },
-                     "componentEvents": {
-                      "click": {
-                       "action": "Run Script",
-                       "event": "click",
-                       "script": "submitHostedSiteUrl();"
-                      }
-                     },
-                     "componentId": "step-share-url-submit",
-                     "componentName": "Button",
-                     "componentProps": {
-                      "label": "Submit",
-                      "variant": "solid"
-                     },
-                     "componentSlots": {}
-                    }
-                   ],
-                   "componentId": "step-share-url-input-row",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div",
-                   "mobileStyles": {
-                    "flexWrap": "wrap"
-                   },
-                   "tabletStyles": {
-                    "flexWrap": "wrap"
-                   }
-                  }
-                 ],
-                 "componentId": "step-share-url-content",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div",
-                 "mobileStyles": {
-                  "padding": "0px 0px 16px 28px"
-                 },
-                 "tabletStyles": {
-                  "padding": "0px 0px 16px 28px"
-                 }
-                }
-               ],
-               "componentId": "step-share-url-item",
-               "componentName": "container",
-               "componentProps": {},
-               "componentSlots": {},
-               "originalElement": "div"
-              }
-             ],
-             "componentId": "checklist",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            }
-           ],
-           "componentId": "left-inner",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          }
-         ],
-         "componentId": "left",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div",
          "mobileStyles": {
           "flex": "0 0 auto",
           "margin": "0px",
           "maxWidth": "none",
-          "overflowY": "visible",
-          "padding": "24px 20px 24px",
           "width": "100%"
          },
          "tabletStyles": {
           "flex": "0 0 auto",
           "margin": "0px",
           "maxWidth": "none",
-          "overflowY": "visible",
-          "padding": "24px 20px 24px",
           "width": "100%"
-         }
+         },
+         "componentSlots": {
+          "default": {
+           "parentBlockId": "left-scroll",
+           "slotContent": [
+            {
+             "baseStyles": {
+              "padding": "0 8px",
+              "paddingTop": "32px"
+             },
+             "children": [
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "20px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-8)",
+                  "fontSize": "18px",
+                  "fontWeight": "600",
+                  "letterSpacing": "0.01em",
+                  "lineHeight": "1.3"
+                 },
+                 "componentId": "page-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "",
+                  "tag": "p",
+                  "text": "Set up your Starter Pack"
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-6)",
+                  "display": "{{ loadError ? 'block' : 'none' }}",
+                  "fontSize": "14px",
+                  "lineHeight": "1.5"
+                 },
+                 "componentId": "load-error",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "p",
+                  "text": "We couldn't load this order. Open it again from the checkout page, or contact Frappe."
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "baseStyles": {
+                  "display": "{{ loadError ? 'none' : 'flex' }}",
+                  "flexDirection": "column"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "borderBottom": "1px solid var(--outline-gray-1)"
+                   },
+                   "children": [
+                    {
+                     "attributes": {
+                      "aria-expanded": "{{ (openStep === 'pay-upfront') ? 'true' : 'false' }}",
+                      "role": "button",
+                      "tabindex": "0"
+                     },
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "cursor": "pointer",
+                      "display": "flex",
+                      "gap": "12px",
+                      "padding": "12px 0"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "justifyContent": "center",
+                        "width": "16px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "backgroundColor": "var(--ink-gray-7)",
+                          "borderRadius": "50%",
+                          "display": "{{ stepStatus('pay-upfront') === 'completed' ? 'flex' : 'none' }}",
+                          "flexShrink": "0",
+                          "height": "16px",
+                          "justifyContent": "center",
+                          "width": "16px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "white",
+                            "height": "10px",
+                            "width": "10px"
+                           },
+                           "componentId": "step-pay-upfront-status-check",
+                           "componentName": "Icon",
+                           "componentProps": {
+                            "icon": "lucide-check"
+                           },
+                           "componentSlots": {}
+                          }
+                         ],
+                         "componentId": "step-pay-upfront-status-done",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-4)",
+                          "display": "{{ stepStatus('pay-upfront') === 'completed' ? 'none' : 'flex' }}",
+                          "flexShrink": "0",
+                          "height": "16px",
+                          "width": "16px"
+                         },
+                         "componentId": "step-pay-upfront-status-pending",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "lucide-circle-dashed"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-pay-upfront-status-icon",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "flex": "1",
+                        "minWidth": "0px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "{{ stepStatus('pay-upfront') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
+                          "fontSize": "14px",
+                          "fontWeight": "500",
+                          "letterSpacing": "0.02em",
+                          "lineHeight": "1.15",
+                          "textDecoration": "{{ stepStatus('pay-upfront') === 'completed' ? 'line-through' : 'none' }}"
+                         },
+                         "componentId": "step-pay-upfront-title",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "tag": "span",
+                          "text": "Pay upfront"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-pay-upfront-title-wrap",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "transform": "{{ isStepOpen('pay-upfront') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
+                        "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+                        "width": "16px"
+                       },
+                       "componentId": "step-pay-upfront-chevron",
+                       "componentName": "Icon",
+                       "componentProps": {
+                        "icon": "lucide-chevron-down"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleStep('pay-upfront');"
+                      }
+                     },
+                     "componentId": "step-pay-upfront-trigger",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "display": "{{ isStepOpen('pay-upfront') ? 'block' : 'none' }}",
+                      "padding": "0 4px 16px 28px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "1.5",
+                        "maxWidth": "65ch"
+                       },
+                       "componentId": "step-pay-upfront-description",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "{{ paidLine }}"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "componentId": "step-pay-upfront-content",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div",
+                     "mobileStyles": {
+                      "padding": "0px 0px 16px 28px"
+                     },
+                     "tabletStyles": {
+                      "padding": "0px 0px 16px 28px"
+                     }
+                    }
+                   ],
+                   "componentId": "step-pay-upfront-item",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "borderBottom": "1px solid var(--outline-gray-1)"
+                   },
+                   "children": [
+                    {
+                     "attributes": {
+                      "aria-expanded": "{{ (openStep === 'company') ? 'true' : 'false' }}",
+                      "role": "button",
+                      "tabindex": "0"
+                     },
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "cursor": "pointer",
+                      "display": "flex",
+                      "gap": "12px",
+                      "padding": "12px 0"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "justifyContent": "center",
+                        "width": "16px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "backgroundColor": "var(--ink-gray-7)",
+                          "borderRadius": "50%",
+                          "display": "{{ stepStatus('company') === 'completed' ? 'flex' : 'none' }}",
+                          "flexShrink": "0",
+                          "height": "16px",
+                          "justifyContent": "center",
+                          "width": "16px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "white",
+                            "height": "10px",
+                            "width": "10px"
+                           },
+                           "componentId": "step-company-status-check",
+                           "componentName": "Icon",
+                           "componentProps": {
+                            "icon": "lucide-check"
+                           },
+                           "componentSlots": {}
+                          }
+                         ],
+                         "componentId": "step-company-status-done",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-4)",
+                          "display": "{{ stepStatus('company') === 'completed' ? 'none' : 'flex' }}",
+                          "flexShrink": "0",
+                          "height": "16px",
+                          "width": "16px"
+                         },
+                         "componentId": "step-company-status-pending",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "lucide-circle-dashed"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-company-status-icon",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "flex": "1",
+                        "minWidth": "0px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "{{ stepStatus('company') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
+                          "fontSize": "14px",
+                          "fontWeight": "500",
+                          "letterSpacing": "0.02em",
+                          "lineHeight": "1.15",
+                          "textDecoration": "{{ stepStatus('company') === 'completed' ? 'line-through' : 'none' }}"
+                         },
+                         "componentId": "step-company-title",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "tag": "span",
+                          "text": "Tell us about your company"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-company-title-wrap",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "transform": "{{ isStepOpen('company') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
+                        "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+                        "width": "16px"
+                       },
+                       "componentId": "step-company-chevron",
+                       "componentName": "Icon",
+                       "componentProps": {
+                        "icon": "lucide-chevron-down"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleStep('company');"
+                      }
+                     },
+                     "componentId": "step-company-trigger",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "display": "{{ isStepOpen('company') ? 'block' : 'none' }}",
+                      "padding": "0 4px 16px 28px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "{{ stepStatus('company') === 'completed' ? 'var(--ink-gray-7)' : 'var(--ink-gray-6)' }}",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "1.5",
+                        "maxWidth": "65ch"
+                       },
+                       "componentId": "step-company-description",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "{{ stepStatus('company') === 'completed' ? companySummary : 'This helps Frappe\u2019s team prepare for your sessions.' }}"
+                       },
+                       "componentSlots": {}
+                      },
+                      {
+                       "baseStyles": {
+                        "display": "flex",
+                        "gap": "8px",
+                        "marginTop": "12px"
+                       },
+                       "children": [
+                        {
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "openCompany();"
+                          }
+                         },
+                         "componentId": "step-company-action-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "label": "{{ stepStatus('company') === 'completed' ? 'Edit' : 'Add details' }}",
+                          "variant": "{{ stepStatus('company') === 'completed' ? 'subtle' : 'solid' }}"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-company-actions",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      }
+                     ],
+                     "componentId": "step-company-content",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div",
+                     "mobileStyles": {
+                      "padding": "0px 0px 16px 28px"
+                     },
+                     "tabletStyles": {
+                      "padding": "0px 0px 16px 28px"
+                     }
+                    }
+                   ],
+                   "componentId": "step-company-item",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "borderBottom": "1px solid var(--outline-gray-1)"
+                   },
+                   "children": [
+                    {
+                     "attributes": {
+                      "aria-expanded": "{{ (openStep === 'kickoff') ? 'true' : 'false' }}",
+                      "role": "button",
+                      "tabindex": "0"
+                     },
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "cursor": "pointer",
+                      "display": "flex",
+                      "gap": "12px",
+                      "padding": "12px 0"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "justifyContent": "center",
+                        "width": "16px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "backgroundColor": "var(--ink-gray-7)",
+                          "borderRadius": "50%",
+                          "display": "{{ stepStatus('kickoff') === 'completed' ? 'flex' : 'none' }}",
+                          "flexShrink": "0",
+                          "height": "16px",
+                          "justifyContent": "center",
+                          "width": "16px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "white",
+                            "height": "10px",
+                            "width": "10px"
+                           },
+                           "componentId": "step-kickoff-status-check",
+                           "componentName": "Icon",
+                           "componentProps": {
+                            "icon": "lucide-check"
+                           },
+                           "componentSlots": {}
+                          }
+                         ],
+                         "componentId": "step-kickoff-status-done",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-4)",
+                          "display": "{{ stepStatus('kickoff') === 'completed' ? 'none' : 'flex' }}",
+                          "flexShrink": "0",
+                          "height": "16px",
+                          "width": "16px"
+                         },
+                         "componentId": "step-kickoff-status-pending",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "lucide-circle-dashed"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-kickoff-status-icon",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "flex": "1",
+                        "minWidth": "0px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "{{ stepStatus('kickoff') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
+                          "fontSize": "14px",
+                          "fontWeight": "500",
+                          "letterSpacing": "0.02em",
+                          "lineHeight": "1.15",
+                          "textDecoration": "{{ stepStatus('kickoff') === 'completed' ? 'line-through' : 'none' }}"
+                         },
+                         "componentId": "step-kickoff-title",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "tag": "span",
+                          "text": "Schedule your kickoff call"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-kickoff-title-wrap",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "transform": "{{ isStepOpen('kickoff') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
+                        "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+                        "width": "16px"
+                       },
+                       "componentId": "step-kickoff-chevron",
+                       "componentName": "Icon",
+                       "componentProps": {
+                        "icon": "lucide-chevron-down"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleStep('kickoff');"
+                      }
+                     },
+                     "componentId": "step-kickoff-trigger",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "display": "{{ isStepOpen('kickoff') ? 'block' : 'none' }}",
+                      "padding": "0 4px 16px 28px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "1.5",
+                        "maxWidth": "65ch"
+                       },
+                       "componentId": "step-kickoff-description",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "{{ kickoffDescription }}"
+                       },
+                       "componentSlots": {}
+                      },
+                      {
+                       "baseStyles": {
+                        "display": "flex",
+                        "gap": "8px",
+                        "marginTop": "12px"
+                       },
+                       "children": [
+                        {
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "joinCall();"
+                          }
+                         },
+                         "componentId": "step-kickoff-join-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "iconLeft": "lucide-video",
+                          "label": "Join call",
+                          "variant": "solid"
+                         },
+                         "componentSlots": {},
+                         "visibilityCondition": "meetingLink"
+                        },
+                        {
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "openThread();"
+                          }
+                         },
+                         "componentId": "step-kickoff-action-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "label": "{{ 'Message ' + partnerName }}",
+                          "variant": "{{ meetingLink ? 'subtle' : 'solid' }}"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-kickoff-actions",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      }
+                     ],
+                     "componentId": "step-kickoff-content",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div",
+                     "mobileStyles": {
+                      "padding": "0px 0px 16px 28px"
+                     },
+                     "tabletStyles": {
+                      "padding": "0px 0px 16px 28px"
+                     }
+                    }
+                   ],
+                   "componentId": "step-kickoff-item",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "borderBottom": "1px solid var(--outline-gray-1)"
+                   },
+                   "children": [
+                    {
+                     "attributes": {
+                      "aria-expanded": "{{ (openStep === 'login') ? 'true' : 'false' }}",
+                      "role": "button",
+                      "tabindex": "0"
+                     },
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "cursor": "pointer",
+                      "display": "flex",
+                      "gap": "12px",
+                      "padding": "12px 0"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "justifyContent": "center",
+                        "width": "16px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "backgroundColor": "var(--ink-gray-7)",
+                          "borderRadius": "50%",
+                          "display": "{{ stepStatus('login') === 'completed' ? 'flex' : 'none' }}",
+                          "flexShrink": "0",
+                          "height": "16px",
+                          "justifyContent": "center",
+                          "width": "16px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "white",
+                            "height": "10px",
+                            "width": "10px"
+                           },
+                           "componentId": "step-login-status-check",
+                           "componentName": "Icon",
+                           "componentProps": {
+                            "icon": "lucide-check"
+                           },
+                           "componentSlots": {}
+                          }
+                         ],
+                         "componentId": "step-login-status-done",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-4)",
+                          "display": "{{ stepStatus('login') === 'completed' ? 'none' : 'flex' }}",
+                          "flexShrink": "0",
+                          "height": "16px",
+                          "width": "16px"
+                         },
+                         "componentId": "step-login-status-pending",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "lucide-circle-dashed"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-login-status-icon",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "flex": "1",
+                        "minWidth": "0px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "{{ stepStatus('login') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
+                          "fontSize": "14px",
+                          "fontWeight": "500",
+                          "letterSpacing": "0.02em",
+                          "lineHeight": "1.15",
+                          "textDecoration": "{{ stepStatus('login') === 'completed' ? 'line-through' : 'none' }}"
+                         },
+                         "componentId": "step-login-title",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "tag": "span",
+                          "text": "Log in to Frappe Cloud using your Frappe login credentials"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-login-title-wrap",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "transform": "{{ isStepOpen('login') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
+                        "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+                        "width": "16px"
+                       },
+                       "componentId": "step-login-chevron",
+                       "componentName": "Icon",
+                       "componentProps": {
+                        "icon": "lucide-chevron-down"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleStep('login');"
+                      }
+                     },
+                     "componentId": "step-login-trigger",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "display": "{{ isStepOpen('login') ? 'block' : 'none' }}",
+                      "padding": "0 4px 16px 28px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "1.5",
+                        "maxWidth": "65ch"
+                       },
+                       "componentId": "step-login-description",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "Use the same email you paid with to log in to Frappe Cloud. This links your Starter Pack to your Frappe Cloud account."
+                       },
+                       "componentSlots": {}
+                      },
+                      {
+                       "baseStyles": {
+                        "display": "flex",
+                        "gap": "8px",
+                        "marginTop": "12px"
+                       },
+                       "children": [
+                        {
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "window.open('https://frappecloud.com/dashboard/login', '_blank');"
+                          }
+                         },
+                         "componentId": "step-login-action-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "label": "Log in to Frappe Cloud",
+                          "variant": "solid"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-login-actions",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      }
+                     ],
+                     "componentId": "step-login-content",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div",
+                     "mobileStyles": {
+                      "padding": "0px 0px 16px 28px"
+                     },
+                     "tabletStyles": {
+                      "padding": "0px 0px 16px 28px"
+                     }
+                    }
+                   ],
+                   "componentId": "step-login-item",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "borderBottom": "1px solid var(--outline-gray-1)"
+                   },
+                   "children": [
+                    {
+                     "attributes": {
+                      "aria-expanded": "{{ (openStep === 'billing') ? 'true' : 'false' }}",
+                      "role": "button",
+                      "tabindex": "0"
+                     },
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "cursor": "pointer",
+                      "display": "flex",
+                      "gap": "12px",
+                      "padding": "12px 0"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "justifyContent": "center",
+                        "width": "16px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "backgroundColor": "var(--ink-gray-7)",
+                          "borderRadius": "50%",
+                          "display": "{{ stepStatus('billing') === 'completed' ? 'flex' : 'none' }}",
+                          "flexShrink": "0",
+                          "height": "16px",
+                          "justifyContent": "center",
+                          "width": "16px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "white",
+                            "height": "10px",
+                            "width": "10px"
+                           },
+                           "componentId": "step-billing-status-check",
+                           "componentName": "Icon",
+                           "componentProps": {
+                            "icon": "lucide-check"
+                           },
+                           "componentSlots": {}
+                          }
+                         ],
+                         "componentId": "step-billing-status-done",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-4)",
+                          "display": "{{ stepStatus('billing') === 'completed' ? 'none' : 'flex' }}",
+                          "flexShrink": "0",
+                          "height": "16px",
+                          "width": "16px"
+                         },
+                         "componentId": "step-billing-status-pending",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "lucide-circle-dashed"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-billing-status-icon",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "flex": "1",
+                        "minWidth": "0px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "{{ stepStatus('billing') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
+                          "fontSize": "14px",
+                          "fontWeight": "500",
+                          "letterSpacing": "0.02em",
+                          "lineHeight": "1.15",
+                          "textDecoration": "{{ stepStatus('billing') === 'completed' ? 'line-through' : 'none' }}"
+                         },
+                         "componentId": "step-billing-title",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "tag": "span",
+                          "text": "Add a payment method and set up a plan of at least \u20b9820/month"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-billing-title-wrap",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "transform": "{{ isStepOpen('billing') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
+                        "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+                        "width": "16px"
+                       },
+                       "componentId": "step-billing-chevron",
+                       "componentName": "Icon",
+                       "componentProps": {
+                        "icon": "lucide-chevron-down"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleStep('billing');"
+                      }
+                     },
+                     "componentId": "step-billing-trigger",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "display": "{{ isStepOpen('billing') ? 'block' : 'none' }}",
+                      "padding": "0 4px 16px 28px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "1.5",
+                        "maxWidth": "65ch"
+                       },
+                       "componentId": "step-billing-description",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "Add a payment method in Frappe Cloud, then create a site or server on a plan of at least $25 a month. This is where your implementation will live."
+                       },
+                       "componentSlots": {}
+                      },
+                      {
+                       "baseStyles": {
+                        "display": "flex",
+                        "gap": "8px",
+                        "marginTop": "12px"
+                       },
+                       "children": [
+                        {
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "window.open('https://frappecloud.com/dashboard/settings/billing', '_blank');"
+                          }
+                         },
+                         "componentId": "step-billing-action-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "label": "Set up billing",
+                          "variant": "solid"
+                         },
+                         "componentSlots": {}
+                        },
+                        {
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "window.open('https://frappecloud.com/dashboard/sites/new', '_blank');"
+                          }
+                         },
+                         "componentId": "step-site-action-btn",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "label": "Create a site",
+                          "variant": "subtle"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-billing-actions",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      }
+                     ],
+                     "componentId": "step-billing-content",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div",
+                     "mobileStyles": {
+                      "padding": "0px 0px 16px 28px"
+                     },
+                     "tabletStyles": {
+                      "padding": "0px 0px 16px 28px"
+                     }
+                    }
+                   ],
+                   "componentId": "step-billing-item",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div"
+                  },
+                  {
+                   "baseStyles": {
+                    "borderBottom": "1px solid var(--outline-gray-1)"
+                   },
+                   "children": [
+                    {
+                     "attributes": {
+                      "aria-expanded": "{{ (openStep === 'share-url') ? 'true' : 'false' }}",
+                      "role": "button",
+                      "tabindex": "0"
+                     },
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "cursor": "pointer",
+                      "display": "flex",
+                      "gap": "12px",
+                      "padding": "12px 0"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "alignItems": "center",
+                        "display": "flex",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "justifyContent": "center",
+                        "width": "16px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "alignItems": "center",
+                          "backgroundColor": "var(--ink-gray-7)",
+                          "borderRadius": "50%",
+                          "display": "{{ stepStatus('share-url') === 'completed' ? 'flex' : 'none' }}",
+                          "flexShrink": "0",
+                          "height": "16px",
+                          "justifyContent": "center",
+                          "width": "16px"
+                         },
+                         "children": [
+                          {
+                           "baseStyles": {
+                            "color": "white",
+                            "height": "10px",
+                            "width": "10px"
+                           },
+                           "componentId": "step-share-url-status-check",
+                           "componentName": "Icon",
+                           "componentProps": {
+                            "icon": "lucide-check"
+                           },
+                           "componentSlots": {}
+                          }
+                         ],
+                         "componentId": "step-share-url-status-done",
+                         "componentName": "container",
+                         "componentProps": {},
+                         "componentSlots": {},
+                         "originalElement": "div"
+                        },
+                        {
+                         "baseStyles": {
+                          "color": "var(--ink-gray-4)",
+                          "display": "{{ stepStatus('share-url') === 'completed' ? 'none' : 'flex' }}",
+                          "flexShrink": "0",
+                          "height": "16px",
+                          "width": "16px"
+                         },
+                         "componentId": "step-share-url-status-pending",
+                         "componentName": "Icon",
+                         "componentProps": {
+                          "icon": "lucide-circle-dashed"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-share-url-status-icon",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "flex": "1",
+                        "minWidth": "0px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "color": "{{ stepStatus('share-url') === 'completed' ? 'var(--ink-gray-5)' : 'var(--ink-gray-7)' }}",
+                          "fontSize": "14px",
+                          "fontWeight": "500",
+                          "letterSpacing": "0.02em",
+                          "lineHeight": "1.15",
+                          "textDecoration": "{{ stepStatus('share-url') === 'completed' ? 'line-through' : 'none' }}"
+                         },
+                         "componentId": "step-share-url-title",
+                         "componentName": "TextBlock",
+                         "componentProps": {
+                          "tag": "span",
+                          "text": "Share the URL of your hosted site"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-share-url-title-wrap",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "transform": "{{ isStepOpen('share-url') ? 'rotate(180deg)' : 'rotate(0deg)' }}",
+                        "transition": "transform 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+                        "width": "16px"
+                       },
+                       "componentId": "step-share-url-chevron",
+                       "componentName": "Icon",
+                       "componentProps": {
+                        "icon": "lucide-chevron-down"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "toggleStep('share-url');"
+                      }
+                     },
+                     "componentId": "step-share-url-trigger",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "display": "{{ isStepOpen('share-url') ? 'block' : 'none' }}",
+                      "padding": "0 4px 16px 28px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-6)",
+                        "fontSize": "14px",
+                        "fontWeight": "420",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "1.5",
+                        "maxWidth": "65ch"
+                       },
+                       "componentId": "step-share-url-description",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "tag": "p",
+                        "text": "Once your site is live, share its URL so we can start the implementation."
+                       },
+                       "componentSlots": {}
+                      },
+                      {
+                       "baseStyles": {
+                        "display": "flex",
+                        "gap": "8px",
+                        "marginTop": "12px"
+                       },
+                       "children": [
+                        {
+                         "baseStyles": {
+                          "flex": "1"
+                         },
+                         "classes": [
+                          "[&_input]:text-ink-gray-7"
+                         ],
+                         "componentId": "step-share-url-input",
+                         "componentName": "FormControl",
+                         "componentProps": {
+                          "modelValue": {
+                           "$type": "variable",
+                           "name": "hostedSiteUrl"
+                          },
+                          "placeholder": "https://yoursite.frappe.cloud",
+                          "size": "sm",
+                          "type": "text",
+                          "variant": "outline"
+                         },
+                         "componentSlots": {}
+                        },
+                        {
+                         "baseStyles": {
+                          "flexShrink": "0"
+                         },
+                         "componentEvents": {
+                          "click": {
+                           "action": "Run Script",
+                           "event": "click",
+                           "script": "submitHostedSiteUrl();"
+                          }
+                         },
+                         "componentId": "step-share-url-submit",
+                         "componentName": "Button",
+                         "componentProps": {
+                          "label": "Submit",
+                          "variant": "solid"
+                         },
+                         "componentSlots": {}
+                        }
+                       ],
+                       "componentId": "step-share-url-input-row",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div",
+                       "mobileStyles": {
+                        "flexWrap": "wrap"
+                       },
+                       "tabletStyles": {
+                        "flexWrap": "wrap"
+                       }
+                      }
+                     ],
+                     "componentId": "step-share-url-content",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div",
+                     "mobileStyles": {
+                      "padding": "0px 0px 16px 28px"
+                     },
+                     "tabletStyles": {
+                      "padding": "0px 0px 16px 28px"
+                     }
+                    }
+                   ],
+                   "componentId": "step-share-url-item",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div"
+                  }
+                 ],
+                 "componentId": "checklist",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "originalElement": "div"
+                }
+               ],
+               "componentId": "left-inner",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
+              }
+             ],
+             "componentId": "left",
+             "componentName": "container",
+             "componentProps": {},
+             "componentSlots": {},
+             "originalElement": "div",
+             "mobileStyles": {
+              "padding": "24px 20px 24px"
+             },
+             "tabletStyles": {
+              "padding": "24px 20px 24px"
+             }
+            }
+           ],
+           "slotId": "left-scroll:default",
+           "slotName": "default"
+          }
+         },
+         "isCustomVueComponent": true
         },
         {
          "baseStyles": {
@@ -3199,7 +3216,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-10-27 14:21:56.551943",
+ "modified": "2026-11-23 23:30:00.000000",
  "modified_by": "Administrator",
  "name": "starter_pack_implementation",
  "owner": "Administrator",
