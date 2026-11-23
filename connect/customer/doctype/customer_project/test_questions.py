@@ -84,6 +84,11 @@ class TestProjectQuestions(IntegrationTestCase):
 			{"country": "India", "company_size": "11-50", "industries": ["Retail"]},
 		)
 
+	def test_a_budget_can_be_in_dollars(self):
+		project = make_project(country="United States", budget="$6k to $18k")
+
+		self.assertEqual(frappe.db.get_value("Customer Project", project.name, "budget"), "$6k to $18k")
+
 	def test_every_question_must_be_answered(self):
 		for question, message in (
 			("apps", "apps"),
