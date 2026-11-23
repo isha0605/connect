@@ -5291,178 +5291,193 @@
            "originalElement": "div"
           },
           {
+           "blockName": "ConnectScrollArea",
+           "componentId": "templates-grid-scroll-scroll",
+           "componentName": "ConnectScrollArea",
+           "componentProps": {},
            "baseStyles": {
-            "display": "flex",
             "flex": "1",
-            "flexDirection": "column",
-            "minHeight": "0px",
-            "overflowY": "auto",
-            "scrollbarColor": "var(--ink-gray-2) transparent",
-            "scrollbarWidth": "thin"
+            "minHeight": "0px"
            },
-           "children": [
-            {
-             "baseStyles": {
-              "display": "grid",
-              "gap": "12px",
-              "gridTemplateColumns": "repeat(3, minmax(0, 1fr))"
-             },
-             "children": [
+           "componentSlots": {
+            "default": {
+             "parentBlockId": "templates-grid-scroll-scroll",
+             "slotContent": [
               {
                "baseStyles": {
-                "backgroundColor": "var(--surface-base)",
-                "boxSizing": "border-box",
-                "cursor": "pointer",
                 "display": "flex",
-                "flexDirection": "column",
-                "gap": "8px",
-                "height": "224px",
-                "overflow": "hidden",
-                "padding": "12px"
+                "flexDirection": "column"
                },
                "children": [
                 {
                  "baseStyles": {
-                  "alignItems": "center",
-                  "borderBottom": "1px solid var(--outline-gray-1)",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "flexShrink": "0",
-                  "gap": "8px",
-                  "minHeight": "28px",
-                  "paddingBottom": "8px"
+                  "display": "grid",
+                  "gap": "12px",
+                  "gridTemplateColumns": "repeat(3, minmax(0, 1fr))"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-8)",
-                    "flex": "1",
-                    "fontWeight": "600",
-                    "minWidth": "0px",
+                    "backgroundColor": "var(--surface-base)",
+                    "boxSizing": "border-box",
+                    "cursor": "pointer",
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "gap": "8px",
+                    "height": "224px",
                     "overflow": "hidden",
-                    "textOverflow": "ellipsis",
-                    "whiteSpace": "nowrap"
+                    "padding": "12px"
                    },
-                   "componentId": "templates-card-title",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "{{ dataItem.title }}"
-                   },
-                   "componentSlots": {}
-                  },
-                  {
-                   "attributes": {
-                    "aria-label": "Edit template"
-                   },
-                   "baseStyles": {
-                    "flexShrink": "0",
-                    "margin": "-4px -4px -4px 0px"
-                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "borderBottom": "1px solid var(--outline-gray-1)",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "flexShrink": "0",
+                      "gap": "8px",
+                      "minHeight": "28px",
+                      "paddingBottom": "8px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-8)",
+                        "flex": "1",
+                        "fontWeight": "600",
+                        "minWidth": "0px",
+                        "overflow": "hidden",
+                        "textOverflow": "ellipsis",
+                        "whiteSpace": "nowrap"
+                       },
+                       "componentId": "templates-card-title",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-base",
+                        "tag": "span",
+                        "text": "{{ dataItem.title }}"
+                       },
+                       "componentSlots": {}
+                      },
+                      {
+                       "attributes": {
+                        "aria-label": "Edit template"
+                       },
+                       "baseStyles": {
+                        "flexShrink": "0",
+                        "margin": "-4px -4px -4px 0px"
+                       },
+                       "componentEvents": {
+                        "click": {
+                         "action": "Run Script",
+                         "event": "click",
+                         "script": "openEditTemplate(dataItem, eventArgs[0]);"
+                        }
+                       },
+                       "componentId": "templates-card-edit-btn",
+                       "componentName": "Button",
+                       "componentProps": {
+                        "icon": "lucide-pencil",
+                        "size": "sm",
+                        "theme": "gray",
+                        "tooltip": "Edit template",
+                        "variant": "ghost"
+                       },
+                       "componentSlots": {},
+                       "visibilityCondition": "canEditTemplate(dataItem)"
+                      }
+                     ],
+                     "componentId": "templates-card-header",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "WebkitMaskImage": "linear-gradient(to bottom, black 80%, transparent)",
+                      "color": "var(--ink-gray-5)",
+                      "flex": "1",
+                      "lineHeight": "1.5",
+                      "maskImage": "linear-gradient(to bottom, black 80%, transparent)",
+                      "minHeight": "0px",
+                      "overflow": "hidden",
+                      "pointerEvents": "none",
+                      "whiteSpace": "pre-wrap",
+                      "wordBreak": "break-word"
+                     },
+                     "componentId": "templates-card-content",
+                     "componentName": "TextBlock",
+                     "componentProps": {
+                      "fontSize": "text-base",
+                      "tag": "p",
+                      "text": "{{ dataItem.content }}"
+                     },
+                     "componentSlots": {}
+                    }
+                   ],
+                   "classes": [
+                    "border",
+                    "border-outline-gray-1",
+                    "hover:border-outline-gray-3",
+                    "rounded-6"
+                   ],
                    "componentEvents": {
                     "click": {
                      "action": "Run Script",
                      "event": "click",
-                     "script": "openEditTemplate(dataItem, eventArgs[0]);"
+                     "script": "insertTemplate(dataItem);"
                     }
                    },
-                   "componentId": "templates-card-edit-btn",
-                   "componentName": "Button",
-                   "componentProps": {
-                    "icon": "lucide-pencil",
-                    "size": "sm",
-                    "theme": "gray",
-                    "tooltip": "Edit template",
-                    "variant": "ghost"
-                   },
+                   "componentId": "templates-card",
+                   "componentName": "container",
+                   "componentProps": {},
                    "componentSlots": {},
-                   "visibilityCondition": "canEditTemplate(dataItem)"
+                   "mobileStyles": {
+                    "height": "160px"
+                   },
+                   "originalElement": "div"
                   }
                  ],
-                 "componentId": "templates-card-header",
-                 "componentName": "container",
-                 "componentProps": {},
+                 "componentId": "templates-grid",
+                 "componentName": "Repeater",
+                 "componentProps": {
+                  "data": "{{ filteredMessageTemplates() }}",
+                  "dataKey": "name"
+                 },
                  "componentSlots": {},
-                 "originalElement": "div"
+                 "mobileStyles": {
+                  "gridTemplateColumns": "minmax(0, 1fr)"
+                 },
+                 "tabletStyles": {
+                  "gridTemplateColumns": "repeat(2, minmax(0, 1fr))"
+                 },
+                 "visibilityCondition": "(filteredMessageTemplates() || []).length > 0"
                 },
                 {
-                 "baseStyles": {
-                  "WebkitMaskImage": "linear-gradient(to bottom, black 80%, transparent)",
-                  "color": "var(--ink-gray-5)",
-                  "flex": "1",
-                  "lineHeight": "1.5",
-                  "maskImage": "linear-gradient(to bottom, black 80%, transparent)",
-                  "minHeight": "0px",
-                  "overflow": "hidden",
-                  "pointerEvents": "none",
-                  "whiteSpace": "pre-wrap",
-                  "wordBreak": "break-word"
-                 },
-                 "componentId": "templates-card-content",
-                 "componentName": "TextBlock",
+                 "componentId": "templates-grid-empty",
+                 "componentName": "emptystate",
                  "componentProps": {
-                  "fontSize": "text-base",
-                  "tag": "p",
-                  "text": "{{ dataItem.content }}"
+                  "message": "{{ templatesEmptyMessage() }}"
                  },
-                 "componentSlots": {}
+                 "componentSlots": {},
+                 "isStudioComponent": true,
+                 "visibilityCondition": "(filteredMessageTemplates() || []).length === 0"
                 }
                ],
-               "classes": [
-                "border",
-                "border-outline-gray-1",
-                "hover:border-outline-gray-3",
-                "rounded-6"
-               ],
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "insertTemplate(dataItem);"
-                }
-               },
-               "componentId": "templates-card",
+               "componentId": "templates-grid-scroll",
                "componentName": "container",
                "componentProps": {},
                "componentSlots": {},
-               "mobileStyles": {
-                "height": "160px"
-               },
                "originalElement": "div"
               }
              ],
-             "componentId": "templates-grid",
-             "componentName": "Repeater",
-             "componentProps": {
-              "data": "{{ filteredMessageTemplates() }}",
-              "dataKey": "name"
-             },
-             "componentSlots": {},
-             "mobileStyles": {
-              "gridTemplateColumns": "minmax(0, 1fr)"
-             },
-             "tabletStyles": {
-              "gridTemplateColumns": "repeat(2, minmax(0, 1fr))"
-             },
-             "visibilityCondition": "(filteredMessageTemplates() || []).length > 0"
-            },
-            {
-             "componentId": "templates-grid-empty",
-             "componentName": "emptystate",
-             "componentProps": {
-              "message": "{{ templatesEmptyMessage() }}"
-             },
-             "componentSlots": {},
-             "isStudioComponent": true,
-             "visibilityCondition": "(filteredMessageTemplates() || []).length === 0"
+             "slotId": "templates-grid-scroll-scroll:default",
+             "slotName": "default"
             }
-           ],
-           "componentId": "templates-grid-scroll",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
+           },
+           "isCustomVueComponent": true
           }
          ],
          "componentId": "templates-list-view",
@@ -5473,312 +5488,327 @@
          "visibilityCondition": "templatesView === 'list'"
         },
         {
+         "blockName": "ConnectScrollArea",
+         "componentId": "templates-new-view-scroll",
+         "componentName": "ConnectScrollArea",
+         "componentProps": {},
          "baseStyles": {
-          "display": "flex",
           "flex": "1",
-          "flexDirection": "column",
-          "gap": "20px",
-          "minHeight": "0px",
-          "overflowY": "auto",
-          "scrollbarColor": "var(--ink-gray-2) transparent",
-          "scrollbarWidth": "thin"
+          "minHeight": "0px"
          },
-         "children": [
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "display": "flex",
-            "flexDirection": "row",
-            "gap": "12px",
-            "justifyContent": "space-between"
-           },
-           "children": [
+         "visibilityCondition": "templatesView === 'new'",
+         "componentSlots": {
+          "default": {
+           "parentBlockId": "templates-new-view-scroll",
+           "slotContent": [
             {
              "baseStyles": {
-              "alignItems": "center",
-              "display": "flex",
-              "flexDirection": "row",
-              "gap": "6px",
-              "minWidth": "0px"
-             },
-             "children": [
-              {
-               "attributes": {
-                "aria-label": "Back to templates"
-               },
-               "componentEvents": {
-                "click": {
-                 "action": "Run Script",
-                 "event": "click",
-                 "script": "backToTemplateList();"
-                }
-               },
-               "componentId": "templates-new-back-btn",
-               "componentName": "Button",
-               "componentProps": {
-                "icon": "lucide-chevron-left",
-                "size": "sm",
-                "theme": "gray",
-                "tooltip": "Back to templates",
-                "variant": "ghost"
-               },
-               "componentSlots": {}
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-8)",
-                "fontWeight": "600"
-               },
-               "componentId": "templates-new-title",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-2xl",
-                "tag": "h2",
-                "text": "{{ templateFormTitle() }}"
-               },
-               "componentSlots": {}
-              }
-             ],
-             "componentId": "templates-new-title-row",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            },
-            {
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "saveNewTemplate();"
-              }
-             },
-             "componentId": "templates-new-save-btn",
-             "componentName": "Button",
-             "componentProps": {
-              "disabled": "{{ !newTemplateTitle.trim() || !newTemplateContent.trim() }}",
-              "label": "Save",
-              "loading": "{{ creatingTemplate }}",
-              "size": "sm",
-              "theme": "gray",
-              "tooltip": "{{ (!newTemplateTitle.trim() || !newTemplateContent.trim()) ? 'Add a title and a message' : '' }}",
-              "variant": "solid"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "templates-new-header",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "start",
-            "display": "grid",
-            "gap": "16px",
-            "gridTemplateColumns": "repeat(2, minmax(0, 1fr))"
-           },
-           "children": [
-            {
-             "componentEvents": {
-              "input": {
-               "action": "Run Script",
-               "event": "input",
-               "script": "onTemplateTitleInput(eventArgs[0]);"
-              }
-             },
-             "componentId": "templates-new-name-input",
-             "componentName": "TextInput",
-             "componentProps": {
-              "label": "Name",
-              "required": true,
-              "size": "sm",
-              "variant": "outline"
-             },
-             "componentSlots": {}
-            },
-            {
-             "baseStyles": {
-              "width": "100%"
-             },
-             "componentId": "templates-new-scope-select",
-             "componentName": "Select",
-             "componentProps": {
-              "description": "Choose who can view and use this template.",
-              "label": "Scope",
-              "modelValue": {
-               "$type": "variable",
-               "name": "newTemplateScope"
-              },
-              "options": "{{ newTemplateScopeOptions() }}",
-              "required": true,
-              "size": "sm",
-              "variant": "subtle"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "templates-new-fields",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "mobileStyles": {
-            "gridTemplateColumns": "minmax(0, 1fr)"
-           },
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flexDirection": "column",
-            "position": "relative"
-           },
-           "children": [
-            {
-             "classes": [
-              "[&_textarea]:overflow-y-auto",
-              "[&_textarea]:resize-y",
-              "[&_textarea]:[scrollbar-color:var(--ink-gray-2)_transparent]",
-              "[&_textarea]:[scrollbar-width:thin]"
-             ],
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "syncTemplateCaret();"
-              },
-              "input": {
-               "action": "Run Script",
-               "event": "input",
-               "script": "onResponseInput(eventArgs[0]);"
-              },
-              "keydown": {
-               "action": "Run Script",
-               "event": "keydown",
-               "script": "onResponseKeydown(eventArgs[0]);"
-              },
-              "keyup": {
-               "action": "Run Script",
-               "event": "keyup",
-               "script": "syncTemplateCaret();"
-              }
-             },
-             "componentId": "templates-new-content-input",
-             "componentName": "Textarea",
-             "componentProps": {
-              "label": "Response",
-              "placeholder": "{{ templateResponsePlaceholder() }}",
-              "required": true,
-              "rows": 10,
-              "size": "sm",
-              "variant": "outline"
-             },
-             "componentSlots": {}
-            },
-            {
-             "baseStyles": {
-              "backgroundColor": "var(--surface-base)",
-              "border": "1px solid var(--outline-gray-1)",
-              "borderRadius": "12px",
-              "boxSizing": "border-box",
               "display": "flex",
               "flexDirection": "column",
-              "left": "{{ variableMenuPosition.left + 'px' }}",
-              "maxHeight": "280px",
-              "overflowY": "auto",
-              "padding": "6px",
-              "position": "absolute",
-              "scrollbarColor": "var(--ink-gray-2) transparent",
-              "scrollbarWidth": "thin",
-              "top": "{{ variableMenuPosition.top + 'px' }}",
-              "width": "260px",
-              "zIndex": "20"
+              "gap": "20px"
              },
              "children": [
               {
                "baseStyles": {
+                "alignItems": "center",
                 "display": "flex",
-                "flexDirection": "column",
-                "gap": "2px"
+                "flexDirection": "row",
+                "gap": "12px",
+                "justifyContent": "space-between"
                },
                "children": [
                 {
                  "baseStyles": {
                   "alignItems": "center",
-                  "backgroundColor": "{{ dataItem.active ? 'var(--surface-gray-3)' : 'transparent' }}",
-                  "borderRadius": "8px",
-                  "cursor": "pointer",
                   "display": "flex",
                   "flexDirection": "row",
-                  "padding": "7px 10px"
+                  "gap": "6px",
+                  "minWidth": "0px"
                  },
                  "children": [
                   {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8)"
+                   "attributes": {
+                    "aria-label": "Back to templates"
                    },
-                   "componentId": "templates-variable-label",
+                   "componentEvents": {
+                    "click": {
+                     "action": "Run Script",
+                     "event": "click",
+                     "script": "backToTemplateList();"
+                    }
+                   },
+                   "componentId": "templates-new-back-btn",
+                   "componentName": "Button",
+                   "componentProps": {
+                    "icon": "lucide-chevron-left",
+                    "size": "sm",
+                    "theme": "gray",
+                    "tooltip": "Back to templates",
+                    "variant": "ghost"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-8)",
+                    "fontWeight": "600"
+                   },
+                   "componentId": "templates-new-title",
                    "componentName": "TextBlock",
                    "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "{{ dataItem.label }}"
+                    "fontSize": "text-2xl",
+                    "tag": "h2",
+                    "text": "{{ templateFormTitle() }}"
                    },
                    "componentSlots": {}
                   }
                  ],
-                 "componentEvents": {
-                  "mousedown": {
-                   "action": "Run Script",
-                   "event": "mousedown",
-                   "script": "eventArgs[0].preventDefault(); insertTemplateVariable(dataItem);"
-                  }
-                 },
-                 "componentId": "templates-variable-item",
+                 "componentId": "templates-new-title-row",
                  "componentName": "container",
                  "componentProps": {},
                  "componentSlots": {},
                  "originalElement": "div"
+                },
+                {
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "saveNewTemplate();"
+                  }
+                 },
+                 "componentId": "templates-new-save-btn",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "disabled": "{{ !newTemplateTitle.trim() || !newTemplateContent.trim() }}",
+                  "label": "Save",
+                  "loading": "{{ creatingTemplate }}",
+                  "size": "sm",
+                  "theme": "gray",
+                  "tooltip": "{{ (!newTemplateTitle.trim() || !newTemplateContent.trim()) ? 'Add a title and a message' : '' }}",
+                  "variant": "solid"
+                 },
+                 "componentSlots": {}
                 }
                ],
-               "componentId": "templates-variable-repeater",
-               "componentName": "Repeater",
-               "componentProps": {
-                "data": "{{ templateVariableSuggestions() }}",
-                "dataKey": "key"
+               "componentId": "templates-new-header",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "start",
+                "display": "grid",
+                "gap": "16px",
+                "gridTemplateColumns": "repeat(2, minmax(0, 1fr))"
                },
-               "componentSlots": {}
+               "children": [
+                {
+                 "componentEvents": {
+                  "input": {
+                   "action": "Run Script",
+                   "event": "input",
+                   "script": "onTemplateTitleInput(eventArgs[0]);"
+                  }
+                 },
+                 "componentId": "templates-new-name-input",
+                 "componentName": "TextInput",
+                 "componentProps": {
+                  "label": "Name",
+                  "required": true,
+                  "size": "sm",
+                  "variant": "outline"
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "baseStyles": {
+                  "width": "100%"
+                 },
+                 "componentId": "templates-new-scope-select",
+                 "componentName": "Select",
+                 "componentProps": {
+                  "description": "Choose who can view and use this template.",
+                  "label": "Scope",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "newTemplateScope"
+                  },
+                  "options": "{{ newTemplateScopeOptions() }}",
+                  "required": true,
+                  "size": "sm",
+                  "variant": "subtle"
+                 },
+                 "componentSlots": {}
+                }
+               ],
+               "componentId": "templates-new-fields",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "mobileStyles": {
+                "gridTemplateColumns": "minmax(0, 1fr)"
+               },
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "position": "relative"
+               },
+               "children": [
+                {
+                 "classes": [
+                  "[&_textarea]:overflow-y-auto",
+                  "[&_textarea]:resize-y",
+                  "[&_textarea]:[scrollbar-color:var(--ink-gray-2)_transparent]",
+                  "[&_textarea]:[scrollbar-width:thin]"
+                 ],
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "syncTemplateCaret();"
+                  },
+                  "input": {
+                   "action": "Run Script",
+                   "event": "input",
+                   "script": "onResponseInput(eventArgs[0]);"
+                  },
+                  "keydown": {
+                   "action": "Run Script",
+                   "event": "keydown",
+                   "script": "onResponseKeydown(eventArgs[0]);"
+                  },
+                  "keyup": {
+                   "action": "Run Script",
+                   "event": "keyup",
+                   "script": "syncTemplateCaret();"
+                  }
+                 },
+                 "componentId": "templates-new-content-input",
+                 "componentName": "Textarea",
+                 "componentProps": {
+                  "label": "Response",
+                  "placeholder": "{{ templateResponsePlaceholder() }}",
+                  "required": true,
+                  "rows": 10,
+                  "size": "sm",
+                  "variant": "outline"
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "baseStyles": {
+                  "backgroundColor": "var(--surface-base)",
+                  "border": "1px solid var(--outline-gray-1)",
+                  "borderRadius": "12px",
+                  "boxSizing": "border-box",
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "left": "{{ variableMenuPosition.left + 'px' }}",
+                  "maxHeight": "280px",
+                  "overflowY": "auto",
+                  "padding": "6px",
+                  "position": "absolute",
+                  "scrollbarColor": "var(--ink-gray-2) transparent",
+                  "scrollbarWidth": "thin",
+                  "top": "{{ variableMenuPosition.top + 'px' }}",
+                  "width": "260px",
+                  "zIndex": "20"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "gap": "2px"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "backgroundColor": "{{ dataItem.active ? 'var(--surface-gray-3)' : 'transparent' }}",
+                      "borderRadius": "8px",
+                      "cursor": "pointer",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "padding": "7px 10px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-8)"
+                       },
+                       "componentId": "templates-variable-label",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-base",
+                        "tag": "span",
+                        "text": "{{ dataItem.label }}"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "componentEvents": {
+                      "mousedown": {
+                       "action": "Run Script",
+                       "event": "mousedown",
+                       "script": "eventArgs[0].preventDefault(); insertTemplateVariable(dataItem);"
+                      }
+                     },
+                     "componentId": "templates-variable-item",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
+                    }
+                   ],
+                   "componentId": "templates-variable-repeater",
+                   "componentName": "Repeater",
+                   "componentProps": {
+                    "data": "{{ templateVariableSuggestions() }}",
+                    "dataKey": "key"
+                   },
+                   "componentSlots": {}
+                  }
+                 ],
+                 "classes": [
+                  "shadow-xl"
+                 ],
+                 "componentId": "templates-variable-menu",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "mobileStyles": {
+                  "width": "min(260px, calc(100vw - 32px))"
+                 },
+                 "originalElement": "div",
+                 "visibilityCondition": "isVariableMenuOpen()"
+                }
+               ],
+               "componentId": "templates-new-content-field",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
               }
              ],
-             "classes": [
-              "shadow-xl"
-             ],
-             "componentId": "templates-variable-menu",
+             "componentId": "templates-new-view",
              "componentName": "container",
              "componentProps": {},
              "componentSlots": {},
-             "mobileStyles": {
-              "width": "min(260px, calc(100vw - 32px))"
-             },
-             "originalElement": "div",
-             "visibilityCondition": "isVariableMenuOpen()"
+             "originalElement": "div"
             }
            ],
-           "componentId": "templates-new-content-field",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
+           "slotId": "templates-new-view-scroll:default",
+           "slotName": "default"
           }
-         ],
-         "componentId": "templates-new-view",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div",
-         "visibilityCondition": "templatesView === 'new'"
+         },
+         "isCustomVueComponent": true
         }
        ],
        "componentId": "templates-dialog-body",
@@ -6226,5 +6256,5 @@
  ],
  "route": "/leads/:lead_id",
  "studio_app": "connect",
- "modified": "2026-11-23 22:00:00.000000"
+ "modified": "2026-11-23 23:30:00.000000"
 }

@@ -2,7 +2,6 @@ import { ref, computed, watch, onScopeDispose, nextTick, h } from "vue"
 import { toast, call, useFileUpload, setConfig } from "frappe-ui"
 import { avatarTheme } from "@app/utils/avatarTheme"
 import { currencySymbol, exampleQuote, formatMoney } from "@app/utils/money"
-import { installScrollFade } from "@app/utils/scrollFade"
 import { goToSignIn, signOut } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
 import { usePartnerRegistration } from "@app/utils/partnerRegistration"
@@ -91,8 +90,6 @@ function sendPartnersToTheirPages(context, myContext) {
 export default function setup(context) {
 	const myContext = useMyContext()
 	startTracking(context)
-	// the thread list's thin scrollbar that fades when idle (see @app/utils/scrollFade)
-	installScrollFade()
 	sendPartnersToTheirPages(context, myContext)
 	// ---- State ----
 	const selectedThread = ref("")
