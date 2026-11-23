@@ -130,479 +130,72 @@
        },
        "children": [
         {
+         "blockName": "ConnectScrollArea",
+         "componentId": "left-panel-7639197f-scroll",
+         "componentName": "ConnectScrollArea",
+         "componentProps": {},
          "baseStyles": {
-          "display": "flex",
-          "flexDirection": "column",
           "flexShrink": "0",
-          "justifyContent": "center",
-          "overflowY": "auto",
-          "padding": "48px 40px",
           "width": "529px"
          },
-         "children": [
-          {
-           "baseStyles": {
-            "display": "flex",
-            "flexDirection": "column",
-            "gap": "8px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "alignItems": "baseline",
-              "display": "flex",
-              "flexDirection": "row",
-              "gap": "12px",
-              "justifyContent": "space-between"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-9)",
-                "fontWeight": "600"
-               },
-               "componentId": "form-title",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-xl",
-                "tag": "h1",
-                "text": "{{ contactMode ? 'Tell us about your project for closer quotes' : 'Tell us about your business' }}"
-               },
-               "componentSlots": {}
-              },
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-5)",
-                "flexShrink": "0"
-               },
-               "componentId": "form-step-counter",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-sm",
-                "tag": "span",
-                "text": "{{ wizardStep + ' / 3' }}"
-               },
-               "componentSlots": {}
-              }
-             ],
-             "componentId": "form-title-row",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-7)",
-              "display": "{{ contactMode ? 'none' : 'block' }}"
-             },
-             "componentId": "form-subtitle",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-p-base",
-              "tag": "p",
-              "text": "Three questions, about a minute, and you'll get a recommendation straight away. No sales call in between."
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "form-header",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "display": "{{ wizardStep === 1 ? 'flex' : 'none' }}",
-            "flexDirection": "column",
-            "gap": "16px",
-            "marginTop": "24px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "display": "block",
-              "width": "100%"
-             },
-             "componentId": "input-business-country",
-             "componentName": "Select",
-             "componentProps": {
-              "error": "{{ showErrors && !businessCountry ? 'Pick where your business is based' : '' }}",
-              "label": "Where is your business based?",
-              "modelValue": {
-               "$type": "variable",
-               "name": "businessCountry"
-              },
-              "options": "{{ countryOptions }}",
-              "placeholder": "Select",
-              "required": true
-             },
-             "componentSlots": {}
-            },
-            {
-             "baseStyles": {
-              "width": "100%"
-             },
-             "componentId": "input-employee-count",
-             "componentName": "Select",
-             "componentProps": {
-              "error": "{{ showErrors && !employeeCount ? 'Pick how many people work there' : '' }}",
-              "label": "Number of employees",
-              "modelValue": {
-               "$type": "variable",
-               "name": "employeeCount"
-              },
-              "options": "{{ employeeOptions }}",
-              "placeholder": "Select",
-              "required": true
-             },
-             "componentSlots": {}
-            },
-            {
-             "baseStyles": {
-              "width": "100%"
-             },
-             "componentId": "input-industry",
-             "componentName": "MultiSelect",
-             "componentProps": {
-              "error": "{{ showErrors && !(industries || []).length ? 'Select an industry' : '' }}",
-              "label": "Relevant industry",
-              "modelValue": {
-               "$type": "variable",
-               "name": "industries"
-              },
-              "options": "{{ industryOptions }}",
-              "placeholder": "Select",
-              "required": true
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "step1-business",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "display": "{{ wizardStep === 3 && !contactMode ? 'flex' : 'none' }}",
-            "flexDirection": "column",
-            "gap": "12px",
-            "marginTop": "24px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-7)"
-             },
-             "componentId": "pains-question-label",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-sm",
-              "tag": "span",
-              "text": "What are you trying to fix?"
-             },
-             "componentSlots": {}
-            },
+         "componentSlots": {
+          "default": {
+           "parentBlockId": "left-panel-7639197f-scroll",
+           "slotContent": [
             {
              "baseStyles": {
               "display": "flex",
               "flexDirection": "column",
-              "gap": "12px"
+              "justifyContent": "center",
+              "padding": "48px 40px"
              },
              "children": [
-              {
-               "componentEvents": {
-                "update:modelValue": {
-                 "action": "Run Script",
-                 "event": "update:modelValue",
-                 "script": "togglePain('manual_work');"
-                }
-               },
-               "componentId": "pain-manual_work",
-               "componentName": "Checkbox",
-               "componentProps": {
-                "label": "Manual work that should be automated",
-                "modelValue": "{{ hasPain('manual_work') }}"
-               },
-               "componentSlots": {}
-              },
-              {
-               "componentEvents": {
-                "update:modelValue": {
-                 "action": "Run Script",
-                 "event": "update:modelValue",
-                 "script": "togglePain('hr_by_hand');"
-                }
-               },
-               "componentId": "pain-hr_by_hand",
-               "componentName": "Checkbox",
-               "componentProps": {
-                "label": "Payroll, leave and attendance are run by hand",
-                "modelValue": "{{ hasPain('hr_by_hand') }}"
-               },
-               "componentSlots": {}
-              },
-              {
-               "componentEvents": {
-                "update:modelValue": {
-                 "action": "Run Script",
-                 "event": "update:modelValue",
-                 "script": "togglePain('disconnected_systems');"
-                }
-               },
-               "componentId": "pain-disconnected_systems",
-               "componentName": "Checkbox",
-               "componentProps": {
-                "label": "Systems that do not talk to each other",
-                "modelValue": "{{ hasPain('disconnected_systems') }}"
-               },
-               "componentSlots": {}
-              },
-              {
-               "componentEvents": {
-                "update:modelValue": {
-                 "action": "Run Script",
-                 "event": "update:modelValue",
-                 "script": "togglePain('slow_close');"
-                }
-               },
-               "componentId": "pain-slow_close",
-               "componentName": "Checkbox",
-               "componentProps": {
-                "label": "Month-end close and reporting take too long",
-                "modelValue": "{{ hasPain('slow_close') }}"
-               },
-               "componentSlots": {}
-              },
-              {
-               "componentEvents": {
-                "update:modelValue": {
-                 "action": "Run Script",
-                 "event": "update:modelValue",
-                 "script": "togglePain('stock_visibility');"
-                }
-               },
-               "componentId": "pain-stock_visibility",
-               "componentName": "Checkbox",
-               "componentProps": {
-                "label": "No reliable view of stock and orders",
-                "modelValue": "{{ hasPain('stock_visibility') }}"
-               },
-               "componentSlots": {}
-              },
-              {
-               "componentEvents": {
-                "update:modelValue": {
-                 "action": "Run Script",
-                 "event": "update:modelValue",
-                 "script": "togglePain('tools_dont_fit');"
-                }
-               },
-               "componentId": "pain-tools_dont_fit",
-               "componentName": "Checkbox",
-               "componentProps": {
-                "label": "Our tools cannot handle how we actually work",
-                "modelValue": "{{ hasPain('tools_dont_fit') }}"
-               },
-               "componentSlots": {}
-              },
-              {
-               "componentEvents": {
-                "update:modelValue": {
-                 "action": "Run Script",
-                 "event": "update:modelValue",
-                 "script": "togglePain('outgrowing');"
-                }
-               },
-               "componentId": "pain-outgrowing",
-               "componentName": "Checkbox",
-               "componentProps": {
-                "label": "We are outgrowing what we have",
-                "modelValue": "{{ hasPain('outgrowing') }}"
-               },
-               "componentSlots": {}
-              }
-             ],
-             "componentId": "pains-options",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            },
-            {
-             "componentId": "pains-error",
-             "componentName": "ErrorMessage",
-             "componentProps": {
-              "message": "{{ showErrors && !painPoints.length ? 'Pick at least one' : '' }}"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "step3-pains",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "display": "{{ wizardStep === 3 && contactMode ? 'flex' : 'none' }}",
-            "flexDirection": "column",
-            "marginTop": "24px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "marginTop": "0px",
-              "width": "100%"
-             },
-             "blockName": "BudgetSelect",
-             "componentId": "fp-budget",
-             "componentName": "BudgetSelect",
-             "componentProps": {
-              "country": "{{ businessCountry }}",
-              "error": "{{ showErrors && !briefBudget ? 'Pick a budget range' : '' }}",
-              "label": "Your budget",
-              "modelValue": {
-               "$type": "variable",
-               "name": "briefBudget"
-              },
-              "required": true
-             },
-             "componentSlots": {},
-             "isCustomVueComponent": true
-            },
-            {
-             "baseStyles": {
-              "marginTop": "16px",
-              "width": "100%"
-             },
-             "classes": [
-              "[&_textarea]:h-[129px]"
-             ],
-             "componentId": "fp-description",
-             "componentName": "FormControl",
-             "componentProps": {
-              "error": "{{ showErrors && !briefDescription.trim() ? 'Tell partners what you need' : '' }}",
-              "label": "What do you need?",
-              "modelValue": {
-               "$type": "variable",
-               "name": "briefDescription"
-              },
-              "placeholder": "What do you make or sell, who are your customers, how does it run today, what keeps going wrong, and what must it connect to or prove?",
-              "required": true,
-              "rows": 6,
-              "type": "textarea"
-             },
-             "componentSlots": {}
-            },
-            {
-             "baseStyles": {
-              "color": "var(--ink-gray-5)",
-              "fontSize": "13px",
-              "letterSpacing": "0.12px",
-              "marginTop": "7px"
-             },
-             "componentId": "fp-description-hint",
-             "componentName": "TextBlock",
-             "componentProps": {
-              "fontSize": "text-p-base",
-              "tag": "p",
-              "text": "Partners quote from this, so the detail you add here comes back as accuracy."
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "fp-brief",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "display": "{{ wizardStep === 2 ? 'flex' : 'none' }}",
-            "flexDirection": "column",
-            "gap": "16px",
-            "marginTop": "24px"
-           },
-           "children": [
-            {
-             "baseStyles": {
-              "display": "flex",
-              "flexDirection": "column",
-              "gap": "4px"
-             },
-             "children": [
-              {
-               "baseStyles": {
-                "color": "var(--ink-gray-7)"
-               },
-               "componentId": "ops-question-label",
-               "componentName": "TextBlock",
-               "componentProps": {
-                "fontSize": "text-sm",
-                "tag": "span",
-                "text": "How would you describe your operations today?"
-               },
-               "componentSlots": {}
-              },
               {
                "baseStyles": {
                 "display": "flex",
-                "flexDirection": "column"
+                "flexDirection": "column",
+                "gap": "8px"
                },
                "children": [
                 {
                  "baseStyles": {
-                  "alignItems": "center",
-                  "cursor": "pointer",
+                  "alignItems": "baseline",
                   "display": "flex",
                   "flexDirection": "row",
-                  "gap": "8px",
-                  "padding": "6px 0px"
+                  "gap": "12px",
+                  "justifyContent": "space-between"
                  },
                  "children": [
                   {
                    "baseStyles": {
-                    "backgroundColor": "var(--surface-base)",
-                    "border": "{{ operations === 'spreadsheets' ? '5px solid var(--ink-gray-9)' : '1px solid var(--outline-gray-4)' }}",
-                    "borderRadius": "9999px",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "width": "16px"
+                    "color": "var(--ink-gray-9)",
+                    "fontWeight": "600"
                    },
-                   "componentId": "ops-radio-spreadsheets",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
+                   "componentId": "form-title",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-xl",
+                    "tag": "h1",
+                    "text": "{{ contactMode ? 'Tell us about your project for closer quotes' : 'Tell us about your business' }}"
+                   },
+                   "componentSlots": {}
                   },
                   {
                    "baseStyles": {
-                    "color": "var(--ink-gray-8)"
+                    "color": "var(--ink-gray-5)",
+                    "flexShrink": "0"
                    },
-                   "componentId": "ops-label-spreadsheets",
+                   "componentId": "form-step-counter",
                    "componentName": "TextBlock",
                    "componentProps": {
-                    "fontSize": "text-base",
+                    "fontSize": "text-sm",
                     "tag": "span",
-                    "text": "Spreadsheets, email and paper"
+                    "text": "{{ wizardStep + ' / 3' }}"
                    },
                    "componentSlots": {}
                   }
                  ],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "operations.value = 'spreadsheets';"
-                  }
-                 },
-                 "componentId": "ops-option-spreadsheets",
+                 "componentId": "form-title-row",
                  "componentName": "container",
                  "componentProps": {},
                  "componentSlots": {},
@@ -610,373 +203,797 @@
                 },
                 {
                  "baseStyles": {
-                  "alignItems": "center",
-                  "cursor": "pointer",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "gap": "8px",
-                  "padding": "6px 0px"
+                  "color": "var(--ink-gray-7)",
+                  "display": "{{ contactMode ? 'none' : 'block' }}"
                  },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "backgroundColor": "var(--surface-base)",
-                    "border": "{{ operations === 'accounting_software' ? '5px solid var(--ink-gray-9)' : '1px solid var(--outline-gray-4)' }}",
-                    "borderRadius": "9999px",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "width": "16px"
-                   },
-                   "componentId": "ops-radio-accounting_software",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8)"
-                   },
-                   "componentId": "ops-label-accounting_software",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "Accounting software, everything else by hand"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "operations.value = 'accounting_software';"
-                  }
+                 "componentId": "form-subtitle",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-p-base",
+                  "tag": "p",
+                  "text": "Three questions, about a minute, and you'll get a recommendation straight away. No sales call in between."
                  },
-                 "componentId": "ops-option-accounting_software",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "cursor": "pointer",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "gap": "8px",
-                  "padding": "6px 0px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "backgroundColor": "var(--surface-base)",
-                    "border": "{{ operations === 'disconnected_systems' ? '5px solid var(--ink-gray-9)' : '1px solid var(--outline-gray-4)' }}",
-                    "borderRadius": "9999px",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "width": "16px"
-                   },
-                   "componentId": "ops-radio-disconnected_systems",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8)"
-                   },
-                   "componentId": "ops-label-disconnected_systems",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "Several systems that do not talk to each other"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "operations.value = 'disconnected_systems';"
-                  }
-                 },
-                 "componentId": "ops-option-disconnected_systems",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
-                },
-                {
-                 "baseStyles": {
-                  "alignItems": "center",
-                  "cursor": "pointer",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "gap": "8px",
-                  "padding": "6px 0px"
-                 },
-                 "children": [
-                  {
-                   "baseStyles": {
-                    "backgroundColor": "var(--surface-base)",
-                    "border": "{{ operations === 'outgrown_erp' ? '5px solid var(--ink-gray-9)' : '1px solid var(--outline-gray-4)' }}",
-                    "borderRadius": "9999px",
-                    "flexShrink": "0",
-                    "height": "16px",
-                    "width": "16px"
-                   },
-                   "componentId": "ops-radio-outgrown_erp",
-                   "componentName": "container",
-                   "componentProps": {},
-                   "componentSlots": {},
-                   "originalElement": "div"
-                  },
-                  {
-                   "baseStyles": {
-                    "color": "var(--ink-gray-8)"
-                   },
-                   "componentId": "ops-label-outgrown_erp",
-                   "componentName": "TextBlock",
-                   "componentProps": {
-                    "fontSize": "text-base",
-                    "tag": "span",
-                    "text": "An ERP that no longer fits how we work"
-                   },
-                   "componentSlots": {}
-                  }
-                 ],
-                 "componentEvents": {
-                  "click": {
-                   "action": "Run Script",
-                   "event": "click",
-                   "script": "operations.value = 'outgrown_erp';"
-                  }
-                 },
-                 "componentId": "ops-option-outgrown_erp",
-                 "componentName": "container",
-                 "componentProps": {},
-                 "componentSlots": {},
-                 "originalElement": "div"
+                 "componentSlots": {}
                 }
                ],
-               "componentId": "ops-options",
+               "componentId": "form-header",
                "componentName": "container",
                "componentProps": {},
                "componentSlots": {},
                "originalElement": "div"
               },
               {
-               "componentId": "ops-error",
-               "componentName": "ErrorMessage",
-               "componentProps": {
-                "message": "{{ showErrors && !operations ? 'Pick the one closest to how you work today' : '' }}"
-               },
-               "componentSlots": {}
-              }
-             ],
-             "componentId": "ops-question",
-             "componentName": "container",
-             "componentProps": {},
-             "componentSlots": {},
-             "originalElement": "div"
-            },
-            {
-             "baseStyles": {
-              "display": "{{ usesOtherSystems(operations) ? 'flex' : 'none' }}",
-              "flexDirection": "column"
-             },
-             "children": [
-              {
                "baseStyles": {
-                "width": "100%"
+                "display": "{{ wizardStep === 1 ? 'flex' : 'none' }}",
+                "flexDirection": "column",
+                "gap": "16px",
+                "marginTop": "24px"
                },
-               "componentId": "input-current-systems",
-               "componentName": "MultiSelect",
-               "componentProps": {
-                "label": "Which systems do you use?",
-                "modelValue": {
-                 "$type": "variable",
-                 "name": "currentSystems"
+               "children": [
+                {
+                 "baseStyles": {
+                  "display": "block",
+                  "width": "100%"
+                 },
+                 "componentId": "input-business-country",
+                 "componentName": "Select",
+                 "componentProps": {
+                  "error": "{{ showErrors && !businessCountry ? 'Pick where your business is based' : '' }}",
+                  "label": "Where is your business based?",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "businessCountry"
+                  },
+                  "options": "{{ countryOptions }}",
+                  "placeholder": "Select",
+                  "required": true
+                 },
+                 "componentSlots": {}
                 },
-                "options": "{{ systemOptions }}",
-                "placeholder": "Select"
-               },
-               "componentSlots": {}
+                {
+                 "baseStyles": {
+                  "width": "100%"
+                 },
+                 "componentId": "input-employee-count",
+                 "componentName": "Select",
+                 "componentProps": {
+                  "error": "{{ showErrors && !employeeCount ? 'Pick how many people work there' : '' }}",
+                  "label": "Number of employees",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "employeeCount"
+                  },
+                  "options": "{{ employeeOptions }}",
+                  "placeholder": "Select",
+                  "required": true
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "baseStyles": {
+                  "width": "100%"
+                 },
+                 "componentId": "input-industry",
+                 "componentName": "MultiSelect",
+                 "componentProps": {
+                  "error": "{{ showErrors && !(industries || []).length ? 'Select an industry' : '' }}",
+                  "label": "Relevant industry",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "industries"
+                  },
+                  "options": "{{ industryOptions }}",
+                  "placeholder": "Select",
+                  "required": true
+                 },
+                 "componentSlots": {}
+                }
+               ],
+               "componentId": "step1-business",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
               },
               {
-               "componentId": "input-other-system",
-               "componentName": "FormControl",
-               "componentSlots": {},
                "baseStyles": {
-                "marginTop": "16px",
-                "width": "100%"
+                "display": "{{ wizardStep === 3 && !contactMode ? 'flex' : 'none' }}",
+                "flexDirection": "column",
+                "gap": "12px",
+                "marginTop": "24px"
                },
-               "componentProps": {
-                "type": "text",
-                "label": "What else do you use?",
-                "placeholder": "e.g. a custom system built in-house",
-                "modelValue": {
-                 "$type": "variable",
-                 "name": "otherSystem"
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-7)"
+                 },
+                 "componentId": "pains-question-label",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-sm",
+                  "tag": "span",
+                  "text": "What are you trying to fix?"
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "12px"
+                 },
+                 "children": [
+                  {
+                   "componentEvents": {
+                    "update:modelValue": {
+                     "action": "Run Script",
+                     "event": "update:modelValue",
+                     "script": "togglePain('manual_work');"
+                    }
+                   },
+                   "componentId": "pain-manual_work",
+                   "componentName": "Checkbox",
+                   "componentProps": {
+                    "label": "Manual work that should be automated",
+                    "modelValue": "{{ hasPain('manual_work') }}"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "componentEvents": {
+                    "update:modelValue": {
+                     "action": "Run Script",
+                     "event": "update:modelValue",
+                     "script": "togglePain('hr_by_hand');"
+                    }
+                   },
+                   "componentId": "pain-hr_by_hand",
+                   "componentName": "Checkbox",
+                   "componentProps": {
+                    "label": "Payroll, leave and attendance are run by hand",
+                    "modelValue": "{{ hasPain('hr_by_hand') }}"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "componentEvents": {
+                    "update:modelValue": {
+                     "action": "Run Script",
+                     "event": "update:modelValue",
+                     "script": "togglePain('disconnected_systems');"
+                    }
+                   },
+                   "componentId": "pain-disconnected_systems",
+                   "componentName": "Checkbox",
+                   "componentProps": {
+                    "label": "Systems that do not talk to each other",
+                    "modelValue": "{{ hasPain('disconnected_systems') }}"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "componentEvents": {
+                    "update:modelValue": {
+                     "action": "Run Script",
+                     "event": "update:modelValue",
+                     "script": "togglePain('slow_close');"
+                    }
+                   },
+                   "componentId": "pain-slow_close",
+                   "componentName": "Checkbox",
+                   "componentProps": {
+                    "label": "Month-end close and reporting take too long",
+                    "modelValue": "{{ hasPain('slow_close') }}"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "componentEvents": {
+                    "update:modelValue": {
+                     "action": "Run Script",
+                     "event": "update:modelValue",
+                     "script": "togglePain('stock_visibility');"
+                    }
+                   },
+                   "componentId": "pain-stock_visibility",
+                   "componentName": "Checkbox",
+                   "componentProps": {
+                    "label": "No reliable view of stock and orders",
+                    "modelValue": "{{ hasPain('stock_visibility') }}"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "componentEvents": {
+                    "update:modelValue": {
+                     "action": "Run Script",
+                     "event": "update:modelValue",
+                     "script": "togglePain('tools_dont_fit');"
+                    }
+                   },
+                   "componentId": "pain-tools_dont_fit",
+                   "componentName": "Checkbox",
+                   "componentProps": {
+                    "label": "Our tools cannot handle how we actually work",
+                    "modelValue": "{{ hasPain('tools_dont_fit') }}"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "componentEvents": {
+                    "update:modelValue": {
+                     "action": "Run Script",
+                     "event": "update:modelValue",
+                     "script": "togglePain('outgrowing');"
+                    }
+                   },
+                   "componentId": "pain-outgrowing",
+                   "componentName": "Checkbox",
+                   "componentProps": {
+                    "label": "We are outgrowing what we have",
+                    "modelValue": "{{ hasPain('outgrowing') }}"
+                   },
+                   "componentSlots": {}
+                  }
+                 ],
+                 "componentId": "pains-options",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "originalElement": "div"
+                },
+                {
+                 "componentId": "pains-error",
+                 "componentName": "ErrorMessage",
+                 "componentProps": {
+                  "message": "{{ showErrors && !painPoints.length ? 'Pick at least one' : '' }}"
+                 },
+                 "componentSlots": {}
                 }
+               ],
+               "componentId": "step3-pains",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "display": "{{ wizardStep === 3 && contactMode ? 'flex' : 'none' }}",
+                "flexDirection": "column",
+                "marginTop": "24px"
                },
-               "visibilityCondition": "(currentSystems || []).includes('Something else')"
+               "children": [
+                {
+                 "baseStyles": {
+                  "marginTop": "0px",
+                  "width": "100%"
+                 },
+                 "blockName": "BudgetSelect",
+                 "componentId": "fp-budget",
+                 "componentName": "BudgetSelect",
+                 "componentProps": {
+                  "country": "{{ businessCountry }}",
+                  "error": "{{ showErrors && !briefBudget ? 'Pick a budget range' : '' }}",
+                  "label": "Your budget",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "briefBudget"
+                  },
+                  "required": true
+                 },
+                 "componentSlots": {},
+                 "isCustomVueComponent": true
+                },
+                {
+                 "baseStyles": {
+                  "marginTop": "16px",
+                  "width": "100%"
+                 },
+                 "classes": [
+                  "[&_textarea]:h-[129px]"
+                 ],
+                 "componentId": "fp-description",
+                 "componentName": "FormControl",
+                 "componentProps": {
+                  "error": "{{ showErrors && !briefDescription.trim() ? 'Tell partners what you need' : '' }}",
+                  "label": "What do you need?",
+                  "modelValue": {
+                   "$type": "variable",
+                   "name": "briefDescription"
+                  },
+                  "placeholder": "What do you make or sell, who are your customers, how does it run today, what keeps going wrong, and what must it connect to or prove?",
+                  "required": true,
+                  "rows": 6,
+                  "type": "textarea"
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "baseStyles": {
+                  "color": "var(--ink-gray-5)",
+                  "fontSize": "13px",
+                  "letterSpacing": "0.12px",
+                  "marginTop": "7px"
+                 },
+                 "componentId": "fp-description-hint",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "fontSize": "text-p-base",
+                  "tag": "p",
+                  "text": "Partners quote from this, so the detail you add here comes back as accuracy."
+                 },
+                 "componentSlots": {}
+                }
+               ],
+               "componentId": "fp-brief",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "display": "{{ wizardStep === 2 ? 'flex' : 'none' }}",
+                "flexDirection": "column",
+                "gap": "16px",
+                "marginTop": "24px"
+               },
+               "children": [
+                {
+                 "baseStyles": {
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "gap": "4px"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "color": "var(--ink-gray-7)"
+                   },
+                   "componentId": "ops-question-label",
+                   "componentName": "TextBlock",
+                   "componentProps": {
+                    "fontSize": "text-sm",
+                    "tag": "span",
+                    "text": "How would you describe your operations today?"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "baseStyles": {
+                    "display": "flex",
+                    "flexDirection": "column"
+                   },
+                   "children": [
+                    {
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "cursor": "pointer",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "8px",
+                      "padding": "6px 0px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-base)",
+                        "border": "{{ operations === 'spreadsheets' ? '5px solid var(--ink-gray-9)' : '1px solid var(--outline-gray-4)' }}",
+                        "borderRadius": "9999px",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "width": "16px"
+                       },
+                       "componentId": "ops-radio-spreadsheets",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-8)"
+                       },
+                       "componentId": "ops-label-spreadsheets",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-base",
+                        "tag": "span",
+                        "text": "Spreadsheets, email and paper"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "operations.value = 'spreadsheets';"
+                      }
+                     },
+                     "componentId": "ops-option-spreadsheets",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "cursor": "pointer",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "8px",
+                      "padding": "6px 0px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-base)",
+                        "border": "{{ operations === 'accounting_software' ? '5px solid var(--ink-gray-9)' : '1px solid var(--outline-gray-4)' }}",
+                        "borderRadius": "9999px",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "width": "16px"
+                       },
+                       "componentId": "ops-radio-accounting_software",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-8)"
+                       },
+                       "componentId": "ops-label-accounting_software",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-base",
+                        "tag": "span",
+                        "text": "Accounting software, everything else by hand"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "operations.value = 'accounting_software';"
+                      }
+                     },
+                     "componentId": "ops-option-accounting_software",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "cursor": "pointer",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "8px",
+                      "padding": "6px 0px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-base)",
+                        "border": "{{ operations === 'disconnected_systems' ? '5px solid var(--ink-gray-9)' : '1px solid var(--outline-gray-4)' }}",
+                        "borderRadius": "9999px",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "width": "16px"
+                       },
+                       "componentId": "ops-radio-disconnected_systems",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-8)"
+                       },
+                       "componentId": "ops-label-disconnected_systems",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-base",
+                        "tag": "span",
+                        "text": "Several systems that do not talk to each other"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "operations.value = 'disconnected_systems';"
+                      }
+                     },
+                     "componentId": "ops-option-disconnected_systems",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
+                    },
+                    {
+                     "baseStyles": {
+                      "alignItems": "center",
+                      "cursor": "pointer",
+                      "display": "flex",
+                      "flexDirection": "row",
+                      "gap": "8px",
+                      "padding": "6px 0px"
+                     },
+                     "children": [
+                      {
+                       "baseStyles": {
+                        "backgroundColor": "var(--surface-base)",
+                        "border": "{{ operations === 'outgrown_erp' ? '5px solid var(--ink-gray-9)' : '1px solid var(--outline-gray-4)' }}",
+                        "borderRadius": "9999px",
+                        "flexShrink": "0",
+                        "height": "16px",
+                        "width": "16px"
+                       },
+                       "componentId": "ops-radio-outgrown_erp",
+                       "componentName": "container",
+                       "componentProps": {},
+                       "componentSlots": {},
+                       "originalElement": "div"
+                      },
+                      {
+                       "baseStyles": {
+                        "color": "var(--ink-gray-8)"
+                       },
+                       "componentId": "ops-label-outgrown_erp",
+                       "componentName": "TextBlock",
+                       "componentProps": {
+                        "fontSize": "text-base",
+                        "tag": "span",
+                        "text": "An ERP that no longer fits how we work"
+                       },
+                       "componentSlots": {}
+                      }
+                     ],
+                     "componentEvents": {
+                      "click": {
+                       "action": "Run Script",
+                       "event": "click",
+                       "script": "operations.value = 'outgrown_erp';"
+                      }
+                     },
+                     "componentId": "ops-option-outgrown_erp",
+                     "componentName": "container",
+                     "componentProps": {},
+                     "componentSlots": {},
+                     "originalElement": "div"
+                    }
+                   ],
+                   "componentId": "ops-options",
+                   "componentName": "container",
+                   "componentProps": {},
+                   "componentSlots": {},
+                   "originalElement": "div"
+                  },
+                  {
+                   "componentId": "ops-error",
+                   "componentName": "ErrorMessage",
+                   "componentProps": {
+                    "message": "{{ showErrors && !operations ? 'Pick the one closest to how you work today' : '' }}"
+                   },
+                   "componentSlots": {}
+                  }
+                 ],
+                 "componentId": "ops-question",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "originalElement": "div"
+                },
+                {
+                 "baseStyles": {
+                  "display": "{{ usesOtherSystems(operations) ? 'flex' : 'none' }}",
+                  "flexDirection": "column"
+                 },
+                 "children": [
+                  {
+                   "baseStyles": {
+                    "width": "100%"
+                   },
+                   "componentId": "input-current-systems",
+                   "componentName": "MultiSelect",
+                   "componentProps": {
+                    "label": "Which systems do you use?",
+                    "modelValue": {
+                     "$type": "variable",
+                     "name": "currentSystems"
+                    },
+                    "options": "{{ systemOptions }}",
+                    "placeholder": "Select"
+                   },
+                   "componentSlots": {}
+                  },
+                  {
+                   "componentId": "input-other-system",
+                   "componentName": "FormControl",
+                   "componentSlots": {},
+                   "baseStyles": {
+                    "marginTop": "16px",
+                    "width": "100%"
+                   },
+                   "componentProps": {
+                    "type": "text",
+                    "label": "What else do you use?",
+                    "placeholder": "e.g. a custom system built in-house",
+                    "modelValue": {
+                     "$type": "variable",
+                     "name": "otherSystem"
+                    }
+                   },
+                   "visibilityCondition": "(currentSystems || []).includes('Something else')"
+                  }
+                 ],
+                 "componentId": "systems-field",
+                 "componentName": "container",
+                 "componentProps": {},
+                 "componentSlots": {},
+                 "originalElement": "div"
+                }
+               ],
+               "componentId": "step2-operations",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "display": "{{ wizardStep === 1 ? 'flex' : 'none' }}",
+                "flexDirection": "row",
+                "gap": "8px",
+                "marginTop": "24px"
+               },
+               "children": [
+                {
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "continueFromBusiness();"
+                  }
+                 },
+                 "componentId": "step1-primary",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "label": "Continue",
+                  "variant": "solid"
+                 },
+                 "componentSlots": {}
+                }
+               ],
+               "componentId": "step1-actions",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "display": "{{ wizardStep === 2 ? 'flex' : 'none' }}",
+                "flexDirection": "row",
+                "gap": "8px",
+                "marginTop": "24px"
+               },
+               "children": [
+                {
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "continueFromOperations();"
+                  }
+                 },
+                 "componentId": "step2-primary",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "label": "Continue",
+                  "variant": "solid"
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "goToStep(1);"
+                  }
+                 },
+                 "componentId": "step2-back",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "label": "Back",
+                  "variant": "subtle"
+                 },
+                 "componentSlots": {}
+                }
+               ],
+               "componentId": "step2-actions",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
+              },
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "display": "{{ wizardStep === 3 ? 'flex' : 'none' }}",
+                "flexDirection": "row",
+                "gap": "8px",
+                "marginTop": "24px"
+               },
+               "children": [
+                {
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "finishStep3();"
+                  }
+                 },
+                 "componentId": "step3-primary",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "iconLeft": "{{ contactMode && !signedIn ? 'lucide-user-round' : undefined }}",
+                  "label": "{{ contactMode ? (signedIn ? 'View details' : 'Sign up to see partners') : 'See what we recommend' }}",
+                  "variant": "solid"
+                 },
+                 "componentSlots": {}
+                },
+                {
+                 "componentEvents": {
+                  "click": {
+                   "action": "Run Script",
+                   "event": "click",
+                   "script": "goToStep(2);"
+                  }
+                 },
+                 "componentId": "step3-back",
+                 "componentName": "Button",
+                 "componentProps": {
+                  "label": "Back",
+                  "variant": "subtle"
+                 },
+                 "componentSlots": {}
+                }
+               ],
+               "componentId": "step3-actions",
+               "componentName": "container",
+               "componentProps": {},
+               "componentSlots": {},
+               "originalElement": "div"
               }
              ],
-             "componentId": "systems-field",
+             "componentId": "left-panel-7639197f",
              "componentName": "container",
              "componentProps": {},
              "componentSlots": {},
              "originalElement": "div"
             }
            ],
-           "componentId": "step2-operations",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "display": "{{ wizardStep === 1 ? 'flex' : 'none' }}",
-            "flexDirection": "row",
-            "gap": "8px",
-            "marginTop": "24px"
-           },
-           "children": [
-            {
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "continueFromBusiness();"
-              }
-             },
-             "componentId": "step1-primary",
-             "componentName": "Button",
-             "componentProps": {
-              "label": "Continue",
-              "variant": "solid"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "step1-actions",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "display": "{{ wizardStep === 2 ? 'flex' : 'none' }}",
-            "flexDirection": "row",
-            "gap": "8px",
-            "marginTop": "24px"
-           },
-           "children": [
-            {
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "continueFromOperations();"
-              }
-             },
-             "componentId": "step2-primary",
-             "componentName": "Button",
-             "componentProps": {
-              "label": "Continue",
-              "variant": "solid"
-             },
-             "componentSlots": {}
-            },
-            {
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "goToStep(1);"
-              }
-             },
-             "componentId": "step2-back",
-             "componentName": "Button",
-             "componentProps": {
-              "label": "Back",
-              "variant": "subtle"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "step2-actions",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
-          },
-          {
-           "baseStyles": {
-            "alignItems": "center",
-            "display": "{{ wizardStep === 3 ? 'flex' : 'none' }}",
-            "flexDirection": "row",
-            "gap": "8px",
-            "marginTop": "24px"
-           },
-           "children": [
-            {
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "finishStep3();"
-              }
-             },
-             "componentId": "step3-primary",
-             "componentName": "Button",
-             "componentProps": {
-              "iconLeft": "{{ contactMode && !signedIn ? 'lucide-user-round' : undefined }}",
-              "label": "{{ contactMode ? (signedIn ? 'View details' : 'Sign up to see partners') : 'See what we recommend' }}",
-              "variant": "solid"
-             },
-             "componentSlots": {}
-            },
-            {
-             "componentEvents": {
-              "click": {
-               "action": "Run Script",
-               "event": "click",
-               "script": "goToStep(2);"
-              }
-             },
-             "componentId": "step3-back",
-             "componentName": "Button",
-             "componentProps": {
-              "label": "Back",
-              "variant": "subtle"
-             },
-             "componentSlots": {}
-            }
-           ],
-           "componentId": "step3-actions",
-           "componentName": "container",
-           "componentProps": {},
-           "componentSlots": {},
-           "originalElement": "div"
+           "slotId": "left-panel-7639197f-scroll:default",
+           "slotName": "default"
           }
-         ],
-         "componentId": "left-panel-7639197f",
-         "componentName": "container",
-         "componentProps": {},
-         "componentSlots": {},
-         "originalElement": "div"
+         },
+         "isCustomVueComponent": true
         },
         {
          "baseStyles": {
@@ -1899,7 +1916,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-23 12:00:00.000000",
+ "modified": "2026-11-23 23:30:00.000000",
  "modified_by": "maitri@frappe.io",
  "name": "find_partners_redesign",
  "owner": "Administrator",
