@@ -150,7 +150,7 @@ class IntegrationTestBriefSLA(SLAFixture):
 		frappe.set_user(OWNER)
 		send_quote(self.quote, 400000, 6)
 		frappe.set_user(BUYER)
-		set_quote_status(self.quote, "Not Interested")
+		set_quote_status(self.quote, "Not Interested", "Price")
 
 		self.assertEqual(self.sla_row().sla_status, "Fulfilled")
 

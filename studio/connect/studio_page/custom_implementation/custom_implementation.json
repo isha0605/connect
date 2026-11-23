@@ -2267,6 +2267,151 @@
      },
      "componentSlots": {},
      "isCustomVueComponent": true
+    },
+    {
+     "componentId": "decline-dialog",
+     "componentName": "Dialog",
+     "componentSlots": {},
+     "componentProps": {
+      "modelValue": {
+       "$type": "variable",
+       "name": "declineOpen"
+      },
+      "size": "md",
+      "title": "{{ declineTitle }}"
+     },
+     "children": [
+      {
+       "componentId": "decline-body",
+       "componentName": "container",
+       "componentProps": {},
+       "componentSlots": {},
+       "originalElement": "div",
+       "classes": [
+        "flex",
+        "flex-col",
+        "gap-4"
+       ],
+       "children": [
+        {
+         "componentId": "decline-text",
+         "componentName": "TextBlock",
+         "componentSlots": {},
+         "classes": [
+          "text-ink-gray-6"
+         ],
+         "componentProps": {
+          "tag": "p",
+          "fontSize": "text-p-base",
+          "text": "{{ (declineRow ? declineRow.company_name : 'The partner') + ' is emailed your reason, and the quote moves to Not interested. You can restore it later.' }}"
+         }
+        },
+        {
+         "componentId": "decline-reasons",
+         "componentName": "Repeater",
+         "componentSlots": {
+          "default": {
+           "parentBlockId": "decline-reasons",
+           "slotId": "decline-reasons:default",
+           "slotName": "default",
+           "slotContent": [
+            {
+             "componentId": "decline-reason-chip",
+             "componentName": "Button",
+             "componentProps": {
+              "label": "{{ dataItem.value }}",
+              "iconLeft": "{{ declineReason === dataItem.value ? 'lucide-check' : 'lucide-plus' }}",
+              "variant": "{{ declineReason === dataItem.value ? 'solid' : 'subtle' }}"
+             },
+             "componentSlots": {},
+             "componentEvents": {
+              "click": {
+               "action": "Run Script",
+               "event": "click",
+               "script": "pickDeclineReason(dataItem.value);"
+              }
+             }
+            }
+           ]
+          }
+         },
+         "componentProps": {
+          "data": "{{ declineReasons }}",
+          "dataKey": "value",
+          "emptyStateMessage": ""
+         },
+         "classes": [],
+         "baseStyles": {
+          "display": "flex",
+          "flexWrap": "wrap",
+          "gap": "8px"
+         }
+        },
+        {
+         "componentId": "decline-note",
+         "componentName": "Textarea",
+         "componentSlots": {},
+         "componentProps": {
+          "modelValue": {
+           "$type": "variable",
+           "name": "declineNote"
+          },
+          "placeholder": "Add a note for the partner (optional)",
+          "rows": 3
+         }
+        },
+        {
+         "componentId": "decline-actions",
+         "componentName": "container",
+         "componentProps": {},
+         "componentSlots": {},
+         "originalElement": "div",
+         "classes": [
+          "flex",
+          "justify-end",
+          "gap-2",
+          "pt-2"
+         ],
+         "children": [
+          {
+           "componentId": "decline-cancel",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Cancel",
+            "variant": "subtle"
+           },
+           "componentSlots": {},
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "declineOpen.value = false;"
+            }
+           }
+          },
+          {
+           "componentId": "decline-confirm",
+           "componentName": "Button",
+           "componentProps": {
+            "label": "Not interested",
+            "variant": "solid",
+            "disabled": "{{ !declineReason }}",
+            "loading": "{{ declining }}"
+           },
+           "componentSlots": {},
+           "componentEvents": {
+            "click": {
+             "action": "Run Script",
+             "event": "click",
+             "script": "confirmNotInterested();"
+            }
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
     }
    ],
    "componentId": "proj-body",
@@ -2282,7 +2427,7 @@
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-11-21 20:00:00.000000",
+ "modified": "2026-11-24 10:10:00.000000",
  "modified_by": "Administrator",
  "name": "custom_implementation",
  "owner": "Administrator",

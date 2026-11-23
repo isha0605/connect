@@ -62,9 +62,9 @@ def list_quotes(name):
 
 
 @frappe.whitelist(methods=["POST"])
-def set_quote_status(quote, status):
+def set_quote_status(quote, status, reason=None, note=None):
 	from connect.customer.doctype.customer_project.customer_project import set_quote_status
-	return set_quote_status(quote, status)
+	return set_quote_status(quote, status, reason, note)
 
 
 # Demo only: every partner still Awaiting replies with a made-up quote. See simulate_quotes.

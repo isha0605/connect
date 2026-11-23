@@ -1,8 +1,9 @@
-import { computed } from "vue"
+import { computed, watch } from "vue"
 import { call, toast } from "frappe-ui"
 import { hourlyRate } from "@app/utils/money"
 import { projectDialog, projectPath } from "@app/utils/projectDialog"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 import { tierSeal } from "@app/utils/tierSeal"
 
 // Home for a signed-in buyer: their latest projects and saved partners come from the
@@ -80,9 +81,24 @@ const EVENTS = [
 // Home shows the newest few; the Projects page lists them all.
 const HOME_PROJECTS = 6
 
+// Home is the buyer's start page. A partner's team member who lands here (the app's own
+// address, or a link back to Home) goes to their own start: Leads, Customers or onboarding.
+function sendPartnersHome(router) {
+	if (window.location.pathname.startsWith("/studio/")) return
+	const myContext = useMyContext()
+	watch(
+		() => myContext.data,
+		(data) => {
+			if (data?.partner) router.replace(data.partner.home_route || "/partner-listing")
+		},
+		{ immediate: true },
+	)
+}
+
 export default function setup(context) {
 	startTracking(context)
 	const { router, myProfile, projectList, myShortlist } = context
+	sendPartnersHome(router)
 
 	// ---- Greeting ----
 	const greeting = computed(() => {

@@ -48,6 +48,8 @@ INVITED_QUOTE_STATUSES = ("Awaiting", "Partner Declined")
 # Why the customer chose their partner. The page's Other chip is the free-text `hire_note`.
 HIRE_REASONS = ("Price", "Timeline", "Their profile", "How they replied")
 HIRE_NOTE_LIMIT = 500
+# Why the customer set a quote aside: one is required, and the partner is emailed it.
+NOT_INTERESTED_REASONS = ("Price", "Timeline", "Picked another partner", "Not a good fit", "Other")
 
 # The quote statuses a hire request moves through, which only hiring.py sets.
 HIRE_QUOTE_STATUSES = ("Hire Requested", "Hire Declined", "Hired")
@@ -325,6 +327,7 @@ def project_dict(doc: CustomerProject) -> dict:
 		"hire_reason": doc.hire_reason,
 		"hire_reasons": list(HIRE_REASONS),
 		"hire_note_limit": HIRE_NOTE_LIMIT,
+		"not_interested_reasons": list(NOT_INTERESTED_REASONS),
 		"hired_on": with_timezone(doc.hired_on),
 		"live_on": with_timezone(doc.live_on),
 		"completed_on": with_timezone(doc.completed_on),
@@ -392,7 +395,9 @@ def list_quotes(name: str) -> list[dict]:
 	return rows
 
 
-def set_quote_status(quote: str, status: str) -> dict:
+def set_quote_status(quote: str, status: str, reason: str | None = None, note: str | None = None) -> dict:
+	"""The customer's answer to a quote. Not interested needs a reason, which the partner is told;
+	Project Quote.on_update loses their lead and emails them."""
 	if status not in QUOTE_STATUSES:
 		frappe.throw(_("Pick Interested or Not interested."))
 	row = frappe.get_doc("Project Quote", quote)
@@ -402,9 +407,22 @@ def set_quote_status(quote: str, status: str) -> dict:
 	if row.status in HIRE_QUOTE_STATUSES:
 		frappe.throw(_("You have already asked this partner to take the project on."))
 	row.status = status
+	row.not_interested_reason, row.not_interested_note = _not_interested_answer(status, reason, note)
 	# Project Quote is a system DocType; get_own_project above checked this is the customer's own.
 	row.save(ignore_permissions=True)
 	return quote_counts(row.customer_project)
+
+
+def _not_interested_answer(status: str, reason: str | None, note: str | None) -> tuple:
+	"""The reason and note kept with a Not interested quote; any other status clears them."""
+	if status != "Not Interested":
+		return None, None
+	if reason not in NOT_INTERESTED_REASONS:
+		frappe.throw(_("Tell the partner why you're not interested."))
+	note = (note or "").strip()
+	if len(note) > HIRE_NOTE_LIMIT:
+		frappe.throw(_("Keep the note under {0} characters.").format(HIRE_NOTE_LIMIT))
+	return reason, note or None
 
 
 def set_hire_reason(name: str, reasons=None, note=None):

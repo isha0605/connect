@@ -95,6 +95,20 @@ function quoteError(amount, weeks, note) {
 // is_customer_revealed), `reload` reads it again after anything here changes the thread, and
 // `followUpMethod` is the page's log_*_follow_up, which also sends a meeting invite. `me` is
 // the signed-in user (a ref), and `socket` is Studio's realtime connection.
+// As CRM does with a record's emails: once the messages are on screen, ease down to the newest,
+// unless it's already in view. `rowId` is the message row's block id on the page.
+export function revealLatestMessage(rowId) {
+	setTimeout(() => {
+		const rows = document.querySelectorAll(`[data-component-id="${rowId}"]`)
+		const latest = rows[rows.length - 1]
+		if (!latest) return
+		const feed = latest.closest(".overflow-y-auto")?.getBoundingClientRect() || { top: 0, bottom: window.innerHeight }
+		const row = latest.getBoundingClientRect()
+		if (row.top >= feed.top && row.bottom <= feed.bottom) return
+		latest.scrollIntoView({ behavior: "smooth", block: "end" })
+	}, 500)
+}
+
 export function useConversation({ call, toast, record, reload, followUpMethod, me, socket }) {
 	const thread = computed(() => record.value?.thread || "")
 

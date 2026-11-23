@@ -9,7 +9,7 @@ from frappe.model.document import Document
 from frappe.utils import cint, flt, now_datetime
 
 from connect.api.attachments import _attach_file_to_message, _copy_message_attachment
-from connect.customer.doctype.customer_project.project_notifications import notify_quote_update
+from connect.customer.doctype.customer_project.project_notifications import email_quote_declined, notify_quote_update
 from connect.partner.doctype.connect_partner_member.connect_partner_member import LEAD_ACCESS
 from connect.partner.chat_sla import hand_chat_clock_to_quote
 from connect.partner.performance_events import RequirementEvents
@@ -29,6 +29,8 @@ QUOTED_STATUSES = ("Quoted", "Interested")
 # A brief the partner may still win, which keeps its lead open when they decline another.
 OPEN_FOR_PARTNER_STATUSES = ("Awaiting", "Quoted", "Interested", "Hire Requested", "Hired")
 DECLINED_LOST_REASON = "Not taking new clients"
+# The customer set the quote aside; Restore reopens only a lead lost for this reason.
+CUSTOMER_DECLINED_LOST_REASON = "Customer declined the quote"
 MAX_WEEKS = 104
 NOTE_LIMIT = 300
 # A brochure opens in the customer's browser, so only types that can't run scripts there: no SVG.
@@ -83,7 +85,9 @@ class ProjectQuote(Document):
 			withdraw_sibling_brief_clocks(self)
 		if self.status == "Partner Declined" and self.has_value_changed("status"):
 			self._tell_customer_of_decline()
-			self._lose_lead()
+			self._lose_lead(DECLINED_LOST_REASON)
+		if self.has_value_changed("status"):
+			self._follow_customer_decision()
 		if self.lead and any(self.has_value_changed(field) for field in FRAPPE_CRM_FIELDS):
 			from connect.crm_partner_leads import queue_partner_lead_sync
 
@@ -183,8 +187,8 @@ class ProjectQuote(Document):
 			_("{0} is not available to take on new clients right now.").format(company_name)
 		)
 
-	def _lose_lead(self):
-		"""Declining the customer's only open brief loses the lead; another open one keeps it."""
+	def _lose_lead(self, reason: str):
+		"""Closing the customer's only open brief loses the lead; another open one keeps it."""
 		if not self.lead:
 			return
 		has_open_brief = frappe.db.exists(
@@ -192,7 +196,19 @@ class ProjectQuote(Document):
 			{"lead": self.lead, "name": ["!=", self.name], "status": ["in", OPEN_FOR_PARTNER_STATUSES]},
 		)
 		if not has_open_brief:
-			frappe.get_doc("Partner Lead", self.lead).lose(DECLINED_LOST_REASON)
+			frappe.get_doc("Partner Lead", self.lead).lose(reason)
+
+	def _follow_customer_decision(self):
+		"""Not interested loses the partner's lead and emails them why; Restore takes it back,
+		reopening a lead that was lost only because of it."""
+		before = self.get_doc_before_save()
+		if self.status == "Not Interested":
+			self._lose_lead(CUSTOMER_DECLINED_LOST_REASON)
+			email_quote_declined(self)
+		elif before and before.status == "Not Interested" and self.lead:
+			lead = frappe.get_doc("Partner Lead", self.lead)
+			if lead.stage == "Lost" and lead.lost_reason == CUSTOMER_DECLINED_LOST_REASON:
+				lead.reopen()
 
 	def _check_hire_change(self):
 		"""One hire per project, and a completed project's hire is final."""

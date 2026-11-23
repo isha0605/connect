@@ -17,7 +17,7 @@ import {
 	toFollowUpRows,
 	toNoteRows,
 } from "@app/utils/partnerRecords"
-import { useConversation } from "@app/utils/partnerConversation"
+import { revealLatestMessage, useConversation } from "@app/utils/partnerConversation"
 import { startTracking } from "@app/utils/tracking"
 
 const TABS = [
@@ -150,6 +150,10 @@ export default function setup(context) {
 
 	// ── Tabs ────────────────────────────────────────────────────────────────
 	const tab = ref("messages")
+	// Opening Messages (or the lead, which starts there) eases down to the newest message.
+	watch([tab, loading], ([current, busy]) => {
+		if (current === "messages" && !busy) revealLatestMessage("le-msg")
+	})
 	const sideOpen = ref(false)
 
 	// ── Messages ────────────────────────────────────────────────────────────
@@ -192,19 +196,31 @@ export default function setup(context) {
 	}
 
 	// ── Notes: the team's own about this customer, never sent to the business ──
+	// Written in a dialog; the list shows it once saved.
 	const noteDraft = ref("")
+	const noteOpen = ref(false)
+	const savingNote = ref(false)
 	const notes = computed(() => toNoteRows(data.value?.notes || []))
+
+	function openNote() {
+		noteDraft.value = ""
+		noteOpen.value = true
+	}
 
 	async function addNote() {
 		const text = noteDraft.value.trim()
-		if (!text) return
+		if (!text || savingNote.value) return
+		savingNote.value = true
 		try {
 			const saved = await call("connect.api.leads.add_lead_note", { name: leadId.value, content: text })
 			data.value = { ...data.value, notes: saved }
 			noteDraft.value = ""
+			noteOpen.value = false
 			toast.success("Note added")
 		} catch (error) {
 			toast.error(error?.messages?.[0] || "Couldn't add the note.")
+		} finally {
+			savingNote.value = false
 		}
 	}
 
@@ -235,6 +251,7 @@ export default function setup(context) {
 			sideOpen.value = false
 			conversation.resetDraft()
 			noteDraft.value = ""
+			noteOpen.value = false
 			loading.value = true
 			load()
 		},
@@ -280,7 +297,11 @@ export default function setup(context) {
 		activity: computed(() => activityRows(toActivityEntries(data.value?.activity || []), expandedGroups.value)),
 		toggleGroup,
 		noteDraft,
+		noteOpen,
+		savingNote,
 		notes,
+		openNote,
+		closeNote: () => (noteOpen.value = false),
 		addNote,
 		openSections,
 		toggleSection,
