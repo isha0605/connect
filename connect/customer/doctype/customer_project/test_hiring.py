@@ -181,6 +181,23 @@ class TestHiring(IntegrationTestCase):
 			project["declined_hire"], {"company_name": PARTNER, "reason": "We're fully booked until March."}
 		)
 
+	def test_the_customer_is_emailed_why_the_partner_declined(self, enqueue):
+		from connect.customer.doctype.customer_project.project_notifications import send_hire_declined_email
+
+		self.request()
+		self.answer(accept=0, reason="We're fully booked until March.")
+		jobs = [call.args[0] for call in enqueue.call_args_list if call.args]
+		self.assertIn("connect.customer.doctype.customer_project.project_notifications.send_hire_declined_email", jobs)
+
+		frappe.set_user("Administrator")
+		with patch("connect.customer.doctype.customer_project.project_notifications.frappe.sendmail") as sendmail:
+			send_hire_declined_email(self.quote.name)
+		mail = sendmail.call_args.kwargs
+		self.assertEqual(mail["recipients"], [BUYER])
+		self.assertEqual(mail["subject"], f"{PARTNER} declined your hire request for ERP rollout")
+		for part in ("₹8,75,000", "8 weeks", "fully booked until March", "Choose another partner", f"custom-implementation?project={self.project.name}"):
+			self.assertIn(part, mail["message"])
+
 	def hire_cards(self):
 		return frappe.get_all(
 			"Connect Message",

@@ -315,7 +315,7 @@ export default function setup(context) {
 	const declinedLine = computed(() => {
 		if (!declinedHire.value) return ""
 		const reason = (declinedHire.value.reason || "").trim().replace(/[.!]+$/, "")
-		return `${declinedHire.value.company_name} declined: ${reason}. Pick another partner from your quotes.`
+		return `${declinedHire.value.company_name} declined: ${reason}. Choose another partner to work with.`
 	})
 
 	const cancelling = ref(false)

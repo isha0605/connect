@@ -54,6 +54,12 @@ def notify_quote_update(quote) -> None:
 			_("{0} declined your hire request").format(company_name(quote.partner)),
 			quote.decline_reason or project.project_name,
 		)
+		frappe.enqueue(
+			"connect.customer.doctype.customer_project.project_notifications.send_hire_declined_email",
+			queue="short",
+			enqueue_after_commit=True,
+			quote=quote.name,
+		)
 
 
 def notify_customer(project, subject: str, body: str) -> None:
@@ -114,31 +120,72 @@ def email_quote_declined(quote) -> None:
 
 def send_quote_declined_email(user: str, quote: str) -> None:
 	"""Background job: tells one partner team member the customer declined their quote, and why."""
-	from frappe.utils import escape_html, get_url
-
 	row = frappe.get_doc("Project Quote", quote)
 	if row.status != "Not Interested":
 		return  # restored before the email went out
 	customer = frappe.db.get_value("Connect Thread", row.thread, "customer")
 	company = frappe.db.get_value("Customer", customer, "customer_name") or customer or _("A customer")
 	project = frappe.db.get_value("Customer Project", row.customer_project, "project_name")
+	send_decision_email(
+		user,
+		subject=_("{0} declined your quote for {1}").format(company, project),
+		intro=_("{0} is not taking your quote forward.").format(company),
+		rows=[
+			(_("Project"), project),
+			(_("Your quote"), offer_line(row)),
+			(_("Reason"), _(row.not_interested_reason or "")),
+			(_("Their note"), row.not_interested_note),
+		],
+		link=(_("Open the lead"), f"/connect/leads/{row.lead}" if row.lead else "/connect/leads"),
+		quote=quote,
+	)
+
+
+def send_hire_declined_email(quote: str) -> None:
+	"""Background job: tells the customer the partner declined their hire request, and why."""
+	row = frappe.get_doc("Project Quote", quote)
+	if row.status != "Hire Declined":
+		return
+	project = frappe.get_doc("Customer Project", row.customer_project)
+	partner = company_name(row.partner)
+	send_decision_email(
+		project.user,
+		subject=_("{0} declined your hire request for {1}").format(partner, project.project_name),
+		intro=_("{0} can't take on this project.").format(partner),
+		rows=[
+			(_("Project"), project.project_name),
+			(_("Their quote"), offer_line(row)),
+			(_("Reason"), row.decline_reason),
+		],
+		# A hire only happens on a custom implementation, so its page is where to choose again.
+		link=(_("Choose another partner"), f"/connect/custom-implementation?project={project.name}"),
+		quote=quote,
+	)
+
+
+def offer_line(row) -> str:
+	"""A quote as one line: ₹8,75,000 · 8 weeks."""
 	offer = quote_amount(row.amount, row.currency)
-	if row.timeline_weeks:
-		offer += " · " + _("{0} weeks").format(row.timeline_weeks)
-	note = f"<br><b>{_('Their note')}:</b> {escape_html(row.not_interested_note)}" if row.not_interested_note else ""
-	link = get_url(f"/connect/leads/{row.lead}") if row.lead else get_url("/connect/leads")
+	return offer + " · " + _("{0} weeks").format(row.timeline_weeks) if row.timeline_weeks else offer
+
+
+def send_decision_email(user: str, subject: str, intro: str, rows: list, link: tuple, quote: str) -> None:
+	"""The email both sides get when the other turns a quote or hire down: what happened, the
+	quote and the reason as labelled lines (empty ones left out), and where to go next."""
+	from frappe.utils import escape_html, get_url
+
+	lines = "<br>".join(f"<b>{escape_html(label)}:</b> {escape_html(value)}" for label, value in rows if value)
+	label, path = link
 	try:
 		frappe.sendmail(
 			recipients=[frappe.db.get_value("User", user, "email") or user],
-			subject=_("{0} declined your quote for {1}").format(company, project),
+			subject=subject,
 			message=(
-				f"<p>{escape_html(company)} {_('is not taking your quote forward.')}</p>"
-				f"<p><b>{_('Project')}:</b> {escape_html(project)}<br>"
-				f"<b>{_('Your quote')}:</b> {offer}<br>"
-				f"<b>{_('Reason')}:</b> {escape_html(_(row.not_interested_reason or ''))}{note}</p>"
-				f"<p><a href='{link}'>{_('Open the lead')}</a></p>"
+				f"<p>{escape_html(intro)}</p>"
+				f"<p>{lines}</p>"
+				f"<p><a href='{get_url(path)}'>{escape_html(label)}</a></p>"
 			),
 			now=True,
 		)
 	except Exception:
-		frappe.log_error(title=f"Quote declined email failed for {quote}")
+		frappe.log_error(title=f"Decision email failed for {quote}")
