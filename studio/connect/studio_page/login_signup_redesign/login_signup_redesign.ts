@@ -1,5 +1,5 @@
 import { onScopeDispose, ref } from "vue"
-import { call, toast } from "frappe-ui"
+import { call, toast, useColorScheme } from "frappe-ui"
 import { startTracking, visitorId } from "@app/utils/tracking"
 import { stashRegistration, usePartnerRegistration } from "@app/utils/partnerRegistration"
 
@@ -26,6 +26,10 @@ function errorText(err, fallback) {
 // in and says where to go. A new email that came through "Log in" is asked for its profile
 // (name and company) before its account is made, with the same code.
 export default function setup(context) {
+	// Pages with the sidebar apply the person's Light, Dark or System choice through its Theme menu;
+	// this page has no sidebar, so it applies the choice itself.
+	useColorScheme()
+
 	startTracking(context)
 	const {
 		route,
