@@ -88,6 +88,15 @@ class IntegrationTestPartner(IntegrationTestCase):
 		self.assertEqual(get_partner_preview(LISTED)["name"], LISTED)
 		self.assertIsInstance(list_partner_reviews(LISTED), list)
 
+	def test_a_profile_gives_each_app_its_logo(self):
+		if not frappe.db.exists("App", "_Test Logo App"):
+			frappe.get_doc({"doctype": "App", "title": "_Test Logo App", "logo": "/files/test-app.png"}).insert()
+		frappe.set_user("Guest")
+
+		logos = get_partner_document(LISTED)["app_logos"]
+
+		self.assertEqual(logos["_Test Logo App"], "/files/test-app.png")
+
 	def test_guest_cannot_open_an_unlisted_profile(self):
 		frappe.set_user("Guest")
 

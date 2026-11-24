@@ -921,9 +921,14 @@ def list_partner_filter_options():
 		"implementation_types": frappe.get_all("Implementation Type", pluck="title", order_by="title"),
 		"languages": frappe.get_all("FC Language", pluck="title", order_by="title"),
 		"apps": frappe.get_all("App", pluck="title", order_by="title"),
-		"app_logos": dict(frappe.get_all("App", fields=["title", "logo"], filters={"logo": ["is", "set"]}, as_list=True)),
+		"app_logos": get_app_logos(),
 		"migration_paths": frappe.get_all("Migration Path", pluck="title", order_by="title"),
 	}
+
+
+def get_app_logos() -> dict[str, str]:
+	"""Each app's logo by its title, for the filters and the profile chips that name an app."""
+	return dict(frappe.get_all("App", fields=["title", "logo"], filters={"logo": ["is", "set"]}, as_list=True))
 
 
 def get_partner_preview(partner):
@@ -966,6 +971,7 @@ def get_partner_document(partner):
 	doc["display_industries"] = industries
 	# the same apps as doc["apps"], which Partner.set_apps_from_stories keeps in step with the stories
 	doc["story_apps"] = apps_from_stories(doc.get("success_stories"))
+	doc["app_logos"] = get_app_logos()
 	# adds client_logo_display per success story — a greyscale-normalized copy of
 	# the client logo where one has been built, else the original URL
 	attach_normalized_logos(doc.get("success_stories"))
@@ -1187,6 +1193,7 @@ def get_my_profile(with_draft=False) -> dict:
 		**{fieldname: doc.get(fieldname) for fieldname in _BUILDER_FIELDS},
 		"apps": [row.app for row in doc.apps],
 		"story_apps": apps_from_stories(stories),
+		"app_logos": get_app_logos(),
 		"migrations": [row.migration_path for row in doc.migrations],
 		"served_countries": [row.country for row in doc.served_countries],
 		"delivery_options": [row.delivery_mode for row in doc.delivery_options],

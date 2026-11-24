@@ -54,17 +54,19 @@ export function useProfileView({ profile, stories, isEditing, selectedStoryIndus
 	const details = computed(() => {
 		const p = profile.value || {}
 		const pmm = Math.round(Number(p.pmm_level) || 0)
+		// An app chip shows the app's logo, when it has one.
+		const logos = p.app_logos || {}
 		return {
 			pmm: pmm ? String(pmm) : "Not rated yet",
 			certified: [
-				p.erpnext_certified ? `${p.erpnext_certified} ERPNext` : "",
-				p.framework_certified ? `${p.framework_certified} Framework` : "",
+				p.erpnext_certified ? { label: `${p.erpnext_certified} ERPNext` } : null,
+				p.framework_certified ? { label: `${p.framework_certified} Framework` } : null,
 			].filter(Boolean),
 			offices: p.offices || [],
 			rate: p.hourly_rate ? hourlyRate(p.hourly_rate, p.currency) : "Not added yet",
 			industries: p.industry_badges || [],
 			// The partner's own picks, then the apps their success stories name on frappe.io.
-			apps: [...new Set([...(p.apps || []), ...(p.story_apps || [])])],
+			apps: [...new Set([...(p.apps || []), ...(p.story_apps || [])])].map((app) => ({ label: app, logo: logos[app] || "" })),
 			migrations: p.migrations || [],
 		}
 	})
