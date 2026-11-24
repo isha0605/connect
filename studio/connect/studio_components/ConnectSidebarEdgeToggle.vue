@@ -2,7 +2,7 @@
 // The sidebar's collapse button: a round chevron on the sidebar's right border that shows beside the
 // pointer while it is over the border. It is fixed to the page and follows the sidebar's right edge,
 // since the sidebar hides anything that sticks out of it.
-import { computed, inject, onBeforeUnmount, onMounted, ref } from "vue"
+import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref } from "vue"
 import { sidebarCollapsedKey, sidebarToggleKey } from "frappe-ui"
 
 defineProps({
@@ -14,6 +14,7 @@ const isCollapsed = inject(sidebarCollapsedKey, computed(() => false))
 const toggle = inject(sidebarToggleKey, () => {})
 
 const BUTTON_HALF = 12
+const COLLAPSED_KEY = "connect:sidebar-collapsed"
 
 const anchor = ref(null)
 const edge = ref(0)
@@ -31,9 +32,38 @@ function follow(event) {
 	pointerY.value = Math.min(Math.max(event.clientY, BUTTON_HALF), window.innerHeight - BUTTON_HALF)
 }
 
+function isSavedCollapsed() {
+	try {
+		return localStorage.getItem(COLLAPSED_KEY) === "1"
+	} catch {
+		return false
+	}
+}
+
+function toggleAndRemember() {
+	toggle()
+	try {
+		if (isCollapsed.value) localStorage.setItem(COLLAPSED_KEY, "1")
+		else localStorage.removeItem(COLLAPSED_KEY)
+	} catch {}
+}
+
+// Every page draws its own sidebar, so a closed one would open again on the next page.
+// The width animation is off for this one change, so the sidebar doesn't slide shut on load.
+function restoreCollapsed() {
+	if (!isSavedCollapsed() || isCollapsed.value) return
+	sidebar.style.transition = "none"
+	toggle()
+	nextTick(() => {
+		sidebar.getBoundingClientRect()
+		sidebar.style.transition = ""
+	})
+}
+
 onMounted(() => {
 	sidebar = anchor.value?.closest('[data-slot="sidebar"]')
 	if (!sidebar) return
+	restoreCollapsed()
 	measure()
 	// Follows the edge while the sidebar's width animates.
 	observer = new ResizeObserver(measure)
@@ -56,7 +86,7 @@ onBeforeUnmount(() => {
 			:style="pointerY === null ? null : { top: `${pointerY - BUTTON_HALF}px` }"
 			:aria-label="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
 			:aria-expanded="!isCollapsed"
-			@click="toggle"
+			@click="toggleAndRemember"
 		>
 			<span :class="isCollapsed ? icons.expand : icons.collapse" class="edge-icon" aria-hidden="true" />
 		</button>
