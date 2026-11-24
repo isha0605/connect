@@ -41,7 +41,7 @@ const hasOtherReason = computed(() => pickedReasons.value.includes(OTHER_REASON)
 // Frappe not being a party comes first: it is the one a customer would otherwise assume the opposite of.
 const terms = computed(() =>
 	[
-		{ icon: "lucide-wallet", text: `Pay ${name.value} directly, Frappe isn’t a party` },
+		{ icon: "lucide-wallet", text: `Pay ${name.value} directly` },
 		{ icon: "lucide-file-check", text: "Scope, price and timeline are as quoted" },
 		{ icon: "lucide-cloud", text: `Host with ${name.value}, Frappe Cloud or elsewhere` },
 		{ icon: "lucide-lock", text: "Frappe sees this project, not your site" },
