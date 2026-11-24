@@ -28,7 +28,8 @@
       "display": "flex",
       "flex": "1",
       "flexDirection": "column",
-      "overflow": "hidden"
+      "overflow": "hidden",
+      "position": "relative"
      },
      "children": [
       {
@@ -94,7 +95,8 @@
           {
            "baseStyles": {
             "display": "flex",
-            "flexDirection": "column"
+            "flexDirection": "column",
+            "paddingBottom": "{{ ((myShortlist.data || []).concat((localShortlist || []).filter(name => !(myShortlist.data || []).includes(name)))).length ? '96px' : '0px' }}"
            },
            "children": [
             {
@@ -3743,6 +3745,20 @@
         }
        },
        "isCustomVueComponent": true
+      },
+      {
+       "blockName": "SavedPartnersBar",
+       "componentId": "saved-partners-bar",
+       "componentName": "SavedPartnersBar",
+       "componentProps": {
+        "icons": {
+         "view": "lucide-arrow-right"
+        },
+        "names": "{{ (myShortlist.data || []).concat((localShortlist || []).filter(name => !(myShortlist.data || []).includes(name))) }}",
+        "route": "/shortlisted-redesign"
+       },
+       "componentSlots": {},
+       "isCustomVueComponent": true
       }
      ],
      "componentId": "container-pd-content-wrapper",
@@ -3791,7 +3807,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-24 13:00:00.000000",
+ "modified": "2026-11-24 14:00:00.000000",
  "modified_by": "Administrator",
  "name": "partner_directory_redesign",
  "owner": "Administrator",
