@@ -4,10 +4,15 @@
 // link is what authorises them.
 
 import { computed, ref } from "vue"
+import { useColorScheme } from "frappe-ui"
 
 const API = "connect.api.partner"
 
 export default function setup(context) {
+	// Pages with the sidebar apply the person's Light, Dark or System choice through its Theme menu;
+	// this page has no sidebar, so it applies the choice itself.
+	useColorScheme()
+
 	const { call, route } = context
 
 	const key = String(route.query.key || "")
