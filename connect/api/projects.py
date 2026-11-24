@@ -29,6 +29,12 @@ def get_project(name):
 
 
 @frappe.whitelist(methods=["POST"])
+def rename_project(name, project_name):
+	from connect.customer.doctype.customer_project.customer_project import rename_project
+	return rename_project(name, project_name)
+
+
+@frappe.whitelist(methods=["POST"])
 def update_requirements(name, answers):
 	from connect.customer.doctype.customer_project.customer_project import update_requirements
 	return update_requirements(name, answers)

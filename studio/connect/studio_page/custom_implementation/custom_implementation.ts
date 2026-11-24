@@ -1,7 +1,7 @@
 // A shared project (Customer Project): its quotes, the hire and going live. Opened as
 // /custom-implementation?project=CP-…, which is where the project questions land once shared.
 
-import { computed, h, onScopeDispose, ref } from "vue"
+import { computed, h, nextTick, onScopeDispose, ref } from "vue"
 import { formatMoney } from "@app/utils/money"
 import { startTracking } from "@app/utils/tracking"
 import { tierSeal } from "@app/utils/tierSeal"
@@ -284,6 +284,50 @@ export default function setup(context) {
 
 
 	const projectTitle = computed(() => project.value?.project_name || "Project")
+
+	// ---- Rename: double-click the name in the panel; Enter or clicking away saves, Esc cancels ----
+	const renaming = ref(false)
+	const titleDraft = ref("")
+
+	// Locked once a hire is asked for: the partner is then working to the name they were sent.
+	const canRename = computed(() => ["Draft", "Shared"].includes(project.value?.status))
+
+	function startRename() {
+		if (!canRename.value) return
+		titleDraft.value = project.value.project_name || ""
+		renaming.value = true
+		nextTick(() => {
+			// TextInput puts the block id on the <input> itself.
+			const block = document.querySelector('[data-component-id="rp-header-title-input"]')
+			const input = block?.matches("input") ? block : block?.querySelector("input")
+			input?.focus()
+			input?.select()
+		})
+	}
+
+	function renameKey(event) {
+		if (event.key === "Enter") event.target.blur()
+		if (event.key === "Escape") renaming.value = false
+	}
+
+	let renameRequest = 0
+	function saveRename() {
+		if (!renaming.value) return
+		renaming.value = false
+		const title = titleDraft.value.trim()
+		const previous = project.value?.project_name
+		if (!title || title === previous) return
+		const request = ++renameRequest
+		const setName = (name) => (project.value = { ...project.value, project_name: name })
+		setName(title)
+		call("connect.api.projects.rename_project", { name: projectName, project_name: title })
+			.then((data) => request === renameRequest && setName(data.project_name))
+			.catch((error) => {
+				if (request !== renameRequest) return
+				setName(previous)
+				toast.error(error?.messages?.[0] || "Couldn't rename the project. Try again.")
+			})
+	}
 	const breadcrumbItems = computed(() => [
 		{ label: "Projects", route: { path: "/projects" } },
 		{ label: projectTitle.value },
@@ -546,6 +590,12 @@ export default function setup(context) {
 		project,
 		loadError,
 		projectTitle,
+		renaming,
+		canRename,
+		titleDraft,
+		startRename,
+		renameKey,
+		saveRename,
 		breadcrumbItems,
 		isShared,
 		hired,
