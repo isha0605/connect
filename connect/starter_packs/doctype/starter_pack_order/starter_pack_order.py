@@ -30,15 +30,16 @@ from connect.partner.industries import picked_industries
 PAYMENT_HOOK_FLAG = "in_starter_pack_payment_hook"
 
 # Gateway Payment Request status -> Starter Pack Order payment_status.
-GATEWAY_STATUS_MAP = {
-	"Pending": "Unpaid",
-	"Paid": "Paid",
-	"Not Paid": "Failed",
-	"Cancelled": "Failed",
-	"Expired": "Failed",
-	"Partially Refunded": "Partially Refunded",
-	"Refunded": "Refunded",
-}
+# bwh_payments is switched off: uncomment when online payment comes back.
+# GATEWAY_STATUS_MAP = {
+# 	"Pending": "Unpaid",
+# 	"Paid": "Paid",
+# 	"Not Paid": "Failed",
+# 	"Cancelled": "Failed",
+# 	"Expired": "Failed",
+# 	"Partially Refunded": "Partially Refunded",
+# 	"Refunded": "Refunded",
+# }
 
 # Packs an order can hold only one of: Core + Manufacturing is Core with more, not an add-on.
 ALTERNATIVE_PACKS = {"core", "core-manufacturing"}
@@ -201,48 +202,54 @@ class StarterPackOrder(Document):
 		self.gst_amount = flt(self.subtotal * flt(self.gst_rate) / 100, self.precision("gst_amount"))
 		self.amount = flt(self.subtotal + self.gst_amount, self.precision("amount"))
 
-	def create_payment_request(self):
-		"""Return the payment request to send the customer to, opening one if needed.
+	# bwh_payments is switched off: uncomment when online payment comes back.
+	# def create_payment_request(self):
+	# 	"""Return the payment request to send the customer to, opening one if needed.
 
-		An open link is reused, so paying again never creates a second one that could
-		also be paid. A new link is only opened when the current one is dead — expired,
-		cancelled or failed — and a dead link can no longer take money.
-		"""
-		if self.payment_status not in ("Unpaid", "Failed"):
-			frappe.throw(_("This order has already been paid for."))
+	# 	An open link is reused, so paying again never creates a second one that could
+	# 	also be paid. A new link is only opened when the current one is dead — expired,
+	# 	cancelled or failed — and a dead link can no longer take money.
+	# 	"""
+	# 	if self.payment_status not in ("Unpaid", "Failed"):
+	# 		frappe.throw(_("This order has already been paid for."))
 
-		if self.payment_request:
-			current = frappe.get_doc("Gateway Payment Request", self.payment_request)
-			if current.status == "Pending":
-				return current
+	# 	if self.payment_request:
+	# 		current = frappe.get_doc("Gateway Payment Request", self.payment_request)
+	# 		if current.status == "Pending":
+	# 			return current
 
-		settings = frappe.get_cached_doc("Starter Pack Settings")
-		if not settings.payment_gateway:
-			frappe.throw(_("Online payment isn't set up yet."))
+	# 	settings = frappe.get_cached_doc("Starter Pack Settings")
+	# 	if not settings.payment_gateway:
+	# 		frappe.throw(_("Online payment isn't set up yet."))
 
-		forenames, _sep, surname = (self.buyer_name or "").strip().partition(" ")
-		request = frappe.get_doc(
-			{
-				"doctype": "Gateway Payment Request",
-				"gateway": settings.payment_gateway,
-				"amount": self.amount,
-				"currency_code": settings.currency,
-				"ref_doctype": self.doctype,
-				"ref_docname": self.name,
-				"customer_ref": self.customer,
-				# Whoever checkout says is paying — sent to Razorpay as the customer.
-				"customer_email": self.buyer_email,
-				"customer_phone": self.phone,
-				"customer_forenames": forenames or None,
-				"customer_surname": surname or None,
-			}
-		).insert(ignore_permissions=True)  # before_save opens the gateway session
+	# 	forenames, _sep, surname = (self.buyer_name or "").strip().partition(" ")
+	# 	request = frappe.get_doc(
+	# 		{
+	# 			"doctype": "Gateway Payment Request",
+	# 			"gateway": settings.payment_gateway,
+	# 			"amount": self.amount,
+	# 			"currency_code": settings.currency,
+	# 			"ref_doctype": self.doctype,
+	# 			"ref_docname": self.name,
+	# 			"customer_ref": self.customer,
+	# 			# Whoever checkout says is paying — sent to Razorpay as the customer.
+	# 			"customer_email": self.buyer_email,
+	# 			"customer_phone": self.phone,
+	# 			"customer_forenames": forenames or None,
+	# 			"customer_surname": surname or None,
+	# 		}
+	# 	).insert(ignore_permissions=True)  # before_save opens the gateway session
 
-		# A retry after a dead link: the order is payable again.
-		self.payment_request = request.name
-		self.payment_status = "Unpaid"
-		save_as_payment_hook(self)
-		return request
+	# 	# A retry after a dead link: the order is payable again.
+	# 	self.payment_request = request.name
+	# 	self.payment_status = "Unpaid"
+	# 	save_as_payment_hook(self)
+	# 	return request
+
+
+def payment_switched_off():
+	"""Checkout pays through bwh_payments, which is switched off, so no order is placed."""
+	frappe.throw(_("Online payment is switched off for now."))
 
 
 def save_as_payment_hook(order):
@@ -255,61 +262,63 @@ def save_as_payment_hook(order):
 		frappe.flags[PAYMENT_HOOK_FLAG] = False
 
 
-def on_gateway_payment_request_update(request, method=None):
-	"""doc_events hook: mirror a Gateway Payment Request's status onto its order.
+# bwh_payments is switched off: uncomment when online payment comes back.
+# def on_gateway_payment_request_update(request, method=None):
+# 	"""doc_events hook: mirror a Gateway Payment Request's status onto its order.
 
-	Runs inside bwh_payments' save, after the gateway has already acted, so it must
-	never raise: failing here would roll back bwh's record of money that moved.
-	"""
-	if request.ref_doctype != "Starter Pack Order" or not request.ref_docname:
-		return
+# 	Runs inside bwh_payments' save, after the gateway has already acted, so it must
+# 	never raise: failing here would roll back bwh's record of money that moved.
+# 	"""
+# 	if request.ref_doctype != "Starter Pack Order" or not request.ref_docname:
+# 		return
 
-	order = frappe.get_doc("Starter Pack Order", request.ref_docname)
-	if order.payment_request != request.name:
-		# A link replaced by a newer one. It was released at the gateway first, so this
-		# should never be paid — if it is, the customer paid twice and needs a refund.
-		if request.status == "Paid":
-			frappe.log_error(
-				title="Starter Pack Order paid on a superseded link",
-				message=f"{request.name} was paid, but {order.name} now uses {order.payment_request}.",
-			)
-		return
+# 	order = frappe.get_doc("Starter Pack Order", request.ref_docname)
+# 	if order.payment_request != request.name:
+# 		# A link replaced by a newer one. It was released at the gateway first, so this
+# 		# should never be paid — if it is, the customer paid twice and needs a refund.
+# 		if request.status == "Paid":
+# 			frappe.log_error(
+# 				title="Starter Pack Order paid on a superseded link",
+# 				message=f"{request.name} was paid, but {order.name} now uses {order.payment_request}.",
+# 			)
+# 		return
 
-	payment_status = GATEWAY_STATUS_MAP.get(request.status)
-	if not payment_status or payment_status == order.payment_status:
-		return  # also makes a replayed webhook a no-op
+# 	payment_status = GATEWAY_STATUS_MAP.get(request.status)
+# 	if not payment_status or payment_status == order.payment_status:
+# 		return  # also makes a replayed webhook a no-op
 
-	order.payment_status = payment_status
-	if payment_status == "Paid" and not order.gateway_payment_id:
-		order.gateway_payment_id = get_captured_payment_id(request)
-	save_as_payment_hook(order)
+# 	order.payment_status = payment_status
+# 	if payment_status == "Paid" and not order.gateway_payment_id:
+# 		order.gateway_payment_id = get_captured_payment_id(request)
+# 	save_as_payment_hook(order)
 
-	if payment_status == "Paid" and not order.partner:
-		hand_over(order.name)  # never raises; leaves the order unassigned on failure
+# 	if payment_status == "Paid" and not order.partner:
+# 		hand_over(order.name)  # never raises; leaves the order unassigned on failure
 
 
-def get_captured_payment_id(request):
-	"""The gateway's id for the captured payment. bwh_payments keeps only the payment
-	link's id, and support asks for the payment's. Best-effort: never fails the hook."""
-	if frappe.db.get_value("Payment Gateway Profile", request.gateway, "gateway_settings") != (
-		"Razorpay Gateway Settings"
-	):
-		return None
-	try:
-		from bwh_payments.bwh_payments.doctype.razorpay_gateway_settings.razorpay_gateway_settings import (
-			get_captured_payment_id as razorpay_captured_payment_id,
-		)
+# bwh_payments is switched off: uncomment when online payment comes back.
+# def get_captured_payment_id(request):
+# 	"""The gateway's id for the captured payment. bwh_payments keeps only the payment
+# 	link's id, and support asks for the payment's. Best-effort: never fails the hook."""
+# 	if frappe.db.get_value("Payment Gateway Profile", request.gateway, "gateway_settings") != (
+# 		"Razorpay Gateway Settings"
+# 	):
+# 		return None
+# 	try:
+# 		from bwh_payments.bwh_payments.doctype.razorpay_gateway_settings.razorpay_gateway_settings import (
+# 			get_captured_payment_id as razorpay_captured_payment_id,
+# 		)
 
-		settings = frappe.get_single("Razorpay Gateway Settings")
-		payment_id = razorpay_captured_payment_id(settings.get_payment_link(request.order_ref))
-	except Exception:
-		# e.g. treat_authorised_as_paid: the link is Paid but nothing is captured yet.
-		frappe.clear_messages()
-		frappe.log_error(title=f"Could not read the payment id for {request.name}")
-		return None
+# 		settings = frappe.get_single("Razorpay Gateway Settings")
+# 		payment_id = razorpay_captured_payment_id(settings.get_payment_link(request.order_ref))
+# 	except Exception:
+# 		# e.g. treat_authorised_as_paid: the link is Paid but nothing is captured yet.
+# 		frappe.clear_messages()
+# 		frappe.log_error(title=f"Could not read the payment id for {request.name}")
+# 		return None
 
-	request.db_set("gateway_transaction_ref", payment_id, update_modified=False)
-	return payment_id
+# 	request.db_set("gateway_transaction_ref", payment_id, update_modified=False)
+# 	return payment_id
 
 
 def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None, buyer_email=None, project=None):
@@ -354,7 +363,9 @@ def checkout(packs, company_name, phone=None, terms_accepted=0, buyer_name=None,
 		}
 	).insert(ignore_permissions=True)
 
-	return payment_response(order, order.create_payment_request())
+	# bwh_payments is switched off: uncomment when online payment comes back.
+	# return payment_response(order, order.create_payment_request())
+	payment_switched_off()
 
 
 def buyer_company(company_name, buyer_name):
@@ -384,14 +395,15 @@ def own_project(project):
 	return project if owner == frappe.session.user else None
 
 
-def payment_response(order, request):
-	return {
-		"order": order.name,
-		"key": order.access_key,
-		"payment_request": request.name,
-		"amount": order.amount,
-		"payment_url": request.order_url,
-	}
+# bwh_payments is switched off: uncomment when online payment comes back.
+# def payment_response(order, request):
+# 	return {
+# 		"order": order.name,
+# 		"key": order.access_key,
+# 		"payment_request": request.name,
+# 		"amount": order.amount,
+# 		"payment_url": request.order_url,
+# 	}
 
 
 def get_order(order=None, payment_request=None, key=None):
@@ -403,20 +415,22 @@ def get_order(order=None, payment_request=None, key=None):
 	"""
 	if not order and payment_request:
 		order = frappe.db.get_value("Starter Pack Order", {"payment_request": payment_request})
-		if not order:
-			# The request exists but is no longer the order's current one, or never was.
-			order = frappe.db.get_value(
-				"Gateway Payment Request",
-				{"name": payment_request, "ref_doctype": "Starter Pack Order"},
-				"ref_docname",
-			)
+		# bwh_payments is switched off: uncomment when online payment comes back.
+		# if not order:
+		# 	# The request exists but is no longer the order's current one, or never was.
+		# 	order = frappe.db.get_value(
+		# 		"Gateway Payment Request",
+		# 		{"name": payment_request, "ref_doctype": "Starter Pack Order"},
+		# 		"ref_docname",
+		# 	)
 	if not order:
 		frappe.throw(_("Order not found"), frappe.DoesNotExistError)
 
 	doc = get_own_order(order, key)
-	if doc.payment_request and doc.payment_status == "Unpaid":
-		frappe.get_doc("Gateway Payment Request", doc.payment_request).sync_status()
-		doc.reload()
+	# bwh_payments is switched off: uncomment when online payment comes back.
+	# if doc.payment_request and doc.payment_status == "Unpaid":
+	# 	frappe.get_doc("Gateway Payment Request", doc.payment_request).sync_status()
+	# 	doc.reload()
 
 	return {
 		"order": doc.name,
@@ -561,7 +575,9 @@ def pay(order, key=None):
 	"""Send the customer back to pay an order they already placed — e.g. after a
 	payment link expired. Reuses an open link rather than opening a second one."""
 	doc = get_own_order(order, key)
-	return payment_response(doc, doc.create_payment_request())
+	# bwh_payments is switched off: uncomment when online payment comes back.
+	# return payment_response(doc, doc.create_payment_request())
+	payment_switched_off()
 
 
 def order_customer(doc):

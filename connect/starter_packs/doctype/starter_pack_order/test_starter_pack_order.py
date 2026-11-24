@@ -19,9 +19,9 @@ from connect.starter_packs.doctype.starter_pack_order.starter_pack_order import 
 	share_kickoff_meeting,
 )
 
-RAZORPAY = "bwh_payments.bwh_payments.doctype.razorpay_gateway_settings.razorpay_gateway_settings.RazorpayGatewaySettings"
+# RAZORPAY = "bwh_payments.bwh_payments.doctype.razorpay_gateway_settings.razorpay_gateway_settings.RazorpayGatewaySettings"
 ORDER_MODULE = "connect.starter_packs.doctype.starter_pack_order.starter_pack_order"
-GPR_MODULE = "bwh_payments.bwh_payments.doctype.gateway_payment_request.gateway_payment_request"
+# GPR_MODULE = "bwh_payments.bwh_payments.doctype.gateway_payment_request.gateway_payment_request"
 from connect.customer.doctype.customer_project.test_hiring import make_buyer
 from connect.starter_packs.doctype.starter_pack_order.implementation import (
 	hand_over,
@@ -61,6 +61,12 @@ class IntegrationTestStarterPackOrder(IntegrationTestCase):
 	def test_prices_come_from_the_catalog_not_the_request(self):
 		order = make_order([self.pack_a], sent_price=1)
 		self.assertEqual(order.packs[0].price, 10000)
+
+	def test_paying_fails_clearly_while_online_payment_is_switched_off(self):
+		order = make_order([self.pack_a])
+
+		with self.assertRaisesRegex(frappe.ValidationError, "switched off"):
+			pay(order.name, key=order.access_key)
 
 	def test_totals_add_gst_on_top(self):
 		order = make_order([self.pack_a, self.pack_b])
@@ -175,307 +181,308 @@ class IntegrationTestStarterPackOrderPartner(IntegrationTestCase):
 		self.assertEqual(order.partner, self.approved)
 
 
-class IntegrationTestStarterPackPayment(IntegrationTestCase):
-	"""Checkout and the gateway round trip, against a mocked Razorpay: no network,
-	and no keys needed. The bwh_payments code itself runs for real."""
+# bwh_payments is switched off: uncomment when online payment comes back.
+# class IntegrationTestStarterPackPayment(IntegrationTestCase):
+# 	"""Checkout and the gateway round trip, against a mocked Razorpay: no network,
+# 	and no keys needed. The bwh_payments code itself runs for real."""
 
-	def setUp(self):
-		self.pack_a = make_pack("_test_pack_a", 10000, 5)
-		self.pack_b = make_pack("_test_pack_b", 20000, 8)
-		frappe.db.set_single_value("Starter Pack Settings", "gst_rate", 18)
-		frappe.db.set_single_value("Starter Pack Settings", "currency", "INR")
-		if not frappe.db.exists("Payment Gateway Profile", "_Test Razorpay"):
-			frappe.get_doc(
-				{
-					"doctype": "Payment Gateway Profile",
-					"__newname": "_Test Razorpay",
-					"gateway_settings": "Razorpay Gateway Settings",
-					"enabled": 1,
-				}
-			).insert(ignore_permissions=True)
-		frappe.db.set_single_value("Starter Pack Settings", "payment_gateway", "_Test Razorpay")
-		frappe.db.set_single_value(
-			"Starter Pack Settings", {"implementation_partner": "", "auto_assign_partners": 0}
-		)
-		without_site_consultants()
-		# Checkout is for a signed-in buyer with a company, as every buyer is now.
-		self.buyer = make_buyer(CHECKOUT_BUYER, CHECKOUT_COMPANY)
+# 	def setUp(self):
+# 		self.pack_a = make_pack("_test_pack_a", 10000, 5)
+# 		self.pack_b = make_pack("_test_pack_b", 20000, 8)
+# 		frappe.db.set_single_value("Starter Pack Settings", "gst_rate", 18)
+# 		frappe.db.set_single_value("Starter Pack Settings", "currency", "INR")
+# 		if not frappe.db.exists("Payment Gateway Profile", "_Test Razorpay"):
+# 			frappe.get_doc(
+# 				{
+# 					"doctype": "Payment Gateway Profile",
+# 					"__newname": "_Test Razorpay",
+# 					"gateway_settings": "Razorpay Gateway Settings",
+# 					"enabled": 1,
+# 				}
+# 			).insert(ignore_permissions=True)
+# 		frappe.db.set_single_value("Starter Pack Settings", "payment_gateway", "_Test Razorpay")
+# 		frappe.db.set_single_value(
+# 			"Starter Pack Settings", {"implementation_partner": "", "auto_assign_partners": 0}
+# 		)
+# 		without_site_consultants()
+# 		# Checkout is for a signed-in buyer with a company, as every buyer is now.
+# 		self.buyer = make_buyer(CHECKOUT_BUYER, CHECKOUT_COMPANY)
 
-		# Records persist across tests within a class (the rollback is per class), and
-		# order_ref is unique, so every fake session needs its own id.
-		self.patches = [
-			patch(
-				f"{RAZORPAY}.create_session",
-				side_effect=lambda *a, **k: {
-					"session_id": f"plink_test_{frappe.generate_hash(length=12)}",
-					"redirect_url": "https://rzp.io/test",
-				},
-			),
-			patch(f"{RAZORPAY}.get_payment_status", return_value="Pending"),
-			patch(f"{ORDER_MODULE}.get_captured_payment_id", return_value="pay_test_1"),
-			# refund() logs through frappe's create_request_log, which commits. In a test
-			# that would persist everything the class created, so the log is stubbed.
-			patch(f"{GPR_MODULE}.create_request_log", return_value=MagicMock()),
-			patch("frappe.log_error"),
-		]
-		for p in self.patches:
-			p.start()
+# 		# Records persist across tests within a class (the rollback is per class), and
+# 		# order_ref is unique, so every fake session needs its own id.
+# 		self.patches = [
+# 			patch(
+# 				f"{RAZORPAY}.create_session",
+# 				side_effect=lambda *a, **k: {
+# 					"session_id": f"plink_test_{frappe.generate_hash(length=12)}",
+# 					"redirect_url": "https://rzp.io/test",
+# 				},
+# 			),
+# 			patch(f"{RAZORPAY}.get_payment_status", return_value="Pending"),
+# 			patch(f"{ORDER_MODULE}.get_captured_payment_id", return_value="pay_test_1"),
+# 			# refund() logs through frappe's create_request_log, which commits. In a test
+# 			# that would persist everything the class created, so the log is stubbed.
+# 			patch(f"{GPR_MODULE}.create_request_log", return_value=MagicMock()),
+# 			patch("frappe.log_error"),
+# 		]
+# 		for p in self.patches:
+# 			p.start()
 
-	def tearDown(self):
-		for p in self.patches:
-			p.stop()
-		frappe.flags[PAYMENT_HOOK_FLAG] = False
+# 	def tearDown(self):
+# 		for p in self.patches:
+# 			p.stop()
+# 		frappe.flags[PAYMENT_HOOK_FLAG] = False
 
-	def place(self, packs, as_user=CHECKOUT_BUYER, company="Test Co"):
-		frappe.set_user(as_user)
-		try:
-			result = checkout(
-				frappe.as_json(packs),
-				company,
-				phone="9999999999",
-				terms_accepted=1,
-				buyer_name="Asha Rao",
-				buyer_email="asha@example.com",
-			)
-		finally:
-			frappe.set_user("Administrator")
-		return result, frappe.get_doc("Starter Pack Order", result["order"])
+# 	def place(self, packs, as_user=CHECKOUT_BUYER, company="Test Co"):
+# 		frappe.set_user(as_user)
+# 		try:
+# 			result = checkout(
+# 				frappe.as_json(packs),
+# 				company,
+# 				phone="9999999999",
+# 				terms_accepted=1,
+# 				buyer_name="Asha Rao",
+# 				buyer_email="asha@example.com",
+# 			)
+# 		finally:
+# 			frappe.set_user("Administrator")
+# 		return result, frappe.get_doc("Starter Pack Order", result["order"])
 
-	def request(self, order):
-		return frappe.get_doc("Gateway Payment Request", order.payment_request)
+# 	def request(self, order):
+# 		return frappe.get_doc("Gateway Payment Request", order.payment_request)
 
-	def test_checkout_charges_the_server_price(self):
-		result, order = self.place([self.pack_a, self.pack_b])
-		self.assertEqual(result["amount"], 35400)
-		self.assertEqual(result["payment_url"], "https://rzp.io/test")
-		request = self.request(order)
-		self.assertEqual(request.amount, 35400)
-		self.assertEqual(request.currency_code, "INR")
-		self.assertEqual((request.ref_doctype, request.ref_docname), ("Starter Pack Order", order.name))
+# 	def test_checkout_charges_the_server_price(self):
+# 		result, order = self.place([self.pack_a, self.pack_b])
+# 		self.assertEqual(result["amount"], 35400)
+# 		self.assertEqual(result["payment_url"], "https://rzp.io/test")
+# 		request = self.request(order)
+# 		self.assertEqual(request.amount, 35400)
+# 		self.assertEqual(request.currency_code, "INR")
+# 		self.assertEqual((request.ref_doctype, request.ref_docname), ("Starter Pack Order", order.name))
 
-	def test_checkout_needs_terms_a_pack_and_a_buyer(self):
-		buyer = {"buyer_name": "Asha Rao", "buyer_email": "asha@example.com"}
-		self.assertRaises(frappe.ValidationError, checkout, frappe.as_json([self.pack_a]), "Test Co", **buyer)
-		self.assertRaises(frappe.ValidationError, checkout, "[]", "Test Co", terms_accepted=1, **buyer)
-		packs = frappe.as_json([self.pack_a])
-		self.assertRaises(frappe.ValidationError, checkout, packs, "Test Co", terms_accepted=1, buyer_email="a@b.co")
-		self.assertRaises(frappe.ValidationError, checkout, packs, "Test Co", terms_accepted=1, buyer_name="Asha")
-		self.assertRaises(
-			frappe.ValidationError, checkout, packs, "Test Co", terms_accepted=1, buyer_name="Asha", buyer_email="nope"
-		)
+# 	def test_checkout_needs_terms_a_pack_and_a_buyer(self):
+# 		buyer = {"buyer_name": "Asha Rao", "buyer_email": "asha@example.com"}
+# 		self.assertRaises(frappe.ValidationError, checkout, frappe.as_json([self.pack_a]), "Test Co", **buyer)
+# 		self.assertRaises(frappe.ValidationError, checkout, "[]", "Test Co", terms_accepted=1, **buyer)
+# 		packs = frappe.as_json([self.pack_a])
+# 		self.assertRaises(frappe.ValidationError, checkout, packs, "Test Co", terms_accepted=1, buyer_email="a@b.co")
+# 		self.assertRaises(frappe.ValidationError, checkout, packs, "Test Co", terms_accepted=1, buyer_name="Asha")
+# 		self.assertRaises(
+# 			frappe.ValidationError, checkout, packs, "Test Co", terms_accepted=1, buyer_name="Asha", buyer_email="nope"
+# 		)
 
-	def test_the_order_is_the_buyers_company(self):
-		result, order = self.place([self.pack_a])
-		self.assertEqual((order.user, order.customer), (CHECKOUT_BUYER, CHECKOUT_COMPANY))
-		# the company's own name, not whatever the form sent
-		self.assertEqual((order.buyer_name, order.buyer_email, order.company_name), ("Asha Rao", "asha@example.com", CHECKOUT_COMPANY))
-		self.assertEqual(result["key"], order.access_key)
-		# What was typed at checkout is what the payment request, and so Razorpay, gets.
-		request = self.request(order)
-		self.assertEqual(
-			(request.customer_forenames, request.customer_surname, request.customer_email, request.customer_phone),
-			("Asha", "Rao", "asha@example.com", "9999999999"),
-		)
+# 	def test_the_order_is_the_buyers_company(self):
+# 		result, order = self.place([self.pack_a])
+# 		self.assertEqual((order.user, order.customer), (CHECKOUT_BUYER, CHECKOUT_COMPANY))
+# 		# the company's own name, not whatever the form sent
+# 		self.assertEqual((order.buyer_name, order.buyer_email, order.company_name), ("Asha Rao", "asha@example.com", CHECKOUT_COMPANY))
+# 		self.assertEqual(result["key"], order.access_key)
+# 		# What was typed at checkout is what the payment request, and so Razorpay, gets.
+# 		request = self.request(order)
+# 		self.assertEqual(
+# 			(request.customer_forenames, request.customer_surname, request.customer_email, request.customer_phone),
+# 			("Asha", "Rao", "asha@example.com", "9999999999"),
+# 		)
 
-	def test_guests_sign_in_to_buy(self):
-		self.assertRaises(frappe.PermissionError, self.place, [self.pack_a], as_user="Guest")
+# 	def test_guests_sign_in_to_buy(self):
+# 		self.assertRaises(frappe.PermissionError, self.place, [self.pack_a], as_user="Guest")
 
-	def test_a_buyer_without_a_company_gets_one_at_checkout(self):
-		# e.g. a sign-up that stopped before its company was saved
-		user = make_user("_test_sp_no_company@example.com")
-		company = f"_Test SP New Co {frappe.generate_hash(length=6)}"
-		_, order = self.place([self.pack_a], as_user=user, company=company)
-		self.assertEqual(order.customer, company)
-		self.assertTrue(frappe.db.exists("Customer Team Member", {"customer": company, "user": user, "access": "Owner"}))
+# 	def test_a_buyer_without_a_company_gets_one_at_checkout(self):
+# 		# e.g. a sign-up that stopped before its company was saved
+# 		user = make_user("_test_sp_no_company@example.com")
+# 		company = f"_Test SP New Co {frappe.generate_hash(length=6)}"
+# 		_, order = self.place([self.pack_a], as_user=user, company=company)
+# 		self.assertEqual(order.customer, company)
+# 		self.assertTrue(frappe.db.exists("Customer Team Member", {"customer": company, "user": user, "access": "Owner"}))
 
-		# a company that's already here is someone else's: its admin adds them instead
-		other = make_user("_test_sp_no_company_2@example.com")
-		self.assertRaisesRegex(
-			frappe.ValidationError, "already registered", self.place, [self.pack_a], as_user=other, company=company
-		)
-		self.assertRaisesRegex(frappe.ValidationError, "company", self.place, [self.pack_a], as_user=other, company=" ")
+# 		# a company that's already here is someone else's: its admin adds them instead
+# 		other = make_user("_test_sp_no_company_2@example.com")
+# 		self.assertRaisesRegex(
+# 			frappe.ValidationError, "already registered", self.place, [self.pack_a], as_user=other, company=company
+# 		)
+# 		self.assertRaisesRegex(frappe.ValidationError, "company", self.place, [self.pack_a], as_user=other, company=" ")
 
-	def test_checkout_prefill_reads_only_the_callers_own_orders(self):
-		self.place([self.pack_a])
-		other = make_user("_test_sp_prefill_other@example.com")
-		try:
-			frappe.set_user(CHECKOUT_BUYER)
-			self.assertEqual(last_checkout_details()["phone"], "9999999999")
-			frappe.set_user(other)
-			self.assertEqual(last_checkout_details(), {})
-			frappe.set_user("Guest")
-			self.assertEqual(last_checkout_details(), {})
-		finally:
-			frappe.set_user("Administrator")
+# 	def test_checkout_prefill_reads_only_the_callers_own_orders(self):
+# 		self.place([self.pack_a])
+# 		other = make_user("_test_sp_prefill_other@example.com")
+# 		try:
+# 			frappe.set_user(CHECKOUT_BUYER)
+# 			self.assertEqual(last_checkout_details()["phone"], "9999999999")
+# 			frappe.set_user(other)
+# 			self.assertEqual(last_checkout_details(), {})
+# 			frappe.set_user("Guest")
+# 			self.assertEqual(last_checkout_details(), {})
+# 		finally:
+# 			frappe.set_user("Administrator")
 
-		from connect.api import starter_pack
+# 		from connect.api import starter_pack
 
-		self.assertNotIn(starter_pack.last_checkout_details, frappe.guest_methods)
+# 		self.assertNotIn(starter_pack.last_checkout_details, frappe.guest_methods)
 
-	def test_a_guest_reads_their_order_back_only_with_its_key(self):
-		result, order = self.place([self.pack_a])
-		frappe.set_user("Guest")
-		try:
-			self.assertEqual(get_order(payment_request=result["payment_request"], key=result["key"])["order"], order.name)
-			self.assertRaises(frappe.PermissionError, get_order, order.name)
-			self.assertRaises(frappe.PermissionError, get_order, order.name, key="not-the-key")
-			self.assertEqual(pay(order.name, key=result["key"])["order"], order.name)
-			self.assertRaises(frappe.PermissionError, pay, order.name)
-		finally:
-			frappe.set_user("Administrator")
+# 	def test_a_guest_reads_their_order_back_only_with_its_key(self):
+# 		result, order = self.place([self.pack_a])
+# 		frappe.set_user("Guest")
+# 		try:
+# 			self.assertEqual(get_order(payment_request=result["payment_request"], key=result["key"])["order"], order.name)
+# 			self.assertRaises(frappe.PermissionError, get_order, order.name)
+# 			self.assertRaises(frappe.PermissionError, get_order, order.name, key="not-the-key")
+# 			self.assertEqual(pay(order.name, key=result["key"])["order"], order.name)
+# 			self.assertRaises(frappe.PermissionError, pay, order.name)
+# 		finally:
+# 			frappe.set_user("Administrator")
 
-	def test_webhook_marks_the_order_paid(self):
-		_, order = self.place([self.pack_a])
-		self.request(order).apply_webhook_status("Paid", "evt_1")
-		order.reload()
-		self.assertEqual(order.payment_status, "Paid")
-		self.assertEqual(order.gateway_payment_id, "pay_test_1")
-		self.assertTrue(order.paid_on)
+# 	def test_webhook_marks_the_order_paid(self):
+# 		_, order = self.place([self.pack_a])
+# 		self.request(order).apply_webhook_status("Paid", "evt_1")
+# 		order.reload()
+# 		self.assertEqual(order.payment_status, "Paid")
+# 		self.assertEqual(order.gateway_payment_id, "pay_test_1")
+# 		self.assertTrue(order.paid_on)
 
-	def test_payment_gives_the_order_to_the_implementation_partner(self):
-		make_partner("_Test Implementing Partner", starter_pack=0)
-		frappe.db.set_single_value("Starter Pack Settings", "implementation_partner", "_Test Implementing Partner")
+# 	def test_payment_gives_the_order_to_the_implementation_partner(self):
+# 		make_partner("_Test Implementing Partner", starter_pack=0)
+# 		frappe.db.set_single_value("Starter Pack Settings", "implementation_partner", "_Test Implementing Partner")
 
-		_, order = self.place([self.pack_a])
-		with patch(f"{IMPLEMENTATION_MODULE}.frappe.enqueue") as enqueue:
-			self.request(order).apply_webhook_status("Paid", "evt_1")
-		order.reload()
-		self.assertEqual(order.partner, "_Test Implementing Partner")
-		self.assertFalse(order.partner_auto_assigned)
-		self.assertEqual(order.status, "Partner Assigned")
-		# Also queued: admins told there's no Frappe consultant (the site's are switched off here).
-		enqueue.assert_any_call(post_opening_message, order_name=order.name, enqueue_after_commit=True)
+# 		_, order = self.place([self.pack_a])
+# 		with patch(f"{IMPLEMENTATION_MODULE}.frappe.enqueue") as enqueue:
+# 			self.request(order).apply_webhook_status("Paid", "evt_1")
+# 		order.reload()
+# 		self.assertEqual(order.partner, "_Test Implementing Partner")
+# 		self.assertFalse(order.partner_auto_assigned)
+# 		self.assertEqual(order.status, "Partner Assigned")
+# 		# Also queued: admins told there's no Frappe consultant (the site's are switched off here).
+# 		enqueue.assert_any_call(post_opening_message, order_name=order.name, enqueue_after_commit=True)
 
-	def test_payment_assigns_a_partner_by_round_robin_when_switched_on(self):
-		frappe.db.set_single_value("Starter Pack Settings", "auto_assign_partners", 1)
-		make_partner("_Test RR Payment Partner", starter_pack=0)
-		partner = frappe.get_doc("Partner", "_Test RR Payment Partner")
-		partner.update({"starter_pack": 1, "enabled": 1, "starter_pack_sequence": 0})
-		partner.save(ignore_permissions=True)
+# 	def test_payment_assigns_a_partner_by_round_robin_when_switched_on(self):
+# 		frappe.db.set_single_value("Starter Pack Settings", "auto_assign_partners", 1)
+# 		make_partner("_Test RR Payment Partner", starter_pack=0)
+# 		partner = frappe.get_doc("Partner", "_Test RR Payment Partner")
+# 		partner.update({"starter_pack": 1, "enabled": 1, "starter_pack_sequence": 0})
+# 		partner.save(ignore_permissions=True)
 
-		_, order = self.place([self.pack_a])
-		self.request(order).apply_webhook_status("Paid", "evt_1")
-		order.reload()
-		self.assertTrue(order.partner)
-		self.assertTrue(order.partner_auto_assigned)
-		self.assertEqual(order.status, "Partner Assigned")
+# 		_, order = self.place([self.pack_a])
+# 		self.request(order).apply_webhook_status("Paid", "evt_1")
+# 		order.reload()
+# 		self.assertTrue(order.partner)
+# 		self.assertTrue(order.partner_auto_assigned)
+# 		self.assertEqual(order.status, "Partner Assigned")
 
-	def test_placing_and_paying_are_recorded_once_each(self):
-		with patch(f"{ORDER_MODULE}.capture") as capture:
-			_, order = self.place([self.pack_a])
-			self.request(order).apply_webhook_status("Paid", "evt_1")
-			self.request(order).apply_webhook_status("Paid", "evt_1")
+# 	def test_placing_and_paying_are_recorded_once_each(self):
+# 		with patch(f"{ORDER_MODULE}.capture") as capture:
+# 			_, order = self.place([self.pack_a])
+# 			self.request(order).apply_webhook_status("Paid", "evt_1")
+# 			self.request(order).apply_webhook_status("Paid", "evt_1")
 
-		events = [call.args[0] for call in capture.call_args_list]
-		self.assertEqual(events, ["order_placed", "payment_completed"])
-		self.assertEqual(capture.call_args.args[2]["packs"], self.pack_a)
+# 		events = [call.args[0] for call in capture.call_args_list]
+# 		self.assertEqual(events, ["order_placed", "payment_completed"])
+# 		self.assertEqual(capture.call_args.args[2]["packs"], self.pack_a)
 
-	def test_a_replayed_webhook_changes_nothing(self):
-		_, order = self.place([self.pack_a])
-		self.assertTrue(self.request(order).apply_webhook_status("Paid", "evt_1"))
-		self.assertFalse(self.request(order).apply_webhook_status("Paid", "evt_1"))
-		order.reload()
-		self.assertEqual(order.payment_status, "Paid")
+# 	def test_a_replayed_webhook_changes_nothing(self):
+# 		_, order = self.place([self.pack_a])
+# 		self.assertTrue(self.request(order).apply_webhook_status("Paid", "evt_1"))
+# 		self.assertFalse(self.request(order).apply_webhook_status("Paid", "evt_1"))
+# 		order.reload()
+# 		self.assertEqual(order.payment_status, "Paid")
 
-	def test_an_expired_link_fails_the_order(self):
-		_, order = self.place([self.pack_a])
-		self.request(order).apply_webhook_status("Expired", "evt_1")
-		order.reload()
-		self.assertEqual(order.payment_status, "Failed")
+# 	def test_an_expired_link_fails_the_order(self):
+# 		_, order = self.place([self.pack_a])
+# 		self.request(order).apply_webhook_status("Expired", "evt_1")
+# 		order.reload()
+# 		self.assertEqual(order.payment_status, "Failed")
 
-	def test_paying_again_reuses_an_open_link(self):
-		_, order = self.place([self.pack_a])
-		self.assertEqual(order.create_payment_request().name, order.payment_request)
+# 	def test_paying_again_reuses_an_open_link(self):
+# 		_, order = self.place([self.pack_a])
+# 		self.assertEqual(order.create_payment_request().name, order.payment_request)
 
-	def test_a_dead_link_can_be_retried(self):
-		_, order = self.place([self.pack_a])
-		first = order.payment_request
-		self.request(order).apply_webhook_status("Expired", "evt_1")
-		order.reload()
-		self.assertEqual(order.payment_status, "Failed")
+# 	def test_a_dead_link_can_be_retried(self):
+# 		_, order = self.place([self.pack_a])
+# 		first = order.payment_request
+# 		self.request(order).apply_webhook_status("Expired", "evt_1")
+# 		order.reload()
+# 		self.assertEqual(order.payment_status, "Failed")
 
-		retry = pay(order.name)
-		order.reload()
-		self.assertNotEqual(order.payment_request, first)
-		self.assertEqual(order.payment_status, "Unpaid")
-		self.assertEqual(retry["payment_url"], "https://rzp.io/test")
+# 		retry = pay(order.name)
+# 		order.reload()
+# 		self.assertNotEqual(order.payment_request, first)
+# 		self.assertEqual(order.payment_status, "Unpaid")
+# 		self.assertEqual(retry["payment_url"], "https://rzp.io/test")
 
-		self.request(order).apply_webhook_status("Paid", "evt_2")
-		order.reload()
-		self.assertEqual(order.payment_status, "Paid")
+# 		self.request(order).apply_webhook_status("Paid", "evt_2")
+# 		order.reload()
+# 		self.assertEqual(order.payment_status, "Paid")
 
-	def test_the_return_page_finds_the_order_by_its_payment_request(self):
-		_, order = self.place([self.pack_a, self.pack_b])
-		self.request(order).apply_webhook_status("Paid", "evt_1")
-		result = get_order(payment_request=order.payment_request)
-		self.assertEqual(result["order"], order.name)
-		self.assertEqual(result["payment_status"], "Paid")
-		self.assertEqual((result["subtotal"], result["gst_amount"], result["amount"]), (30000, 5400, 35400))
-		self.assertEqual([p["total_hours"] for p in result["packs"]], [5, 8])
+# 	def test_the_return_page_finds_the_order_by_its_payment_request(self):
+# 		_, order = self.place([self.pack_a, self.pack_b])
+# 		self.request(order).apply_webhook_status("Paid", "evt_1")
+# 		result = get_order(payment_request=order.payment_request)
+# 		self.assertEqual(result["order"], order.name)
+# 		self.assertEqual(result["payment_status"], "Paid")
+# 		self.assertEqual((result["subtotal"], result["gst_amount"], result["amount"]), (30000, 5400, 35400))
+# 		self.assertEqual([p["total_hours"] for p in result["packs"]], [5, 8])
 
-	def test_the_confirmed_page_gets_the_partner_and_when_things_happened(self):
-		frappe.db.set_single_value("Starter Pack Settings", "auto_assign_partners", 1)
-		make_partner("_Test RR Payment Partner", starter_pack=0)
-		partner = frappe.get_doc("Partner", "_Test RR Payment Partner")
-		partner.update({"starter_pack": 1, "enabled": 1, "starter_pack_sequence": 0})
-		partner.save(ignore_permissions=True)
+# 	def test_the_confirmed_page_gets_the_partner_and_when_things_happened(self):
+# 		frappe.db.set_single_value("Starter Pack Settings", "auto_assign_partners", 1)
+# 		make_partner("_Test RR Payment Partner", starter_pack=0)
+# 		partner = frappe.get_doc("Partner", "_Test RR Payment Partner")
+# 		partner.update({"starter_pack": 1, "enabled": 1, "starter_pack_sequence": 0})
+# 		partner.save(ignore_permissions=True)
 
-		_, order = self.place([self.pack_a])
-		self.request(order).apply_webhook_status("Paid", "evt_1")
-		result = get_order(order.name)
+# 		_, order = self.place([self.pack_a])
+# 		self.request(order).apply_webhook_status("Paid", "evt_1")
+# 		result = get_order(order.name)
 
-		order.reload()
-		self.assertEqual(result["partner"]["name"], order.partner)
-		self.assertIsInstance(result["partner"]["industries"], list)
-		self.assertEqual(result["partner"]["review_count"], frappe.db.count("Partner Review", {"partner": order.partner}))
-		# Sent with the site's offset, so a browser in another zone reads the right moment.
-		for field in ("created_on", "paid_on", "partner_assigned_on"):
-			self.assertIsNotNone(datetime.fromisoformat(result[field]).utcoffset(), field)
+# 		order.reload()
+# 		self.assertEqual(result["partner"]["name"], order.partner)
+# 		self.assertIsInstance(result["partner"]["industries"], list)
+# 		self.assertEqual(result["partner"]["review_count"], frappe.db.count("Partner Review", {"partner": order.partner}))
+# 		# Sent with the site's offset, so a browser in another zone reads the right moment.
+# 		for field in ("created_on", "paid_on", "partner_assigned_on"):
+# 			self.assertIsNotNone(datetime.fromisoformat(result[field]).utcoffset(), field)
 
-	def test_the_return_page_is_only_for_the_buyer(self):
-		_, order = self.place([self.pack_a])
-		frappe.set_user("Guest")
-		try:
-			self.assertRaises(frappe.PermissionError, get_order, payment_request=order.payment_request)
-		finally:
-			frappe.set_user("Administrator")
+# 	def test_the_return_page_is_only_for_the_buyer(self):
+# 		_, order = self.place([self.pack_a])
+# 		frappe.set_user("Guest")
+# 		try:
+# 			self.assertRaises(frappe.PermissionError, get_order, payment_request=order.payment_request)
+# 		finally:
+# 			frappe.set_user("Administrator")
 
-	def test_a_paid_order_cannot_be_paid_again(self):
-		_, order = self.place([self.pack_a])
-		self.request(order).apply_webhook_status("Paid", "evt_1")
-		self.assertRaises(frappe.ValidationError, pay, order.name)
+# 	def test_a_paid_order_cannot_be_paid_again(self):
+# 		_, order = self.place([self.pack_a])
+# 		self.request(order).apply_webhook_status("Paid", "evt_1")
+# 		self.assertRaises(frappe.ValidationError, pay, order.name)
 
-	def test_a_superseded_link_being_paid_leaves_the_order_alone(self):
-		_, order = self.place([self.pack_a])
-		old = self.request(order)
-		order.db_set("payment_request", None)
-		new = order.create_payment_request()
-		old.reload()
-		old.apply_webhook_status("Paid", "evt_old")
-		order.reload()
-		self.assertEqual(order.payment_request, new.name)
-		self.assertEqual(order.payment_status, "Unpaid")
+# 	def test_a_superseded_link_being_paid_leaves_the_order_alone(self):
+# 		_, order = self.place([self.pack_a])
+# 		old = self.request(order)
+# 		order.db_set("payment_request", None)
+# 		new = order.create_payment_request()
+# 		old.reload()
+# 		old.apply_webhook_status("Paid", "evt_old")
+# 		order.reload()
+# 		self.assertEqual(order.payment_request, new.name)
+# 		self.assertEqual(order.payment_status, "Unpaid")
 
-	def test_refund_before_kickoff_goes_through(self):
-		_, order = self.place([self.pack_a])
-		self.request(order).apply_webhook_status("Paid", "evt_1")
-		with patch(f"{RAZORPAY}.refund_payment", return_value={"refund_id": "rfnd_1"}) as refund:
-			self.request(order).refund()
-		refund.assert_called_once()
-		order.reload()
-		self.assertEqual(order.payment_status, "Refunded")
+# 	def test_refund_before_kickoff_goes_through(self):
+# 		_, order = self.place([self.pack_a])
+# 		self.request(order).apply_webhook_status("Paid", "evt_1")
+# 		with patch(f"{RAZORPAY}.refund_payment", return_value={"refund_id": "rfnd_1"}) as refund:
+# 			self.request(order).refund()
+# 		refund.assert_called_once()
+# 		order.reload()
+# 		self.assertEqual(order.payment_status, "Refunded")
 
-	def test_no_refund_after_kickoff_and_razorpay_is_never_called(self):
-		_, order = self.place([self.pack_a])
-		self.request(order).apply_webhook_status("Paid", "evt_1")
-		order.reload()
-		order.kickoff_date = today()
-		order.save(ignore_permissions=True)
-		with patch(f"{RAZORPAY}.refund_payment") as refund:
-			self.assertRaises(frappe.ValidationError, self.request(order).refund)
-		refund.assert_not_called()
-		order.reload()
-		self.assertEqual(order.payment_status, "Paid")
+# 	def test_no_refund_after_kickoff_and_razorpay_is_never_called(self):
+# 		_, order = self.place([self.pack_a])
+# 		self.request(order).apply_webhook_status("Paid", "evt_1")
+# 		order.reload()
+# 		order.kickoff_date = today()
+# 		order.save(ignore_permissions=True)
+# 		with patch(f"{RAZORPAY}.refund_payment") as refund:
+# 			self.assertRaises(frappe.ValidationError, self.request(order).refund)
+# 		refund.assert_not_called()
+# 		order.reload()
+# 		self.assertEqual(order.payment_status, "Paid")
 
 
 def make_pack(pack_key, price, total_hours):

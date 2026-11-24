@@ -209,7 +209,8 @@ override_whitelisted_methods = {
 }
 
 override_doctype_class = {
-	"Gateway Payment Request": "connect.overrides.gateway_payment_request.GatewayPaymentRequest",
+	# bwh_payments is switched off: uncomment when online payment comes back.
+	# "Gateway Payment Request": "connect.overrides.gateway_payment_request.GatewayPaymentRequest",
 }
 
 # Document Events
@@ -268,9 +269,10 @@ doc_events = {
 		"after_insert": "connect.roles.grant_thread_guest_role",
 		"on_trash": "connect.roles.revoke_thread_guest_role",
 	},
-	"Gateway Payment Request": {
-		"on_update": "connect.starter_packs.doctype.starter_pack_order.starter_pack_order.on_gateway_payment_request_update",
-	},
+	# bwh_payments is switched off: uncomment when online payment comes back.
+	# "Gateway Payment Request": {
+	# 	"on_update": "connect.starter_packs.doctype.starter_pack_order.starter_pack_order.on_gateway_payment_request_update",
+	# },
 	# The Frappe Consultant role: see connect.partner.consultants.
 	"User": {
 		"validate": "connect.partner.consultants.validate_user",
