@@ -67,10 +67,12 @@ export default function setup(context) {
 	const lostReason = ref(LOST_REASONS[0])
 
 	// The server records the change in the lead's Activity, so the lead is read again after.
-	async function save(values) {
+	// `done` is the toast that confirms it.
+	async function save(values, done = "") {
 		try {
 			await call("connect.api.leads.update_lead", { name: leadId.value, ...values })
 			await load()
+			if (done) toast.success(done)
 			return true
 		} catch (error) {
 			toast.error(error?.messages?.[0] || "Couldn't save the change.")
@@ -85,7 +87,7 @@ export default function setup(context) {
 			lostOpen.value = true
 			return
 		}
-		save({ stage })
+		save({ stage }, `Moved to ${stage}`)
 	}
 
 	async function confirmLost() {
@@ -104,11 +106,12 @@ export default function setup(context) {
 			toast.error(`${nameOf(next)} isn't on your CRM. Create their account there, then match them in Settings → Users.`)
 			return
 		}
-		save({ owner: next })
+		save({ owner: next }, next ? `Assigned to ${nameOf(next)}` : "Unassigned")
 	}
 
 	function setProbability(probability) {
-		save({ probability })
+		if (!probability || probability === lead.value.probability) return
+		save({ probability }, `Probability set to ${probability}`)
 	}
 
 	// ── The CRM's owner ─────────────────────────────────────────────────────
