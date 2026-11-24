@@ -1158,7 +1158,7 @@ _PROFILE_SIMPLE_FIELDS = (
 	# import, so partners can't overwrite them.
 	"tagline", "description", "country", "city", "website",
 	"foundation_date", "hourly_rate", "typical_project_size", "proposal_timeline",
-	"demo_available", "logo_position_x", "logo_position_y", "phone", "team_size", "journey_blog_url",
+	"demo_available", "phone", "team_size", "journey_blog_url",
 	"logo", "logo_icon", "why_choose_them", "how_we_work", "successful_implementation", "origin_story",
 )
 
@@ -1288,7 +1288,6 @@ def update_my_partner_profile(
 	hourly_rate=None,
 	typical_project_size=None, proposal_timeline=None,
 	demo_available=None,
-	logo_position_x=None, logo_position_y=None,
 	migrations=None, business_processes=None, implementation_types=None, languages=None,
 	founder=None, success_stories=None, offices=None, addons=None,
 	phone=None, team_size=None, journey_blog_url=None,
@@ -1309,7 +1308,6 @@ def update_my_partner_profile(
 		hourly_rate=hourly_rate, typical_project_size=typical_project_size,
 		proposal_timeline=proposal_timeline,
 		demo_available=demo_available,
-		logo_position_x=logo_position_x, logo_position_y=logo_position_y,
 		phone=phone, team_size=team_size, journey_blog_url=journey_blog_url,
 		logo=logo, logo_icon=logo_icon, why_choose_them=why_choose_them, origin_story=origin_story,
 		how_we_work=how_we_work, successful_implementation=successful_implementation,
@@ -1408,8 +1406,6 @@ def _apply_founder(doc, founder: dict | None) -> None:
 		founder_row.designation = founder.get("designation")
 		founder_row.bio = founder.get("bio")
 		founder_row.photo = founder.get("photo")
-		founder_row.photo_position_x = founder.get("photo_position_x", 50)
-		founder_row.photo_position_y = founder.get("photo_position_y", 50)
 
 
 def _profile_draft(doc) -> dict:
