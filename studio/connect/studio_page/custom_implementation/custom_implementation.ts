@@ -47,8 +47,8 @@ export default function setup(context) {
 	}
 
 	// ---- Hire a Partner: every quote in one list, narrowed by a filter ----
-	// Share details (Interested) tells the partner who the customer is; Not interested sets a
-	// quote aside, with Restore. Partners who got the brief and have not quoted follow the quotes.
+	// Not interested sets a quote aside, with Restore. Partners who got the brief and have not
+	// quoted follow the quotes.
 	const INVITED_STATUS_LABELS = {
 		Awaiting: "",
 		"Partner Declined": "Not available to take on new clients",
@@ -89,17 +89,14 @@ export default function setup(context) {
 	)
 	// A quote with no date yet sorts after the dated ones.
 	const quotedAt = (row) => (row.quoted_on ? new Date(row.quoted_on).getTime() : Infinity)
-	const arrivedFirst = (a, b) =>
-		(a.status === "Interested" ? 0 : 1) - (b.status === "Interested" ? 0 : 1) || quotedAt(a) - quotedAt(b)
+	const arrivedFirst = (a, b) => quotedAt(a) - quotedAt(b)
 
 	const VIEWS = {
 		all: { label: "All quotes", match: (row) => row.status !== "Not Interested" },
-		shared: { label: "Details shared", match: (row) => row.status === "Interested" },
 		declined: { label: "Not interested", match: (row) => row.status === "Not Interested" },
 	}
 	const EMPTY_VIEWS = {
 		all: { icon: "lucide-inbox", title: "No quotes yet", text: "" },
-		shared: { icon: "lucide-send", title: "No details shared yet", text: "" },
 		declined: { icon: "lucide-ban", title: "No one marked not interested", text: "" },
 	}
 	const view = ref("all")
@@ -151,9 +148,7 @@ export default function setup(context) {
 	// The line under a partner's name: where they are (their country when no city is on file),
 	// and whether they have the customer's details.
 	function quoteSubline(row) {
-		if (row?.statusLabel) return row.statusLabel
-		const shared = row?.status === "Interested" ? "Details shared" : ""
-		return [row?.city || row?.country, shared].filter(Boolean).join(" · ")
+		return row?.statusLabel || row?.city || row?.country || ""
 	}
 
 	function setQuoteStatus(row, status, answer = {}) {
@@ -168,12 +163,6 @@ export default function setup(context) {
 				toast.error(error?.messages?.[0] || "Couldn't update that quote. Try again.")
 				throw error
 			})
-	}
-
-	function shareDetails(row) {
-		setQuoteStatus(row, "Interested")
-			.then(() => toast.success(`Details shared with ${row.company_name}`))
-			.catch(() => {})
 	}
 
 	// ---- Not interested: the customer says why; the partner is emailed and their lead closes ----
@@ -226,13 +215,12 @@ export default function setup(context) {
 		router.push(`/partner-profile-redesign/${encodeURIComponent(row.partner)}`)
 	}
 
-	// Message is on every row, so More holds the brochure, Share details (until it's done) and Not interested.
+	// Message is on every row, so More holds the brochure and Not interested.
 	// On a narrow screen Message moves into More too.
 	function quoteMenu(row) {
 		return [
 			isNarrow.value && { label: "Message", icon: "lucide-message-square", onClick: () => readThread(row) },
 			row.brochure && { label: "Open brochure", icon: "lucide-file-text", onClick: () => openBrochure(row) },
-			row.status === "Quoted" && { label: "Share details", icon: "lucide-send", onClick: () => shareDetails(row) },
 			row.status !== "Not Interested" && { label: "Not interested", icon: "lucide-ban", onClick: () => notInterested(row) },
 		].filter(Boolean)
 	}
