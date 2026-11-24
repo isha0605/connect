@@ -9,7 +9,7 @@ app_license = "mit"
 # ------------------
 
 # Starter Pack Order links to its Gateway Payment Request.
-required_apps = ["bwh_payments"]
+# required_apps = ["bwh_payments"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
