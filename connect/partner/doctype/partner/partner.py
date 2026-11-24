@@ -412,6 +412,19 @@ SORT_OPTIONS = {
 }
 
 
+def order_by_tier(partners: list) -> list:
+	"""The directory's own order: highest tier first, then highest rating, then name."""
+	rank = {tier: index for index, tier in enumerate(get_tier_order())}
+	return sorted(
+		partners,
+		key=lambda partner: (
+			rank.get(partner.tier, len(rank)),
+			-(partner.rating or 0),
+			(partner.company_name or "").lower(),
+		),
+	)
+
+
 # Operators the CRM-style Filter component can emit (its own WIRE_OPERATOR map) —
 # validated against this whitelist before reaching the query.
 FILTER_OPERATORS = {"is", "is not", "in", "not in", "=", "!=", "like", "not like", ">", "<", ">=", "<=", "between", "timespan"}
@@ -486,14 +499,15 @@ def search_partners(
 	limit = cint(limit) or 100
 	search = (search or "").strip()
 
-	if not search:
-		order_by = "rating desc"
-		if sort in SORT_OPTIONS:
-			field, desc = SORT_OPTIONS[sort]
-			order_by = f"{field} {'desc' if desc else 'asc'}"
+	if not search and sort in SORT_OPTIONS:
+		field, desc = SORT_OPTIONS[sort]
 		partners = frappe.get_all(
-			"Partner", fields=PARTNER_FIELDS, filters=filters, order_by=order_by, limit_page_length=limit
+			"Partner", fields=PARTNER_FIELDS, filters=filters,
+			order_by=f"{field} {'desc' if desc else 'asc'}", limit_page_length=limit,
 		)
+	elif not search:
+		# Ordered before the limit, so a page of partners always starts with the highest tier.
+		partners = order_by_tier(frappe.get_all("Partner", fields=PARTNER_FIELDS, filters=filters))[:limit]
 	else:
 		# Candidates passing the structured filters — unranked, no text match yet.
 		candidates = frappe.get_all("Partner", fields=PARTNER_FIELDS, filters=filters)

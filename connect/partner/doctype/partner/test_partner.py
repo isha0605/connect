@@ -279,6 +279,40 @@ def remove_year_column_and_partner():
 SERVING = "_Test Serving Partner LLP"
 
 
+GOLD_UNRATED = "_Test Order Gold Unrated"
+GOLD_RATED = "_Test Order Gold Rated"
+SILVER_RATED = "_Test Order Silver Rated"
+
+
+class IntegrationTestDirectoryOrder(IntegrationTestCase):
+	"""The directory lists partners by tier, then rating. A typed search keeps the best match first."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		names = (GOLD_UNRATED, GOLD_RATED, SILVER_RATED)
+		remove_partners(*names)
+		for name, tier, rating in ((GOLD_UNRATED, "Gold", 0), (GOLD_RATED, "Gold", 3), (SILVER_RATED, "Silver", 5)):
+			served = [{"country": "Kiribati"}]
+			save_imported_partner(name, {**partner_values(name), "tier": tier, "served_countries": served})
+			frappe.db.set_value("Partner", name, {"verification_status": VERIFIED, "show_in_website": 1, "rating": rating})
+		self.addCleanup(remove_partners, *names)
+
+	def test_a_higher_tier_comes_first_then_the_higher_rating(self):
+		order = [p.name for p in search_partners(served_country="Kiribati")]
+
+		self.assertEqual(order, [GOLD_RATED, GOLD_UNRATED, SILVER_RATED])
+
+	def test_a_page_of_partners_starts_with_the_highest_tier(self):
+		first = search_partners(served_country="Kiribati", limit=1)
+
+		self.assertEqual([p.name for p in first], [GOLD_RATED])
+
+	def test_a_chosen_sort_still_wins(self):
+		order = [p.name for p in search_partners(served_country="Kiribati", sort="rating_desc")]
+
+		self.assertEqual(order[0], SILVER_RATED)
+
+
 class IntegrationTestServedCountries(IntegrationTestCase):
 	"""Countries Served is a list of countries. The count and the directory search follow the list."""
 
