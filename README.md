@@ -28,6 +28,10 @@ Pre-commit is configured to use the following tools for checking and formatting 
 - prettier
 - pyupgrade
 
+### Assets
+
+Each push to `main` publishes pre-built assets to the `assets-main` GitHub release. Pilot downloads them instead of building the Studio app.
+
 ### License
 
 mit
