@@ -6,6 +6,7 @@
 // The answers' codes and wording. The Requirement card partners get reads the same file
 // (connect/customer/doctype/customer_project/brief.py), so both sides see the same words.
 import ANSWER_OPTIONS from "./answerOptions.json"
+import { currencyOfCountry } from "./money"
 
 // Grouped by the directory's regions so a country with no partners can still fall
 // back to its neighbours. Names are Frappe's Country names, which is what
@@ -254,7 +255,7 @@ export function budgetIn(budget, currency) {
 // The currency of a customer's budget ranges: their country when they've given one, else their
 // browser's time zone, since a guest hasn't said where they are.
 export function startingBudgetCurrency(country) {
-	if (country) return country === "India" ? "INR" : "USD"
+	if (country) return currencyOfCountry(country)
 	return INDIAN_TIME_ZONES.includes(Intl.DateTimeFormat().resolvedOptions().timeZone) ? "INR" : "USD"
 }
 

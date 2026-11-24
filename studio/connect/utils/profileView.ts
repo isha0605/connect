@@ -36,7 +36,8 @@ export function openInNewTab(url) {
 }
 
 // profile, stories and isEditing are refs or computeds; selectedStoryIndustry is the page's variable.
-export function useProfileView({ profile, stories, isEditing, selectedStoryIndustry, forCustomers = false }) {
+// viewerCurrency, a ref, is the customer's currency for the rough amount beside the rate.
+export function useProfileView({ profile, stories, isEditing, selectedStoryIndustry, forCustomers = false, viewerCurrency = null }) {
 	const photos = computed(() => (profile.value?.photos || []).map((photo, index) => ({ ...photo, index })))
 	const sidePhotos = computed(() => {
 		const more = photos.value.length - GALLERY_TILES
@@ -63,7 +64,7 @@ export function useProfileView({ profile, stories, isEditing, selectedStoryIndus
 				p.framework_certified ? { label: `${p.framework_certified} Framework` } : null,
 			].filter(Boolean),
 			offices: p.offices || [],
-			rate: p.hourly_rate ? hourlyRate(p.hourly_rate, p.currency) : "Not added yet",
+			rate: p.hourly_rate ? hourlyRate(p.hourly_rate, p.currency, viewerCurrency?.value) : "Not added yet",
 			industries: p.industry_badges || [],
 			// The partner's own picks, then the apps their success stories name on frappe.io.
 			apps: [...new Set([...(p.apps || []), ...(p.story_apps || [])])].map((app) => ({ label: app, logo: logos[app] || "" })),

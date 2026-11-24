@@ -1,6 +1,6 @@
 import { computed, watch } from "vue"
 import { call, toast } from "frappe-ui"
-import { hourlyRate } from "@app/utils/money"
+import { hourlyRate, viewerCurrency } from "@app/utils/money"
 import { projectDialog, projectPath } from "@app/utils/projectDialog"
 import { startTracking } from "@app/utils/tracking"
 import { useMyContext } from "@app/utils/myContext"
@@ -158,7 +158,7 @@ export default function setup(context) {
 
 	// In the partner's currency, as the partner directory shows it.
 	function partnerRate(p) {
-		return p.hourly_rate ? hourlyRate(p.hourly_rate, p.currency) : "Undisclosed"
+		return p.hourly_rate ? hourlyRate(p.hourly_rate, p.currency, viewerCurrency(context.myContext?.data)) : "Undisclosed"
 	}
 
 	function partnerRating(p) {

@@ -3,7 +3,7 @@
 // sign in.
 
 import { carryGuestShortlist } from "@app/utils/guestShortlist"
-import { hourlyRate } from "@app/utils/money"
+import { hourlyRate, viewerCurrency } from "@app/utils/money"
 import { partnerConnect } from "@app/utils/partnerConnect"
 
 export default function setup(context) {
@@ -14,6 +14,7 @@ export default function setup(context) {
 			context.myShortlistFull.reload()
 		},
 	})
-	// The cards show each partner's rate in their own currency.
-	return { ...partnerConnect(context), hourlyRate }
+	// The cards show each partner's rate in their own currency, with a rough amount in the customer's.
+	const rateFor = (amount, currency) => hourlyRate(amount, currency, viewerCurrency(context.myContext?.data))
+	return { ...partnerConnect(context), hourlyRate: rateFor }
 }

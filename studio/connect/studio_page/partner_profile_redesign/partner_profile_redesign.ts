@@ -5,6 +5,7 @@
 
 import { computed, onScopeDispose, ref, watch } from "vue"
 import { partnerConnect } from "@app/utils/partnerConnect"
+import { viewerCurrency } from "@app/utils/money"
 import { useProfileView } from "@app/utils/profileView"
 import { onPreviewChange, readPreview, withPreview } from "@app/utils/profilePreview"
 import { goToSignIn } from "@app/utils/signIn"
@@ -128,7 +129,8 @@ export default function setup(context) {
 	const isEditing = ref(false)
 	const profile = computed(() => profileOf(partner.data))
 	const stories = computed(() => partner.data?.success_stories || [])
-	const view = useProfileView({ profile, stories, isEditing, selectedStoryIndustry, forCustomers: true })
+	const customerCurrency = computed(() => viewerCurrency(context.myContext?.data))
+	const view = useProfileView({ profile, stories, isEditing, selectedStoryIndustry, forCustomers: true, viewerCurrency: customerCurrency })
 
 	// Each Partner Photo is an image, or a video with the image as its cover. Kept in the
 	// photos' own order, so a tile's index is its place in the lightbox.
