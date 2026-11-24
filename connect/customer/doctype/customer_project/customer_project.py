@@ -425,6 +425,27 @@ def _not_interested_answer(status: str, reason: str | None, note: str | None) ->
 	return reason, note or None
 
 
+# The name shows in the project's header and on partners' leads; Data holds up to 140.
+PROJECT_NAME_LIMIT = 140
+
+
+def rename_project(name: str, project_name: str) -> dict:
+	"""The owner renames their project, from its header on the project page, while still choosing
+	a partner. Once a hire is asked for, the partner is working to the name they were sent."""
+	doc = get_own_project(name)
+	if doc.status not in ("Draft", "Shared"):
+		frappe.throw(_("You've asked a partner to take this project on, so its name stays as it is."))
+	title = (project_name or "").strip()
+	if not title:
+		frappe.throw(_("Give your project a name."))
+	if len(title) > PROJECT_NAME_LIMIT:
+		frappe.throw(_("Keep the name to {0} characters or fewer.").format(PROJECT_NAME_LIMIT))
+	doc.project_name = title
+	# Only System Managers write projects; get_own_project checked the caller owns this one.
+	doc.save(ignore_permissions=True)
+	return project_dict(doc)
+
+
 def set_hire_reason(name: str, reasons=None, note=None):
 	"""Why they picked this partner ("What made you choose them?"): any of HIRE_REASONS, one
 	per line, and a note for anything else. Done with nothing picked sends nothing."""

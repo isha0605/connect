@@ -1644,22 +1644,73 @@
                "originalElement": "div"
               },
               {
-               "componentId": "rp-header-title",
-               "componentName": "TextBlock",
+               "children": [
+                {
+                 "componentId": "rp-header-title",
+                 "componentName": "TextBlock",
+                 "componentProps": {
+                  "tag": "h2",
+                  "text": "{{ projectTitle }}",
+                  "fontSize": "text-3xl"
+                 },
+                 "componentSlots": {},
+                 "classes": [
+                  "line-clamp-2",
+                  "min-w-0",
+                  "flex-1",
+                  "text-pretty",
+                  "font-medium",
+                  "text-ink-gray-9"
+                 ],
+                 "componentEvents": {
+                  "dblclick": {
+                   "action": "Run Script",
+                   "event": "dblclick",
+                   "script": "startRename()"
+                  }
+                 }
+                }
+               ],
+               "componentId": "rp-header-title-tip",
+               "componentName": "Tooltip",
                "componentProps": {
-                "tag": "h2",
-                "text": "{{ projectTitle }}",
-                "fontSize": "text-3xl"
+                "text": "Double-click to rename",
+                "disabled": "{{ !canRename }}"
                },
                "componentSlots": {},
+               "visibilityCondition": "!renaming"
+              },
+              {
+               "componentId": "rp-header-title-input",
+               "componentName": "TextInput",
+               "componentSlots": {},
+               "componentProps": {
+                "aria-label": "Project name",
+                "modelValue": {
+                 "$type": "variable",
+                 "name": "titleDraft"
+                },
+                "type": "text",
+                "size": "lg",
+                "maxlength": 140
+               },
                "classes": [
-                "line-clamp-2",
                 "min-w-0",
-                "flex-1",
-                "text-pretty",
-                "font-medium",
-                "text-ink-gray-9"
-               ]
+                "flex-1"
+               ],
+               "visibilityCondition": "renaming",
+               "componentEvents": {
+                "blur": {
+                 "action": "Run Script",
+                 "event": "blur",
+                 "script": "saveRename()"
+                },
+                "keydown": {
+                 "action": "Run Script",
+                 "event": "keydown",
+                 "script": "renameKey(eventArgs[0])"
+                }
+               }
               }
              ],
              "originalElement": "div"
@@ -2427,7 +2478,7 @@
  "frappe_app": "connect",
  "idx": 1,
  "is_standard": 1,
- "modified": "2026-11-24 10:10:00.000000",
+ "modified": "2026-11-24 16:30:00.000000",
  "modified_by": "Administrator",
  "name": "custom_implementation",
  "owner": "Administrator",

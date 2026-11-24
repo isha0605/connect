@@ -1,7 +1,7 @@
 // A shared project (Customer Project): its quotes, the hire and going live. Opened as
 // /custom-implementation?project=CP-…, which is where the project questions land once shared.
 
-import { computed, h, onScopeDispose, ref } from "vue"
+import { computed, h, nextTick, onScopeDispose, ref } from "vue"
 import { formatMoney } from "@app/utils/money"
 import { startTracking } from "@app/utils/tracking"
 import { tierSeal } from "@app/utils/tierSeal"
@@ -47,8 +47,8 @@ export default function setup(context) {
 	}
 
 	// ---- Hire a Partner: every quote in one list, narrowed by a filter ----
-	// Share details (Interested) tells the partner who the customer is; Not interested sets a
-	// quote aside, with Restore. Partners who got the brief and have not quoted follow the quotes.
+	// Not interested sets a quote aside, with Restore. Partners who got the brief and have not
+	// quoted follow the quotes.
 	const INVITED_STATUS_LABELS = {
 		Awaiting: "",
 		"Partner Declined": "Not available to take on new clients",
@@ -89,17 +89,14 @@ export default function setup(context) {
 	)
 	// A quote with no date yet sorts after the dated ones.
 	const quotedAt = (row) => (row.quoted_on ? new Date(row.quoted_on).getTime() : Infinity)
-	const arrivedFirst = (a, b) =>
-		(a.status === "Interested" ? 0 : 1) - (b.status === "Interested" ? 0 : 1) || quotedAt(a) - quotedAt(b)
+	const arrivedFirst = (a, b) => quotedAt(a) - quotedAt(b)
 
 	const VIEWS = {
 		all: { label: "All quotes", match: (row) => row.status !== "Not Interested" },
-		shared: { label: "Details shared", match: (row) => row.status === "Interested" },
 		declined: { label: "Not interested", match: (row) => row.status === "Not Interested" },
 	}
 	const EMPTY_VIEWS = {
 		all: { icon: "lucide-inbox", title: "No quotes yet", text: "" },
-		shared: { icon: "lucide-send", title: "No details shared yet", text: "" },
 		declined: { icon: "lucide-ban", title: "No one marked not interested", text: "" },
 	}
 	const view = ref("all")
@@ -151,9 +148,7 @@ export default function setup(context) {
 	// The line under a partner's name: where they are (their country when no city is on file),
 	// and whether they have the customer's details.
 	function quoteSubline(row) {
-		if (row?.statusLabel) return row.statusLabel
-		const shared = row?.status === "Interested" ? "Details shared" : ""
-		return [row?.city || row?.country, shared].filter(Boolean).join(" · ")
+		return row?.statusLabel || row?.city || row?.country || ""
 	}
 
 	function setQuoteStatus(row, status, answer = {}) {
@@ -168,12 +163,6 @@ export default function setup(context) {
 				toast.error(error?.messages?.[0] || "Couldn't update that quote. Try again.")
 				throw error
 			})
-	}
-
-	function shareDetails(row) {
-		setQuoteStatus(row, "Interested")
-			.then(() => toast.success(`Details shared with ${row.company_name}`))
-			.catch(() => {})
 	}
 
 	// ---- Not interested: the customer says why; the partner is emailed and their lead closes ----
@@ -226,13 +215,12 @@ export default function setup(context) {
 		router.push(`/partner-profile-redesign/${encodeURIComponent(row.partner)}`)
 	}
 
-	// Message is on every row, so More holds the brochure, Share details (until it's done) and Not interested.
+	// Message is on every row, so More holds the brochure and Not interested.
 	// On a narrow screen Message moves into More too.
 	function quoteMenu(row) {
 		return [
 			isNarrow.value && { label: "Message", icon: "lucide-message-square", onClick: () => readThread(row) },
 			row.brochure && { label: "Open brochure", icon: "lucide-file-text", onClick: () => openBrochure(row) },
-			row.status === "Quoted" && { label: "Share details", icon: "lucide-send", onClick: () => shareDetails(row) },
 			row.status !== "Not Interested" && { label: "Not interested", icon: "lucide-ban", onClick: () => notInterested(row) },
 		].filter(Boolean)
 	}
@@ -296,6 +284,50 @@ export default function setup(context) {
 
 
 	const projectTitle = computed(() => project.value?.project_name || "Project")
+
+	// ---- Rename: double-click the name in the panel; Enter or clicking away saves, Esc cancels ----
+	const renaming = ref(false)
+	const titleDraft = ref("")
+
+	// Locked once a hire is asked for: the partner is then working to the name they were sent.
+	const canRename = computed(() => ["Draft", "Shared"].includes(project.value?.status))
+
+	function startRename() {
+		if (!canRename.value) return
+		titleDraft.value = project.value.project_name || ""
+		renaming.value = true
+		nextTick(() => {
+			// TextInput puts the block id on the <input> itself.
+			const block = document.querySelector('[data-component-id="rp-header-title-input"]')
+			const input = block?.matches("input") ? block : block?.querySelector("input")
+			input?.focus()
+			input?.select()
+		})
+	}
+
+	function renameKey(event) {
+		if (event.key === "Enter") event.target.blur()
+		if (event.key === "Escape") renaming.value = false
+	}
+
+	let renameRequest = 0
+	function saveRename() {
+		if (!renaming.value) return
+		renaming.value = false
+		const title = titleDraft.value.trim()
+		const previous = project.value?.project_name
+		if (!title || title === previous) return
+		const request = ++renameRequest
+		const setName = (name) => (project.value = { ...project.value, project_name: name })
+		setName(title)
+		call("connect.api.projects.rename_project", { name: projectName, project_name: title })
+			.then((data) => request === renameRequest && setName(data.project_name))
+			.catch((error) => {
+				if (request !== renameRequest) return
+				setName(previous)
+				toast.error(error?.messages?.[0] || "Couldn't rename the project. Try again.")
+			})
+	}
 	const breadcrumbItems = computed(() => [
 		{ label: "Projects", route: { path: "/projects" } },
 		{ label: projectTitle.value },
@@ -327,7 +359,7 @@ export default function setup(context) {
 	const declinedLine = computed(() => {
 		if (!declinedHire.value) return ""
 		const reason = (declinedHire.value.reason || "").trim().replace(/[.!]+$/, "")
-		return `${declinedHire.value.company_name} declined: ${reason}. Pick another partner from your quotes.`
+		return `${declinedHire.value.company_name} declined: ${reason}. Choose another partner to work with.`
 	})
 
 	const cancelling = ref(false)
@@ -558,6 +590,12 @@ export default function setup(context) {
 		project,
 		loadError,
 		projectTitle,
+		renaming,
+		canRename,
+		titleDraft,
+		startRename,
+		renameKey,
+		saveRename,
 		breadcrumbItems,
 		isShared,
 		hired,

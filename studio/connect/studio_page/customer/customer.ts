@@ -72,10 +72,12 @@ export default function setup(context) {
 	watch(customerId, load, { immediate: true })
 
 	// Saves what the team changed, then reads the customer again for its Activity.
-	async function save(values) {
+	// `done` is the toast that confirms it.
+	async function save(values, done = "") {
 		try {
 			await call("connect.api.partner_customers.update_customer", { name: customerId.value, ...values })
 			await load()
+			if (done) toast.success(done)
 		} catch (error) {
 			toast.error(error?.messages?.[0] || "Couldn't save the change.")
 		}
@@ -86,13 +88,15 @@ export default function setup(context) {
 	const stageMenu = computed(() =>
 		LINKED_STAGES.map((stage) => ({
 			label: stage,
-			onClick: () => stage !== customer.value.stage && save({ stage }),
+			onClick: () => stage !== customer.value.stage && save({ stage }, `Moved to ${stage}`),
 		})),
 	)
 	const ownerMenu = computed(() =>
 		team.value.map((member) => ({
 			label: member.full_name || member.user,
-			onClick: () => member.user !== customer.value.owner && save({ assigned_to: member.user }),
+			onClick: () =>
+				member.user !== customer.value.owner &&
+				save({ assigned_to: member.user }, `Assigned to ${member.full_name || member.user}`),
 		})),
 	)
 
