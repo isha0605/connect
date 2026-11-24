@@ -33,10 +33,10 @@ def move_company_names():
 
 
 def set_owner_names():
-	from connect.partner.doctype.connect_partner_member.connect_partner_member import set_owner_name_on_partner
+	from connect.partner.doctype.connect_partner_member.connect_partner_member import set_owner_on_partner
 
 	for partner in frappe.get_all("Partner", pluck="name"):
-		set_owner_name_on_partner(partner)
+		set_owner_on_partner(partner)
 
 
 def move_column(old: str, new: str) -> None:

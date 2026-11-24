@@ -139,20 +139,58 @@ class ConnectPartnerMember(CompanyMembership, Document):
 
 	def on_update(self):
 		if self.is_new() or self.has_value_changed("access") or self.has_value_changed("is_removed"):
-			set_owner_name_on_partner(self.partner)
+			set_owner_on_partner(self.partner)
+		if self.is_new() or self.has_value_changed("is_removed"):
+			set_login_from_partners(self.user)
 
 	def on_trash(self):
 		if self.access == OWNER:
-			# The row is still in the table now, so the partner is left with no Owner name.
-			frappe.db.set_value("Partner", self.partner, "partner_name", None, update_modified=False)
+			# The row is still in the table now, so the partner is left with no Owner.
+			frappe.db.set_value(
+				"Partner", self.partner, {"partner_name": None, "owner_email": None}, update_modified=False
+			)
 
 
-def set_owner_name_on_partner(partner: str) -> None:
-	"""Keeps Partner.partner_name the full name of the partner's one Owner, like frappe.io's Partner
-	Name. Set without saving the Partner, so its own save hooks (CRM sync) don't run for it."""
+def set_owner_on_partner(partner: str) -> None:
+	"""Keeps Partner.partner_name and owner_email the full name and login of the partner's one Owner,
+	like frappe.io's Partner Name and User. Set without saving the Partner, so its own save hooks
+	(CRM sync) don't run for it."""
 	owner = frappe.db.get_value("Connect Partner Member", {"partner": partner, "access": OWNER, "is_removed": 0}, "user")
 	full_name = frappe.db.get_value("User", owner, "full_name") if owner else None
-	frappe.db.set_value("Partner", partner, "partner_name", full_name, update_modified=False)
+	frappe.db.set_value(
+		"Partner", partner, {"partner_name": full_name, "owner_email": owner}, update_modified=False
+	)
+
+
+def set_member_logins(partner: str) -> None:
+	"""Partner on_update: disabling a partner turns off its team's logins, as on frappe.io, and
+	enabling it turns them back on."""
+	for user in frappe.get_all("Connect Partner Member", filters={"partner": partner, "is_removed": 0}, pluck="user"):
+		set_login_from_partners(user)
+
+
+def set_login_from_partners(user: str) -> None:
+	"""A person on partner teams can log in while at least one of those partners is enabled. A person
+	on no team is left as they are. Frappe staff (System Users) are never changed."""
+	member = frappe.qb.DocType("Connect Partner Member")
+	partner = frappe.qb.DocType("Partner")
+	partners_enabled = (
+		frappe.qb.from_(member)
+		.join(partner)
+		.on(partner.name == member.partner)
+		.select(partner.enabled)
+		.where((member.user == user) & (member.is_removed == 0))
+	).run(pluck=True)
+	if not partners_enabled:
+		return
+
+	user_doc = frappe.get_doc("User", user)
+	enabled = int(any(partners_enabled))
+	if user_doc.user_type == "System User" or user_doc.enabled == enabled:
+		return
+	user_doc.enabled = enabled
+	# Follows the partner's status, set by Frappe staff or the import, not by the user themselves.
+	user_doc.save(ignore_permissions=True)
 
 
 def update_owner_name_from_user(doc, method=None) -> None:
@@ -162,4 +200,4 @@ def update_owner_name_from_user(doc, method=None) -> None:
 	for partner in frappe.get_all(
 		"Connect Partner Member", filters={"user": doc.name, "access": OWNER, "is_removed": 0}, pluck="partner"
 	):
-		set_owner_name_on_partner(partner)
+		set_owner_on_partner(partner)

@@ -45,6 +45,10 @@ def owner_name_on(partner) -> str:
 	return frappe.db.get_value("Partner", partner, "partner_name")
 
 
+def owner_email_on(partner) -> str:
+	return frappe.db.get_value("Partner", partner, "owner_email")
+
+
 def full_name(user) -> str:
 	return frappe.db.get_value("User", user, "full_name")
 
@@ -76,14 +80,16 @@ class IntegrationTestConnectPartnerMember(IntegrationTestCase):
 		self.assertEqual((access_of(self.sales), access_of(self.owner)), ("Owner", "Admin"))
 		self.assertEqual(_get_partner_admins(PARTNER), [SALES, OWNER, ADMIN])
 
-	def test_the_partner_name_is_the_owners_full_name(self):
+	def test_the_partner_name_and_owner_email_are_the_owners(self):
 		self.assertEqual(owner_name_on(PARTNER), full_name(OWNER))
+		self.assertEqual(owner_email_on(PARTNER), OWNER)
 
 	def test_a_transfer_shows_the_new_owners_name(self):
 		frappe.set_user(OWNER)
 		set_team_member_access(self.sales.name, "Owner")
 
 		self.assertEqual(owner_name_on(PARTNER), full_name(SALES))
+		self.assertEqual(owner_email_on(PARTNER), SALES)
 
 	def test_a_renamed_owner_shows_the_new_name(self):
 		user = frappe.get_doc("User", OWNER)
@@ -202,6 +208,67 @@ class IntegrationTestConnectPartnerMember(IntegrationTestCase):
 		thread_member.make_admin(OWNER)
 
 		self.assertEqual((access_of(self.sales), access_of(self.owner)), ("Owner", "Admin"))
+
+
+def set_partner_enabled(partner, enabled):
+	doc = frappe.get_doc("Partner", partner)
+	doc.enabled = enabled
+	doc.save(ignore_permissions=True)
+
+
+def can_log_in(user) -> bool:
+	return bool(frappe.db.get_value("User", user, "enabled"))
+
+
+class IntegrationTestPartnerMemberLogins(IntegrationTestCase):
+	"""A partner's status decides whether its team can log in, as on frappe.io."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		self.addCleanup(frappe.db.rollback)
+		make_partner(PARTNER)
+		make_partner(OTHER_PARTNER)
+		for partner in (PARTNER, OTHER_PARTNER):
+			frappe.db.set_value("Partner", partner, "enabled", 1)
+		frappe.db.delete("Connect Partner Member", {"partner": ["in", [PARTNER, OTHER_PARTNER]]})
+		make_member(PARTNER, OWNER, access="Owner")
+		make_member(PARTNER, SALES, access="Sales")
+		make_member(OTHER_PARTNER, OUTSIDER, access="Owner")
+
+	def test_disabling_a_partner_turns_off_its_team_logins(self):
+		set_partner_enabled(PARTNER, 0)
+
+		self.assertEqual([can_log_in(user) for user in (OWNER, SALES, OUTSIDER)], [False, False, True])
+
+		set_partner_enabled(PARTNER, 1)
+
+		self.assertEqual([can_log_in(user) for user in (OWNER, SALES)], [True, True])
+
+	def test_a_person_also_on_an_enabled_team_keeps_their_login(self):
+		make_member(OTHER_PARTNER, SALES)
+
+		set_partner_enabled(PARTNER, 0)
+
+		self.assertTrue(can_log_in(SALES))
+
+	def test_joining_a_disabled_partner_turns_off_the_login(self):
+		set_partner_enabled(PARTNER, 0)
+
+		make_member(PARTNER, ADMIN, access="Admin")
+
+		self.assertFalse(can_log_in(ADMIN))
+
+	def test_frappe_staff_on_the_team_keep_their_login(self):
+		staff = "access.staff@example.test"
+		if not frappe.db.exists("User", staff):
+			frappe.get_doc(
+				{"doctype": "User", "email": staff, "first_name": "Staff", "roles": [{"role": "System Manager"}]}
+			).insert(ignore_permissions=True)
+		make_member(PARTNER, staff)
+
+		set_partner_enabled(PARTNER, 0)
+
+		self.assertTrue(can_log_in(staff))
 
 
 class UnitTestSetOneOwnerPerPartner(UnitTestCase):

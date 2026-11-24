@@ -24,7 +24,10 @@ from connect.partner.industries import (
 from connect.partner.logo import attach_normalized_logos
 from connect.partner.story_apps import apps_from_stories, queue_missing_story_apps
 from connect.partner.story_image import queue_missing_story_images
-from connect.partner.doctype.connect_partner_member.connect_partner_member import get_current_membership
+from connect.partner.doctype.connect_partner_member.connect_partner_member import (
+	get_current_membership,
+	set_member_logins,
+)
 from connect.partner.doctype.partner_tier.partner_tier import get_tier_order
 from connect.partner.doctype.region.region import get_filter_countries, get_region_of_country
 from connect.starter_packs.doctype.starter_pack.starter_pack import get_hours_range
@@ -176,6 +179,8 @@ class Partner(Document):
 		from connect.crm_partners import queue_partner_sync
 
 		queue_partner_sync(self)
+		if self.has_value_changed("enabled"):
+			set_member_logins(self.name)
 		# background-fetches each success story's own frappe.io cover photo —
 		# never blocks this save, and no-ops for rows that already have one
 		queue_missing_story_images(self.get("success_stories"))
@@ -272,8 +277,8 @@ BASE_PARTNER_FILTERS = [
 PRIVATE_PROFILE_FIELDS = (
 	"profile_draft", "cloud_registration", "cloud_registration_sent_on", "show_in_website", "starter_pack_sequence",
 	"email", "contact_email",
-	# The Owner's own name: personal, so customers see only the company.
-	"partner_name",
+	# The Owner's own name and login: personal, so customers see only the company.
+	"partner_name", "owner_email",
 	"revenue_last_month", "revenue_this_month", "revenue_updated_on", "next_tier", "previous_tier",
 	"tier_changed_on", "reviewed_tier", "keep_tier", "keep_tier_reason", "listed_on", "listing_review",
 	"keep_listing", "keep_listing_reason",
