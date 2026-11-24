@@ -8,8 +8,6 @@ const props = defineProps({
 	// Saved partner names: the account's list, or the browser's for a signed-out visitor.
 	names: { type: Array, default: () => [] },
 	route: { type: String, default: "/shortlisted-redesign" },
-	// Named in the page's block JSON: Studio's build bundles only the lucide icons it finds there.
-	icons: { type: Object, default: () => ({}) },
 })
 
 const LOGOS_SHOWN = 3
@@ -62,11 +60,7 @@ function view() {
 				<span v-if="moreCount > 0" class="logo more">+{{ moreCount }}</span>
 			</div>
 			<span class="count">{{ countLabel }}</span>
-			<Button variant="solid" label="View" @click="view">
-				<template #suffix>
-					<span :class="icons.view" class="view-icon" aria-hidden="true" />
-				</template>
-			</Button>
+			<Button variant="subtle" label="View" @click="view" />
 		</section>
 	</div>
 </template>
@@ -135,10 +129,5 @@ function view() {
 	font-weight: 500;
 	margin: 0 6px 0 4px;
 	white-space: nowrap;
-}
-
-.view-icon {
-	height: 14px;
-	width: 14px;
 }
 </style>
