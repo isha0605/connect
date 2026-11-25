@@ -6,26 +6,30 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "customer",
-  "user",
-  "buyer_name",
-  "buyer_email",
   "company_name",
-  "phone",
+  "customer",
   "customer_project",
   "column_break_status",
   "status",
   "payment_status",
-  "payment_request",
-  "gateway_payment_id",
   "paid_on",
+  "section_break_buyer",
+  "user",
+  "buyer_name",
+  "column_break_buyer",
+  "buyer_email",
+  "phone",
+  "section_break_delivery",
   "partner",
   "partner_assigned_on",
   "partner_auto_assigned",
+  "implementation_thread",
+  "column_break_delivery",
   "consultant",
   "consultant_assigned_on",
-  "implementation_thread",
+  "section_break_kickoff",
   "kickoff_date",
+  "column_break_kickoff",
   "kickoff_at",
   "meeting_link",
   "section_break_packs",
@@ -37,41 +41,15 @@
   "column_break_totals",
   "amount",
   "total_hours",
+  "section_break_payment",
+  "payment_request",
+  "column_break_payment",
+  "gateway_payment_id",
   "section_break_terms",
   "terms_accepted",
   "access_key"
  ],
  "fields": [
-  {
-   "fieldname": "customer",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Customer",
-   "options": "Customer",
-   "search_index": 1
-  },
-  {
-   "fieldname": "user",
-   "fieldtype": "Link",
-   "label": "User",
-   "options": "User",
-   "read_only": 1,
-   "search_index": 1
-  },
-  {
-   "description": "Who paid, as they entered it at checkout. Not an account: a guest buys without one.",
-   "fieldname": "buyer_name",
-   "fieldtype": "Data",
-   "label": "Buyer Name",
-   "read_only": 1
-  },
-  {
-   "fieldname": "buyer_email",
-   "fieldtype": "Data",
-   "label": "Buyer Email",
-   "options": "Email",
-   "read_only": 1
-  },
   {
    "fieldname": "company_name",
    "fieldtype": "Data",
@@ -79,10 +57,12 @@
    "reqd": 1
   },
   {
-   "fieldname": "phone",
-   "fieldtype": "Data",
-   "label": "Phone",
-   "options": "Phone"
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Customer",
+   "options": "Customer",
+   "search_index": 1
   },
   {
    "description": "The customer's own project this order was bought for, when checkout started from one. The order then carries that project's name.",
@@ -117,25 +97,52 @@
    "read_only": 1
   },
   {
-   "fieldname": "payment_request",
-   "fieldtype": "Link",
-   "label": "Payment Request",
-   "options": "Gateway Payment Request",
-   "read_only": 1,
-   "search_index": 1
-  },
-  {
-   "description": "The captured payment's id at the gateway (pay_… on Razorpay) — what support asks for.",
-   "fieldname": "gateway_payment_id",
-   "fieldtype": "Data",
-   "label": "Gateway Payment ID",
-   "read_only": 1
-  },
-  {
    "fieldname": "paid_on",
    "fieldtype": "Datetime",
    "label": "Paid On",
    "read_only": 1
+  },
+  {
+   "fieldname": "section_break_buyer",
+   "fieldtype": "Section Break",
+   "label": "Buyer"
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "description": "Who paid, as they entered it at checkout. Not an account: a guest buys without one.",
+   "fieldname": "buyer_name",
+   "fieldtype": "Data",
+   "label": "Buyer Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_buyer",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "buyer_email",
+   "fieldtype": "Data",
+   "label": "Buyer Email",
+   "options": "Email",
+   "read_only": 1
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "section_break_delivery",
+   "fieldtype": "Section Break",
+   "label": "Partner and Consultant"
   },
   {
    "fieldname": "partner",
@@ -161,6 +168,19 @@
    "read_only": 1
   },
   {
+   "description": "Where the buyer's opening message to the partner was posted.",
+   "fieldname": "implementation_thread",
+   "fieldtype": "Link",
+   "label": "Chat Thread",
+   "no_copy": 1,
+   "options": "Connect Thread",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_delivery",
+   "fieldtype": "Column Break"
+  },
+  {
    "description": "The Frappe consultant delivering this order, when Frappe is the partner. Given in turn at payment; a returning customer keeps theirs. Change it here to hand the order over: the new consultant joins the chat.",
    "fieldname": "consultant",
    "fieldtype": "Link",
@@ -175,18 +195,18 @@
    "read_only": 1
   },
   {
-   "description": "Where the buyer's opening message to the partner was posted.",
-   "fieldname": "implementation_thread",
-   "fieldtype": "Link",
-   "label": "Chat Thread",
-   "no_copy": 1,
-   "options": "Connect Thread",
-   "read_only": 1
+   "fieldname": "section_break_kickoff",
+   "fieldtype": "Section Break",
+   "label": "Kickoff"
   },
   {
    "fieldname": "kickoff_date",
    "fieldtype": "Date",
    "label": "Kickoff Date"
+  },
+  {
+   "fieldname": "column_break_kickoff",
+   "fieldtype": "Column Break"
   },
   {
    "description": "When the kickoff call is, as the consultant shared it in the chat. Not the Kickoff Date: that one stops refunds, and a call that's only planned shouldn't.",
@@ -256,6 +276,31 @@
    "read_only": 1
   },
   {
+   "collapsible": 1,
+   "fieldname": "section_break_payment",
+   "fieldtype": "Section Break",
+   "label": "Payment Gateway"
+  },
+  {
+   "fieldname": "payment_request",
+   "fieldtype": "Link",
+   "label": "Payment Request",
+   "options": "Gateway Payment Request",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_payment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "The captured payment's id at the gateway (pay_… on Razorpay) — what support asks for.",
+   "fieldname": "gateway_payment_id",
+   "fieldtype": "Data",
+   "label": "Gateway Payment ID",
+   "read_only": 1
+  },
+  {
    "fieldname": "section_break_terms",
    "fieldtype": "Section Break"
   },
@@ -276,7 +321,7 @@
   }
  ],
  "links": [],
- "modified": "2026-11-25 13:06:16.000000",
+ "modified": "2026-11-25 13:59:01.000000",
  "modified_by": "Administrator",
  "module": "Starter Packs",
  "name": "Starter Pack Order",
