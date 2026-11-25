@@ -5,6 +5,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "tab_project",
   "project_name",
   "status",
   "verdict",
@@ -13,6 +14,10 @@
   "shared_on",
   "shared_count",
   "requirements_updated_on",
+  "section_brief",
+  "budget",
+  "description",
+  "tab_requirements",
   "section_partners",
   "apps",
   "column_break_partners",
@@ -23,9 +28,7 @@
   "other_system",
   "column_break_operations",
   "problems",
-  "section_brief",
-  "budget",
-  "description",
+  "tab_hiring",
   "section_hiring",
   "partner",
   "hired_quote",
@@ -34,14 +37,23 @@
   "column_break_hiring",
   "hire_requested_on",
   "hired_on",
+  "section_going_live",
   "cloud_link_status",
   "cloud_setup_url",
   "cloud_link_error",
-  "done_tasks",
+  "column_break_going_live",
   "live_on",
-  "completed_on"
+  "completed_on",
+  "section_hosting_tasks",
+  "done_tasks",
+  "tab_connections"
  ],
  "fields": [
+  {
+   "fieldname": "tab_project",
+   "fieldtype": "Tab Break",
+   "label": "Project"
+  },
   {
    "fieldname": "project_name",
    "fieldtype": "Data",
@@ -57,14 +69,17 @@
    "default": "Draft",
    "in_list_view": 1,
    "read_only": 1,
-   "description": "Moves with the project's steps in Connect. To hire or free a partner, change their Project Quote."
+   "description": "Moves with the project's steps in Connect. To hire or free a partner, change their Project Quote.",
+   "in_standard_filter": 1,
+   "search_index": 1
   },
   {
    "fieldname": "verdict",
    "fieldtype": "Select",
    "label": "Recommendation",
    "options": "\nStarter Pack\nCustom",
-   "in_list_view": 1
+   "in_list_view": 1,
+   "in_standard_filter": 1
   },
   {
    "fieldname": "column_break_main",
@@ -76,7 +91,9 @@
    "fieldtype": "Link",
    "label": "User",
    "options": "User",
-   "read_only": 1
+   "read_only": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
   },
   {
    "fieldname": "shared_on",
@@ -97,6 +114,27 @@
    "label": "Requirements Updated On",
    "no_copy": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "section_brief",
+   "fieldtype": "Section Break",
+   "label": "Brief"
+  },
+  {
+   "fieldname": "budget",
+   "fieldtype": "Select",
+   "label": "Budget",
+   "options": "\nUnder ₹5 lakh\n₹5 to 15 lakh\n₹15 to 40 lakh\nOver ₹40 lakh\nUnder $6k\n$6k to $18k\n$18k to $50k\nOver $50k\nNot decided yet"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text",
+   "label": "What They Need"
+  },
+  {
+   "fieldname": "tab_requirements",
+   "fieldtype": "Tab Break",
+   "label": "Requirements"
   },
   {
    "fieldname": "section_partners",
@@ -151,20 +189,9 @@
    "label": "Trying To Solve"
   },
   {
-   "fieldname": "section_brief",
-   "fieldtype": "Section Break",
-   "label": "Brief"
-  },
-  {
-   "fieldname": "budget",
-   "fieldtype": "Select",
-   "label": "Budget",
-   "options": "\nUnder ₹5 lakh\n₹5 to 15 lakh\n₹15 to 40 lakh\nOver ₹40 lakh\nUnder $6k\n$6k to $18k\n$18k to $50k\nOver $50k\nNot decided yet"
-  },
-  {
-   "fieldname": "description",
-   "fieldtype": "Text",
-   "label": "What They Need"
+   "fieldname": "tab_hiring",
+   "fieldtype": "Tab Break",
+   "label": "Hiring"
   },
   {
    "fieldname": "section_hiring",
@@ -176,7 +203,10 @@
    "fieldtype": "Link",
    "label": "Partner",
    "options": "Partner",
-   "read_only": 1
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
   },
   {
    "fieldname": "hired_quote",
@@ -217,13 +247,19 @@
    "read_only": 1
   },
   {
+   "fieldname": "section_going_live",
+   "fieldtype": "Section Break",
+   "label": "Going Live"
+  },
+  {
    "fieldname": "cloud_link_status",
    "fieldtype": "Select",
    "label": "Frappe Cloud Link",
    "options": "\nPending\nWaiting for Partner\nRequested\nActive\nDeclined\nExpired\nEnded",
    "read_only": 1,
    "no_copy": 1,
-   "description": "Pending while Connect asks Frappe Cloud to link the hired partner with the customer. Waiting for Partner until the partner registers there. Requested until the customer accepts on Frappe Cloud."
+   "description": "Pending while Connect asks Frappe Cloud to link the hired partner with the customer. Waiting for Partner until the partner registers there. Requested until the customer accepts on Frappe Cloud.",
+   "in_standard_filter": 1
   },
   {
    "fieldname": "cloud_setup_url",
@@ -242,10 +278,8 @@
    "description": "Why the last request to Frappe Cloud failed. Connect tries again every hour."
   },
   {
-   "fieldname": "done_tasks",
-   "fieldtype": "JSON",
-   "label": "Done Tasks",
-   "read_only": 1
+   "fieldname": "column_break_going_live",
+   "fieldtype": "Column Break"
   },
   {
    "description": "When the partner marked the project live. Cleared when the customer says it isn't live yet.",
@@ -259,11 +293,46 @@
    "fieldtype": "Datetime",
    "label": "Completed On",
    "read_only": 1
+  },
+  {
+   "fieldname": "section_hosting_tasks",
+   "fieldtype": "Section Break",
+   "label": "Hosting Tasks Done",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "done_tasks",
+   "fieldtype": "JSON",
+   "label": "Done Tasks",
+   "read_only": 1,
+   "description": "Hosting setup tasks the customer has ticked off after hiring."
+  },
+  {
+   "fieldname": "tab_connections",
+   "fieldtype": "Tab Break",
+   "label": "Connections",
+   "show_dashboard": 1
   }
  ],
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-11-23 16:00:00.000000",
+ "links": [
+  {
+   "group": "Partners",
+   "link_doctype": "Project Quote",
+   "link_fieldname": "customer_project"
+  },
+  {
+   "group": "Partners",
+   "link_doctype": "Partner Customer",
+   "link_fieldname": "project"
+  },
+  {
+   "group": "Starter Pack",
+   "link_doctype": "Starter Pack Order",
+   "link_fieldname": "customer_project"
+  }
+ ],
+ "modified": "2026-11-25 13:57:41.000000",
  "modified_by": "Administrator",
  "module": "Customer",
  "name": "Customer Project",
@@ -286,7 +355,30 @@
  "row_format": "Dynamic",
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": [],
+ "states": [
+  {
+   "color": "Gray",
+   "title": "Draft"
+  },
+  {
+   "color": "Blue",
+   "title": "Shared"
+  },
+  {
+   "color": "Orange",
+   "title": "Hiring"
+  },
+  {
+   "color": "Cyan",
+   "title": "Hired"
+  },
+  {
+   "color": "Green",
+   "title": "Completed"
+  }
+ ],
  "title_field": "project_name",
- "track_changes": 1
+ "track_changes": 1,
+ "show_title_field_in_link": 1,
+ "search_fields": "user,partner"
 }

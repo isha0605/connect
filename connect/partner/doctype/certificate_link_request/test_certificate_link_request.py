@@ -6,9 +6,16 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from connect.api.partner import approve_certificate_link, get_certificate_link_request, remove_certificate
+from connect.api.partner import (
+	approve_certificate_link,
+	get_certificate_link_request,
+	remove_certificate,
+	resend_certificate_link_request,
+)
 from connect.customer.doctype.customer_project.test_hiring import make_partner, make_partner_admin
+from connect.partner.doctype.partner.test_staff_roles import make_staff_user
 from connect.partner.doctype.partner_application.partner_application import get_certificate_link_status
+from connect.roles import PARTNER_MANAGER_ROLE, STAFF_ROLE
 
 PARTNER = "_Test Cert Partner"
 OTHER_PARTNER = "_Test Cert Other Partner"
@@ -16,6 +23,8 @@ ADMIN = "cert.admin@example.test"
 OTHER_ADMIN = "cert.other.admin@example.test"
 HOLDER = "cert.holder@example.test"
 COURSE = "erpnext-distribution"
+MANAGER = "cert.manager@example.test"
+STAFF = "cert.staff@example.test"
 
 
 class IntegrationTestCertificateLinkRequest(IntegrationTestCase):
@@ -119,6 +128,51 @@ class IntegrationTestCertificateLinkRequest(IntegrationTestCase):
 		self.assertIsNone(frappe.db.get_value("Partner Certificate", self.certificate.name, "partner"))
 		self.assertEqual(frappe.db.get_value("Certificate Link Request", request.name, "status"), "Cancelled")
 		self.assertEqual(self.counts(PARTNER), (0, 0))
+
+	def resend_as(self, user, request, resend):
+		frappe.set_user(user)
+		try:
+			with patch("frappe.sendmail") as sendmail:
+				resend(request)
+		finally:
+			frappe.set_user("Administrator")
+		return sendmail
+
+	def test_desk_resend_needs_write_permission(self):
+		make_staff_user(STAFF, STAFF_ROLE)
+		make_staff_user(MANAGER, PARTNER_MANAGER_ROLE)
+		request, _message = self.request_link()
+		old_key = request.key
+
+		# Staff can read the request, which is all Frappe checks before running a document method.
+		self.assertTrue(frappe.has_permission("Certificate Link Request", "read", user=STAFF))
+		with self.assertRaises(frappe.PermissionError):
+			self.resend_as(STAFF, request, lambda doc: frappe.get_doc(doc.doctype, doc.name).resend())
+		self.assertEqual(frappe.db.get_value("Certificate Link Request", request.name, "key"), old_key)
+
+		sendmail = self.resend_as(MANAGER, request, lambda doc: frappe.get_doc(doc.doctype, doc.name).resend())
+		new_key = frappe.db.get_value("Certificate Link Request", request.name, "key")
+		self.assertNotEqual(new_key, old_key)
+		self.assertEqual(sendmail.call_args.kwargs["recipients"], [HOLDER])
+		self.assertIn(f"key={new_key}", sendmail.call_args.kwargs["message"])
+
+	def test_desk_resend_refuses_a_request_that_is_not_pending(self):
+		request, _message = self.request_link()
+		with patch("frappe.sendmail"):
+			approve_certificate_link(request.key)
+
+		with self.assertRaises(frappe.ValidationError):
+			frappe.get_doc("Certificate Link Request", request.name).resend()
+
+	def test_partner_resends_only_their_own_request_from_the_portal(self):
+		request, _message = self.request_link()
+
+		with self.assertRaises(frappe.PermissionError):
+			self.resend_as(OTHER_ADMIN, request, lambda doc: resend_certificate_link_request(doc.name))
+
+		sendmail = self.resend_as(ADMIN, request, lambda doc: resend_certificate_link_request(doc.name))
+		self.assertNotEqual(frappe.db.get_value("Certificate Link Request", request.name, "key"), request.key)
+		self.assertEqual(sendmail.call_args.kwargs["recipients"], [HOLDER])
 
 	def test_partner_lists_linked_certificates_with_their_school_page(self):
 		frappe.db.set_value("Partner Certificate", self.certificate.name, "partner", PARTNER)

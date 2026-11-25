@@ -90,6 +90,17 @@ class CertificateLinkRequest(Document):
 
 	@frappe.whitelist()
 	def resend(self):
+		"""Desk's Resend email button. Frappe lets anyone who can read a document call its methods,
+		and resending voids the emailed link, so it needs write."""
+		self.check_permission("write")
+		if self.status != "Pending":
+			frappe.throw(_("Only a pending request can be resent."))
+
+		self.reissue_link()
+
+	def reissue_link(self):
+		"""Makes a new key, so the link emailed before stops working, and emails the new link.
+		Callers check the right to do it: write in Desk, or owning the request on the partner portal."""
 		self.key = frappe.generate_hash(length=15)
 		self.save(ignore_permissions=True)
 		self._send_email()
@@ -193,7 +204,7 @@ def create_or_resend(partner: str, user_email: str, certificate_type: str) -> di
 	)
 	if existing_request:
 		doc = frappe.get_doc("Certificate Link Request", existing_request)
-		doc.resend()
+		doc.reissue_link()
 		return {"status": "Pending", "request": doc.as_dict()}
 
 	doc = frappe.get_doc(
