@@ -14,6 +14,9 @@ class PartnerNonConformance(Document):
 	"""A gap an audit found in how a partner works. The partner, auditor and audit date come from its audit."""
 
 	def validate(self):
+		# A migrated non-conformance keeps the state, closer and dates its source site left it with.
+		if frappe.flags.in_data_migration:
+			return
 		if self.is_new() and not self.press_name:
 			self._check_audit_status()
 		if self.expected_closure and self.audit_date and getdate(self.expected_closure) < getdate(self.audit_date):

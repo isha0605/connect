@@ -185,7 +185,10 @@ def is_customer_email(email) -> bool:
 
 
 def enforce_signup_limit():
-	"""A cap on new accounts an hour, across the site, against bots (System Settings)."""
+	"""A cap on new accounts an hour, across the site, against bots (System Settings). A data migration
+	makes every partner owner's account at once, so it isn't capped."""
+	if frappe.flags.in_data_migration:
+		return
 	limit = cint(frappe.get_system_settings("max_signups_allowed_per_hour") or 300)
 	if frappe.db.get_creation_count("User", 60) >= limit:
 		frappe.throw(

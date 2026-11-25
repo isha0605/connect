@@ -34,7 +34,13 @@ def should_invite(doc) -> bool:
 	inviter = frappe.session.user
 	if doc.is_removed or inviter in ("Guest", doc.user) or doc.get("role") == "Consultant":
 		return False
-	return not (frappe.flags.in_install or frappe.flags.in_patch or frappe.flags.in_migrate)
+	# A data migration adds every partner's owner at once; Frappe announces the move instead.
+	return not (
+		frappe.flags.in_install
+		or frappe.flags.in_patch
+		or frappe.flags.in_migrate
+		or frappe.flags.in_data_migration
+	)
 
 
 def send_invitation(doc) -> None:

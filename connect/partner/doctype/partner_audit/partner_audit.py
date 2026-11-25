@@ -19,6 +19,9 @@ class PartnerAudit(Document):
 		self.partner_tier = self.partner_tier or frappe.db.get_value("Partner", self.partner, "tier")
 
 	def validate(self):
+		# A migrated audit keeps the state its source site left it in, even one Connect wouldn't allow.
+		if frappe.flags.in_data_migration:
+			return
 		if self.is_new() and self.status == "Requested" and not self.press_name:
 			self._check_proposed_date()
 		if self.status in DATED_STATUSES and not self.audit_date:

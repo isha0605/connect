@@ -68,6 +68,9 @@ class PartnerApplication(Document):
 			frappe.throw(_("Registered state is required when registered country is India."))
 
 	def before_submit(self):
+		# A migrated application was submitted and reviewed on its source site: it keeps that history.
+		if frappe.flags.in_data_migration:
+			return
 		self._validate_profile_complete()
 		self._validate_certificate_count()
 		self._validate_cloud_account()
@@ -76,7 +79,7 @@ class PartnerApplication(Document):
 		self.submitted_on = now_datetime()
 
 	def before_save(self):
-		if not self.has_value_changed("status"):
+		if frappe.flags.in_data_migration or not self.has_value_changed("status"):
 			return
 
 		if self.status in ("Approved", "Rejected"):
