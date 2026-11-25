@@ -129,8 +129,26 @@ def fetch_rows(client) -> dict[str, list[dict]]:
 	return {PARTNER.source_doctype: partners}
 
 
+def get_partner_emails(rows: dict[str, list[dict]]) -> set[str]:
+	"""The emails of the partners read: Press finds each partner's team by them."""
+	return {row["email"] for row in rows[PARTNER.source_doctype] if row.get("email")}
+
+
+def get_migrated_partner_emails() -> set[str]:
+	"""The emails of the partners an earlier run brought from frappe.io, for a run of Press alone."""
+	partners = frappe.get_all(
+		"Migration Record",
+		filters={"source": SOURCE, "source_doctype": PARTNER.source_doctype},
+		pluck="target_name",
+	)
+	return set(
+		frappe.get_all("Partner", filters={"name": ["in", partners], "email": ["is", "set"]}, pluck="email")
+	)
+
+
 def migrate(rows: dict[str, list[dict]], report: Report) -> None:
-	"""Brings over each frappe.io partner under its frappe.io ID, with its owner and manager."""
+	"""Brings over each frappe.io partner under its frappe.io ID, with its owner and manager. frappe.io
+	runs first: Press finds these partners by email."""
 	for row in rows[PARTNER.source_doctype]:
 		with each_partner(f"frappe.io partner {row['name']}", report):
 			_migrate_partner(row, report)

@@ -9,13 +9,19 @@ from unittest.mock import MagicMock, patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from connect.partner.migration import frappe_io
-from connect.partner.migration.run import migrate, run
+from connect.partner.migration import frappe_io, press
+from connect.partner.migration.run import migrate, read_sources, run
 
 PARTNER_ID = "_Test Migrated Partner Private Limited"
 OWNER = "migrated.owner@example.test"
+NEW_OWNER = "migrated.new.owner@example.test"
+HOLDER = "migrated.holder@example.test"
 OLD_PARTNER_ID = "_Test Old Migrated Partner LLP"
 OLD_OWNER = "migrated.old.owner@example.test"
+TEAM = "_test-migrated-team"
+OLD_TEAM = "_test-migrated-old-team"
+NEW_TEAM = "_test-migrated-new-team"
+LEFT_TEAM = "_test-migrated-left-team"
 
 
 def frappe_io_partner(**values):
@@ -45,6 +51,68 @@ def frappe_io_partner(**values):
 	}
 
 
+def team(name=TEAM, **values):
+	return {"name": name, "user": OWNER, "partner_email": OWNER, **values}
+
+
+def onboarding(name="PONB-0001", **values):
+	"""A team's application on Press, submitted and waiting for review."""
+	return {
+		"name": name,
+		"team": NEW_TEAM,
+		"docstatus": 1,
+		"status": "Pending Review",
+		"company_name": "_Test New Press Partner",
+		"company_email": NEW_OWNER,
+		"registered_country": "India",
+		"registered_state": "Karnataka",
+		"employee_range": "11-50",
+		"submitted_on": "2025-03-01 10:00:00",
+		"incorporation_certificate": "/private/files/incorporation.pdf",
+		"creation": "2025-03-01 10:00:00",
+		**values,
+	}
+
+
+def certificate(name, issue_date, **values):
+	return {
+		"name": name,
+		"team": TEAM,
+		"course": "erpnext-distribution",
+		"partner_member_email": HOLDER,
+		"partner_member_name": "Asha Holder",
+		"issue_date": issue_date,
+		"certificate_link": f"https://school.frappe.io/certificates/{name}/",
+		**values,
+	}
+
+
+def audit(**values):
+	return {
+		"name": "ADT-0001",
+		"partner_team": TEAM,
+		"mode_of_audit": "Online",
+		"status": "Completed",
+		"requested_on": "2025-02-01",
+		"audit_date": "2025-02-20",
+		"conducted_by": "auditor.at.frappe@example.test",
+		"audit_report": "/private/files/audit.pdf",
+		**values,
+	}
+
+
+def non_conformance(name="NC-0001", **values):
+	return {
+		"name": name,
+		"partner_team": TEAM,
+		"partner_audit": "ADT-0001",
+		"status": "Open",
+		"department": "Sales",
+		"nc_statement": "No sales playbook",
+		**values,
+	}
+
+
 def make_exports() -> dict[tuple[str, str], list[dict]]:
 	return {
 		("frappe.io", "Partner"): [
@@ -57,12 +125,29 @@ def make_exports() -> dict[tuple[str, str], list[dict]]:
 				route="partners/india/_test-old-migrated",
 			),
 		],
+		("Press", "Team"): [
+			team(),
+			# Approved before Press kept onboarding records: its email is all that ties it to its partner.
+			team(OLD_TEAM, user=OLD_OWNER, partner_email=None),
+			team(NEW_TEAM, user=NEW_OWNER, partner_email=None),
+		],
+		("Press", "Partner Onboarding"): [onboarding()],
+		("Press", "Partner Certificate"): [
+			certificate("PCERT-OLD", "2024-01-10"),
+			certificate("PCERT-NEW", "2025-01-10"),
+			certificate("PCERT-OLD-TEAM", "2023-05-01", team=OLD_TEAM, partner_member_email=OLD_OWNER),
+		],
+		("Press", "Partner Audit"): [audit()],
+		("Press", "Partner Non Conformance"): [non_conformance()],
 	}
 
 
 def make_records(exports: dict | None = None) -> dict:
-	"""What reading frappe.io would give: records by source and DocType."""
-	return {frappe_io: {doctype: rows for (_source, doctype), rows in (exports or make_exports()).items()}}
+	"""What reading both sites would give: records by source and DocType."""
+	records = {frappe_io: {}, press: {}}
+	for (source, doctype), rows in (exports or make_exports()).items():
+		records[frappe_io if source == frappe_io.SOURCE else press][doctype] = rows
+	return records
 
 
 class TestMigration(IntegrationTestCase):
@@ -83,6 +168,26 @@ class TestMigration(IntegrationTestCase):
 		self.assertEqual(str(partner.listed_on), "2025-06-01")
 		self.assertEqual([row.industry for row in partner.industries], ["Agriculture"])
 		self.assertEqual([row.country for row in partner.served_countries], ["India"])
+
+	def test_a_press_team_joins_its_frappe_io_partner_by_email(self):
+		self.migrate()
+
+		self.assertEqual(frappe.db.count("Partner", {"email": OWNER}), 1)
+		self.assertEqual(
+			frappe.db.get_value("Migration Record", f"Press:Team:{TEAM}", "target_name"), PARTNER_ID
+		)
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER_ID, "tier"), "Silver")
+
+	def test_an_old_partner_without_onboarding_gets_its_certificates(self):
+		self.migrate()
+
+		self.assertFalse(frappe.db.exists("Partner Application", {"partner": OLD_PARTNER_ID}))
+		self.assertEqual(
+			frappe.get_all(
+				"Partner Certificate", filters={"partner": OLD_PARTNER_ID}, pluck="partner_member_email"
+			),
+			[OLD_OWNER],
+		)
 
 	def test_owner_joins_without_an_invitation(self):
 		with patch("connect.auth.invitations.send_invitation") as send_invitation:
@@ -105,6 +210,55 @@ class TestMigration(IntegrationTestCase):
 
 		queue.assert_not_called()
 		self.assertFalse(frappe.flags.in_data_migration)
+
+	def test_a_partners_certificates_audits_and_non_conformances_come_over(self):
+		report = self.migrate()
+
+		(certificate,) = frappe.get_all("Partner Certificate", filters={"partner": PARTNER_ID}, fields=["*"])
+		self.assertEqual(
+			(str(certificate.issue_date), certificate.school_certificate_id), ("2025-01-10", "PCERT-NEW")
+		)
+		self.assertIn("Certificate PCERT-OLD: an older copy", " ".join(report.lines["skipped"]))
+
+		(audit_name,) = frappe.get_all("Partner Audit", filters={"partner": PARTNER_ID}, pluck="name")
+		self.assertEqual(frappe.db.get_value("Partner Audit", audit_name, "status"), "Completed")
+		self.assertEqual(
+			frappe.db.get_value("Partner Non Conformance", {"partner_audit": audit_name}, "statement"),
+			"No sales playbook",
+		)
+
+	def test_a_team_still_applying_becomes_a_new_partner(self):
+		self.migrate()
+
+		partner = frappe.db.get_value(
+			"Partner",
+			{"company_name": "_Test New Press Partner"},
+			["name", "tier", "verification_status", "email"],
+			as_dict=True,
+		)
+		self.assertEqual(
+			(partner.tier, partner.verification_status, partner.email),
+			("Beginner", "Pending Review", NEW_OWNER),
+		)
+		access = frappe.db.get_value(
+			"Connect Partner Member", {"partner": partner.name, "user": NEW_OWNER}, "access"
+		)
+		self.assertEqual(access, "Owner")
+		application = frappe.db.get_value(
+			"Partner Application", {"partner": partner.name}, ["docstatus", "status"], as_dict=True
+		)
+		self.assertEqual((application.docstatus, application.status), (1, "Pending Review"))
+
+	def test_a_team_whose_partner_didnt_come_over_is_unmatched_and_not_made_a_partner(self):
+		exports = make_exports()
+		exports[("Press", "Team")].append(team(LEFT_TEAM, user="left@example.test", partner_email=None))
+
+		report = self.migrate(exports)
+
+		self.assertFalse(frappe.db.exists("Partner", {"email": "left@example.test"}))
+		self.assertEqual(
+			report.lines["unmatched"], [f"Team {LEFT_TEAM}: no partner has its email (no records)"]
+		)
 
 	def test_file_addresses_are_noted_for_the_file_step(self):
 		self.migrate()
@@ -132,6 +286,7 @@ class TestMigration(IntegrationTestCase):
 
 		self.assertFalse(report.has_problems(), dict(report.lines))
 		self.assertEqual({doctype: frappe.db.count(doctype) for doctype in counts}, counts)
+		self.assertIn("applications_already_migrated", report.lines)
 
 	def test_an_unknown_field_stops_the_run_before_anything_is_saved(self):
 		exports = make_exports()
@@ -200,6 +355,18 @@ class TestMigration(IntegrationTestCase):
 
 		self.assertFalse(frappe.db.exists("Partner", PARTNER_ID))
 		self.assertIn(f"frappe.io {PARTNER_ID} → {PARTNER_ID}", report.lines["partners_deleted_in_Connect"])
+		self.assertIn(f"Press {TEAM} → {PARTNER_ID}", report.lines["partners_deleted_in_Connect"])
+
+	def test_an_audit_deleted_in_connect_isnt_brought_back(self):
+		self.migrate()
+		audit = frappe.db.get_value("Partner Audit", {"partner": PARTNER_ID})
+		frappe.db.delete("Partner Audit", audit)
+
+		report = self.migrate()
+
+		self.assertFalse(frappe.db.exists("Partner Audit", {"partner": PARTNER_ID}))
+		self.assertEqual(report.lines["audits_deleted_in_Connect"], [f"ADT-0001 → {audit}"])
+		self.assertIn("NC-0001: its audit", report.lines["non_conformances_deleted_in_Connect"][0])
 
 	def test_frappe_staff_isnt_made_an_owner(self):
 		exports = make_exports()
@@ -249,6 +416,34 @@ class TestMigration(IntegrationTestCase):
 		)
 		self.assertTrue(report.has_problems())
 
+	def test_frappe_io_alone_migrates_without_press(self):
+		records = make_records()
+		del records[press]
+
+		report = migrate(records)
+
+		self.assertFalse(report.has_problems(), dict(report.lines))
+		self.assertTrue(frappe.db.exists("Partner", PARTNER_ID))
+		self.assertFalse(frappe.db.exists("Partner Application", {"partner": PARTNER_ID}))
+
+	def test_press_is_asked_for_the_teams_of_frappe_ios_partners(self):
+		frappe_io_rows = {"Partner": [frappe_io_partner()]}
+		with patch(
+			"connect.partner.migration.run.read",
+			side_effect=lambda source, *args: frappe_io_rows if source is frappe_io else {},
+		) as read:
+			read_sources({frappe_io: "frappe.io client", press: "Press client"})
+
+		read.assert_called_with(press, "Press client", {OWNER})
+
+	def test_press_alone_is_asked_for_the_teams_of_partners_migrated_from_frappe_io(self):
+		self.migrate()
+
+		with patch("connect.partner.migration.run.read", return_value={}) as read:
+			read_sources({press: "Press client"})
+
+		read.assert_called_once_with(press, "Press client", {OWNER, OLD_OWNER})
+
 	def test_a_trial_run_saves_nothing_and_writes_a_report(self):
 		with (
 			patch("connect.partner.migration.run.get_clients", return_value={}),
@@ -259,5 +454,5 @@ class TestMigration(IntegrationTestCase):
 		self.addCleanup(shutil.rmtree, written)
 
 		self.assertFalse(frappe.db.exists("Partner", PARTNER_ID))
-		self.assertIn("partners_created: 2", (written / "summary.txt").read_text())
+		self.assertIn("partners_created: 3", (written / "summary.txt").read_text())
 		self.assertTrue((written / "source" / "frappe.io" / "Partner.json").is_file())

@@ -11,8 +11,14 @@ from frappe.frappeclient import FrappeException
 from frappe.tests import IntegrationTestCase
 from requests.adapters import HTTPAdapter
 
-from connect.partner.migration import frappe_io
-from connect.partner.migration.sources import SourceError, get_frappe_io_client, make_patient, read
+from connect.partner.migration import frappe_io, press
+from connect.partner.migration.sources import (
+	SourceError,
+	get_frappe_io_client,
+	get_where_in,
+	make_patient,
+	read,
+)
 
 
 class FakeClient:
@@ -108,14 +114,78 @@ class TestFrappeIoSource(IntegrationTestCase):
 			get_frappe_io_client()
 
 
+class TestPressSource(IntegrationTestCase):
+	def setUp(self):
+		client = FakeClient(
+			{
+				"Team": [
+					{
+						"name": "team-partner",
+						"user": "x@a.test",
+						"partner_email": "a@a.test",
+						"billing_name": "A",
+					},
+					{"name": "team-by-owner", "user": "b@b.test", "partner_email": None},
+					{"name": "team-applying", "user": "c@c.test", "partner_email": None},
+					{"name": "team-rejected", "user": "d@d.test", "partner_email": None},
+					{"name": "team-customer", "user": "e@e.test", "partner_email": None},
+				],
+				"Partner Onboarding": [
+					{"name": "PONB-1", "team": "team-applying", "status": "Pending Review"},
+					{"name": "PONB-2", "team": "team-rejected", "status": "Rejected"},
+					{"name": "PONB-3", "team": "team-partner", "status": "Approved"},
+					{"name": "PONB-4", "team": None, "status": "Pending Review"},
+				],
+				"Partner Certificate": [
+					{"name": "PCERT-1", "team": "team-partner"},
+					{"name": "PCERT-2", "team": "team-customer"},
+				],
+				"Partner Audit": [{"name": "ADT-1", "partner_team": "team-by-owner"}],
+				"Partner Non Conformance": [{"name": "NC-1", "partner_team": "team-customer"}],
+			}
+		)
+		self.records = read(press, client, {"a@a.test", "b@b.test"})
+
+	def test_partner_teams_by_either_email_and_applying_teams_are_read_with_three_columns(self):
+		teams = sorted(self.records["Team"], key=lambda team: team["name"])
+
+		self.assertEqual(
+			teams,
+			[
+				{"name": "team-applying", "user": "c@c.test", "partner_email": None},
+				{"name": "team-by-owner", "user": "b@b.test", "partner_email": None},
+				{"name": "team-partner", "user": "x@a.test", "partner_email": "a@a.test"},
+			],
+		)
+
+	def test_only_onboardings_pending_review_with_a_team_are_read(self):
+		self.assertEqual([row["name"] for row in self.records["Partner Onboarding"]], ["PONB-1"])
+
+	def test_only_the_read_teams_records_are_read(self):
+		self.assertEqual([row["name"] for row in self.records["Partner Certificate"]], ["PCERT-1"])
+		self.assertEqual([row["name"] for row in self.records["Partner Audit"]], ["ADT-1"])
+		self.assertEqual(self.records["Partner Non Conformance"], [])
+
+
+class TestReadingByValues(IntegrationTestCase):
+	def test_values_are_sent_100_at_a_time(self):
+		names = [f"team-{number}" for number in range(250)]
+		client = FakeClient({"Team": [{"name": name} for name in names]})
+
+		rows = get_where_in(client, "Team", ["name"], "name", names)
+
+		self.assertEqual(sorted(row["name"] for row in rows), sorted(names))
+		self.assertEqual(client.requests, 3)
+
+
 class TestUnreadableSource(IntegrationTestCase):
 	def test_a_refused_or_unreachable_site_names_the_source(self):
 		for error in (FrappeException("PermissionError"), requests.ConnectionError("no route")):
 			client = FakeClient({})
 			client.get_list = lambda *args, error=error, **kwargs: (_ for _ in ()).throw(error)
 
-			with self.assertRaisesRegex(SourceError, "Couldn't read frappe.io"):
-				read(frappe_io, client)
+			with self.assertRaisesRegex(SourceError, "Couldn't read Press"):
+				read(press, client, set())
 
 
 class TestPatientClient(IntegrationTestCase):

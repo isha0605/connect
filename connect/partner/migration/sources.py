@@ -61,10 +61,10 @@ def make_patient(client: FrappeClient) -> FrappeClient:
 	return client
 
 
-def read(source, client: FrappeClient) -> dict[str, list[dict]]:
+def read(source, client: FrappeClient, *args) -> dict[str, list[dict]]:
 	"""The records `source` migrates, read from its site, by DocType."""
 	try:
-		return source.fetch_rows(client)
+		return source.fetch_rows(client, *args)
 	except (requests.RequestException, FrappeException, ValueError) as error:
 		raise SourceError(_("Couldn't read {0}: {1}").format(source.SOURCE, error)) from error
 
@@ -74,6 +74,16 @@ def get_all(client: FrappeClient, doctype: str, fields: list[str], filters=None)
 	return client.get_list(
 		doctype, fields=fields, filters=filters, order_by="creation asc", limit_page_length=0
 	)
+
+
+def get_where_in(
+	client: FrappeClient, doctype: str, fields: list[str], fieldname: str, values: Iterable[str]
+) -> list[dict]:
+	"""Every record whose `fieldname` is one of `values`."""
+	rows = []
+	for chunk in _chunks(values):
+		rows += get_all(client, doctype, fields, [[fieldname, "in", chunk]])
+	return rows
 
 
 def get_child_rows(

@@ -3,11 +3,13 @@ from pathlib import Path
 
 import frappe
 
-from connect.partner.migration import frappe_io
+from connect.partner.migration import frappe_io, press
 from connect.partner.migration.report import Report
 from connect.partner.migration.sources import get_frappe_io_client, make_patient, read
+from connect.partner.press_integration import get_press_client
 
-SOURCES = (frappe_io,)
+# frappe.io runs first: Press finds frappe.io's partners by email and adds to them.
+SOURCES = (frappe_io, press)
 # What a run saves besides the mapped records: owners' members and logins, and copied files.
 OTHER_SAVED_DOCTYPES = ("Connect Partner Member", "User", "File")
 # Frappe features set up in Desk that act on every save. Connect's own code stays quiet during a run,
@@ -21,7 +23,7 @@ AUTOMATIONS = (
 
 
 def run(apply: bool = False) -> str:
-	"""Reads frappe.io and migrates its partner records into Connect. For testing from the
+	"""Reads frappe.io and Press and migrates their partner records into Connect. For testing from the
 	command line; the Partner Migration form in Desk runs the same steps.
 
 	Without `apply` it is a trial run: it makes every change, then rolls all of it back, so the report
@@ -46,13 +48,24 @@ def run(apply: bool = False) -> str:
 
 def get_clients(sources: tuple = SOURCES) -> dict:
 	"""A client for each of `sources`. Fails at once when a connection isn't set up in Integration Settings."""
-	getters = {frappe_io: get_frappe_io_client}
+	getters = {frappe_io: get_frappe_io_client, press: get_press_client}
 	return {source: make_patient(getters[source]()) for source in sources}
 
 
 def read_sources(clients: dict) -> dict:
-	"""What each source site holds for the migration, read now, by source and DocType."""
-	return {source: read(source, client) for source, client in clients.items()}
+	"""What each source site holds for the migration, read now, by source and DocType. frappe.io is
+	read first: Press is asked only for the teams of its partners' emails."""
+	records = {}
+	if frappe_io in clients:
+		records[frappe_io] = read(frappe_io, clients[frappe_io])
+	if press in clients:
+		emails = (
+			frappe_io.get_partner_emails(records[frappe_io])
+			if frappe_io in records
+			else frappe_io.get_migrated_partner_emails()
+		)
+		records[press] = read(press, clients[press], emails)
+	return records
 
 
 def migrate(records: dict) -> Report:
@@ -109,7 +122,7 @@ def _migrate(records: dict, report: Report) -> None:
 	# field defaults on new records, as Data Import expects the file to hold every value.
 	frappe.flags.in_data_migration = True
 	try:
-		# In SOURCES' order, whichever sources were read.
+		# In SOURCES' order whichever sources were read: frappe.io before Press.
 		for source in SOURCES:
 			if source in records:
 				source.migrate(records[source], report)
