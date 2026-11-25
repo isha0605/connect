@@ -6,7 +6,13 @@ from connect.partner.migration.mapping import Mapping, Table
 from connect.partner.migration.owners import add_owner
 from connect.partner.migration.report import Report
 from connect.partner.migration.sources import get_all, get_child_rows
-from connect.partner.migration.store import DELETED_IN_CONNECT, each_partner, get_existing, save
+from connect.partner.migration.store import (
+	DELETED_IN_CONNECT,
+	each_partner,
+	get_existing,
+	get_label,
+	save,
+)
 
 SOURCE = "frappe.io"
 # What frappe.io still decides once a partner is in Connect. Partners and Connect own the rest, so a
@@ -150,7 +156,7 @@ def migrate(rows: dict[str, list[dict]], report: Report) -> None:
 	"""Brings over each frappe.io partner under its frappe.io ID, with its owner and manager. frappe.io
 	runs first: Press finds these partners by email."""
 	for row in rows[PARTNER.source_doctype]:
-		with each_partner(f"frappe.io partner {row['name']}", report):
+		with each_partner(get_label(PARTNER, row["name"]), report):
 			_migrate_partner(row, report)
 
 

@@ -257,7 +257,11 @@ class TestMigration(IntegrationTestCase):
 
 		self.assertFalse(frappe.db.exists("Partner", {"email": "left@example.test"}))
 		self.assertEqual(
-			report.lines["unmatched"], [f"Team {LEFT_TEAM}: no partner has its email (no records)"]
+			report.lines["unmatched"],
+			[
+				f"Team {LEFT_TEAM} (left@example.test): no partner in Connect has this email, so its records "
+				"weren't brought over. If its frappe.io partner failed, fix that first."
+			],
 		)
 
 	def test_file_addresses_are_noted_for_the_file_step(self):
@@ -310,11 +314,48 @@ class TestMigration(IntegrationTestCase):
 
 		report = self.migrate(exports)
 
-		(failure,) = report.lines["failed"]
-		self.assertIn("_Test Broken Partner LLP", failure)
-		self.assertIn("Platinum", failure)
+		self.assertEqual(
+			report.lines["failed"],
+			["frappe.io Partner _Test Broken Partner LLP: Partner.tier: no Partner Tier named 'Platinum'"],
+		)
 		self.assertFalse(frappe.db.exists("Partner", "_Test Broken Partner LLP"))
 		self.assertTrue(frappe.db.exists("Partner", PARTNER_ID))
+
+	def test_a_failure_names_the_record_that_failed(self):
+		exports = make_exports()
+		exports[("Press", "Partner Audit")].append(audit(name="ADT-0002", status="Scheduled-ish"))
+
+		report = self.migrate(exports)
+
+		(failure,) = report.lines["failed"]
+		self.assertTrue(
+			failure.startswith(
+				f"Press Team {TEAM}: Press Partner Audit ADT-0002: Partner Audit.status: 'Scheduled-ish' is not one of"
+			),
+			failure,
+		)
+
+	def test_a_failure_gives_frappes_message_without_its_html(self):
+		def validate(doc):
+			frappe.throw("<b>Registered state</b> is required when the country is India.")
+
+		with patch("connect.partner.doctype.partner.partner.Partner.validate", validate, create=True):
+			report = self.migrate()
+
+		self.assertIn(
+			f"frappe.io Partner {PARTNER_ID}: Registered state is required when the country is India.",
+			report.lines["failed"],
+		)
+
+	def test_a_fault_in_code_says_where_it_happened(self):
+		with patch.object(frappe_io, "_get_managers", side_effect=AttributeError("no strip")):
+			report = self.migrate()
+
+		self.assertRegex(
+			report.lines["failed"][0],
+			r"^frappe\.io Partner .+: AttributeError in partner/migration/frappe_io\.py:\d+ "
+			r"\(_migrate_partner\): no strip$",
+		)
 
 	def test_a_bad_contact_detail_is_dropped_and_the_partner_still_comes_over(self):
 		exports = make_exports()
