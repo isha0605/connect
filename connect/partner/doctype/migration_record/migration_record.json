@@ -1,0 +1,106 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-25 12:00:00.000000",
+ "description": "Which Connect record each frappe.io or Press record was migrated into, so a second run updates it instead of making a copy.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "source",
+  "source_doctype",
+  "source_name",
+  "column_break_target",
+  "target_doctype",
+  "target_name",
+  "section_break_files",
+  "file_urls"
+ ],
+ "fields": [
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Source",
+   "options": "frappe.io\nPress",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_doctype",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Source DocType",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "description": "The record's name on the source site.",
+   "fieldname": "source_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Source Record",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_target",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "target_doctype",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Connect DocType",
+   "options": "DocType",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "target_name",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Connect Record",
+   "options": "target_doctype",
+   "read_only": 1,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_files",
+   "fieldtype": "Section Break",
+   "label": "Files"
+  },
+  {
+   "description": "The source addresses of this record's files, by Connect field. The file step copies them.",
+   "fieldname": "file_urls",
+   "fieldtype": "JSON",
+   "label": "File Addresses",
+   "read_only": 1
+  }
+ ],
+ "in_create": 1,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-25 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Partner",
+ "name": "Migration Record",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "export": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager"
+  }
+ ],
+ "search_fields": "source_name,target_name",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "source_name"
+}
