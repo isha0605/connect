@@ -16,7 +16,7 @@ INVOICE_FIELDS = ["partner_email", "due_date", "docstatus", "currency", "total_b
 FINALISED = 1
 
 
-def _get_press_client():
+def get_press_client():
 	"""Returns a FrappeClient connected to Frappe Cloud using the Press credentials in Integration Settings."""
 	from frappe.frappeclient import FrappeClient
 
@@ -73,7 +73,11 @@ def update_partner_revenue(partners: list[str] | None = None) -> None:
 		frappe.db.set_value(
 			"Partner",
 			row.name,
-			{"revenue_last_month": last_month, "revenue_this_month": this_month, "revenue_updated_on": updated_on},
+			{
+				"revenue_last_month": last_month,
+				"revenue_this_month": this_month,
+				"revenue_updated_on": updated_on,
+			},
 			update_modified=False,
 		)
 
@@ -81,7 +85,7 @@ def update_partner_revenue(partners: list[str] | None = None) -> None:
 def _fetch_partner_invoices(emails: list[str] | None = None) -> list[dict]:
 	"""Last month's and this month's subscription invoices of the customers linked to these partner
 	emails, or to any partner, read a page at a time."""
-	client = _get_press_client()
+	client = get_press_client()
 	filters = [
 		["partner_email", "in", emails] if emails is not None else ["partner_email", "is", "set"],
 		["type", "=", "Subscription"],
