@@ -94,8 +94,9 @@ class TestUpdatePartnerRevenue(IntegrationTestCase):
 		failing = MagicMock()
 		failing.get_list.side_effect = ConnectionError("Frappe Cloud is down")
 
-		with patch.object(press_integration, "is_press_enabled", return_value=True), patch.object(
-			press_integration, "_get_press_client", return_value=failing
+		with (
+			patch.object(press_integration, "is_press_enabled", return_value=True),
+			patch.object(press_integration, "get_press_client", return_value=failing),
 		):
 			update_all_partner_revenue()
 
@@ -105,7 +106,13 @@ class TestUpdatePartnerRevenue(IntegrationTestCase):
 def make_partner(company_name, country, email):
 	frappe.delete_doc("Partner", company_name, force=True, ignore_missing=True)
 	frappe.get_doc(
-		{"doctype": "Partner", "company_name": company_name, "tier": "Gold", "country": country, "email": email}
+		{
+			"doctype": "Partner",
+			"company_name": company_name,
+			"tier": "Gold",
+			"country": country,
+			"email": email,
+		}
 	).insert()
 
 
@@ -119,4 +126,4 @@ def fake_press(invoices):
 	client.get_list.side_effect = lambda *args, limit_start=0, limit_page_length=None, **kwargs: invoices[
 		limit_start : limit_start + limit_page_length
 	]
-	return patch.object(press_integration, "_get_press_client", return_value=client)
+	return patch.object(press_integration, "get_press_client", return_value=client)

@@ -152,7 +152,9 @@ def queue_team_match(doc, method=None):
 
 def queue_member_match(doc, method=None):
 	"""on_update on Connect Partner Member: someone joining (or back on) the team is looked up
-	on the CRM, so they're offered as on it or not."""
+	on the CRM, so they're offered as on it or not. Not during a migration, which sends nothing to the CRM."""
+	if frappe.flags.in_data_migration:
+		return
 	# A new row counts as changed too.
 	joined = doc.has_value_changed("is_removed") or doc.has_value_changed("user")
 	if joined and not doc.is_removed and crm_settings(doc.partner):

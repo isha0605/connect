@@ -181,10 +181,12 @@ class Partner(Document):
 		queue_partner_sync(self)
 		if self.has_value_changed("enabled"):
 			set_member_logins(self.name)
-		# background-fetches each success story's own frappe.io cover photo —
-		# never blocks this save, and no-ops for rows that already have one
-		queue_missing_story_images(self.get("success_stories"))
-		queue_missing_story_apps(self.get("success_stories"))
+		# A migration fetches nothing from frappe.io per save: its file step and the backfills do it after.
+		if not frappe.flags.in_data_migration:
+			# background-fetches each success story's own frappe.io cover photo —
+			# never blocks this save, and no-ops for rows that already have one
+			queue_missing_story_images(self.get("success_stories"))
+			queue_missing_story_apps(self.get("success_stories"))
 
 
 def get_target_currency(country: str | None) -> str | None:

@@ -1,0 +1,201 @@
+{
+ "actions": [],
+ "autoname": "format:PMIG-{#####}",
+ "creation": "2026-11-25 14:00:00.000000",
+ "description": "One run of the partner data migration from frappe.io, Press or both, through the connections in Integration Settings: a trial run, the real migration with its files, and its check.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "status",
+  "sources",
+  "last_step",
+  "is_clean",
+  "is_checked",
+  "column_break_run",
+  "run_by",
+  "started_on",
+  "finished_on",
+  "crm_queued_on",
+  "tab_break_results",
+  "problem_count",
+  "column_break_results",
+  "report_file",
+  "source_snapshot",
+  "section_break_summary",
+  "summary",
+  "section_break_problems",
+  "problems",
+  "section_break_error",
+  "error"
+ ],
+ "fields": [
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nQueued\nRunning\nTrial Done\nMigrated\nFailed",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "default": "Both",
+   "description": "The sites this run reads. Press only needs frappe.io migrated first: Press finds its partners by frappe.io's emails. Changing it sets the run back to Draft.",
+   "fieldname": "sources",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Sources",
+   "options": "Both\nfrappe.io only\nPress only",
+   "read_only_depends_on": "eval:['Queued', 'Running', 'Migrated'].includes(doc.status)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "last_step",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Last Step",
+   "options": "\nTrial Run\nMigration\nCheck\nCopy Files",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "The last trial run found nothing to act on, so Run Migration is unlocked.",
+   "fieldname": "is_clean",
+   "fieldtype": "Check",
+   "label": "Ready to Migrate",
+   "read_only": 1,
+   "depends_on": "eval:doc.status == 'Trial Done'"
+  },
+  {
+   "default": "0",
+   "description": "The last check found every record in Connect, so Send to Frappe CRM is unlocked.",
+   "fieldname": "is_checked",
+   "fieldtype": "Check",
+   "label": "Ready for Frappe CRM",
+   "read_only": 1,
+   "depends_on": "eval:doc.status == 'Migrated'"
+  },
+  {
+   "fieldname": "column_break_run",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "run_by",
+   "fieldtype": "Link",
+   "label": "Run By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "started_on",
+   "fieldtype": "Datetime",
+   "label": "Started On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "finished_on",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Finished On",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.crm_queued_on",
+   "fieldname": "crm_queued_on",
+   "fieldtype": "Datetime",
+   "label": "Sent to Frappe CRM On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tab_break_results",
+   "fieldtype": "Tab Break",
+   "label": "Results"
+  },
+  {
+   "description": "Lines of the last step's report that someone must act on.",
+   "fieldname": "problem_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Problems",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_results",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Every line of the last step's report, as CSV files in a zip.",
+   "fieldname": "report_file",
+   "fieldtype": "Attach",
+   "label": "Full Report",
+   "read_only": 1
+  },
+  {
+   "description": "What the last step read from frappe.io and Press, as JSON files in a zip.",
+   "fieldname": "source_snapshot",
+   "fieldtype": "Attach",
+   "label": "Source Snapshot",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_summary",
+   "fieldtype": "Section Break"
+  },
+  {
+   "description": "How many report lines of each kind the last step wrote.",
+   "fieldname": "summary",
+   "fieldtype": "Small Text",
+   "label": "Summary",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_problems",
+   "fieldtype": "Section Break",
+   "label": "Problems"
+  },
+  {
+   "fieldname": "problems",
+   "fieldtype": "Table",
+   "label": "Problems",
+   "options": "Partner Migration Problem",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_error",
+   "fieldtype": "Section Break",
+   "label": "Error"
+  },
+  {
+   "description": "Why the last step stopped, when it couldn't finish.",
+   "fieldname": "error",
+   "fieldtype": "Code",
+   "label": "Error",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-25 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Partner",
+ "name": "Partner Migration",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

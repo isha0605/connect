@@ -28,7 +28,9 @@ WAITING = ("Queued", "Failed")
 
 def queue_partner_sync(doc) -> None:
 	"""on_update on Partner: sends the partner to Frappe's CRM in the background when something the
-	CRM shows changed."""
+	CRM shows changed. A migration sends nothing: partners go to the CRM once it is checked."""
+	if frappe.flags.in_data_migration:
+		return
 	settings = frappe_crm()
 	if not (settings and is_applying_changes() and is_sent(doc, settings)):
 		return
