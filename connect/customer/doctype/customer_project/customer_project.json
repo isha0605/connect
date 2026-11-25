@@ -57,14 +57,17 @@
    "default": "Draft",
    "in_list_view": 1,
    "read_only": 1,
-   "description": "Moves with the project's steps in Connect. To hire or free a partner, change their Project Quote."
+   "description": "Moves with the project's steps in Connect. To hire or free a partner, change their Project Quote.",
+   "in_standard_filter": 1,
+   "search_index": 1
   },
   {
    "fieldname": "verdict",
    "fieldtype": "Select",
    "label": "Recommendation",
    "options": "\nStarter Pack\nCustom",
-   "in_list_view": 1
+   "in_list_view": 1,
+   "in_standard_filter": 1
   },
   {
    "fieldname": "column_break_main",
@@ -76,7 +79,9 @@
    "fieldtype": "Link",
    "label": "User",
    "options": "User",
-   "read_only": 1
+   "read_only": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
   },
   {
    "fieldname": "shared_on",
@@ -176,7 +181,10 @@
    "fieldtype": "Link",
    "label": "Partner",
    "options": "Partner",
-   "read_only": 1
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
   },
   {
    "fieldname": "hired_quote",
@@ -223,7 +231,8 @@
    "options": "\nPending\nWaiting for Partner\nRequested\nActive\nDeclined\nExpired\nEnded",
    "read_only": 1,
    "no_copy": 1,
-   "description": "Pending while Connect asks Frappe Cloud to link the hired partner with the customer. Waiting for Partner until the partner registers there. Requested until the customer accepts on Frappe Cloud."
+   "description": "Pending while Connect asks Frappe Cloud to link the hired partner with the customer. Waiting for Partner until the partner registers there. Requested until the customer accepts on Frappe Cloud.",
+   "in_standard_filter": 1
   },
   {
    "fieldname": "cloud_setup_url",
@@ -263,7 +272,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-23 16:00:00.000000",
+ "modified": "2026-11-25 13:04:07.000000",
  "modified_by": "Administrator",
  "module": "Customer",
  "name": "Customer Project",
@@ -286,7 +295,30 @@
  "row_format": "Dynamic",
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": [],
+ "states": [
+  {
+   "color": "Gray",
+   "title": "Draft"
+  },
+  {
+   "color": "Blue",
+   "title": "Shared"
+  },
+  {
+   "color": "Orange",
+   "title": "Hiring"
+  },
+  {
+   "color": "Cyan",
+   "title": "Hired"
+  },
+  {
+   "color": "Green",
+   "title": "Completed"
+  }
+ ],
  "title_field": "project_name",
- "track_changes": 1
+ "track_changes": 1,
+ "show_title_field_in_link": 1,
+ "search_fields": "user,partner"
 }
