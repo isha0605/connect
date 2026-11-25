@@ -1,5 +1,6 @@
 app_name = "connect"
 app_title = "Connect"
+app_logo_url = "/assets/connect/images/connect-logo.svg"
 app_publisher = "Isha"
 app_description = "An app for connecting customers with Frappe partners"
 app_email = "isha@frappe.io"
