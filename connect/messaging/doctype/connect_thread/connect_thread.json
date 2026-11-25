@@ -33,7 +33,9 @@
    "in_list_view": 1,
    "label": "Customer",
    "options": "Customer",
-   "reqd": 1
+   "reqd": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
   },
   {
    "fieldname": "partner",
@@ -41,7 +43,9 @@
    "in_list_view": 1,
    "label": "Partner",
    "options": "Partner",
-   "reqd": 1
+   "reqd": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
   },
   {
    "description": "Set on a Starter Pack chat: the Frappe consultant delivering it. A customer has one thread per partner, and with Frappe one per consultant.",
@@ -49,7 +53,8 @@
    "fieldtype": "Link",
    "label": "Consultant",
    "options": "Frappe Consultant",
-   "read_only": 1
+   "read_only": 1,
+   "in_standard_filter": 1
   },
   {
    "default": "Open",
@@ -57,7 +62,8 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Status",
-   "options": "Open\nClosed"
+   "options": "Open\nClosed",
+   "in_standard_filter": 1
   },
   {
    "default": "0",
@@ -113,14 +119,16 @@
    "fieldname": "crm_lead_id",
    "fieldtype": "Data",
    "label": "CRM Lead ID",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "crm_sync_status",
    "fieldtype": "Select",
    "label": "CRM Sync Status",
    "options": "\nQueued\nSynced\nFailed",
-   "read_only": 1
+   "read_only": 1,
+   "in_standard_filter": 1
   },
   {
    "fieldname": "crm_synced_at",
@@ -151,7 +159,7 @@
    "link_fieldname": "thread"
   }
  ],
- "modified": "2026-11-15 10:00:00.000000",
+ "modified": "2026-11-25 13:07:05.000000",
  "modified_by": "Administrator",
  "module": "Messaging",
  "name": "Connect Thread",
@@ -228,5 +236,15 @@
  "rows_threshold_for_grid_search": 20,
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": []
+ "states": [
+  {
+   "color": "Green",
+   "title": "Open"
+  },
+  {
+   "color": "Gray",
+   "title": "Closed"
+  }
+ ],
+ "search_fields": "customer,partner"
 }
