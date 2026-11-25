@@ -11,14 +11,17 @@
   "customer",
   "partner",
   "consultant",
+  "column_break_status",
   "status",
   "is_customer_revealed",
   "closed_by",
   "closed_on",
-  "last_message",
+  "last_message_section",
   "last_message_at",
-  "last_message_preview",
   "last_message_sender",
+  "column_break_last_message",
+  "last_message_preview",
+  "last_message",
   "crm_sync_section",
   "crm_lead_id",
   "crm_deal_id",
@@ -78,35 +81,41 @@
    "fieldname": "closed_by",
    "fieldtype": "Link",
    "label": "Closed By",
-   "options": "User"
+   "options": "User",
+   "read_only": 1
   },
   {
    "fieldname": "closed_on",
    "fieldtype": "Datetime",
-   "label": "Closed On"
+   "label": "Closed On",
+   "read_only": 1
   },
   {
-   "description": "Denormalized from the thread's actual latest Connect Message, kept in sync by doc_events on insert/edit/delete \u2014 see connect.notifications. Lets the sidebar thread list (get_my_threads) render without a per-thread lookup.",
+   "description": "The newest message in the thread. Connect updates this section on its own when messages are sent, edited or deleted, so the chat list loads quickly.",
    "fieldname": "last_message",
    "fieldtype": "Link",
    "label": "Last Message",
-   "options": "Connect Message"
+   "options": "Connect Message",
+   "read_only": 1
   },
   {
    "fieldname": "last_message_at",
    "fieldtype": "Datetime",
-   "label": "Last Message At"
+   "label": "Last Message At",
+   "read_only": 1
   },
   {
    "fieldname": "last_message_preview",
    "fieldtype": "Data",
-   "label": "Last Message Preview"
+   "label": "Last Message Preview",
+   "read_only": 1
   },
   {
    "fieldname": "last_message_sender",
    "fieldtype": "Link",
    "label": "Last Message Sender",
-   "options": "User"
+   "options": "User",
+   "read_only": 1
   },
   {
    "collapsible": 1,
@@ -148,6 +157,20 @@
    "fieldtype": "Data",
    "label": "CRM Deal ID",
    "read_only": 1
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "last_message_section",
+   "fieldtype": "Section Break",
+   "label": "Last Message",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "column_break_last_message",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
@@ -189,7 +212,7 @@
    "link_fieldname": "implementation_thread"
   }
  ],
- "modified": "2026-11-25 13:52:05.000000",
+ "modified": "2026-11-25 13:59:50.000000",
  "modified_by": "Administrator",
  "module": "Messaging",
  "name": "Connect Thread",
