@@ -384,7 +384,7 @@ def resend_certificate_link_request(request_name):
 		frappe.throw(frappe._("Not your request"), frappe.PermissionError)
 	if doc.status != "Pending":
 		frappe.throw(frappe._("Only pending certificate link requests can be resent. Refresh the page."))
-	doc.resend()
+	doc.reissue_link()
 	return {"ok": True}
 
 
