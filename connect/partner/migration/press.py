@@ -12,6 +12,7 @@ from connect.partner.migration.sources import get_all, get_where_in
 from connect.partner.migration.store import (
 	MigrationProblem,
 	each_partner,
+	get_label,
 	get_migrated,
 	is_deleted,
 	remember,
@@ -175,7 +176,7 @@ def migrate(rows: dict[str, list[dict]], report: Report) -> None:
 	}
 	for team in rows[TEAM.source_doctype]:
 		team_records = {kind: grouped.get(team["name"], []) for kind, grouped in records.items()}
-		with each_partner(f"Press team {team['name']}", report):
+		with each_partner(get_label(TEAM, team["name"]), report):
 			_migrate_team(team, team_records, report)
 
 
@@ -217,8 +218,13 @@ def _migrate_team(team: dict, records: dict[str, list[dict]], report: Report) ->
 
 	partner = _get_partner(team, records["onboardings"], report)
 	if not partner:
+		emails = ", ".join(dict.fromkeys(filter(None, (team.get("partner_email"), team.get("user")))))
 		counts = ", ".join(f"{len(rows)} {kind}" for kind, rows in records.items() if rows)
-		report.add("unmatched", f"Team {team['name']}: no partner has its email ({counts or 'no records'})")
+		report.add(
+			"unmatched",
+			f"Team {team['name']} ({emails}): no partner in Connect has this email, so its "
+			f"{counts or 'records'} weren't brought over. If its frappe.io partner failed, fix that first.",
+		)
 		return
 
 	add_owner(partner, team.get("user"), None, None, report)

@@ -1,6 +1,9 @@
+import os
+import traceback
 from contextlib import contextmanager
 
 import frappe
+from frappe.utils import strip_html_tags
 
 from connect.partner.doctype.migration_record.migration_record import get_record_name
 from connect.partner.migration.checks import get_problems
@@ -52,18 +55,42 @@ def save(
 	if is_deleted(mapping.target_doctype, existing):
 		return existing, DELETED_IN_CONNECT
 
-	label = f"{mapping.source} {mapping.source_doctype} {source_name}"
-	if not existing:
-		values = check_values(mapping, values, is_new=True, report=report, label=label)
-		existing, outcome = _insert(mapping, values, name), "created"
-	elif update_existing:
-		values = check_values(mapping, values, is_new=False, report=report, label=label)
-		existing, outcome = _update(mapping, existing, values), "updated"
-	else:
-		outcome = "already migrated"
+	label = get_label(mapping, source_name)
+	try:
+		if not existing:
+			values = check_values(mapping, values, is_new=True, report=report, label=label)
+			existing, outcome = _insert(mapping, values, name), "created"
+		elif update_existing:
+			values = check_values(mapping, values, is_new=False, report=report, label=label)
+			existing, outcome = _update(mapping, existing, values), "updated"
+		else:
+			outcome = "already migrated"
+	except Exception as error:
+		# Names the record, as one partner's run saves many.
+		raise MigrationProblem(f"{label}: {describe(error)}") from error
 
 	remember(mapping, source_name, existing, file_urls)
 	return existing, outcome
+
+
+def get_label(mapping: Mapping, source_name: str) -> str:
+	"""How the report names a source record, such as "Press Partner Audit ADT-0002"."""
+	return f"{mapping.source} {mapping.source_doctype} {source_name}"
+
+
+def describe(error: Exception) -> str:
+	"""Why a save failed, in words staff can act on: Frappe's own message without its HTML, or, for a
+	fault in code, the error's type and the line of Connect it came from."""
+	if isinstance(error, MigrationProblem | frappe.ValidationError):
+		return strip_html_tags(str(error))
+
+	connect = f"{os.sep}connect{os.sep}"
+	frames = [frame for frame in traceback.extract_tb(error.__traceback__) if connect in frame.filename]
+	if not frames:
+		return f"{type(error).__name__}: {error}"
+	frame = frames[-1]
+	where = frame.filename.rsplit(connect, 1)[-1]
+	return f"{type(error).__name__} in {where}:{frame.lineno} ({frame.name}): {error}"
 
 
 def remember(mapping: Mapping, source_name: str, target_name: str, file_urls: dict | None = None) -> None:
@@ -140,11 +167,14 @@ def _update(mapping: Mapping, name: str, values: dict) -> str:
 @contextmanager
 def each_partner(label: str, report: Report):
 	"""Runs one partner's migration inside a savepoint. When anything about it fails, only that partner
-	is rolled back and named in the report, and the run goes on with the next one."""
+	is rolled back and named in the report, and the run goes on with the next one. `label` names the
+	source record the partner comes from, as get_label does."""
 	frappe.db.savepoint(_SAVEPOINT)
 	try:
 		yield
 	except Exception as error:
 		# Any failure, expected or not, must cost only this partner, never the whole run.
 		frappe.db.rollback(save_point=_SAVEPOINT)
-		report.add("failed", f"{label}: {error}")
+		reason = describe(error)
+		# A failure of the partner's own record already starts with its name.
+		report.add("failed", reason if reason.startswith(f"{label}: ") else f"{label}: {reason}")
