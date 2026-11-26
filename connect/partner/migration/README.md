@@ -6,7 +6,7 @@ It moves:
 
 | Site | DocType | Connect record |
 | --- | --- | --- |
-| frappe.io | Partner, enabled only, with its industries and countries served | Partner, with its owner as a member |
+| frappe.io | Partner, enabled only, with its industry and country served | Partner, with its owner as a member |
 | Frappe Cloud | Team whose `partner_email` or `user` is a migrated partner's email, or that has an onboarding pending review. Only name, user and partner_email are read | Links each team to its partner by email |
 | Frappe Cloud | Partner Onboarding with the status Pending Review: teams that applied and are not partners yet | Partner Application, pending review, on a new partner |
 | Frappe Cloud | Partner Certificate, Partner Audit and Partner Non Conformance of those teams | Partner Certificate, Partner Audit and Partner Non Conformance |

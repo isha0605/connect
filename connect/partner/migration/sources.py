@@ -1,4 +1,3 @@
-import json
 from collections.abc import Iterable, Iterator
 
 import frappe
@@ -83,28 +82,6 @@ def get_where_in(
 	rows = []
 	for chunk in _chunks(values):
 		rows += get_all(client, doctype, fields, [[fieldname, "in", chunk]])
-	return rows
-
-
-def get_child_rows(
-	client: FrappeClient, parent_doctype: str, child_doctype: str, parentfield: str, parents: Iterable[str]
-) -> list[dict]:
-	"""The rows of one table field of these parents, in their order. Frappe reads a child DocType
-	only through frappe.client.get_list, which checks the reader may read the parent DocType."""
-	rows = []
-	for chunk in _chunks(parents):
-		filters = [["parentfield", "=", parentfield], ["parent", "in", chunk]]
-		rows += client.get_api(
-			"frappe.client.get_list",
-			{
-				"doctype": child_doctype,
-				"parent": parent_doctype,
-				"fields": json.dumps(["*"]),
-				"filters": json.dumps(filters),
-				"order_by": "idx asc",
-				"limit_page_length": 0,
-			},
-		)
 	return rows
 
 

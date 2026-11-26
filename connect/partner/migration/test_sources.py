@@ -1,7 +1,6 @@
 # Copyright (c) 2026
 # See license.txt
 
-import json
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -35,17 +34,6 @@ class FakeClient:
 			return [dict(row) for row in rows]
 		return [{field: row.get(field) for field in fields} for row in rows]
 
-	def get_api(self, method, params):
-		"""frappe.client.get_list, the only way to read a child DocType's rows."""
-		assert (method, params["parent"]) == ("frappe.client.get_list", "Partner")
-		self.requests += 1
-		rows = self.records.get(params["doctype"], [])
-		return sorted((row for row in rows if _matches(row, json.loads(params["filters"]))), key=_idx)
-
-
-def _idx(row: dict) -> int:
-	return row["idx"]
-
 
 def _matches(row: dict, filters) -> bool:
 	if isinstance(filters, dict):
@@ -63,51 +51,33 @@ def _matches(row: dict, filters) -> bool:
 
 
 class TestFrappeIoSource(IntegrationTestCase):
-	def test_only_enabled_partners_are_read_with_their_table_rows_in_order(self):
+	def test_only_enabled_partners_are_read_in_one_request_with_links_as_table_rows(self):
 		client = FakeClient(
 			{
 				"Partner": [
-					{"name": "A/B Partner LLP", "enabled": 1},
-					{"name": "Disabled LLP", "enabled": 0},
-				],
-				"Partner Industry Type": [
 					{
-						"parent": "A/B Partner LLP",
-						"parentfield": "industry_type",
-						"idx": 2,
-						"industry": "Retail",
+						"name": "A/B Partner LLP",
+						"enabled": 1,
+						"industry_type": "Retail",
+						"custom_countries_served": "India",
 					},
 					{
-						"parent": "A/B Partner LLP",
-						"parentfield": "industry_type",
-						"idx": 1,
-						"industry": "Health",
+						"name": "No Links LLP",
+						"enabled": 1,
+						"industry_type": None,
+						"custom_countries_served": "",
 					},
-					{
-						"parent": "Disabled LLP",
-						"parentfield": "industry_type",
-						"idx": 1,
-						"industry": "Retail",
-					},
-				],
-				"Partner Countries Served": [
-					{
-						"parent": "A/B Partner LLP",
-						"parentfield": "custom_countries_served",
-						"idx": 1,
-						"country": "India",
-					}
+					{"name": "Disabled LLP", "enabled": 0, "industry_type": "Retail"},
 				],
 			}
 		)
 
-		(partner,) = read(frappe_io, client)["Partner"]
+		linked, unlinked = sorted(read(frappe_io, client)["Partner"], key=lambda partner: partner["name"])
 
-		self.assertEqual(partner["name"], "A/B Partner LLP")
-		self.assertEqual([row["industry"] for row in partner["industry_type"]], ["Health", "Retail"])
-		self.assertEqual([row["country"] for row in partner["custom_countries_served"]], ["India"])
-		# The partners, then one request for each table.
-		self.assertEqual(client.requests, 3)
+		self.assertEqual(linked["industry_type"], [{"industry": "Retail"}])
+		self.assertEqual(linked["custom_countries_served"], [{"country": "India"}])
+		self.assertEqual((unlinked["industry_type"], unlinked["custom_countries_served"]), ([], []))
+		self.assertEqual(client.requests, 1)
 
 	def test_a_missing_connection_stops_before_anything_is_read(self):
 		with self.assertRaisesRegex(frappe.ValidationError, "frappe.io connection"):
