@@ -91,9 +91,9 @@ PARTNER = Mapping(
 			Mapping(SOURCE, "Country", "Partner Served Country", fields={"country": "country"}),
 		),
 	},
-	# The owner's login and name, the Frappe staff member who looks after the partner, and the
-	# address that becomes the partner's office.
-	read_by_rules=frozenset({"user", "partner_name", "success_manager", "address"}),
+	# The owner's name (their login is the partner's email), the Frappe staff member who looks after
+	# the partner, and the address that becomes the partner's office.
+	read_by_rules=frozenset({"partner_name", "success_manager", "address"}),
 	# Details a partner or staff can fix in Connect: a bad one shouldn't hold back the partner. A team
 	# size outside Connect's ranges, or an old tier Connect doesn't have, is listed and left out.
 	may_drop=frozenset(
@@ -173,7 +173,7 @@ def _migrate_partner(row: dict, report: Report) -> None:
 	)
 	report.add(f"partners_{outcome.replace(' ', '_')}", f"frappe.io {row['name']} → {partner}")
 	if outcome != DELETED_IN_CONNECT:
-		add_owner(partner, row.get("user"), row.get("partner_name"), row.get("country"), report)
+		add_owner(partner, row.get("email"), row.get("partner_name"), row.get("country"), report)
 
 
 def _keep_connect_values(partner: str, values: dict) -> dict:

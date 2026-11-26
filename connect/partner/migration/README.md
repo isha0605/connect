@@ -6,7 +6,7 @@ It moves:
 
 | Site | DocType | Connect record |
 | --- | --- | --- |
-| frappe.io | Partner, enabled only, with its industry and country served | Partner, with its owner as a member |
+| frappe.io | Partner, enabled only, with its industry and country served | Partner, with the person at its email as its owner |
 | Frappe Cloud | Team whose `partner_email` or `user` is a migrated partner's email, or that has an onboarding pending review. Only name, user and partner_email are read | Links each team to its partner by email |
 | Frappe Cloud | Partner Onboarding with the status Pending Review: teams that applied and are not partners yet | Partner Application, pending review, on a new partner |
 | Frappe Cloud | Partner Certificate, Partner Audit and Partner Non Conformance of those teams | Partner Certificate, Partner Audit and Partner Non Conformance |
@@ -63,7 +63,7 @@ These kinds are information only:
 - `members_added`: the owners and admins who join their partner.
 - `managers_missing`: a frappe.io success manager who has no Connect login.
 - `values_dropped`: a bad phone, contact email, website, industry, country served, team size, legacy partner type, or an address without a city, that was left out, so its partner could still come over. It can be added in Connect.
-- `owners_skipped`: a Frappe staff email (`@frappe.io`) named as a partner's user. Staff do not become owners.
+- `owners_skipped`: a partner whose email is a Frappe staff email (`@frappe.io`). Staff do not become owners.
 - `partners_deleted_in_Connect`, `applications_deleted_in_Connect`, `audits_deleted_in_Connect`: records an earlier run made that someone has since deleted in Connect. The run leaves them deleted.
 
 Fix the problems and click **Trial Run** again until the run is clean. If a step stops, the status is Failed and the **Error** section on the Results tab shows why.
