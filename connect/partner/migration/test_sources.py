@@ -60,6 +60,7 @@ class TestFrappeIoSource(IntegrationTestCase):
 						"enabled": 1,
 						"industry_type": "Retail",
 						"custom_countries_served": "India",
+						"account_number": "000123",
 					},
 					{
 						"name": "No Links LLP",
@@ -78,6 +79,7 @@ class TestFrappeIoSource(IntegrationTestCase):
 		self.assertEqual(linked["custom_countries_served"], [{"country": "India"}])
 		self.assertEqual((unlinked["industry_type"], unlinked["custom_countries_served"]), ([], []))
 		self.assertEqual(client.requests, 1)
+		self.assertNotIn("account_number", linked)
 
 	def test_a_missing_connection_stops_before_anything_is_read(self):
 		with self.assertRaisesRegex(frappe.ValidationError, "frappe.io connection"):

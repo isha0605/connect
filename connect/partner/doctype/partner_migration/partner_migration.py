@@ -190,9 +190,8 @@ def _run(step: str, sources: tuple) -> tuple[Report, dict | None]:
 		return check(records), records
 
 	report = migrate(records)
-	if step == TRIAL_RUN or report.lines.get("unknown_fields"):
-		# A trial run keeps nothing, and copies no files: only its report. A migration that met a
-		# field the trial didn't saved nothing either.
+	if step == TRIAL_RUN:
+		# A trial run keeps nothing, and copies no files: only its report.
 		frappe.db.rollback()
 		return report, records
 
@@ -226,18 +225,14 @@ def _save_results(migration: str, step: str, report: Report, records: dict | Non
 		rows.append({"kind": "more", "message": f"{len(problems) - PROBLEMS_SHOWN} more in the full report"})
 
 	counts = [f"{kind}: {count}" for kind, count in report.get_counts().items() if kind != "counts"]
-	stopped = step == MIGRATION and report.lines.get("unknown_fields")
 	doc.update(
 		{
-			# The sources gained a field since the trial run: nothing was saved, so it needs a new trial.
-			"status": FAILED if stopped else FINISHED_STATUS[step],
+			"status": FINISHED_STATUS[step],
 			"is_clean": int(not problems),
 			"problem_count": len(problems),
 			"summary": "\n".join(counts + report.lines.get("counts", [])),
 			"finished_on": now_datetime(),
-			"error": _("A source has a field the trial run didn't: nothing was saved. Run a new trial.")
-			if stopped
-			else None,
+			"error": None,
 		}
 	)
 	if step == CHECK:

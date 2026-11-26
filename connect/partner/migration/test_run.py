@@ -292,15 +292,6 @@ class TestMigration(IntegrationTestCase):
 		self.assertEqual({doctype: frappe.db.count(doctype) for doctype in counts}, counts)
 		self.assertIn("applications_already_migrated", report.lines)
 
-	def test_an_unknown_field_stops_the_run_before_anything_is_saved(self):
-		exports = make_exports()
-		exports[("frappe.io", "Partner")] = [frappe_io_partner(introduction="We build ERPs.")]
-
-		report = self.migrate(exports)
-
-		self.assertEqual(report.lines["unknown_fields"], ["Partner.introduction"])
-		self.assertFalse(frappe.db.exists("Partner", PARTNER_ID))
-
 	def test_a_bad_partner_fails_alone(self):
 		exports = make_exports()
 		exports[("frappe.io", "Partner")].append(

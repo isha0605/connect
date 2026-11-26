@@ -84,33 +84,6 @@ PARTNER = Mapping(
 	read_by_rules=frozenset({"user", "partner_name", "success_manager"}),
 	# Contact details and lists a partner can fix in Connect: a bad one shouldn't hold back the partner.
 	may_drop=frozenset({"phone", "contact_email", "website", "industries", "served_countries"}),
-	skipped=frozenset(
-		{
-			# Lead routing and partner scoring stay on frappe.io: Connect has its own.
-			"auto_pass_unresponsive_leads",
-			"max_unresponded_leads",
-			"received_last_unresponsive_lead",
-			"custom_unresponded_leads_quota",
-			"custom_pass_leads_from_outside_country",
-			"custom_domain_avg",
-			"custom_domain_indicator",
-			"custom_domain_score",
-			"custom_domain_score_total",
-			"custom_skillset_",
-			"custom_skillset_indicator",
-			"custom_skillset_score",
-			"custom_skillset_score_total",
-			"custom_revenue_contribution",
-			# Connect counts these from the certificates it holds.
-			"custom_erpnext_certified",
-			"custom_framework_certified",
-			# Connect works out the region from the country, and apps from the success stories.
-			"territory",
-			"custom_app_expertise",
-			"skype_id",
-			"old_name",
-		}
-	),
 )
 
 MAPPINGS = (PARTNER,)
@@ -119,7 +92,7 @@ MAPPINGS = (PARTNER,)
 def fetch_rows(client) -> dict[str, list[dict]]:
 	"""Every enabled frappe.io partner, in one request. Each linked industry and country becomes
 	the one row of its Connect table."""
-	partners = get_all(client, PARTNER.source_doctype, ["*"], {"enabled": 1})
+	partners = get_all(client, PARTNER.source_doctype, PARTNER.get_source_fields(), {"enabled": 1})
 	for partner in partners:
 		for source_field, table in PARTNER.tables.items():
 			(target_field,) = table.mapping.fields.values()

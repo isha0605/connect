@@ -80,8 +80,6 @@ ONBOARDING = Mapping(
 	fields={field: field for field in _ONBOARDING_FIELDS},
 	files={"incorporation_certificate": "incorporation_certificate", "company_logo": "company_logo"},
 	read_by_rules=frozenset({"team"}),
-	# Not reviewed yet, and the onboarding it amends isn't migrated.
-	skipped=frozenset({"reviewed_by", "amended_from"}),
 	is_submitted=True,
 )
 CERTIFICATE = Mapping(
@@ -138,7 +136,10 @@ def fetch_rows(client, partner_emails: set[str]) -> dict[str, list[dict]]:
 	onboardings pending review with their teams, and those teams' certificates, audits and
 	non-conformances."""
 	onboardings = get_all(
-		client, ONBOARDING.source_doctype, ["*"], {"status": PENDING_REVIEW, "team": ["is", "set"]}
+		client,
+		ONBOARDING.source_doctype,
+		ONBOARDING.get_source_fields(),
+		{"status": PENDING_REVIEW, "team": ["is", "set"]},
 	)
 	teams = {}
 	for fieldname, values in (
@@ -152,7 +153,9 @@ def fetch_rows(client, partner_emails: set[str]) -> dict[str, list[dict]]:
 	rows = {TEAM.source_doctype: list(teams.values()), ONBOARDING.source_doctype: onboardings}
 	for mapping in (CERTIFICATE, AUDIT, NON_CONFORMANCE):
 		team_field = _TEAM_FIELDS[mapping.source_doctype]
-		rows[mapping.source_doctype] = get_where_in(client, mapping.source_doctype, ["*"], team_field, teams)
+		rows[mapping.source_doctype] = get_where_in(
+			client, mapping.source_doctype, mapping.get_source_fields(), team_field, teams
+		)
 	return rows
 
 

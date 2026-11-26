@@ -1,6 +1,6 @@
 # Partner data migration
 
-This tool moves partner data from frappe.io and Frappe Cloud (Press) into Connect. It reads both sites through their APIs, maps each source field to a Connect field, and checks every value before it saves. It never writes to frappe.io or Frappe Cloud.
+This tool moves partner data from frappe.io and Frappe Cloud (Press) into Connect. It reads both sites through their APIs, asks only for the fields it maps to a Connect field, and checks every value before it saves. It never writes to frappe.io or Frappe Cloud.
 
 It moves:
 
@@ -50,7 +50,6 @@ These kinds of problem need action. A clean trial run has none of them:
 
 | Kind | Meaning | What to do |
 | --- | --- | --- |
-| `unknown_fields` | A site has a field that no mapping accounts for. The run stops before it saves anything. | Map the field or skip it on purpose in `frappe_io.py` or `press.py`. |
 | `automations_on` | A Notification, Webhook, Assignment Rule or Server Script acts on a DocType the run saves. It would send, assign or call out once for every migrated record. Muting email is not enough: Frappe would still queue the emails and send them after the run. | Switch it off in Desk for the migration, and on again after it. |
 | `failed` | A partner could not be saved. Only that partner was rolled back. The line gives the reason. | Fix the mapping, or the data on frappe.io or Frappe Cloud. |
 | `unmatched` | No partner can take a Frappe Cloud team's records, usually because its frappe.io partner `failed`. | Fix that partner's failure. |
@@ -59,7 +58,6 @@ These kinds of problem need action. A clean trial run has none of them:
 
 These kinds are information only:
 
-- `fields_not_in_source`: a mapped field that no record on the site has.
 - `skipped`: an older copy of a certificate. Connect keeps the newest one for each holder and course.
 - `partners_created`, `partners_matched`, `partners_updated`: what happened to each partner.
 - `members_added`: the owners and admins who join their partner.
