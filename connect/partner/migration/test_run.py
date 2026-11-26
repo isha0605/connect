@@ -236,6 +236,18 @@ class TestMigration(IntegrationTestCase):
 			"No sales playbook",
 		)
 
+	def test_a_long_non_conformance_statement_comes_over_whole(self):
+		statement = "Lead qualification details are not captured formally for reference and analysis. " * 3
+		exports = make_exports()
+		exports[("Press", "Partner Non Conformance")] = [non_conformance(nc_statement=statement)]
+
+		report = self.migrate(exports)
+
+		self.assertFalse(report.has_problems(), dict(report.lines))
+		self.assertEqual(
+			frappe.db.get_value("Partner Non Conformance", {"partner": PARTNER_ID}, "statement"), statement
+		)
+
 	def test_a_team_still_applying_becomes_a_new_partner(self):
 		self.migrate()
 
