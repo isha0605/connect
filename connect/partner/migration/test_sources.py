@@ -96,8 +96,11 @@ class TestPressSource(IntegrationTestCase):
 						"user": "x@a.test",
 						"partner_email": "a@a.test",
 						"billing_name": "A",
+						"erpnext_partner": 1,
 					},
-					{"name": "team-by-owner", "user": "b@b.test", "partner_email": None},
+					{"name": "team-by-owner", "user": "b@b.test", "partner_email": None, "erpnext_partner": 1},
+					# A customer of the partner: Press notes the partner's email on its team too.
+					{"name": "team-of-a-customer", "user": "f@f.test", "partner_email": "a@a.test"},
 					{"name": "team-applying", "user": "c@c.test", "partner_email": None},
 					{"name": "team-rejected", "user": "d@d.test", "partner_email": None},
 					{"name": "team-customer", "user": "e@e.test", "partner_email": None},
@@ -129,6 +132,9 @@ class TestPressSource(IntegrationTestCase):
 				{"name": "team-partner", "user": "x@a.test", "partner_email": "a@a.test"},
 			],
 		)
+
+	def test_a_partners_customer_team_isnt_read(self):
+		self.assertNotIn("team-of-a-customer", [team["name"] for team in self.records["Team"]])
 
 	def test_only_onboardings_pending_review_with_a_team_are_read(self):
 		self.assertEqual([row["name"] for row in self.records["Partner Onboarding"]], ["PONB-1"])
