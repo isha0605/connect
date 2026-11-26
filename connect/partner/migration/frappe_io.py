@@ -207,7 +207,7 @@ def _migrate_partner(row: dict, report: Report) -> None:
 	values = PARTNER.get_values(row)
 	country = values.get("country")
 	values["partner_managers"] = _get_managers(row, report)
-	values["offices"] = _get_offices(row, report)
+	values["offices"] = _get_offices(row, country, report)
 	existing = get_existing(PARTNER, row["name"], name=row["name"])
 	if existing and frappe.db.exists("Partner", existing):
 		values = _keep_connect_values(existing, values)
@@ -237,13 +237,15 @@ def _keep_connect_values(partner: str, values: dict) -> dict:
 	}
 
 
-def _get_offices(row: dict, report: Report) -> list[dict]:
-	"""frappe.io keeps one address per partner, in a text box. Connect's office needs a city too, as
-	Frappe's Address does, so an address without a city is reported and left out."""
+def _get_offices(row: dict, country: str | None, report: Report) -> list[dict]:
+	"""frappe.io keeps one address per partner, in a text box. Connect's office needs a city, so a
+	partner without one has its country there, as when Connect moved addresses into offices."""
 	address = (row.get("address") or "").strip()
-	city = (row.get("custom_city") or "").strip()
+	city = (row.get("custom_city") or "").strip() or country
 	if address and not city:
-		report.add("values_dropped", f"{row['name']}: Partner.address has no city, so no office was added")
+		report.add(
+			"values_dropped", f"{row['name']}: Partner.address has no city or country, so no office was added"
+		)
 	if not (address and city):
 		return []
 	return [{"city": city, "address": address}]
