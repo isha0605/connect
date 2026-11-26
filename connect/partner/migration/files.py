@@ -5,6 +5,7 @@ from urllib.parse import unquote, urlparse
 import frappe
 import requests
 from frappe.frappeclient import FrappeClient
+from PIL import Image, UnidentifiedImageError
 from pypdf.errors import PyPdfError
 
 from connect.partner.migration.report import Report
@@ -79,9 +80,16 @@ def _copy_file(client: FrappeClient, record, fieldname: str, file_url: str, repo
 	frappe.db.savepoint(_SAVEPOINT)
 	try:
 		copied = _save_file(record, fieldname, file_url, _download(client, file_url))
-	# A file that can't be fetched, is over Connect's upload limit, or is a PDF Frappe can't read to
-	# check it for scripts, must not stop the others.
-	except (requests.RequestException, NotAFileError, frappe.ValidationError, PyPdfError) as error:
+	# A file that can't be fetched, is over Connect's upload limit, or is a PDF or image Frappe can't
+	# read to check it, must not stop the others. An image too big to open safely stays at the source.
+	except (
+		requests.RequestException,
+		NotAFileError,
+		frappe.ValidationError,
+		PyPdfError,
+		UnidentifiedImageError,
+		Image.DecompressionBombError,
+	) as error:
 		frappe.db.rollback(save_point=_SAVEPOINT)
 		report.add("files_failed", f"{label} from {file_url}: {error}")
 		return

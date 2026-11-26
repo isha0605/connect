@@ -7,6 +7,7 @@ from unittest.mock import patch
 import frappe
 import requests
 from frappe.tests import IntegrationTestCase
+from PIL import Image
 from pypdf import PdfWriter
 
 from connect.partner.migration.files import copy_files
@@ -30,6 +31,13 @@ def make_pdf() -> bytes:
 	writer.add_blank_page(width=72, height=72)
 	content = io.BytesIO()
 	writer.write(content)
+	return content.getvalue()
+
+
+def make_jpeg() -> bytes:
+	"""A real JPEG: Frappe opens JPEGs to strip their EXIF data."""
+	content = io.BytesIO()
+	Image.new("RGB", (10, 10)).save(content, format="JPEG")
 	return content.getvalue()
 
 
@@ -137,6 +145,22 @@ class TestCopyFiles(IntegrationTestCase):
 
 		(failure,) = report.lines["files_failed"]
 		self.assertIn("audit_report", failure)
+		self.assertEqual(len(report.lines["files_copied"]), 3)
+
+	def test_an_image_too_big_to_open_is_listed_and_the_rest_carry_on(self):
+		logo = f"{FRAPPE_IO}/files/huge.jpg"
+		exports = make_exports()
+		exports[("frappe.io", "Partner")][0] = frappe_io_partner(logo=logo)
+		migrate(make_records(exports))
+		self.frappe_io.files[logo] = make_jpeg()
+		frappe.db.set_single_value("System Settings", "strip_exif_metadata_from_uploaded_images", 1)
+
+		# Pillow refuses an image over twice this many pixels as a decompression bomb.
+		with patch.object(Image, "MAX_IMAGE_PIXELS", 10):
+			report = self.copy()
+
+		(failure,) = report.lines["files_failed"]
+		self.assertTrue("logo" in failure and "decompression bomb" in failure)
 		self.assertEqual(len(report.lines["files_copied"]), 3)
 
 	def test_only_the_given_sources_files_are_copied(self):
