@@ -76,12 +76,17 @@ def get_all(client: FrappeClient, doctype: str, fields: list[str], filters=None)
 
 
 def get_where_in(
-	client: FrappeClient, doctype: str, fields: list[str], fieldname: str, values: Iterable[str]
+	client: FrappeClient,
+	doctype: str,
+	fields: list[str],
+	fieldname: str,
+	values: Iterable[str],
+	filters: list | None = None,
 ) -> list[dict]:
-	"""Every record whose `fieldname` is one of `values`."""
+	"""Every record whose `fieldname` is one of `values` and that matches `filters`."""
 	rows = []
 	for chunk in _chunks(values):
-		rows += get_all(client, doctype, fields, [[fieldname, "in", chunk]])
+		rows += get_all(client, doctype, fields, [[fieldname, "in", chunk], *(filters or [])])
 	return rows
 
 

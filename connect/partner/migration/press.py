@@ -129,6 +129,8 @@ _TEAM_FIELDS = {
 }
 # A Team is a whole Frappe Cloud account: only these columns are read.
 _TEAM_COLUMNS = ["name", "user", "partner_email"]
+# Press's "Enable Partner Privileges" sets this on a partner's own team.
+_PARTNER_TEAMS = [["erpnext_partner", "=", 1]]
 
 
 def fetch_rows(client, partner_emails: set[str]) -> dict[str, list[dict]]:
@@ -142,12 +144,14 @@ def fetch_rows(client, partner_emails: set[str]) -> dict[str, list[dict]]:
 		{"status": PENDING_REVIEW, "team": ["is", "set"]},
 	)
 	teams = {}
-	for fieldname, values in (
-		("partner_email", partner_emails),
-		("user", partner_emails),
-		("name", {row["team"] for row in onboardings}),
+	for fieldname, values, filters in (
+		# A customer's team also has its partner's email, so only teams with partner privileges.
+		("partner_email", partner_emails, _PARTNER_TEAMS),
+		("user", partner_emails, _PARTNER_TEAMS),
+		# Applicants aren't partners yet.
+		("name", {row["team"] for row in onboardings}, None),
 	):
-		for team in get_where_in(client, TEAM.source_doctype, _TEAM_COLUMNS, fieldname, values):
+		for team in get_where_in(client, TEAM.source_doctype, _TEAM_COLUMNS, fieldname, values, filters):
 			teams[team["name"]] = team
 
 	rows = {TEAM.source_doctype: list(teams.values()), ONBOARDING.source_doctype: onboardings}

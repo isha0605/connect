@@ -7,7 +7,7 @@ It moves:
 | Site | DocType | Connect record |
 | --- | --- | --- |
 | frappe.io | Partner, enabled only, with its industry and country served | Partner, with the person at its email as its owner |
-| Frappe Cloud | Team whose `partner_email` or `user` is a migrated partner's email, or that has an onboarding pending review. Only name, user and partner_email are read | Links each team to its partner by email |
+| Frappe Cloud | Team with partner privileges (`erpnext_partner`) whose `partner_email` or `user` is a migrated partner's email, or that has an onboarding pending review. A customer's team also has its partner's email, so a team without partner privileges is not read by email. Only name, user and partner_email are read | Links each team to its partner by email |
 | Frappe Cloud | Partner Onboarding with the status Pending Review: teams that applied and are not partners yet | Partner Application, pending review, on a new partner |
 | Frappe Cloud | Partner Certificate, Partner Audit and Partner Non Conformance of those teams | Partner Certificate, Partner Audit and Partner Non Conformance |
 
