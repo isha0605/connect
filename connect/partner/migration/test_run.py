@@ -32,7 +32,6 @@ def frappe_io_partner(**values):
 		"status": "Approved",
 		"enabled": 1,
 		"email": OWNER,
-		"user": OWNER,
 		"partner_name": "Mira Owner",
 		"country": "India",
 		"custom_state": "Karnataka",
@@ -126,7 +125,6 @@ def make_exports() -> dict[tuple[str, str], list[dict]]:
 				name=OLD_PARTNER_ID,
 				company_name="_Test Old Migrated Partner",
 				email=OLD_OWNER,
-				user=OLD_OWNER,
 				route="partners/india/_test-old-migrated",
 			),
 		],
@@ -310,7 +308,6 @@ class TestMigration(IntegrationTestCase):
 				name="_Test Broken Partner LLP",
 				partner_type="Platinum",
 				email="broken@example.test",
-				user=None,
 			)
 		)
 
@@ -430,7 +427,7 @@ class TestMigration(IntegrationTestCase):
 	def test_frappe_staff_isnt_made_an_owner(self):
 		exports = make_exports()
 		exports[("frappe.io", "Partner")][1] = frappe_io_partner(
-			name=OLD_PARTNER_ID, email=OLD_OWNER, user="partners@frappe.io", route="partners/india/_old"
+			name=OLD_PARTNER_ID, email="partners@frappe.io", route="partners/india/_old"
 		)
 
 		report = self.migrate(exports)
@@ -441,7 +438,7 @@ class TestMigration(IntegrationTestCase):
 	def test_one_person_isnt_made_owner_of_two_partners(self):
 		exports = make_exports()
 		exports[("frappe.io", "Partner")][1] = frappe_io_partner(
-			name=OLD_PARTNER_ID, email=OLD_OWNER, user=OWNER, route="partners/india/_old"
+			name=OLD_PARTNER_ID, email=OWNER, route="partners/india/_old"
 		)
 
 		report = self.migrate(exports)
