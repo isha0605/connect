@@ -257,6 +257,16 @@ class TestMigration(IntegrationTestCase):
 		self.assertFalse(report.has_problems(), dict(report.lines))
 		self.assertEqual(frappe.db.get_value("Partner", PARTNER_ID, "successful_projects_count"), 60)
 
+	def test_a_team_size_number_fits_its_range(self):
+		for size, expected in (("51", "51-200"), ("8", "1-10"), ("11-50", "11-50"), ("350", "201+")):
+			exports = make_exports()
+			exports[("frappe.io", "Partner")][0] = frappe_io_partner(custom_team_size=size)
+
+			self.migrate(exports)
+
+			self.assertEqual(frappe.db.get_value("Partner", PARTNER_ID, "team_size"), expected, size)
+			frappe.db.rollback()
+
 	def test_a_frappe_io_country_name_becomes_frappes(self):
 		exports = make_exports()
 		exports[("frappe.io", "Partner")][0] = frappe_io_partner(
@@ -406,7 +416,7 @@ class TestMigration(IntegrationTestCase):
 		exports[("frappe.io", "Partner")][0] = frappe_io_partner(
 			phone_number="call us maybe",
 			industry_type=[{"industry": "Agriculture"}, {"industry": "_Test Spaceflight"}],
-			custom_team_size="Around 30",
+			custom_team_size="A few",
 			custom_legacy_partner_type="Platinum",
 		)
 

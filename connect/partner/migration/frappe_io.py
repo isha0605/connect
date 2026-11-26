@@ -44,6 +44,21 @@ def with_scheme(url: str) -> str:
 	return url if "://" in url else f"https://{url}"
 
 
+# Connect's team size ranges, by their largest team.
+TEAM_SIZES = ((10, "1-10"), (50, "11-50"), (200, "51-200"))
+
+
+def team_size_range(value: object) -> object:
+	"""The Connect range a frappe.io team size falls in, such as 51-200 for "51". A value that is
+	already a range, or has no number, is kept as it is."""
+	if value in {size for _largest, size in TEAM_SIZES} | {"201+"}:
+		return value
+	size = first_number(value)
+	if not isinstance(size, int):
+		return value
+	return next((range_ for largest, range_ in TEAM_SIZES if size <= largest), "201+")
+
+
 def first_number(value: object) -> object:
 	"""The first whole number in a count typed as text, such as 60 in "60+". A value with no number
 	is kept as it is, so the check reports it."""
@@ -105,6 +120,7 @@ PARTNER = Mapping(
 		"number_of_certified_members": first_number,
 		"total_sites_count": first_number,
 		"successful_projects_count": first_number,
+		"team_size": team_size_range,
 	},
 	files={"logo": "logo"},
 	# frappe.io links one industry and one country; Connect keeps lists of them.
