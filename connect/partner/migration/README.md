@@ -62,7 +62,7 @@ These kinds are information only:
 - `partners_created`, `partners_matched`, `partners_updated`: what happened to each partner.
 - `members_added`: the owners and admins who join their partner.
 - `managers_missing`: a frappe.io success manager who has no Connect login.
-- `values_dropped`: a bad phone, contact email, website, industry or country served that was left out, so its partner could still come over. The partner can add it in Connect.
+- `values_dropped`: a bad phone, contact email, website, industry, country served, team size or legacy partner type that was left out, so its partner could still come over. It can be added in Connect.
 - `owners_skipped`: a Frappe staff email (`@frappe.io`) named as a partner's user. Staff do not become owners.
 - `partners_deleted_in_Connect`, `applications_deleted_in_Connect`, `audits_deleted_in_Connect`: records an earlier run made that someone has since deleted in Connect. The run leaves them deleted.
 
@@ -85,7 +85,7 @@ Only one run can work at a time. If a step stays Queued or Running because its b
 
 You can run the migration again with a new run. Each source record is linked to its Connect record by a **Migration Record**, which you can find in Desk. It does not make copies:
 
-- A frappe.io partner already in Connect gets only the fields frappe.io still owns: email, enabled, and the contract dates. Its other fields are filled only where Connect has nothing. What a partner edits in Connect, and the tier Connect works out, are never overwritten.
+- A frappe.io partner already in Connect gets only the fields frappe.io still owns: email, enabled, the contract dates and the legacy contract. Its other fields are filled only where Connect has nothing. What a partner edits in Connect, and the tier Connect works out, are never overwritten.
 - Press records already in Connect stay as they are.
 - A record deleted in Connect stays deleted.
 

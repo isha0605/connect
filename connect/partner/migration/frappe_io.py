@@ -24,6 +24,9 @@ FRAPPE_IO_OWNED = frozenset(
 		"contract_renewed",
 		"apply_legacy_contract",
 		"commitment_scrutiny_date",
+		"contract_end_date_as_per_payment",
+		"legacy_partner_type",
+		"legacy_contract_end_date",
 	}
 )
 
@@ -47,6 +50,7 @@ PARTNER = Mapping(
 		"partner_website": "website",
 		"country": "country",
 		"custom_state": "state",
+		"custom_city": "city",
 		"description": "description",
 		"show_in_website": "show_in_website",
 		"listing_date": "listed_on",
@@ -63,6 +67,13 @@ PARTNER = Mapping(
 		"custom_partner_type_change_date": "tier_changed_on",
 		"custom_number_of_certified_members": "number_of_certified_members",
 		"custom_total_sites_count": "total_sites_count",
+		"custom_journey_blog_link": "journey_blog_url",
+		"custom_foundation_date": "foundation_date",
+		"custom_team_size": "team_size",
+		"custom_successful_projects_count": "successful_projects_count",
+		"custom_contract_end_date_as_per_payment": "contract_end_date_as_per_payment",
+		"custom_legacy_contract_end_date": "legacy_contract_end_date",
+		"custom_legacy_partner_type": "legacy_partner_type",
 	},
 	convert={
 		"verification_status": {"Approved": "Verified", "Rejected": "Rejected", "Pending": "Pending Review"},
@@ -82,8 +93,19 @@ PARTNER = Mapping(
 	},
 	# The owner's login and name, and the Frappe staff member who looks after the partner.
 	read_by_rules=frozenset({"user", "partner_name", "success_manager"}),
-	# Contact details and lists a partner can fix in Connect: a bad one shouldn't hold back the partner.
-	may_drop=frozenset({"phone", "contact_email", "website", "industries", "served_countries"}),
+	# Details a partner or staff can fix in Connect: a bad one shouldn't hold back the partner. A team
+	# size outside Connect's ranges, or an old tier Connect doesn't have, is listed and left out.
+	may_drop=frozenset(
+		{
+			"phone",
+			"contact_email",
+			"website",
+			"industries",
+			"served_countries",
+			"team_size",
+			"legacy_partner_type",
+		}
+	),
 )
 
 MAPPINGS = (PARTNER,)
