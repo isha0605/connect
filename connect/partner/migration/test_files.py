@@ -7,8 +7,10 @@ from unittest.mock import patch
 import frappe
 import requests
 from frappe.tests import IntegrationTestCase
+from PIL import Image
 from pypdf import PdfWriter
 
+from connect.partner.migration import files
 from connect.partner.migration.files import copy_files
 from connect.partner.migration.run import migrate
 from connect.partner.migration.test_run import (
@@ -30,6 +32,13 @@ def make_pdf() -> bytes:
 	writer.add_blank_page(width=72, height=72)
 	content = io.BytesIO()
 	writer.write(content)
+	return content.getvalue()
+
+
+def make_jpeg(size=(10, 10)) -> bytes:
+	"""A real JPEG: Frappe opens JPEGs to strip their EXIF data."""
+	content = io.BytesIO()
+	Image.new("RGB", size).save(content, format="JPEG")
 	return content.getvalue()
 
 
@@ -138,6 +147,39 @@ class TestCopyFiles(IntegrationTestCase):
 		(failure,) = report.lines["files_failed"]
 		self.assertIn("audit_report", failure)
 		self.assertEqual(len(report.lines["files_copied"]), 3)
+
+	def test_a_jpeg_too_big_to_open_is_saved_as_a_smaller_copy(self):
+		logo = f"{FRAPPE_IO}/files/huge.jpg"
+		exports = make_exports()
+		exports[("frappe.io", "Partner")][0] = frappe_io_partner(logo=logo)
+		migrate(make_records(exports))
+		self.frappe_io.files[logo] = make_jpeg(size=(64, 48))
+		frappe.db.set_single_value("System Settings", "strip_exif_metadata_from_uploaded_images", 1)
+
+		# Pillow refuses an image over twice this many pixels as a decompression bomb.
+		with patch.object(Image, "MAX_IMAGE_PIXELS", 500), patch.object(files, "MAX_IMAGE_SIDE", 16):
+			report = self.copy()
+			# The limit is lifted only while the header is read.
+			self.assertEqual(Image.MAX_IMAGE_PIXELS, 500)
+
+		self.assertNotIn("files_failed", report.lines)
+		self.assertEqual(report.lines["files_resized"], [f"Partner {PARTNER_ID}: logo"])
+		saved = frappe.get_doc("File", {"file_url": frappe.db.get_value("Partner", PARTNER_ID, "logo")})
+		self.assertEqual(Image.open(io.BytesIO(saved.get_content())).size, (16, 12))
+
+	def test_an_other_image_too_big_to_open_is_listed_and_the_rest_carry_on(self):
+		logo = f"{FRAPPE_IO}/files/huge.jpg"
+		exports = make_exports()
+		exports[("frappe.io", "Partner")][0] = frappe_io_partner(logo=logo)
+		migrate(make_records(exports))
+		self.frappe_io.files[logo] = b"anything"
+
+		with patch.object(files, "_save_file", side_effect=Image.DecompressionBombError("too big")):
+			with patch.object(files, "_shrink_jpeg", side_effect=Image.DecompressionBombError("a PNG")):
+				report = self.copy()
+
+		self.assertEqual(len(report.lines["files_failed"]), 4)
+		self.assertIn("a PNG", " ".join(report.lines["files_failed"]))
 
 	def test_only_the_given_sources_files_are_copied(self):
 		migrate(make_records())

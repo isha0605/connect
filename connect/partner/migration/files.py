@@ -1,3 +1,4 @@
+import io
 import json
 from collections import defaultdict
 from urllib.parse import unquote, urlparse
@@ -5,6 +6,7 @@ from urllib.parse import unquote, urlparse
 import frappe
 import requests
 from frappe.frappeclient import FrappeClient
+from PIL import Image, ImageOps, UnidentifiedImageError
 from pypdf.errors import PyPdfError
 
 from connect.partner.migration.report import Report
@@ -12,6 +14,8 @@ from connect.partner.migration.report import Report
 # Only Frappe's staff and the partner may see these. Logos show in the directory.
 PRIVATE_FIELDS = frozenset({"incorporation_certificate", "audit_report", "evidence"})
 _SAVEPOINT = "partner_migration_file"
+# The longest side of a JPEG too big to open safely, once shrunk. Scanned text stays readable.
+MAX_IMAGE_SIDE = 4096
 
 
 class NotAFileError(Exception):
@@ -78,10 +82,17 @@ def _copy_file(client: FrappeClient, record, fieldname: str, file_url: str, repo
 
 	frappe.db.savepoint(_SAVEPOINT)
 	try:
-		copied = _save_file(record, fieldname, file_url, _download(client, file_url))
-	# A file that can't be fetched, is over Connect's upload limit, or is a PDF Frappe can't read to
-	# check it for scripts, must not stop the others.
-	except (requests.RequestException, NotAFileError, frappe.ValidationError, PyPdfError) as error:
+		copied = _save_file_or_shrunk_copy(record, fieldname, file_url, _download(client, file_url), report)
+	# A file that can't be fetched, is over Connect's upload limit, or is a PDF or image Frappe can't
+	# read to check it, must not stop the others. An image too big to open safely stays at the source.
+	except (
+		requests.RequestException,
+		NotAFileError,
+		frappe.ValidationError,
+		PyPdfError,
+		UnidentifiedImageError,
+		Image.DecompressionBombError,
+	) as error:
 		frappe.db.rollback(save_point=_SAVEPOINT)
 		report.add("files_failed", f"{label} from {file_url}: {error}")
 		return
@@ -109,6 +120,38 @@ def _download(client: FrappeClient, file_url: str) -> bytes:
 	if is_page and not urlparse(url).path.lower().endswith((".html", ".htm")):
 		raise NotAFileError("the site sent a web page, not the file: check the key can read it")
 	return response.content
+
+
+def _save_file_or_shrunk_copy(record, fieldname: str, file_url: str, content: bytes, report: Report) -> str:
+	"""Saves the file. A JPEG too big for Frappe to open safely is saved as a smaller copy."""
+	try:
+		return _save_file(record, fieldname, file_url, content)
+	except Image.DecompressionBombError:
+		copied = _save_file(record, fieldname, file_url, _shrink_jpeg(content))
+		report.add("files_resized", f"{record.target_doctype} {record.target_name}: {fieldname}")
+		return copied
+
+
+def _shrink_jpeg(content: bytes) -> bytes:
+	"""The JPEG fitted within MAX_IMAGE_SIDE. It is decoded at a fraction of its size, so the full
+	image never sits in memory: that is what Pillow's pixel limit protects against."""
+	limit = Image.MAX_IMAGE_PIXELS
+	Image.MAX_IMAGE_PIXELS = None  # Opening reads only the header; draft() keeps the decoding small.
+	try:
+		image = Image.open(io.BytesIO(content))
+	finally:
+		Image.MAX_IMAGE_PIXELS = limit
+	if image.format != "JPEG":
+		raise Image.DecompressionBombError(
+			f"a {image.format} image of {image.size} pixels is too big to open"
+		)
+
+	image.draft("RGB", (MAX_IMAGE_SIDE, MAX_IMAGE_SIDE))
+	image.thumbnail((MAX_IMAGE_SIDE, MAX_IMAGE_SIDE))
+	image = ImageOps.exif_transpose(image)
+	output = io.BytesIO()
+	image.save(output, format="JPEG", quality=90)
+	return output.getvalue()
 
 
 def _save_file(record, fieldname: str, file_url: str, content: bytes) -> str:
