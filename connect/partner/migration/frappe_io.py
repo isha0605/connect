@@ -1,11 +1,9 @@
-from collections import defaultdict
-
 import frappe
 
 from connect.partner.migration.mapping import Mapping, Table
 from connect.partner.migration.owners import add_owner
 from connect.partner.migration.report import Report
-from connect.partner.migration.sources import get_all, get_child_rows
+from connect.partner.migration.sources import get_all
 from connect.partner.migration.store import (
 	DELETED_IN_CONNECT,
 	each_partner,
@@ -71,16 +69,15 @@ PARTNER = Mapping(
 		"website": with_scheme,
 	},
 	files={"logo": "logo"},
+	# frappe.io links one industry and one country; Connect keeps lists of them.
 	tables={
 		"industry_type": Table(
 			"industries",
-			Mapping(SOURCE, "Partner Industry Type", "Partner Industry", fields={"industry": "industry"}),
+			Mapping(SOURCE, "Industry Type", "Partner Industry", fields={"industry": "industry"}),
 		),
 		"custom_countries_served": Table(
 			"served_countries",
-			Mapping(
-				SOURCE, "Partner Countries Served", "Partner Served Country", fields={"country": "country"}
-			),
+			Mapping(SOURCE, "Country", "Partner Served Country", fields={"country": "country"}),
 		),
 	},
 	# The owner's login and name, and the Frappe staff member who looks after the partner.
@@ -120,18 +117,14 @@ MAPPINGS = (PARTNER,)
 
 
 def fetch_rows(client) -> dict[str, list[dict]]:
-	"""Every enabled frappe.io partner, with its tables: the partners in one request, then each
-	table's rows for 100 partners at a time."""
+	"""Every enabled frappe.io partner, in one request. Each linked industry and country becomes
+	the one row of its Connect table."""
 	partners = get_all(client, PARTNER.source_doctype, ["*"], {"enabled": 1})
-	names = [partner["name"] for partner in partners]
-	for source_field, table in PARTNER.tables.items():
-		rows = defaultdict(list)
-		for row in get_child_rows(
-			client, PARTNER.source_doctype, table.mapping.source_doctype, source_field, names
-		):
-			rows[row["parent"]].append(row)
-		for partner in partners:
-			partner[source_field] = rows[partner["name"]]
+	for partner in partners:
+		for source_field, table in PARTNER.tables.items():
+			(target_field,) = table.mapping.fields.values()
+			value = partner.get(source_field)
+			partner[source_field] = [{target_field: value}] if value else []
 	return {PARTNER.source_doctype: partners}
 
 

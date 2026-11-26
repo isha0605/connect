@@ -28,7 +28,7 @@ Converter = Callable[[object], object] | dict
 
 @dataclass(frozen=True)
 class Table:
-	"""A source child table and the Connect table field its rows go into."""
+	"""Source rows read from one field of a record, and the Connect table field they go into."""
 
 	field: str
 	mapping: "Mapping"
