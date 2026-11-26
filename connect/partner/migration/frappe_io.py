@@ -76,7 +76,12 @@ PARTNER = Mapping(
 		"custom_legacy_partner_type": "legacy_partner_type",
 	},
 	convert={
-		"verification_status": {"Approved": "Verified", "Rejected": "Rejected", "Pending": "Pending Review"},
+		"verification_status": {
+			"Approved": "Verified",
+			"Rejected": "Rejected",
+			"Not Approved": "Rejected",
+			"Pending": "Pending Review",
+		},
 		"website": with_scheme,
 	},
 	files={"logo": "logo"},

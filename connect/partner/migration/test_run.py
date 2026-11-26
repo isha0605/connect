@@ -248,6 +248,15 @@ class TestMigration(IntegrationTestCase):
 			frappe.db.get_value("Partner Non Conformance", {"partner": PARTNER_ID}, "statement"), statement
 		)
 
+	def test_not_approved_on_frappe_io_comes_over_as_rejected(self):
+		exports = make_exports()
+		exports[("frappe.io", "Partner")][0] = frappe_io_partner(status="Not Approved")
+
+		report = self.migrate(exports)
+
+		self.assertFalse(report.has_problems(), dict(report.lines))
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER_ID, "verification_status"), "Rejected")
+
 	def test_a_team_still_applying_becomes_a_new_partner(self):
 		self.migrate()
 
