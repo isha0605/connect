@@ -1,3 +1,5 @@
+import re
+
 import frappe
 
 from connect.partner.migration.mapping import Mapping, Table
@@ -31,8 +33,24 @@ FRAPPE_IO_OWNED = frozenset(
 )
 
 
+# frappe.io names some countries differently from Frappe's Country list.
+COUNTRY_NAMES = {
+	"Congo - Kinshasa": "Congo, The Democratic Republic of the",
+	"Congo - Brazzaville": "Congo",
+}
+
+
 def with_scheme(url: str) -> str:
 	return url if "://" in url else f"https://{url}"
+
+
+def first_number(value: object) -> object:
+	"""The first whole number in a count typed as text, such as 60 in "60+". A value with no number
+	is kept as it is, so the check reports it."""
+	if isinstance(value, int):
+		return value
+	match = re.search(r"\d+", str(value))
+	return int(match.group()) if match else value
 
 
 PARTNER = Mapping(
@@ -76,8 +94,17 @@ PARTNER = Mapping(
 		"custom_legacy_partner_type": "legacy_partner_type",
 	},
 	convert={
-		"verification_status": {"Approved": "Verified", "Rejected": "Rejected", "Pending": "Pending Review"},
+		"verification_status": {
+			"Approved": "Verified",
+			"Rejected": "Rejected",
+			"Not Approved": "Rejected",
+			"Pending": "Pending Review",
+		},
 		"website": with_scheme,
+		"country": COUNTRY_NAMES,
+		"number_of_certified_members": first_number,
+		"total_sites_count": first_number,
+		"successful_projects_count": first_number,
 	},
 	files={"logo": "logo"},
 	# frappe.io links one industry and one country; Connect keeps lists of them.
@@ -88,7 +115,13 @@ PARTNER = Mapping(
 		),
 		"custom_countries_served": Table(
 			"served_countries",
-			Mapping(SOURCE, "Country", "Partner Served Country", fields={"country": "country"}),
+			Mapping(
+				SOURCE,
+				"Country",
+				"Partner Served Country",
+				fields={"country": "country"},
+				convert={"country": COUNTRY_NAMES},
+			),
 		),
 	},
 	# The owner's name (their login is the partner's email), the Frappe staff member who looks after
@@ -156,6 +189,7 @@ def get_expected_names(rows: dict[str, list[dict]]) -> dict[str, list[str]]:
 
 def _migrate_partner(row: dict, report: Report) -> None:
 	values = PARTNER.get_values(row)
+	country = values.get("country")
 	values["partner_managers"] = _get_managers(row, report)
 	values["offices"] = _get_offices(row, report)
 	existing = get_existing(PARTNER, row["name"], name=row["name"])
@@ -173,7 +207,7 @@ def _migrate_partner(row: dict, report: Report) -> None:
 	)
 	report.add(f"partners_{outcome.replace(' ', '_')}", f"frappe.io {row['name']} → {partner}")
 	if outcome != DELETED_IN_CONNECT:
-		add_owner(partner, row.get("email"), row.get("partner_name"), row.get("country"), report)
+		add_owner(partner, row.get("email"), row.get("partner_name"), country, report)
 
 
 def _keep_connect_values(partner: str, values: dict) -> dict:

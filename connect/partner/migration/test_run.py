@@ -236,6 +236,51 @@ class TestMigration(IntegrationTestCase):
 			"No sales playbook",
 		)
 
+	def test_a_long_non_conformance_statement_comes_over_whole(self):
+		statement = "Lead qualification details are not captured formally for reference and analysis. " * 3
+		exports = make_exports()
+		exports[("Press", "Partner Non Conformance")] = [non_conformance(nc_statement=statement)]
+
+		report = self.migrate(exports)
+
+		self.assertFalse(report.has_problems(), dict(report.lines))
+		self.assertEqual(
+			frappe.db.get_value("Partner Non Conformance", {"partner": PARTNER_ID}, "statement"), statement
+		)
+
+	def test_a_count_typed_as_text_keeps_its_number(self):
+		exports = make_exports()
+		exports[("frappe.io", "Partner")][0] = frappe_io_partner(custom_successful_projects_count="60+")
+
+		report = self.migrate(exports)
+
+		self.assertFalse(report.has_problems(), dict(report.lines))
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER_ID, "successful_projects_count"), 60)
+
+	def test_a_frappe_io_country_name_becomes_frappes(self):
+		exports = make_exports()
+		exports[("frappe.io", "Partner")][0] = frappe_io_partner(
+			country="Congo - Kinshasa", custom_countries_served=[{"country": "Congo - Kinshasa"}]
+		)
+
+		report = self.migrate(exports)
+
+		self.assertFalse(report.has_problems(), dict(report.lines))
+		partner = frappe.get_doc("Partner", PARTNER_ID)
+		congo = "Congo, The Democratic Republic of the"
+		self.assertEqual(partner.country, congo)
+		self.assertEqual([row.country for row in partner.served_countries], [congo])
+		self.assertEqual(frappe.db.get_value("User", partner.email, "location"), congo)
+
+	def test_not_approved_on_frappe_io_comes_over_as_rejected(self):
+		exports = make_exports()
+		exports[("frappe.io", "Partner")][0] = frappe_io_partner(status="Not Approved")
+
+		report = self.migrate(exports)
+
+		self.assertFalse(report.has_problems(), dict(report.lines))
+		self.assertEqual(frappe.db.get_value("Partner", PARTNER_ID, "verification_status"), "Rejected")
+
 	def test_a_team_still_applying_becomes_a_new_partner(self):
 		self.migrate()
 
