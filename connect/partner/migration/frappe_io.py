@@ -91,8 +91,9 @@ PARTNER = Mapping(
 			Mapping(SOURCE, "Country", "Partner Served Country", fields={"country": "country"}),
 		),
 	},
-	# The owner's login and name, and the Frappe staff member who looks after the partner.
-	read_by_rules=frozenset({"user", "partner_name", "success_manager"}),
+	# The owner's login and name, the Frappe staff member who looks after the partner, and the
+	# address that becomes the partner's office.
+	read_by_rules=frozenset({"user", "partner_name", "success_manager", "address"}),
 	# Details a partner or staff can fix in Connect: a bad one shouldn't hold back the partner. A team
 	# size outside Connect's ranges, or an old tier Connect doesn't have, is listed and left out.
 	may_drop=frozenset(
@@ -156,6 +157,7 @@ def get_expected_names(rows: dict[str, list[dict]]) -> dict[str, list[str]]:
 def _migrate_partner(row: dict, report: Report) -> None:
 	values = PARTNER.get_values(row)
 	values["partner_managers"] = _get_managers(row, report)
+	values["offices"] = _get_offices(row, report)
 	existing = get_existing(PARTNER, row["name"], name=row["name"])
 	if existing and frappe.db.exists("Partner", existing):
 		values = _keep_connect_values(existing, values)
@@ -183,6 +185,18 @@ def _keep_connect_values(partner: str, values: dict) -> dict:
 		for field, value in values.items()
 		if field in FRAPPE_IO_OWNED or doc.get(field) in (None, "", [])
 	}
+
+
+def _get_offices(row: dict, report: Report) -> list[dict]:
+	"""frappe.io keeps one address per partner, in a text box. Connect's office needs a city too, as
+	Frappe's Address does, so an address without a city is reported and left out."""
+	address = (row.get("address") or "").strip()
+	city = (row.get("custom_city") or "").strip()
+	if address and not city:
+		report.add("values_dropped", f"{row['name']}: Partner.address has no city, so no office was added")
+	if not (address and city):
+		return []
+	return [{"city": city, "address": address}]
 
 
 def _get_managers(row: dict, report: Report) -> list[dict]:

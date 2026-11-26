@@ -37,6 +37,7 @@ def frappe_io_partner(**values):
 		"country": "India",
 		"custom_state": "Karnataka",
 		"custom_city": "Bengaluru",
+		"address": "12 MG Road, Bengaluru",
 		"custom_foundation_date": "2015-01-01",
 		"custom_team_size": "11-50",
 		"custom_legacy_partner_type": "Gold",
@@ -173,6 +174,9 @@ class TestMigration(IntegrationTestCase):
 		self.assertEqual([row.industry for row in partner.industries], ["Agriculture"])
 		self.assertEqual([row.country for row in partner.served_countries], ["India"])
 		self.assertEqual(partner.city, "Bengaluru")
+		self.assertEqual(
+			[(row.city, row.address) for row in partner.offices], [("Bengaluru", "12 MG Road, Bengaluru")]
+		)
 		self.assertEqual(str(partner.foundation_date), "2015-01-01")
 		self.assertEqual((partner.team_size, partner.legacy_partner_type), ("11-50", "Gold"))
 
@@ -372,6 +376,19 @@ class TestMigration(IntegrationTestCase):
 		self.assertEqual([row.industry for row in partner.industries], ["Agriculture"])
 		self.assertFalse(partner.team_size or partner.legacy_partner_type)
 		self.assertEqual(len(report.lines["values_dropped"]), 4)
+
+	def test_an_address_without_a_city_adds_no_office_and_is_listed(self):
+		exports = make_exports()
+		exports[("frappe.io", "Partner")][0] = frappe_io_partner(custom_city=None)
+
+		report = self.migrate(exports)
+
+		self.assertFalse(report.has_problems(), dict(report.lines))
+		self.assertFalse(frappe.get_doc("Partner", PARTNER_ID).offices)
+		self.assertEqual(
+			report.lines["values_dropped"],
+			[f"{PARTNER_ID}: Partner.address has no city, so no office was added"],
+		)
 
 	def test_a_second_run_keeps_what_partners_edit_in_connect(self):
 		self.migrate()

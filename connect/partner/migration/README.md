@@ -62,7 +62,7 @@ These kinds are information only:
 - `partners_created`, `partners_matched`, `partners_updated`: what happened to each partner.
 - `members_added`: the owners and admins who join their partner.
 - `managers_missing`: a frappe.io success manager who has no Connect login.
-- `values_dropped`: a bad phone, contact email, website, industry, country served, team size or legacy partner type that was left out, so its partner could still come over. It can be added in Connect.
+- `values_dropped`: a bad phone, contact email, website, industry, country served, team size, legacy partner type, or an address without a city, that was left out, so its partner could still come over. It can be added in Connect.
 - `owners_skipped`: a Frappe staff email (`@frappe.io`) named as a partner's user. Staff do not become owners.
 - `partners_deleted_in_Connect`, `applications_deleted_in_Connect`, `audits_deleted_in_Connect`: records an earlier run made that someone has since deleted in Connect. The run leaves them deleted.
 
