@@ -257,6 +257,16 @@ class TestMigration(IntegrationTestCase):
 		self.assertFalse(report.has_problems(), dict(report.lines))
 		self.assertEqual(frappe.db.get_value("Partner", PARTNER_ID, "successful_projects_count"), 60)
 
+	def test_a_team_size_number_fits_its_range(self):
+		for size, expected in (("51", "51-200"), ("8", "1-10"), ("11-50", "11-50"), ("350", "201+")):
+			exports = make_exports()
+			exports[("frappe.io", "Partner")][0] = frappe_io_partner(custom_team_size=size)
+
+			self.migrate(exports)
+
+			self.assertEqual(frappe.db.get_value("Partner", PARTNER_ID, "team_size"), expected, size)
+			frappe.db.rollback()
+
 	def test_a_frappe_io_country_name_becomes_frappes(self):
 		exports = make_exports()
 		exports[("frappe.io", "Partner")][0] = frappe_io_partner(
@@ -406,7 +416,7 @@ class TestMigration(IntegrationTestCase):
 		exports[("frappe.io", "Partner")][0] = frappe_io_partner(
 			phone_number="call us maybe",
 			industry_type=[{"industry": "Agriculture"}, {"industry": "_Test Spaceflight"}],
-			custom_team_size="Around 30",
+			custom_team_size="A few",
 			custom_legacy_partner_type="Platinum",
 		)
 
@@ -419,18 +429,18 @@ class TestMigration(IntegrationTestCase):
 		self.assertFalse(partner.team_size or partner.legacy_partner_type)
 		self.assertEqual(len(report.lines["values_dropped"]), 4)
 
-	def test_an_address_without_a_city_adds_no_office_and_is_listed(self):
+	def test_an_address_without_a_city_gets_the_country_as_its_city(self):
 		exports = make_exports()
 		exports[("frappe.io", "Partner")][0] = frappe_io_partner(custom_city=None)
 
 		report = self.migrate(exports)
 
 		self.assertFalse(report.has_problems(), dict(report.lines))
-		self.assertFalse(frappe.get_doc("Partner", PARTNER_ID).offices)
 		self.assertEqual(
-			report.lines["values_dropped"],
-			[f"{PARTNER_ID}: Partner.address has no city, so no office was added"],
+			[(row.city, row.address) for row in frappe.get_doc("Partner", PARTNER_ID).offices],
+			[("India", "12 MG Road, Bengaluru")],
 		)
+		self.assertNotIn("values_dropped", report.lines)
 
 	def test_a_second_run_keeps_what_partners_edit_in_connect(self):
 		self.migrate()

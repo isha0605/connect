@@ -44,6 +44,21 @@ def with_scheme(url: str) -> str:
 	return url if "://" in url else f"https://{url}"
 
 
+# Connect's team size ranges, by their largest team.
+TEAM_SIZES = ((10, "1-10"), (50, "11-50"), (200, "51-200"))
+
+
+def team_size_range(value: object) -> object:
+	"""The Connect range a frappe.io team size falls in, such as 51-200 for "51". A value that is
+	already a range, or has no number, is kept as it is."""
+	if value in {size for _largest, size in TEAM_SIZES} | {"201+"}:
+		return value
+	size = first_number(value)
+	if not isinstance(size, int):
+		return value
+	return next((range_ for largest, range_ in TEAM_SIZES if size <= largest), "201+")
+
+
 def first_number(value: object) -> object:
 	"""The first whole number in a count typed as text, such as 60 in "60+". A value with no number
 	is kept as it is, so the check reports it."""
@@ -105,6 +120,7 @@ PARTNER = Mapping(
 		"number_of_certified_members": first_number,
 		"total_sites_count": first_number,
 		"successful_projects_count": first_number,
+		"team_size": team_size_range,
 	},
 	files={"logo": "logo"},
 	# frappe.io links one industry and one country; Connect keeps lists of them.
@@ -191,7 +207,7 @@ def _migrate_partner(row: dict, report: Report) -> None:
 	values = PARTNER.get_values(row)
 	country = values.get("country")
 	values["partner_managers"] = _get_managers(row, report)
-	values["offices"] = _get_offices(row, report)
+	values["offices"] = _get_offices(row, country, report)
 	existing = get_existing(PARTNER, row["name"], name=row["name"])
 	if existing and frappe.db.exists("Partner", existing):
 		values = _keep_connect_values(existing, values)
@@ -221,13 +237,15 @@ def _keep_connect_values(partner: str, values: dict) -> dict:
 	}
 
 
-def _get_offices(row: dict, report: Report) -> list[dict]:
-	"""frappe.io keeps one address per partner, in a text box. Connect's office needs a city too, as
-	Frappe's Address does, so an address without a city is reported and left out."""
+def _get_offices(row: dict, country: str | None, report: Report) -> list[dict]:
+	"""frappe.io keeps one address per partner, in a text box. Connect's office needs a city, so a
+	partner without one has its country there, as when Connect moved addresses into offices."""
 	address = (row.get("address") or "").strip()
-	city = (row.get("custom_city") or "").strip()
+	city = (row.get("custom_city") or "").strip() or country
 	if address and not city:
-		report.add("values_dropped", f"{row['name']}: Partner.address has no city, so no office was added")
+		report.add(
+			"values_dropped", f"{row['name']}: Partner.address has no city or country, so no office was added"
+		)
 	if not (address and city):
 		return []
 	return [{"city": city, "address": address}]
