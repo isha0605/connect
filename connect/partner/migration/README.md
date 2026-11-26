@@ -1,6 +1,6 @@
 # Partner data migration
 
-This tool moves partner data from frappe.io and Frappe Cloud (Press) into Connect. It reads both sites through their APIs, maps each source field to a Connect field, and checks every value before it saves. It never writes to frappe.io or Frappe Cloud.
+This tool moves partner data from frappe.io and Frappe Cloud (Press) into Connect. It reads both sites through their APIs, asks only for the fields it maps to a Connect field, and checks every value before it saves. It never writes to frappe.io or Frappe Cloud.
 
 It moves:
 
@@ -50,7 +50,6 @@ These kinds of problem need action. A clean trial run has none of them:
 
 | Kind | Meaning | What to do |
 | --- | --- | --- |
-| `unknown_fields` | A site has a field that no mapping accounts for. The run stops before it saves anything. | Map the field or skip it on purpose in `frappe_io.py` or `press.py`. |
 | `automations_on` | A Notification, Webhook, Assignment Rule or Server Script acts on a DocType the run saves. It would send, assign or call out once for every migrated record. Muting email is not enough: Frappe would still queue the emails and send them after the run. | Switch it off in Desk for the migration, and on again after it. |
 | `failed` | A partner could not be saved. Only that partner was rolled back. The line gives the reason. | Fix the mapping, or the data on frappe.io or Frappe Cloud. |
 | `unmatched` | No partner can take a Frappe Cloud team's records, usually because its frappe.io partner `failed`. | Fix that partner's failure. |
@@ -59,12 +58,11 @@ These kinds of problem need action. A clean trial run has none of them:
 
 These kinds are information only:
 
-- `fields_not_in_source`: a mapped field that no record on the site has.
 - `skipped`: an older copy of a certificate. Connect keeps the newest one for each holder and course.
 - `partners_created`, `partners_matched`, `partners_updated`: what happened to each partner.
 - `members_added`: the owners and admins who join their partner.
 - `managers_missing`: a frappe.io success manager who has no Connect login.
-- `values_dropped`: a bad phone, contact email, website, industry or country served that was left out, so its partner could still come over. The partner can add it in Connect.
+- `values_dropped`: a bad phone, contact email, website, industry, country served, team size, legacy partner type, or an address without a city, that was left out, so its partner could still come over. It can be added in Connect.
 - `owners_skipped`: a Frappe staff email (`@frappe.io`) named as a partner's user. Staff do not become owners.
 - `partners_deleted_in_Connect`, `applications_deleted_in_Connect`, `audits_deleted_in_Connect`: records an earlier run made that someone has since deleted in Connect. The run leaves them deleted.
 
@@ -87,7 +85,7 @@ Only one run can work at a time. If a step stays Queued or Running because its b
 
 You can run the migration again with a new run. Each source record is linked to its Connect record by a **Migration Record**, which you can find in Desk. It does not make copies:
 
-- A frappe.io partner already in Connect gets only the fields frappe.io still owns: email, enabled, and the contract dates. Its other fields are filled only where Connect has nothing. What a partner edits in Connect, and the tier Connect works out, are never overwritten.
+- A frappe.io partner already in Connect gets only the fields frappe.io still owns: email, enabled, the contract dates and the legacy contract. Its other fields are filled only where Connect has nothing. What a partner edits in Connect, and the tier Connect works out, are never overwritten.
 - Press records already in Connect stay as they are.
 - A record deleted in Connect stays deleted.
 

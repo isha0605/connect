@@ -36,6 +36,11 @@ def frappe_io_partner(**values):
 		"partner_name": "Mira Owner",
 		"country": "India",
 		"custom_state": "Karnataka",
+		"custom_city": "Bengaluru",
+		"address": "12 MG Road, Bengaluru",
+		"custom_foundation_date": "2015-01-01",
+		"custom_team_size": "11-50",
+		"custom_legacy_partner_type": "Gold",
 		"show_in_website": 1,
 		"listing_date": "2025-06-01",
 		"route": "partners/india/_test-migrated",
@@ -168,6 +173,12 @@ class TestMigration(IntegrationTestCase):
 		self.assertEqual(str(partner.listed_on), "2025-06-01")
 		self.assertEqual([row.industry for row in partner.industries], ["Agriculture"])
 		self.assertEqual([row.country for row in partner.served_countries], ["India"])
+		self.assertEqual(partner.city, "Bengaluru")
+		self.assertEqual(
+			[(row.city, row.address) for row in partner.offices], [("Bengaluru", "12 MG Road, Bengaluru")]
+		)
+		self.assertEqual(str(partner.foundation_date), "2015-01-01")
+		self.assertEqual((partner.team_size, partner.legacy_partner_type), ("11-50", "Gold"))
 
 	def test_a_press_team_joins_its_frappe_io_partner_by_email(self):
 		self.migrate()
@@ -292,15 +303,6 @@ class TestMigration(IntegrationTestCase):
 		self.assertEqual({doctype: frappe.db.count(doctype) for doctype in counts}, counts)
 		self.assertIn("applications_already_migrated", report.lines)
 
-	def test_an_unknown_field_stops_the_run_before_anything_is_saved(self):
-		exports = make_exports()
-		exports[("frappe.io", "Partner")] = [frappe_io_partner(introduction="We build ERPs.")]
-
-		report = self.migrate(exports)
-
-		self.assertEqual(report.lines["unknown_fields"], ["Partner.introduction"])
-		self.assertFalse(frappe.db.exists("Partner", PARTNER_ID))
-
 	def test_a_bad_partner_fails_alone(self):
 		exports = make_exports()
 		exports[("frappe.io", "Partner")].append(
@@ -362,6 +364,8 @@ class TestMigration(IntegrationTestCase):
 		exports[("frappe.io", "Partner")][0] = frappe_io_partner(
 			phone_number="call us maybe",
 			industry_type=[{"industry": "Agriculture"}, {"industry": "_Test Spaceflight"}],
+			custom_team_size="Around 30",
+			custom_legacy_partner_type="Platinum",
 		)
 
 		report = self.migrate(exports)
@@ -370,7 +374,21 @@ class TestMigration(IntegrationTestCase):
 		partner = frappe.get_doc("Partner", PARTNER_ID)
 		self.assertFalse(partner.phone)
 		self.assertEqual([row.industry for row in partner.industries], ["Agriculture"])
-		self.assertEqual(len(report.lines["values_dropped"]), 2)
+		self.assertFalse(partner.team_size or partner.legacy_partner_type)
+		self.assertEqual(len(report.lines["values_dropped"]), 4)
+
+	def test_an_address_without_a_city_adds_no_office_and_is_listed(self):
+		exports = make_exports()
+		exports[("frappe.io", "Partner")][0] = frappe_io_partner(custom_city=None)
+
+		report = self.migrate(exports)
+
+		self.assertFalse(report.has_problems(), dict(report.lines))
+		self.assertFalse(frappe.get_doc("Partner", PARTNER_ID).offices)
+		self.assertEqual(
+			report.lines["values_dropped"],
+			[f"{PARTNER_ID}: Partner.address has no city, so no office was added"],
+		)
 
 	def test_a_second_run_keeps_what_partners_edit_in_connect(self):
 		self.migrate()

@@ -18,7 +18,6 @@ PARTNER = Mapping(
 	files={"logo": "logo"},
 	tables={"custom_countries_served": Table("served_countries", COUNTRIES)},
 	read_by_rules=frozenset({"user"}),
-	skipped=frozenset({"skype_id"}),
 )
 
 
@@ -51,36 +50,19 @@ class TestMapping(IntegrationTestCase):
 		self.assertNotIn("logo", PARTNER.get_values(row))
 		self.assertEqual(PARTNER.get_file_urls(row), {"logo": "/files/acme.png"})
 
-	def test_every_field_not_accounted_for_is_unknown(self):
-		rows = [
-			{
-				"name": "P-1",
-				"modified": "2026-01-01",
-				"company_name": "Acme",
-				"user": "owner@acme.test",
-				"skype_id": "acme",
-				"introduction": "We build ERPs.",
-				"custom_countries_served": [{"country": "India", "since": "2020"}],
-			}
-		]
-
+	def test_only_the_fields_it_uses_are_read_from_the_source(self):
 		self.assertEqual(
-			PARTNER.get_unknown_fields(rows),
-			{"Partner.introduction", "Partner Countries Served.since"},
-		)
-
-	def test_a_mapped_field_no_row_has_is_reported(self):
-		missing = PARTNER.get_missing_fields([{"company_name": "Acme"}])
-
-		self.assertEqual(
-			missing,
-			{
-				"Partner.partner_type",
-				"Partner.partner_website",
-				"Partner.logo",
-				"Partner.custom_countries_served",
-				"Partner.user",
-			},
+			PARTNER.get_source_fields(),
+			[
+				"name",
+				"creation",
+				"company_name",
+				"partner_type",
+				"partner_website",
+				"logo",
+				"custom_countries_served",
+				"user",
+			],
 		)
 
 

@@ -6,7 +6,6 @@ from frappe.utils import now_datetime
 
 # Kinds of line that mean the data didn't move cleanly. A clean trial run has none of them.
 PROBLEM_KINDS = (
-	"unknown_fields",
 	"automations_on",
 	"failed",
 	"conflicts",

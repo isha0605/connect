@@ -212,16 +212,17 @@ class TestRunningSteps(IntegrationTestCase):
 
 	def test_a_trial_run_lists_what_to_act_on(self):
 		exports = make_exports()
-		exports[("frappe.io", "Partner")] = [frappe_io_partner(introduction="We build ERPs.")]
+		exports[("frappe.io", "Partner")] = [frappe_io_partner(partner_type="Platinum")]
 		run = make_run()
 
 		with job(records=make_records(exports)):
 			run_step(run.name, "Trial Run")
 
 		run.reload()
-		self.assertEqual((run.status, run.is_clean, run.problem_count), ("Trial Done", 0, 1))
-		self.assertEqual(
-			[(row.kind, row.message) for row in run.problems], [("unknown_fields", "Partner.introduction")]
+		self.assertEqual((run.status, run.is_clean), ("Trial Done", 0))
+		self.assertIn(
+			("failed", f"frappe.io Partner {PARTNER_ID}: Partner.tier: no Partner Tier named 'Platinum'"),
+			[(row.kind, row.message) for row in run.problems],
 		)
 
 	def test_a_run_reads_only_its_sources(self):
@@ -234,21 +235,6 @@ class TestRunningSteps(IntegrationTestCase):
 
 		sites.get_clients.assert_called_once_with((frappe_io,))
 		self.assertIn("partners_created: 2", frappe.db.get_value("Partner Migration", run.name, "summary"))
-
-	def test_a_migration_that_meets_a_new_field_saves_nothing_and_fails(self):
-		exports = make_exports()
-		exports[("frappe.io", "Partner")] = [frappe_io_partner(introduction="New since the trial.")]
-		run = make_run()
-
-		with job(records=make_records(exports)) as sites:
-			run_step(run.name, "Migration")
-
-		sites.full_rollback.assert_called_once_with()
-		sites.copy_files.assert_not_called()
-		self.assertFalse(frappe.db.exists("Partner", PARTNER_ID))
-		run.reload()
-		self.assertEqual(run.status, "Failed")
-		self.assertIn("Run a new trial", run.error)
 
 	def test_the_migration_keeps_its_records_and_copies_their_files(self):
 		run = make_run()

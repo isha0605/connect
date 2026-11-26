@@ -1,27 +1,8 @@
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
-# Fields every Frappe record has. Connect sets its own, so they are never copied.
-STANDARD_FIELDS = frozenset(
-	{
-		"name",
-		"owner",
-		"creation",
-		"modified",
-		"modified_by",
-		"docstatus",
-		"idx",
-		"doctype",
-		"parent",
-		"parentfield",
-		"parenttype",
-		"_user_tags",
-		"_comments",
-		"_assign",
-		"_liked_by",
-		"_seen",
-	}
-)
+# Read with every record: `name` ties it to Connect, `creation` orders a team's records.
+SOURCE_STANDARD_FIELDS = ("name", "creation")
 
 Converter = Callable[[object], object] | dict
 
@@ -36,11 +17,8 @@ class Table:
 
 @dataclass(frozen=True)
 class Mapping:
-	"""How rows of one source DocType become values of one Connect DocType.
-
-	Every source field must be copied, noted as a file, read by a rule, or skipped on purpose. Any
-	other field a source record has is reported as unknown and stops the run, so nothing is lost silently.
-	"""
+	"""How rows of one source DocType become values of one Connect DocType. Only the fields it
+	copies, notes as files or reads by a rule are read from the source."""
 
 	source: str
 	source_doctype: str
@@ -54,7 +32,6 @@ class Mapping:
 	# Source table field -> the Connect table its rows go into.
 	tables: dict[str, Table] = field(default_factory=dict)
 	read_by_rules: frozenset[str] = frozenset()
-	skipped: frozenset[str] = frozenset()
 	# Required Connect fields an old source record may have left blank, as the source didn't require them.
 	may_be_blank: frozenset[str] = frozenset()
 	# Optional Connect fields whose bad value is dropped and listed, instead of failing the record.
@@ -79,27 +56,10 @@ class Mapping:
 	def get_file_urls(self, row: dict) -> dict[str, str]:
 		return {target: row[source] for source, target in self.files.items() if row.get(source)}
 
-	def get_unknown_fields(self, rows: Iterable[dict]) -> set[str]:
-		"""Fields the source records have that this mapping doesn't account for, as "DocType.field"."""
-		rows = list(rows)
-		known = STANDARD_FIELDS | set(self.fields) | set(self.files) | set(self.tables)
-		known |= self.read_by_rules | self.skipped
-		unknown = {f"{self.source_doctype}.{name}" for row in rows for name in row if name not in known}
-		for source, table in self.tables.items():
-			children = [child for row in rows for child in row.get(source) or []]
-			unknown |= table.mapping.get_unknown_fields(children)
-		return unknown
-
-	def get_missing_fields(self, rows: Iterable[dict]) -> set[str]:
-		"""Mapped fields that no source record has: a wrong guess at a field name, or a field the
-		source doesn't send."""
-		rows = list(rows)
-		if not rows:
-			return set()
-
-		expected = set(self.fields) | set(self.files) | set(self.tables) | self.read_by_rules
-		present = {name for row in rows for name in row}
-		return {f"{self.source_doctype}.{name}" for name in expected - present}
+	def get_source_fields(self) -> list[str]:
+		"""The fields to read from the source: nothing else leaves the source site."""
+		fields = [*self.fields, *self.files, *self.tables, *sorted(self.read_by_rules)]
+		return [*SOURCE_STANDARD_FIELDS, *(name for name in fields if name not in SOURCE_STANDARD_FIELDS)]
 
 	def _convert(self, target: str, value):
 		converter = self.convert.get(target)

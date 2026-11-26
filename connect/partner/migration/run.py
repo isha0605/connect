@@ -69,13 +69,11 @@ def read_sources(clients: dict) -> dict:
 
 
 def migrate(records: dict) -> Report:
-	"""Checks the records' fields and migrates them unless a field is unknown. Leaves committing or
-	rolling back to the caller."""
+	"""Migrates the records, after listing the automations that would act on them. Leaves committing
+	or rolling back to the caller."""
 	report = Report()
-	_check_fields(records, report)
 	_check_automations(records, report)
-	if not report.lines.get("unknown_fields"):
-		_migrate(records, report)
+	_migrate(records, report)
 	return report
 
 
@@ -89,16 +87,6 @@ def write_snapshot(records: dict, folder: str | Path) -> Path:
 			path.parent.mkdir(parents=True, exist_ok=True)
 			path.write_text(json.dumps(records_of_doctype, indent=1, default=str), encoding="utf-8")
 	return folder
-
-
-def _check_fields(records: dict, report: Report) -> None:
-	"""Lists every field the mappings don't account for, and every mapped field no record has."""
-	for source, rows in records.items():
-		for mapping in source.MAPPINGS:
-			for field in sorted(mapping.get_unknown_fields(rows[mapping.source_doctype])):
-				report.add("unknown_fields", field)
-			for field in sorted(mapping.get_missing_fields(rows[mapping.source_doctype])):
-				report.add("fields_not_in_source", field)
 
 
 def _check_automations(records: dict, report: Report) -> None:
