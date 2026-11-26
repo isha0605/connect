@@ -102,7 +102,8 @@ You can run the migration again with a new run. Each source record is linked to 
 | Non-conformance evidence | Partner Non Conformance | Yes |
 
 - A field that already has a file in Connect keeps it. The step never replaces a file.
-- A file that cannot be copied is listed as `files_failed` with the reason: not found, refused, too large for the upload limit in System Settings, or a PDF that cannot be read. The other files carry on.
+- A file that cannot be copied is listed as `files_failed` with the reason: not found, refused, too large for the upload limit in System Settings, or a PDF or image that cannot be read. The other files carry on.
+- A JPEG too big for Frappe to open safely (over about 179 million pixels) is saved as a copy whose longest side is 4,096 pixels, and listed as `files_resized`. Upload the original by hand if the copy is not enough.
 - Each file is saved as soon as it is copied. If copying stops, the records stay migrated.
 - To try the missing files again, click **Copy Files** on a migrated run. It reads no records again and copies only the files that are still missing.
 - The step sends a site's API key only to that site. A file kept on another host is downloaded without a key.
