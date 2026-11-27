@@ -251,13 +251,13 @@
          "slotContent": [
           {
            "baseStyles": {
-            "padding": "32px 20px 64px"
+            "padding": "32px 20px 96px"
            },
            "children": [
             {
              "baseStyles": {
               "margin": "0 auto",
-              "maxWidth": "900px",
+              "maxWidth": "800px",
               "width": "100%"
              },
              "children": [
@@ -283,14 +283,15 @@
                 "display": "flex",
                 "flexDirection": "column",
                 "flexWrap": "nowrap",
-                "gap": "48px"
+                "gap": "0px"
                },
                "children": [
                 {
                  "baseStyles": {
                   "display": "flex",
                   "flexDirection": "column",
-                  "gap": "8px"
+                  "gap": "8px",
+                  "marginBottom": "{{ profile && !canEdit ? '16px' : '0px' }}"
                  },
                  "children": [
                   {
@@ -326,9 +327,9 @@
                  "children": [
                   {
                    "baseStyles": {
-                    "alignItems": "center",
+                    "alignItems": "flex-start",
                     "display": "flex",
-                    "gap": "16px"
+                    "gap": "12px"
                    },
                    "children": [
                     {
@@ -340,8 +341,8 @@
                       "backgroundSize": "contain",
                       "borderRadius": "10px",
                       "flexShrink": "0",
-                      "height": "48px",
-                      "width": "48px"
+                      "height": "{{ (profile.logo_icon || profile.logo) ? '46px' : '48px' }}",
+                      "width": "{{ (profile.logo_icon || profile.logo) ? '46px' : '48px' }}"
                      },
                      "componentId": "name-logo",
                      "componentName": "container",
@@ -390,7 +391,7 @@
                      "baseStyles": {
                       "display": "flex",
                       "flexDirection": "column",
-                      "gap": "2px",
+                      "gap": "0px",
                       "minWidth": "0px",
                       "flex": "1 1 0px"
                      },
@@ -405,16 +406,14 @@
                         {
                          "baseStyles": {
                           "color": "var(--ink-gray-9)",
-                          "fontSize": "18px",
-                          "fontWeight": "600",
-                          "letterSpacing": "0.02em",
-                          "lineHeight": "26px"
+                          "fontWeight": "600"
                          },
                          "componentId": "name-value",
                          "componentName": "TextBlock",
                          "componentProps": {
                           "tag": "h2",
-                          "text": "{{ listingName }}"
+                          "text": "{{ listingName }}",
+                          "fontSize": "text-xl"
                          },
                          "componentSlots": {}
                         },
@@ -475,17 +474,15 @@
                       },
                       {
                        "baseStyles": {
-                        "color": "{{ profile.tagline ? 'var(--ink-gray-7)' : 'var(--ink-gray-5)' }}",
-                        "fontSize": "15px",
-                        "fontWeight": "420",
-                        "letterSpacing": "0.02em",
-                        "lineHeight": "22px"
+                        "color": "{{ profile.tagline ? 'var(--ink-gray-6)' : 'var(--ink-gray-5)' }}",
+                        "padding": "4px 0"
                        },
                        "componentId": "name-tagline",
                        "componentName": "TextBlock",
                        "componentProps": {
                         "tag": "p",
-                        "text": "{{ profile.tagline || 'No tagline yet' }}"
+                        "text": "{{ profile.tagline || 'No tagline yet' }}",
+                        "fontSize": "text-p-base"
                        },
                        "componentSlots": {},
                        "visibilityCondition": "!isEditing"
@@ -581,7 +578,8 @@
                  "baseStyles": {
                   "display": "flex",
                   "flexDirection": "column",
-                  "gap": "20px"
+                  "gap": "16px",
+                  "marginTop": "96px"
                  },
                  "children": [
                   {
@@ -699,7 +697,7 @@
                        "slotContent": [
                         {
                          "baseStyles": {
-                          "borderBottom": "1px solid var(--outline-gray-1)",
+                          "borderBottom": "{{ dataItem === shownReviews[shownReviews.length - 1] ? 'none' : '1px solid var(--outline-gray-1)' }}",
                           "display": "flex",
                           "flexDirection": "column",
                           "gap": "10px",
@@ -929,7 +927,10 @@
                  "componentName": "partnerprofilestories",
                  "componentProps": {},
                  "componentSlots": {},
-                 "isStudioComponent": true
+                 "isStudioComponent": true,
+                 "baseStyles": {
+                  "marginTop": "96px"
+                 }
                 }
                ],
                "componentId": "pl-listing",
@@ -1271,7 +1272,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-27 12:00:00.000000",
+ "modified": "2026-11-27 12:15:11.557769",
  "modified_by": "tridots@example.com",
  "name": "partner_listing",
  "owner": "Administrator",
