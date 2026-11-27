@@ -9,6 +9,7 @@ import { toast } from "frappe-ui"
 import { BILLING, STAGES, approveLink, isWaitingToLink, money, toCustomer } from "@app/utils/partnerCustomers"
 import { matchesFilters } from "@app/utils/listFilters"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const STAGE_CHOICES = Object.keys(STAGES).map((stage) => ({ label: stage, value: stage }))
 const STAGE_OPTIONS = [{ label: "Any stage", value: "" }, ...STAGE_CHOICES]
@@ -162,6 +163,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext: useMyContext(),
 		view,
 		views: VIEWS,
 		query,

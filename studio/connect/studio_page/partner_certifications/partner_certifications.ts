@@ -7,6 +7,7 @@
 
 import { computed, onScopeDispose, ref } from "vue"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const API = "connect.api.partner"
 const COURSES = [
@@ -280,6 +281,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext: useMyContext(),
 		status,
 		loadError,
 		loading,

@@ -10,6 +10,7 @@ import { useProfileView } from "@app/utils/profileView"
 import { onPreviewChange, readPreview, withPreview } from "@app/utils/profilePreview"
 import { goToSignIn } from "@app/utils/signIn"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const HERO_CONNECT = "contact-btn-ppr"
 const HEADER = "header-row-ppr"
@@ -34,6 +35,7 @@ function profileOf(record) {
 export default function setup(context) {
 	startTracking(context)
 	const { route, partner, showHeaderConnect, selectedStoryIndustry, toast } = context
+	const myContext = useMyContext()
 
 	// Reviews: only the partner's real customers write one (hired on Connect, or asked by the
 	// partner). ?review=1, from a review request the customer just confirmed, opens the form until
@@ -129,7 +131,7 @@ export default function setup(context) {
 	const isEditing = ref(false)
 	const profile = computed(() => profileOf(partner.data))
 	const stories = computed(() => partner.data?.success_stories || [])
-	const customerCurrency = computed(() => viewerCurrency(context.myContext?.data))
+	const customerCurrency = computed(() => viewerCurrency(myContext.data))
 	const view = useProfileView({ profile, stories, isEditing, selectedStoryIndustry, forCustomers: true, viewerCurrency: customerCurrency })
 
 	// Each Partner Photo is an image, or a video with the image as its cover. Kept in the
@@ -184,6 +186,7 @@ export default function setup(context) {
 	onScopeDispose(() => window.removeEventListener("keydown", onGalleryKey))
 
 	return {
+		myContext,
 		...connecting,
 		...view,
 		isEditing,

@@ -23,6 +23,7 @@ import {
 import { useProfileAutosave } from "@app/utils/profileAutosave"
 import { openInNewTab, useProfileView } from "@app/utils/profileView"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const SUBMIT_STORY_URL = "https://frappe.io/partners"
 const REVIEWS_SHOWN = 4
@@ -315,6 +316,7 @@ export default function setup(context) {
 	const options = computed(() => profile.value?.options || {})
 
 	return {
+		myContext: useMyContext(),
 		...view,
 		profile,
 		loadError,

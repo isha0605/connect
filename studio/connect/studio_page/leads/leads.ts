@@ -8,6 +8,7 @@ import { PRM_STAGES, PROBABILITY, lastAt, leadTitle, ownerOptions, requirementBa
 import { matchesFilters } from "@app/utils/listFilters"
 import { clockOrDate } from "@app/utils/partnerRecords"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const VIEWS = [
 	{ label: "All leads", value: "all", icon: "lucide-list" },
@@ -168,6 +169,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext: useMyContext(),
 		view,
 		currentView,
 		viewMenu,

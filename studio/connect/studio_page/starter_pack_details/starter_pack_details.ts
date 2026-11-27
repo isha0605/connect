@@ -6,6 +6,7 @@ import { computed } from "vue"
 import { keyboardAccess } from "@app/utils/keyboard"
 import { STARTER_PACK_TERMS, starterPackCart } from "@app/utils/starterPackCart"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const SETUP = {
 	key: "setup",
@@ -139,5 +140,5 @@ export default function setup(context) {
 	const packKey = computed(() => (String(route.query.pack || "") in PACKS ? String(route.query.pack) : "core"))
 	const pack = computed(() => PACKS[packKey.value])
 
-	return { ...starterPackCart(context), pack, packKey, terms: STARTER_PACK_TERMS }
+	return { myContext: useMyContext(), ...starterPackCart(context), pack, packKey, terms: STARTER_PACK_TERMS }
 }

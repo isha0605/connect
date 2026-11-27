@@ -2,6 +2,7 @@ import { ref, watch } from "vue"
 import { toast, call, useFileUpload } from "frappe-ui"
 import { signOut } from "@app/utils/signIn"
 import { takeStashedRegistration, usePartnerRegistration } from "@app/utils/partnerRegistration"
+import { useMyContext } from "@app/utils/myContext"
 
 // Port of Press's dashboard/src/onboarding (PartnerOnboarding.vue + usePartnerOnboarding.ts and
 // its dialogs) onto connect's Partner Application API: Press's Team is connect's Partner, so every
@@ -100,6 +101,8 @@ function pickFile(accept, onFile) {
 }
 
 export default function setup(context) {
+	const myContext = useMyContext()
+
 	// ---- Application + status ----
 	const certificateStatus = ref({ ...EMPTY_CERTIFICATE_STATUS })
 	const mrrStatus = ref({ current_amount: 0, target_amount: 100, currency: "USD", progress: 0, requirement_complete: false })
@@ -111,13 +114,13 @@ export default function setup(context) {
 	}
 
 	function amPartner() {
-		return !!(context.myContext.data && context.myContext.data.partner)
+		return !!(myContext.data && myContext.data.partner)
 	}
 
 	// Logged in, but not on any partner's roster -- get_partner_application can't resolve a
 	// partner for them, so the page shows a notice instead of a checklist that can't save.
 	function notPartner() {
-		return !!context.myContext.fetched && !amPartner()
+		return !!myContext.fetched && !amPartner()
 	}
 
 	function isRegistered() {
@@ -309,10 +312,10 @@ export default function setup(context) {
 	// again first, so the sidebar swaps Overview for the partner pages.
 	const LISTING_ROUTE = "/partner-listing"
 	function goToListing() {
-		Promise.resolve(context.myContext.reload?.()).finally(() => context.router.replace(LISTING_ROUTE))
+		Promise.resolve(myContext.reload?.()).finally(() => context.router.replace(LISTING_ROUTE))
 	}
 	watch(
-		() => !!context.myContext.data?.partner?.is_approved,
+		() => !!myContext.data?.partner?.is_approved,
 		(approved) => approved && context.router.replace(LISTING_ROUTE),
 		{ immediate: true },
 	)
@@ -463,7 +466,7 @@ export default function setup(context) {
 		partnershipSaving.value = true
 		return call(`${API}.save_partner_application`, { details: details || registration.partnershipDetails() })
 			// A first registration makes the partner: myContext now names it, so the checklist shows.
-			.then(() => (registersPartner ? context.myContext.reload() : reloadApplication()))
+			.then(() => (registersPartner ? myContext.reload() : reloadApplication()))
 			.then(() => {
 				if (editing) {
 					partnershipWizardOpen.value = false
@@ -487,7 +490,7 @@ export default function setup(context) {
 	// details they already filled in, then show the same "thank you" screen Press shows. Someone
 	// new is on no partner's team yet, so only an existing partner waits for its application.
 	watch(
-		() => !!context.myContext.fetched && (!amPartner() || !!context.partnerApplication.fetched),
+		() => !!myContext.fetched && (!amPartner() || !!context.partnerApplication.fetched),
 		(ready) => {
 			if (!ready || isRegistered()) return
 			const stash = takeStashedRegistration()
@@ -817,6 +820,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext,
 		notPartner,
 		isRegistered,
 		canEditDraft,

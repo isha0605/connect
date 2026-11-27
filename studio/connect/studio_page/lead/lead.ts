@@ -19,6 +19,7 @@ import {
 } from "@app/utils/partnerRecords"
 import { revealLatestMessage, useConversation } from "@app/utils/partnerConversation"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const TABS = [
 	{ value: "messages", label: "Messages", iconLeft: "lucide-message-square" },
@@ -262,6 +263,7 @@ export default function setup(context) {
 	)
 
 	return {
+		myContext: useMyContext(),
 		lead,
 		loading,
 		closed,

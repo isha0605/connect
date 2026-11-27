@@ -13,6 +13,7 @@ import { computed, watch } from "vue"
 import { orderKey, rememberOrderKey } from "@app/utils/checkoutSession"
 import { keyboardAccess } from "@app/utils/keyboard"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 export default function setup(context) {
 	startTracking(context)
@@ -22,7 +23,6 @@ export default function setup(context) {
 		router,
 		call,
 		toast,
-		myContext,
 		catalog,
 		checkoutName,
 		checkoutEmail,
@@ -33,6 +33,7 @@ export default function setup(context) {
 		orderData,
 		loadError,
 	} = context
+	const myContext = useMyContext()
 
 	const referenceId = String(route.query.reference_id || "")
 	const packKeys = String(route.query.packs || "").split(",").filter(Boolean)
@@ -167,6 +168,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext,
 		isGuest,
 		money,
 		lines,

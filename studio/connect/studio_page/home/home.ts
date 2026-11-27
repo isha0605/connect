@@ -98,6 +98,7 @@ function sendPartnersHome(router) {
 export default function setup(context) {
 	startTracking(context)
 	const { router, myProfile, projectList, myShortlist } = context
+	const myContext = useMyContext()
 	sendPartnersHome(router)
 
 	// ---- Greeting ----
@@ -158,7 +159,7 @@ export default function setup(context) {
 
 	// In the partner's currency, as the partner directory shows it.
 	function partnerRate(p) {
-		return p.hourly_rate ? hourlyRate(p.hourly_rate, p.currency, viewerCurrency(context.myContext?.data)) : "Undisclosed"
+		return p.hourly_rate ? hourlyRate(p.hourly_rate, p.currency, viewerCurrency(myContext.data)) : "Undisclosed"
 	}
 
 	function partnerRating(p) {
@@ -190,6 +191,7 @@ export default function setup(context) {
 
 
 	return {
+		myContext,
 		...dialog,
 		greeting,
 		projects,

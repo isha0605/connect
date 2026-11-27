@@ -28,6 +28,7 @@ import {
 } from "@app/utils/partnerRecords"
 import { revealLatestMessage, useConversation } from "@app/utils/partnerConversation"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const CONTACT_FIELDS = [
 	{ key: "contact", label: "Name", type: "text" },
@@ -237,6 +238,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext: useMyContext(),
 		customer,
 		loadingSaved: loading,
 		crumb: computed(() => customer.value?.name || (loading.value ? "" : "Not found")),

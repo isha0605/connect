@@ -9,6 +9,7 @@
 import { computed, ref } from "vue"
 import { rememberOrderKey } from "@app/utils/checkoutSession"
 import { track } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const STORAGE_KEY = "connect_starter_pack_cart"
 const DEFAULT_GST_RATE = 18
@@ -113,7 +114,8 @@ function priced(key) {
 }
 
 export function starterPackCart(context) {
-	const { router, myContext, call, toast } = context
+	const { router, call, toast } = context
+	const myContext = useMyContext()
 
 	if (!catalogRequested && call) {
 		catalogRequested = true

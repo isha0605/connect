@@ -1,14 +1,21 @@
+<script>
+import { ref } from "vue"
+
+// Every page mounts its own sidebar, so the count lives here, once per tab: the next page's
+// badge shows the last count at once and recounts quietly, instead of starting from 0.
+const unread = ref(0)
+</script>
+
 <script setup>
 // The sidebar's Notifications item, which owns the unread count: a red dot on the bell while the
 // sidebar is collapsed, the number beside the label while it is open. A notification that
 // arrives while a page is open also pops up as a toast. Clicking opens ConnectNotifications.
-import { getCurrentInstance, onBeforeUnmount, onMounted, ref } from "vue"
+import { getCurrentInstance, onBeforeUnmount, onMounted } from "vue"
 import { Badge, SidebarItem, call, toast } from "frappe-ui"
 import { LOG_API, bodyOf, categoryOf, titleOf } from "@app/utils/notificationLogs"
 
 const TOAST_CHECK_LIMIT = 5
 
-const unread = ref(0)
 const router = getCurrentInstance()?.appContext.config.globalProperties.$router
 // The newest notification already on screen when the page opened, or already toasted.
 let newestSeen = ""

@@ -5,6 +5,7 @@
 
 import { computed, ref, watch } from "vue"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const BILLING_URL = "https://frappecloud.com/dashboard/billing"
 const NOT_YET = "Not available yet. Invoices will come from Frappe Cloud."
@@ -68,7 +69,8 @@ function monthLabel(month) {
 
 export default function setup(context) {
 	startTracking(context)
-	const { toast, openInvoice, myContext } = context
+	const { toast, openInvoice } = context
+	const myContext = useMyContext()
 
 	const months = Object.keys(SAMPLE_BILLS).sort().reverse()
 	const month = ref(months[0])
@@ -98,6 +100,7 @@ export default function setup(context) {
 	const selected = computed(() => bill.value.invoices.find((row) => row.name === openInvoice.value) || null)
 
 	return {
+		myContext,
 		breadcrumbItems: [{ label: "Invoices", route: "/partner-invoicing" }],
 		openBilling: () => window.open(BILLING_URL, "_blank", "noopener"),
 		month,

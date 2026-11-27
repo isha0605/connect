@@ -6,6 +6,7 @@
 
 import { computed, onScopeDispose, ref, watch } from "vue"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const AUDIT_TYPES = ["Online", "In-Person", "Hybrid"]
 const AUDIT_STATUSES = ["Requested", "Scheduled", "In Progress", "Completed", "On Hold", "Cancelled"]
@@ -343,6 +344,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext: useMyContext(),
 		rows,
 		dateFilter,
 		statusFilter,
