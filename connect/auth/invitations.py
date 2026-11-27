@@ -10,7 +10,7 @@ from frappe.utils import add_days, get_url, now_datetime
 from connect.auth.accounts import landing_page
 
 INVITE_DAYS = 7
-SIGN_IN_PAGE = "/connect/login-signup-redesign"
+SIGN_IN_PAGE = "/connect/login-signup"
 # The company each kind of member row belongs to: (link field, doctype, name field).
 COMPANIES = {
 	"Connect Partner Member": ("partner", "Partner", "company_name"),

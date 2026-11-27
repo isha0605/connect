@@ -24,7 +24,7 @@ const PARTNER_PAGES = [
 const CUSTOMER_PAGES = [
 	{ label: "Projects", icon: "lucide-briefcase", route: "/projects", isShown: (context) => context.has_projects },
 	{ label: "Messages", icon: "lucide-inbox", route: "/messaging" },
-	{ label: "Partners", icon: "lucide-building-2", route: "/partner-directory-redesign" },
+	{ label: "Partners", icon: "lucide-building-2", route: "/partner-directory" },
 ]
 
 // What each kind of user searches: the lists to load and the result groups found in them.
@@ -226,7 +226,7 @@ function partnerRow(partner) {
 		key: "partner:" + partner.name,
 		label: partner.company_name,
 		icon: "lucide-building-2",
-		route: "/partner-profile-redesign/" + encodeURIComponent(partner.name),
+		route: "/partner-profile/" + encodeURIComponent(partner.name),
 	}
 }
 

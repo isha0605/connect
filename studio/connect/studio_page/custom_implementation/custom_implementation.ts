@@ -213,7 +213,7 @@ export default function setup(context) {
 	}
 
 	function openPartnerProfile(row) {
-		router.push(`/partner-profile-redesign/${encodeURIComponent(row.partner)}`)
+		router.push(`/partner-profile/${encodeURIComponent(row.partner)}`)
 	}
 
 	// Message is on every row, so More holds the brochure and Not interested.
@@ -504,7 +504,7 @@ export default function setup(context) {
 	const reviewAskOpen = ref(false)
 	function reviewPartner() {
 		reviewAskOpen.value = false
-		if (hired.value) router.push({ path: `/partner-profile-redesign/${encodeURIComponent(hired.value.partner)}`, query: { review: "1" } })
+		if (hired.value) router.push({ path: `/partner-profile/${encodeURIComponent(hired.value.partner)}`, query: { review: "1" } })
 	}
 
 	// The Partner panel: who was hired, and on what quote.
@@ -513,7 +513,7 @@ export default function setup(context) {
 		if (hired.value?.thread) router.push({ path: "/messaging", query: { thread: hired.value.thread } })
 	}
 	function viewPartnerProfile() {
-		if (hired.value) router.push(`/partner-profile-redesign/${encodeURIComponent(hired.value.partner)}`)
+		if (hired.value) router.push(`/partner-profile/${encodeURIComponent(hired.value.partner)}`)
 	}
 	// The Requirement card as partners got it, in the first thread it went to.
 	const briefThread = computed(() => project.value?.brief_thread || "")

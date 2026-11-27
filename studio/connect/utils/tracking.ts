@@ -98,7 +98,7 @@ function landingDetails(to) {
 	return details
 }
 
-// "/partner-profile-redesign/:partner_id", not one route per partner
+// "/partner-profile/:partner_id", not one route per partner
 function routePattern(to) {
 	return to.matched?.[to.matched.length - 1]?.path || to.path
 }

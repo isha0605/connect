@@ -115,7 +115,7 @@ export default function setup(context) {
 			router.push({ path: "/starter-pack-recommendation", query: answersToQuery(answers()) })
 		} else {
 			router.push({
-				path: "/partner-directory-redesign",
+				path: "/partner-directory",
 				query: directoryQuery(answers(), partnerCountries.data || []),
 			})
 		}
@@ -265,7 +265,7 @@ export default function setup(context) {
 		if (!signedIn.value) {
 			keepBrief()
 			const next = router.resolve({ path: route.path, query: { intent: "contact", details: "1" } }).fullPath
-			router.push({ path: "/login-signup-redesign", query: { next } })
+			router.push({ path: "/login-signup", query: { next } })
 			return
 		}
 		openShare()
@@ -381,7 +381,7 @@ export default function setup(context) {
 		liveMatchCount.value === 1 ? "Partner that matches your answers" : "Partners that match your answers",
 	)
 	function viewAllPartners() {
-		router.push({ path: "/partner-directory-redesign", query: directoryQuery(answers(), partnerCountries.data || []) })
+		router.push({ path: "/partner-directory", query: directoryQuery(answers(), partnerCountries.data || []) })
 	}
 
 	// Their country as the partners' country names it, when partners are there; the server

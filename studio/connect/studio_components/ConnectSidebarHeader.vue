@@ -33,7 +33,7 @@ const settings = computed(() => {
 
 // Log in returns them to their own home, not this page (see connect.auth.accounts.landing_page).
 const guestMenuItems = computed(() => [
-	{ label: "Log in", icon: props.icons.logIn, onClick: () => (window.location.href = "/connect/login-signup-redesign?screen=login") },
+	{ label: "Log in", icon: props.icons.logIn, onClick: () => (window.location.href = "/connect/login-signup?screen=login") },
 	themeMenu.value,
 ])
 

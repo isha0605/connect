@@ -186,7 +186,7 @@ export function starterPackCart(context) {
 		if (!packs.length || checkingOut.value) return
 		track("checkout_started", { packs: packs.join(","), signed_in: !isGuest.value })
 		if (isGuest.value) {
-			router.push({ path: "/login-signup-redesign", query: { next: "/starter-pack-cart" } })
+			router.push({ path: "/login-signup", query: { next: "/starter-pack-cart" } })
 			return
 		}
 		const account = myContext.data

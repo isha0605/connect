@@ -107,7 +107,7 @@ export default function setup(context) {
 	const dialog = projectDialog()
 
 	function changeAnswers() {
-		router.push({ path: "/find-partners-redesign", query: answersToQuery(answers.value || {}) })
+		router.push({ path: "/find-partners", query: answersToQuery(answers.value || {}) })
 	}
 
 	const projectMenu = [{ label: "Change my answers", icon: "lucide-pencil", onClick: changeAnswers }]
@@ -128,7 +128,7 @@ export default function setup(context) {
 
 	function getQuotes() {
 		router.push({
-			path: "/partner-directory-redesign",
+			path: "/partner-directory",
 			query: directoryQuery(answers.value || {}, partnerCountries.data || []),
 		})
 	}

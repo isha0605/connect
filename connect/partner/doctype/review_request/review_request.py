@@ -356,7 +356,7 @@ def accept_request(token: str, full_name: str | None = None, company_name: str |
 		doc.accept(get_customer_for_user(user_name))
 		frappe.local.login_manager.login_as(user_name)
 
-	return {"redirect": f"/connect/partner-profile-redesign/{doc.partner}?review=1"}
+	return {"redirect": f"/connect/partner-profile/{doc.partner}?review=1"}
 
 
 def decline_request(token: str, reason: str | None = None) -> None:

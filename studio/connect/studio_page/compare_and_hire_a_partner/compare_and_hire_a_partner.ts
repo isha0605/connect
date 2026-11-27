@@ -114,7 +114,7 @@ export default function setup(context) {
 			{
 				label: "View profile",
 				icon: "lucide-user",
-				onClick: () => router.push(`/partner-profile-redesign/${encodeURIComponent(row.partner)}`),
+				onClick: () => router.push(`/partner-profile/${encodeURIComponent(row.partner)}`),
 			},
 		]
 	}

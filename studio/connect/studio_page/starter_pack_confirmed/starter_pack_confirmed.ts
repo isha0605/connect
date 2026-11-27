@@ -246,7 +246,7 @@ export default function setup(context) {
 	}
 
 	function visitPartnerProfile() {
-		if (partner.value) router.push(`/partner-profile-redesign/${partner.value.name}`)
+		if (partner.value) router.push(`/partner-profile/${partner.value.name}`)
 	}
 
 	function backToStarterPacks() {

@@ -72,7 +72,7 @@ export function packBasket(context) {
 		if (route?.query?.project) query.project = String(route.query.project)
 		if (isGuest.value) {
 			const next = router.resolve({ path: "/starter-pack-checkout", query }).fullPath
-			router.push({ path: "/login-signup-redesign", query: { next } })
+			router.push({ path: "/login-signup", query: { next } })
 		} else {
 			router.push({ path: "/starter-pack-checkout", query })
 		}

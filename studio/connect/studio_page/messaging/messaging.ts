@@ -354,7 +354,7 @@ export default function setup(context) {
 		const profile = {
 			icon: "lucide-building-2",
 			label: "View profile",
-			onClick: () => context.router.push(`/partner-profile-redesign/${encodeURIComponent(thread.partner)}`),
+			onClick: () => context.router.push(`/partner-profile/${encodeURIComponent(thread.partner)}`),
 		}
 		return [profile, ...media]
 	}
