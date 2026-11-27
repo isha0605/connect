@@ -86,7 +86,10 @@ def certificate(name, issue_date, **values):
 		"partner_member_email": HOLDER,
 		"partner_member_name": "Asha Holder",
 		"issue_date": issue_date,
-		"certificate_link": f"https://school.frappe.io/certificates/{name}/",
+		"certificate_link": (
+			"https://school.frappe.io/api/method/frappe.utils.print_format.download_pdf"
+			f"?doctype=LMS+Certificate&name={name}&format=FS Certificate"
+		),
 		**values,
 	}
 
