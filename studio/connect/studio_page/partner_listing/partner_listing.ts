@@ -113,7 +113,7 @@ export default function setup(context) {
 	const markImage = computed(() => imageTile(draft.value.logo_icon || draft.value.logo))
 
 	function copyProfileLink() {
-		const path = router.resolve(`/partner-profile-redesign/${encodeURIComponent(liveProfile.value.partner)}`).href
+		const path = router.resolve(`/partner-profile/${encodeURIComponent(liveProfile.value.partner)}`).href
 		const link = new URL(path, window.location.origin).href
 		navigator.clipboard
 			.writeText(link)

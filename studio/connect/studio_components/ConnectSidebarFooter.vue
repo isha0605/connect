@@ -23,7 +23,7 @@ const name = computed(() => {
 const menuItems = computed(() => [themeMenu.value, { label: "Log out", icon: props.icons.logOut, onClick: logOut }])
 
 function logOut() {
-	call("logout").then(() => (window.location.href = "/connect/partner-directory-redesign"))
+	call("logout").then(() => (window.location.href = "/connect/partner-directory"))
 }
 </script>
 

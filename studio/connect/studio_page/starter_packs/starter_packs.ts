@@ -28,7 +28,7 @@ export default function setup(context) {
 	}
 
 	function getQuotes() {
-		router.push("/partner-directory-redesign")
+		router.push("/partner-directory")
 	}
 
 	return {

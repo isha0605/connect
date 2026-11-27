@@ -2,7 +2,7 @@
 // which is Desk's. The sign-in page comes back to `next` afterwards: by default, the page the
 // person is on. Block scripts can't import this, so they build the same URL inline.
 
-export const SIGN_IN_PAGE = "/connect/login-signup-redesign"
+export const SIGN_IN_PAGE = "/connect/login-signup"
 
 // screen: "login" or "signup"; left out, the page picks (Create your account, when there's a
 // page to go back to).

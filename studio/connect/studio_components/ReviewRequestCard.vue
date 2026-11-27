@@ -12,7 +12,7 @@ const props = defineProps({
 })
 
 const API = "connect.api.review_requests"
-const SIGN_IN = "/connect/login-signup-redesign?screen=login"
+const SIGN_IN = "/connect/login-signup?screen=login"
 
 // "loading" | "ready" | "declining" | "declined" | "invalid"
 const state = ref("loading")

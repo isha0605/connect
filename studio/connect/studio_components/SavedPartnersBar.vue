@@ -7,7 +7,7 @@ import { Button, createResource } from "frappe-ui"
 const props = defineProps({
 	// Saved partner names: the account's list, or the browser's for a signed-out visitor.
 	names: { type: Array, default: () => [] },
-	route: { type: String, default: "/shortlisted-redesign" },
+	route: { type: String, default: "/saved-partners" },
 })
 
 const LOGOS_SHOWN = 3

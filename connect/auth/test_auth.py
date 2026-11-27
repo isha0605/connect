@@ -250,7 +250,7 @@ class IntegrationTestEmailCodeSignIn(IntegrationTestCase):
 		with patch("connect.auth.accounts.home_is_published", return_value=True):
 			self.assertEqual(landing_page(email), "/connect/home")
 		with patch("connect.auth.accounts.home_is_published", return_value=False):
-			self.assertEqual(landing_page(email), "/connect/partner-directory-redesign")
+			self.assertEqual(landing_page(email), "/connect/partner-directory")
 
 	# ---- Consultants ----
 

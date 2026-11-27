@@ -63,7 +63,7 @@ function actionsFor(request) {
 			label: "View review",
 			icon: "lucide-star",
 			condition: () => request.status === "Reviewed" && !request.is_review_hidden,
-			onClick: () => window.open(`/connect/partner-profile-redesign/${encodeURIComponent(request.partner)}`, "_blank"),
+			onClick: () => window.open(`/connect/partner-profile/${encodeURIComponent(request.partner)}`, "_blank"),
 		},
 		{
 			label: "Withdraw",

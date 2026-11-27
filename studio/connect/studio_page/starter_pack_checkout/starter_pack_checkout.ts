@@ -46,7 +46,7 @@ export default function setup(context) {
 			if (!data) return
 			if (data.user === "Guest") {
 				if (!referenceId && packKeys.length) {
-					router.replace({ path: "/login-signup-redesign", query: { next: route.fullPath } })
+					router.replace({ path: "/login-signup", query: { next: route.fullPath } })
 				}
 				return
 			}
@@ -136,7 +136,7 @@ export default function setup(context) {
 
 	function payNow() {
 		if (isGuest.value) {
-			router.push({ path: "/login-signup-redesign", query: { next: route.fullPath } })
+			router.push({ path: "/login-signup", query: { next: route.fullPath } })
 			return
 		}
 		if (!checkoutName.value || !checkoutEmail.value || !checkoutCompany.value || !termsAccepted.value) return

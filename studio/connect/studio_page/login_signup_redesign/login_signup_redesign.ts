@@ -217,7 +217,7 @@ export default function setup(context) {
 					return
 				}
 				// A full reload, so every page sees the new session.
-				window.location.href = (res && res.redirect) || "/connect/partner-directory-redesign"
+				window.location.href = (res && res.redirect) || "/connect/partner-directory"
 			})
 			.catch((err) => {
 				verifying.value = false

@@ -212,7 +212,7 @@ def landing_page(user, next_path=None):
 	membership = get_current_membership(user)
 	if membership:
 		return "/connect" + partner_access(membership)["home_route"]
-	return "/connect/home" if home_is_published() else "/connect/partner-directory-redesign"
+	return "/connect/home" if home_is_published() else "/connect/partner-directory"
 
 
 def home_is_published():

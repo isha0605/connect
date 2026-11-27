@@ -1,5 +1,5 @@
 // Who a brief goes to: the criteria summary ("Based in India", "All tiers", …) and the Edit
-// criteria chips, for the Contact partners flow on find-partners-redesign.
+// criteria chips, for the Contact partners flow on find-partners.
 //
 // The country and industries come from the questions; the chips narrow within them by city
 // and tier (connect.api.projects.partner_criteria counts each chip).

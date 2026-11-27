@@ -171,7 +171,7 @@ export default function setup(context) {
 	}
 
 	function openPartner(p) {
-		router.push(`/partner-profile-redesign/${encodeURIComponent(p.name)}`)
+		router.push(`/partner-profile/${encodeURIComponent(p.name)}`)
 	}
 
 	function unsavePartner(p) {
@@ -181,7 +181,7 @@ export default function setup(context) {
 	}
 
 	function viewSaved() {
-		router.push("/shortlisted-redesign")
+		router.push("/saved-partners")
 	}
 
 	// ---- Frappe's content ----
