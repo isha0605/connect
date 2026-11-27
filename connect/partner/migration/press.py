@@ -1,4 +1,5 @@
 from collections import defaultdict
+from urllib.parse import parse_qs, urlsplit
 
 import frappe
 from frappe import _
@@ -338,10 +339,11 @@ def _migrate_certificate(certificate: dict, partner: str, report: Report) -> Non
 
 
 def _get_school_certificate_id(certificate_link: str | None) -> str | None:
-	"""The Frappe School certificate's name: the last part of its link on Press."""
+	"""The Frappe School certificate's name: Press links to its PDF download, which names the
+	certificate in the `name` query parameter."""
 	if not certificate_link:
 		return None
-	return certificate_link.split("?")[0].rstrip("/").rsplit("/", 1)[-1]
+	return parse_qs(urlsplit(certificate_link).query).get("name", [None])[0]
 
 
 def _migrate_audit(audit: dict, partner: str, report: Report) -> None:
