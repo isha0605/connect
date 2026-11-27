@@ -5,6 +5,7 @@
 import { CUSTOM_IF, HOW_IT_WORKS, INCLUDED, NOT_INCLUDED, OUR_NEEDS } from "@app/utils/recommendation"
 import { packBasket } from "@app/utils/packBasket"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const VALUE_PROPS = [
 	{ icon: "lucide-circle-dollar-sign", title: "Standardized pricing", body: "Based on region" },
@@ -31,6 +32,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext: useMyContext(),
 		...packBasket(context),
 		valueProps: VALUE_PROPS,
 		howItWorks: HOW_IT_WORKS,

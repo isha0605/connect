@@ -9,10 +9,11 @@ import { keyboardAccess } from "@app/utils/keyboard"
 import { INDUSTRY_OPTIONS } from "@app/utils/recommendation"
 import { starterPackCart } from "@app/utils/starterPackCart"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 export default function setup(context) {
 	startTracking(context)
-	const { myContext } = context
+	const myContext = useMyContext()
 	keyboardAccess()
 
 	// "Talk to our team": down to the contact form at the end of the page, ready to type in
@@ -85,6 +86,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext,
 		...starterPackCart(context),
 		talkToTeam,
 		...enquiry,

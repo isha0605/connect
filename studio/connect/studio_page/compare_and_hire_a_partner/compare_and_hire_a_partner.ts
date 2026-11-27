@@ -7,6 +7,7 @@
 import { computed } from "vue"
 import { toast } from "frappe-ui"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const LOGOS = "/assets/connect/images/project"
 
@@ -132,6 +133,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext: useMyContext(),
 		project: PROJECT,
 		resources: RESOURCES,
 		steps,

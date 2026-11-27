@@ -5,6 +5,7 @@ import { computed, h, nextTick, onScopeDispose, ref } from "vue"
 import { formatMoney } from "@app/utils/money"
 import { startTracking } from "@app/utils/tracking"
 import { tierSeal } from "@app/utils/tierSeal"
+import { useMyContext } from "@app/utils/myContext"
 
 export default function setup(context) {
 	startTracking(context)
@@ -551,6 +552,7 @@ export default function setup(context) {
 	})
 
 	return {
+		myContext: useMyContext(),
 		quotes,
 		hasQuotes,
 		hasQuoteRows,

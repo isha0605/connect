@@ -5,6 +5,7 @@
 import { computed } from "vue"
 import { DEFAULT_CURRENCY, compactMoney, formatMoney, sampleAmount } from "@app/utils/money"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const STEPS_SHOWN = 3
 
@@ -269,7 +270,8 @@ function listingSteps(data) {
 
 export default function setup(context) {
 	startTracking(context)
-	const { route, router, toast, myContext } = context
+	const { route, router, toast } = context
+	const myContext = useMyContext()
 
 	const data = SAMPLES[route.query.tier] || SAMPLES[DEFAULT_SAMPLE]
 	const tierIndex = TIERS.findIndex((tier) => tier.name === data.tier)
@@ -337,6 +339,7 @@ export default function setup(context) {
 	const lastAudit = data.last_audit ? `Last audit ${formatDate(data.last_audit)}` : "No audit yet"
 
 	return {
+		myContext,
 		breadcrumbItems: [{ label: "Overview", route: "/partner-overview" }],
 		partnerCode: "EyZnHMkVq1",
 		copyPartnerCode,

@@ -3,6 +3,7 @@
 
 import { computed } from "vue"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const SECTIONS = {
 	dashboard: { label: "Dashboard", icon: "lucide-layout-dashboard" },
@@ -18,6 +19,7 @@ export default function setup(context) {
 	const section = computed(() => SECTIONS[String(route.query.section || "")] || { label: "Partnership", icon: "lucide-badge-check" })
 
 	return {
+		myContext: useMyContext(),
 		sectionLabel: computed(() => section.value.label),
 		sectionIcon: computed(() => section.value.icon),
 		breadcrumbItems: computed(() => [{ label: section.value.label }]),

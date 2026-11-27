@@ -19,6 +19,7 @@ import {
 import { packBasket } from "@app/utils/packBasket"
 import { isProjectSent, projectDialog } from "@app/utils/projectDialog"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 export default function setup(context) {
 	startTracking(context)
@@ -133,6 +134,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext: useMyContext(),
 		...dialog,
 		...basket,
 		howItWorks: HOW_IT_WORKS,

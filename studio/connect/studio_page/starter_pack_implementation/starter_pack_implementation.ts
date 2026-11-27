@@ -6,6 +6,7 @@ import { EMPLOYEE_OPTIONS, INDUSTRY_OPTIONS, MODULE_ICONS, SYSTEM_OPTIONS } from
 import { signOut } from "@app/utils/signIn"
 import { CART_PACKS, clearCart } from "@app/utils/starterPackCart"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 // "Set up your Starter Pack": where checkout sends the buyer once their order is paid
 // (/starter-pack-implementation?order=SPO-…). The right panel and "Pay upfront" come from
@@ -351,6 +352,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext: useMyContext(),
 		order,
 		loadError,
 		projectTitle,

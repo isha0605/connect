@@ -4,6 +4,7 @@
 import { STARTER_PACK_TERMS, starterPackCart } from "@app/utils/starterPackCart"
 import { keyboardAccess } from "@app/utils/keyboard"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const HOW_IT_WORKS = [
 	{ text: "Pay Frappe upfront, at one fixed price" },
@@ -14,5 +15,5 @@ const HOW_IT_WORKS = [
 export default function setup(context) {
 	startTracking(context)
 	keyboardAccess()
-	return { ...starterPackCart(context), howItWorks: HOW_IT_WORKS, terms: STARTER_PACK_TERMS }
+	return { myContext: useMyContext(), ...starterPackCart(context), howItWorks: HOW_IT_WORKS, terms: STARTER_PACK_TERMS }
 }

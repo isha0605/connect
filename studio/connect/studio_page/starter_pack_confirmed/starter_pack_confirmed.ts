@@ -9,6 +9,7 @@ import { orderKey } from "@app/utils/checkoutSession"
 import { keyboardAccess } from "@app/utils/keyboard"
 import { hourlyRate } from "@app/utils/money"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const ORDER_STATUS_BADGES = {
 	New: { label: "Awaiting partner", theme: "gray" },
@@ -253,6 +254,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext: useMyContext(),
 		heading,
 		subheading,
 		partner,

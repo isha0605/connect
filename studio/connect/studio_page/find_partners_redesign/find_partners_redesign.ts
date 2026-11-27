@@ -25,6 +25,7 @@ import {
 	regionOf,
 } from "@app/utils/recommendation"
 import { startTracking } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 export default function setup(context) {
 	startTracking(context)
@@ -40,8 +41,8 @@ export default function setup(context) {
 		currentSystems,
 		painPoints,
 		partnerCountries,
-		myContext,
 	} = context
+	const myContext = useMyContext()
 
 	// Back from "Change my answers": start from what they said last time.
 	const previous = answersFromQuery(route.query)
@@ -397,6 +398,7 @@ export default function setup(context) {
 	}
 
 	return {
+		myContext,
 		matchCountLabel,
 		matchCountCaption,
 		viewAllPartners,
