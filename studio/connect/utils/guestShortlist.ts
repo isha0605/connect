@@ -2,6 +2,7 @@
 // this browser until they sign in, and then added to their account here.
 
 import { watch } from "vue"
+import { useMyContext } from "@app/utils/myContext"
 
 export const GUEST_SHORTLIST_KEY = "connect_local_shortlist"
 // Set by the directory's old stand-in sign-in dialog; nothing reads it now.
@@ -9,7 +10,8 @@ const OLD_MOCK_SIGN_IN_KEY = "connect_mock_logged_in"
 
 // localShortlist: the page's ref of the guest's list. onAdded runs once their account has it.
 export function carryGuestShortlist(context, { localShortlist, onAdded }) {
-	const { myContext, call } = context
+	const { call } = context
+	const myContext = useMyContext()
 	let done = false
 
 	watch(

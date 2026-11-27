@@ -7,11 +7,13 @@
 import { computed } from "vue"
 import { MODULE_ICONS, commercialTerms } from "@app/utils/recommendation"
 import { track } from "@app/utils/tracking"
+import { useMyContext } from "@app/utils/myContext"
 
 const BASE_PACKS = ["core", "core-manufacturing"]
 
 export function packBasket(context) {
-	const { route, router, catalog, myContext, pickedPacks, scopePackKey, showScope } = context
+	const { route, router, catalog, pickedPacks, scopePackKey, showScope } = context
+	const myContext = useMyContext()
 
 	const packs = computed(() => catalog.data?.packs || [])
 	const gstRate = computed(() => catalog.data?.gst_rate ?? 18)

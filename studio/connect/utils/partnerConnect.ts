@@ -11,6 +11,7 @@
 import { ref, watch } from "vue"
 import { projectDialog } from "@app/utils/projectDialog"
 import { goToSignIn } from "@app/utils/signIn"
+import { useMyContext } from "@app/utils/myContext"
 
 // Carry the partner through sign-in: their name, and the name to show in the dialog's title.
 const CONNECT_QUERY = "connect"
@@ -29,7 +30,8 @@ function isContactable(row) {
 }
 
 export function partnerConnect(context) {
-	const { call, route, router, myContext, toast } = context
+	const { call, route, router, toast } = context
+	const myContext = useMyContext()
 
 	const dialog = projectDialog()
 
