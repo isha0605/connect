@@ -20,12 +20,11 @@ import {
 	storyView,
 } from "@app/utils/partnerProfile"
 
-const ANSWER_ICONS = "/assets/connect/images"
 // The three questions, in the order "In their words" asks them.
 const ANSWERS = [
-	{ key: "origin_story", icon: `${ANSWER_ICONS}/how-we-got-here-icon.svg`, label: "How we got here" },
-	{ key: "why_choose_them", icon: `${ANSWER_ICONS}/why-work-with-us-icon.svg`, label: "Why work with us and who should work with us" },
-	{ key: "how_we_work", icon: `${ANSWER_ICONS}/how-we-work-icon.svg`, label: "How we'll work together" },
+	{ key: "origin_story", icon: "lucide-book-open", label: "How we got here" },
+	{ key: "why_choose_them", icon: "lucide-unplug", label: "Why work with us and who should work with us" },
+	{ key: "how_we_work", icon: "lucide-wrench", label: "How we'll work together" },
 ]
 // The grid shows the cover and two more; the second of those says how many more there are.
 const GALLERY_TILES = 3

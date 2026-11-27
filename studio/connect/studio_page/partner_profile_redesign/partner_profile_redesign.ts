@@ -3,7 +3,7 @@
 // header once the one beside the partner's name has scrolled away, and a lightbox for the photos.
 // Connect opens the New project dialog for this partner (partnerConnect.ts).
 
-import { computed, onScopeDispose, ref, watch } from "vue"
+import { computed, nextTick, onScopeDispose, ref, watch } from "vue"
 import { partnerConnect } from "@app/utils/partnerConnect"
 import { viewerCurrency } from "@app/utils/money"
 import { useProfileView } from "@app/utils/profileView"
@@ -14,6 +14,8 @@ import { useMyContext } from "@app/utils/myContext"
 
 const HERO_CONNECT = "contact-btn-ppr"
 const HEADER = "header-row-ppr"
+const GALLERY_CLOSE = '[data-component-id="gallery-lightbox-close"]'
+const GALLERY_CONTROLS = `${GALLERY_CLOSE}, [data-component-id="gallery-lightbox-prev"], [data-component-id="gallery-lightbox-next"], [data-component-id="gallery-lightbox"] video`
 // How long to keep looking for the page's buttons after it opens.
 const WAIT_FOR_PAGE_MS = 5000
 
@@ -174,22 +176,50 @@ export default function setup(context) {
 		return `<img src="${escapeAttr(item.image)}" alt="" style="${fit}object-fit:contain;">`
 	})
 
+	// Tab cycles through the lightbox's own controls, so focus never lands on the page behind it.
+	function keepFocusInGallery(event) {
+		const controls = [...document.querySelectorAll(GALLERY_CONTROLS)].filter((control) => control.offsetParent)
+		if (!controls.length) return
+		event.preventDefault()
+		const current = controls.indexOf(document.activeElement)
+		const step = event.shiftKey ? controls.length - 1 : 1
+		controls[(current + step) % controls.length].focus()
+	}
+
 	function onGalleryKey(event) {
 		if (event.key === "Escape") closeGallery()
 		else if (event.key === "ArrowLeft") showPrevious()
 		else if (event.key === "ArrowRight") showNext()
+		else if (event.key === "Tab") keepFocusInGallery(event)
 	}
+
+	// Focus moves to Close on open and back to the photo that opened the lightbox on close.
+	let focusBeforeGallery = null
 	watch(galleryOpen, (open) => {
-		if (open) window.addEventListener("keydown", onGalleryKey)
-		else window.removeEventListener("keydown", onGalleryKey)
+		if (open) {
+			focusBeforeGallery = document.activeElement
+			window.addEventListener("keydown", onGalleryKey)
+			nextTick(() => document.querySelector(GALLERY_CLOSE)?.focus())
+		} else {
+			window.removeEventListener("keydown", onGalleryKey)
+			focusBeforeGallery?.focus()
+			focusBeforeGallery = null
+		}
 	})
 	onScopeDispose(() => window.removeEventListener("keydown", onGalleryKey))
+
+	// The first two reviews until "View all"; the list and the rule under each row read this one list.
+	const shownReviews = computed(() => {
+		const reviews = context.partnerReviews?.data || []
+		return context.showAllReviews.value ? reviews : reviews.slice(0, 2)
+	})
 
 	return {
 		myContext,
 		...connecting,
 		...view,
 		isEditing,
+		shownReviews,
 		profile,
 		connect,
 		openReview,

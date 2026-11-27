@@ -13,35 +13,48 @@
    "blockName": "body",
    "children": [
     {
+     "attributes": {
+      "aria-label": "Photos",
+      "aria-modal": "true",
+      "role": "dialog"
+     },
      "baseStyles": {
       "alignItems": "center",
-      "backgroundColor": "rgba(10, 10, 10, 0.88)",
-      "display": "{{ galleryOpen ? 'flex' : 'none' }}",
+      "backgroundColor": "rgba(0, 0, 0, 0.9)",
+      "display": "flex",
       "inset": "0px",
       "justifyContent": "center",
+      "opacity": "{{ galleryOpen ? '1' : '0' }}",
       "position": "fixed",
+      "transition": "{{ galleryOpen ? 'opacity 150ms ease' : 'opacity 150ms ease, visibility 0s linear 150ms' }}",
+      "visibility": "{{ galleryOpen ? 'visible' : 'hidden' }}",
       "zIndex": "60"
      },
      "children": [
       {
+       "attributes": {
+        "aria-label": "Close",
+        "role": "button",
+        "tabindex": "0"
+       },
        "baseStyles": {
         "alignItems": "center",
         "cursor": "pointer",
         "display": "flex",
-        "height": "40px",
+        "height": "36px",
         "justifyContent": "center",
         "position": "absolute",
         "right": "20px",
         "top": "20px",
-        "width": "40px"
+        "width": "36px"
        },
        "children": [
         {
          "baseStyles": {
-          "color": "white",
+          "color": "currentColor",
           "flexShrink": "0",
-          "height": "22px",
-          "width": "22px"
+          "height": "20px",
+          "width": "20px"
          },
          "componentId": "gallery-lightbox-close-icon",
          "componentName": "Icon",
@@ -51,11 +64,31 @@
          "componentSlots": {}
         }
        ],
+       "classes": [
+        "rounded-4",
+        "text-white/70",
+        "transition-colors",
+        "hover:bg-white/10",
+        "hover:text-white",
+        "focus-visible:outline-none",
+        "focus-visible:ring-2",
+        "focus-visible:ring-white/50"
+       ],
        "componentEvents": {
         "click": {
          "action": "Run Script",
          "event": "click",
          "script": "closeGallery();"
+        },
+        "keydown.enter": {
+         "action": "Run Script",
+         "event": "keydown.enter",
+         "script": "closeGallery();"
+        },
+        "keydown.space": {
+         "action": "Run Script",
+         "event": "keydown.space",
+         "script": "eventArgs[0].preventDefault();\ncloseGallery();"
         }
        },
        "componentId": "gallery-lightbox-close",
@@ -65,9 +98,13 @@
        "originalElement": "div"
       },
       {
+       "attributes": {
+        "aria-label": "Previous photo",
+        "role": "button",
+        "tabindex": "0"
+       },
        "baseStyles": {
         "alignItems": "center",
-        "borderRadius": "9999px",
         "cursor": "pointer",
         "display": "{{ galleryItems.length > 1 ? 'flex' : 'none' }}",
         "height": "44px",
@@ -81,7 +118,7 @@
        "children": [
         {
          "baseStyles": {
-          "color": "white",
+          "color": "currentColor",
           "flexShrink": "0",
           "height": "28px",
           "width": "28px"
@@ -94,11 +131,31 @@
          "componentSlots": {}
         }
        ],
+       "classes": [
+        "rounded-4",
+        "text-white/70",
+        "transition-colors",
+        "hover:bg-white/10",
+        "hover:text-white",
+        "focus-visible:outline-none",
+        "focus-visible:ring-2",
+        "focus-visible:ring-white/50"
+       ],
        "componentEvents": {
         "click": {
          "action": "Run Script",
          "event": "click",
          "script": "showPrevious();"
+        },
+        "keydown.enter": {
+         "action": "Run Script",
+         "event": "keydown.enter",
+         "script": "showPrevious();"
+        },
+        "keydown.space": {
+         "action": "Run Script",
+         "event": "keydown.space",
+         "script": "eventArgs[0].preventDefault();\nshowPrevious();"
         }
        },
        "componentId": "gallery-lightbox-prev",
@@ -129,9 +186,13 @@
        }
       },
       {
+       "attributes": {
+        "aria-label": "Next photo",
+        "role": "button",
+        "tabindex": "0"
+       },
        "baseStyles": {
         "alignItems": "center",
-        "borderRadius": "9999px",
         "cursor": "pointer",
         "display": "{{ galleryItems.length > 1 ? 'flex' : 'none' }}",
         "height": "44px",
@@ -145,7 +206,7 @@
        "children": [
         {
          "baseStyles": {
-          "color": "white",
+          "color": "currentColor",
           "flexShrink": "0",
           "height": "28px",
           "width": "28px"
@@ -158,11 +219,31 @@
          "componentSlots": {}
         }
        ],
+       "classes": [
+        "rounded-4",
+        "text-white/70",
+        "transition-colors",
+        "hover:bg-white/10",
+        "hover:text-white",
+        "focus-visible:outline-none",
+        "focus-visible:ring-2",
+        "focus-visible:ring-white/50"
+       ],
        "componentEvents": {
         "click": {
          "action": "Run Script",
          "event": "click",
          "script": "showNext();"
+        },
+        "keydown.enter": {
+         "action": "Run Script",
+         "event": "keydown.enter",
+         "script": "showNext();"
+        },
+        "keydown.space": {
+         "action": "Run Script",
+         "event": "keydown.space",
+         "script": "eventArgs[0].preventDefault();\nshowNext();"
         }
        },
        "componentId": "gallery-lightbox-next",
@@ -177,8 +258,7 @@
       {
        "baseStyles": {
         "bottom": "20px",
-        "color": "rgba(255, 255, 255, 0.8)",
-        "fontSize": "13px",
+        "color": "rgba(255, 255, 255, 0.6)",
         "left": "50%",
         "position": "absolute",
         "transform": "translateX(-50%)"
@@ -186,12 +266,23 @@
        "componentId": "gallery-lightbox-counter",
        "componentName": "TextBlock",
        "componentProps": {
+        "fontSize": "text-p-sm",
         "tag": "span",
         "text": "{{ galleryCounter }}"
        },
        "componentSlots": {}
       }
      ],
+     "classes": [
+      "motion-reduce:!transition-none"
+     ],
+     "componentEvents": {
+      "click": {
+       "action": "Run Script",
+       "event": "click",
+       "script": "const target = eventArgs[0].target;\nconst onMedia = ['IMG', 'VIDEO', 'IFRAME'].includes(target.tagName);\nconst onControl = target.closest('[data-component-id=\"gallery-lightbox-prev\"], [data-component-id=\"gallery-lightbox-next\"], [data-component-id=\"gallery-lightbox-close\"]');\nif (!onMedia && !onControl) closeGallery();"
+      }
+     },
      "componentId": "gallery-lightbox",
      "componentName": "container",
      "componentProps": {},
@@ -236,7 +327,10 @@
           "alignItems": "center",
           "display": "flex",
           "flexDirection": "row",
-          "gap": "4px"
+          "flexShrink": "1",
+          "gap": "4px",
+          "minWidth": "0px",
+          "overflow": "hidden"
          },
          "children": [
           {
@@ -256,6 +350,7 @@
         {
          "baseStyles": {
           "display": "flex",
+          "flexShrink": "0",
           "marginLeft": "auto",
           "opacity": "{{ showHeaderConnect ? '1' : '0' }}",
           "pointerEvents": "{{ showHeaderConnect ? 'auto' : 'none' }}",
@@ -274,7 +369,7 @@
            "componentId": "header-connect-btn-ppr",
            "componentName": "Button",
            "componentProps": {
-            "iconRight": "lucide-arrow-right",
+            "iconLeft": "lucide-message-square",
             "label": "Connect",
             "variant": "ghost"
            },
@@ -300,7 +395,11 @@
         "flex": "1",
         "flexDirection": "column",
         "minHeight": "0px",
-        "overflowY": "auto"
+        "opacity": "{{ (partner.data || partner.error) ? '1' : '0' }}",
+        "overflowY": "auto",
+        "scrollbarGutter": "stable",
+        "transform": "{{ (partner.data || partner.error) ? 'none' : 'translateY(4px)' }}",
+        "transition": "opacity 200ms cubic-bezier(0.23, 1, 0.32, 1), transform 200ms cubic-bezier(0.23, 1, 0.32, 1)"
        },
        "children": [
         {
@@ -308,10 +407,10 @@
           "alignItems": "flex-start",
           "display": "flex",
           "flexDirection": "row",
-          "gap": "20px",
+          "gap": "12px",
           "margin": "0 auto",
           "maxWidth": "800px",
-          "padding": "47px 0 0",
+          "padding": "32px 0 0",
           "width": "100%"
          },
          "children": [
@@ -323,19 +422,19 @@
             "backgroundPosition": "center",
             "backgroundRepeat": "no-repeat",
             "backgroundSize": "contain",
-            "borderRadius": "8px",
+            "borderRadius": "10px",
             "display": "flex",
             "flexShrink": "0",
-            "height": "46px",
+            "height": "{{ (partner.data && !(partner.data.logo_icon || partner.data.logo)) ? '48px' : '46px' }}",
             "justifyContent": "center",
             "overflow": "hidden",
-            "width": "46px"
+            "width": "{{ (partner.data && !(partner.data.logo_icon || partner.data.logo)) ? '48px' : '46px' }}"
            },
            "children": [
             {
              "baseStyles": {
               "color": "var(--ink-gray-6, #525252)",
-              "display": "{{ (partner.data && (partner.data.logo_icon || partner.data.logo)) ? 'none' : 'flex' }}",
+              "display": "{{ (partner.data && !(partner.data.logo_icon || partner.data.logo)) ? 'flex' : 'none' }}",
               "fontWeight": "600"
              },
              "componentId": "avatar-initial-ppr",
@@ -359,7 +458,7 @@
             "display": "flex",
             "flexDirection": "column",
             "flexShrink": "0",
-            "gap": "4px",
+            "gap": "0px",
             "width": "500px"
            },
            "children": [
@@ -373,13 +472,13 @@
              "children": [
               {
                "baseStyles": {
-                "color": "var(--ink-gray-8)",
+                "color": "var(--ink-gray-9)",
                 "fontWeight": "600"
                },
                "componentId": "partner-name-ppr",
                "componentName": "TextBlock",
                "componentProps": {
-                "fontSize": "text-lg",
+                "fontSize": "text-xl",
                 "tag": "span",
                 "text": "{{ partner.data ? partner.data.company_name : '' }}"
                },
@@ -446,7 +545,8 @@
             {
              "baseStyles": {
               "color": "var(--ink-gray-6, #525252)",
-              "display": "{{ partner.data && partner.data.tagline ? 'block' : 'none' }}"
+              "display": "{{ partner.data && partner.data.tagline ? 'block' : 'none' }}",
+              "padding": "4px 0"
              },
              "componentId": "tagline-ppr",
              "componentName": "TextBlock",
@@ -484,7 +584,6 @@
               "aria-label": "Visit website"
              },
              "baseStyles": {
-              "backgroundColor": "var(--surface-gray-2)",
               "display": "{{ (partner.data && partner.data.website) ? 'flex' : 'none' }}"
              },
              "componentEvents": {
@@ -498,20 +597,17 @@
              "componentName": "Button",
              "componentProps": {
               "icon": "lucide-globe",
-              "size": "md",
+              "size": "sm",
               "tooltip": "Visit website",
-              "variant": "ghost"
+              "variant": "subtle"
              },
              "componentSlots": {}
             },
             {
              "attributes": {
-              "aria-label": "{{ ((myShortlist.data || []).includes(route.params.partner_id)) ? 'Remove from shortlist' : 'Add to shortlist' }}"
+              "aria-label": "{{ ((myShortlist.data || []).includes(route.params.partner_id)) ? 'Remove from saved' : 'Save' }}"
              },
-             "baseStyles": {
-              "backgroundColor": "var(--surface-gray-2)",
-              "color": "{{ (myShortlist.data || []).includes(route.params.partner_id) ? 'var(--ink-gray-8)' : 'var(--ink-gray-5)' }}"
-             },
+             "baseStyles": {},
              "componentEvents": {
               "click": {
                "action": "Run Script",
@@ -522,9 +618,9 @@
              "componentId": "shortlist-btn-ppr",
              "componentName": "Button",
              "componentProps": {
-              "size": "md",
-              "tooltip": "{{ ((myShortlist.data || []).includes(route.params.partner_id)) ? 'Remove from shortlist' : 'Add to shortlist' }}",
-              "variant": "ghost"
+              "size": "sm",
+              "tooltip": "{{ ((myShortlist.data || []).includes(route.params.partner_id)) ? 'Remove from saved' : 'Save' }}",
+              "variant": "subtle"
              },
              "componentSlots": {
               "icon": {
@@ -550,9 +646,7 @@
              }
             },
             {
-             "baseStyles": {
-              "backgroundColor": "var(--ink-gray-9, #171717)"
-             },
+             "baseStyles": {},
              "componentEvents": {
               "click": {
                "action": "Run Script",
@@ -600,10 +694,10 @@
          "baseStyles": {
           "display": "flex",
           "flexDirection": "column",
-          "gap": "48px",
+          "gap": "0px",
           "margin": "0 auto",
           "maxWidth": "800px",
-          "paddingTop": "47px",
+          "paddingTop": "0px",
           "width": "100%"
          },
          "blockName": "PartnerProfileSections",
@@ -625,10 +719,10 @@
          "baseStyles": {
           "display": "flex",
           "flexDirection": "column",
-          "gap": "25px",
+          "gap": "16px",
           "margin": "0 auto",
           "maxWidth": "800px",
-          "padding": "115px 0 0",
+          "padding": "96px 0 0",
           "width": "100%"
          },
          "children": [
@@ -1091,7 +1185,7 @@
              "componentId": "reviews-list",
              "componentName": "ListRows",
              "componentProps": {
-              "items": "{{ (showAllReviews ? (partnerReviews.data || []) : (partnerReviews.data || []).slice(0, 2)) }}",
+              "items": "{{ shownReviews }}",
               "rowKey": "name"
              },
              "componentSlots": {
@@ -1100,7 +1194,7 @@
                "slotContent": [
                 {
                  "baseStyles": {
-                  "borderBottom": "1px solid var(--outline-gray-1, #ededed)",
+                  "borderBottom": "{{ item === shownReviews.at(-1) ? 'none' : '1px solid var(--outline-gray-1)' }}",
                   "display": "flex",
                   "flexDirection": "column",
                   "gap": "12px",
@@ -1445,11 +1539,11 @@
          "baseStyles": {
           "display": "flex",
           "flexDirection": "column",
-          "gap": "48px",
+          "gap": "96px",
           "margin": "0 auto",
           "maxWidth": "800px",
           "paddingBottom": "96px",
-          "paddingTop": "115px",
+          "paddingTop": "96px",
           "width": "100%"
          },
          "blockName": "PartnerProfileStories",
@@ -1467,6 +1561,9 @@
          },
          "visibilityCondition": "profile"
         }
+       ],
+       "classes": [
+        "motion-reduce:![transform:none]"
        ],
        "componentId": "scroll-body-ppr",
        "componentName": "container",
@@ -1708,7 +1805,7 @@
  "frappe_app": "connect",
  "idx": 0,
  "is_standard": 1,
- "modified": "2026-11-27 12:00:00.000000",
+ "modified": "2026-11-27 14:46:00.872282",
  "modified_by": "Administrator",
  "name": "partner_profile_redesign",
  "owner": "Administrator",
