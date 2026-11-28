@@ -26,6 +26,14 @@ Do this once. In Desk, open **Integration Settings**:
 
 Tick **Enabled** in both sections. Read access is enough. Give both API users read-only roles.
 
+Raise Frappe's limit on new users for the migration. A run makes a user for each partner owner, and Frappe refuses a new user with "Throttled" when more than 60 were made in the last hour:
+
+```
+bench --site <site> set-config --parse throttle_user_limit 10000
+```
+
+Use `--parse`: without it the value is saved as text, and every new user fails. Put the limit back when the migration is done (see [After the migration](#5-after-the-migration)). The limit protects signups.
+
 ## 2. Do a trial run
 
 1. In Desk, open **Partner Migration** and add a new run.
@@ -113,6 +121,12 @@ You can run the migration again with a new run. Each source record is linked to 
 During a run, Connect sends no invitations and nothing to Frappe CRM. When **Ready for Frappe CRM** is ticked, click **Send to Frappe CRM** and confirm. This sends every approved partner to Frappe CRM once. The partners go only when tier and listing changes are on in Integration Settings.
 
 Owners get no invitation email. They sign in with an email code. Frappe announces the move to partners.
+
+Put back Frappe's limit on new users:
+
+```
+bench --site <site> set-config --parse throttle_user_limit 60
+```
 
 ## Command line, for testing
 
