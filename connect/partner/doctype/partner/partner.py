@@ -894,10 +894,18 @@ def list_industry_facets(search=None, tier=None, country=None,
 
 
 def list_directory_filter_facets(search=None, tier=None, industry=None, country=None, category=None,
-	business_process=None, implementation_type=None, language=None,
+	product=None, business_process=None, implementation_type=None, language=None,
 	min_rating=None, max_response_time=None):
-	"""Both facet panels in one call, so the Directory's filter row only needs one resource."""
+	"""Both facet panels and the number of partners every filter matches, in one call, so the
+	Directory's filter row only needs one resource. The list loads as the visitor scrolls, so its
+	count comes from here, not from the rows loaded so far."""
+	matching = search_partners(
+		search=search, tier=tier, country=country, industry=industry, category=category, product=product,
+		business_process=business_process, implementation_type=implementation_type, language=language,
+		min_rating=min_rating, max_response_time=max_response_time, limit=10000,
+	)
 	return {
+		"total": len(matching),
 		"regions": list_country_facets(
 			search=search, tier=tier, industry=industry, category=category,
 			business_process=business_process, implementation_type=implementation_type, language=language,

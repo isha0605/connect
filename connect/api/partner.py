@@ -72,13 +72,13 @@ def list_directory_partners(
 
 @frappe.whitelist(allow_guest=True)
 def list_directory_filter_facets(
-	search=None, tier=None, industry=None, country=None, category=None,
+	search=None, tier=None, industry=None, country=None, category=None, product=None,
 	business_process=None, implementation_type=None, language=None,
 	min_rating=None, max_response_time=None,
 ):
 	from connect.partner.doctype.partner.partner import list_directory_filter_facets
 	return list_directory_filter_facets(
-		search=search, tier=tier, industry=industry, country=country, category=category,
+		search=search, tier=tier, industry=industry, country=country, category=category, product=product,
 		business_process=business_process, implementation_type=implementation_type, language=language,
 		min_rating=min_rating, max_response_time=max_response_time,
 	)

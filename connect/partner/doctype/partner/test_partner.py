@@ -10,6 +10,7 @@ from connect.partner.doctype.partner.partner import (
 	VERIFIED,
 	get_partner_document,
 	get_partner_preview,
+	list_directory_filter_facets,
 	list_directory_partners,
 	list_partner_tiers,
 	save_imported_partner,
@@ -76,6 +77,23 @@ class IntegrationTestPartner(IntegrationTestCase):
 
 		self.assertIn(LISTED, names)
 		self.assertNotIn(PENDING, names)
+
+	def test_directory_total_counts_every_match_not_one_page(self):
+		frappe.set_user("Guest")
+
+		listed = list_directory_partners(limit=500)
+		first_page = list_directory_partners(limit=1)
+
+		self.assertEqual(len(first_page), 1)
+		self.assertEqual(list_directory_filter_facets()["total"], len(listed))
+
+	def test_directory_total_follows_the_filters(self):
+		frappe.set_user("Guest")
+
+		total = list_directory_filter_facets(search=LISTED)["total"]
+
+		self.assertEqual(total, len(list_directory_partners(limit=500, search=LISTED)))
+		self.assertGreaterEqual(total, 1)
 
 	def test_guest_opens_a_listed_profile_without_private_fields(self):
 		frappe.set_user("Guest")
